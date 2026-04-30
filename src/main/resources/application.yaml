@@ -1,0 +1,54 @@
+server:
+  port: 8080
+  compression:
+    enabled: true
+    mime-types: application/json
+  shutdown: graceful
+
+vaadin:
+  productionMode: true
+
+spring:
+  application:
+    name: starfare
+  docker:
+    compose:
+      enabled: true  # set to false in production (DB is already running there)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/starfare
+    username: starfare
+    password: starfare
+    hikari:
+      # https://vladmihalcea:com/why-you-should-always-use-hibernate-connection-provider_disables_autocommit-for-resource-local-jpa-transactions/
+      # in combination with jpa:properties:hibernate:connection:provider_disables_autocommit: true
+      auto-commit: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        connection:
+          provider_disables_autocommit: true
+        jdbc:
+          time_zone: UTC
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  info:
+    build:
+      enabled: true
+    git:
+      enabled: true
+      mode: full
+
+logging:
+  level:
+    org:
+      atmosphere: warn

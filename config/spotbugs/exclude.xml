@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter xmlns="https://github.com/spotbugs/filter/3.0.0"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/master/spotbugs/etc/findbugsfilter.xsd">
+
+    <Match>
+        <Source name="~.*/build/generated/.*"/>
+    </Match>
+
+    <Match>
+        <Class name="~.*\$AutoValue_.*"/>
+    </Match>
+
+    <Match>
+        <Class name="~.*Entity"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,EQ_DOESNT_OVERRIDE_EQUALS,HE_EQUALS_USE_HASHCODE"/>
+    </Match>
+
+    <Match>
+        <Class name="~de\.zettsystems\.starfare\..*View"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~de\.zettsystems\.starfare\..*Dialog"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~de\.zettsystems\.starfare\..*Panel"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~de\.zettsystems\.starfare\.(game|social|auth)\.ui\..*"/>
+        <Bug pattern="SE_BAD_FIELD,SE_NO_SERIALVERSIONID,SE_BAD_FIELD_STORE,SE_TRANSIENT_FIELD_NOT_RESTORED"/>
+    </Match>
+
+    <Match>
+        <Class name="~.*_\$.*"/>
+    </Match>
+
+    <!--
+       Vaadin views/dialogs/panels call overridable add()/setSizeFull()/
+       setHeader() in their constructor. That's the canonical Vaadin
+       lifecycle pattern (no other hook to compose the layout) and none of
+       our UI components are subclassed inside the project. Filter rather
+       than per-class annotations because it covers the whole UI layer.
+    -->
+    <Match>
+        <Class name="~de\.zettsystems\.starfare\..*\.ui\..*"/>
+        <Bug pattern="MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR"/>
+    </Match>
+
+    <!--
+       Read-only data records with Collection components. SpotBugs flags
+       both the canonical constructor (REP2) and each accessor (REP) as
+       potential leaks. We can't suppress on the record itself because
+       class-level @SuppressFBWarnings doesn't propagate to the synthetic
+       accessor methods that the compiler generates from the record header.
+       Producers always wrap their lists with List.copyOf at construction
+       time (see PlayerViewBuilder, DefaultReportService, GameSetup.normalized,
+       GameState.toSnapshot), so the records are effectively immutable.
+    -->
+    <Match>
+        <Or>
+            <Class name="de.zettsystems.starfare.game.domain.GameStateSnapshot"/>
+            <Class name="de.zettsystems.starfare.game.values.PlayerViewState"/>
+            <Class name="de.zettsystems.starfare.game.values.GameSetup"/>
+            <Class name="de.zettsystems.starfare.report.values.TurnReport"/>
+        </Or>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!--
+       FALSE POSITIVE: SpotBugs 4.9 does not understand Java 21+ record
+       patterns. In DefaultGameService.publishTurnResult(...), the binding
+       `int turn` in `case TurnResult.Advanced(int turn) -> publish(... turn)`
+       IS used inside the same arrow expression. Re-evaluate when SpotBugs
+       gains record-pattern dataflow support.
+    -->
+    <Match>
+        <Class name="de.zettsystems.starfare.game.application.DefaultGameService"/>
+        <Method name="publishTurnResult"/>
+        <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
+    </Match>
+
+    <!--
+       FALSE POSITIVE: in DefaultGameRegistry.initializeState(...) the local
+       `Random r` is reused six times (lines 241..253). SpotBugs analyses
+       the per-iteration calls in isolation and misreports each as a
+       single-use Random. The other Random in spaceOut() does not exist —
+       only this one method is affected.
+    -->
+    <Match>
+        <Class name="de.zettsystems.starfare.game.application.DefaultGameRegistry"/>
+        <Method name="initializeState"/>
+        <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
+    </Match>
+
+</FindBugsFilter>
