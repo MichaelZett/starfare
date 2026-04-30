@@ -1,0 +1,182 @@
+# Real star and system names
+Vega
+Altair
+Sirius
+Rigel
+Procyon
+Arcturus
+Capella
+Betelgeuse
+Aldebaran
+Deneb
+Antares
+Pollux
+Regulus
+Spica
+Bellatrix
+Canopus
+Achernar
+Fomalhaut
+Mira
+Polaris
+Alphard
+Alnilam
+Alnitak
+Mintaka
+Saiph
+Alphecca
+Algol
+Castor
+Tau Ceti
+Epsilon Eridani
+Epsilon Indi
+Lalande
+Wolf 359
+Ross 128
+Gliese 581
+Gliese 667
+Gliese 876
+Kepler-22
+Kepler-186
+Kepler-442
+Trappist-1
+Proxima Centauri
+Alpha Centauri
+Barnard
+Luhman
+Teegarden
+Kapteyn
+Luyten
+Bernard
+Van Maanen
+61 Cygni
+70 Ophiuchi
+55 Cancri
+47 Ursae Majoris
+HD 10180
+HD 209458
+HD 189733
+HD 40307
+HD 85512
+HD 219134
+Tabby
+Methuselah
+
+# Star Trek
+Qo'noS
+Vulcan
+Romulus
+Remus
+Bajor
+Cardassia
+Ferenginar
+Andoria
+Risa
+Trill
+Betazed
+Cestus
+Wolf 359
+Organia
+Talos
+Khitomer
+Deep Space
+Terok Nor
+Dominion
+Gorn
+Argelius
+
+# Star Wars
+Tatooine
+Alderaan
+Coruscant
+Naboo
+Endor
+Hoth
+Dagobah
+Bespin
+Mustafar
+Kamino
+Geonosis
+Kashyyyk
+Mandalore
+Jakku
+Scarif
+Crait
+Yavin
+Mon Cala
+Ryloth
+Lothal
+Exegol
+Ahch-To
+
+# Dune / Foundation
+Arrakis
+Caladan
+Giedi Prime
+Ix
+Tleilax
+Kaitain
+Trantor
+Terminus
+Kalgan
+Anacreon
+Siwenna
+Helicon
+Smyrno
+Cinna
+
+# Babylon 5 / Stargate / Expanse / Firefly
+Minbar
+Centauri Prime
+Narn
+Vorlon
+Z'ha'dum
+Chulak
+Abydos
+Dakara
+Atlantis
+Ceres
+Eros
+Tycho
+Ganymede
+Europa
+Ilus
+Laconia
+Medina
+Persephone
+Serenity
+Miranda
+Ariel
+Whitefall
+Shadow
+Lilac
+
+# Mass Effect / Halo / Battlestar / Warhammer
+Palaven
+Thessia
+Tuchanka
+Rannoch
+Illium
+Omega
+Noveria
+Feros
+Virmire
+Horizon
+Reach
+Harvest
+Arcadia
+Sigma Octanus
+Onyx
+Caprica
+Gemenon
+Tauron
+Sagittaron
+Kobol
+New Caprica
+Cadia
+Armageddon
+Macragge
+Fenris
+Baal
+Catachan
+Prospero

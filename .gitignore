@@ -1,0 +1,44 @@
+# Node
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.yarn-cache/
+.pnp.*
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Vite
+vite.config.*.timestamp-*
+vite.generated.ts
+
+# Frontend generated
+frontend/generated/
+src/main/frontend/generated/
+
+# Java/Maven
+/target/
+*.class
+
+# Rust
+**/target/
+
+# IDEs & editors
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / local
+.env
+.env.*
+*.local
+*.log
+
+.gradle/*
