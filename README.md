@@ -25,6 +25,29 @@ Testcontainers) wrapped around a small but complete game.
 
 Architecture details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+## Screenshots
+
+![Galaxy map with a travelling fleet](docs/screenshots/Karte.png)
+
+*Galaxy map: own systems in blue, neutrals grey, a fleet in transit with
+an ETA badge mid-route; fog of war keeps unseen systems frozen at their
+last known state.*
+
+![Lobby view](docs/screenshots/Lobby.png)
+
+*Lobby: running games with host actions, presence panel, chat, language
+switcher and a per-user visibility menu.*
+
+![Send-fleet dialog](docs/screenshots/Flotte.png)
+
+*Send-fleet dialog: ship slider with quick buttons (half / double / all),
+travel-time preview, optional "as production transfer" mode.*
+
+![Round report](docs/screenshots/Runde.png)
+
+*Round report: a filterable timeline of production, reinforcements,
+victories, defeats, and systems lost or defended.*
+
 ## Run it
 
 Prerequisites: Java 25, Docker Desktop (for PostgreSQL).
