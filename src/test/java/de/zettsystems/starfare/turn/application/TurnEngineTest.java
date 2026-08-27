@@ -53,6 +53,6 @@ class TurnEngineTest {
 
         assertThat(state.getSystem(2).garrison()).isEqualTo(7);
         assertThat(state.reports().get(1).lines().stream().anyMatch(l -> l.contains("Verstärkung"))).isTrue();
-        assertThat(state.fleets()).hasSize(0);
+        assertThat(state.fleets()).isEmpty();
     }
 }

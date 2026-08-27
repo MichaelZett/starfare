@@ -37,10 +37,6 @@ public class UserPreferencesEntity extends AbstractBaseEntity<String> {
         return username;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
     public Visibility getVisibility() {
         return visibility;
     }

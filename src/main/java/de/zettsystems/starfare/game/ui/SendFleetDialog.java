@@ -36,7 +36,8 @@ final class SendFleetDialog {
 
     private record DialogParams(int maxShips, boolean canSend, int sliderMax, int initial) {
         static DialogParams from(VisibleSystem source) {
-            int garrison = source.garrison() != null ? source.garrison() : 0;
+            Integer sourceGarrison = source.garrison();
+            int garrison = sourceGarrison != null ? sourceGarrison : 0;
             int maxShips = Math.max(0, garrison);
             return new DialogParams(maxShips, maxShips >= 1, Math.max(1, maxShips), 1);
         }

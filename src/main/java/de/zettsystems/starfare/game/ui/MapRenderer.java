@@ -145,7 +145,8 @@ final class MapRenderer {
         LaneGeometry geom = computeLaneGeometry(a, b, len);
         String color = resolveFleetColor(in, f.ownerId());
         String tooltip = fleetTooltip(f, in.view().turn());
-        boolean highlighted = in.highlightedFleetId() != null && in.highlightedFleetId() == f.globalId();
+        Integer highlightedFleetId = in.highlightedFleetId();
+        boolean highlighted = highlightedFleetId != null && highlightedFleetId == f.globalId();
 
         map.add(buildLaneDiv(geom, color, tooltip, highlighted));
         map.add(buildFleetBadge(f, a, b, color, tooltip, in, highlighted));

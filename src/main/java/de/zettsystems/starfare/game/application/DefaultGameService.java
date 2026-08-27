@@ -272,7 +272,7 @@ public class DefaultGameService implements GameService {
             return captureTurnResult(state);
         });
         publishTurnResult(gameId, result);
-        return result != TurnResult.REJECTED;
+        return !TurnResult.REJECTED.equals(result);
     }
 
     @Override

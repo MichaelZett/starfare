@@ -10,13 +10,13 @@ class GameConfigTest {
 
     @Test
     void defaultsArePositive() {
-        assertThat(GameConfig.DEFAULT_SYSTEM_COUNT).isGreaterThan(0);
-        assertThat(GameConfig.DEFAULT_HUMAN_PLAYERS).isGreaterThan(0);
-        assertThat(GameConfig.DEFAULT_AI_PLAYERS).isGreaterThanOrEqualTo(0);
-        assertThat(GameConfig.DEFAULT_START_SYSTEM_PRODUCTION).isGreaterThan(0);
-        assertThat(GameConfig.DEFAULT_NEUTRAL_MIN_PRODUCTION).isGreaterThan(0);
+        assertThat(GameConfig.DEFAULT_SYSTEM_COUNT).isPositive();
+        assertThat(GameConfig.DEFAULT_HUMAN_PLAYERS).isPositive();
+        assertThat(GameConfig.DEFAULT_AI_PLAYERS).isNotNegative();
+        assertThat(GameConfig.DEFAULT_START_SYSTEM_PRODUCTION).isPositive();
+        assertThat(GameConfig.DEFAULT_NEUTRAL_MIN_PRODUCTION).isPositive();
         assertThat(GameConfig.DEFAULT_NEUTRAL_MAX_PRODUCTION).isGreaterThanOrEqualTo(GameConfig.DEFAULT_NEUTRAL_MIN_PRODUCTION);
-        assertThat(GameConfig.SPACEOUT_ITERATIONS).isGreaterThan(0);
+        assertThat(GameConfig.SPACEOUT_ITERATIONS).isPositive();
         assertThat(GameConfig.SPACEOUT_MIN_DIST).isGreaterThan(0.0);
     }
 

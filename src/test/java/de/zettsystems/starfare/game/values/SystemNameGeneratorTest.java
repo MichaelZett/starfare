@@ -42,6 +42,6 @@ class SystemNameGeneratorTest {
         long withSuffix = names.stream()
                 .filter(n -> n.endsWith(" II") || n.endsWith(" III") || n.endsWith(" IV"))
                 .count();
-        assertThat(withSuffix > 0).as("overflow batch must reuse pool with roman suffixes").isTrue();
+        assertThat(withSuffix).as("overflow batch must reuse pool with roman suffixes").isPositive();
     }
 }

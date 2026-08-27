@@ -53,6 +53,20 @@
     </Match>
 
     <!--
+       FALSE POSITIVE: LobbyView's constructor composes Vaadin components,
+       which internally invoke framework callbacks that SpotBugs models as
+       throwing. The view has no finalizer and receives only Spring-managed
+       collaborators; moving the composition out of the Vaadin lifecycle
+       would not remove the callback path. Keep this exception scoped to the
+       one reported constructor.
+    -->
+    <Match>
+        <Class name="de.zettsystems.starfare.game.ui.LobbyView"/>
+        <Method name="&lt;init&gt;"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <!--
        Read-only data records with Collection components. SpotBugs flags
        both the canonical constructor (REP2) and each accessor (REP) as
        potential leaks. We can't suppress on the record itself because

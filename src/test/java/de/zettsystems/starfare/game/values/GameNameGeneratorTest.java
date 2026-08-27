@@ -10,11 +10,12 @@ class GameNameGeneratorTest {
     void randomNameIsNonBlankAndHasAtLeastThreeTokens() {
         String name = GameNameGenerator.random();
 
-        assertThat(name != null && !name.isBlank()).isTrue();
+        assertThat(name)
+                .isNotBlank();
         // Format is "<prefix> <connector> <place>", but the connector ("jenseits von")
         // and some places ("Tau Ceti") add extra spaces, so we only assert the lower bound.
         String[] parts = name.split(" ");
-        assertThat(parts.length >= 3).as("expected >=3 tokens, got '" + name + "'").isTrue();
+        assertThat(parts).as("expected >=3 tokens, got '" + name + "'").hasSizeGreaterThanOrEqualTo(3);
     }
 
     @RepeatedTest(5)
@@ -25,7 +26,7 @@ class GameNameGeneratorTest {
                 .mapToObj(_ -> GameNameGenerator.random())
                 .distinct()
                 .count();
-        assertThat(distinct > 1).as("generator should produce variation across draws").isTrue();
+        assertThat(distinct).as("generator should produce variation across draws").isGreaterThan(1);
     }
 
     @org.junit.jupiter.api.Test

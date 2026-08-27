@@ -34,7 +34,7 @@ class DefaultCombatServiceTest {
 
     private TurnReport reportOf(int playerId) {
         TurnReport report = state.reports().get(playerId);
-        assertThat(report != null).as("no report for player " + playerId).isTrue();
+        assertThat(report).as("no report for player " + playerId).isNotNull();
         return report;
     }
 
@@ -59,7 +59,7 @@ class DefaultCombatServiceTest {
         StarSystem captured = state.getSystem(3);
         assertThat(captured.ownerId()).isOne();
         assertThat(captured.neutral()).as("captured systems are no longer neutral").isFalse();
-        assertThat(captured.garrison() > 0).as("attacker survivors form the new garrison").isTrue();
+        assertThat(captured.garrison()).as("attacker survivors form the new garrison").isPositive();
 
         TurnEvent.BattleWon win = (TurnEvent.BattleWon) reportOf(1).events().getFirst();
         assertThat(win.wasNeutral()).as("BattleWon must record that the target was neutral").isTrue();
@@ -98,7 +98,7 @@ class DefaultCombatServiceTest {
 
         StarSystem target = state.getSystem(2);
         assertThat(target.ownerId()).as("owner must not flip").isEqualTo(2);
-        assertThat(target.garrison() > 0).as("defenders survive").isTrue();
+        assertThat(target.garrison()).as("defenders survive").isPositive();
 
         TurnEvent.BattleLost lost = (TurnEvent.BattleLost) reportOf(1).events().getFirst();
         assertThat(lost.systemId()).isEqualTo(2);

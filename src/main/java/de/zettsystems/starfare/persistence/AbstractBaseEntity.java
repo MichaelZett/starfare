@@ -11,12 +11,12 @@ import org.jspecify.annotations.Nullable;
  * the entity has been persisted).
  */
 @MappedSuperclass
-public abstract class AbstractBaseEntity<ID> {
+public abstract class AbstractBaseEntity<I> {
 
     @Version
     private long version;
 
-    public abstract @Nullable ID getId();
+    public abstract @Nullable I getId();
 
     public long getVersion() {
         return version;
@@ -32,13 +32,13 @@ public abstract class AbstractBaseEntity<ID> {
             return false;
         }
         AbstractBaseEntity<?> that = (AbstractBaseEntity<?>) o;
-        ID id = getId();
+        I id = getId();
         return id != null && id.equals(that.getId());
     }
 
     @Override
     public final int hashCode() {
-        ID id = getId();
+        I id = getId();
         return id != null ? id.hashCode() : System.identityHashCode(this);
     }
 }

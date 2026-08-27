@@ -14,7 +14,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class GameRegistryTest extends AbstractIntegrationTest {
 
@@ -30,7 +30,7 @@ class GameRegistryTest extends AbstractIntegrationTest {
     @Test
     void requireOnUnknownIdThrows() {
         GameId unknown = GameId.newId();
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> registry.require(unknown));
+        assertThatThrownBy(() -> registry.require(unknown)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -161,8 +161,8 @@ class GameRegistryTest extends AbstractIntegrationTest {
 
         int sizeA = registry.readState(a, state -> state.waitThisTurn().size());
         int sizeB = registry.readState(b, state -> state.waitThisTurn().size());
-        assertThat(sizeA).isGreaterThan(0);
-        assertThat(sizeB).isGreaterThan(0);
+        assertThat(sizeA).isPositive();
+        assertThat(sizeB).isPositive();
     }
 
     private int counterA = 1;

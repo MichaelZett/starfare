@@ -50,14 +50,15 @@ public class DefaultTurnEngine implements TurnEngine {
 
     private void applyProduction(GameState state, java.util.Set<Integer> routedSystems) {
         for (StarSystem s : state.systems()) {
-            if (s.ownerId() == null || s.neutral()) {
+            Integer ownerId = s.ownerId();
+            if (ownerId == null || s.neutral()) {
                 continue;
             }
             if (!routedSystems.contains(s.id())) {
                 state.updateSystem(s.id(), StarSystem::produce);
             }
-            reportService.appendEvent(state, s.ownerId(),
-                    new TurnEvent.Production(s.ownerId(), s.id(), s.name(), s.productionPerTurn()));
+            reportService.appendEvent(state, ownerId,
+                    new TurnEvent.Production(ownerId, s.id(), s.name(), s.productionPerTurn()));
         }
     }
 

@@ -184,7 +184,7 @@ html, body, #outlet {
 /* Mirror the gold map highlight onto the selected fleet row so the link
    between table and map is unmistakable. Vaadin's default selection tint
    is too subtle on the dark background. */
-.map-right vaadin-grid::part(row)[selected] {
+.map-right vaadin-grid::part(selected-row) {
     background: rgba(255, 193, 79, 0.28) !important;
     box-shadow: inset 3px 0 0 #ffd166 !important;
     color: #ffe9b8 !important;

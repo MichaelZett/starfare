@@ -9,7 +9,7 @@ plugins {
     id 'net.ltgt.nullaway' version "${nullawayPluginVersion}"
     id 'org.sonarqube' version "${sonarqubePluginVersion}"
     id 'com.gorylenko.gradle-git-properties' version "${gitPropertiesPluginVersion}"
-    id 'com.github.ben-manes.versions' version "${benManesVersionsPluginVersion}"
+    id 'io.github.ben-manes.versions' version "${benManesVersionsPluginVersion}"
     id 'org.openrewrite.rewrite' version "${openrewriteVersion}"
 }
 
@@ -31,10 +31,19 @@ dependencyManagement {
         mavenBom "com.vaadin:vaadin-bom:${vaadinVersion}"
         mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
     }
+    dependencies {
+        dependency "org.flywaydb:flyway-core:${flywayVersion}"
+        dependency "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
+        dependency "org.postgresql:postgresql:${postgresqlVersion}"
+    }
 }
 
 springBoot {
     buildInfo()
+}
+
+configurations {
+    mockitoAgent
 }
 
 dependencies {
@@ -63,6 +72,10 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
     testImplementation 'org.testcontainers:testcontainers-postgresql'
 
+    mockitoAgent('org.mockito:mockito-core') {
+        transitive = false
+    }
+
     errorprone "com.google.errorprone:error_prone_core:${errorproneVersion}"
     errorprone "com.uber.nullaway:nullaway:${nullawayVersion}"
 
@@ -84,6 +97,7 @@ rewrite {
 
 test {
     useJUnitPlatform()
+    jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}"
     systemProperty 'user.language', 'en'
     systemProperty 'user.country', 'US'
     finalizedBy jacocoTestReport

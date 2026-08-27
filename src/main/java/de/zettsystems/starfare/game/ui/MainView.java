@@ -157,9 +157,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private void cancelOrder(PlannedOrder o) {
         int pid = currentSeat();
+        Integer standingOrderId = o.standingOrderId();
         boolean ok;
-        if (o.standing() && o.standingOrderId() != null) {
-            ok = pid >= 0 && game.removeStandingOrder(gameId, pid, o.standingOrderId());
+        if (o.standing() && standingOrderId != null) {
+            ok = pid >= 0 && game.removeStandingOrder(gameId, pid, standingOrderId);
         } else {
             ok = pid >= 0 && game.cancelOrder(gameId, pid, o.index());
         }
@@ -221,7 +222,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
         PlayerViewState view = game.viewFor(gameId, pid);
         VisibleSystem home = view.systems().stream()
-                .filter(s -> s.ownerId() != null && s.ownerId() == pid)
+                .filter(s -> Objects.equals(s.ownerId(), pid))
                 .findFirst().orElse(null);
         if (home == null) {
             return;

@@ -110,7 +110,8 @@ class GameServiceLeaveGameTest extends AbstractIntegrationTest {
         assertThat(game.leaveGame(id, 1)).isTrue();
         assertThat(playerIsAi(id, 1)).isTrue();
         assertThat(isJoined(id, 1)).isFalse();
-        assertThat(currentTurn(id) > turnBefore).as("leaveGame by sole human with no observers must trigger autoplay (turn advances)").isTrue();
+        assertThat(currentTurn(id)).as("leaveGame by sole human with no observers must trigger autoplay (turn advances)")
+                .isGreaterThan(turnBefore);
     }
 
     @Test
