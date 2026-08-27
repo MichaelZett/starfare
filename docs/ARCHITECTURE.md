@@ -9,7 +9,7 @@ this document covers the structural decisions.
   (`ui | application | domain | values | config`).
 - Clear flow: UI → `GameService` → services → `GameState`; no feedback
   loop back into the UI.
-- Thread safety centralised in the repository (`GameStateRepository`,
+- Thread safety centralised per game session (`GameSession`,
   `ReentrantReadWriteLock`).
 - Module boundaries verified by Spring Modulith (`ModulithTest`).
 
@@ -46,9 +46,12 @@ other modules. New modules need the same declaration.
 
 - `game.ui` → `GameService` → services
   (`turn/combat/fleet/ai/report`) → `GameState`.
-- `game.application.GameStateRepository` owns the only `GameState` and
-  all locks; access exclusively through `readState(fn)` /
-  `writeState(fn)`.
+- `game.application.GameRegistry` locates games. Each `GameSession` owns
+  exactly one `GameState` and its lock; access goes exclusively through
+  `GameRegistry.readState(gameId, fn)` / `writeState(gameId, fn)`.
+- `JpaGameSessionStore` caches sessions in memory and persists a
+  `GameStateSnapshot` JSON document after every write. At application
+  startup it recreates all sessions from `game_sessions`.
 - Services operate on the `GameState` instance passed in, never hold
   references between calls and never reach for the repository
   themselves. `GameService` is the only orchestrator.
@@ -87,8 +90,8 @@ running.
   package (they fit neither `ui` nor `application/domain/values`).
 - New game: wizard in `LobbyView` → `GameSetup` (`game.values`);
   `GameSetup.normalized()` clamps and defaults inputs.
-  `GameStateRepository.newGame(GameSetup)` is the only entry point (a
-  legacy overload just builds a default setup).
+  `GameRegistry.createGame(GameSetup, hostUsername, name)` is the main
+  entry point (the short overload builds a default, unnamed game).
 
 ## i18n
 
@@ -182,9 +185,10 @@ returns such a copy for read-only UI queries that need more than the
 
 ## Thread safety
 
-- Only `GameStateRepository` knows about locks.
-- Mutating operations always go through `repository.writeState(...)`;
-  reads through `readState(...)` or `snapshot()`.
+- Only `GameSession` knows about the lock. `GameRegistry` is the sole
+  entry point to it.
+- Mutating operations always go through `registry.writeState(...)`;
+  reads through `registry.readState(...)` or `GameService.snapshot(...)`.
 
 ## Test strategy
 

@@ -29,8 +29,8 @@ class PresenceTrackerTest {
         tracker.attach("alice");
 
         assertThat(tracker.isOnline("alice")).isTrue();
-        assertThat(events).hasSize(1);
-        assertThat(events.getFirst()).isEqualTo(new SocialEvent.PresenceChanged("alice", true));
+        assertThat(events).hasSize(1)
+                .first().isEqualTo(new SocialEvent.PresenceChanged("alice", true));
     }
 
     @Test

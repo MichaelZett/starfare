@@ -29,7 +29,8 @@ class BroadcasterTest {
         broadcaster.publish(new GameEvent.TurnAdvanced(id, 3));
 
         assertThat(received).hasSize(1);
-        assertThat(received.getFirst() instanceof GameEvent.TurnAdvanced t && t.turn() == 3).isTrue();
+        assertThat(received.getFirst()).isInstanceOfSatisfying(GameEvent.TurnAdvanced.class,
+                event -> assertThat(event.turn()).isEqualTo(3));
     }
 
     @Test

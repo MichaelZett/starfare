@@ -45,7 +45,7 @@ class FleetServiceTest {
         assertThat(state.getSystem(1).garrison()).isEqualTo(10); // unchanged
         assertThat(state.fleets()).isEmpty();            // no fleet yet
         assertThat(state.pendingOrders().get(1)).hasSize(1);
-        assertThat(state.pendingOrders().get(1).getFirst()).isInstanceOf(FleetOrder.Send.class);
+        assertThat(state.pendingOrders().get(1)).first().isInstanceOf(FleetOrder.Send.class);
     }
 
     @Test
@@ -116,7 +116,7 @@ class FleetServiceTest {
 
     @Test
     void addStandingOrderRequiresOwnedSource() {
-        assertThat(service.addStandingOrder(state, 1, 1, 2)).isGreaterThan(0);
+        assertThat(service.addStandingOrder(state, 1, 1, 2)).isPositive();
         assertThat(state.standingOrders().get(1)).hasSize(1);
         // foreign source is rejected
         assertThat(service.addStandingOrder(state, 1, 2, 1)).isEqualTo(-1);
@@ -171,7 +171,7 @@ class FleetServiceTest {
 
         var routed = service.applyStandingOrdersForProduction(state);
 
-        assertThat(routed).doesNotContain(1);
+        assertThat(routed).isEmpty();
         assertThat(state.standingOrders().get(1)).isEmpty();
         assertThat(state.fleets()).isEmpty();
     }

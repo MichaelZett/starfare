@@ -45,10 +45,11 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         int turn = state.turn();
         var players = List.copyOf(state.players());
         var systems = state.systems().stream().map(s -> {
-            String color = s.ownerId() == null ? null : playerById(state, s.ownerId()).colorHex();
+            Integer ownerId = s.ownerId();
+            String color = ownerId != null ? playerById(state, ownerId).colorHex() : null;
             return new VisibleSystem(
                     s.id(), s.name(), s.x(), s.y(),
-                    s.ownerId(), s.garrison(), s.productionPerTurn(),
+                    ownerId, s.garrison(), s.productionPerTurn(),
                     true, color, turn);
         }).toList();
         var fleets = List.copyOf(state.fleets());
@@ -76,8 +77,9 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             lastSeen = state.turn();
         } else {
             var intel = state.intel().getOrDefault(playerId, Map.of()).get(s.id());
-            if (intel != null && intel.ownerId() != null) {
-                color = playerById(state, intel.ownerId()).colorHex();
+            Integer intelOwnerId = intel != null ? intel.ownerId() : null;
+            if (intel != null && intelOwnerId != null) {
+                color = playerById(state, intelOwnerId).colorHex();
                 lastSeen = intel.turn();
             }
         }

@@ -40,7 +40,7 @@ class FriendshipRepositoryTest extends AbstractRepositoryTest {
         repository.save(new FriendshipEntity("alice", "bob", FriendshipStatus.ACCEPTED, "alice", NOW));
 
         // CHECK constraint enforces user_a < user_b, so the swapped query must miss
-        assertThat(repository.findByUserAAndUserB("bob", "alice")).isNotPresent();
+        assertThat(repository.findByUserAAndUserB("bob", "alice")).isEmpty();
     }
 
     @Test

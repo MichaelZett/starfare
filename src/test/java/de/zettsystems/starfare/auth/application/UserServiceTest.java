@@ -10,7 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class UserServiceTest extends AbstractIntegrationTest {
 
@@ -47,26 +47,26 @@ class UserServiceTest extends AbstractIntegrationTest {
 
     @Test
     void registerRejectsShortUsername() {
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> service.register("ab", "secret123", "A"));
+        assertThatThrownBy(() -> service.register("ab", "secret123", "A")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void registerRejectsInvalidCharactersInUsername() {
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> service.register("alice bob", "secret123", "A"));
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> service.register("alice@home", "secret123", "A"));
+        assertThatThrownBy(() -> service.register("alice bob", "secret123", "A")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.register("alice@home", "secret123", "A")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void registerRejectsShortPassword() {
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> service.register("alice", "short", "A"));
+        assertThatThrownBy(() -> service.register("alice", "short", "A")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void registerRejectsDuplicateUsername() {
         service.register("alice", "secret123", "A");
 
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> service.register("alice", "othersecret", "A"));
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> service.register("ALICE", "othersecret", "A"));
+        assertThatThrownBy(() -> service.register("alice", "othersecret", "A")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.register("ALICE", "othersecret", "A")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

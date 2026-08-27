@@ -41,7 +41,8 @@ class CombatResolverTest {
 
         assertThat(r.attackerWon()).isTrue();
         assertThat(r.defendersLeft()).isZero();
-        assertThat(r.attackersLeft() >= 95).as("expected attacker to keep almost all ships, got " + r.attackersLeft()).isTrue();
+        assertThat(r.attackersLeft()).as("expected attacker to keep almost all ships, got " + r.attackersLeft())
+                .isGreaterThanOrEqualTo(95);
     }
 
     @RepeatedTest(20)
@@ -50,15 +51,19 @@ class CombatResolverTest {
 
         assertThat(r.attackerWon()).isFalse();
         assertThat(r.attackersLeft()).isZero();
-        assertThat(r.defendersLeft() >= 95).as("expected defender to keep almost all ships, got " + r.defendersLeft()).isTrue();
+        assertThat(r.defendersLeft()).as("expected defender to keep almost all ships, got " + r.defendersLeft())
+                .isGreaterThanOrEqualTo(95);
     }
 
     @RepeatedTest(20)
     void survivorCountIsNeverNegativeOrAboveStartingForce() {
         CombatResolver.Result r = CombatResolver.resolve(50, 30);
 
-        assertThat(r.attackersLeft() >= 0 && r.attackersLeft() <= 50).isTrue();
-        assertThat(r.defendersLeft() >= 0 && r.defendersLeft() <= 30).isTrue();
+        assertThat(r.attackersLeft()).isGreaterThanOrEqualTo(0);
+
+        assertThat(r.attackersLeft()).isLessThanOrEqualTo(50);
+        assertThat(r.defendersLeft()).isGreaterThanOrEqualTo(0);
+        assertThat(r.defendersLeft()).isLessThanOrEqualTo(30);
         // exactly one side wipes the other in this model
         assertThat((r.attackersLeft() == 0) ^ (r.defendersLeft() == 0)).isTrue();
     }

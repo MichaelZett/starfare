@@ -11,10 +11,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -37,7 +34,8 @@ public class JpaGameSessionStore implements GameSessionStore {
             try {
                 GameStateSnapshot snapshot = objectMapper.readValue(entity.getStateJson(), GameStateSnapshot.class);
                 GameState state = GameState.fromSnapshot(snapshot);
-                GameId id = GameId.of(entity.getId());
+                String idValue = Objects.requireNonNull(entity.getId(), "Persisted game session must have an id");
+                GameId id = GameId.of(idValue);
                 cache.put(id, new GameSession(id, entity.getName(), entity.getHostUsername(), entity.getCreatedAt(), state));
             } catch (JacksonException e) {
                 throw new IllegalStateException("Failed to restore game session " + entity.getId() + " from DB", e);
