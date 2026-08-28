@@ -3,9 +3,7 @@ package de.zettsystems.starfare.game.ui;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
-import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
@@ -30,7 +28,7 @@ final class MapRenderer {
     }
 
     record Inputs(GameService game, GameId gameId,
-                  PlayerViewState view, @Nullable GameState gs,
+                  PlayerViewState view,
                   int playerId, boolean observer,
                   @Nullable VisibleSystem selectedFrom,
                   @Nullable Integer highlightedFleetId,
@@ -151,7 +149,7 @@ final class MapRenderer {
         map.add(buildLaneDiv(geom, color, tooltip, highlighted));
         map.add(buildFleetBadge(f, a, b, color, tooltip, in, highlighted));
 
-        if (!in.observer() && in.gs() != null && in.playerId() >= 0) {
+        if (!in.observer() && in.playerId() >= 0) {
             map.add(buildFleetHitArea(f, a.x(), a.y(), len, geom.angle, in));
         }
     }
@@ -253,15 +251,8 @@ final class MapRenderer {
     private static Div buildFleetHitArea(Fleet f, double ax, double ay, double len, double angle, Inputs in) {
         final int pid = in.playerId();
         final int fleetId = f.globalId();
-        GameState gs = in.gs();
-        if (gs == null) {
-            throw new IllegalStateException("buildFleetHitArea requires gs (guarded by caller)");
-        }
-        boolean launchedThisTurn = gs.fleets().stream()
-                .anyMatch(fl -> fl.globalId() == fleetId && fl.launchTurn() == gs.turn());
-        boolean waitPending = gs.waitThisTurn().contains(fleetId)
-                || gs.pendingOrders().getOrDefault(pid, List.of()).stream()
-                .anyMatch(o -> o instanceof FleetOrder.Wait w && w.fleetId() == fleetId);
+        boolean launchedThisTurn = f.launchTurn() == in.view().turn();
+        boolean waitPending = in.view().waitingFleetIds().contains(fleetId);
 
         Div hitArea = new Div();
         hitArea.addClassName("fleet-lane-hit");

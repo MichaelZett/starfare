@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.social.ui;
 
-import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -11,6 +10,7 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.ui.UiTexts;
@@ -93,7 +93,7 @@ public class InvitationsPanel extends VerticalLayout {
                     if (!invited.containsKey(viewer)) {
                         return java.util.stream.Stream.empty();
                     }
-                    String host = games.hostUsernameOf(gid).orElse(null);
+                    String host = games.hostPlayerIdOf(gid).orElse(null);
                     String name = games.gameNameOf(gid);
                     return java.util.stream.Stream.of(new PendingInvite(gid, name, host));
                 })

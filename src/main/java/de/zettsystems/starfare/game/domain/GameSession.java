@@ -17,19 +17,19 @@ import java.util.function.Function;
 public class GameSession {
     private final GameId id;
     private final String name;
-    private volatile @Nullable String hostUsername;
+    private volatile @Nullable String hostPlayerId;
     private final Instant createdAt;
     private final GameState state;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public GameSession(GameId id, String name, @Nullable String hostUsername, Instant createdAt) {
-        this(id, name, hostUsername, createdAt, new GameState());
+    public GameSession(GameId id, String name, @Nullable String hostPlayerId, Instant createdAt) {
+        this(id, name, hostPlayerId, createdAt, new GameState());
     }
 
-    public GameSession(GameId id, String name, @Nullable String hostUsername, Instant createdAt, GameState state) {
+    public GameSession(GameId id, String name, @Nullable String hostPlayerId, Instant createdAt, GameState state) {
         this.id = id;
         this.name = name;
-        this.hostUsername = hostUsername;
+        this.hostPlayerId = hostPlayerId;
         this.createdAt = createdAt;
         this.state = state;
     }
@@ -42,15 +42,15 @@ public class GameSession {
         return name;
     }
 
-    public @Nullable String hostUsername() {
-        return hostUsername;
+    public @Nullable String hostPlayerId() {
+        return hostPlayerId;
     }
 
     /**
      * Transfers the host role to {@code newHost} (null clears the host slot).
      */
     public void transferHostTo(@Nullable String newHost) {
-        this.hostUsername = newHost;
+        this.hostPlayerId = newHost;
     }
 
     public Instant createdAt() {

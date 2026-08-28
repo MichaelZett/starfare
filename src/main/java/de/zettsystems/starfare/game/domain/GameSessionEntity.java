@@ -21,7 +21,7 @@ public class GameSessionEntity extends AbstractBaseEntity<String> {
     private String name;
 
     @Column(name = "host_player_id", length = 30)
-    private @Nullable String hostUsername;
+    private @Nullable String hostPlayerId;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -33,10 +33,10 @@ public class GameSessionEntity extends AbstractBaseEntity<String> {
     protected GameSessionEntity() {}
 
     @SuppressWarnings("NullAway.Init")
-    public GameSessionEntity(String id, String name, @Nullable String hostUsername, Instant createdAt, String stateJson) {
+    public GameSessionEntity(String id, String name, @Nullable String hostPlayerId, Instant createdAt, String stateJson) {
         this.id = id;
         this.name = name;
-        this.hostUsername = hostUsername;
+        this.hostPlayerId = hostPlayerId;
         this.createdAt = createdAt;
         this.stateJson = stateJson;
     }
@@ -45,8 +45,8 @@ public class GameSessionEntity extends AbstractBaseEntity<String> {
     public String getId() { return id; }
     public String getName() { return name; }
 
-    public @Nullable String getHostUsername() {
-        return hostUsername;
+    public @Nullable String getHostPlayerId() {
+        return hostPlayerId;
     }
     public Instant getCreatedAt() { return createdAt; }
     public String getStateJson() { return stateJson; }

@@ -25,7 +25,7 @@ class UserPreferencesRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void findByUsernameReturnsStoredPreference() {
+    void findByIdReturnsStoredPreference() {
         repository.save(new UserPreferencesEntity("alice", Visibility.FRIENDS_ONLY, NOW));
 
         Optional<UserPreferencesEntity> found = repository.findById("alice");

@@ -46,10 +46,10 @@ class MessageServiceTest {
     }
 
     @Test
-    void normalisesUsernamesToLowercase() {
+    void trimsPlayerIds() {
         presence.attach("bob");
 
-        MessageService.SendResult result = service.send(" ALICE ", "BoB", "hi");
+        MessageService.SendResult result = service.send(" alice ", " bob ", "hi");
 
         assertThat(result).isEqualTo(MessageService.SendResult.DELIVERED);
         assertThat(last()).isInstanceOf(SocialEvent.DirectMessage.class);
@@ -169,16 +169,14 @@ class MessageServiceTest {
             if (observer == null || target == null) {
                 return false;
             }
-            if (observer.equalsIgnoreCase(target)) {
+            if (observer.equals(target)) {
                 return true;
             }
             return !hiddenPairs.contains(pair(observer, target));
         }
 
         private String pair(String a, String b) {
-            String la = a.toLowerCase();
-            String lb = b.toLowerCase();
-            return la.compareTo(lb) <= 0 ? la + "|" + lb : lb + "|" + la;
+            return a.compareTo(b) <= 0 ? a + "|" + b : b + "|" + a;
         }
     }
 

@@ -21,10 +21,10 @@ public final class DirectMessageEntity extends AbstractBaseEntity<Long> {
     private Long id;
 
     @Column(name = "sender_player_id", nullable = false, length = 30)
-    private String senderUsername;
+    private String senderPlayerId;
 
     @Column(name = "recipient_player_id", nullable = false, length = 30)
-    private String recipientUsername;
+    private String recipientPlayerId;
 
     @Column(nullable = false, length = 1000)
     private String text;
@@ -37,9 +37,9 @@ public final class DirectMessageEntity extends AbstractBaseEntity<Long> {
     }
 
     @SuppressWarnings("NullAway.Init")
-    public DirectMessageEntity(String senderUsername, String recipientUsername, String text, Instant sentAt) {
-        this.senderUsername = senderUsername;
-        this.recipientUsername = recipientUsername;
+    public DirectMessageEntity(String senderPlayerId, String recipientPlayerId, String text, Instant sentAt) {
+        this.senderPlayerId = senderPlayerId;
+        this.recipientPlayerId = recipientPlayerId;
         this.text = text;
         this.sentAt = sentAt;
     }
@@ -49,12 +49,12 @@ public final class DirectMessageEntity extends AbstractBaseEntity<Long> {
         return id;
     }
 
-    public String getSenderUsername() {
-        return senderUsername;
+    public String getSenderPlayerId() {
+        return senderPlayerId;
     }
 
-    public String getRecipientUsername() {
-        return recipientUsername;
+    public String getRecipientPlayerId() {
+        return recipientPlayerId;
     }
 
     public String getText() {

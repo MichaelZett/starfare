@@ -6,10 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest
 @Import(SyncAsyncTestConfig.class)
+// Profil-Datei statt application.yaml: eine gleichnamige Test-Ressource würde die
+// Haupt-Konfiguration komplett verdecken (nur die erste Datei auf dem Classpath zählt).
+@ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
 
     @ServiceConnection

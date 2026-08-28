@@ -21,9 +21,9 @@ public sealed interface GameEvent {
 
     record SeatAbandoned(GameId gameId, int playerId) implements GameEvent {}
 
-    record ObserverJoined(GameId gameId, String username) implements GameEvent {}
+    record ObserverJoined(GameId gameId, String playerId) implements GameEvent {}
 
-    record ObserverLeft(GameId gameId, String username) implements GameEvent {}
+    record ObserverLeft(GameId gameId, String playerId) implements GameEvent {}
 
     record GameCreated(GameId gameId) implements GameEvent {}
 
@@ -31,6 +31,6 @@ public sealed interface GameEvent {
 
     record GameStarted(GameId gameId) implements GameEvent {}
 
-    record HostChanged(GameId gameId, @Nullable String newHostUsername) implements GameEvent {
+    record HostChanged(GameId gameId, @Nullable String newHostPlayerId) implements GameEvent {
     }
 }

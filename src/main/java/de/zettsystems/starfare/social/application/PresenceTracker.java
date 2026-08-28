@@ -6,11 +6,11 @@ import java.util.List;
 
 public interface PresenceTracker {
 
-    void attach(String username);
+    void attach(String playerId);
 
-    void detach(String username);
+    void detach(String playerId);
 
-    boolean isOnline(String username);
+    boolean isOnline(String playerId);
 
     List<UserPresence> onlineUsers();
 }

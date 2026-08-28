@@ -23,7 +23,7 @@ class JpaMessageStore implements MessageStore {
     @Override
     public List<DirectMessage> conversation(String firstUser, String secondUser) {
         return repository.findConversation(firstUser, secondUser).stream()
-                .map(message -> new DirectMessage(message.getSenderUsername(), message.getRecipientUsername(),
+                .map(message -> new DirectMessage(message.getSenderPlayerId(), message.getRecipientPlayerId(),
                         message.getText(), message.getSentAt()))
                 .toList();
     }

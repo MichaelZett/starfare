@@ -6,6 +6,9 @@ import java.util.List;
  * Centralized game configuration values for default setup and tuning knobs.
  */
 public final class GameConfig {
+    /** Map extent in pixels; star systems are placed within [0, MAX_X) x [0, MAX_Y). */
+    public static final float MAX_X = 3200.0F;
+    public static final float MAX_Y = 2000.0F;
     public static final int DEFAULT_SYSTEM_COUNT = 24;
     public static final int DEFAULT_HUMAN_PLAYERS = 1;
     public static final int DEFAULT_AI_PLAYERS = 2;

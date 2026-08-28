@@ -24,64 +24,65 @@ public class DefaultInvitationService implements InvitationService {
     }
 
     @Override
-    public Optional<Integer> inviteUser(GameId gameId, String ownerUsername, String invitee) {
-        if (!isHost(gameId, ownerUsername) || invitee == null || invitee.isBlank()) {
+    public Optional<Integer> inviteUser(GameId gameId, String hostPlayerId, String inviteePlayerId) {
+        if (!isHost(gameId, hostPlayerId) || inviteePlayerId == null || inviteePlayerId.isBlank()) {
             return Optional.empty();
         }
-        if (ownerUsername.equalsIgnoreCase(invitee)) {
+        if (hostPlayerId.equals(inviteePlayerId)) {
             return Optional.empty();
         }
-        if (!visibility.canSee(ownerUsername, invitee)) {
+        if (!visibility.canSee(hostPlayerId, inviteePlayerId)) {
             return Optional.empty();
         }
-        Optional<Integer> seat = games.inviteUser(gameId, invitee);
-        seat.ifPresent(s -> broadcaster.publish(new SocialEvent.InviteReceived(gameId, ownerUsername, invitee, s)));
+        Optional<Integer> seat = games.inviteUser(gameId, inviteePlayerId);
+        seat.ifPresent(s ->
+                broadcaster.publish(new SocialEvent.InviteReceived(gameId, hostPlayerId, inviteePlayerId, s)));
         return seat;
     }
 
     @Override
-    public boolean revokeInvite(GameId gameId, String ownerUsername, String invitee) {
-        if (!isHost(gameId, ownerUsername) || invitee == null) {
+    public boolean revokeInvite(GameId gameId, String hostPlayerId, String inviteePlayerId) {
+        if (!isHost(gameId, hostPlayerId) || inviteePlayerId == null) {
             return false;
         }
-        boolean removed = games.revokeInvite(gameId, invitee).isPresent();
+        boolean removed = games.revokeInvite(gameId, inviteePlayerId).isPresent();
         if (removed) {
-            broadcaster.publish(new SocialEvent.InviteWithdrawn(gameId, ownerUsername, invitee));
+            broadcaster.publish(new SocialEvent.InviteWithdrawn(gameId, hostPlayerId, inviteePlayerId));
         }
         return removed;
     }
 
     @Override
-    public boolean acceptInvite(GameId gameId, String invitee) {
-        if (invitee == null || invitee.isBlank()) {
+    public boolean acceptInvite(GameId gameId, String inviteePlayerId) {
+        if (inviteePlayerId == null || inviteePlayerId.isBlank()) {
             return false;
         }
-        if (games.seatReservedFor(gameId, invitee).isEmpty()) {
+        if (games.seatReservedFor(gameId, inviteePlayerId).isEmpty()) {
             return false;
         }
-        Optional<Integer> seat = games.joinGame(gameId, invitee);
-        seat.ifPresent(s -> broadcaster.publish(new SocialEvent.InviteAccepted(gameId, invitee, s)));
+        Optional<Integer> seat = games.joinGame(gameId, inviteePlayerId);
+        seat.ifPresent(s -> broadcaster.publish(new SocialEvent.InviteAccepted(gameId, inviteePlayerId, s)));
         return seat.isPresent();
     }
 
     @Override
-    public boolean declineInvite(GameId gameId, String invitee) {
-        if (invitee == null) {
+    public boolean declineInvite(GameId gameId, String inviteePlayerId) {
+        if (inviteePlayerId == null) {
             return false;
         }
-        boolean removed = games.revokeInvite(gameId, invitee).isPresent();
+        boolean removed = games.revokeInvite(gameId, inviteePlayerId).isPresent();
         if (removed) {
-            broadcaster.publish(new SocialEvent.InviteDeclined(gameId, invitee));
+            broadcaster.publish(new SocialEvent.InviteDeclined(gameId, inviteePlayerId));
         }
         return removed;
     }
 
-    private boolean isHost(GameId gameId, String username) {
-        if (username == null || username.isBlank()) {
+    private boolean isHost(GameId gameId, String playerId) {
+        if (playerId == null || playerId.isBlank()) {
             return false;
         }
-        return games.hostUsernameOf(gameId)
-                .map(host -> host.equalsIgnoreCase(username))
+        return games.hostPlayerIdOf(gameId)
+                .map(host -> host.equals(playerId))
                 .orElse(false);
     }
 }

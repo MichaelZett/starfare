@@ -21,6 +21,12 @@ class LayerRulesTest {
             .should().dependOnClassesThat().resideInAPackage("org.springframework..");
 
     @ArchTest
+    static final ArchRule ui_must_not_depend_on_domain = noClasses()
+            .that().resideInAPackage("..ui..")
+            .should().dependOnClassesThat().resideInAPackage("..domain..")
+            .because("the UI consumes immutable view models from ..values.. built by the application layer");
+
+    @ArchTest
     static final ArchRule application_top_level_classes_must_be_spring_beans = classes()
             .that().resideInAPackage("..application..")
             .and().areTopLevelClasses()

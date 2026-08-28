@@ -2,7 +2,7 @@ package de.zettsystems.starfare.social.application;
 
 import de.zettsystems.starfare.social.values.DirectMessage;
 import de.zettsystems.starfare.social.values.SocialEvent;
-import de.zettsystems.starfare.social.values.Usernames;
+import de.zettsystems.starfare.social.values.PlayerIds;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -25,8 +25,8 @@ public class DefaultMessageService implements MessageService {
 
     @Override
     public SendResult send(String from, String to, String text) {
-        String f = Usernames.normalize(from);
-        String t = Usernames.normalize(to);
+        String f = PlayerIds.normalize(from);
+        String t = PlayerIds.normalize(to);
         if (f == null || t == null || f.equals(t)) {
             return SendResult.REJECTED;
         }
@@ -51,8 +51,8 @@ public class DefaultMessageService implements MessageService {
 
     @Override
     public java.util.List<DirectMessage> conversation(String firstUser, String secondUser) {
-        String first = Usernames.normalize(firstUser);
-        String second = Usernames.normalize(secondUser);
+        String first = PlayerIds.normalize(firstUser);
+        String second = PlayerIds.normalize(secondUser);
         if (first == null || second == null || first.equals(second)) {
             return java.util.List.of();
         }

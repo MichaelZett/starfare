@@ -4,7 +4,7 @@ import de.zettsystems.starfare.social.values.Visibility;
 
 public interface UserPreferencesService {
 
-    Visibility getVisibility(String username);
+    Visibility getVisibility(String playerId);
 
-    void setVisibility(String username, Visibility visibility);
+    void setVisibility(String playerId, Visibility visibility);
 }

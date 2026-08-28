@@ -4,9 +4,12 @@ import de.zettsystems.starfare.report.values.TurnReport;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Snapshot tailored to a single player for UI rendering, including game-over state.
+ * {@code empire} is {@link EmpireStats#NONE} for observers; {@code waitingFleetIds} lists the
+ * player's fleets that already wait this turn or have a pending wait order.
  */
 public record PlayerViewState(
         int turn,
@@ -17,5 +20,7 @@ public record PlayerViewState(
         boolean gameOver,
         @Nullable Integer winnerId,
         List<PlannedOrder> plannedOrders,
-        List<StandingOrderView> standingOrders
+        List<StandingOrderView> standingOrders,
+        EmpireStats empire,
+        Set<Integer> waitingFleetIds
 ) { }

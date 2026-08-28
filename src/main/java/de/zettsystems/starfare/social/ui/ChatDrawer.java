@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.social.ui;
 
-import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
@@ -14,6 +13,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.game.values.Subscription;
@@ -113,15 +113,14 @@ public class ChatDrawer extends VerticalLayout {
 
     public void openChatWith(String otherUser) {
         String me = UserContext.currentPlayerId().orElse(null);
-        if (me == null || otherUser == null || otherUser.equalsIgnoreCase(me)) {
+        if (me == null || otherUser == null || otherUser.equals(me)) {
             return;
         }
-        String key = otherUser.toLowerCase(Locale.ROOT);
-        Conversation conversation = conversations.computeIfAbsent(key,
+        Conversation conversation = conversations.computeIfAbsent(otherUser,
                 _ -> new Conversation(otherUser, players.displayName(otherUser)));
         conversation.messages.clear();
         conversation.messages.addAll(messages.conversation(me, otherUser));
-        setActive(key);
+        setActive(otherUser);
     }
 
     private void handleIncoming(SocialEvent.DirectMessage dm) {
@@ -129,14 +128,13 @@ public class ChatDrawer extends VerticalLayout {
         if (me == null) {
             return;
         }
-        String meLc = me.toLowerCase(Locale.ROOT);
-        if (!dm.from().equals(meLc) && !dm.to().equals(meLc)) {
+        if (!dm.from().equals(me) && !dm.to().equals(me)) {
             return;
         }
-        String other = dm.from().equals(meLc) ? dm.to() : dm.from();
+        String other = dm.from().equals(me) ? dm.to() : dm.from();
         Conversation conv = conversations.computeIfAbsent(other, _ -> new Conversation(other, players.displayName(other)));
         conv.messages.add(new DirectMessage(dm.from(), dm.to(), dm.text(), dm.sentAt()));
-        if (!other.equals(activeUser) && !dm.from().equals(meLc)) {
+        if (!other.equals(activeUser) && !dm.from().equals(me)) {
             conv.unread++;
         }
         if (other.equals(activeUser)) {
@@ -179,7 +177,7 @@ public class ChatDrawer extends VerticalLayout {
     }
 
     private void renderMessages(Conversation conv) {
-        String me = UserContext.currentPlayerId().orElse("").toLowerCase(Locale.ROOT);
+        String me = UserContext.currentPlayerId().orElse("");
         messagesView.removeAll();
         if (conv.messages.isEmpty()) {
             Span empty = new Span(I18n.t(UiTexts.CHAT_EMPTY_CONVERSATION));
@@ -241,7 +239,7 @@ public class ChatDrawer extends VerticalLayout {
         }
 
         String key() {
-            return playerId.toLowerCase(Locale.ROOT);
+            return playerId;
         }
     }
 }

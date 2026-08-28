@@ -22,7 +22,7 @@ public class DefaultVisibilityFilter implements VisibilityFilter {
         if (observer == null || target == null) {
             return false;
         }
-        if (observer.equalsIgnoreCase(target)) {
+        if (observer.equals(target)) {
             return true;
         }
         if (friendships.isBlockedBetween(observer, target)) {

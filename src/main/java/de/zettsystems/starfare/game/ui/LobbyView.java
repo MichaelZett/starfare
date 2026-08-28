@@ -21,9 +21,9 @@ import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.Subscription;
 import de.zettsystems.starfare.i18n.I18n;
@@ -45,6 +45,7 @@ public class LobbyView extends VerticalLayout {
     private final InvitationService invitationService;
     private final PresenceTracker presence;
     private final VisibilityFilter visibilityFilter;
+    private final PlayerDirectory players;
     private final SocialBroadcaster socialBroadcaster;
     private final Grid<LobbyGameRow> grid = new Grid<>(LobbyGameRow.class, false);
     private final Div emptyState = new Div();
@@ -65,6 +66,7 @@ public class LobbyView extends VerticalLayout {
         this.invitationService = invitationService;
         this.presence = presence;
         this.visibilityFilter = visibilityFilter;
+        this.players = players;
         this.socialBroadcaster = socialBroadcaster;
         this.chatDrawer = new ChatDrawer(messageService, socialBroadcaster, players);
         this.onlineUsersPanel = new OnlineUsersPanel(presence, socialBroadcaster, visibilityFilter,
@@ -176,13 +178,9 @@ public class LobbyView extends VerticalLayout {
     }
 
     private void refresh() {
-        String username = UserContext.currentPlayerId().orElse(null);
+        String playerId = UserContext.currentPlayerId().orElse(null);
         List<LobbyGameRow> rows = game.listGames().stream()
-                .map(id -> {
-                    GameState state = game.snapshot(id);
-                    String host = game.hostUsernameOf(id).orElse(null);
-                    return LobbyGameRow.from(id, game.gameNameOf(id), state, username, host);
-                })
+                .map(id -> LobbyGameRow.from(game.summaryOf(id), playerId))
                 .toList();
         boolean any = !rows.isEmpty();
         grid.setVisible(any);
@@ -254,8 +252,8 @@ public class LobbyView extends VerticalLayout {
 
     private Button buildJoinButton(LobbyGameRow row) {
         Button join = new Button(I18n.t(UiTexts.LOBBY_ACTION_JOIN), _ -> {
-            String username = UserContext.currentPlayerId().orElse(null);
-            if (game.joinGame(row.gameId(), username).isEmpty()) {
+            String playerId = UserContext.currentPlayerId().orElse(null);
+            if (game.joinGame(row.gameId(), playerId).isEmpty()) {
                 Notification.show(I18n.t(UiTexts.LOBBY_JOIN_FAILED));
             } else {
                 Notification.show(I18n.t(UiTexts.LOBBY_JOINED));
@@ -285,8 +283,8 @@ public class LobbyView extends VerticalLayout {
 
     private Button buildObserveButton(LobbyGameRow row) {
         Button observe = new Button(I18n.t(UiTexts.LOBBY_ACTION_OBSERVE), _ -> {
-            String username = UserContext.currentPlayerId().orElse(null);
-            if (!game.observeGame(row.gameId(), username)) {
+            String playerId = UserContext.currentPlayerId().orElse(null);
+            if (!game.observeGame(row.gameId(), playerId)) {
                 Notification.show(I18n.t(UiTexts.LOBBY_OBSERVE_FAILED));
                 return;
             }
@@ -301,8 +299,8 @@ public class LobbyView extends VerticalLayout {
 
     private Button buildAbortButton(LobbyGameRow row) {
         Button abort = new Button(I18n.t(UiTexts.LOBBY_ACTION_ABORT), _ -> {
-            String username = UserContext.currentPlayerId().orElse(null);
-            if (!game.abortGame(row.gameId(), username)) {
+            String playerId = UserContext.currentPlayerId().orElse(null);
+            if (!game.abortGame(row.gameId(), playerId)) {
                 Notification.show(I18n.t(UiTexts.LOBBY_ABORT_DENIED));
                 return;
             }
@@ -326,12 +324,12 @@ public class LobbyView extends VerticalLayout {
     }
 
     private void openManageDialog(LobbyGameRow row) {
-        String username = UserContext.currentPlayerId().orElse(null);
-        if (username == null) {
+        String playerId = UserContext.currentPlayerId().orElse(null);
+        if (playerId == null) {
             return;
         }
-        ManageGameDialog dialog = new ManageGameDialog(row.gameId(), username, game, invitationService,
-                presence, visibilityFilter, broadcaster, socialBroadcaster);
+        ManageGameDialog dialog = new ManageGameDialog(row.gameId(), playerId, game, invitationService,
+                presence, visibilityFilter, broadcaster, socialBroadcaster, players);
         dialog.open();
     }
 
@@ -345,28 +343,22 @@ public class LobbyView extends VerticalLayout {
                                 boolean knownToCurrentUser, boolean hasOpenHumanSeat,
                                 boolean observersAllowed, boolean reentryAllowed,
                                 boolean isHostedByCurrentUser, boolean hasHost) {
-        static LobbyGameRow from(GameId gameId, String name, GameState state,
-                                 @Nullable String username, @Nullable String host) {
-            String players = state.players().stream()
+        static LobbyGameRow from(GameSummary summary, @Nullable String playerId) {
+            String players = summary.players().stream()
                     .map(LobbyGameRow::playerLabel)
                     .collect(Collectors.joining(", "));
-            boolean canStart = !state.started() && state.players().stream()
-                    .filter(p -> !p.ai())
-                    .map(Player::id)
-                    .allMatch(pid -> state.joinedHumanPlayerIds().contains(pid));
-            Integer seat = username == null ? null : state.seatByUser().get(username);
-            boolean joinedByCurrent = seat != null && state.joinedHumanPlayerIds().contains(seat);
+            boolean canStart = !summary.started() && summary.allHumansJoined();
+            Integer seat = playerId == null ? null : summary.seatByPlayer().get(playerId);
+            boolean joinedByCurrent = seat != null && summary.joinedHumanSeats().contains(seat);
             boolean known = seat != null;
-            boolean openSeat = state.players().stream()
-                    .filter(p -> !p.ai())
-                    .map(Player::id)
-                    .anyMatch(pid -> !state.joinedHumanPlayerIds().contains(pid));
-            String displayName = name == null || name.isBlank() ? GameConfig.DEFAULT_GAME_NAME : name;
+            String name = summary.name();
+            String displayName = name.isBlank() ? GameConfig.DEFAULT_GAME_NAME : name;
+            String host = summary.hostPlayerId();
             boolean hasHost = host != null && !host.isBlank();
-            boolean hostedByCurrent = hasHost && username != null && host != null && host.equalsIgnoreCase(username);
-            return new LobbyGameRow(gameId, displayName, players, state.turn(), state.gameOver(),
-                    state.started(), canStart, joinedByCurrent, known, openSeat, state.observersAllowed(),
-                    state.reentryAllowed(), hostedByCurrent, hasHost);
+            boolean hostedByCurrent = hasHost && host != null && host.equals(playerId);
+            return new LobbyGameRow(summary.gameId(), displayName, players, summary.turn(), summary.gameOver(),
+                    summary.started(), canStart, joinedByCurrent, known, summary.hasOpenHumanSeat(),
+                    summary.observersAllowed(), summary.reentryAllowed(), hostedByCurrent, hasHost);
         }
 
         private static String playerLabel(Player player) {

@@ -27,11 +27,11 @@ class UserPreferencesServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void setVisibilityPersistsAndNormalisesUsername() {
-        service.setVisibility("Alice", Visibility.FRIENDS_ONLY);
+    void setVisibilityPersistsAndTrimsPlayerId() {
+        service.setVisibility(" alice ", Visibility.FRIENDS_ONLY);
 
         assertThat(service.getVisibility("alice")).isEqualTo(Visibility.FRIENDS_ONLY);
-        assertThat(service.getVisibility("ALICE")).isEqualTo(Visibility.FRIENDS_ONLY);
+        assertThat(service.getVisibility(" alice ")).isEqualTo(Visibility.FRIENDS_ONLY);
     }
 
     @Test

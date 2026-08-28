@@ -4,7 +4,7 @@ import de.zettsystems.starfare.social.domain.FriendshipEntity;
 import de.zettsystems.starfare.social.values.Friendship;
 import de.zettsystems.starfare.social.values.FriendshipStatus;
 import de.zettsystems.starfare.social.values.SocialEvent;
-import de.zettsystems.starfare.social.values.Usernames;
+import de.zettsystems.starfare.social.values.PlayerIds;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,13 +26,13 @@ public class DefaultFriendshipService implements FriendshipService {
     @Override
     @Transactional
     public boolean request(String from, String to) {
-        String a = Usernames.normalize(from);
-        String b = Usernames.normalize(to);
+        String a = PlayerIds.normalize(from);
+        String b = PlayerIds.normalize(to);
         if (a == null || b == null || a.equals(b)) {
             return false;
         }
         String[] pair = canonical(a, b);
-        Optional<FriendshipEntity> existing = repository.findByUserAAndUserB(pair[0], pair[1]);
+        Optional<FriendshipEntity> existing = repository.findByPlayerAAndPlayerB(pair[0], pair[1]);
         if (existing.isPresent()) {
             return false;
         }
@@ -45,13 +45,13 @@ public class DefaultFriendshipService implements FriendshipService {
     @Override
     @Transactional
     public boolean accept(String accepter, String other) {
-        String self = Usernames.normalize(accepter);
-        String o = Usernames.normalize(other);
+        String self = PlayerIds.normalize(accepter);
+        String o = PlayerIds.normalize(other);
         if (self == null || o == null) {
             return false;
         }
         String[] pair = canonical(self, o);
-        Optional<FriendshipEntity> existing = repository.findByUserAAndUserB(pair[0], pair[1]);
+        Optional<FriendshipEntity> existing = repository.findByPlayerAAndPlayerB(pair[0], pair[1]);
         if (existing.isEmpty()) {
             return false;
         }
@@ -71,13 +71,13 @@ public class DefaultFriendshipService implements FriendshipService {
     @Override
     @Transactional
     public boolean decline(String decliner, String other) {
-        String self = Usernames.normalize(decliner);
-        String o = Usernames.normalize(other);
+        String self = PlayerIds.normalize(decliner);
+        String o = PlayerIds.normalize(other);
         if (self == null || o == null) {
             return false;
         }
         String[] pair = canonical(self, o);
-        Optional<FriendshipEntity> existing = repository.findByUserAAndUserB(pair[0], pair[1]);
+        Optional<FriendshipEntity> existing = repository.findByPlayerAAndPlayerB(pair[0], pair[1]);
         if (existing.isEmpty()) {
             return false;
         }
@@ -96,13 +96,13 @@ public class DefaultFriendshipService implements FriendshipService {
     @Override
     @Transactional
     public boolean remove(String actor, String other) {
-        String self = Usernames.normalize(actor);
-        String o = Usernames.normalize(other);
+        String self = PlayerIds.normalize(actor);
+        String o = PlayerIds.normalize(other);
         if (self == null || o == null) {
             return false;
         }
         String[] pair = canonical(self, o);
-        Optional<FriendshipEntity> existing = repository.findByUserAAndUserB(pair[0], pair[1]);
+        Optional<FriendshipEntity> existing = repository.findByPlayerAAndPlayerB(pair[0], pair[1]);
         if (existing.isEmpty()) {
             return false;
         }
@@ -119,13 +119,13 @@ public class DefaultFriendshipService implements FriendshipService {
     @Override
     @Transactional
     public boolean block(String blocker, String other) {
-        String self = Usernames.normalize(blocker);
-        String o = Usernames.normalize(other);
+        String self = PlayerIds.normalize(blocker);
+        String o = PlayerIds.normalize(other);
         if (self == null || o == null || self.equals(o)) {
             return false;
         }
         String[] pair = canonical(self, o);
-        Optional<FriendshipEntity> existing = repository.findByUserAAndUserB(pair[0], pair[1]);
+        Optional<FriendshipEntity> existing = repository.findByPlayerAAndPlayerB(pair[0], pair[1]);
         FriendshipEntity entity = existing.orElseGet(() ->
                 new FriendshipEntity(pair[0], pair[1], FriendshipStatus.BLOCKED, self, Instant.now()));
         entity.block(self, Instant.now());
@@ -137,13 +137,13 @@ public class DefaultFriendshipService implements FriendshipService {
     @Override
     @Transactional
     public boolean unblock(String actor, String other) {
-        String self = Usernames.normalize(actor);
-        String o = Usernames.normalize(other);
+        String self = PlayerIds.normalize(actor);
+        String o = PlayerIds.normalize(other);
         if (self == null || o == null) {
             return false;
         }
         String[] pair = canonical(self, o);
-        Optional<FriendshipEntity> existing = repository.findByUserAAndUserB(pair[0], pair[1]);
+        Optional<FriendshipEntity> existing = repository.findByPlayerAAndPlayerB(pair[0], pair[1]);
         if (existing.isEmpty()) {
             return false;
         }
@@ -179,23 +179,23 @@ public class DefaultFriendshipService implements FriendshipService {
     }
 
     private Optional<Friendship> lookupStatus(String user1, String user2) {
-        String a = Usernames.normalize(user1);
-        String b = Usernames.normalize(user2);
+        String a = PlayerIds.normalize(user1);
+        String b = PlayerIds.normalize(user2);
         if (a == null || b == null) {
             return Optional.empty();
         }
         String[] pair = canonical(a, b);
-        return repository.findByUserAAndUserB(pair[0], pair[1]).map(this::toValue);
+        return repository.findByPlayerAAndPlayerB(pair[0], pair[1]).map(this::toValue);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Friendship> incomingRequests(String username) {
-        String self = Usernames.normalize(username);
+    public List<Friendship> incomingRequests(String playerId) {
+        String self = PlayerIds.normalize(playerId);
         if (self == null) {
             return List.of();
         }
-        return repository.findByUserAndStatus(self, FriendshipStatus.PENDING).stream()
+        return repository.findByPlayerAndStatus(self, FriendshipStatus.PENDING).stream()
                 .filter(e -> !self.equals(e.getRequestedBy()))
                 .map(this::toValue)
                 .toList();
@@ -203,12 +203,12 @@ public class DefaultFriendshipService implements FriendshipService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Friendship> friendsOf(String username) {
-        String self = Usernames.normalize(username);
+    public List<Friendship> friendsOf(String playerId) {
+        String self = PlayerIds.normalize(playerId);
         if (self == null) {
             return List.of();
         }
-        return repository.findByUserAndStatus(self, FriendshipStatus.ACCEPTED).stream()
+        return repository.findByPlayerAndStatus(self, FriendshipStatus.ACCEPTED).stream()
                 .map(this::toValue)
                 .toList();
     }
@@ -218,6 +218,6 @@ public class DefaultFriendshipService implements FriendshipService {
     }
 
     private Friendship toValue(FriendshipEntity e) {
-        return new Friendship(e.getUserA(), e.getUserB(), e.getStatus(), e.getRequestedBy());
+        return new Friendship(e.getPlayerA(), e.getPlayerB(), e.getStatus(), e.getRequestedBy());
     }
 }

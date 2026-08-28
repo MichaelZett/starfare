@@ -10,11 +10,11 @@ import java.util.Optional;
 
 interface FriendshipRepository extends JpaRepository<FriendshipEntity, Long> {
 
-    Optional<FriendshipEntity> findByUserAAndUserB(String userA, String userB);
+    Optional<FriendshipEntity> findByPlayerAAndPlayerB(String playerA, String playerB);
 
-    @Query("select f from FriendshipEntity f where (f.userA = :user or f.userB = :user) and f.status = :status")
-    List<FriendshipEntity> findByUserAndStatus(String user, FriendshipStatus status);
+    @Query("select f from FriendshipEntity f where (f.playerA = :user or f.playerB = :user) and f.status = :status")
+    List<FriendshipEntity> findByPlayerAndStatus(String user, FriendshipStatus status);
 
-    @Query("select f from FriendshipEntity f where f.userA = :user or f.userB = :user")
-    List<FriendshipEntity> findByUser(String user);
+    @Query("select f from FriendshipEntity f where f.playerA = :user or f.playerB = :user")
+    List<FriendshipEntity> findByPlayer(String user);
 }

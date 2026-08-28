@@ -96,7 +96,7 @@ running.
   package (they fit neither `ui` nor `application/domain/values`).
 - New game: wizard in `LobbyView` → `GameSetup` (`game.values`);
   `GameSetup.normalized()` clamps and defaults inputs.
-  `GameRegistry.createGame(GameSetup, hostUsername, name)` is the main
+  `GameRegistry.createGame(GameSetup, hostPlayerId, name)` is the main
   entry point (the short overload builds a default, unnamed game).
 
 ## i18n
@@ -155,14 +155,14 @@ itself.
 ### Presence
 
 `PresenceTracker` rides on Vaadin `UI` attach/detach with a ref-count
-per username (multiple tabs count). `SocialBroadcaster` is the global
+per player id (multiple tabs count). `SocialBroadcaster` is the global
 fan-out for `SocialEvent`s (`PresenceChanged`, `FriendRequestReceived`,
 `FriendshipUpdated`, `VisibilityUpdated`, `DirectMessage`,
 `InviteReceived/Withdrawn/Accepted/Declined`).
 
 ### Owner mechanics and invites
 
-- `GameSession.hostUsername` is the owner; kick/abort/invite are
+- `GameSession.hostPlayerId` is the owner; kick/abort/invite are
   owner-only.
 - Auto-transfer on `leaveGame`: next human by seat ID. If there are
   neither humans nor observers left, the game plays itself out via
@@ -178,9 +178,13 @@ fan-out for `SocialEvent`s (`PresenceChanged`, `FriendRequestReceived`,
 
 `GameState.copyOf` is a **shallow** copy of the collections (elements
 like `StarSystem` and `Fleet` are records and effectively immutable),
-with a **deep** copy of the `intel` maps. `GameService.snapshot()`
-returns such a copy for read-only UI queries that need more than the
-`PlayerViewState` (e.g. `waitThisTurn`). Snapshots must not be mutated.
+with a **deep** copy of the `intel` maps; it backs the persistence
+snapshots. The UI never sees a `GameState`: it consumes the immutable
+view models in `game.values` only — `PlayerViewState` (including
+`EmpireStats` and `waitingFleetIds` for the map) and `GameSummary` (lobby
+and manage dialog), built by `PlayerViewBuilder` and
+`GameService.summaryOf`. The ArchUnit rule `ui_must_not_depend_on_domain`
+enforces this.
 
 ## Invariants
 
@@ -198,7 +202,8 @@ returns such a copy for read-only UI queries that need more than the
 - Only `GameSession` knows about the lock. `GameRegistry` is the sole
   entry point to it.
 - Mutating operations always go through `registry.writeState(...)`;
-  reads through `registry.readState(...)` or `GameService.snapshot(...)`.
+  reads through `registry.readState(...)`, which hands the UI-facing
+  service an immutable view model.
 
 ## Test strategy
 
