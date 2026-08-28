@@ -105,7 +105,7 @@ final class CreateGameWizardDialog {
                 color, observersAllowed, reentryAllowed);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CREATE), _ -> {
             GameSetup setup = buildSetup(formInputs);
-            String hostUsername = UserContext.currentUsername().orElse(null);
+        String hostUsername = UserContext.currentPlayerId().orElse(null);
             game.newGame(setup, hostUsername, GameNameGenerator.random());
             onCreated.run();
             dialog.close();

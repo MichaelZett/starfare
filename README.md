@@ -68,9 +68,15 @@ For local development with Vaadin hot reload:
 
 ## Sign in
 
-On first visit: create a user (username + password). Subsequent
-sessions: log in with the same credentials. The username doubles as
-the player name in games.
+On first visit: create an account with email address, public player name and
+password, then confirm the email address. Subsequent sessions use the email
+address and password. Starfare stores the internal account ID as the player
+reference; the public player name is shown in games.
+
+For real verification and password-reset mail, start with the `brevo` profile.
+It reads the SMTP login, key and verified sender address from the external file
+`~/.config/starfare/brevo.yaml` under `starfare.mail.username`,
+`starfare.mail.password` and `starfare.mail.from-address`.
 
 ## Language
 

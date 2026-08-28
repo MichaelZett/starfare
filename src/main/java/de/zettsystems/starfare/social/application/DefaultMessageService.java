@@ -13,11 +13,14 @@ public class DefaultMessageService implements MessageService {
     private final PresenceTracker presence;
     private final VisibilityFilter visibility;
     private final SocialBroadcaster broadcaster;
+    private final MessageStore store;
 
-    public DefaultMessageService(PresenceTracker presence, VisibilityFilter visibility, SocialBroadcaster broadcaster) {
+    public DefaultMessageService(PresenceTracker presence, VisibilityFilter visibility, SocialBroadcaster broadcaster,
+                                 MessageStore store) {
         this.presence = presence;
         this.visibility = visibility;
         this.broadcaster = broadcaster;
+        this.store = store;
     }
 
     @Override
@@ -40,7 +43,19 @@ public class DefaultMessageService implements MessageService {
         if (!visibility.canSee(f, t)) {
             return SendResult.NOT_VISIBLE;
         }
-        broadcaster.publish(new SocialEvent.DirectMessage(f, t, body, Instant.now()));
+        DirectMessage message = new DirectMessage(f, t, body, Instant.now());
+        store.save(message);
+        broadcaster.publish(new SocialEvent.DirectMessage(message.from(), message.to(), message.text(), message.sentAt()));
         return SendResult.DELIVERED;
+    }
+
+    @Override
+    public java.util.List<DirectMessage> conversation(String firstUser, String secondUser) {
+        String first = Usernames.normalize(firstUser);
+        String second = Usernames.normalize(secondUser);
+        if (first == null || second == null || first.equals(second)) {
+            return java.util.List.of();
+        }
+        return store.conversation(first, second);
     }
 }

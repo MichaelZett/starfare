@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.social.ui;
 
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -31,14 +32,17 @@ public class InvitationsPanel extends VerticalLayout {
     private final GameService games;
     private final InvitationService invitations;
     private final SocialBroadcaster broadcaster;
+    private final PlayerDirectory players;
     private final Div list = new Div();
     private final Span empty = new Span(I18n.t(UiTexts.INVITATIONS_EMPTY));
     private @Nullable Subscription subscription;
 
-    public InvitationsPanel(GameService games, InvitationService invitations, SocialBroadcaster broadcaster) {
+    public InvitationsPanel(GameService games, InvitationService invitations, SocialBroadcaster broadcaster,
+                            PlayerDirectory players) {
         this.games = games;
         this.invitations = invitations;
         this.broadcaster = broadcaster;
+        this.players = players;
         addClassName("invitations-panel");
         setPadding(false);
         setSpacing(false);
@@ -66,7 +70,7 @@ public class InvitationsPanel extends VerticalLayout {
     }
 
     private void refresh() {
-        String viewer = UserContext.currentUsername().orElse(null);
+        String viewer = UserContext.currentPlayerId().orElse(null);
         list.removeAll();
         if (viewer == null) {
             setVisible(false);
@@ -99,7 +103,8 @@ public class InvitationsPanel extends VerticalLayout {
     private Div renderRow(String viewer, PendingInvite invite) {
         Div row = new Div();
         row.addClassName("invitations-row");
-        Span label = new Span(I18n.t(UiTexts.INVITATIONS_ROW, invite.gameName(), invite.host() == null ? "" : invite.host()));
+        String hostName = invite.host() == null ? "" : players.displayName(invite.host());
+        Span label = new Span(I18n.t(UiTexts.INVITATIONS_ROW, invite.gameName(), hostName));
         label.addClassName("invitations-row-label");
         Button accept = new Button(I18n.t(UiTexts.INVITATIONS_ACCEPT), _ -> {
             if (!invitations.acceptInvite(invite.gameId(), viewer)) {

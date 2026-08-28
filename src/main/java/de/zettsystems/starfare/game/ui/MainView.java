@@ -97,7 +97,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void onNextRound() {
-        String username = UserContext.currentUsername().orElse(null);
+        String username = UserContext.currentPlayerId().orElse(null);
         if (isObserver()) {
             if (!game.advanceForObserver(gameId, username)) {
                 Notification.show(I18n.t(UiTexts.MAP_SUBMIT_FAILED));
@@ -239,7 +239,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void doLeave() {
-        String username = UserContext.currentUsername().orElse(null);
+        String username = UserContext.currentPlayerId().orElse(null);
         if (isObserver()) {
             game.leaveObserve(gameId, username);
             getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
@@ -255,12 +255,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private int currentSeat() {
-        String username = UserContext.currentUsername().orElse(null);
+        String username = UserContext.currentPlayerId().orElse(null);
         return username == null ? -1 : game.seatFor(gameId, username).orElse(-1);
     }
 
     private boolean isObserver() {
-        String username = UserContext.currentUsername().orElse(null);
+        String username = UserContext.currentPlayerId().orElse(null);
         return username != null && game.isObserver(gameId, username);
     }
 

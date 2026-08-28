@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.social.ui;
 
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -29,13 +30,15 @@ public class FriendRequestsPanel extends VerticalLayout {
 
     private final FriendshipService friendships;
     private final SocialBroadcaster broadcaster;
+    private final PlayerDirectory players;
     private final Div list = new Div();
     private final Span empty = new Span(I18n.t(UiTexts.FRIEND_INBOX_EMPTY));
     private @Nullable Subscription subscription;
 
-    public FriendRequestsPanel(FriendshipService friendships, SocialBroadcaster broadcaster) {
+    public FriendRequestsPanel(FriendshipService friendships, SocialBroadcaster broadcaster, PlayerDirectory players) {
         this.friendships = friendships;
         this.broadcaster = broadcaster;
+        this.players = players;
         addClassName("friend-inbox");
         setPadding(false);
         setSpacing(false);
@@ -63,7 +66,7 @@ public class FriendRequestsPanel extends VerticalLayout {
     }
 
     private void refresh() {
-        String viewer = UserContext.currentUsername().orElse(null);
+        String viewer = UserContext.currentPlayerId().orElse(null);
         list.removeAll();
         if (viewer == null) {
             empty.setVisible(true);
@@ -85,7 +88,7 @@ public class FriendRequestsPanel extends VerticalLayout {
         Div row = new Div();
         row.addClassName("friend-inbox-row");
         String other = f.otherSide(viewer).orElse(null);
-        Span from = new Span(other == null ? "" : other);
+        Span from = new Span(other == null ? "" : players.displayName(other));
         from.addClassName("friend-inbox-from");
         Button accept = new Button(I18n.t(UiTexts.FRIEND_INBOX_ACCEPT), _ -> {
             if (other == null || !friendships.accept(viewer, other)) {

@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.social.ui;
 
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
@@ -28,9 +29,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- * Ephemeral chat panel: keeps one conversation list per session (lost on reload). Incoming
- * {@link SocialEvent.DirectMessage} events that involve the current user open or update a
- * conversation and bump the unread counter if the conversation is not currently active.
+ * Chat panel. It loads a persisted conversation when opened; incoming
+ * {@link SocialEvent.DirectMessage} events update the visible session immediately.
  */
 public class ChatDrawer extends VerticalLayout {
 
@@ -39,6 +39,7 @@ public class ChatDrawer extends VerticalLayout {
 
     private final MessageService messages;
     private final SocialBroadcaster broadcaster;
+    private final PlayerDirectory players;
 
     private final Map<String, Conversation> conversations = new LinkedHashMap<>();
     private final Div conversationList = new Div();
@@ -52,9 +53,10 @@ public class ChatDrawer extends VerticalLayout {
     private @Nullable Subscription subscription;
     private @Nullable String activeUser;
 
-    public ChatDrawer(MessageService messages, SocialBroadcaster broadcaster) {
+    public ChatDrawer(MessageService messages, SocialBroadcaster broadcaster, PlayerDirectory players) {
         this.messages = messages;
         this.broadcaster = broadcaster;
+        this.players = players;
         addClassName("chat-drawer");
         setPadding(false);
         setSpacing(false);
@@ -110,17 +112,20 @@ public class ChatDrawer extends VerticalLayout {
     }
 
     public void openChatWith(String otherUser) {
-        String me = UserContext.currentUsername().orElse(null);
+        String me = UserContext.currentPlayerId().orElse(null);
         if (me == null || otherUser == null || otherUser.equalsIgnoreCase(me)) {
             return;
         }
         String key = otherUser.toLowerCase(Locale.ROOT);
-        conversations.computeIfAbsent(key, _ -> new Conversation(otherUser));
+        Conversation conversation = conversations.computeIfAbsent(key,
+                _ -> new Conversation(otherUser, players.displayName(otherUser)));
+        conversation.messages.clear();
+        conversation.messages.addAll(messages.conversation(me, otherUser));
         setActive(key);
     }
 
     private void handleIncoming(SocialEvent.DirectMessage dm) {
-        String me = UserContext.currentUsername().orElse(null);
+        String me = UserContext.currentPlayerId().orElse(null);
         if (me == null) {
             return;
         }
@@ -129,7 +134,7 @@ public class ChatDrawer extends VerticalLayout {
             return;
         }
         String other = dm.from().equals(meLc) ? dm.to() : dm.from();
-        Conversation conv = conversations.computeIfAbsent(other, _ -> new Conversation(other));
+        Conversation conv = conversations.computeIfAbsent(other, _ -> new Conversation(other, players.displayName(other)));
         conv.messages.add(new DirectMessage(dm.from(), dm.to(), dm.text(), dm.sentAt()));
         if (!other.equals(activeUser) && !dm.from().equals(meLc)) {
             conv.unread++;
@@ -144,7 +149,7 @@ public class ChatDrawer extends VerticalLayout {
         if (activeUser == null) {
             return;
         }
-        String me = UserContext.currentUsername().orElse(null);
+        String me = UserContext.currentPlayerId().orElse(null);
         if (me == null) {
             return;
         }
@@ -174,7 +179,7 @@ public class ChatDrawer extends VerticalLayout {
     }
 
     private void renderMessages(Conversation conv) {
-        String me = UserContext.currentUsername().orElse("").toLowerCase(Locale.ROOT);
+        String me = UserContext.currentPlayerId().orElse("").toLowerCase(Locale.ROOT);
         messagesView.removeAll();
         if (conv.messages.isEmpty()) {
             Span empty = new Span(I18n.t(UiTexts.CHAT_EMPTY_CONVERSATION));
@@ -225,16 +230,18 @@ public class ChatDrawer extends VerticalLayout {
     }
 
     private static final class Conversation {
+        final String playerId;
         final String displayName;
         final List<DirectMessage> messages = new ArrayList<>();
         int unread;
 
-        Conversation(String displayName) {
+        Conversation(String playerId, String displayName) {
+            this.playerId = playerId;
             this.displayName = displayName;
         }
 
         String key() {
-            return displayName.toLowerCase(Locale.ROOT);
+            return playerId.toLowerCase(Locale.ROOT);
         }
     }
 }

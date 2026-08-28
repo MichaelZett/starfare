@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.social.ui;
 
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -38,18 +39,20 @@ public class OnlineUsersPanel extends VerticalLayout {
     private final SocialBroadcaster broadcaster;
     private final VisibilityFilter visibility;
     private final FriendshipService friendships;
+    private final PlayerDirectory players;
     private final Consumer<String> openChatWith;
     private final Div list = new Div();
     private final Span empty = new Span(I18n.t(UiTexts.PRESENCE_EMPTY));
     private @Nullable Subscription subscription;
 
     public OnlineUsersPanel(PresenceTracker presence, SocialBroadcaster broadcaster,
-                            VisibilityFilter visibility, FriendshipService friendships,
+                            VisibilityFilter visibility, FriendshipService friendships, PlayerDirectory players,
                             Consumer<String> openChatWith) {
         this.presence = presence;
         this.broadcaster = broadcaster;
         this.visibility = visibility;
         this.friendships = friendships;
+        this.players = players;
         this.openChatWith = openChatWith;
         addClassName("presence-panel");
         setPadding(false);
@@ -78,7 +81,7 @@ public class OnlineUsersPanel extends VerticalLayout {
     }
 
     public void refresh() {
-        String viewer = UserContext.currentUsername().orElse(null);
+        String viewer = UserContext.currentPlayerId().orElse(null);
         list.removeAll();
         if (viewer == null) {
             empty.setVisible(true);
@@ -101,7 +104,7 @@ public class OnlineUsersPanel extends VerticalLayout {
         row.addClassName("presence-row");
         Span dot = new Span();
         dot.addClassName("presence-dot");
-        Span name = new Span(username);
+        Span name = new Span(players.displayName(username));
         name.addClassName("presence-name");
         row.add(dot, name);
 

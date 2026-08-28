@@ -35,6 +35,7 @@ public record GameStateSnapshot(
         Set<Integer> originalHumanPlayerIds,
         Set<String> observers,
         Map<String, Integer> seatByUser,
+        Map<String, Integer> invitedSeats,
         Map<Integer, List<FleetOrder>> pendingOrders,
         Map<Integer, List<StandingOrder>> standingOrders,
         Map<Integer, Integer> nextStandingOrderId,

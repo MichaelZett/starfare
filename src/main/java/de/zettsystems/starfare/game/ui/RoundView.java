@@ -150,7 +150,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
             return;
         }
-        String username = UserContext.currentUsername().orElse(null);
+        String username = UserContext.currentPlayerId().orElse(null);
         int seat = username == null ? -1 : game.seatFor(gameId, username).orElse(-1);
         if (seat < 0) {
             getUI().ifPresent(ui -> ui.navigate(LobbyView.class));

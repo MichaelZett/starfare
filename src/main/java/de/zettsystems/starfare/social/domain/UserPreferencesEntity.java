@@ -11,7 +11,7 @@ import java.time.Instant;
 public class UserPreferencesEntity extends AbstractBaseEntity<String> {
 
     @Id
-    @Column(name = "username", nullable = false, length = 30)
+    @Column(name = "player_id", nullable = false, length = 30)
     private String username;
 
     @Enumerated(EnumType.STRING)

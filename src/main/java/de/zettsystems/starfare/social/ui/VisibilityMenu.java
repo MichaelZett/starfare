@@ -30,13 +30,13 @@ public class VisibilityMenu extends HorizontalLayout {
         combo.setItemLabelGenerator(VisibilityMenu::translate);
         combo.setAllowCustomValue(false);
 
-        String viewer = UserContext.currentUsername().orElse(null);
+        String viewer = UserContext.currentPlayerId().orElse(null);
         Visibility current = viewer == null ? Visibility.ALL : preferences.getVisibility(viewer);
         combo.setValue(current);
 
         combo.addValueChangeListener(event -> {
             Visibility next = event.getValue();
-            String name = UserContext.currentUsername().orElse(null);
+        String name = UserContext.currentPlayerId().orElse(null);
             if (next == null || name == null) {
                 return;
             }

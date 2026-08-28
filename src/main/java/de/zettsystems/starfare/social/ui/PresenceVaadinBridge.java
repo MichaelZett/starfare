@@ -23,7 +23,7 @@ public class PresenceVaadinBridge implements VaadinServiceInitListener {
     @Override
     public void serviceInit(ServiceInitEvent event) {
         event.getSource().addUIInitListener(uiEvent -> {
-            String username = UserContext.currentUsername().orElse(null);
+        String username = UserContext.currentPlayerId().orElse(null);
             if (username == null) {
                 return;
             }

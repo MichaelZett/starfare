@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
 import java.time.Instant;
 
 @Entity
-@Table(name = "friendships", uniqueConstraints = @UniqueConstraint(columnNames = {"user_a", "user_b"}))
+@Table(name = "friendships", uniqueConstraints = @UniqueConstraint(columnNames = {"player_a", "player_b"}))
 public class FriendshipEntity extends AbstractBaseEntity<Long> {
 
     @Id
@@ -16,17 +16,17 @@ public class FriendshipEntity extends AbstractBaseEntity<Long> {
     @SequenceGenerator(name = "friendship_seq", sequenceName = "friendship_seq", allocationSize = 50)
     private Long id;
 
-    @Column(name = "user_a", nullable = false, length = 30)
+    @Column(name = "player_a", nullable = false, length = 30)
     private String userA;
 
-    @Column(name = "user_b", nullable = false, length = 30)
+    @Column(name = "player_b", nullable = false, length = 30)
     private String userB;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 16)
     private FriendshipStatus status;
 
-    @Column(name = "requested_by", length = 30)
+    @Column(name = "requested_by_player_id", length = 30)
     private @Nullable String requestedBy;
 
     @Column(name = "created_at", nullable = false)
