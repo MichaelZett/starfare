@@ -169,6 +169,8 @@ tasks.register('e2eTest', Test) {
     useJUnitPlatform()
     jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}"
     systemProperty 'e2e.headless', System.getProperty('e2e.headless', 'true')
+    // Nur zur Diagnose (-De2e.lang=en-US): Die Steps erwarten die deutsche Oberfläche.
+    systemProperty 'e2e.lang', System.getProperty('e2e.lang', 'de-DE')
     jacoco {
         destinationFile = layout.buildDirectory.file('jacoco/e2eTest.exec').get().asFile
     }

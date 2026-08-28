@@ -17,6 +17,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.function.Predicate;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * Die Browser-Handgriffe der Steps an einer Stelle, damit die
  * Vaadin-Eigenheiten (Wert steht im inneren {@code input}, Knöpfe ohne
@@ -119,6 +121,19 @@ public class Browser {
         return all(css).stream()
                 .map(element -> String.valueOf(element.getDomProperty("textContent")).strip())
                 .toList();
+    }
+
+    /**
+     * Die Seite selbst scrollt nie seitwärts — läuft als Hook nach jedem
+     * Schritt und prüft so jede besuchte Ansicht im HD-Viewport.
+     */
+    public void assertNoSidewaysScrolling() {
+        JavascriptExecutor js = (JavascriptExecutor) driver();
+        long scrollWidth = ((Number) js.executeScript("return document.documentElement.scrollWidth")).longValue();
+        long clientWidth = ((Number) js.executeScript("return document.documentElement.clientWidth")).longValue();
+        assertThat(scrollWidth)
+                .withFailMessage("Seite %s scrollt seitwärts (%d > %d px)", driver().getCurrentUrl(), scrollWidth, clientWidth)
+                .isLessThanOrEqualTo(clientWidth + 1);
     }
 
     /** Der gerade gerenderte Seitentext — für Fehler-Dumps. */

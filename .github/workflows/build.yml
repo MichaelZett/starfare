@@ -137,14 +137,18 @@ jobs:
           detailed_summary: true
           include_passed: false
 
-      # Die Suite schreibt bei Szenario-Fehlschlägen Seitentext und
-      # Screenshot nach build/e2e-failures/.
+      # Die Suite schreibt bei Szenario-Fehlschlägen Seitentext und Screenshot
+      # nach build/e2e-failures/; der Seitentext steht außerdem im stderr der
+      # JUnit-XML unter build/test-results/e2eTest/.
       - name: Upload e2e failure dumps
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: e2e-failures
-          path: build/e2e-failures/
+          path: |
+            build/e2e-failures/
+            build/test-results/e2eTest/
+            build/reports/tests/e2eTest/
           if-no-files-found: ignore
           retention-days: 7
 

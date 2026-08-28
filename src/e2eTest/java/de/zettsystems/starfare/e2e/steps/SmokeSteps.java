@@ -4,6 +4,7 @@ import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.e2e.E2eWorld;
 import de.zettsystems.starfare.e2e.RecordingMailConfiguration.RecordingMailSender;
 import io.cucumber.java.After;
+import io.cucumber.java.AfterStep;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.de.Dann;
@@ -43,6 +44,14 @@ public class SmokeSteps {
     @Before
     public void startLoggedOut() {
         browser.resetSession();
+    }
+
+    /** HD-Zusicherung: Keine besuchte Ansicht scrollt seitwärts (CI-Lauf vom 2026-08-28: Lobby tat es). */
+    @AfterStep
+    public void pageStaysWithinViewport() {
+        if (String.valueOf(browser.driver().getCurrentUrl()).startsWith(browser.baseUrl())) {
+            browser.assertNoSidewaysScrolling();
+        }
     }
 
     /** Seitentext und Screenshot zum Fehlschlag — erspart das Nachstellen. */
