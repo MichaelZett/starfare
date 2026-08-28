@@ -71,12 +71,12 @@ class PresenceTrackerTest {
         tracker.attach("alice");
         tracker.attach("carol");
 
-        List<String> names = tracker.onlineUsers().stream().map(UserPresence::username).toList();
+        List<String> names = tracker.onlineUsers().stream().map(UserPresence::playerId).toList();
         assertThat(names).containsExactlyElementsOf(List.of("alice", "bob", "carol"));
     }
 
     @Test
-    void blankUsernamesAreIgnored() {
+    void blankPlayerIdsAreIgnored() {
         tracker.attach("");
         tracker.attach(null);
         tracker.detach("");

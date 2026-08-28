@@ -36,7 +36,7 @@ public class VisibilityMenu extends HorizontalLayout {
 
         combo.addValueChangeListener(event -> {
             Visibility next = event.getValue();
-        String name = UserContext.currentPlayerId().orElse(null);
+            String name = UserContext.currentPlayerId().orElse(null);
             if (next == null || name == null) {
                 return;
             }

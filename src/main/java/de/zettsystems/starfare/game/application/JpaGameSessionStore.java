@@ -36,7 +36,7 @@ public class JpaGameSessionStore implements GameSessionStore {
                 GameState state = GameState.fromSnapshot(snapshot);
                 String idValue = Objects.requireNonNull(entity.getId(), "Persisted game session must have an id");
                 GameId id = GameId.of(idValue);
-                cache.put(id, new GameSession(id, entity.getName(), entity.getHostUsername(), entity.getCreatedAt(), state));
+                cache.put(id, new GameSession(id, entity.getName(), entity.getHostPlayerId(), entity.getCreatedAt(), state));
             } catch (JacksonException e) {
                 throw new IllegalStateException("Failed to restore game session " + entity.getId() + " from DB", e);
             }
@@ -51,7 +51,7 @@ public class JpaGameSessionStore implements GameSessionStore {
             String json = objectMapper.writeValueAsString(snapshot);
             GameSessionEntity entity = repository.findById(session.id().value())
                     .orElse(new GameSessionEntity(session.id().value(), session.name(),
-                            session.hostUsername(), session.createdAt(), json));
+                            session.hostPlayerId(), session.createdAt(), json));
             entity.replaceSnapshot(json);
             repository.save(entity);
         } catch (JacksonException e) {

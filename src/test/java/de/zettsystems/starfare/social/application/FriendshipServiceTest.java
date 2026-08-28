@@ -45,7 +45,7 @@ class FriendshipServiceTest extends AbstractIntegrationTest {
     @Test
     void selfRequestIsRejected() {
         assertThat(service.request("alice", "alice")).isFalse();
-        assertThat(service.request("ALICE", "alice")).isFalse();
+        assertThat(service.request(" alice ", "alice")).isFalse();
     }
 
     @Test
@@ -143,10 +143,10 @@ class FriendshipServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void canonicalisationIsCaseInsensitive() {
-        service.request("Alice", "BOB");
+    void canonicalisationIsOrderInsensitive() {
+        service.request("alice", "bob");
 
-        assertThat(service.statusBetween("ALICE", "bob")).isPresent();
+        assertThat(service.statusBetween("alice", "bob")).isPresent();
         assertThat(service.statusBetween("bob", "alice")).isPresent();
     }
 }

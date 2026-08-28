@@ -22,9 +22,9 @@ public class DefaultGameRegistry implements GameRegistry {
     }
 
     @Override
-    public GameId createGame(GameSetup requestedSetup, @Nullable String hostUsername, String name) {
+    public GameId createGame(GameSetup requestedSetup, @Nullable String hostPlayerId, String name) {
         GameId id = GameId.newId();
-        GameSession session = new GameSession(id, name, hostUsername, Instant.now());
+        GameSession session = new GameSession(id, name, hostPlayerId, Instant.now());
         session.writeState(state -> {
             initializeState(state, requestedSetup.normalized());
             return null;
@@ -67,29 +67,29 @@ public class DefaultGameRegistry implements GameRegistry {
     }
 
     @Override
-    public Optional<Integer> claimSeat(GameId id, @Nullable String username) {
-        if (username == null || username.isBlank()) {
+    public Optional<Integer> claimSeat(GameId id, @Nullable String playerId) {
+        if (playerId == null || playerId.isBlank()) {
             return Optional.empty();
         }
-        return Optional.ofNullable(writeState(id, state -> tryClaimSeat(state, username)));
+        return Optional.ofNullable(writeState(id, state -> tryClaimSeat(state, playerId)));
     }
 
-    private static @Nullable Integer tryClaimSeat(GameState state, String username) {
+    private static @Nullable Integer tryClaimSeat(GameState state, String playerId) {
         if (!state.active() || state.gameOver()) {
             return null;
         }
-        Integer existing = state.seatByUser().get(username);
+        Integer existing = state.seatByUser().get(playerId);
         if (existing != null) {
             return tryReclaimExistingSeat(state, existing);
         }
         if (state.started()) {
             return null;
         }
-        Integer invitedSeat = state.invitedSeats().get(username);
+        Integer invitedSeat = state.invitedSeats().get(playerId);
         if (invitedSeat != null) {
-            return claimInvitedSeat(state, username, invitedSeat);
+            return claimInvitedSeat(state, playerId, invitedSeat);
         }
-        return tryClaimFreeSeat(state, username);
+        return tryClaimFreeSeat(state, playerId);
     }
 
     private static @Nullable Integer tryReclaimExistingSeat(GameState state, int existing) {
@@ -108,14 +108,14 @@ public class DefaultGameRegistry implements GameRegistry {
         return existing;
     }
 
-    private static Integer claimInvitedSeat(GameState state, String username, int invitedSeat) {
-        state.invitedSeats().remove(username);
+    private static Integer claimInvitedSeat(GameState state, String playerId, int invitedSeat) {
+        state.invitedSeats().remove(playerId);
         state.joinedHumanPlayerIds().add(invitedSeat);
-        state.seatByUser().put(username, invitedSeat);
+        state.seatByUser().put(playerId, invitedSeat);
         return invitedSeat;
     }
 
-    private static @Nullable Integer tryClaimFreeSeat(GameState state, String username) {
+    private static @Nullable Integer tryClaimFreeSeat(GameState state, String playerId) {
         java.util.Set<Integer> reserved = new java.util.HashSet<>(state.invitedSeats().values());
         Integer seat = state.players().stream()
                 .filter(p -> !p.ai())
@@ -127,17 +127,17 @@ public class DefaultGameRegistry implements GameRegistry {
             return null;
         }
         state.joinedHumanPlayerIds().add(seat);
-        state.seatByUser().put(username, seat);
+        state.seatByUser().put(playerId, seat);
         return seat;
     }
 
     @Override
-    public Optional<Integer> seatOf(GameId id, @Nullable String username) {
-        if (username == null) {
+    public Optional<Integer> seatOf(GameId id, @Nullable String playerId) {
+        if (playerId == null) {
             return Optional.empty();
         }
         return find(id).flatMap(session -> session.readState(state ->
-                Optional.ofNullable(state.seatByUser().get(username))));
+                Optional.ofNullable(state.seatByUser().get(playerId))));
     }
 
     @Override
@@ -231,8 +231,8 @@ public class DefaultGameRegistry implements GameRegistry {
         var r = new Random(System.nanoTime());
         List<String> names = SystemNameGenerator.sample(setup.systemCount(), r);
         for (int i = 1; i <= setup.systemCount(); i++) {
-            double x = r.nextDouble(GameState.MAX_X);
-            double y = r.nextDouble(GameState.MAX_Y);
+            double x = r.nextDouble(GameConfig.MAX_X);
+            double y = r.nextDouble(GameConfig.MAX_Y);
             int prodRange = setup.neutralMaxProduction() - setup.neutralMinProduction() + 1;
             int prod = setup.neutralMinProduction() + r.nextInt(Math.max(1, prodRange));
             int garrison = Math.max(1, prod - 1);
@@ -254,9 +254,9 @@ public class DefaultGameRegistry implements GameRegistry {
 
     private static void spaceOut(GameState state, int iterations, double minDist) {
         double minX = 0;
-        double maxX = GameState.MAX_X;
+        double maxX = GameConfig.MAX_X;
         double minY = 0;
-        double maxY = GameState.MAX_Y;
+        double maxY = GameConfig.MAX_Y;
         for (int it = 0; it < iterations; it++) {
             for (int i = 0; i < state.systems().size(); i++) {
                 for (int j = i + 1; j < state.systems().size(); j++) {

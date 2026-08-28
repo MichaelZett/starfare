@@ -1,4 +1,4 @@
 package de.zettsystems.starfare.social.values;
 
-public record UserPresence(String username) {
+public record UserPresence(String playerId) {
 }

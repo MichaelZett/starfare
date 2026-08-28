@@ -25,7 +25,7 @@ public interface FriendshipService {
 
     boolean isBlockedBetween(String user1, String user2);
 
-    List<Friendship> incomingRequests(String username);
+    List<Friendship> incomingRequests(String playerId);
 
-    List<Friendship> friendsOf(String username);
+    List<Friendship> friendsOf(String playerId);
 }

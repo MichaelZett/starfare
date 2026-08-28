@@ -85,7 +85,7 @@ class GameServiceObserveTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void observeRejectedForBlankOrNullUsername() {
+    void observeRejectedForBlankOrNullPlayerId() {
         GameId id = setupStartedGameWithObservers(true);
 
         assertThat(game.observeGame(id, null)).isFalse();

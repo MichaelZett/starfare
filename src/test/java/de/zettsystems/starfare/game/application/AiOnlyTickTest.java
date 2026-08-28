@@ -96,7 +96,7 @@ class AiOnlyTickTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void advanceRejectedForBlankUsername() {
+    void advanceRejectedForBlankPlayerId() {
         GameId id = setupAiOnlyStartedGame();
 
         assertThat(game.advanceForObserver(id, null)).isFalse();

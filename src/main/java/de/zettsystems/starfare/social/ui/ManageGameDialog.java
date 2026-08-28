@@ -11,11 +11,12 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.Subscription;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.social.application.InvitationService;
@@ -42,6 +43,7 @@ public class ManageGameDialog extends Dialog {
     private final VisibilityFilter visibility;
     private final Broadcaster gameBroadcaster;
     private final SocialBroadcaster socialBroadcaster;
+    private final PlayerDirectory players;
     private final GameId gameId;
     private final String host;
 
@@ -54,7 +56,8 @@ public class ManageGameDialog extends Dialog {
     @SuppressWarnings("java:S107")
     public ManageGameDialog(GameId gameId, String host, GameService games, InvitationService invitations,
                             PresenceTracker presence, VisibilityFilter visibility,
-                            Broadcaster gameBroadcaster, SocialBroadcaster socialBroadcaster) {
+                            Broadcaster gameBroadcaster, SocialBroadcaster socialBroadcaster,
+                            PlayerDirectory players) {
         this.gameId = gameId;
         this.host = host;
         this.games = games;
@@ -63,6 +66,7 @@ public class ManageGameDialog extends Dialog {
         this.visibility = visibility;
         this.gameBroadcaster = gameBroadcaster;
         this.socialBroadcaster = socialBroadcaster;
+        this.players = players;
 
         addClassName("manage-dialog");
         setHeaderTitle(I18n.t(UiTexts.MANAGE_TITLE));
@@ -79,6 +83,7 @@ public class ManageGameDialog extends Dialog {
         inviteCombo.setLabel(I18n.t(UiTexts.MANAGE_INVITE_DROPDOWN));
         inviteCombo.setPlaceholder(I18n.t(UiTexts.MANAGE_INVITE_PLACEHOLDER));
         inviteCombo.setClearButtonVisible(true);
+        inviteCombo.setItemLabelGenerator(players::displayName);
         Button inviteButton = new Button(I18n.t(UiTexts.MANAGE_INVITE_SEND), _ -> onInvite());
         inviteButton.addThemeVariants(ButtonVariant.PRIMARY);
         HorizontalLayout inviteRow = new HorizontalLayout(inviteCombo, inviteButton);
@@ -117,18 +122,17 @@ public class ManageGameDialog extends Dialog {
     }
 
     private void refresh() {
-        GameState snapshot = games.snapshot(gameId);
-        renderHumans(snapshot);
-        Map<String, Integer> invited = games.invitedSeatsOf(gameId);
-        renderInvites(invited);
-        updateInviteCandidates(snapshot, invited);
+        GameSummary summary = games.summaryOf(gameId);
+        renderHumans(summary);
+        renderInvites(summary.invitedSeats());
+        updateInviteCandidates(summary);
     }
 
-    private void renderHumans(GameState state) {
+    private void renderHumans(GameSummary summary) {
         humansList.removeAll();
-        List<HumanRow> rows = state.players().stream()
+        List<HumanRow> rows = summary.players().stream()
                 .filter(p -> !p.ai())
-                .map(p -> new HumanRow(p.id(), p.name(), usernameForSeat(state, p.id()).orElse(null)))
+                .map(p -> new HumanRow(p.id(), p.name(), playerIdForSeat(summary, p.id()).orElse(null)))
                 .toList();
         if (rows.isEmpty()) {
             Span empty = new Span(I18n.t(UiTexts.MANAGE_PLAYERS_EMPTY));
@@ -144,7 +148,8 @@ public class ManageGameDialog extends Dialog {
     private Div renderHumanRow(HumanRow row) {
         Div container = new Div();
         container.addClassName("manage-row");
-        String displayName = row.username() != null ? row.username() : row.seatName();
+        String playerId = row.playerId();
+        String displayName = playerId != null ? players.displayName(playerId) : row.seatName();
         Span label = new Span(displayName);
         label.addClassName("manage-row-label");
         container.add(label);
@@ -155,8 +160,7 @@ public class ManageGameDialog extends Dialog {
             }
         });
         kick.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.SMALL);
-        String username = row.username();
-        boolean isSelf = username != null && username.equalsIgnoreCase(host);
+        boolean isSelf = playerId != null && playerId.equals(host);
         kick.setEnabled(!isSelf);
         container.add(kick);
         return container;
@@ -170,30 +174,30 @@ public class ManageGameDialog extends Dialog {
             invitesList.add(empty);
             return;
         }
-        invited.keySet().stream().sorted().forEach(invitee -> invitesList.add(renderInviteRow(invitee)));
+        invited.keySet().stream().sorted().forEach(inviteePlayerId -> invitesList.add(renderInviteRow(inviteePlayerId)));
     }
 
-    private Div renderInviteRow(String invitee) {
+    private Div renderInviteRow(String inviteePlayerId) {
         Div row = new Div();
         row.addClassName("manage-row");
-        Span label = new Span(invitee);
+        Span label = new Span(players.displayName(inviteePlayerId));
         label.addClassName("manage-row-label");
         Button revoke = new Button(I18n.t(UiTexts.MANAGE_INVITES_REVOKE),
-                _ -> invitations.revokeInvite(gameId, host, invitee));
+                _ -> invitations.revokeInvite(gameId, host, inviteePlayerId));
         revoke.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
         row.add(label, revoke);
         return row;
     }
 
-    private void updateInviteCandidates(GameState state, Map<String, Integer> invited) {
-        Set<String> seated = state.seatByUser().keySet();
-        Set<String> alreadyInvited = invited.keySet();
+    private void updateInviteCandidates(GameSummary summary) {
+        Set<String> seated = summary.seatByPlayer().keySet();
+        Set<String> alreadyInvited = summary.invitedSeats().keySet();
         List<String> candidates = presence.onlineUsers().stream()
-                .map(UserPresence::username)
-                .filter(u -> !u.equalsIgnoreCase(host))
+                .map(UserPresence::playerId)
+                .filter(u -> !u.equals(host))
                 .filter(u -> visibility.canSee(host, u))
-                .filter(u -> !containsIgnoreCase(seated, u))
-                .filter(u -> !containsIgnoreCase(alreadyInvited, u))
+                .filter(u -> !seated.contains(u))
+                .filter(u -> !alreadyInvited.contains(u))
                 .sorted()
                 .toList();
         String previous = inviteCombo.getValue();
@@ -204,30 +208,26 @@ public class ManageGameDialog extends Dialog {
     }
 
     private void onInvite() {
-        String invitee = inviteCombo.getValue();
-        if (invitee == null || invitee.isBlank()) {
+        String inviteePlayerId = inviteCombo.getValue();
+        if (inviteePlayerId == null || inviteePlayerId.isBlank()) {
             Notification.show(I18n.t(UiTexts.MANAGE_INVITE_FAILED));
             return;
         }
-        if (invitations.inviteUser(gameId, host, invitee).isEmpty()) {
+        if (invitations.inviteUser(gameId, host, inviteePlayerId).isEmpty()) {
             Notification.show(I18n.t(UiTexts.MANAGE_INVITE_FAILED));
             return;
         }
-        Notification.show(I18n.t(UiTexts.MANAGE_INVITE_SUCCESS, invitee));
+        Notification.show(I18n.t(UiTexts.MANAGE_INVITE_SUCCESS, players.displayName(inviteePlayerId)));
         inviteCombo.clear();
     }
 
-    private static Optional<String> usernameForSeat(GameState state, int seatId) {
-        return state.seatByUser().entrySet().stream()
+    private static Optional<String> playerIdForSeat(GameSummary summary, int seatId) {
+        return summary.seatByPlayer().entrySet().stream()
                 .filter(e -> e.getValue() != null && e.getValue() == seatId)
                 .map(Map.Entry::getKey)
                 .findFirst();
     }
 
-    private static boolean containsIgnoreCase(Set<String> set, String value) {
-        return set.stream().anyMatch(s -> s.equalsIgnoreCase(value));
-    }
-
-    private record HumanRow(int seatId, String seatName, @Nullable String username) {
+    private record HumanRow(int seatId, String seatName, @Nullable String playerId) {
     }
 }

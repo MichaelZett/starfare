@@ -8,9 +8,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -37,7 +39,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var ownFleets = state.fleets().stream().filter(f -> f.ownerId() == playerId).toList();
         var report = state.reports().getOrDefault(playerId, new TurnReport(turn - 1, List.of()));
         return new PlayerViewState(turn, players, vis, ownFleets, report, state.gameOver(), state.winnerId(),
-                plannedOrders, standing);
+                plannedOrders, standing, empireStats(state, playerId, ownFleets), waitingFleetIds(state, orders));
     }
 
     @Override
@@ -54,7 +56,33 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         }).toList();
         var fleets = List.copyOf(state.fleets());
         return new PlayerViewState(turn, players, systems, fleets, null, state.gameOver(), state.winnerId(),
-                List.of(), List.of());
+                List.of(), List.of(), EmpireStats.NONE, Set.of());
+    }
+
+    private static EmpireStats empireStats(GameState state, int playerId, List<Fleet> ownFleets) {
+        int systems = 0;
+        int production = 0;
+        int garrison = 0;
+        for (StarSystem s : state.systems()) {
+            Integer ownerId = s.ownerId();
+            if (ownerId != null && ownerId == playerId) {
+                systems++;
+                production += s.productionPerTurn();
+                garrison += s.garrison();
+            }
+        }
+        int inTransit = ownFleets.stream().mapToInt(Fleet::ships).sum();
+        return new EmpireStats(systems, production, garrison + inTransit);
+    }
+
+    private static Set<Integer> waitingFleetIds(GameState state, List<FleetOrder> orders) {
+        Set<Integer> waiting = new HashSet<>(state.waitThisTurn());
+        for (FleetOrder order : orders) {
+            if (order instanceof FleetOrder.Wait wait) {
+                waiting.add(wait.fleetId());
+            }
+        }
+        return Set.copyOf(waiting);
     }
 
     private static Map<Integer, Integer> committedShipsBySystem(List<FleetOrder> orders) {

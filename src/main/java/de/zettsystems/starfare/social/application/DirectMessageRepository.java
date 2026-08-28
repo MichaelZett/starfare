@@ -10,8 +10,8 @@ interface DirectMessageRepository extends JpaRepository<DirectMessageEntity, Lon
 
     @Query("""
             select message from DirectMessageEntity message
-            where (message.senderUsername = :firstUser and message.recipientUsername = :secondUser)
-               or (message.senderUsername = :secondUser and message.recipientUsername = :firstUser)
+            where (message.senderPlayerId = :firstUser and message.recipientPlayerId = :secondUser)
+               or (message.senderPlayerId = :secondUser and message.recipientPlayerId = :firstUser)
             order by message.sentAt asc, message.id asc
             """)
     List<DirectMessageEntity> findConversation(String firstUser, String secondUser);

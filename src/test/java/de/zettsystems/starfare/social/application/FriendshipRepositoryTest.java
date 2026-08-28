@@ -26,40 +26,40 @@ class FriendshipRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    void findByUserAAndUserBReturnsCanonicalPair() {
+    void findByPlayerAAndPlayerBReturnsCanonicalPair() {
         repository.save(new FriendshipEntity("alice", "bob", FriendshipStatus.ACCEPTED, "alice", NOW));
 
-        Optional<FriendshipEntity> found = repository.findByUserAAndUserB("alice", "bob");
+        Optional<FriendshipEntity> found = repository.findByPlayerAAndPlayerB("alice", "bob");
 
         assertThat(found).isPresent();
         assertThat(found.get().getStatus()).isEqualTo(FriendshipStatus.ACCEPTED);
     }
 
     @Test
-    void findByUserAAndUserBIsOrderSensitive() {
+    void findByPlayerAAndPlayerBIsOrderSensitive() {
         repository.save(new FriendshipEntity("alice", "bob", FriendshipStatus.ACCEPTED, "alice", NOW));
 
         // CHECK constraint enforces user_a < user_b, so the swapped query must miss
-        assertThat(repository.findByUserAAndUserB("bob", "alice")).isEmpty();
+        assertThat(repository.findByPlayerAAndPlayerB("bob", "alice")).isEmpty();
     }
 
     @Test
-    void findByUserAndStatusMatchesEitherSide() {
+    void findByPlayerAndStatusMatchesEitherSide() {
         repository.save(new FriendshipEntity("alice", "bob", FriendshipStatus.ACCEPTED, "alice", NOW));
         repository.save(new FriendshipEntity("alice", "carol", FriendshipStatus.PENDING, "alice", NOW));
         repository.save(new FriendshipEntity("bob", "dave", FriendshipStatus.ACCEPTED, "bob", NOW));
 
-        List<FriendshipEntity> bobsAccepted = repository.findByUserAndStatus("bob", FriendshipStatus.ACCEPTED);
+        List<FriendshipEntity> bobsAccepted = repository.findByPlayerAndStatus("bob", FriendshipStatus.ACCEPTED);
 
         assertThat(bobsAccepted).as("bob is user_b in alice/bob and user_a in bob/dave").hasSize(2);
     }
 
     @Test
-    void findByUserAndStatusFiltersOutMismatchingStatus() {
+    void findByPlayerAndStatusFiltersOutMismatchingStatus() {
         repository.save(new FriendshipEntity("alice", "bob", FriendshipStatus.PENDING, "alice", NOW));
 
-        assertThat(repository.findByUserAndStatus("bob", FriendshipStatus.ACCEPTED)).isEmpty();
-        assertThat(repository.findByUserAndStatus("bob", FriendshipStatus.PENDING)).hasSize(1);
+        assertThat(repository.findByPlayerAndStatus("bob", FriendshipStatus.ACCEPTED)).isEmpty();
+        assertThat(repository.findByPlayerAndStatus("bob", FriendshipStatus.PENDING)).hasSize(1);
     }
 
     @Test
@@ -68,8 +68,8 @@ class FriendshipRepositoryTest extends AbstractRepositoryTest {
         repository.save(new FriendshipEntity("alice", "carol", FriendshipStatus.PENDING, "alice", NOW));
         repository.save(new FriendshipEntity("bob", "dave", FriendshipStatus.BLOCKED, "bob", NOW));
 
-        List<FriendshipEntity> alicesRelations = repository.findByUser("alice");
-        List<FriendshipEntity> bobsRelations = repository.findByUser("bob");
+        List<FriendshipEntity> alicesRelations = repository.findByPlayer("alice");
+        List<FriendshipEntity> bobsRelations = repository.findByPlayer("bob");
 
         assertThat(alicesRelations).hasSize(2);
         assertThat(bobsRelations).hasSize(2);
@@ -79,7 +79,7 @@ class FriendshipRepositoryTest extends AbstractRepositoryTest {
     void findByUserReturnsEmptyForUnknownUser() {
         repository.save(new FriendshipEntity("alice", "bob", FriendshipStatus.ACCEPTED, "alice", NOW));
 
-        assertThat(repository.findByUser("zoe")).isEmpty();
+        assertThat(repository.findByPlayer("zoe")).isEmpty();
     }
 
 }

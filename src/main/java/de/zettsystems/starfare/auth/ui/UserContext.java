@@ -10,12 +10,6 @@ public final class UserContext {
     private UserContext() {
     }
 
-    /** @deprecated use {@link #currentPlayerId()} to make the identifier's semantics explicit. */
-    @Deprecated(forRemoval = true)
-    public static Optional<String> currentUsername() {
-        return currentPlayerId();
-    }
-
     public static Optional<String> currentPlayerId() {
         return currentUserId().map(String::valueOf);
     }

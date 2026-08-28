@@ -12,7 +12,7 @@ import java.util.function.Function;
 
 public interface GameRegistry {
 
-    GameId createGame(GameSetup requestedSetup, @Nullable String hostUsername, String name);
+    GameId createGame(GameSetup requestedSetup, @Nullable String hostPlayerId, String name);
 
     GameId createGame(GameSetup setup);
 
@@ -26,9 +26,9 @@ public interface GameRegistry {
 
     <T> T writeState(GameId id, Function<GameState, T> fn);
 
-    Optional<Integer> claimSeat(GameId id, @Nullable String username);
+    Optional<Integer> claimSeat(GameId id, @Nullable String playerId);
 
-    Optional<Integer> seatOf(GameId id, @Nullable String username);
+    Optional<Integer> seatOf(GameId id, @Nullable String playerId);
 
     boolean joinHumanPlayer(GameId id, int playerId);
 

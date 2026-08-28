@@ -4,8 +4,8 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.html.Div;
 import de.zettsystems.starfare.style.CssProperties;
 
-import static de.zettsystems.starfare.game.domain.GameState.MAX_X;
-import static de.zettsystems.starfare.game.domain.GameState.MAX_Y;
+import static de.zettsystems.starfare.game.values.GameConfig.MAX_X;
+import static de.zettsystems.starfare.game.values.GameConfig.MAX_Y;
 
 /**
  * Scrollable container for the game map. Wraps the scroll Div + inner map Div,

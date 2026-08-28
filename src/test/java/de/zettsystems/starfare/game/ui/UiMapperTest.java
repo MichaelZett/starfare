@@ -1,11 +1,13 @@
 package de.zettsystems.starfare.game.ui;
 
+import de.zettsystems.starfare.game.values.EmpireStats;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.game.values.VisibleSystem;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,7 +38,8 @@ class UiMapperTest {
         VisibleSystem s1 = new VisibleSystem(1, "Alpha", 0, 0, 1, 4, 2, true, "#fff", 1);
         VisibleSystem s2 = new VisibleSystem(2, "Beta", 0, 0, null, null, null, false, null, 1);
         Fleet fleet = new Fleet(10, 1, 3, 1, 2, 5, 1, 4);
-        PlayerViewState view = new PlayerViewState(2, List.of(), List.of(s1, s2), List.of(fleet), null, false, null, List.of(), List.of());
+        PlayerViewState view = new PlayerViewState(2, List.of(), List.of(s1, s2), List.of(fleet), null, false, null, List.of(), List.of(),
+                EmpireStats.NONE, Set.of());
 
         var fleetViews = UiMapper.toFleetViews(view);
 

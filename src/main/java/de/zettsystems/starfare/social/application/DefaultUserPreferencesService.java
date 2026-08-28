@@ -2,7 +2,7 @@ package de.zettsystems.starfare.social.application;
 
 import de.zettsystems.starfare.social.domain.UserPreferencesEntity;
 import de.zettsystems.starfare.social.values.SocialEvent;
-import de.zettsystems.starfare.social.values.Usernames;
+import de.zettsystems.starfare.social.values.PlayerIds;
 import de.zettsystems.starfare.social.values.Visibility;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,8 +22,8 @@ public class DefaultUserPreferencesService implements UserPreferencesService {
 
     @Override
     @Transactional(readOnly = true)
-    public Visibility getVisibility(String username) {
-        String name = Usernames.normalize(username);
+    public Visibility getVisibility(String playerId) {
+        String name = PlayerIds.normalize(playerId);
         if (name == null) {
             return Visibility.ALL;
         }
@@ -32,8 +32,8 @@ public class DefaultUserPreferencesService implements UserPreferencesService {
 
     @Override
     @Transactional
-    public void setVisibility(String username, Visibility visibility) {
-        String name = Usernames.normalize(username);
+    public void setVisibility(String playerId, Visibility visibility) {
+        String name = PlayerIds.normalize(playerId);
         if (name == null || visibility == null) {
             return;
         }

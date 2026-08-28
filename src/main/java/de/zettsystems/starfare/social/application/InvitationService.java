@@ -6,11 +6,11 @@ import java.util.Optional;
 
 public interface InvitationService {
 
-    Optional<Integer> inviteUser(GameId gameId, String ownerUsername, String invitee);
+    Optional<Integer> inviteUser(GameId gameId, String hostPlayerId, String inviteePlayerId);
 
-    boolean revokeInvite(GameId gameId, String ownerUsername, String invitee);
+    boolean revokeInvite(GameId gameId, String hostPlayerId, String inviteePlayerId);
 
-    boolean acceptInvite(GameId gameId, String invitee);
+    boolean acceptInvite(GameId gameId, String inviteePlayerId);
 
-    boolean declineInvite(GameId gameId, String invitee);
+    boolean declineInvite(GameId gameId, String inviteePlayerId);
 }

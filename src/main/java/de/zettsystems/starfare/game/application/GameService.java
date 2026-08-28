@@ -1,8 +1,8 @@
 package de.zettsystems.starfare.game.application;
 
-import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import org.jspecify.annotations.Nullable;
 
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface GameService {
 
-    GameId newGame(GameSetup setup, @Nullable String hostUsername, String name);
+    GameId newGame(GameSetup setup, @Nullable String hostPlayerId, String name);
 
     GameId newGame(GameSetup setup);
 
@@ -22,11 +22,11 @@ public interface GameService {
 
     void abortGame(GameId gameId);
 
-    boolean abortGame(GameId gameId, @Nullable String actorUsername);
+    boolean abortGame(GameId gameId, @Nullable String actorPlayerId);
 
-    Optional<String> hostUsernameOf(GameId gameId);
+    Optional<String> hostPlayerIdOf(GameId gameId);
 
-    boolean canAbort(GameId gameId, @Nullable String username);
+    boolean canAbort(GameId gameId, @Nullable String playerId);
 
     boolean hasActiveGame(GameId gameId);
 
@@ -34,17 +34,17 @@ public interface GameService {
 
     boolean joinGame(GameId gameId, int playerId);
 
-    Optional<Integer> joinGame(GameId gameId, @Nullable String username);
+    Optional<Integer> joinGame(GameId gameId, @Nullable String playerId);
 
-    Optional<Integer> seatFor(GameId gameId, @Nullable String username);
+    Optional<Integer> seatFor(GameId gameId, @Nullable String playerId);
 
-    Optional<Integer> inviteUser(GameId gameId, @Nullable String invitee);
+    Optional<Integer> inviteUser(GameId gameId, @Nullable String inviteePlayerId);
 
-    Optional<Integer> revokeInvite(GameId gameId, @Nullable String invitee);
+    Optional<Integer> revokeInvite(GameId gameId, @Nullable String inviteePlayerId);
 
     Map<String, Integer> invitedSeatsOf(GameId gameId);
 
-    Optional<Integer> seatReservedFor(GameId gameId, @Nullable String invitee);
+    Optional<Integer> seatReservedFor(GameId gameId, @Nullable String inviteePlayerId);
 
     boolean canStartGame(GameId gameId);
 
@@ -54,19 +54,20 @@ public interface GameService {
 
     PlayerViewState viewForObserver(GameId gameId);
 
-    boolean observeGame(GameId gameId, @Nullable String username);
+    boolean observeGame(GameId gameId, @Nullable String playerId);
 
-    boolean leaveObserve(GameId gameId, @Nullable String username);
+    boolean leaveObserve(GameId gameId, @Nullable String playerId);
 
-    boolean advanceForObserver(GameId gameId, @Nullable String username);
+    boolean advanceForObserver(GameId gameId, @Nullable String playerId);
 
     boolean isAiOnly(GameId gameId);
 
-    boolean isObserver(GameId gameId, @Nullable String username);
+    boolean isObserver(GameId gameId, @Nullable String playerId);
 
     boolean observersAllowed(GameId gameId);
 
-    GameState snapshot(GameId gameId);
+    /** Lobby-level read model of the game; the UI never sees the mutable {@code GameState}. */
+    GameSummary summaryOf(GameId gameId);
 
     int travelTurns(GameId gameId, int fromId, int toId);
 
@@ -80,7 +81,7 @@ public interface GameService {
 
     boolean submitTurn(GameId gameId, int playerId);
 
-    boolean kickHuman(GameId gameId, @Nullable String actorUsername, int seatId);
+    boolean kickHuman(GameId gameId, @Nullable String actorPlayerId, int seatId);
 
     boolean leaveGame(GameId gameId, int playerId);
 

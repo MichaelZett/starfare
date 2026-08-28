@@ -15,7 +15,6 @@ import com.vaadin.flow.router.RouteParameters;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
@@ -97,9 +96,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void onNextRound() {
-        String username = UserContext.currentPlayerId().orElse(null);
+        String playerId = UserContext.currentPlayerId().orElse(null);
         if (isObserver()) {
-            if (!game.advanceForObserver(gameId, username)) {
+            if (!game.advanceForObserver(gameId, playerId)) {
                 Notification.show(I18n.t(UiTexts.MAP_SUBMIT_FAILED));
                 return;
             }
@@ -239,9 +238,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void doLeave() {
-        String username = UserContext.currentPlayerId().orElse(null);
+        String playerId = UserContext.currentPlayerId().orElse(null);
         if (isObserver()) {
-            game.leaveObserve(gameId, username);
+            game.leaveObserve(gameId, playerId);
             getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
             return;
         }
@@ -255,13 +254,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private int currentSeat() {
-        String username = UserContext.currentPlayerId().orElse(null);
-        return username == null ? -1 : game.seatFor(gameId, username).orElse(-1);
+        String playerId = UserContext.currentPlayerId().orElse(null);
+        return playerId == null ? -1 : game.seatFor(gameId, playerId).orElse(-1);
     }
 
     private boolean isObserver() {
-        String username = UserContext.currentPlayerId().orElse(null);
-        return username != null && game.isObserver(gameId, username);
+        String playerId = UserContext.currentPlayerId().orElse(null);
+        return playerId != null && game.isObserver(gameId, playerId);
     }
 
     private void refresh() {
@@ -292,10 +291,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
         List<VisibleSystem> systems = view.systems().stream()
                 .sorted(Comparator.comparingInt(VisibleSystem::id)).toList();
-        GameState gs = observer ? null : game.snapshot(gameId);
-
-        if (!observer && gs != null) {
-            header.updateEmpireStats(view, gs, playerId);
+        if (!observer) {
+            header.updateEmpireStats(view);
         }
 
         // Drop fleet-specific UI state for fleets that no longer exist (arrived, disbanded, …).
@@ -307,7 +304,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
 
         mapCanvas.render(new MapRenderer.Inputs(
-                game, gameId, view, gs, playerId, observer, selectedFrom,
+                game, gameId, view, playerId, observer, selectedFrom,
                 highlightedFleetId, badgesShowingFleetNo, systems,
                 sel -> {
                     selectedFrom = sel;

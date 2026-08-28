@@ -16,8 +16,3 @@ spring:
 zs:
   identity:
     from-address: ${starfare.mail.from-address}
-
-management:
-  health:
-    mail:
-      enabled: false

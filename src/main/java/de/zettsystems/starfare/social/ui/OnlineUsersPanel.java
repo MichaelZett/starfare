@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.social.ui;
 
-import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -12,6 +11,7 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.game.values.Subscription;
@@ -89,34 +89,34 @@ public class OnlineUsersPanel extends VerticalLayout {
             return;
         }
         List<UserPresence> visibleUsers = presence.onlineUsers().stream()
-                .filter(u -> visibility.canSee(viewer, u.username()))
+                .filter(u -> visibility.canSee(viewer, u.playerId()))
                 .toList();
         boolean any = !visibleUsers.isEmpty();
         empty.setVisible(!any);
         list.setVisible(any);
         for (UserPresence u : visibleUsers) {
-            list.add(renderRow(viewer, u.username()));
+            list.add(renderRow(viewer, u.playerId()));
         }
     }
 
-    private Div renderRow(String viewer, String username) {
+    private Div renderRow(String viewer, String playerId) {
         Div row = new Div();
         row.addClassName("presence-row");
         Span dot = new Span();
         dot.addClassName("presence-dot");
-        Span name = new Span(players.displayName(username));
+        Span name = new Span(players.displayName(playerId));
         name.addClassName("presence-name");
         row.add(dot, name);
 
-        if (viewer != null && !viewer.equalsIgnoreCase(username)) {
-            Optional<Friendship> status = friendships.statusBetween(viewer, username);
+        if (viewer != null && !viewer.equals(playerId)) {
+            Optional<Friendship> status = friendships.statusBetween(viewer, playerId);
             status.ifPresent(f -> row.add(statusBadge(f)));
             Button actions = new Button("\u22EF");
             actions.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
             actions.addClassName("presence-actions");
             ContextMenu menu = new ContextMenu(actions);
             menu.setOpenOnClick(true);
-            buildMenu(menu, viewer, username, status.orElse(null));
+            buildMenu(menu, viewer, playerId, status.orElse(null));
             row.add(actions);
         }
         return row;
@@ -150,7 +150,7 @@ public class OnlineUsersPanel extends VerticalLayout {
         }
         switch (current.status()) {
             case PENDING -> {
-                if (viewer.equalsIgnoreCase(current.requestedBy())) {
+                if (viewer.equals(current.requestedBy())) {
                     menu.addItem(I18n.t(UiTexts.PRESENCE_ACTION_CANCEL_REQUEST),
                             _ -> notifyResult(friendships.remove(viewer, target),
                                     null, UiTexts.PRESENCE_ACTION_FAILED));
@@ -173,7 +173,7 @@ public class OnlineUsersPanel extends VerticalLayout {
                         _ -> runBlock(viewer, target));
             }
             case BLOCKED -> {
-                if (viewer.equalsIgnoreCase(current.requestedBy())) {
+                if (viewer.equals(current.requestedBy())) {
                     menu.addItem(I18n.t(UiTexts.PRESENCE_ACTION_UNBLOCK),
                             _ -> notifyResult(friendships.unblock(viewer, target),
                                     null, UiTexts.PRESENCE_ACTION_FAILED));

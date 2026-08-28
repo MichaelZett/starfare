@@ -53,7 +53,7 @@
     </Match>
 
     <!--
-       FALSE POSITIVE: LobbyView's constructor composes Vaadin components,
+       FALSE POSITIVE: LobbyView's and ManageGameDialog's constructors compose Vaadin components,
        which internally invoke framework callbacks that SpotBugs models as
        throwing. The view has no finalizer and receives only Spring-managed
        collaborators; moving the composition out of the Vaadin lifecycle
@@ -61,7 +61,10 @@
        one reported constructor.
     -->
     <Match>
-        <Class name="de.zettsystems.starfare.game.ui.LobbyView"/>
+        <Or>
+            <Class name="de.zettsystems.starfare.game.ui.LobbyView"/>
+            <Class name="de.zettsystems.starfare.social.ui.ManageGameDialog"/>
+        </Or>
         <Method name="&lt;init&gt;"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
@@ -74,12 +77,13 @@
        accessor methods that the compiler generates from the record header.
        Producers always wrap their lists with List.copyOf at construction
        time (see PlayerViewBuilder, DefaultReportService, GameSetup.normalized,
-       GameState.toSnapshot), so the records are effectively immutable.
+       GameState.toSnapshot, DefaultGameService.summaryOf), so the records are effectively immutable.
     -->
     <Match>
         <Or>
             <Class name="de.zettsystems.starfare.game.domain.GameStateSnapshot"/>
             <Class name="de.zettsystems.starfare.game.values.PlayerViewState"/>
+            <Class name="de.zettsystems.starfare.game.values.GameSummary"/>
             <Class name="de.zettsystems.starfare.game.values.GameSetup"/>
             <Class name="de.zettsystems.starfare.report.values.TurnReport"/>
         </Or>

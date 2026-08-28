@@ -8,7 +8,6 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.i18n.I18n;
 
@@ -82,7 +81,7 @@ final class MapHeaderBar extends HorizontalLayout {
         empireStats.setVisible(visible);
     }
 
-    void updateEmpireStats(PlayerViewState view, GameState gs, int playerId) {
-        empireStats.update(view, gs, playerId);
+    void updateEmpireStats(PlayerViewState view) {
+        empireStats.update(view);
     }
 }

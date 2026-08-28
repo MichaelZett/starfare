@@ -12,7 +12,7 @@ public class UserPreferencesEntity extends AbstractBaseEntity<String> {
 
     @Id
     @Column(name = "player_id", nullable = false, length = 30)
-    private String username;
+    private String playerId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility", nullable = false, length = 16)
@@ -26,15 +26,15 @@ public class UserPreferencesEntity extends AbstractBaseEntity<String> {
     }
 
     @SuppressWarnings("NullAway.Init")
-    public UserPreferencesEntity(String username, Visibility visibility, Instant updatedAt) {
-        this.username = username;
+    public UserPreferencesEntity(String playerId, Visibility visibility, Instant updatedAt) {
+        this.playerId = playerId;
         this.visibility = visibility;
         this.updatedAt = updatedAt;
     }
 
     @Override
     public String getId() {
-        return username;
+        return playerId;
     }
 
     public Visibility getVisibility() {

@@ -17,10 +17,10 @@ public class FriendshipEntity extends AbstractBaseEntity<Long> {
     private Long id;
 
     @Column(name = "player_a", nullable = false, length = 30)
-    private String userA;
+    private String playerA;
 
     @Column(name = "player_b", nullable = false, length = 30)
-    private String userB;
+    private String playerB;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 16)
@@ -40,10 +40,10 @@ public class FriendshipEntity extends AbstractBaseEntity<Long> {
     }
 
     @SuppressWarnings("NullAway.Init")
-    public FriendshipEntity(String userA, String userB, FriendshipStatus status, @Nullable String requestedBy,
+    public FriendshipEntity(String playerA, String playerB, FriendshipStatus status, @Nullable String requestedBy,
                             Instant now) {
-        this.userA = userA;
-        this.userB = userB;
+        this.playerA = playerA;
+        this.playerB = playerB;
         this.status = status;
         this.requestedBy = requestedBy;
         this.createdAt = now;
@@ -55,12 +55,12 @@ public class FriendshipEntity extends AbstractBaseEntity<Long> {
         return id;
     }
 
-    public String getUserA() {
-        return userA;
+    public String getPlayerA() {
+        return playerA;
     }
 
-    public String getUserB() {
-        return userB;
+    public String getPlayerB() {
+        return playerB;
     }
 
     public FriendshipStatus getStatus() {

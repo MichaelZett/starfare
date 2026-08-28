@@ -19,23 +19,23 @@ public class DefaultPresenceTracker implements PresenceTracker {
     }
 
     @Override
-    public void attach(String username) {
-        if (username == null || username.isBlank()) {
+    public void attach(String playerId) {
+        if (playerId == null || playerId.isBlank()) {
             return;
         }
-        boolean becameOnline = refCounts.merge(username, 1, Integer::sum) == 1;
+        boolean becameOnline = refCounts.merge(playerId, 1, Integer::sum) == 1;
         if (becameOnline) {
-            broadcaster.publish(new SocialEvent.PresenceChanged(username, true));
+            broadcaster.publish(new SocialEvent.PresenceChanged(playerId, true));
         }
     }
 
     @Override
-    public void detach(String username) {
-        if (username == null || username.isBlank()) {
+    public void detach(String playerId) {
+        if (playerId == null || playerId.isBlank()) {
             return;
         }
         boolean[] becameOffline = {false};
-        refCounts.computeIfPresent(username, (_, count) -> {
+        refCounts.computeIfPresent(playerId, (_, count) -> {
             if (count <= 1) {
                 becameOffline[0] = true;
                 return null;
@@ -43,16 +43,16 @@ public class DefaultPresenceTracker implements PresenceTracker {
             return count - 1;
         });
         if (becameOffline[0]) {
-            broadcaster.publish(new SocialEvent.PresenceChanged(username, false));
+            broadcaster.publish(new SocialEvent.PresenceChanged(playerId, false));
         }
     }
 
     @Override
-    public boolean isOnline(String username) {
-        if (username == null) {
+    public boolean isOnline(String playerId) {
+        if (playerId == null) {
             return false;
         }
-        return refCounts.containsKey(username);
+        return refCounts.containsKey(playerId);
     }
 
     @Override

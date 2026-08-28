@@ -6,6 +6,7 @@ import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.report.application.ReportService;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Optional;
 
 @Service
@@ -44,8 +46,8 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public GameId newGame(GameSetup setup, @Nullable String hostUsername, String name) {
-        GameId id = registry.createGame(setup, hostUsername, name);
+    public GameId newGame(GameSetup setup, @Nullable String hostPlayerId, String name) {
+        GameId id = registry.createGame(setup, hostPlayerId, name);
         broadcaster.publish(new GameEvent.GameCreated(id));
         return id;
     }
@@ -74,8 +76,8 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public boolean abortGame(GameId gameId, @Nullable String actorUsername) {
-        if (!canAbort(gameId, actorUsername)) {
+    public boolean abortGame(GameId gameId, @Nullable String actorPlayerId) {
+        if (!canAbort(gameId, actorPlayerId)) {
             return false;
         }
         abortGame(gameId);
@@ -83,17 +85,17 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public Optional<String> hostUsernameOf(GameId gameId) {
-        return registry.find(gameId).map(GameSession::hostUsername);
+    public Optional<String> hostPlayerIdOf(GameId gameId) {
+        return registry.find(gameId).map(GameSession::hostPlayerId);
     }
 
     @Override
-    public boolean canAbort(GameId gameId, @Nullable String username) {
-        if (username == null || username.isBlank()) {
+    public boolean canAbort(GameId gameId, @Nullable String playerId) {
+        if (playerId == null || playerId.isBlank()) {
             return false;
         }
-        return hostUsernameOf(gameId)
-                .map(host -> host.equalsIgnoreCase(username))
+        return hostPlayerIdOf(gameId)
+                .map(host -> host.equals(playerId))
                 .orElse(true);
     }
 
@@ -119,30 +121,30 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public Optional<Integer> joinGame(GameId gameId, @Nullable String username) {
-        Optional<Integer> seat = registry.claimSeat(gameId, username);
+    public Optional<Integer> joinGame(GameId gameId, @Nullable String playerId) {
+        Optional<Integer> seat = registry.claimSeat(gameId, playerId);
         seat.ifPresent(pid -> broadcaster.publish(new GameEvent.PlayerJoined(gameId, pid)));
         return seat;
     }
 
     @Override
-    public Optional<Integer> seatFor(GameId gameId, @Nullable String username) {
-        return registry.seatOf(gameId, username);
+    public Optional<Integer> seatFor(GameId gameId, @Nullable String playerId) {
+        return registry.seatOf(gameId, playerId);
     }
 
     @Override
-    public Optional<Integer> inviteUser(GameId gameId, @Nullable String invitee) {
-        if (invitee == null || invitee.isBlank()) {
+    public Optional<Integer> inviteUser(GameId gameId, @Nullable String inviteePlayerId) {
+        if (inviteePlayerId == null || inviteePlayerId.isBlank()) {
             return Optional.empty();
         }
         Integer seat = registry.writeState(gameId, state -> {
             if (!state.active() || state.started() || state.gameOver()) {
                 return null;
             }
-            if (state.invitedSeats().containsKey(invitee)) {
+            if (state.invitedSeats().containsKey(inviteePlayerId)) {
                 return null;
             }
-            if (state.seatByUser().containsKey(invitee)) {
+            if (state.seatByUser().containsKey(inviteePlayerId)) {
                 return null;
             }
             java.util.Set<Integer> reserved = new java.util.HashSet<>(state.invitedSeats().values());
@@ -155,18 +157,18 @@ public class DefaultGameService implements GameService {
             if (candidate == null) {
                 return null;
             }
-            state.invitedSeats().put(invitee, candidate);
+            state.invitedSeats().put(inviteePlayerId, candidate);
             return candidate;
         });
         return Optional.ofNullable(seat);
     }
 
     @Override
-    public Optional<Integer> revokeInvite(GameId gameId, @Nullable String invitee) {
-        if (invitee == null) {
+    public Optional<Integer> revokeInvite(GameId gameId, @Nullable String inviteePlayerId) {
+        if (inviteePlayerId == null) {
             return Optional.empty();
         }
-        Integer seat = registry.writeState(gameId, state -> state.invitedSeats().remove(invitee));
+        Integer seat = registry.writeState(gameId, state -> state.invitedSeats().remove(inviteePlayerId));
         return Optional.ofNullable(seat);
     }
 
@@ -176,11 +178,11 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public Optional<Integer> seatReservedFor(GameId gameId, @Nullable String invitee) {
-        if (invitee == null) {
+    public Optional<Integer> seatReservedFor(GameId gameId, @Nullable String inviteePlayerId) {
+        if (inviteePlayerId == null) {
             return Optional.empty();
         }
-        return Optional.ofNullable(registry.readState(gameId, state -> state.invitedSeats().get(invitee)));
+        return Optional.ofNullable(registry.readState(gameId, state -> state.invitedSeats().get(inviteePlayerId)));
     }
 
     @Override
@@ -208,8 +210,8 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public boolean observeGame(GameId gameId, @Nullable String username) {
-        if (username == null || username.isBlank()) {
+    public boolean observeGame(GameId gameId, @Nullable String playerId) {
+        if (playerId == null || playerId.isBlank()) {
             return false;
         }
         boolean added = registry.writeState(gameId, state -> {
@@ -219,23 +221,23 @@ public class DefaultGameService implements GameService {
             if (!state.observersAllowed()) {
                 return false;
             }
-            state.observers().add(username);
+            state.observers().add(playerId);
             return true;
         });
         if (added) {
-            broadcaster.publish(new GameEvent.ObserverJoined(gameId, username));
+            broadcaster.publish(new GameEvent.ObserverJoined(gameId, playerId));
         }
         return added;
     }
 
     @Override
-    public boolean leaveObserve(GameId gameId, @Nullable String username) {
-        if (username == null) {
+    public boolean leaveObserve(GameId gameId, @Nullable String playerId) {
+        if (playerId == null) {
             return false;
         }
-        boolean removed = registry.writeState(gameId, state -> state.observers().remove(username));
+        boolean removed = registry.writeState(gameId, state -> state.observers().remove(playerId));
         if (removed) {
-            broadcaster.publish(new GameEvent.ObserverLeft(gameId, username));
+            broadcaster.publish(new GameEvent.ObserverLeft(gameId, playerId));
             if (shouldAutoplay(gameId)) {
                 autoplayRunner.autoplayToEnd(gameId);
             }
@@ -253,15 +255,15 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public boolean advanceForObserver(GameId gameId, @Nullable String username) {
-        if (username == null || username.isBlank()) {
+    public boolean advanceForObserver(GameId gameId, @Nullable String playerId) {
+        if (playerId == null || playerId.isBlank()) {
             return false;
         }
         TurnResult result = registry.writeState(gameId, state -> {
             if (!state.active() || !state.started() || state.gameOver()) {
                 return TurnResult.REJECTED;
             }
-            if (!state.observers().contains(username)) {
+            if (!state.observers().contains(playerId)) {
                 return TurnResult.REJECTED;
             }
             if (!state.joinedHumanPlayerIds().isEmpty()) {
@@ -283,12 +285,12 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public boolean isObserver(GameId gameId, @Nullable String username) {
-        if (username == null) {
+    public boolean isObserver(GameId gameId, @Nullable String playerId) {
+        if (playerId == null) {
             return false;
         }
         return registry.find(gameId)
-                .map(s -> s.readState(state -> state.observers().contains(username)))
+                .map(s -> s.readState(state -> state.observers().contains(playerId)))
                 .orElse(false);
     }
 
@@ -298,8 +300,14 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public GameState snapshot(GameId gameId) {
-        return registry.readState(gameId, GameState::copyOf);
+    public GameSummary summaryOf(GameId gameId) {
+        String name = gameNameOf(gameId);
+        String hostPlayerId = hostPlayerIdOf(gameId).orElse(null);
+        return registry.readState(gameId, state -> new GameSummary(
+                gameId, name, hostPlayerId, state.turn(), state.started(), state.gameOver(),
+                state.observersAllowed(), state.reentryAllowed(),
+                List.copyOf(state.players()), Set.copyOf(state.joinedHumanPlayerIds()),
+                Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats())));
     }
 
     @Override
@@ -355,12 +363,12 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public boolean kickHuman(GameId gameId, @Nullable String actorUsername, int seatId) {
-        if (!canAbort(gameId, actorUsername)) {
+    public boolean kickHuman(GameId gameId, @Nullable String actorPlayerId, int seatId) {
+        if (!canAbort(gameId, actorPlayerId)) {
             return false;
         }
-        String kickedUser = usernameBySeat(gameId, seatId).orElse(null);
-        KickResult kick = registry.writeState(gameId, state -> resolveKick(state, seatId, actorUsername, kickedUser));
+        String kickedPlayerId = playerIdBySeat(gameId, seatId).orElse(null);
+        KickResult kick = registry.writeState(gameId, state -> resolveKick(state, seatId, actorPlayerId, kickedPlayerId));
         if (kick.accepted()) {
             broadcaster.publish(new GameEvent.SeatAbandoned(gameId, seatId));
             publishTurnResult(gameId, kick.turnResult());
@@ -390,8 +398,8 @@ public class DefaultGameService implements GameService {
         if (result.accepted()) {
             broadcaster.publish(new GameEvent.SeatAbandoned(gameId, playerId));
             publishTurnResult(gameId, result.turnResult());
-            usernameBySeat(gameId, playerId).ifPresent(leavingUsername ->
-                    transferHostIfNeeded(gameId, leavingUsername));
+            playerIdBySeat(gameId, playerId).ifPresent(leavingPlayerId ->
+                    transferHostIfNeeded(gameId, leavingPlayerId));
             if (shouldAutoplay(gameId)) {
                 autoplayRunner.autoplayToEnd(gameId);
             }
@@ -399,20 +407,20 @@ public class DefaultGameService implements GameService {
         return result.accepted();
     }
 
-    private Optional<String> usernameBySeat(GameId gameId, int playerId) {
+    private Optional<String> playerIdBySeat(GameId gameId, int playerId) {
         return registry.readState(gameId, state -> state.seatByUser().entrySet().stream()
                 .filter(e -> e.getValue() != null && e.getValue() == playerId)
                 .map(Map.Entry::getKey)
                 .findFirst());
     }
 
-    private void transferHostIfNeeded(GameId gameId, String leavingUsername) {
+    private void transferHostIfNeeded(GameId gameId, String leavingPlayerId) {
         GameSession session = registry.find(gameId).orElse(null);
         if (session == null) {
             return;
         }
-        String host = session.hostUsername();
-        if (host == null || !host.equalsIgnoreCase(leavingUsername)) {
+        String host = session.hostPlayerId();
+        if (host == null || !host.equals(leavingPlayerId)) {
             return;
         }
 
@@ -427,7 +435,7 @@ public class DefaultGameService implements GameService {
         broadcaster.publish(new GameEvent.HostChanged(gameId, newHost));
     }
 
-    private KickResult resolveKick(GameState state, int seatId, @Nullable String actorUsername, @Nullable String kickedUser) {
+    private KickResult resolveKick(GameState state, int seatId, @Nullable String actorPlayerId, @Nullable String kickedPlayerId) {
         if (!state.active() || state.gameOver()) {
             return new KickResult(false, TurnResult.REJECTED);
         }
@@ -435,25 +443,25 @@ public class DefaultGameService implements GameService {
         if (!existsAsHuman) {
             return new KickResult(false, TurnResult.REJECTED);
         }
-        if (kickedUser != null && kickedUser.equalsIgnoreCase(actorUsername)) {
+        if (kickedPlayerId != null && kickedPlayerId.equals(actorPlayerId)) {
             return new KickResult(false, TurnResult.REJECTED);
         }
         if (!state.started()) {
-            return kickBeforeStart(state, seatId, kickedUser);
+            return kickBeforeStart(state, seatId, kickedPlayerId);
         }
-        return kickDuringGame(state, seatId, kickedUser);
+        return kickDuringGame(state, seatId, kickedPlayerId);
     }
 
-    private KickResult kickBeforeStart(GameState state, int seatId, @Nullable String kickedUser) {
+    private KickResult kickBeforeStart(GameState state, int seatId, @Nullable String kickedPlayerId) {
         state.updatePlayer(seatId, Player::asAi);
         state.joinedHumanPlayerIds().remove(seatId);
-        if (kickedUser != null) {
-            state.seatByUser().remove(kickedUser);
+        if (kickedPlayerId != null) {
+            state.seatByUser().remove(kickedPlayerId);
         }
         return new KickResult(true, TurnResult.NONE);
     }
 
-    private KickResult kickDuringGame(GameState state, int seatId, @Nullable String kickedUser) {
+    private KickResult kickDuringGame(GameState state, int seatId, @Nullable String kickedPlayerId) {
         if (!state.joinedHumanPlayerIds().contains(seatId)) {
             return new KickResult(false, TurnResult.REJECTED);
         }
@@ -461,8 +469,8 @@ public class DefaultGameService implements GameService {
         state.joinedHumanPlayerIds().remove(seatId);
         state.submittedThisTurn().remove(seatId);
         state.pendingOrders().remove(seatId);
-        if (kickedUser != null) {
-            state.seatByUser().remove(kickedUser);
+        if (kickedPlayerId != null) {
+            state.seatByUser().remove(kickedPlayerId);
         }
         return new KickResult(true, maybeAdvance(state));
     }

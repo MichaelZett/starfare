@@ -37,10 +37,10 @@ class GameServiceHostTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void hostUsernameStoredOnCreation() {
+    void hostPlayerIdStoredOnCreation() {
         GameId id = createGameWithHost("alice");
 
-        assertThat(game.hostUsernameOf(id)).hasValue("alice");
+        assertThat(game.hostPlayerIdOf(id)).hasValue("alice");
     }
 
     @Test
@@ -60,7 +60,7 @@ class GameServiceHostTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void canAbortIsFalseForBlankUsername() {
+    void canAbortIsFalseForBlankPlayerId() {
         GameId id = createGameWithHost("alice");
 
         assertThat(game.canAbort(id, null)).isFalse();
@@ -81,7 +81,7 @@ class GameServiceHostTest extends AbstractIntegrationTest {
 
         assertThat(game.leaveGame(id, 1)).isTrue();
 
-        assertThat(game.hostUsernameOf(id)).hasValue("bob");
+        assertThat(game.hostPlayerIdOf(id)).hasValue("bob");
     }
 
     @Test
@@ -91,7 +91,7 @@ class GameServiceHostTest extends AbstractIntegrationTest {
 
         assertThat(game.leaveGame(id, 2)).isTrue();
 
-        assertThat(game.hostUsernameOf(id)).hasValue("alice");
+        assertThat(game.hostPlayerIdOf(id)).hasValue("alice");
     }
 
     @Test
@@ -110,6 +110,6 @@ class GameServiceHostTest extends AbstractIntegrationTest {
 
         assertThat(game.leaveGame(id, 1)).isTrue();
 
-        assertThat(game.hostUsernameOf(id)).isEmpty();
+        assertThat(game.hostPlayerIdOf(id)).isEmpty();
     }
 }
