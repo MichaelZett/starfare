@@ -18,6 +18,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
 import de.zettsystems.starfare.auth.ui.UserContext;
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.domain.GameState;
@@ -57,7 +58,7 @@ public class LobbyView extends VerticalLayout {
     @Autowired
     public LobbyView(GameService game, Broadcaster broadcaster, PresenceTracker presence,
                      SocialBroadcaster socialBroadcaster, VisibilityFilter visibilityFilter,
-                     FriendshipService friendshipService, UserPreferencesService preferencesService,
+                     FriendshipService friendshipService, UserPreferencesService preferencesService, PlayerDirectory players,
                      MessageService messageService, InvitationService invitationService) {
         this.game = game;
         this.broadcaster = broadcaster;
@@ -65,11 +66,11 @@ public class LobbyView extends VerticalLayout {
         this.presence = presence;
         this.visibilityFilter = visibilityFilter;
         this.socialBroadcaster = socialBroadcaster;
-        this.chatDrawer = new ChatDrawer(messageService, socialBroadcaster);
+        this.chatDrawer = new ChatDrawer(messageService, socialBroadcaster, players);
         this.onlineUsersPanel = new OnlineUsersPanel(presence, socialBroadcaster, visibilityFilter,
-                friendshipService, chatDrawer::openChatWith);
-        this.friendRequestsPanel = new FriendRequestsPanel(friendshipService, socialBroadcaster);
-        this.invitationsPanel = new InvitationsPanel(game, invitationService, socialBroadcaster);
+                friendshipService, players, chatDrawer::openChatWith);
+        this.friendRequestsPanel = new FriendRequestsPanel(friendshipService, socialBroadcaster, players);
+        this.invitationsPanel = new InvitationsPanel(game, invitationService, socialBroadcaster, players);
         setSizeFull();
         setPadding(false);
         setSpacing(false);
@@ -175,7 +176,7 @@ public class LobbyView extends VerticalLayout {
     }
 
     private void refresh() {
-        String username = UserContext.currentUsername().orElse(null);
+        String username = UserContext.currentPlayerId().orElse(null);
         List<LobbyGameRow> rows = game.listGames().stream()
                 .map(id -> {
                     GameState state = game.snapshot(id);
@@ -253,7 +254,7 @@ public class LobbyView extends VerticalLayout {
 
     private Button buildJoinButton(LobbyGameRow row) {
         Button join = new Button(I18n.t(UiTexts.LOBBY_ACTION_JOIN), _ -> {
-            String username = UserContext.currentUsername().orElse(null);
+            String username = UserContext.currentPlayerId().orElse(null);
             if (game.joinGame(row.gameId(), username).isEmpty()) {
                 Notification.show(I18n.t(UiTexts.LOBBY_JOIN_FAILED));
             } else {
@@ -284,7 +285,7 @@ public class LobbyView extends VerticalLayout {
 
     private Button buildObserveButton(LobbyGameRow row) {
         Button observe = new Button(I18n.t(UiTexts.LOBBY_ACTION_OBSERVE), _ -> {
-            String username = UserContext.currentUsername().orElse(null);
+            String username = UserContext.currentPlayerId().orElse(null);
             if (!game.observeGame(row.gameId(), username)) {
                 Notification.show(I18n.t(UiTexts.LOBBY_OBSERVE_FAILED));
                 return;
@@ -300,7 +301,7 @@ public class LobbyView extends VerticalLayout {
 
     private Button buildAbortButton(LobbyGameRow row) {
         Button abort = new Button(I18n.t(UiTexts.LOBBY_ACTION_ABORT), _ -> {
-            String username = UserContext.currentUsername().orElse(null);
+            String username = UserContext.currentPlayerId().orElse(null);
             if (!game.abortGame(row.gameId(), username)) {
                 Notification.show(I18n.t(UiTexts.LOBBY_ABORT_DENIED));
                 return;
@@ -325,7 +326,7 @@ public class LobbyView extends VerticalLayout {
     }
 
     private void openManageDialog(LobbyGameRow row) {
-        String username = UserContext.currentUsername().orElse(null);
+        String username = UserContext.currentPlayerId().orElse(null);
         if (username == null) {
             return;
         }

@@ -20,7 +20,7 @@ public class GameSessionEntity extends AbstractBaseEntity<String> {
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
-    @Column(name = "host_username", length = 30)
+    @Column(name = "host_player_id", length = 30)
     private @Nullable String hostUsername;
 
     @Column(name = "created_at", nullable = false)

@@ -44,10 +44,7 @@ public class GameState {
     private final java.util.Set<Integer> originalHumanPlayerIds = new java.util.HashSet<>();
     private final java.util.Set<String> observers = new java.util.HashSet<>();
     private final Map<String, Integer> seatByUser = new HashMap<>();
-    /**
-     * Username → reserved seat id. Ephemeral (not persisted via {@link #toSnapshot(GameState)});
-     * server restart clears pending invites.
-     */
+    /** Username → reserved seat id. Persisted as part of the game session snapshot. */
     private final Map<String, Integer> invitedSeats = new HashMap<>();
     private final Map<Integer, List<FleetOrder>> pendingOrders = new HashMap<>();
     private final Map<Integer, List<StandingOrder>> standingOrders = new HashMap<>();
@@ -310,7 +307,7 @@ public class GameState {
                 new java.util.HashSet<>(s.waitThisTurn), new java.util.HashSet<>(s.submittedThisTurn),
                 s.gameOver, s.winnerId, s.active, s.started,
                 new java.util.HashSet<>(s.joinedHumanPlayerIds), new java.util.HashSet<>(s.originalHumanPlayerIds),
-                new java.util.HashSet<>(s.observers), new HashMap<>(s.seatByUser),
+                new java.util.HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed);
     }
@@ -336,6 +333,9 @@ public class GameState {
         c.originalHumanPlayerIds.addAll(s.originalHumanPlayerIds());
         c.observers.addAll(s.observers());
         c.seatByUser.putAll(s.seatByUser());
+        if (s.invitedSeats() != null) {
+            c.invitedSeats.putAll(s.invitedSeats());
+        }
         s.pendingOrders().forEach((pid, orders) -> c.pendingOrders.put(pid, new ArrayList<>(orders)));
         if (s.standingOrders() != null) {
             s.standingOrders().forEach((pid, orders) -> c.standingOrders.put(pid, new ArrayList<>(orders)));

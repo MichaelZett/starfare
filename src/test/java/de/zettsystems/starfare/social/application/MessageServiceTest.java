@@ -27,7 +27,7 @@ class MessageServiceTest {
         broadcaster.subscribe(published::add);
         presence = new DefaultPresenceTracker(broadcaster);
         visibility = new FakeVisibilityFilter();
-        service = new DefaultMessageService(presence, visibility, broadcaster);
+        service = new DefaultMessageService(presence, visibility, broadcaster, new InMemoryMessageStore());
         published.clear();
     }
 
@@ -134,6 +134,18 @@ class MessageServiceTest {
         assertThat(dm.text()).isEqualTo("hello");
     }
 
+    @Test
+    void listsPersistedConversationInChronologicalOrder() {
+        presence.attach("bob");
+        presence.attach("alice");
+        service.send("alice", "bob", "first");
+        service.send("bob", "alice", "second");
+
+        assertThat(service.conversation("bob", "alice"))
+                .extracting(DirectMessage::text)
+                .containsExactly("first", "second");
+    }
+
     private SocialEvent last() {
         return published.getLast();
     }
@@ -167,6 +179,27 @@ class MessageServiceTest {
             String la = a.toLowerCase();
             String lb = b.toLowerCase();
             return la.compareTo(lb) <= 0 ? la + "|" + lb : lb + "|" + la;
+        }
+    }
+
+    private static final class InMemoryMessageStore implements MessageStore {
+        private final List<DirectMessage> messages = new ArrayList<>();
+
+        @Override
+        public void save(DirectMessage message) {
+            messages.add(message);
+        }
+
+        @Override
+        public List<DirectMessage> conversation(String firstUser, String secondUser) {
+            return messages.stream()
+                    .filter(message -> isBetween(message, firstUser, secondUser))
+                    .toList();
+        }
+
+        private boolean isBetween(DirectMessage message, String firstUser, String secondUser) {
+            return (message.from().equals(firstUser) && message.to().equals(secondUser))
+                    || (message.from().equals(secondUser) && message.to().equals(firstUser));
         }
     }
 }

@@ -1,0 +1,23 @@
+spring:
+  config:
+    import: optional:file:${user.home}/.config/starfare/brevo.yaml
+  mail:
+    host: smtp-relay.brevo.com
+    port: 587
+    username: ${starfare.mail.username}
+    password: ${starfare.mail.password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+zs:
+  identity:
+    from-address: ${starfare.mail.from-address}
+
+management:
+  health:
+    mail:
+      enabled: false

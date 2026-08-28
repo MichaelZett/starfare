@@ -30,7 +30,13 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
   `FleetOrder`).
 - `ai` — AI player decisions (`AiService`).
 - `report` — Round reports (`TurnReport`, `TurnEvent`).
-- `auth` — User management plus Spring Security integration.
+- `auth` — Starfare adapter around the reusable identity building block
+  (`de.zettsystems:identity-core` / `identity-vaadin` from the `zs-identity`
+  repository, consumed as Maven artifacts). Authentication uses email; game and
+  social references use the immutable account ID, while the public player name
+  (`zs.identity.name-mode: DISPLAY_NAME`) is presentation-only. The building
+  block ships its own Flyway migrations (`V1_x`); Starfare's schema lives in
+  `V2_x` with `spring.flyway.out-of-order: true`.
 - `i18n` — `StarfareI18NProvider` (Vaadin `I18NProvider`),
   `I18n.t(...)` facade, `LocaleServiceInitListener` (restores the UI
   locale from the session).
@@ -131,8 +137,12 @@ messages and invitations. Sub-layers as usual (`values`, `domain`,
   `PENDING`, the blocker for `BLOCKED`), `created_at`, `updated_at`.
 - `user_preferences` stores the per-user `visibility`
   (`ALL | FRIENDS_ONLY | NONE`, default `ALL`).
-- Direct messages and invitations are **ephemeral** (in-memory, no
-  schema). Persistence is a backlog item.
+- `direct_messages` stores the chronological history between two users;
+  `SocialBroadcaster` still delivers newly sent messages immediately to
+  attached UIs. Sending remains limited to visible, online recipients.
+- Invitations are stored as `GameState.invitedSeats` in the persisted
+  `game_sessions.state_json` snapshot, so a restart retains the seat
+  reservation.
 
 ### Visibility rule
 
@@ -157,8 +167,8 @@ fan-out for `SocialEvent`s (`PresenceChanged`, `FriendRequestReceived`,
 - Auto-transfer on `leaveGame`: next human by seat ID. If there are
   neither humans nor observers left, the game plays itself out via
   `AutoplayRunner`.
-- An invite reserves the seat (`GameState.invitedSeats`, ephemeral;
-  reset in `resetForNewGame` / `resetForAbort`). `canStartGame` blocks
+- An invite reserves the seat (`GameState.invitedSeats`, persisted with the
+  game session and reset in `resetForNewGame` / `resetForAbort`). `canStartGame` blocks
   while reserved seats have not yet been joined.
 - `kickHuman` works pre-start **and** during a running game: the seat
   becomes AI; host transfer plus the autoplay check are identical to

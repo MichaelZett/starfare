@@ -7,6 +7,7 @@ server:
 
 vaadin:
   productionMode: true
+  allowed-packages: de.zettsystems.starfare,de.zettsystems.identity
 
 spring:
   application:
@@ -22,6 +23,9 @@ spring:
       # https://vladmihalcea:com/why-you-should-always-use-hibernate-connection-provider_disables_autocommit-for-resource-local-jpa-transactions/
       # in combination with jpa:properties:hibernate:connection:provider_disables_autocommit: true
       auto-commit: false
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -34,7 +38,19 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+    # Nur die eigenen Migrationen (V2_x). Der Identity-Baustein haengt seinen
+    # Ablageort (classpath:db/identity, V1_x) per Auto-Konfiguration selbst an.
     locations: classpath:db/migration
+    # Neue Baustein-Migrationen (V1_x) sind niedriger nummeriert als bereits
+    # angewendete App-Migrationen; ohne out-of-order lehnt Flyway sie ab.
+    out-of-order: true
+
+zs:
+  identity:
+    from-name: Starfare
+    # Spieler waehlen einen oeffentlichen Namen; Vor-/Nachname werden nicht erhoben.
+    name-mode: DISPLAY_NAME
+    base-url: http://localhost:8080
 
 management:
   endpoints:
@@ -47,6 +63,9 @@ management:
     git:
       enabled: true
       mode: full
+  health:
+    mail:
+      enabled: false
 
 logging:
   level:

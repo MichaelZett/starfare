@@ -24,6 +24,26 @@ java {
 
 repositories {
     mavenCentral()
+    // Identity-Baustein (de.zettsystems:identity-*) aus dem Repo zs-identity.
+    // Zugang: gpr.user/gpr.key in ~/.gradle/gradle.properties (PAT mit
+    // read:packages) oder GITHUB_ACTOR/GITHUB_TOKEN in der CI.
+    maven {
+        name = 'GitHubPackages'
+        url = uri('https://maven.pkg.github.com/MichaelZett/zs-identity')
+        credentials {
+            username = providers.gradleProperty('gpr.user').orElse(providers.environmentVariable('GITHUB_ACTOR')).getOrElse('')
+            password = providers.gradleProperty('gpr.key').orElse(providers.environmentVariable('GITHUB_TOKEN')).getOrElse('')
+        }
+        content {
+            includeGroup 'de.zettsystems'
+        }
+    }
+    // Lokale Iteration am Baustein: dort ./gradlew publishToMavenLocal.
+    mavenLocal {
+        content {
+            includeGroup 'de.zettsystems'
+        }
+    }
 }
 
 dependencyManagement {
@@ -47,6 +67,8 @@ configurations {
 }
 
 dependencies {
+    implementation "de.zettsystems:identity-core:${identityVersion}"
+    implementation "de.zettsystems:identity-vaadin:${identityVersion}"
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'com.vaadin:vaadin-spring-boot-starter'
