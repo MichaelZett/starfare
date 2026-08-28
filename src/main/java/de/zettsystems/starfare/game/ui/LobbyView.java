@@ -107,11 +107,10 @@ public class LobbyView extends VerticalLayout {
         buildEmptyState();
         card.add(emptyState);
 
-        VerticalLayout sidebar = new VerticalLayout();
+        // Div statt VerticalLayout: das Layout setzt inline width:100% und würde
+        // die feste Sidebar-Breite aus dem Stylesheet überstimmen.
+        Div sidebar = new Div(friendRequestsPanel, invitationsPanel, onlineUsersPanel, chatDrawer);
         sidebar.addClassName("lobby-sidebar");
-        sidebar.setPadding(false);
-        sidebar.setSpacing(true);
-        sidebar.add(friendRequestsPanel, invitationsPanel, onlineUsersPanel, chatDrawer);
 
         HorizontalLayout body = new HorizontalLayout();
         body.addClassName("lobby-body");

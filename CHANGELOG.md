@@ -33,6 +33,9 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   `ui` ↛ `domain`.
 
 ### Fixed
+- Lobby scrollte bei 1366 px seitwärts: die Sidebar (`VerticalLayout`) setzte
+  inline `width: 100%` und überstimmte die 260-px-Regel. Der Smoke-Test
+  prüft jetzt nach jedem Schritt, dass keine Ansicht seitwärts scrollt.
 - Tests liefen mit einer eigenen `application.yaml`, die die
   Haupt-Konfiguration komplett verdeckte (u. a. `open-in-view`,
   Actuator-Exposure); jetzt Profil `test`.

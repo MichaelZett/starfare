@@ -320,6 +320,7 @@ html, body, #outlet {
 
 .lobby-card {
     width: 100%;
+    min-width: 0;
     max-width: min(1800px, 96vw);
     margin: 0 auto;
     background: var(--sf-surface);
@@ -908,6 +909,9 @@ html, body, #outlet {
 }
 
 .lobby-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     width: 260px;
     padding: 0;
     box-sizing: border-box;
