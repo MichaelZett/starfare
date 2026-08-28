@@ -116,57 +116,113 @@ class FleetServiceTest {
 
     @Test
     void addStandingOrderRequiresOwnedSource() {
-        assertThat(service.addStandingOrder(state, 1, 1, 2)).isPositive();
+        assertThat(service.addStandingOrder(state, 1, 1, 2, 2)).isPositive();
         assertThat(state.standingOrders().get(1)).hasSize(1);
         // foreign source is rejected
-        assertThat(service.addStandingOrder(state, 1, 2, 1)).isEqualTo(-1);
+        assertThat(service.addStandingOrder(state, 1, 2, 1, 1)).isEqualTo(-1);
         assertThat(state.standingOrders().get(1)).hasSize(1);
     }
 
     @Test
-    void addStandingOrderReplacesExistingForSameSource() {
+    void routingIsCappedByProductionPlusIncoming() {
+        // System 1 produziert 2 — mehr darf nicht abfliessen.
+        assertThat(service.routingHeadroom(state, 1, 1, 2)).isEqualTo(2);
+        assertThat(service.addStandingOrder(state, 1, 1, 2, 3)).isEqualTo(-1);
+        assertThat(service.addStandingOrder(state, 1, 1, 2, 2)).isPositive();
+        assertThat(service.routingHeadroom(state, 1, 1, 2)).as("Ersetzen gibt den Platz frei").isEqualTo(2);
+    }
+
+    @Test
+    void secondTargetSharesTheSameBudget() {
         state.systems().add(new StarSystem(3, "S3", 200, 0, null, 0, 1, true));
-        int first = service.addStandingOrder(state, 1, 1, 2);
-        int second = service.addStandingOrder(state, 1, 1, 3);
+        assertThat(service.addStandingOrder(state, 1, 1, 2, 1)).isPositive();
 
-        assertThat(second).isEqualTo(first); // same id, target updated
-        assertThat(state.standingOrders().get(1)).hasSize(1);
-        assertThat(state.standingOrders().get(1).getFirst().toSystemId()).isEqualTo(3);
+        assertThat(service.addStandingOrder(state, 1, 1, 3, 2)).as("1+2 > Produktion 2").isEqualTo(-1);
+        assertThat(service.addStandingOrder(state, 1, 1, 3, 1)).isPositive();
+        assertThat(state.standingOrders().get(1)).hasSize(2);
+        assertThat(service.routedFrom(state, 1, 1)).isEqualTo(2);
     }
 
     @Test
-    void applyStandingOrdersCreatesFleetEqualToProduction() {
-        service.addStandingOrder(state, 1, 1, 2);
+    void incomingRoutingRaisesTheOutgoingLimit() {
+        state.systems().add(new StarSystem(3, "S3", 200, 0, 1, 5, 1, false));
+        // S3 produziert 1, darf also allein nur 1 weiterleiten.
+        assertThat(service.routingHeadroom(state, 1, 3, 2)).isOne();
+
+        service.addStandingOrder(state, 1, 1, 3, 2);
+
+        assertThat(service.routingHeadroom(state, 1, 3, 2)).as("1 eigene + 2 eingehende").isEqualTo(3);
+    }
+
+    @Test
+    void addStandingOrderReplacesExistingForSameRoute() {
+        int first = service.addStandingOrder(state, 1, 1, 2, 1);
+        int second = service.addStandingOrder(state, 1, 1, 2, 2);
+
+        assertThat(second).isEqualTo(first); // same id, size updated
+        assertThat(state.standingOrders().get(1)).hasSize(1);
+        assertThat(state.standingOrders().get(1).getFirst().ships()).isEqualTo(2);
+    }
+
+    @Test
+    void applyStandingOrdersCreatesFleetOfTheRoutedSize() {
+        service.addStandingOrder(state, 1, 1, 2, 2);
 
         var routed = service.applyStandingOrdersForProduction(state);
 
-        assertThat(routed).contains(1);
+        assertThat(routed).containsEntry(1, 2);
         assertThat(state.fleets()).hasSize(1);
         var fleet = state.fleets().getFirst();
-        assertThat(fleet.ships()).isEqualTo(2); // system 1 has productionPerTurn = 2
+        assertThat(fleet.ships()).isEqualTo(2);
         assertThat(fleet.fromSystemId()).isOne();
         assertThat(fleet.toSystemId()).isEqualTo(2);
-        // garrison remains untouched at this phase (production step is skipped separately)
+        // garrison remains untouched at this phase (production step is applied separately)
         assertThat(state.getSystem(1).garrison()).isEqualTo(10);
     }
 
     @Test
-    void applyStandingOrdersSkipsWhenProductionZero() {
+    void routingSmallerThanProductionLeavesTheRest() {
+        service.addStandingOrder(state, 1, 1, 2, 1);
+
+        var routed = service.applyStandingOrdersForProduction(state);
+        state.updateSystem(1, s -> s.produceAndRoute(routed.getOrDefault(1, 0)));
+
+        assertThat(state.fleets().getFirst().ships()).isOne();
+        // 10 Garnison + 2 Produktion - 1 verlegt
+        assertThat(state.getSystem(1).garrison()).isEqualTo(11);
+    }
+
+    @Test
+    void routingFallsBackToTheGarrisonWhenProductionIsGone() {
+        service.addStandingOrder(state, 1, 1, 2, 2);
+        // Produktion faellt weg, die Garnison traegt die Verlegung weiter.
         state.updateSystem(1, s -> new StarSystem(s.id(), s.name(), s.x(), s.y(),
                 s.ownerId(), s.garrison(), 0, s.neutral()));
-        service.addStandingOrder(state, 1, 1, 2);
 
         var routed = service.applyStandingOrdersForProduction(state);
 
-        // still in routed set (so production step is skipped) but no fleet created
-        assertThat(routed).contains(1);
-        assertThat(state.fleets()).isEmpty();
+        assertThat(routed).containsEntry(1, 2);
+        assertThat(state.fleets()).hasSize(1);
         assertThat(state.standingOrders().get(1)).hasSize(1); // kept
     }
 
     @Test
+    void routingNeverShipsMoreThanTheSystemHas() {
+        state.updateSystem(1, s -> new StarSystem(s.id(), s.name(), s.x(), s.y(),
+                s.ownerId(), 0, 2, s.neutral()));
+        service.addStandingOrder(state, 1, 1, 2, 2);
+        state.updateSystem(1, s -> new StarSystem(s.id(), s.name(), s.x(), s.y(),
+                s.ownerId(), 0, 0, s.neutral()));
+
+        var routed = service.applyStandingOrdersForProduction(state);
+
+        assertThat(routed).isEmpty();
+        assertThat(state.fleets()).isEmpty();
+    }
+
+    @Test
     void applyStandingOrdersRemovesOrderWhenSourceLost() {
-        service.addStandingOrder(state, 1, 1, 2);
+        service.addStandingOrder(state, 1, 1, 2, 2);
         state.updateSystem(1, s -> s.captureBy(99, s.garrison()));
 
         var routed = service.applyStandingOrdersForProduction(state);
@@ -178,7 +234,7 @@ class FleetServiceTest {
 
     @Test
     void removeStandingOrderDeletesById() {
-        int id = service.addStandingOrder(state, 1, 1, 2);
+        int id = service.addStandingOrder(state, 1, 1, 2, 2);
 
         assertThat(service.removeStandingOrder(state, 1, id)).isTrue();
         assertThat(state.standingOrders().get(1)).isEmpty();
@@ -187,7 +243,7 @@ class FleetServiceTest {
 
     @Test
     void removeStandingOrderFromDeletesByFromSystem() {
-        service.addStandingOrder(state, 1, 1, 2);
+        service.addStandingOrder(state, 1, 1, 2, 2);
 
         assertThat(service.removeStandingOrderFrom(state, 1, 1)).isTrue();
         assertThat(state.standingOrders().get(1)).isEmpty();

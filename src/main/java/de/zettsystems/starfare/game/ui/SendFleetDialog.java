@@ -72,7 +72,8 @@ final class SendFleetDialog {
 
         DialogControls controls = new DialogControls(slider, shipsInput, halfBtn, doubleBtn, allBtn,
                 standingCheckbox, sendBtn);
-        wireStandingToggle(controls, params.canSend());
+        wireStandingToggle(controls, params,
+                ctx.game().routingHeadroom(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id()));
         setInitialEnablement(controls, params.canSend());
         if (!params.canSend()) {
             standingCheckbox.setValue(true);
@@ -186,7 +187,8 @@ final class SendFleetDialog {
     private static void onSendClicked(SendContext ctx, IntegerField shipsInput,
                                       Checkbox standingCheckbox, Dialog dialog) {
         if (Boolean.TRUE.equals(standingCheckbox.getValue())) {
-            if (!ctx.game().addStandingOrder(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id())) {
+            int routed = shipsInput.getValue() == null ? 0 : shipsInput.getValue();
+            if (!ctx.game().addStandingOrder(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), routed)) {
                 Notification.show(I18n.t(UiTexts.MAP_ADD_STANDING_ORDER_FAILED));
             }
         } else {
@@ -202,16 +204,23 @@ final class SendFleetDialog {
         ctx.onClose().run();
     }
 
-    private static void wireStandingToggle(DialogControls c, boolean canSend) {
+    private static void wireStandingToggle(DialogControls c, DialogParams params, int routingHeadroom) {
         c.standingCheckbox().addValueChangeListener(e -> {
             boolean standing = Boolean.TRUE.equals(e.getValue());
-            boolean shipInputsEnabled = canSend && !standing;
-            c.shipsInput().setEnabled(shipInputsEnabled);
-            c.slider().setEnabled(shipInputsEnabled);
-            c.halfBtn().setEnabled(shipInputsEnabled);
-            c.doubleBtn().setEnabled(shipInputsEnabled);
-            c.allBtn().setEnabled(shipInputsEnabled);
-            c.sendBtn().setEnabled(standing || canSend);
+            // Eine Verlegung hat eine feste Groesse, das Zahlenfeld bleibt also nutzbar.
+            // Die Obergrenze ist dann aber die freie Produktion, nicht die Garnison.
+            int max = standing ? routingHeadroom : params.sliderMax();
+            boolean enabled = max >= 1;
+            c.shipsInput().setMax(Math.max(1, max));
+            if (enabled && currentOr(c.shipsInput(), 1) > max) {
+                c.shipsInput().setValue(max);
+            }
+            c.shipsInput().setEnabled(enabled);
+            c.slider().setEnabled(enabled);
+            c.halfBtn().setEnabled(enabled);
+            c.doubleBtn().setEnabled(enabled);
+            c.allBtn().setEnabled(enabled);
+            c.sendBtn().setEnabled(enabled);
         });
     }
 

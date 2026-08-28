@@ -115,7 +115,7 @@ class PlayerViewBuilderTest {
 
     @Test
     void standingOrderViewsCarryNamesAndProduction() {
-        state.standingOrders().put(1, List.of(new StandingOrder(7, 1, 1, 2)));
+        state.standingOrders().put(1, List.of(new StandingOrder(7, 1, 1, 2, 2)));
 
         PlayerViewState view = builder.forPlayer(state, 1);
 
@@ -174,6 +174,10 @@ class PlayerViewBuilderTest {
     @Test
     void neutralSystemInSensorRangeDropsStaleIntelColor() {
         state.systems().add(new StarSystem(4, "S4", 5, 0, null, 8, 1, true));
+        for (int i = 0; i < 5; i++) {
+            state.nextTurn();
+        }
+        // Bewusst alte Aufklaerung: frische wuerde die Schaetzung ueberschreiben.
         state.intel().get(1).put(4, new GameState.Intel(2, 1, 20));
 
         VisibleSystem seen = visible(builder.forPlayer(state, 1), 4);
@@ -206,5 +210,46 @@ class PlayerViewBuilderTest {
 
         assertThat(visible(builder.forPlayer(state, 1), 4).approximate())
                 .as("Flottenziel S3 deckt das benachbarte S4 ab").isTrue();
+    }
+
+    @Test
+    void freshCombatIntelBeatsTheSensorEstimate() {
+        state.systems().add(new StarSystem(4, "S4", 5, 0, 2, 42, 3, false));
+        state.nextTurn();
+        // Kampf der letzten Runde: der Spieler kennt die genaue Zahl aus dem Bericht.
+        state.intel().get(1).put(4, new GameState.Intel(2, state.turn() - 1, 12));
+
+        VisibleSystem seen = visible(builder.forPlayer(state, 1), 4);
+
+        assertThat(seen.approximate()).isTrue();
+        assertThat(seen.garrison()).as("exakt statt gerundet").isEqualTo(12);
+    }
+
+    @Test
+    void staleCombatIntelDoesNotOverrideTheSensorEstimate() {
+        state.systems().add(new StarSystem(4, "S4", 5, 0, 2, 42, 3, false));
+        for (int i = 0; i < 5; i++) {
+            state.nextTurn();
+        }
+        state.intel().get(1).put(4, new GameState.Intel(2, 1, 12));
+
+        VisibleSystem seen = visible(builder.forPlayer(state, 1), 4);
+
+        assertThat(seen.garrison()).as("alte Zahl zaehlt nicht mehr").isEqualTo(35);
+    }
+
+    @Test
+    void finishedGameRevealsTheWholeMap() {
+        state.endGame(1);
+
+        PlayerViewState view = builder.forPlayer(state, 1);
+
+        assertThat(view.systems()).allSatisfy(s -> {
+            assertThat(s.fullyVisible()).isTrue();
+            assertThat(s.approximate()).isFalse();
+        });
+        assertThat(visible(view, 2).garrison()).as("Gegnergarnison exakt").isEqualTo(7);
+        assertThat(visible(view, 2).productionPerTurn()).isEqualTo(1);
+        assertThat(visible(view, 3).colorHex()).as("neutral bleibt farblos").isNull();
     }
 }

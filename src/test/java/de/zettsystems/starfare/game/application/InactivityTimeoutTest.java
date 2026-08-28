@@ -72,15 +72,32 @@ class InactivityTimeoutTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void takeoverIsPermanentEvenWhenReentryIsAllowed() {
+    void timedOutSeatCanBeReclaimedWhenReentryIsAllowed() {
         GameId id = runningGameWithTwoHumans();
 
         game.expireInactiveSeats(id);
 
-        boolean reentryAllowed = registry.readState(id, GameState::reentryAllowed);
         Map<String, Integer> seats = registry.readState(id, GameState::seatByUser);
-        assertThat(reentryAllowed).isTrue();
-        assertThat(seats).as("der Sitz gehoert dauerhaft der KI").isEmpty();
+        assertThat(seats).as("die Sitzzuordnung bleibt, sonst greift kein Wiedereinstieg")
+                .containsEntry("bob", 2);
+        assertThat(isAi(id, 2)).isTrue();
+
+        assertThat(registry.claimSeat(id, "bob")).contains(2);
+        assertThat(isAi(id, 2)).as("Sitz ist wieder menschlich").isFalse();
+    }
+
+    @Test
+    void timedOutSeatStaysAiWhenReentryIsForbidden() {
+        GameId id = runningGameWithTwoHumans();
+        registry.writeState(id, state -> {
+            state.configureLobby(true, false);
+            return null;
+        });
+
+        game.expireInactiveSeats(id);
+
+        assertThat(registry.claimSeat(id, "bob")).isEmpty();
+        assertThat(isAi(id, 2)).isTrue();
     }
 
     @Test

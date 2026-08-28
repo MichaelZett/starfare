@@ -13,7 +13,7 @@ class GameSetupTest {
                 24, humans, ai,
                 List.of(),
                 2, 6, 8,
-                observersAllowed, true, List.of()
+                observersAllowed, true, List.of(), null, null
         );
     }
 
@@ -23,7 +23,7 @@ class GameSetupTest {
                 24, 3, 1,
                 List.of(4, 4, 4, 4),
                 2, 6, 8,
-                true, true, List.of()
+                true, true, List.of(), null, null
         ).normalized();
 
         assertThat(setup.humanPlayers()).isEqualTo(3);
@@ -66,7 +66,7 @@ class GameSetupTest {
                 24, 2, 1,
                 List.of(5),
                 2, 6, 8,
-                true, true, List.of()
+                true, true, List.of(), null, null
         ).normalized();
 
         assertThat(setup.startProductionPerPlayer()).hasSize(setup.totalPlayers());
@@ -89,7 +89,7 @@ class GameSetupTest {
                 24, 2, 1,
                 List.of(4, 4, 4),
                 2, 6, 8,
-                false, false, List.of()
+                false, false, List.of(), null, null
         ).normalized();
 
         assertThat(normalized.observersAllowed()).isFalse();
@@ -102,7 +102,7 @@ class GameSetupTest {
                 24, 2, 1,
                 List.of(4, 4, 4),
                 2, 6, 8,
-                true, true, List.of()
+                true, true, List.of(), null, null
         ).normalized();
 
         assertThat(setup.seatColorHexes()).hasSize(3);
@@ -120,7 +120,7 @@ class GameSetupTest {
                 24, 2, 0,
                 List.of(4, 4),
                 2, 6, 8,
-                true, true, List.of(third, first)
+                true, true, List.of(third, first), null, null
         ).normalized();
 
         assertThat(setup.colorForSeat(0)).isEqualTo(third);
@@ -135,7 +135,7 @@ class GameSetupTest {
                 24, 3, 0,
                 List.of(4, 4, 4),
                 2, 6, 8,
-                true, true, List.of(same, same, same)
+                true, true, List.of(same, same, same), null, null
         ).normalized();
 
         assertThat(setup.seatColorHexes()).doesNotHaveDuplicates();
@@ -148,7 +148,7 @@ class GameSetupTest {
                 24, 2, 0,
                 List.of(4, 4),
                 2, 6, 8,
-                true, true, List.of("not-a-color", "#123456")
+                true, true, List.of("not-a-color", "#123456"), null, null
         ).normalized();
 
         assertThat(setup.seatColorHexes()).allMatch(GameConfig.PLAYER_PALETTE::contains);

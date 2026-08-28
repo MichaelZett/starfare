@@ -74,7 +74,8 @@ Fixed sequence, fully inside one `writeState`:
 3. Group arrivals by `toSystemId` + owner; reinforce the owner first,
    then resolve attackers strongest-first via `CombatService`.
 4. `AiService.doAiTurns`.
-5. Victory check (> 50% of systems).
+5. Victory check (>= 70% of all systems, neutrals included;
+   `GameConfig.VICTORY_SYSTEM_PERCENT`).
 6. `state.nextTurn()`.
 
 If `state.gameOver()` is true, `advanceTurn` is a no-op.

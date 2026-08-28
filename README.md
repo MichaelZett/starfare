@@ -30,13 +30,13 @@ Architecture details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ![Galaxy map with a travelling fleet](docs/screenshots/Karte.png)
 
 *Galaxy map: own systems in blue, neutrals grey, a fleet in transit with
-an ETA badge mid-route; fog of war keeps unseen systems frozen at their
-last known state.*
+an ETA badge mid-route; systems within sensor range show a rough garrison
+estimate, everything beyond stays frozen at its last known state.*
 
 ![Lobby view](docs/screenshots/Lobby.png)
 
-*Lobby: running games with host actions, presence panel, chat, language
-switcher and a per-user visibility menu.*
+*Lobby: running games with host actions, search and status filter,
+presence panel, chat, language switcher and a per-user visibility menu.*
 
 ![Send-fleet dialog](docs/screenshots/Flotte.png)
 
@@ -91,10 +91,12 @@ The landing route `/` is the lobby. From there:
 - **New game** — opens the wizard:
     - Galaxy size (number of systems)
     - Human players plus AI players
-    - Colour for human 1
+    - A colour per seat (duplicates fall back to a free palette entry)
     - Neutral systems: min/max production
     - Starting production per player plus ships in the home system
     - Allow observers? Allow rejoining?
+- **Search / filter** — narrow the list by game or player name, and by
+  status: all, mine, open, running or finished games.
 - **Join** — take an open slot. One slot per game; first come, first
   served.
 - **Observe** — read-only spectator mode (when allowed by the game).
@@ -111,8 +113,16 @@ icons for owned systems, total production per round and total ships
 (garrisons plus those en route).
 
 Centre: the galaxy map. Owned systems are in the player's colour,
-enemies in the opponent's colour, neutrals grey. Visibility is
-fog-of-war based — enemy systems only show their last known state.
+enemies in the opponent's colour, neutrals grey. Visibility comes in
+three levels:
+
+- **Own systems** — exact garrison and production.
+- **Within sensor range** — up to two travel rounds from one of your
+  systems or a fleet's destination. Owner and colour are live, the
+  garrison is only a rough estimate (shown as `~G:`).
+- **Everything else** — whatever you last learned in combat there
+  (`G:`, with the round it was seen in the tooltip), or nothing at all.
+
 Travelling fleets are rendered as SVG lines with arrowheads; halfway
 along sits a small pill with the ship count, whose tooltip shows the
 arrival round and remaining turns.
@@ -133,6 +143,12 @@ arrival round and remaining turns.
 The order lands in **Planned orders** (left). Until the turn ends you
 can take it back via **Cancel**.
 
+Ticking **as production transfer** turns the order into a standing one: the
+given number of ships is shipped every turn. A system may route at most its
+own production plus whatever is routed into it, and several targets share that
+budget — the map shows the still-free share in brackets after `P:`. Whatever
+is not routed stays behind as garrison.
+
 ### Own fleets (table)
 
 Already in transit. Columns: No, From, To, Ships, ETA.
@@ -149,17 +165,23 @@ Bottom left:
 - **Next round** — submits your turn. Once all humans have submitted,
   the turn pipeline runs (production → wait orders →
   arrivals/combat → AI turns → victory check → next round).
+  A seat that does not submit within five minutes is handed to the AI
+  permanently, so a single idle player cannot stall the game.
 - **Leave game** — your seat becomes AI. If rejoining is allowed, you
   can come back later.
 - **Back to lobby** — exit the map view; the game keeps running.
 
 After every turn change the app shows a **round report** with the
-events (production, combat, conquests). Continue via **Back to map**.
+events (production, combat, conquests). Battle entries can be clicked to
+reveal them with a short animation and sound. Continue via **Back to
+map**.
 
 ## Victory condition
 
-Whoever controls more than 50% of the star systems wins. The game ends
-and a _"Game over. Winner: …"_ message is shown.
+Whoever controls at least 70% of the star systems wins — neutral systems
+count towards the total, so a galaxy that is still largely unclaimed
+cannot be won. The game ends and a _"Game over. Winner: …"_ message is
+shown. The threshold is `GameConfig.VICTORY_SYSTEM_PERCENT`.
 
 ## Observer mode
 

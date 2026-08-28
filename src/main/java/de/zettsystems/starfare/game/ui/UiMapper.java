@@ -18,7 +18,13 @@ public final class UiMapper {
 
     public static String systemLabel(VisibleSystem system) {
         if (system.fullyVisible()) {
-            return "%s G:%d P:%d".formatted(system.name(), system.garrison(), system.productionPerTurn());
+            Integer production = system.productionPerTurn();
+            Integer routed = system.routedProduction();
+            if (production != null && routed != null && routed > 0) {
+                return "%s G:%d P:%d (%d frei)".formatted(system.name(), system.garrison(),
+                        production, Math.max(0, production - routed));
+            }
+            return "%s G:%d P:%d".formatted(system.name(), system.garrison(), production);
         }
         if (system.approximate()) {
             return "%s ~G:%d".formatted(system.name(), system.garrison());

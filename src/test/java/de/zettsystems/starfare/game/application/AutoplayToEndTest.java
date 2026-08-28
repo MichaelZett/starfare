@@ -26,9 +26,12 @@ class AutoplayToEndTest extends AbstractIntegrationTest {
             state.configureLobby(true, false);
             state.players().add(new Player(1, "AI1", true, "#111111"));
             state.players().add(new Player(2, "AI2", true, "#222222"));
+            // AI1 haelt drei von vier Systemen und liegt damit ueber der Siegschwelle.
+            // Andernfalls muesste die KI erst erobern und der Test haenge am Kampfglueck.
             state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 10, 2, false));
             state.systems().add(new StarSystem(2, "S2", 1000, 0, 1, 10, 2, false));
             state.systems().add(new StarSystem(3, "S3", 500, 500, 2, 10, 2, false));
+            state.systems().add(new StarSystem(4, "S4", 0, 1000, 1, 10, 2, false));
             state.start();
             return null;
         });

@@ -9,5 +9,6 @@ import org.jspecify.annotations.Nullable;
 public record VisibleSystem(
         int id, String name, double x, double y,
         @Nullable Integer ownerId, @Nullable Integer garrison, @Nullable Integer productionPerTurn,
-        boolean fullyVisible, @Nullable String colorHex, @Nullable Integer lastSeenTurn, boolean approximate
+        boolean fullyVisible, @Nullable String colorHex, @Nullable Integer lastSeenTurn, boolean approximate,
+        @Nullable Integer routedProduction
 ) { }

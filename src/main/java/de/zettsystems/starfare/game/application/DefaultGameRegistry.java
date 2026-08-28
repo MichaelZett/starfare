@@ -224,21 +224,18 @@ public class DefaultGameRegistry implements GameRegistry {
 
         var r = new Random(System.nanoTime());
         List<String> names = SystemNameGenerator.sample(setup.systemCount(), r);
+        List<double[]> positions = positionsFor(setup, r);
         for (int i = 1; i <= setup.systemCount(); i++) {
-            double x = r.nextDouble(GameConfig.MAX_X);
-            double y = r.nextDouble(GameConfig.MAX_Y);
-            int prodRange = setup.neutralMaxProduction() - setup.neutralMinProduction() + 1;
-            int prod = setup.neutralMinProduction() + r.nextInt(Math.max(1, prodRange));
+            double[] pos = positions.get(i - 1);
+            int prod = neutralProduction(setup, r);
             int garrison = Math.max(1, prod - 1);
-            state.systems().add(new StarSystem(i, names.get(i - 1), x, y, null, garrison, prod, true));
+            state.systems().add(new StarSystem(i, names.get(i - 1), pos[0], pos[1], null, garrison, prod, true));
         }
 
-        var shuffled = new ArrayList<>(state.systems());
-        Collections.shuffle(shuffled, r);
-        int idx = 0;
+        List<StarSystem> homes = homeSystems(state, setup, r);
         for (int playerSeat = 0; playerSeat < state.players().size(); playerSeat++) {
             Player p = state.players().get(playerSeat);
-            StarSystem s = shuffled.get(idx++);
+            StarSystem s = homes.get(playerSeat);
             int startProduction = setup.startProductionForSeat(playerSeat);
             int startGarrison = Math.max(setup.startGarrison(), startProduction);
             state.updateSystem(s.id(), current -> current.colonize(p.id(), startGarrison, startProduction));
@@ -246,11 +243,97 @@ public class DefaultGameRegistry implements GameRegistry {
         spaceOut(state, GameConfig.SPACEOUT_ITERATIONS, GameConfig.SPACEOUT_MIN_DIST);
     }
 
+    private static int neutralProduction(GameSetup setup, Random r) {
+        int min = setup.neutralMinProduction();
+        int max = setup.neutralMaxProduction();
+        if (max <= min) {
+            return min;
+        }
+        if (setup.productionDistribution() == ProductionDistribution.UNIFORM) {
+            return min + r.nextInt(max - min + 1);
+        }
+        // Mitte der Spanne als Erwartungswert, 2 Sigma bis zum Rand. Ausreisser werden
+        // neu gezogen statt geklemmt, sonst haeufen sie sich genau auf min und max.
+        double mean = (min + max) / 2.0;
+        double sigma = (max - min) / 4.0;
+        for (int attempt = 0; attempt < 10; attempt++) {
+            long value = Math.round(mean + r.nextGaussian() * sigma);
+            if (value >= min && value <= max) {
+                return (int) value;
+            }
+        }
+        return (int) Math.round(mean);
+    }
+
+    private static List<double[]> positionsFor(GameSetup setup, Random r) {
+        int count = setup.systemCount();
+        var out = new ArrayList<double[]>(count);
+        double marginX = Math.min(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_X / 4);
+        double marginY = Math.min(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_Y / 4);
+        if (setup.galaxyLayout() == GalaxyLayout.RANDOM) {
+            for (int i = 0; i < count; i++) {
+                out.add(new double[]{
+                        marginX + r.nextDouble(GameConfig.MAX_X - 2 * marginX),
+                        marginY + r.nextDouble(GameConfig.MAX_Y - 2 * marginY)});
+            }
+            return out;
+        }
+        // Ein System je Rasterzelle, innerhalb der Zelle versetzt: verhindert die
+        // Ballungen und Leerraeume, die rein zufaellige Punkte zwangslaeufig bilden.
+        int cols = (int) Math.ceil(Math.sqrt(count * (double) GameConfig.MAX_X / GameConfig.MAX_Y));
+        int rows = (int) Math.ceil((double) count / cols);
+        double cellWidth = (GameConfig.MAX_X - 2 * marginX) / cols;
+        double cellHeight = (GameConfig.MAX_Y - 2 * marginY) / rows;
+        var cells = new ArrayList<int[]>(cols * rows);
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                cells.add(new int[]{col, row});
+            }
+        }
+        Collections.shuffle(cells, r);
+        for (int i = 0; i < count; i++) {
+            int[] cell = cells.get(i);
+            out.add(new double[]{
+                    marginX + cell[0] * cellWidth + (0.25 + r.nextDouble() * 0.5) * cellWidth,
+                    marginY + cell[1] * cellHeight + (0.25 + r.nextDouble() * 0.5) * cellHeight});
+        }
+        return out;
+    }
+
+    private static List<StarSystem> homeSystems(GameState state, GameSetup setup, Random r) {
+        var candidates = new ArrayList<>(state.systems());
+        Collections.shuffle(candidates, r);
+        int needed = state.players().size();
+        if (setup.galaxyLayout() == GalaxyLayout.RANDOM || needed >= candidates.size()) {
+            return candidates.subList(0, Math.min(needed, candidates.size()));
+        }
+        // Greedy moeglichst weit auseinander: sonst entscheidet der Zufall der
+        // Startnachbarschaft die Partie, bevor der erste Zug laeuft.
+        var chosen = new ArrayList<StarSystem>(needed);
+        chosen.add(candidates.removeFirst());
+        while (chosen.size() < needed) {
+            StarSystem best = candidates.getFirst();
+            double bestDist = -1;
+            for (StarSystem candidate : candidates) {
+                double nearest = chosen.stream()
+                        .mapToDouble(c -> Math.hypot(c.x() - candidate.x(), c.y() - candidate.y()))
+                        .min().orElse(0);
+                if (nearest > bestDist) {
+                    bestDist = nearest;
+                    best = candidate;
+                }
+            }
+            candidates.remove(best);
+            chosen.add(best);
+        }
+        return chosen;
+    }
+
     private static void spaceOut(GameState state, int iterations, double minDist) {
-        double minX = 0;
-        double maxX = GameConfig.MAX_X;
-        double minY = 0;
-        double maxY = GameConfig.MAX_Y;
+        double minX = Math.min(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_X / 4);
+        double maxX = GameConfig.MAX_X - minX;
+        double minY = Math.min(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_Y / 4);
+        double maxY = GameConfig.MAX_Y - minY;
         for (int it = 0; it < iterations; it++) {
             for (int i = 0; i < state.systems().size(); i++) {
                 for (int j = i + 1; j < state.systems().size(); j++) {

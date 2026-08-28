@@ -1,9 +1,9 @@
 package de.zettsystems.starfare.game.values;
 
 /**
- * UI-friendly snapshot of a {@link StandingOrder} with resolved system names
- * and the source system's current production-per-turn.
+ * UI-friendly snapshot of a {@link StandingOrder} with resolved system names,
+ * the source system's production-per-turn and the routed amount.
  */
 public record StandingOrderView(int id, int fromSystemId, int toSystemId,
-                                String fromSystem, String toSystem, int productionPerTurn) {
+                                String fromSystem, String toSystem, int productionPerTurn, int ships) {
 }

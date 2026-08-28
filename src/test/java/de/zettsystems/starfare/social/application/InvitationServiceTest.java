@@ -47,7 +47,7 @@ class InvitationServiceTest extends AbstractIntegrationTest {
                 20, 2, 0,
                 List.of(5, 5),
                 2, 5, 6,
-                false, false, List.of());
+                false, false, List.of(), null, null);
         return games.newGame(setup, host, "test-game");
     }
 
@@ -173,7 +173,7 @@ class InvitationServiceTest extends AbstractIntegrationTest {
                 20, 1, 0,
                 List.of(5),
                 2, 5, 6,
-                false, false, List.of());
+                false, false, List.of(), null, null);
         GameId id = games.newGame(setup, "host", "t");
         games.joinGame(id, "host");
         games.startGame(id);

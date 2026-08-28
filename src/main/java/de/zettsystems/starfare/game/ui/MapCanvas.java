@@ -14,8 +14,10 @@ import static de.zettsystems.starfare.game.values.GameConfig.MAX_Y;
 final class MapCanvas extends Div {
 
     private final Div map = new Div();
+    private final String viewportKey;
 
-    MapCanvas(Runnable onBackgroundClick) {
+    MapCanvas(String gameId, Runnable onBackgroundClick) {
+        this.viewportKey = "starfare.viewport." + gameId;
         setId("scroll");
         setWidthFull();
         setHeight("min(80vh, 1100px)");
@@ -32,6 +34,30 @@ final class MapCanvas extends Div {
 
     void render(MapRenderer.Inputs inputs) {
         MapRenderer.render(map, inputs);
+    }
+
+    /**
+     * Stellt Zoom und Bildausschnitt aus der vorigen Ansicht dieser Partie wieder her.
+     * Fehlt ein gespeicherter Stand — erster Aufruf, neuer Tab —, wird stattdessen auf
+     * das übergebene Heimatsystem zentriert. Die Entscheidung fällt im Browser, weil
+     * nur dort bekannt ist, ob ein Stand existiert.
+     *
+     * <p>Der Zustand liegt im {@code sessionStorage}: Nach jedem Zugwechsel baut Vaadin
+     * die Kartenansicht neu auf, serverseitiger Zustand ginge dabei ebenso verloren.
+     */
+    void restoreViewportOrCenterOn(double homeX, double homeY) {
+        getElement().executeJs(
+                "const el = this;" +
+                        "const map = el.querySelector('#map');" +
+                        "let saved = null;" +
+                        "try { saved = JSON.parse(sessionStorage.getItem($0) || 'null'); } catch (e) { saved = null; }" +
+                        "if (saved && map) {" +
+                        "  map.style.zoom = saved.zoom;" +
+                        "  requestAnimationFrame(() => { el.scrollLeft = saved.left; el.scrollTop = saved.top; });" +
+                        "  return;" +
+                        "}" +
+                        "el.scrollTo({left: $1 - el.clientWidth / 2, top: $2 - el.clientHeight / 2});",
+                viewportKey, homeX, homeY);
     }
 
     void installDragToPan() {
@@ -77,15 +103,25 @@ final class MapCanvas extends Div {
                         "    const ratio = newZoom / oldZoom;" +
                         "    el.scrollLeft = cx * ratio - px;" +
                         "    el.scrollTop = cy * ratio - py;" +
+                        "    store();" +
                         "  }, { passive: false });" +
-                        "}"
+                        "}" +
+                        // Zoom und Ausschnitt festhalten, damit der naechste Aufbau der
+                        // Ansicht dort weitermacht, wo der Spieler aufgehoert hat.
+                        "let pending = 0;" +
+                        "function store() {" +
+                        "  clearTimeout(pending);" +
+                        "  pending = setTimeout(() => {" +
+                        "    try {" +
+                        "      sessionStorage.setItem($0, JSON.stringify({" +
+                        "        zoom: parseFloat((map && map.style.zoom) || '1')," +
+                        "        left: el.scrollLeft, top: el.scrollTop}));" +
+                        "    } catch (e) { /* privater Modus o. ae. — dann eben ohne */ }" +
+                        "  }, 150);" +
+                        "}" +
+                        "el.addEventListener('scroll', store, { passive: true });",
+                viewportKey
         );
     }
 
-    void scrollTo(double x, double y) {
-        getElement().executeJs(
-                "this.scrollTo({left: $0 - this.clientWidth/2, top: $1 - this.clientHeight/2});",
-                x, y
-        );
-    }
 }

@@ -333,9 +333,16 @@ public class LobbyView extends VerticalLayout {
 
     private Button buildStartButton(LobbyGameRow row) {
         Button start = new Button(I18n.t(UiTexts.LOBBY_ACTION_START), _ -> {
-            boolean started = game.startGame(row.gameId());
-            if (!started) {
+            if (!game.startGame(row.gameId())) {
                 Notification.show(I18n.t(UiTexts.LOBBY_START_FAILED));
+                refresh();
+                return;
+            }
+            // Wer die Partie startet und selbst mitspielt, will sie auch sehen.
+            // Ein blosser Host ohne Sitz bleibt in der Lobby.
+            if (row.joinedByCurrentUser()) {
+                navigateToMap(row.gameId());
+                return;
             }
             refresh();
         });

@@ -13,6 +13,8 @@ import de.zettsystems.starfare.report.application.ReportService;
 import de.zettsystems.starfare.turn.application.TurnEngine;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,6 +30,8 @@ import de.zettsystems.starfare.game.config.GameTimingProperties;
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Spring-injected collaborators are kept by reference for the bean's lifetime by design.")
 public class DefaultGameService implements GameService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultGameService.class);
     private final GameRegistry registry;
     private final TurnEngine turnEngine;
     private final FleetService fleetService;
@@ -329,12 +333,17 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public boolean addStandingOrder(GameId gameId, int playerId, int fromId, int toId) {
+    public boolean addStandingOrder(GameId gameId, int playerId, int fromId, int toId, int ships) {
         if (!hasStartedGame(gameId)) {
             return false;
         }
         return registry.writeState(gameId,
-                state -> fleetService.addStandingOrder(state, playerId, fromId, toId) > 0);
+                state -> fleetService.addStandingOrder(state, playerId, fromId, toId, ships) > 0);
+    }
+
+    @Override
+    public int routingHeadroom(GameId gameId, int playerId, int fromId, int toId) {
+        return registry.readState(gameId, state -> fleetService.routingHeadroom(state, playerId, fromId, toId));
     }
 
     @Override
@@ -392,14 +401,17 @@ public class DefaultGameService implements GameService {
                 state.updatePlayer(id, Player::asAi);
                 state.joinedHumanPlayerIds().remove(id);
                 state.pendingOrders().remove(id);
-                // Der Sitz gehoert ab jetzt dauerhaft der KI, auch bei erlaubtem Wiedereinstieg.
-                state.seatByUser().entrySet().removeIf(entry -> Objects.equals(entry.getValue(), id));
+                // seatByUser bleibt bewusst stehen: nur so greift tryReclaimExistingSeat
+                // spaeter wieder. Ein Timeout darf nicht haerter sein als freiwilliges Verlassen.
             });
             return new ExpiryResult(inactive, abandonedBy, maybeAdvance(state));
         });
         if (result.seats().isEmpty()) {
             return false;
         }
+        // Der Sitz ist danach dauerhaft weg — das muss nachvollziehbar sein.
+        LOG.info("Inactivity timeout in game {}: seat(s) {} handed to the AI after {} without a submission",
+                gameId, result.seats(), timing.inactivityTimeout());
         result.seats().forEach(seatId -> broadcaster.publish(new GameEvent.SeatAbandoned(gameId, seatId)));
         publishTurnResult(gameId, result.turnResult());
         result.abandonedBy().forEach(playerId -> transferHostIfNeeded(gameId, playerId));

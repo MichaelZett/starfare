@@ -73,7 +73,10 @@ public interface GameService {
 
     boolean sendFleet(GameId gameId, int playerId, int fromId, int toId, int ships);
 
-    boolean addStandingOrder(GameId gameId, int playerId, int fromId, int toId);
+    boolean addStandingOrder(GameId gameId, int playerId, int fromId, int toId, int ships);
+
+    /** Groesse, die eine Verlegung von {@code fromId} nach {@code toId} hoechstens haben darf. */
+    int routingHeadroom(GameId gameId, int playerId, int fromId, int toId);
 
     boolean removeStandingOrder(GameId gameId, int playerId, int orderId);
 

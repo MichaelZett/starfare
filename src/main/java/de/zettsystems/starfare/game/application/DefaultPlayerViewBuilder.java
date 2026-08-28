@@ -4,6 +4,7 @@ import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.report.values.TurnReport;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,17 +23,30 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
     /** Reiserunden, die eigene Systeme und Flotten an Sensorreichweite abdecken. */
     private static final int SENSOR_RANGE_ROUNDS = 2;
 
+    /**
+     * Wie viele Runden Kampfaufklärung als frisch gilt. Ein Kampf schreibt seine Intel
+     * mit der Rundennummer <em>vor</em> {@code nextTurn()}, die Zahl aus dem
+     * Rundenbericht ist also schon eine Runde alt, wenn der Spieler die Karte sieht.
+     */
+    private static final int FRESH_INTEL_TURNS = 1;
+
     @Override
     public PlayerViewState forPlayer(GameState state, int playerId) {
         int turn = state.turn();
         var players = List.copyOf(state.players());
+        if (state.gameOver()) {
+            // Partie entschieden — der Nebel hat keinen Zweck mehr und verdeckt nur,
+            // wie es ausgegangen ist.
+            return revealedView(state, playerId);
+        }
 
         List<FleetOrder> orders = state.pendingOrders().getOrDefault(playerId, List.of());
         Map<Integer, Integer> committedBySystem = committedShipsBySystem(orders);
+        Map<Integer, Integer> routedBySystem = routedShipsBySystem(state, playerId);
 
         Set<Integer> sensorCoverage = sensorCoverage(state, playerId);
         var vis = state.systems().stream()
-                .map(s -> buildVisibleSystem(state, playerId, s, committedBySystem, sensorCoverage))
+                .map(s -> buildVisibleSystem(state, playerId, s, committedBySystem, sensorCoverage, routedBySystem))
                 .toList();
 
         Map<Integer, String> sysNames = state.systems().stream()
@@ -49,18 +64,31 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
     @Override
     public PlayerViewState forObserver(GameState state) {
         int turn = state.turn();
-        var players = List.copyOf(state.players());
-        var systems = state.systems().stream().map(s -> {
+        return new PlayerViewState(turn, List.copyOf(state.players()), revealedSystems(state),
+                List.copyOf(state.fleets()), null, state.gameOver(), state.winnerId(),
+                List.of(), List.of(), EmpireStats.NONE, Set.of());
+    }
+
+    /** Alle Systeme ohne Nebel: fuer Zuschauer und fuer die entschiedene Partie. */
+    private static List<VisibleSystem> revealedSystems(GameState state) {
+        int turn = state.turn();
+        return state.systems().stream().map(s -> {
             Integer ownerId = s.ownerId();
             String color = ownerId != null ? playerById(state, ownerId).colorHex() : null;
             return new VisibleSystem(
                     s.id(), s.name(), s.x(), s.y(),
                     ownerId, s.garrison(), s.productionPerTurn(),
-                    true, color, turn, false);
+                    true, color, turn, false, null);
         }).toList();
-        var fleets = List.copyOf(state.fleets());
-        return new PlayerViewState(turn, players, systems, fleets, null, state.gameOver(), state.winnerId(),
-                List.of(), List.of(), EmpireStats.NONE, Set.of());
+    }
+
+    private static PlayerViewState revealedView(GameState state, int playerId) {
+        int turn = state.turn();
+        var ownFleets = state.fleets().stream().filter(f -> f.ownerId() == playerId).toList();
+        var report = state.reports().getOrDefault(playerId, new TurnReport(turn - 1, List.of()));
+        return new PlayerViewState(turn, List.copyOf(state.players()), revealedSystems(state),
+                ownFleets, report, state.gameOver(), state.winnerId(),
+                List.of(), List.of(), empireStats(state, playerId, ownFleets), Set.of());
     }
 
     private static EmpireStats empireStats(GameState state, int playerId, List<Fleet> ownFleets) {
@@ -99,9 +127,19 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         return committed;
     }
 
+    /** Je Quellsystem die Summe der ausgehenden Produktionsverlegungen. */
+    private static Map<Integer, Integer> routedShipsBySystem(GameState state, int playerId) {
+        Map<Integer, Integer> out = new HashMap<>();
+        for (StandingOrder o : state.standingOrders().getOrDefault(playerId, List.of())) {
+            out.merge(o.fromSystemId(), o.ships(), Integer::sum);
+        }
+        return out;
+    }
+
     private static VisibleSystem buildVisibleSystem(GameState state, int playerId, StarSystem s,
                                                     Map<Integer, Integer> committedBySystem,
-                                                    Set<Integer> sensorCoverage) {
+                                                    Set<Integer> sensorCoverage,
+                                                    Map<Integer, Integer> routedBySystem) {
         boolean own = Objects.equals(s.ownerId(), playerId);
         var intel = state.intel().getOrDefault(playerId, Map.of()).get(s.id());
         boolean inRange = !own && sensorCoverage.contains(s.id());
@@ -116,10 +154,11 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             color = playerById(state, playerId).colorHex();
             lastSeen = state.turn();
         } else if (inRange) {
-            // Live-Sicht: Besitzer exakt, Garnison nur grob. Ein inzwischen neutrales
-            // System darf hier nicht mehr in der Farbe des alten Eigners stehen.
+            // Live-Sicht: Besitzer exakt. Die Garnison bleibt geschätzt — es sei denn,
+            // hier wurde eben gekämpft: dann kennt der Spieler die genaue Zahl bereits
+            // aus dem Rundenbericht und dürfte sie auf der Karte nicht gröber sehen.
             visibleOwner = s.ownerId();
-            garrison = approximateGarrison(s.garrison());
+            garrison = freshIntelGarrison(state, intel).orElseGet(() -> approximateGarrison(s.garrison()));
             color = visibleOwner != null ? playerById(state, visibleOwner).colorHex() : null;
             lastSeen = state.turn();
         } else if (intel != null) {
@@ -139,7 +178,8 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 visibleOwner,
                 garrison,
                 own ? s.productionPerTurn() : null,
-                own, color, lastSeen, inRange);
+                own, color, lastSeen, inRange,
+                own ? routedBySystem.getOrDefault(s.id(), 0) : null);
     }
 
     /**
@@ -162,6 +202,15 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         return state.systemsWithinRounds(sources, SENSOR_RANGE_ROUNDS);
     }
 
+    private static Optional<Integer> freshIntelGarrison(GameState state, GameState.@Nullable Intel intel) {
+        if (intel == null || intel.garrison() == null) {
+            return Optional.empty();
+        }
+        return intel.turn() >= state.turn() - FRESH_INTEL_TURNS
+                ? Optional.of(intel.garrison())
+                : Optional.empty();
+    }
+
     private static int approximateGarrison(int ships) {
         if (ships < 10) return 5;
         if (ships < 25) return 15;
@@ -178,7 +227,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             out.add(new StandingOrderView(o.id(), o.fromSystemId(), o.toSystemId(),
                     sysNames.getOrDefault(o.fromSystemId(), "?"),
                     sysNames.getOrDefault(o.toSystemId(), "?"),
-                    prod));
+                    prod, o.ships()));
         }
         return List.copyOf(out);
     }
