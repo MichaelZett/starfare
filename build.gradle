@@ -14,7 +14,7 @@ plugins {
 }
 
 group = 'de.zettsystems'
-version = '0.1.0'
+version = appVersion
 
 java {
     toolchain {
@@ -62,6 +62,28 @@ springBoot {
     buildInfo()
 }
 
+// Stabiler Artefaktname für den Release-Job (build/libs/starfare.jar).
+bootJar {
+    archiveFileName = 'starfare.jar'
+}
+
+// Cucumber/Selenium-Smoke-Test (src/e2eTest): eigenes Source-Set, damit
+// `./gradlew test` browserfrei bleibt. test.output liegt mit auf dem Pfad,
+// um SyncAsyncTestConfig & Co. wiederzuverwenden; ausgeführt wird davon nichts.
+sourceSets {
+    e2eTest {
+        java.setSrcDirs(['src/e2eTest/java'])
+        resources.setSrcDirs(['src/e2eTest/resources'])
+        compileClasspath += sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+configurations.named('e2eTestImplementation') { extendsFrom configurations.testImplementation }
+configurations.named('e2eTestRuntimeOnly') { extendsFrom configurations.testRuntimeOnly }
+configurations.named('e2eTestCompileOnly') { extendsFrom configurations.testCompileOnly }
+configurations.named('e2eTestAnnotationProcessor') { extendsFrom configurations.testAnnotationProcessor }
+
 configurations {
     mockitoAgent
 }
@@ -94,6 +116,13 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
     testImplementation 'org.testcontainers:testcontainers-postgresql'
 
+    e2eTestImplementation "io.cucumber:cucumber-java:${cucumberVersion}"
+    e2eTestImplementation "io.cucumber:cucumber-spring:${cucumberVersion}"
+    e2eTestImplementation "io.cucumber:cucumber-junit-platform-engine:${cucumberVersion}"
+    e2eTestImplementation 'org.junit.platform:junit-platform-suite'
+    e2eTestImplementation 'org.seleniumhq.selenium:selenium-java'
+    e2eTestImplementation "io.github.bonigarcia:webdrivermanager:${webdrivermanagerVersion}"
+
     mockitoAgent('org.mockito:mockito-core') {
         transitive = false
     }
@@ -123,6 +152,34 @@ test {
     systemProperty 'user.language', 'en'
     systemProperty 'user.country', 'US'
     finalizedBy jacocoTestReport
+}
+
+tasks.matching { it.name == 'compileE2eTestJava' }.configureEach {
+    options.errorprone.enabled = false
+}
+
+// Nicht Teil von `check`/`build`: braucht Chrome + Docker. Lokal
+// `./gradlew e2eTest` (sichtbarer Browser: -De2e.headless=false), in der CI
+// der Job `e2e`.
+tasks.register('e2eTest', Test) {
+    group = 'verification'
+    description = 'Runs the Cucumber/Selenium smoke test against the real app.'
+    testClassesDirs = sourceSets.e2eTest.output.classesDirs
+    classpath = sourceSets.e2eTest.runtimeClasspath
+    useJUnitPlatform()
+    jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}"
+    systemProperty 'e2e.headless', System.getProperty('e2e.headless', 'true')
+    jacoco {
+        destinationFile = layout.buildDirectory.file('jacoco/e2eTest.exec').get().asFile
+    }
+    testLogging {
+        events 'failed', 'skipped'
+        exceptionFormat 'full'
+        showCauses true
+        showExceptions true
+        showStackTraces true
+    }
+    shouldRunAfter tasks.named('test')
 }
 
 import net.ltgt.gradle.errorprone.CheckSeverity
@@ -162,6 +219,7 @@ spotbugsMain {
 }
 
 tasks.named('spotbugsTest').configure { enabled = false }
+tasks.named('spotbugsE2eTest').configure { enabled = false }
 
 // `./gradlew dependencyUpdates` defaults to stable releases only and skips
 // major version bumps. Override per invocation:
