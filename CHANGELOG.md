@@ -2,8 +2,9 @@
 
 Alle nennenswerten Änderungen an Starfare. Format nach
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach
-[SemVer](https://semver.org/lang/de/). Der Release-Job (sobald vorhanden)
-extrahiert den Abschnitt der aktuellen `version` als Release-Body.
+[SemVer](https://semver.org/lang/de/). Beim Release wird `## Unreleased` in
+`## <appVersion> - <Datum>` umbenannt; der Release-Job extrahiert genau diesen
+Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
@@ -14,6 +15,14 @@ extrahiert den Abschnitt der aktuellen `version` als Release-Body.
   überleben einen Server-Neustart.
 - Mailpit im lokalen `docker-compose.yml`; Profil `brevo` für echten
   SMTP-Versand.
+- Dependabot für GitHub Actions und Gradle (wöchentlich, gruppiert);
+  Actions auf aktuelle Major-Versionen gehoben.
+- Release-Workflow: Push auf `main` mit Nicht-SNAPSHOT-`appVersion` erzeugt
+  Tag `v<version>` und GitHub-Release mit `starfare.jar`, danach Auto-Bump
+  auf das nächste Patch-SNAPSHOT. Kein Deploy.
+
+- Cucumber/Selenium-Smoke-Test (`./gradlew e2eTest`, CI-Job `e2e`): Konto
+  anlegen, bestätigen, anmelden, Spiel anlegen, starten, eine Runde spielen.
 
 ### Changed
 - Spieler werden überall über die Konto-ID referenziert; der öffentliche

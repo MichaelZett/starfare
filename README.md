@@ -168,7 +168,26 @@ users can follow the map live. In pure-AI games the round runs
 automatically (autoplay) until the last observer leaves or the game
 ends.
 
+## Release
+
+`appVersion` in `gradle.properties` drives releases. While it ends in
+`-SNAPSHOT`, pushes to `main` only build and test. To release:
+
+1. Remove the `-SNAPSHOT` suffix.
+2. Rename `## Unreleased` in `CHANGELOG.md` to `## <appVersion> - <date>`.
+3. Commit and push to `main`. The workflow tags `v<appVersion>`, creates a
+   GitHub Release with the changelog section and `starfare.jar`, then bumps
+   `appVersion` to the next patch `-SNAPSHOT` (`[skip ci]`) — run `git pull`
+   before continuing. There is no deployment step.
+
 ## Tests
+
+`./gradlew test` runs the unit and integration tests (PostgreSQL via
+Testcontainers). `./gradlew e2eTest` runs the Cucumber/Selenium smoke test
+against the real application in headless Chrome — register, confirm the
+e-mail, log in, create and start a game, play one round. It is not part of
+`build`; CI runs it as a separate job (`[skip e2e]` in the commit message
+skips it). Failures leave page text and a screenshot in `build/e2e-failures/`.
 
 ```bash
 ./gradlew test

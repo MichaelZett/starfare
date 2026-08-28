@@ -1,3 +1,13 @@
+# CI + Release (ohne Deploy).
+#
+# Push auf main:
+#   build + e2e (parallel)
+#   -> release (nur wenn appVersion in gradle.properties NICHT auf -SNAPSHOT
+#      endet: Tag v<version> + GitHub-Release mit starfare.jar)
+#      -> bump_version (appVersion auf nächstes Patch-SNAPSHOT, [skip ci])
+#
+# SNAPSHOT-Pushes bauen und testen nur. Nach einem Release steht main wieder
+# auf -SNAPSHOT; vor dem Weiterarbeiten einmal `git pull`.
 name: Build
 
 on:
@@ -11,14 +21,38 @@ permissions:
   checks: write
   pull-requests: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Release-Läufe nie mittendrin abbrechen (Tag ohne Release wäre die Folge);
+  # nur PR-Läufe verdrängen einander.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      app_version: ${{ steps.app_version.outputs.value }}
+      is_snapshot: ${{ steps.app_version.outputs.is_snapshot }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+
+      - name: Read app version
+        id: app_version
+        run: |
+          APP_VERSION="$(grep '^appVersion=' gradle.properties | cut -d'=' -f2)"
+          if [ -z "$APP_VERSION" ]; then
+            echo "appVersion fehlt in gradle.properties"
+            exit 1
+          fi
+          echo "value=$APP_VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$APP_VERSION" == *-SNAPSHOT ]]; then
+            echo "is_snapshot=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_snapshot=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '25'
@@ -34,7 +68,7 @@ jobs:
 
       - name: Upload build reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build-reports
           path: |
@@ -42,9 +76,18 @@ jobs:
             build/test-results/
           if-no-files-found: ignore
 
+      # Übergabe an den release-Job — kein zweiter Gradle-Build.
+      - name: Upload boot jar
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.app_version.outputs.is_snapshot == 'false'
+        uses: actions/upload-artifact@v7
+        with:
+          name: boot-jar
+          path: build/libs/starfare.jar
+          retention-days: 1
+
       - name: Publish test results
         if: always()
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@v6
         with:
           report_paths: 'build/test-results/test/*.xml'
           detailed_summary: true
@@ -52,10 +95,148 @@ jobs:
 
       - name: JaCoCo coverage report
         if: github.event_name == 'pull_request' && hashFiles('build/reports/jacoco/test/jacocoTestReport.xml') != ''
-        uses: madrapps/jacoco-report@v1.7.2
+        uses: madrapps/jacoco-report@v1.8.0
         with:
           paths: build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           min-coverage-overall: 78
           min-coverage-changed-files: 60
           title: Coverage Report
+
+  # Cucumber/Selenium-Smoke: Ubuntu-Runner bringen Chrome und Docker mit —
+  # genau was SharedBrowser (Headless-Chrome) und Testcontainers brauchen.
+  # Opt-out per Commit-Marker; Pull-Request-Events haben kein head_commit,
+  # der contains-Ausdruck ist dann leer und der Job läuft — gewollt.
+  e2e:
+    runs-on: ubuntu-latest
+    if: >-
+      !contains(github.event.head_commit.message, '[skip e2e]')
+      && !contains(github.event.head_commit.message, '[skip-e2e]')
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Smoke test
+        run: ./gradlew --no-daemon e2eTest
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+
+      - name: Publish smoke results
+        if: always()
+        uses: mikepenz/action-junit-report@v6
+        with:
+          report_paths: 'build/test-results/e2eTest/*.xml'
+          check_name: Smoke Test Report
+          detailed_summary: true
+          include_passed: false
+
+      # Die Suite schreibt bei Szenario-Fehlschlägen Seitentext und
+      # Screenshot nach build/e2e-failures/.
+      - name: Upload e2e failure dumps
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-failures
+          path: build/e2e-failures/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # GitHub-Release mit Tag v<version>; Release-Body = CHANGELOG-Abschnitt.
+  # Ein per [skip e2e] übersprungener Smoke blockiert das Release nicht.
+  release:
+    runs-on: ubuntu-latest
+    needs: [ build, e2e ]
+    if: >-
+      always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && needs.build.result == 'success'
+      && (needs.e2e.result == 'success' || needs.e2e.result == 'skipped')
+      && needs.build.outputs.is_snapshot == 'false'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: boot-jar
+          path: build/libs/
+
+      - name: Prepare release body from changelog
+        env:
+          APP_VERSION: ${{ needs.build.outputs.app_version }}
+        run: |
+          awk -v version="$APP_VERSION" '
+            $0 ~ "^##[[:space:]]+" version "([[:space:]]+-.*)?$" { found=1; print; next }
+            found && /^##[[:space:]]+/ { exit }
+            found { print }
+          ' CHANGELOG.md > changelog-entry.md
+
+          if ! grep -q '^## ' changelog-entry.md; then
+            echo "Kein Changelog-Eintrag für Version $APP_VERSION in CHANGELOG.md"
+            exit 1
+          fi
+
+          {
+            echo "## Changelog"
+            echo
+            cat changelog-entry.md
+            echo
+            echo "## Build Info"
+            echo "- Commit: ${{ github.sha }}"
+            echo "- Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } > release-body.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          # Fine-grained PAT (Repo-Secret RELEASE_TOKEN, Contents: read/write),
+          # falls "Workflow permissions" dem GITHUB_TOKEN das Release verwehrt.
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+          tag_name: v${{ needs.build.outputs.app_version }}
+          name: v${{ needs.build.outputs.app_version }}
+          body_path: release-body.md
+          generate_release_notes: true
+          files: build/libs/starfare.jar
+
+  # Nach dem Release: appVersion auf nächstes Patch-SNAPSHOT heben, damit
+  # Folge-Pushes nicht erneut releasen. [skip ci] -> kein weiterer Lauf.
+  bump_version:
+    runs-on: ubuntu-latest
+    needs: [ release ]
+    if: ${{ !cancelled() && needs.release.result == 'success' }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+
+      - name: Bump appVersion to next patch SNAPSHOT
+        run: |
+          CURRENT="$(grep '^appVersion=' gradle.properties | cut -d'=' -f2)"
+          if [[ "$CURRENT" == *-SNAPSHOT ]]; then
+            echo "appVersion ist bereits SNAPSHOT ($CURRENT) -> kein Bump nötig."
+            exit 0
+          fi
+          if [[ ! "$CURRENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Unerwartetes Versionsformat für Auto-Bump: $CURRENT"
+            exit 1
+          fi
+          MAJOR="$(echo "$CURRENT" | cut -d. -f1)"
+          MINOR="$(echo "$CURRENT" | cut -d. -f2)"
+          PATCH="$(echo "$CURRENT" | cut -d. -f3)"
+          NEXT="${MAJOR}.${MINOR}.$((PATCH + 1))-SNAPSHOT"
+          echo "Bump appVersion: $CURRENT -> $NEXT"
+          sed -i "s/^appVersion=.*/appVersion=${NEXT}/" gradle.properties
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git commit -am "Bump appVersion to ${NEXT} [skip ci]"
+          git push origin HEAD:main
