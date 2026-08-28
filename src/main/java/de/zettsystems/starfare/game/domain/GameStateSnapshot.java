@@ -8,6 +8,7 @@ import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.report.values.TurnReport;
 import org.jspecify.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,5 +41,6 @@ public record GameStateSnapshot(
         @Nullable Map<Integer, List<StandingOrder>> standingOrders,
         Map<Integer, Integer> nextStandingOrderId,
         boolean observersAllowed,
-        boolean reentryAllowed
+        boolean reentryAllowed,
+        @Nullable Instant turnStartedAt
 ) {}

@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.AbstractRepositoryTest;
 import de.zettsystems.starfare.game.domain.GameSessionEntity;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,14 @@ class GameSessionRepositoryTest extends AbstractRepositoryTest {
     void clearSessions() {
         // Other test classes may have committed game_sessions through the
         // production save path; @Transactional rollback can't reach those.
+        repository.deleteAll();
+    }
+
+    @AfterEach
+    void dropStubSessions() {
+        // Die Stub-Rows hier tragen kein vollstaendiges GameStateSnapshot-JSON.
+        // Bleiben sie liegen, scheitert der naechste Spring-Kontext, der sie
+        // beim Start ueber JpaGameSessionStore.loadFromDatabase() einliest.
         repository.deleteAll();
     }
 

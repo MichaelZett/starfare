@@ -13,8 +13,7 @@ class GameSetupTest {
                 24, humans, ai,
                 List.of(),
                 2, 6, 8,
-                GameConfig.PLAYER_PALETTE.getFirst(),
-                observersAllowed, true
+                observersAllowed, true, List.of()
         );
     }
 
@@ -24,8 +23,7 @@ class GameSetupTest {
                 24, 3, 1,
                 List.of(4, 4, 4, 4),
                 2, 6, 8,
-                GameConfig.PLAYER_PALETTE.getFirst(),
-                true, true
+                true, true, List.of()
         ).normalized();
 
         assertThat(setup.humanPlayers()).isEqualTo(3);
@@ -68,8 +66,7 @@ class GameSetupTest {
                 24, 2, 1,
                 List.of(5),
                 2, 6, 8,
-                GameConfig.PLAYER_PALETTE.getFirst(),
-                true, true
+                true, true, List.of()
         ).normalized();
 
         assertThat(setup.startProductionPerPlayer()).hasSize(setup.totalPlayers());
@@ -92,11 +89,76 @@ class GameSetupTest {
                 24, 2, 1,
                 List.of(4, 4, 4),
                 2, 6, 8,
-                GameConfig.PLAYER_PALETTE.getFirst(),
-                false, false
+                false, false, List.of()
         ).normalized();
 
         assertThat(normalized.observersAllowed()).isFalse();
         assertThat(normalized.reentryAllowed()).isFalse();
+    }
+
+    @Test
+    void seatColorsDefaultToPaletteOrder() {
+        GameSetup setup = new GameSetup(
+                24, 2, 1,
+                List.of(4, 4, 4),
+                2, 6, 8,
+                true, true, List.of()
+        ).normalized();
+
+        assertThat(setup.seatColorHexes()).hasSize(3);
+        assertThat(setup.colorForSeat(0)).isEqualTo(GameConfig.PLAYER_PALETTE.get(0));
+        assertThat(setup.colorForSeat(1)).isEqualTo(GameConfig.PLAYER_PALETTE.get(1));
+        assertThat(setup.colorForSeat(2)).isEqualTo(GameConfig.PLAYER_PALETTE.get(2));
+    }
+
+    @Test
+    void chosenSeatColorsSurviveNormalization() {
+        String third = GameConfig.PLAYER_PALETTE.get(2);
+        String first = GameConfig.PLAYER_PALETTE.get(0);
+
+        GameSetup setup = new GameSetup(
+                24, 2, 0,
+                List.of(4, 4),
+                2, 6, 8,
+                true, true, List.of(third, first)
+        ).normalized();
+
+        assertThat(setup.colorForSeat(0)).isEqualTo(third);
+        assertThat(setup.colorForSeat(1)).isEqualTo(first);
+    }
+
+    @Test
+    void duplicateSeatColorsAreReplacedByFreePaletteEntries() {
+        String same = GameConfig.PLAYER_PALETTE.get(1);
+
+        GameSetup setup = new GameSetup(
+                24, 3, 0,
+                List.of(4, 4, 4),
+                2, 6, 8,
+                true, true, List.of(same, same, same)
+        ).normalized();
+
+        assertThat(setup.seatColorHexes()).doesNotHaveDuplicates();
+        assertThat(setup.colorForSeat(0)).isEqualTo(same);
+    }
+
+    @Test
+    void unknownSeatColorFallsBackToPalette() {
+        GameSetup setup = new GameSetup(
+                24, 2, 0,
+                List.of(4, 4),
+                2, 6, 8,
+                true, true, List.of("not-a-color", "#123456")
+        ).normalized();
+
+        assertThat(setup.seatColorHexes()).allMatch(GameConfig.PLAYER_PALETTE::contains);
+        assertThat(setup.seatColorHexes()).doesNotHaveDuplicates();
+    }
+
+    @Test
+    void seatColorsCoverEveryPlayerAfterClamping() {
+        GameSetup setup = setup(GameConfig.MAX_HUMAN_PLAYERS, GameConfig.MAX_AI_PLAYERS, true).normalized();
+
+        assertThat(setup.seatColorHexes()).hasSize(setup.totalPlayers());
     }
 }

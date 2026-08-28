@@ -21,6 +21,13 @@ public final class UiTexts {
     public static final String LOBBY_COLUMN_STATUS = "lobby.column.status";
     public static final String LOBBY_COLUMN_ACTIONS = "lobby.column.actions";
     public static final String LOBBY_TURN_LABEL = "lobby.turnLabel";
+    public static final String LOBBY_SEARCH = "lobby.search";
+    public static final String LOBBY_FILTER = "lobby.filter";
+    public static final String LOBBY_FILTER_ALL = "lobby.filter.all";
+    public static final String LOBBY_FILTER_OWN = "lobby.filter.own";
+    public static final String LOBBY_FILTER_OPEN = "lobby.filter.open";
+    public static final String LOBBY_FILTER_RUNNING = "lobby.filter.running";
+    public static final String LOBBY_FILTER_FINISHED = "lobby.filter.finished";
 
     // Lobby — row actions
     public static final String LOBBY_ACTION_JOIN = "lobby.action.join";

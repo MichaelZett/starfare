@@ -9,10 +9,15 @@ import de.zettsystems.starfare.report.values.TurnReport;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jspecify.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 /**
@@ -49,6 +54,7 @@ public class GameState {
     private final Map<Integer, Integer> nextStandingOrderId = new HashMap<>();
     private boolean observersAllowed;
     private boolean reentryAllowed;
+    private Instant turnStartedAt = Instant.now();
 
     public int turn() {
         return turn;
@@ -103,6 +109,7 @@ public class GameState {
      */
     public void start() {
         this.started = true;
+        this.turnStartedAt = Instant.now();
     }
 
     public java.util.Set<Integer> joinedHumanPlayerIds() {
@@ -145,6 +152,10 @@ public class GameState {
 
     public boolean reentryAllowed() {
         return reentryAllowed;
+    }
+
+    public Instant turnStartedAt() {
+        return turnStartedAt;
     }
 
     /**
@@ -235,12 +246,45 @@ public class GameState {
     }
 
     public int travelRounds(int fromId, int toId) {
-        double d = distance(fromId, toId);
+        return roundsFor(distance(fromId, toId), baseSpeed());
+    }
+
+    /**
+     * IDs aller Systeme, die von mindestens einer der Quellen in hoechstens
+     * {@code maxRounds} Reiserunden erreichbar sind (Quellen eingeschlossen).
+     * Berechnet Bounding-Box und System-Index nur einmal statt je Paar.
+     */
+    public Set<Integer> systemsWithinRounds(Collection<Integer> sourceSystemIds, int maxRounds) {
+        if (sourceSystemIds.isEmpty()) {
+            return Set.of();
+        }
+        double baseSpeed = baseSpeed();
+        Map<Integer, StarSystem> index = new HashMap<>();
+        for (StarSystem s : systems) {
+            index.put(s.id(), s);
+        }
+        List<StarSystem> sources = sourceSystemIds.stream().map(index::get).filter(Objects::nonNull).toList();
+        Set<Integer> reachable = new HashSet<>();
+        for (StarSystem target : systems) {
+            for (StarSystem source : sources) {
+                double d = Math.hypot(source.x() - target.x(), source.y() - target.y());
+                if (roundsFor(d, baseSpeed) <= maxRounds) {
+                    reachable.add(target.id());
+                    break;
+                }
+            }
+        }
+        return reachable;
+    }
+
+    private double baseSpeed() {
         var bbox = bounds();
         double diag = Math.hypot(bbox.width, bbox.height);
-        double baseSpeed = Math.max(1.0, diag / 20.0);
-        int r = (int) Math.ceil(d / baseSpeed);
-        return Math.clamp(r, 2, 20);
+        return Math.max(1.0, diag / 20.0);
+    }
+
+    private static int roundsFor(double distance, double baseSpeed) {
+        return Math.clamp((int) Math.ceil(distance / baseSpeed), 2, 20);
     }
 
     private Bounds bounds() {
@@ -283,12 +327,16 @@ public class GameState {
 
     public void nextTurn() {
         this.turn++;
+        this.turnStartedAt = Instant.now();
     }
 
     private record Bounds(double x, double y, double width, double height) {
     }
 
-    public record Intel(@Nullable Integer ownerId, int turn) {
+    public record Intel(@Nullable Integer ownerId, int turn, @Nullable Integer garrison) {
+        public Intel(@Nullable Integer ownerId, int turn) {
+            this(ownerId, turn, null);
+        }
     }
 
     public static GameStateSnapshot toSnapshot(GameState s) {
@@ -307,7 +355,7 @@ public class GameState {
                 new java.util.HashSet<>(s.joinedHumanPlayerIds), new java.util.HashSet<>(s.originalHumanPlayerIds),
                 new java.util.HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
-                s.observersAllowed, s.reentryAllowed);
+                s.observersAllowed, s.reentryAllowed, s.turnStartedAt);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -345,6 +393,9 @@ public class GameState {
         }
         c.observersAllowed = s.observersAllowed();
         c.reentryAllowed = s.reentryAllowed();
+        // Aeltere Snapshots kennen das Feld nicht; dann laeuft die Zug-Uhr ab Wiederherstellung.
+        Instant startedAt = s.turnStartedAt();
+        c.turnStartedAt = startedAt != null ? startedAt : Instant.now();
         return c;
     }
 

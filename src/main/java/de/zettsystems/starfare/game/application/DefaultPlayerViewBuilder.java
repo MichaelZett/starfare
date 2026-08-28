@@ -18,6 +18,9 @@ import java.util.stream.Collectors;
 @Component
 class DefaultPlayerViewBuilder implements PlayerViewBuilder {
 
+    /** Reiserunden, die eigene Systeme und Flotten an Sensorreichweite abdecken. */
+    private static final int SENSOR_RANGE_ROUNDS = 2;
+
     @Override
     public PlayerViewState forPlayer(GameState state, int playerId) {
         int turn = state.turn();
@@ -26,8 +29,9 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         List<FleetOrder> orders = state.pendingOrders().getOrDefault(playerId, List.of());
         Map<Integer, Integer> committedBySystem = committedShipsBySystem(orders);
 
+        Set<Integer> sensorCoverage = sensorCoverage(state, playerId);
         var vis = state.systems().stream()
-                .map(s -> buildVisibleSystem(state, playerId, s, committedBySystem))
+                .map(s -> buildVisibleSystem(state, playerId, s, committedBySystem, sensorCoverage))
                 .toList();
 
         Map<Integer, String> sysNames = state.systems().stream()
@@ -52,7 +56,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             return new VisibleSystem(
                     s.id(), s.name(), s.x(), s.y(),
                     ownerId, s.garrison(), s.productionPerTurn(),
-                    true, color, turn);
+                    true, color, turn, false);
         }).toList();
         var fleets = List.copyOf(state.fleets());
         return new PlayerViewState(turn, players, systems, fleets, null, state.gameOver(), state.winnerId(),
@@ -96,28 +100,73 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
     }
 
     private static VisibleSystem buildVisibleSystem(GameState state, int playerId, StarSystem s,
-                                                    Map<Integer, Integer> committedBySystem) {
+                                                    Map<Integer, Integer> committedBySystem,
+                                                    Set<Integer> sensorCoverage) {
         boolean own = Objects.equals(s.ownerId(), playerId);
+        var intel = state.intel().getOrDefault(playerId, Map.of()).get(s.id());
+        boolean inRange = !own && sensorCoverage.contains(s.id());
+
+        Integer visibleOwner;
+        Integer garrison;
         String color = null;
         Integer lastSeen = null;
         if (own) {
+            visibleOwner = s.ownerId();
+            garrison = s.garrison() - committedBySystem.getOrDefault(s.id(), 0);
             color = playerById(state, playerId).colorHex();
             lastSeen = state.turn();
-        } else {
-            var intel = state.intel().getOrDefault(playerId, Map.of()).get(s.id());
-            Integer intelOwnerId = intel != null ? intel.ownerId() : null;
-            if (intel != null && intelOwnerId != null) {
-                color = playerById(state, intelOwnerId).colorHex();
+        } else if (inRange) {
+            // Live-Sicht: Besitzer exakt, Garnison nur grob. Ein inzwischen neutrales
+            // System darf hier nicht mehr in der Farbe des alten Eigners stehen.
+            visibleOwner = s.ownerId();
+            garrison = approximateGarrison(s.garrison());
+            color = visibleOwner != null ? playerById(state, visibleOwner).colorHex() : null;
+            lastSeen = state.turn();
+        } else if (intel != null) {
+            // Nur Aufklaerung aus vergangenen Kaempfen; Alter steckt im Tooltip.
+            visibleOwner = intel.ownerId();
+            garrison = intel.garrison();
+            if (visibleOwner != null) {
+                color = playerById(state, visibleOwner).colorHex();
                 lastSeen = intel.turn();
             }
+        } else {
+            visibleOwner = null;
+            garrison = null;
         }
-        Integer garrison = own ? s.garrison() - committedBySystem.getOrDefault(s.id(), 0) : null;
         return new VisibleSystem(
                 s.id(), s.name(), s.x(), s.y(),
-                own ? s.ownerId() : null,
+                visibleOwner,
                 garrison,
                 own ? s.productionPerTurn() : null,
-                own, color, lastSeen);
+                own, color, lastSeen, inRange);
+    }
+
+    /**
+     * Systeme in Sensorreichweite eigener Systeme oder Flottenziele. Einmal je Ansicht
+     * berechnet: die Reichweitenpruefung je Systempaar war quadratisch in der Systemzahl.
+     */
+    private static Set<Integer> sensorCoverage(GameState state, int playerId) {
+        Set<Integer> sources = new HashSet<>();
+        for (StarSystem s : state.systems()) {
+            Integer ownerId = s.ownerId();
+            if (ownerId != null && ownerId == playerId) {
+                sources.add(s.id());
+            }
+        }
+        for (Fleet fleet : state.fleets()) {
+            if (fleet.ownerId() == playerId) {
+                sources.add(fleet.toSystemId());
+            }
+        }
+        return state.systemsWithinRounds(sources, SENSOR_RANGE_ROUNDS);
+    }
+
+    private static int approximateGarrison(int ships) {
+        if (ships < 10) return 5;
+        if (ships < 25) return 15;
+        if (ships < 50) return 35;
+        return 75;
     }
 
     private static List<StandingOrderView> buildStandingOrderViews(GameState state, List<StandingOrder> orders,

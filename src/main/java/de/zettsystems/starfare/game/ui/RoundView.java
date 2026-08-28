@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Visual round-report screen. Shown after a turn with significant events.
@@ -201,7 +202,41 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         iconSpan.addClassName("event-icon");
         var textSpan = new Span(text);
         card.add(iconSpan, textSpan);
+        if (event instanceof TurnEvent.BattleWon || event instanceof TurnEvent.BattleLost
+                || event instanceof TurnEvent.DefenseHeld) {
+            addBattleReveal(card);
+        }
         return card;
+    }
+
+    /**
+     * Browser deckeln die Zahl der AudioContexts pro Dokument (Chrome bei sechs),
+     * darum genau einen anlegen und an {@code window} merken.
+     */
+    private static final String PLAY_IMPACT_JS = """
+            const C = window.AudioContext || window.webkitAudioContext;
+            if (!C) return;
+            window.__starfareAudio = window.__starfareAudio || new C();
+            const c = window.__starfareAudio;
+            if (c.state === 'suspended') c.resume();
+            const o = c.createOscillator(), g = c.createGain();
+            o.frequency.setValueAtTime(110, c.currentTime); o.frequency.exponentialRampToValueAtTime(48, c.currentTime + .22);
+            g.gain.setValueAtTime(.05, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + .24);
+            o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + .25);
+            """;
+
+    private static void addBattleReveal(Div card) {
+        AtomicBoolean revealed = new AtomicBoolean();
+        card.addClassName("event-battle-interactive");
+        card.addClickListener(_ -> {
+            if (revealed.getAndSet(true)) {
+                return;
+            }
+            card.removeClassName("event-battle-interactive");
+            card.addClassName("event-battle-revealed");
+            card.addClassName("event-battle-finished");
+            card.getElement().executeJs(PLAY_IMPACT_JS);
+        });
     }
 
     private static String iconFor(TurnEvent e) {

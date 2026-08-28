@@ -81,6 +81,8 @@ public interface GameService {
 
     boolean submitTurn(GameId gameId, int playerId);
 
+    boolean expireInactiveSeats(GameId gameId);
+
     boolean kickHuman(GameId gameId, @Nullable String actorPlayerId, int seatId);
 
     boolean leaveGame(GameId gameId, int playerId);

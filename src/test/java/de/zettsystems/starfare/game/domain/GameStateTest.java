@@ -5,7 +5,9 @@ import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -126,5 +128,79 @@ class GameStateTest {
         assertThat(state.observers()).isEmpty();
         assertThat(state.observersAllowed()).isFalse();
         assertThat(state.reentryAllowed()).isFalse();
+    }
+
+    @Test
+    void turnStartedAtSurvivesSnapshotRoundTrip() {
+        GameState state = new GameState();
+        state.start();
+        state.nextTurn();
+        Instant expected = state.turnStartedAt();
+
+        GameState restored = GameState.fromSnapshot(GameState.toSnapshot(state));
+
+        assertThat(restored.turnStartedAt()).isEqualTo(expected);
+    }
+
+    @Test
+    void snapshotWithoutTurnStartedAtStartsClockOnRestore() {
+        GameState state = new GameState();
+        state.start();
+        // Referenzzeit aus dem Produktionscode statt aus der Systemuhr im Test:
+        // ein Default wie Instant.EPOCH faellt damit genauso auf.
+        Instant startedInOriginal = state.turnStartedAt();
+        GameStateSnapshot legacy = withoutTurnStartedAt(GameState.toSnapshot(state));
+
+        GameState restored = GameState.fromSnapshot(legacy);
+
+        assertThat(restored.turnStartedAt())
+                .isNotNull()
+                .isAfterOrEqualTo(startedInOriginal);
+    }
+
+    private static GameStateSnapshot withoutTurnStartedAt(GameStateSnapshot s) {
+        return new GameStateSnapshot(s.turn(), s.nextGlobalFleetId(), s.nextLocalFleetNo(), s.players(), s.systems(),
+                s.fleets(), s.reports(), s.intel(), s.waitThisTurn(), s.submittedThisTurn(), s.gameOver(), s.winnerId(),
+                s.active(), s.started(), s.joinedHumanPlayerIds(), s.originalHumanPlayerIds(), s.observers(),
+                s.seatByUser(), s.invitedSeats(), s.pendingOrders(), s.standingOrders(), s.nextStandingOrderId(),
+                s.observersAllowed(), s.reentryAllowed(), null);
+    }
+
+    @Test
+    void nextTurnRestartsTheTurnClock() {
+        GameState state = new GameState();
+        state.start();
+        Instant first = state.turnStartedAt();
+
+        state.nextTurn();
+
+        assertThat(state.turnStartedAt()).isAfterOrEqualTo(first);
+    }
+
+    @Test
+    void systemsWithinRoundsCoversNeighboursButNotDistantSystems() {
+        GameState state = new GameState();
+        state.systems().add(new StarSystem(1, "A", 0, 0, 1, 5, 1, false));
+        state.systems().add(new StarSystem(2, "B", 5, 0, null, 5, 1, true));
+        state.systems().add(new StarSystem(3, "C", 200, 0, null, 5, 1, true));
+
+        Set<Integer> reachable = state.systemsWithinRounds(List.of(1), 2);
+
+        assertThat(reachable).contains(1, 2).doesNotContain(3);
+        assertThat(state.systemsWithinRounds(List.of(), 2)).isEmpty();
+    }
+
+    @Test
+    void systemsWithinRoundsMatchesTravelRounds() {
+        GameState state = new GameState();
+        state.systems().add(new StarSystem(1, "A", 0, 0, 1, 5, 1, false));
+        state.systems().add(new StarSystem(2, "B", 60, 0, null, 5, 1, true));
+        state.systems().add(new StarSystem(3, "C", 200, 0, null, 5, 1, true));
+
+        for (int target : List.of(1, 2, 3)) {
+            assertThat(state.systemsWithinRounds(List.of(1), 4).contains(target))
+                    .as("System %d", target)
+                    .isEqualTo(state.travelRounds(1, target) <= 4);
+        }
     }
 }

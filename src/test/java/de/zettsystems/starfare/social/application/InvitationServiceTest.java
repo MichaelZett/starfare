@@ -2,7 +2,6 @@ package de.zettsystems.starfare.social.application;
 
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.social.values.SocialEvent;
@@ -47,8 +46,8 @@ class InvitationServiceTest extends AbstractIntegrationTest {
         GameSetup setup = new GameSetup(
                 20, 2, 0,
                 List.of(5, 5),
-                2, 5, 6, GameConfig.PLAYER_PALETTE.getFirst(),
-                false, false);
+                2, 5, 6,
+                false, false, List.of());
         return games.newGame(setup, host, "test-game");
     }
 
@@ -173,8 +172,8 @@ class InvitationServiceTest extends AbstractIntegrationTest {
         GameSetup setup = new GameSetup(
                 20, 1, 0,
                 List.of(5),
-                2, 5, 6, GameConfig.PLAYER_PALETTE.getFirst(),
-                false, false);
+                2, 5, 6,
+                false, false, List.of());
         GameId id = games.newGame(setup, "host", "t");
         games.joinGame(id, "host");
         games.startGame(id);

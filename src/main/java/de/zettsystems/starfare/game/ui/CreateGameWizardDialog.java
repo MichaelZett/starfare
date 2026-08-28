@@ -61,14 +61,12 @@ final class CreateGameWizardDialog {
         startGarrison.setMin(1);
         startGarrison.setValue(GameConfig.DEFAULT_START_GARRISON);
 
-        ComboBox<ColorOption> color = buildColorCombo();
-
         Checkbox observersAllowed = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_OBSERVERS_ALLOWED));
         observersAllowed.setValue(GameConfig.DEFAULT_OBSERVERS_ALLOWED);
         Checkbox reentryAllowed = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_REENTRY_ALLOWED));
         reentryAllowed.setValue(GameConfig.DEFAULT_REENTRY_ALLOWED);
 
-        FormLayout setupGrid = grid(3, "13em", systems, humans, ai, color, startGarrison, observersAllowed, reentryAllowed);
+        FormLayout setupGrid = grid(3, "13em", systems, humans, ai, startGarrison, observersAllowed, reentryAllowed);
         FormLayout neutralGrid = grid(2, "16em", neutralMinProduction, neutralMaxProduction);
 
         FormLayout startProductionFields = new FormLayout();
@@ -79,8 +77,9 @@ final class CreateGameWizardDialog {
         startProductionFields.addClassName("wizard-start-production");
 
         List<IntegerField> startProductionInputs = new ArrayList<>();
+        List<ComboBox<ColorOption>> seatColorInputs = new ArrayList<>();
         Runnable rebuildProductionInputs = () -> rebuildStartProduction(
-                startProductionFields, startProductionInputs, humans, ai);
+                startProductionFields, startProductionInputs, seatColorInputs, humans, ai);
         humans.addValueChangeListener(_ -> rebuildProductionInputs.run());
         ai.addValueChangeListener(_ -> rebuildProductionInputs.run());
         rebuildProductionInputs.run();
@@ -100,9 +99,9 @@ final class CreateGameWizardDialog {
         body.setWidthFull();
         dialog.add(body);
 
-        FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs,
+        FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
-                color, observersAllowed, reentryAllowed);
+                observersAllowed, reentryAllowed);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CREATE), _ -> {
             GameSetup setup = buildSetup(formInputs);
             String hostPlayerId = UserContext.currentPlayerId().orElse(null);
@@ -116,18 +115,23 @@ final class CreateGameWizardDialog {
         dialog.open();
     }
 
-    private static void rebuildStartProduction(FormLayout fields, List<IntegerField> inputs,
+    private static void rebuildStartProduction(FormLayout fields, List<IntegerField> inputs, List<ComboBox<ColorOption>> colors,
                                                IntegerField humans, IntegerField ai) {
         fields.removeAll();
         inputs.clear();
+        colors.clear();
 
         int humanCount = Math.max(1, valueOrDefault(humans.getValue(), GameConfig.DEFAULT_HUMAN_PLAYERS));
         for (int i = 1; i <= humanCount; i++) {
             IntegerField humanProduction = new IntegerField(I18n.t(UiTexts.LOBBY_FIELD_START_PRODUCTION_HUMAN, i));
             humanProduction.setMin(1);
             humanProduction.setValue(GameConfig.DEFAULT_START_SYSTEM_PRODUCTION);
-            fields.add(humanProduction);
+            ComboBox<ColorOption> color = buildColorCombo();
+            color.setLabel(I18n.t(UiTexts.LOBBY_FIELD_COLOR) + " " + i);
+            color.setValue(colorOptions().get((i - 1) % GameConfig.PLAYER_PALETTE.size()));
+            fields.add(humanProduction, color);
             inputs.add(humanProduction);
+            colors.add(color);
         }
 
         int aiCount = Math.max(0, valueOrDefault(ai.getValue(), GameConfig.DEFAULT_AI_PLAYERS));
@@ -135,21 +139,29 @@ final class CreateGameWizardDialog {
             IntegerField aiProduction = new IntegerField(I18n.t(UiTexts.LOBBY_FIELD_START_PRODUCTION_AI, i));
             aiProduction.setMin(1);
             aiProduction.setValue(GameConfig.DEFAULT_START_SYSTEM_PRODUCTION);
-            fields.add(aiProduction);
+            ComboBox<ColorOption> color = buildColorCombo();
+            color.setLabel(I18n.t(UiTexts.LOBBY_FIELD_COLOR) + " " + (humanCount + i));
+            color.setValue(colorOptions().get((humanCount + i - 1) % GameConfig.PLAYER_PALETTE.size()));
+            fields.add(aiProduction, color);
             inputs.add(aiProduction);
+            colors.add(color);
         }
     }
 
     private record FormInputs(IntegerField systems, IntegerField humans, IntegerField ai,
                               List<IntegerField> startProductionInputs,
+                              List<ComboBox<ColorOption>> seatColorInputs,
                               IntegerField neutralMinProduction, IntegerField neutralMaxProduction,
-                              IntegerField startGarrison, ComboBox<ColorOption> color,
+                              IntegerField startGarrison,
                               Checkbox observersAllowed, Checkbox reentryAllowed) {
     }
 
     private static GameSetup buildSetup(FormInputs in) {
         List<Integer> startProductionPerPlayer = in.startProductionInputs().stream()
                 .map(field -> valueOrDefault(field.getValue(), GameConfig.DEFAULT_START_SYSTEM_PRODUCTION))
+                .toList();
+        List<String> seatColors = in.seatColorInputs().stream()
+                .map(field -> field.getValue() == null ? GameConfig.PLAYER_PALETTE.getFirst() : field.getValue().hex())
                 .toList();
         return new GameSetup(
                 valueOrDefault(in.systems().getValue(), GameConfig.DEFAULT_SYSTEM_COUNT),
@@ -159,9 +171,9 @@ final class CreateGameWizardDialog {
                 valueOrDefault(in.neutralMinProduction().getValue(), GameConfig.DEFAULT_NEUTRAL_MIN_PRODUCTION),
                 valueOrDefault(in.neutralMaxProduction().getValue(), GameConfig.DEFAULT_NEUTRAL_MAX_PRODUCTION),
                 valueOrDefault(in.startGarrison().getValue(), GameConfig.DEFAULT_START_GARRISON),
-                in.color().getValue() == null ? GameConfig.PLAYER_PALETTE.getFirst() : in.color().getValue().hex(),
                 in.observersAllowed().getValue(),
-                in.reentryAllowed().getValue()
+                in.reentryAllowed().getValue(),
+                seatColors
         ).normalized();
     }
 

@@ -25,7 +25,7 @@ public class DefaultCombatService implements CombatService {
     @Override
     public void resolveAttack(GameState state, int attackerId, int toSystemId, int ships, List<Integer> localNos) {
         StarSystem target = state.getSystem(toSystemId);
-        intelFor(state, attackerId).put(toSystemId, new GameState.Intel(target.ownerId(), state.turn()));
+        intelFor(state, attackerId).put(toSystemId, new GameState.Intel(target.ownerId(), state.turn(), target.garrison()));
 
         String fleetLabel = "F" + listNos(localNos);
 
@@ -52,11 +52,12 @@ public class DefaultCombatService implements CombatService {
             if (oldOwner != null && !Objects.equals(oldOwner, attackerId)) {
                 reportService.appendEvent(state, oldOwner,
                         new TurnEvent.SystemLost(oldOwner, attackerId, toSystemId, target.name()));
-                intelFor(state, oldOwner).put(toSystemId, new GameState.Intel(attackerId, state.turn()));
+                intelFor(state, oldOwner).put(toSystemId, new GameState.Intel(attackerId, state.turn(), res.attackersLeft()));
             }
-            intelFor(state, attackerId).put(toSystemId, new GameState.Intel(attackerId, state.turn()));
+            intelFor(state, attackerId).put(toSystemId, new GameState.Intel(attackerId, state.turn(), res.attackersLeft()));
         } else {
             state.updateSystem(target.id(), current -> current.afterDefense(res.defendersLeft()));
+            intelFor(state, attackerId).put(toSystemId, new GameState.Intel(oldOwner, state.turn(), res.defendersLeft()));
             reportService.appendEvent(state, attackerId,
                     new TurnEvent.BattleLost(attackerId, toSystemId, target.name(),
                             ships, defendersBefore, res.defendersLeft()));

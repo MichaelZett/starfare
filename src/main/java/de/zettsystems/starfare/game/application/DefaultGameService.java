@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.time.Instant;
+import de.zettsystems.starfare.game.config.GameTimingProperties;
 
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
@@ -32,10 +35,11 @@ public class DefaultGameService implements GameService {
     private final AutoplayRunner autoplayRunner;
     private final Broadcaster broadcaster;
     private final PlayerViewBuilder playerViewBuilder;
+    private final GameTimingProperties timing;
 
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
-                              PlayerViewBuilder playerViewBuilder) {
+                              PlayerViewBuilder playerViewBuilder, GameTimingProperties timing) {
         this.registry = registry;
         this.turnEngine = turnEngine;
         this.fleetService = fleetService;
@@ -43,6 +47,7 @@ public class DefaultGameService implements GameService {
         this.autoplayRunner = autoplayRunner;
         this.broadcaster = broadcaster;
         this.playerViewBuilder = playerViewBuilder;
+        this.timing = timing;
     }
 
     @Override
@@ -360,6 +365,60 @@ public class DefaultGameService implements GameService {
             publishTurnResult(gameId, result.turnResult());
         }
         return result.accepted();
+    }
+
+    @Override
+    public boolean expireInactiveSeats(GameId gameId) {
+        // Billiger Vorfilter: writeState persistiert bei jedem Aufruf einen Snapshot,
+        // der Scheduler laeuft aber alle 30 s ueber saemtliche Partien.
+        boolean expired = registry.readState(gameId, this::hasExpiredSeats);
+        if (!expired) {
+            return false;
+        }
+        ExpiryResult result = registry.writeState(gameId, state -> {
+            if (!hasExpiredSeats(state)) {
+                return ExpiryResult.none();
+            }
+            Set<Integer> inactive = state.joinedHumanPlayerIds().stream()
+                    .filter(id -> !state.submittedThisTurn().contains(id))
+                    .collect(Collectors.toUnmodifiableSet());
+            List<String> abandonedBy = inactive.stream()
+                    .map(id -> state.seatByUser().entrySet().stream()
+                            .filter(entry -> Objects.equals(entry.getValue(), id))
+                            .map(Map.Entry::getKey).findFirst().orElse(null))
+                    .filter(Objects::nonNull)
+                    .toList();
+            inactive.forEach(id -> {
+                state.updatePlayer(id, Player::asAi);
+                state.joinedHumanPlayerIds().remove(id);
+                state.pendingOrders().remove(id);
+                // Der Sitz gehoert ab jetzt dauerhaft der KI, auch bei erlaubtem Wiedereinstieg.
+                state.seatByUser().entrySet().removeIf(entry -> Objects.equals(entry.getValue(), id));
+            });
+            return new ExpiryResult(inactive, abandonedBy, maybeAdvance(state));
+        });
+        if (result.seats().isEmpty()) {
+            return false;
+        }
+        result.seats().forEach(seatId -> broadcaster.publish(new GameEvent.SeatAbandoned(gameId, seatId)));
+        publishTurnResult(gameId, result.turnResult());
+        result.abandonedBy().forEach(playerId -> transferHostIfNeeded(gameId, playerId));
+        if (shouldAutoplay(gameId)) {
+            autoplayRunner.autoplayToEnd(gameId);
+        }
+        return true;
+    }
+
+    private boolean hasExpiredSeats(GameState state) {
+        return state.active() && state.started() && !state.gameOver()
+                && !state.turnStartedAt().plus(timing.inactivityTimeout()).isAfter(Instant.now())
+                && !state.joinedHumanPlayerIds().stream().allMatch(state.submittedThisTurn()::contains);
+    }
+
+    private record ExpiryResult(Set<Integer> seats, List<String> abandonedBy, TurnResult turnResult) {
+        static ExpiryResult none() {
+            return new ExpiryResult(Set.of(), List.of(), TurnResult.REJECTED);
+        }
     }
 
     @Override

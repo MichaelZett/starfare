@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.game.values;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.*;
 
 /**
@@ -13,9 +15,9 @@ public record GameSetup(
         int neutralMinProduction,
         int neutralMaxProduction,
         int startGarrison,
-        String humanColorHex,
         boolean observersAllowed,
-        boolean reentryAllowed
+        boolean reentryAllowed,
+        List<String> seatColorHexes
 ) {
     public static GameSetup defaults() {
         int totalPlayers = GameConfig.DEFAULT_HUMAN_PLAYERS + GameConfig.DEFAULT_AI_PLAYERS;
@@ -31,9 +33,9 @@ public record GameSetup(
                 GameConfig.DEFAULT_NEUTRAL_MIN_PRODUCTION,
                 GameConfig.DEFAULT_NEUTRAL_MAX_PRODUCTION,
                 GameConfig.DEFAULT_START_GARRISON,
-                GameConfig.PLAYER_PALETTE.getFirst(),
                 GameConfig.DEFAULT_OBSERVERS_ALLOWED,
-                GameConfig.DEFAULT_REENTRY_ALLOWED
+                GameConfig.DEFAULT_REENTRY_ALLOWED,
+                GameConfig.PLAYER_PALETTE
         );
     }
 
@@ -55,9 +57,9 @@ public record GameSetup(
             neutralMax = tmp;
         }
         int garrison = Math.max(1, startGarrison);
-        String color = normalizeColor(humanColorHex);
-        return new GameSetup(systems, humans, ai, startProductions, neutralMin, neutralMax, garrison, color,
-                observersAllowed, reentryAllowed);
+        List<String> seatColors = normalizeSeatColors(seatColorHexes, totalPlayers);
+        return new GameSetup(systems, humans, ai, startProductions, neutralMin, neutralMax, garrison,
+                observersAllowed, reentryAllowed, seatColors);
     }
 
     public int totalPlayers() {
@@ -69,6 +71,13 @@ public record GameSetup(
             return GameConfig.DEFAULT_START_SYSTEM_PRODUCTION;
         }
         return Math.max(1, startProductionPerPlayer.get(seatIndex));
+    }
+
+    public String colorForSeat(int seatIndex) {
+        if (seatIndex >= 0 && seatIndex < seatColorHexes.size()) {
+            return seatColorHexes.get(seatIndex);
+        }
+        return GameConfig.PLAYER_PALETTE.get(Math.floorMod(seatIndex, GameConfig.PLAYER_PALETTE.size()));
     }
 
     private static int clamp(int value, int min, int max) {
@@ -88,11 +97,27 @@ public record GameSetup(
         return List.copyOf(out);
     }
 
-    private static String normalizeColor(String color) {
+    private static String normalizeColor(@Nullable String color) {
         Set<String> palette = new HashSet<>(GameConfig.PLAYER_PALETTE);
         if (color != null && palette.contains(color)) {
             return color;
         }
         return GameConfig.PLAYER_PALETTE.getFirst();
+    }
+
+    private static List<String> normalizeSeatColors(@Nullable List<String> values, int totalPlayers) {
+        List<String> requested = values == null ? List.of() : values;
+        List<String> result = new ArrayList<>(totalPlayers);
+        Set<String> used = new HashSet<>();
+        for (int i = 0; i < totalPlayers; i++) {
+            String color = normalizeColor(i < requested.size() ? requested.get(i) : null);
+            if (used.contains(color)) {
+                color = GameConfig.PLAYER_PALETTE.stream().filter(candidate -> !used.contains(candidate))
+                        .findFirst().orElse(color);
+            }
+            result.add(color);
+            used.add(color);
+        }
+        return List.copyOf(result);
     }
 }
