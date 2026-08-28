@@ -209,20 +209,14 @@ public class DefaultGameRegistry implements GameRegistry {
         state.reports().clear();
         state.intel().clear();
 
-        var colorPool = new ArrayList<>(GameConfig.PLAYER_PALETTE);
-        colorPool.remove(setup.humanColorHex());
-        Collections.shuffle(colorPool, new Random(System.nanoTime()));
-
         int pid = 1;
-        int ci = 0;
         for (int i = 1; i <= setup.humanPlayers(); i++) {
-            String color = i == 1 ? setup.humanColorHex() : colorPool.get(ci++);
             int seatId = pid++;
-            state.players().add(new Player(seatId, "P" + i, false, color));
+            state.players().add(new Player(seatId, "P" + i, false, setup.colorForSeat(i - 1)));
             state.originalHumanPlayerIds().add(seatId);
         }
         for (int i = 1; i <= setup.aiPlayers(); i++) {
-            state.players().add(new Player(pid++, "AI" + i, true, colorPool.get(ci++)));
+            state.players().add(new Player(pid++, "AI" + i, true, setup.colorForSeat(setup.humanPlayers() + i - 1)));
         }
         for (Player p : state.players()) {
             state.intel().put(p.id(), new HashMap<>());

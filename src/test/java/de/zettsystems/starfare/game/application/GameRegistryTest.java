@@ -54,8 +54,8 @@ class GameRegistryTest extends AbstractIntegrationTest {
         GameSetup setup = new GameSetup(
                 30, 1, 2,
                 List.of(11, 7, 4),
-                2, 5, 6, "#0072B2",
-                true, true);
+                2, 5, 6,
+                true, true, List.of());
         GameId id = registry.createGame(setup);
 
         registry.readState(id, state -> {
@@ -83,8 +83,8 @@ class GameRegistryTest extends AbstractIntegrationTest {
         GameSetup setup = new GameSetup(
                 24, 3, 1,
                 List.of(4, 4, 4, 4),
-                2, 6, 8, "#0072B2",
-                true, true);
+                2, 6, 8,
+                true, true, List.of());
         GameId id = registry.createGame(setup);
 
         registry.readState(id, state -> {

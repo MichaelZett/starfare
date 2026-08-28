@@ -15,6 +15,8 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
 import de.zettsystems.starfare.auth.ui.UserContext;
@@ -33,13 +35,22 @@ import jakarta.annotation.security.PermitAll;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Route("")
 @CssImport("./styles/starfare.css")
 @PermitAll
 public class LobbyView extends VerticalLayout {
+    /** Laufende Partien zuerst, darin gestartete und weiter fortgeschrittene oben, dann alphabetisch. */
+    private static final Comparator<LobbyGameRow> ROW_ORDER =
+            Comparator.comparing(LobbyGameRow::finished)
+                    .thenComparing(Comparator.comparing(LobbyGameRow::started).reversed())
+                    .thenComparing(Comparator.comparingInt(LobbyGameRow::turn).reversed())
+                    .thenComparing(LobbyGameRow::name);
+
     private final GameService game;
     private final Broadcaster broadcaster;
     private final InvitationService invitationService;
@@ -48,6 +59,8 @@ public class LobbyView extends VerticalLayout {
     private final PlayerDirectory players;
     private final SocialBroadcaster socialBroadcaster;
     private final Grid<LobbyGameRow> grid = new Grid<>(LobbyGameRow.class, false);
+    private final TextField search = new TextField();
+    private final ComboBox<LobbyFilter> filter = new ComboBox<>();
     private final Div emptyState = new Div();
     private final OnlineUsersPanel onlineUsersPanel;
     private final FriendRequestsPanel friendRequestsPanel;
@@ -98,11 +111,22 @@ public class LobbyView extends VerticalLayout {
 
         toolbar.add(toolbarText, toolbarAction);
 
+        search.setPlaceholder(I18n.t(UiTexts.LOBBY_SEARCH));
+        search.setClearButtonVisible(true);
+        search.addValueChangeListener(_ -> refresh());
+        filter.setLabel(I18n.t(UiTexts.LOBBY_FILTER));
+        filter.setItems(LobbyFilter.values());
+        filter.setItemLabelGenerator(item -> I18n.t(item.textKey()));
+        filter.setValue(LobbyFilter.ALL);
+        filter.addValueChangeListener(_ -> refresh());
+
         Div card = new Div();
         card.addClassName("lobby-card");
 
         configureGrid();
-        card.add(grid);
+        HorizontalLayout lobbyFilters = new HorizontalLayout(search, filter);
+        lobbyFilters.addClassName("lobby-filters");
+        card.add(lobbyFilters, grid);
 
         buildEmptyState();
         card.add(emptyState);
@@ -180,12 +204,52 @@ public class LobbyView extends VerticalLayout {
         String playerId = UserContext.currentPlayerId().orElse(null);
         List<LobbyGameRow> rows = game.listGames().stream()
                 .map(id -> LobbyGameRow.from(game.summaryOf(id), playerId))
+                .filter(this::matchesFilter)
+                .sorted(ROW_ORDER)
                 .toList();
         boolean any = !rows.isEmpty();
         grid.setVisible(any);
         emptyState.setVisible(!any);
         if (any) {
             grid.setItems(rows);
+        }
+    }
+
+    private boolean matchesFilter(LobbyGameRow row) {
+        String term = search.getValue() == null ? "" : search.getValue().trim().toLowerCase(Locale.ROOT);
+        if (!term.isEmpty() && !(row.name() + " " + row.players()).toLowerCase(Locale.ROOT).contains(term)) {
+            return false;
+        }
+        LobbyFilter selected = filter.getValue();
+        return selected == null || selected.matches(row);
+    }
+
+    /** Auswahl im Lobby-Filter. Identitaet haengt am Enum, nicht am uebersetzten Label. */
+    private enum LobbyFilter {
+        ALL(UiTexts.LOBBY_FILTER_ALL),
+        OWN(UiTexts.LOBBY_FILTER_OWN),
+        OPEN(UiTexts.LOBBY_FILTER_OPEN),
+        RUNNING(UiTexts.LOBBY_FILTER_RUNNING),
+        FINISHED(UiTexts.LOBBY_FILTER_FINISHED);
+
+        private final String textKey;
+
+        LobbyFilter(String textKey) {
+            this.textKey = textKey;
+        }
+
+        String textKey() {
+            return textKey;
+        }
+
+        boolean matches(LobbyGameRow row) {
+            return switch (this) {
+                case ALL -> true;
+                case OWN -> row.joinedByCurrentUser();
+                case OPEN -> !row.started() && row.hasOpenHumanSeat();
+                case RUNNING -> row.started() && !row.finished();
+                case FINISHED -> row.finished();
+            };
         }
     }
 

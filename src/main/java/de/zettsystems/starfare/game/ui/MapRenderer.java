@@ -96,10 +96,15 @@ final class MapRenderer {
     }
 
     private static String systemLabel(VisibleSystem sys) {
-        if (!sys.fullyVisible()) {
+        if (sys.fullyVisible()) {
+            return String.join("\n", sys.name(), "G:" + sys.garrison(), "P:" + sys.productionPerTurn());
+        }
+        Integer garrison = sys.garrison();
+        if (garrison == null) {
             return sys.name();
         }
-        return String.join("\n", sys.name(), "G:" + sys.garrison(), "P:" + sys.productionPerTurn());
+        String prefix = sys.approximate() ? "~G:" : "G:";
+        return String.join("\n", sys.name(), prefix + garrison);
     }
 
     private static void attachSystemInteraction(Div dot, VisibleSystem sys, Inputs in) {

@@ -15,8 +15,8 @@ class UiMapperTest {
 
     @Test
     void systemLabelUsesVisibility() {
-        VisibleSystem visible = new VisibleSystem(1, "S1", 0, 0, 1, 4, 2, true, "#fff", 1);
-        VisibleSystem fog = new VisibleSystem(2, "S2", 0, 0, null, null, null, false, null, null);
+        VisibleSystem visible = new VisibleSystem(1, "S1", 0, 0, 1, 4, 2, true, "#fff", 1, false);
+        VisibleSystem fog = new VisibleSystem(2, "S2", 0, 0, null, null, null, false, null, null, false);
 
         assertThat(UiMapper.systemLabel(visible)).isEqualTo("S1 G:4 P:2");
         assertThat(UiMapper.systemLabel(fog)).isEqualTo("S2");
@@ -24,9 +24,9 @@ class UiMapperTest {
 
     @Test
     void systemTooltipUsesLastSeenOrNoSight() {
-        VisibleSystem visible = new VisibleSystem(1, "S1", 0, 0, 1, 4, 2, true, "#fff", 3);
-        VisibleSystem lastSeen = new VisibleSystem(2, "S2", 0, 0, null, null, null, false, null, 5);
-        VisibleSystem noSight = new VisibleSystem(3, "S3", 0, 0, null, null, null, false, null, null);
+        VisibleSystem visible = new VisibleSystem(1, "S1", 0, 0, 1, 4, 2, true, "#fff", 3, false);
+        VisibleSystem lastSeen = new VisibleSystem(2, "S2", 0, 0, null, null, null, false, null, 5, false);
+        VisibleSystem noSight = new VisibleSystem(3, "S3", 0, 0, null, null, null, false, null, null, false);
 
         assertThat(UiMapper.systemTooltip(visible, 7)).isEqualTo("S1 | live in Runde 7");
         assertThat(UiMapper.systemTooltip(lastSeen, 7)).isEqualTo("S2 | zuletzt gesehen in Runde 5");
@@ -35,8 +35,8 @@ class UiMapperTest {
 
     @Test
     void toFleetViewsMapsSystemNames() {
-        VisibleSystem s1 = new VisibleSystem(1, "Alpha", 0, 0, 1, 4, 2, true, "#fff", 1);
-        VisibleSystem s2 = new VisibleSystem(2, "Beta", 0, 0, null, null, null, false, null, 1);
+        VisibleSystem s1 = new VisibleSystem(1, "Alpha", 0, 0, 1, 4, 2, true, "#fff", 1, false);
+        VisibleSystem s2 = new VisibleSystem(2, "Beta", 0, 0, null, null, null, false, null, 1, false);
         Fleet fleet = new Fleet(10, 1, 3, 1, 2, 5, 1, 4);
         PlayerViewState view = new PlayerViewState(2, List.of(), List.of(s1, s2), List.of(fleet), null, false, null, List.of(), List.of(),
                 EmpireStats.NONE, Set.of());

@@ -23,6 +23,18 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 - Cucumber/Selenium-Smoke-Test (`./gradlew e2eTest`, CI-Job `e2e`): Konto
   anlegen, bestätigen, anmelden, Spiel anlegen, starten, eine Runde spielen.
+- Sensorreichweite: eigene Systeme und Flottenziele decken Systeme in bis zu
+  zwei Reiserunden auf. Dort sind Besitzer und Farbe aktuell, die Garnison nur
+  grob (`~G:`); ohne Sensorkontakt bleibt die exakte, aber alte Aufklärung aus
+  vergangenen Kämpfen (`G:` plus „zuletzt gesehen" im Tooltip).
+- Farbwahl je Sitz im Neue-Spiel-Wizard statt einer Farbe für den Ersteller;
+  doppelt gewählte Farben werden auf freie Palettenwerte ausgewichen.
+- Lobby: Freitextsuche über Partie- und Spielernamen sowie ein Filter
+  (alle / meine / offene / laufende / beendete Partien).
+- Echtzeit-Timeout: Sitze, die einen Zug nicht abgeben, übernimmt nach
+  `starfare.game.inactivity-timeout` (Standard 5 min) dauerhaft die KI.
+- Rundenbericht: Kampfereignisse lassen sich per Klick mit kurzer Animation
+  und Ton aufdecken.
 
 ### Changed
 - Spieler werden überall über die Konto-ID referenziert; der öffentliche

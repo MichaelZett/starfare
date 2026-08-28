@@ -154,4 +154,57 @@ class PlayerViewBuilderTest {
         assertThat(visible(view, 2).colorHex()).isEqualTo("#bbbbbb");
         assertThat(visible(view, 3).colorHex()).as("neutral systems have no owner color").isNull();
     }
+
+    @Test
+    void systemInSensorRangeShowsLiveOwnerAndApproximateGarrison() {
+        // Reichweite haengt an der Distanz, nicht am Besitz: S4 liegt dicht an P1s Heimatsystem.
+        state.systems().add(new StarSystem(4, "S4", 5, 0, 2, 42, 3, false));
+
+        VisibleSystem seen = visible(builder.forPlayer(state, 1), 4);
+
+        assertThat(seen.approximate()).isTrue();
+        assertThat(seen.fullyVisible()).as("fremde Systeme bleiben unvollstaendig sichtbar").isFalse();
+        assertThat(seen.ownerId()).isEqualTo(2);
+        assertThat(seen.colorHex()).isEqualTo("#bbbbbb");
+        assertThat(seen.lastSeenTurn()).isEqualTo(state.turn());
+        assertThat(seen.garrison()).as("nur grob, nicht die echten 42").isEqualTo(35);
+        assertThat(seen.productionPerTurn()).isNull();
+    }
+
+    @Test
+    void neutralSystemInSensorRangeDropsStaleIntelColor() {
+        state.systems().add(new StarSystem(4, "S4", 5, 0, null, 8, 1, true));
+        state.intel().get(1).put(4, new GameState.Intel(2, 1, 20));
+
+        VisibleSystem seen = visible(builder.forPlayer(state, 1), 4);
+
+        assertThat(seen.approximate()).isTrue();
+        assertThat(seen.ownerId()).as("live als neutral erkennbar").isNull();
+        assertThat(seen.colorHex()).as("nicht mehr die Farbe des alten Eigners").isNull();
+        assertThat(seen.garrison()).isEqualTo(5);
+    }
+
+    @Test
+    void systemOutOfSensorRangeFallsBackToIntel() {
+        state.intel().get(1).put(2, new GameState.Intel(2, 3, 17));
+
+        VisibleSystem seen = visible(builder.forPlayer(state, 1), 2);
+
+        assertThat(seen.approximate()).isFalse();
+        assertThat(seen.ownerId()).isEqualTo(2);
+        assertThat(seen.garrison()).as("Kampfaufklaerung ist exakt, aber alt").isEqualTo(17);
+        assertThat(seen.lastSeenTurn()).isEqualTo(3);
+    }
+
+    @Test
+    void fleetDestinationProvidesSensorCoverage() {
+        state.systems().add(new StarSystem(4, "S4", 195, 0, 2, 12, 1, false));
+        assertThat(visible(builder.forPlayer(state, 1), 4).approximate())
+                .as("ohne Flotte ausser Reichweite").isFalse();
+
+        state.addFleet(1, 1, 3, 2);
+
+        assertThat(visible(builder.forPlayer(state, 1), 4).approximate())
+                .as("Flottenziel S3 deckt das benachbarte S4 ab").isTrue();
+    }
 }

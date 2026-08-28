@@ -20,6 +20,12 @@ public final class UiMapper {
         if (system.fullyVisible()) {
             return "%s G:%d P:%d".formatted(system.name(), system.garrison(), system.productionPerTurn());
         }
+        if (system.approximate()) {
+            return "%s ~G:%d".formatted(system.name(), system.garrison());
+        }
+        if (system.garrison() != null) {
+            return "%s G:%d".formatted(system.name(), system.garrison());
+        }
         return system.name();
     }
 

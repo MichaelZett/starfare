@@ -110,7 +110,7 @@ class SeatsTest extends AbstractIntegrationTest {
         GameSetup setup = new GameSetup(
                 10, 2, 1,
                 java.util.List.of(4, 4, 4),
-                2, 4, 6, "#0072B2", true, true);
+                2, 4, 6, true, true, java.util.List.of());
         GameId id = registry.createGame(setup);
 
         assertThat((int) registry.readState(id, state -> state.originalHumanPlayerIds().size())).isEqualTo(2);
