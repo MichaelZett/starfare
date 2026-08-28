@@ -17,9 +17,11 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.GameService;
+import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.GameNameGenerator;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.ProductionDistribution;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
 
@@ -61,13 +63,25 @@ final class CreateGameWizardDialog {
         startGarrison.setMin(1);
         startGarrison.setValue(GameConfig.DEFAULT_START_GARRISON);
 
+        ComboBox<ProductionDistribution> productionDistribution =
+                new ComboBox<>(I18n.t(UiTexts.LOBBY_FIELD_PRODUCTION_DISTRIBUTION));
+        productionDistribution.setItems(ProductionDistribution.values());
+        productionDistribution.setItemLabelGenerator(CreateGameWizardDialog::labelFor);
+        productionDistribution.setValue(GameConfig.DEFAULT_PRODUCTION_DISTRIBUTION);
+
+        ComboBox<GalaxyLayout> galaxyLayout = new ComboBox<>(I18n.t(UiTexts.LOBBY_FIELD_GALAXY_LAYOUT));
+        galaxyLayout.setItems(GalaxyLayout.values());
+        galaxyLayout.setItemLabelGenerator(CreateGameWizardDialog::labelFor);
+        galaxyLayout.setValue(GameConfig.DEFAULT_GALAXY_LAYOUT);
+
         Checkbox observersAllowed = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_OBSERVERS_ALLOWED));
         observersAllowed.setValue(GameConfig.DEFAULT_OBSERVERS_ALLOWED);
         Checkbox reentryAllowed = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_REENTRY_ALLOWED));
         reentryAllowed.setValue(GameConfig.DEFAULT_REENTRY_ALLOWED);
 
-        FormLayout setupGrid = grid(3, "13em", systems, humans, ai, startGarrison, observersAllowed, reentryAllowed);
-        FormLayout neutralGrid = grid(2, "16em", neutralMinProduction, neutralMaxProduction);
+        FormLayout setupGrid = grid(3, "13em", systems, humans, ai, startGarrison,
+                galaxyLayout, observersAllowed, reentryAllowed);
+        FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
 
         FormLayout startProductionFields = new FormLayout();
         startProductionFields.setAutoResponsive(true);
@@ -101,7 +115,7 @@ final class CreateGameWizardDialog {
 
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
-                observersAllowed, reentryAllowed);
+                observersAllowed, reentryAllowed, productionDistribution, galaxyLayout);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CREATE), _ -> {
             GameSetup setup = buildSetup(formInputs);
             String hostPlayerId = UserContext.currentPlayerId().orElse(null);
@@ -153,7 +167,9 @@ final class CreateGameWizardDialog {
                               List<ComboBox<ColorOption>> seatColorInputs,
                               IntegerField neutralMinProduction, IntegerField neutralMaxProduction,
                               IntegerField startGarrison,
-                              Checkbox observersAllowed, Checkbox reentryAllowed) {
+                              Checkbox observersAllowed, Checkbox reentryAllowed,
+                              ComboBox<ProductionDistribution> productionDistribution,
+                              ComboBox<GalaxyLayout> galaxyLayout) {
     }
 
     private static GameSetup buildSetup(FormInputs in) {
@@ -173,8 +189,22 @@ final class CreateGameWizardDialog {
                 valueOrDefault(in.startGarrison().getValue(), GameConfig.DEFAULT_START_GARRISON),
                 in.observersAllowed().getValue(),
                 in.reentryAllowed().getValue(),
-                seatColors
+                seatColors,
+                in.productionDistribution().getValue(),
+                in.galaxyLayout().getValue()
         ).normalized();
+    }
+
+    private static String labelFor(ProductionDistribution value) {
+        return I18n.t(value == ProductionDistribution.GAUSSIAN
+                ? UiTexts.LOBBY_PRODUCTION_DISTRIBUTION_GAUSSIAN
+                : UiTexts.LOBBY_PRODUCTION_DISTRIBUTION_UNIFORM);
+    }
+
+    private static String labelFor(GalaxyLayout value) {
+        return I18n.t(value == GalaxyLayout.EVEN
+                ? UiTexts.LOBBY_GALAXY_LAYOUT_EVEN
+                : UiTexts.LOBBY_GALAXY_LAYOUT_RANDOM);
     }
 
     private static ComboBox<ColorOption> buildColorCombo() {

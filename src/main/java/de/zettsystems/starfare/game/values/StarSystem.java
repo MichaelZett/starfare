@@ -20,6 +20,17 @@ public record StarSystem(int id, String name, double x, double y,
     }
 
     /**
+     * Produziert und gibt im selben Zug {@code routed} Schiffe an Produktions-
+     * verlegungen ab. Reicht die Produktion nicht, zehrt der Rest an der Garnison —
+     * mehr als vorhanden verlässt das System aber nie.
+     */
+    public StarSystem produceAndRoute(int routed) {
+        int available = garrison + productionPerTurn;
+        int shipped = Math.clamp(routed, 0, available);
+        return new StarSystem(id, name, x, y, ownerId, available - shipped, productionPerTurn, neutral);
+    }
+
+    /**
      * Adds incoming friendly ships to the garrison.
      */
     public StarSystem reinforce(int ships) {

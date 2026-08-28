@@ -59,6 +59,12 @@ public final class UiTexts {
     public static final String LOBBY_FIELD_HUMANS = "lobby.field.humans";
     public static final String LOBBY_FIELD_AI = "lobby.field.ai";
     public static final String LOBBY_FIELD_COLOR = "lobby.field.color";
+    public static final String LOBBY_FIELD_PRODUCTION_DISTRIBUTION = "lobby.field.productionDistribution";
+    public static final String LOBBY_PRODUCTION_DISTRIBUTION_UNIFORM = "lobby.productionDistribution.uniform";
+    public static final String LOBBY_PRODUCTION_DISTRIBUTION_GAUSSIAN = "lobby.productionDistribution.gaussian";
+    public static final String LOBBY_FIELD_GALAXY_LAYOUT = "lobby.field.galaxyLayout";
+    public static final String LOBBY_GALAXY_LAYOUT_RANDOM = "lobby.galaxyLayout.random";
+    public static final String LOBBY_GALAXY_LAYOUT_EVEN = "lobby.galaxyLayout.even";
     public static final String LOBBY_FIELD_NEUTRAL_MIN_PRODUCTION = "lobby.field.neutralMinProduction";
     public static final String LOBBY_FIELD_NEUTRAL_MAX_PRODUCTION = "lobby.field.neutralMaxProduction";
     public static final String LOBBY_FIELD_START_PRODUCTION_HUMAN = "lobby.field.startProduction.human";
@@ -130,6 +136,10 @@ public final class UiTexts {
     public static final String MAP_REMOVE_STANDING_ORDER_FAILED = "map.removeStandingOrder.failed";
     public static final String MAP_SHOW_STANDING_TOGGLE = "map.showStanding.toggle";
     public static final String MAP_ORDER_TYPE_STANDING = "map.orderType.standing";
+    public static final String MAP_HINT_PICK_SOURCE = "map.hint.pickSource";
+    public static final String MAP_HINT_PICK_TARGET = "map.hint.pickTarget";
+    public static final String MAP_HINT_FLEET_LANE = "map.hint.fleetLane";
+    public static final String MAP_PLANNED_LANE_TOOLTIP = "map.plannedLane.tooltip";
 
     // Map — fleet badge
     public static final String MAP_FLEET_BADGE_BASE = "map.fleetBadge.base";

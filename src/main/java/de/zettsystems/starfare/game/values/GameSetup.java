@@ -17,7 +17,9 @@ public record GameSetup(
         int startGarrison,
         boolean observersAllowed,
         boolean reentryAllowed,
-        List<String> seatColorHexes
+        List<String> seatColorHexes,
+        ProductionDistribution productionDistribution,
+        GalaxyLayout galaxyLayout
 ) {
     public static GameSetup defaults() {
         int totalPlayers = GameConfig.DEFAULT_HUMAN_PLAYERS + GameConfig.DEFAULT_AI_PLAYERS;
@@ -35,7 +37,9 @@ public record GameSetup(
                 GameConfig.DEFAULT_START_GARRISON,
                 GameConfig.DEFAULT_OBSERVERS_ALLOWED,
                 GameConfig.DEFAULT_REENTRY_ALLOWED,
-                GameConfig.PLAYER_PALETTE
+                GameConfig.PLAYER_PALETTE,
+                GameConfig.DEFAULT_PRODUCTION_DISTRIBUTION,
+                GameConfig.DEFAULT_GALAXY_LAYOUT
         );
     }
 
@@ -59,7 +63,9 @@ public record GameSetup(
         int garrison = Math.max(1, startGarrison);
         List<String> seatColors = normalizeSeatColors(seatColorHexes, totalPlayers);
         return new GameSetup(systems, humans, ai, startProductions, neutralMin, neutralMax, garrison,
-                observersAllowed, reentryAllowed, seatColors);
+                observersAllowed, reentryAllowed, seatColors,
+                productionDistribution == null ? GameConfig.DEFAULT_PRODUCTION_DISTRIBUTION : productionDistribution,
+                galaxyLayout == null ? GameConfig.DEFAULT_GALAXY_LAYOUT : galaxyLayout);
     }
 
     public int totalPlayers() {

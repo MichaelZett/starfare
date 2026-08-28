@@ -119,9 +119,31 @@ html, body, #outlet {
 .fleet-lane-hit {
     height: 12px;
     transform-origin: left center;
-    cursor: context-menu;
+    cursor: pointer;
     opacity: 0;
     z-index: 3;
+    background: rgba(88, 166, 255, 0.55);
+    transition: opacity 0.12s ease;
+}
+
+/* Ohne diesen Hover ist die Trefferflaeche voellig unsichtbar und niemand
+   kommt auf die Idee, dass eine Flottenbahn anklickbar ist. */
+.fleet-lane-hit:hover {
+    opacity: 0.5;
+}
+
+/* Fuer diese Runde vorgemerkt, noch nicht unterwegs. */
+.fleet-lane-planned {
+    height: 0;
+    background: none !important;
+    border-top: 2px dashed currentColor;
+    opacity: 0.75;
+    box-shadow: none;
+    /* .fleet-lane sperrt Zeigerereignisse; hier wieder an, sonst bliebe der
+       Tooltip mit Ziel und Schiffszahl unerreichbar. Die Linie ist 2px hoch
+       und faengt damit praktisch keine Klicks ab. */
+    pointer-events: auto;
+    cursor: help;
 }
 
 .fleet-row-standing {

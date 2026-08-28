@@ -105,29 +105,66 @@ public class DefaultFleetService implements FleetService {
     }
 
     @Override
-    public int addStandingOrder(GameState state, int playerId, int fromId, int toId) {
-        if (fromId == toId) {
+    public int addStandingOrder(GameState state, int playerId, int fromId, int toId, int ships) {
+        if (fromId == toId || ships <= 0) {
             return -1;
         }
         StarSystem from = state.getSystem(fromId);
         if (from == null || !Objects.equals(from.ownerId(), playerId)) {
             return -1;
         }
-        StarSystem target = state.getSystem(toId);
-        if (target == null) {
+        if (state.getSystem(toId) == null) {
             return -1;
         }
         List<StandingOrder> list = standingFor(state, playerId);
-        for (int i = 0; i < list.size(); i++) {
-            StandingOrder existing = list.get(i);
-            if (existing.fromSystemId() == fromId) {
-                list.set(i, new StandingOrder(existing.id(), playerId, fromId, toId));
-                return existing.id();
-            }
+        StandingOrder replaced = list.stream()
+                .filter(o -> o.fromSystemId() == fromId && o.toSystemId() == toId)
+                .findFirst().orElse(null);
+        if (ships > routingHeadroom(state, playerId, fromId, toId)) {
+            return -1;
+        }
+        if (replaced != null) {
+            list.set(list.indexOf(replaced), new StandingOrder(replaced.id(), playerId, fromId, toId, ships));
+            return replaced.id();
         }
         int id = state.nextStandingOrderIdFor(playerId);
-        list.add(new StandingOrder(id, playerId, fromId, toId));
+        list.add(new StandingOrder(id, playerId, fromId, toId, ships));
         return id;
+    }
+
+    @Override
+    public int routingCapacity(GameState state, int playerId, int systemId) {
+        StarSystem system = state.getSystem(systemId);
+        if (system == null || !Objects.equals(system.ownerId(), playerId)) {
+            return 0;
+        }
+        // Eigene Produktion plus alles, was per Verlegung hierher geleitet wird.
+        // Die eingehenden Schiffe reisen zwar, heben aber sofort die Obergrenze.
+        int incoming = standingFor(state, playerId).stream()
+                .filter(o -> o.toSystemId() == systemId)
+                .mapToInt(StandingOrder::ships)
+                .sum();
+        return system.productionPerTurn() + incoming;
+    }
+
+    @Override
+    public int routingHeadroom(GameState state, int playerId, int fromId, int toId) {
+        // Eine bestehende Verlegung auf dieselbe Route wird ersetzt und gibt ihren
+        // Platz wieder frei — sonst liesse sie sich nie vergroessern.
+        int existing = standingFor(state, playerId).stream()
+                .filter(o -> o.fromSystemId() == fromId && o.toSystemId() == toId)
+                .mapToInt(StandingOrder::ships)
+                .sum();
+        return Math.max(0, routingCapacity(state, playerId, fromId)
+                - routedFrom(state, playerId, fromId) + existing);
+    }
+
+    @Override
+    public int routedFrom(GameState state, int playerId, int systemId) {
+        return standingFor(state, playerId).stream()
+                .filter(o -> o.fromSystemId() == systemId)
+                .mapToInt(StandingOrder::ships)
+                .sum();
     }
 
     @Override
@@ -149,13 +186,14 @@ public class DefaultFleetService implements FleetService {
     }
 
     @Override
-    public Set<Integer> applyStandingOrdersForProduction(GameState state) {
-        Set<Integer> routed = new HashSet<>();
+    public Map<Integer, Integer> applyStandingOrdersForProduction(GameState state) {
+        Map<Integer, Integer> routed = new HashMap<>();
         state.standingOrders().forEach((playerId, list) -> applyStandingOrders(state, playerId, list, routed));
         return routed;
     }
 
-    private static void applyStandingOrders(GameState state, int playerId, List<StandingOrder> list, Set<Integer> routed) {
+    private static void applyStandingOrders(GameState state, int playerId, List<StandingOrder> list,
+                                            Map<Integer, Integer> routed) {
         Iterator<StandingOrder> it = list.iterator();
         while (it.hasNext()) {
             StandingOrder o = it.next();
@@ -168,12 +206,18 @@ public class DefaultFleetService implements FleetService {
         }
     }
 
-    private static void routeOneOrder(GameState state, int playerId, StandingOrder o, StarSystem from, Set<Integer> routed) {
-        routed.add(o.fromSystemId());
-        int prod = from.productionPerTurn();
-        if (prod > 0) {
-            state.addFleet(playerId, o.fromSystemId(), o.toSystemId(), prod);
+    private static void routeOneOrder(GameState state, int playerId, StandingOrder o, StarSystem from,
+                                      Map<Integer, Integer> routed) {
+        // Was das System diese Runde noch abgeben kann: Produktion plus Garnison,
+        // abzueglich dessen, was fruehere Verlegungen desselben Systems schon nehmen.
+        int alreadyRouted = routed.getOrDefault(o.fromSystemId(), 0);
+        int available = from.garrison() + from.productionPerTurn() - alreadyRouted;
+        int ships = Math.clamp(o.ships(), 0, Math.max(0, available));
+        if (ships <= 0) {
+            return;
         }
+        routed.merge(o.fromSystemId(), ships, Integer::sum);
+        state.addFleet(playerId, o.fromSystemId(), o.toSystemId(), ships);
     }
 
     private static List<FleetOrder> pendingFor(GameState state, int playerId) {

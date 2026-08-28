@@ -13,6 +13,7 @@ import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.server.VaadinSession;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.GameService;
+import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.PlayerViewState;
@@ -276,7 +277,8 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             case TurnEvent.SystemLost l -> I18n.t(UiTexts.ROUND_EVENT_SYSTEM_LOST, l.systemName());
             case TurnEvent.DefenseHeld d -> I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
                             d.systemName(), d.attacking(), d.defendersLeft());
-            case TurnEvent.Victory _ -> I18n.t(UiTexts.ROUND_EVENT_VICTORY);
+            case TurnEvent.Victory _ -> I18n.t(UiTexts.ROUND_EVENT_VICTORY,
+                    GameConfig.VICTORY_SYSTEM_PERCENT);
         };
     }
 

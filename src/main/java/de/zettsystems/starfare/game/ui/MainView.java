@@ -65,7 +65,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
         fleetsPanel = new FleetAndOrdersPanel(this::refresh, this::cancelOrder, this::openStandingOrdersDialog,
                 this::onFleetRowSelected);
-        mapCanvas = new MapCanvas(this::onMapBackgroundClick);
+        mapCanvas = new MapCanvas(gameId == null ? "none" : gameId.value(), this::onMapBackgroundClick);
         header = new MapHeaderBar(this::onNextRound, this::doLeave,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)));
 
@@ -211,10 +211,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         broadcasterSubscription = broadcaster.subscribe(gameId, _ -> ui.access(this::refresh));
         refresh();
         mapCanvas.installDragToPan();
-        centerOnHomeSystem();
+        restoreViewport();
     }
 
-    private void centerOnHomeSystem() {
+    private void restoreViewport() {
         int pid = currentSeat();
         if (pid < 0) {
             return;
@@ -226,7 +226,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (home == null) {
             return;
         }
-        mapCanvas.scrollTo(home.x(), home.y());
+        mapCanvas.restoreViewportOrCenterOn(home.x(), home.y());
     }
 
     @Override

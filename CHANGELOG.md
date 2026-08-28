@@ -32,11 +32,28 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 - Lobby: Freitextsuche über Partie- und Spielernamen sowie ein Filter
   (alle / meine / offene / laufende / beendete Partien).
 - Echtzeit-Timeout: Sitze, die einen Zug nicht abgeben, übernimmt nach
-  `starfare.game.inactivity-timeout` (Standard 5 min) dauerhaft die KI.
+  `starfare.game.inactivity-timeout` (Standard 5 min) die KI. Erlaubt die
+  Partie den Wiedereinstieg, kann der Spieler seinen Sitz zurückholen.
 - Rundenbericht: Kampfereignisse lassen sich per Klick mit kurzer Animation
   und Ton aufdecken.
+- Wizard: Produktionsverteilung (gleichmäßig oder um die Mitte gehäuft) und
+  Sternenverteilung (zufällig oder gleichmäßig) sind wählbar. Bei
+  gleichmäßiger Verteilung liegt ein System je Rasterzelle und die
+  Heimatsysteme werden maximal auseinandergelegt.
+- Karte: für die laufende Runde geplante Flüge erscheinen als gestrichelte
+  Bahn; Zoom und Ausschnitt überleben den Rundenwechsel.
+- Produktionsverlegungen haben eine feste Größe statt „die ganze Produktion".
+  Ein System darf insgesamt höchstens seine eigene Produktion plus alles,
+  was per Verlegung hereinkommt, weiterleiten; mehrere Ziele teilen sich
+  dieses Budget. Die Karte zeigt bei belegten Systemen die noch freie
+  Produktion in Klammern, der Rest bleibt als Garnison liegen.
+- Nach Spielende deckt die Karte alle Systeme auf.
 
 ### Changed
+- Siegbedingung von „mehr als die Hälfte" auf 70 % aller Systeme angehoben
+  (`GameConfig.VICTORY_SYSTEM_PERCENT`); neutrale Systeme zählen weiterhin
+  in die Gesamtzahl. Knappe 13:11-Ausgänge entscheiden damit keine Partie
+  mehr.
 - Spieler werden überall über die Konto-ID referenziert; der öffentliche
   Spielername ist nur Anzeige (`zs.identity.name-mode: DISPLAY_NAME`).
   Anzeigenamen kommen aus `PlayerDirectory` (kurz gecacht).
@@ -45,6 +62,17 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   `ui` ↛ `domain`.
 
 ### Fixed
+- Nach einem Kampf zeigt die Karte die exakte Garnison aus dem Rundenbericht
+  statt der gröberen Sensorschätzung: die Reichweitenprüfung lief vor der
+  Auswertung der Aufklärung, und ein angegriffenes System liegt fast immer
+  in Reichweite.
+- Der Siegtext nannte weiterhin 50 %; er nennt jetzt die konfigurierte Schwelle.
+- Systeme am Kartenrand wurden angeschnitten: die Punkte streuten über die
+  volle Fläche, sind per CSS aber um ihren halben Durchmesser zentriert.
+  Neue Konstante `GameConfig.SYSTEM_MARGIN`.
+- „Starten" in der Lobby führt direkt zur Karte, statt in der Lobby zu bleiben.
+- Flottenbahnen zeigen beim Überfahren, dass sie anklickbar sind; Systeme
+  erklären im Tooltip, ob ein Klick die Quelle wählt oder dorthin sendet.
 - Lobby scrollte bei 1366 px seitwärts: die Sidebar (`VerticalLayout`) setzte
   inline `width: 100%` und überstimmte die 260-px-Regel. Der Smoke-Test
   prüft jetzt nach jedem Schritt, dass keine Ansicht seitwärts scrollt.

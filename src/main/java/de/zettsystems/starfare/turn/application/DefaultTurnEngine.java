@@ -6,6 +6,7 @@ import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.Fleet;
+import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.report.application.ReportService;
 import de.zettsystems.starfare.report.values.TurnEvent;
@@ -39,8 +40,8 @@ public class DefaultTurnEngine implements TurnEngine {
             return;
         }
         applyOrders(state);
-        java.util.Set<Integer> routedSystems = fleetService.applyStandingOrdersForProduction(state);
-        applyProduction(state, routedSystems);
+        java.util.Map<Integer, Integer> routedShips = fleetService.applyStandingOrdersForProduction(state);
+        applyProduction(state, routedShips);
         applyWaitOrders(state);
         resolveArrivals(state);
         aiService.doAiTurns(state, fleetService);
@@ -48,13 +49,17 @@ public class DefaultTurnEngine implements TurnEngine {
         state.nextTurn();
     }
 
-    private void applyProduction(GameState state, java.util.Set<Integer> routedSystems) {
+    private void applyProduction(GameState state, java.util.Map<Integer, Integer> routedShips) {
         for (StarSystem s : state.systems()) {
             Integer ownerId = s.ownerId();
             if (ownerId == null || s.neutral()) {
                 continue;
             }
-            if (!routedSystems.contains(s.id())) {
+            // Verlegungen sind bereits abgeflossen; was uebrig bleibt, geht in die Garnison.
+            int routed = routedShips.getOrDefault(s.id(), 0);
+            if (routed > 0) {
+                state.updateSystem(s.id(), current -> current.produceAndRoute(routed));
+            } else {
                 state.updateSystem(s.id(), StarSystem::produce);
             }
             reportService.appendEvent(state, ownerId,
@@ -149,7 +154,8 @@ public class DefaultTurnEngine implements TurnEngine {
         var counts = state.systems().stream().filter(s -> s.ownerId() != null)
                 .collect(java.util.stream.Collectors.groupingBy(StarSystem::ownerId, java.util.stream.Collectors.counting()));
         counts.forEach((pid, c) -> {
-            if (c > total / 2) {
+            // Ganzzahlig statt ueber Prozent-Division, damit nichts weggerundet wird.
+            if (c * 100 >= (long) total * GameConfig.VICTORY_SYSTEM_PERCENT) {
                 state.endGame(pid);
                 reportService.appendEvent(state, pid, new TurnEvent.Victory(pid));
             }

@@ -46,9 +46,46 @@ final class MapRenderer {
         for (VisibleSystem sys : in.systems()) {
             map.add(buildSystemDot(sys, in));
         }
+        for (PlannedOrder order : in.view().plannedOrders()) {
+            renderPlannedOrder(map, order, in);
+        }
         for (Fleet f : in.view().ownFleets()) {
             renderFleet(map, f, in);
         }
+    }
+
+    /**
+     * Zeichnet einen für diese Runde vorgemerkten Sendebefehl gestrichelt, damit er
+     * sich von bereits fliegenden Flotten unterscheidet. Ohne Quelle oder Ziel — etwa
+     * bei einem Warte-Befehl — gibt es nichts zu zeichnen.
+     */
+    private static void renderPlannedOrder(Div map, PlannedOrder order, Inputs in) {
+        Integer fromId = order.fromSystemId();
+        Integer toId = order.toSystemId();
+        if (fromId == null || toId == null) {
+            return;
+        }
+        VisibleSystem a = findSystem(in, fromId).orElse(null);
+        VisibleSystem b = findSystem(in, toId).orElse(null);
+        if (a == null || b == null) {
+            return;
+        }
+        double len = Math.hypot(b.x() - a.x(), b.y() - a.y());
+        if (len < 1) {
+            return;
+        }
+        LaneGeometry geom = computeLaneGeometry(a, b, len);
+        String color = in.playerId() >= 0 ? resolveFleetColor(in, in.playerId()) : "#58a6ff";
+        String tooltip = I18n.t(UiTexts.MAP_PLANNED_LANE_TOOLTIP,
+                order.fromSystem(), order.toSystem(),
+                order.ships() == null ? "?" : String.valueOf(order.ships()));
+
+        // Gleiche Geometrie wie eine fliegende Flotte; nur Strichelung und Farbe
+        // kommen ueber die zusaetzliche Klasse dazu.
+        Div lane = buildLaneDiv(geom, color, tooltip, false);
+        lane.addClassName("fleet-lane-planned");
+        lane.getStyle().set("borderTopColor", color);
+        map.add(lane);
     }
 
     private static Div buildSystemDot(VisibleSystem sys, Inputs in) {
@@ -97,7 +134,7 @@ final class MapRenderer {
 
     private static String systemLabel(VisibleSystem sys) {
         if (sys.fullyVisible()) {
-            return String.join("\n", sys.name(), "G:" + sys.garrison(), "P:" + sys.productionPerTurn());
+            return String.join("\n", sys.name(), "G:" + sys.garrison(), productionLabel(sys));
         }
         Integer garrison = sys.garrison();
         if (garrison == null) {
@@ -105,6 +142,22 @@ final class MapRenderer {
         }
         String prefix = sys.approximate() ? "~G:" : "G:";
         return String.join("\n", sys.name(), prefix + garrison);
+    }
+
+    /**
+     * Produktion und — sofern Verlegungen bestehen — der noch freie Teil davon.
+     * Ohne die Angabe verplant man dieselbe Produktion versehentlich mehrfach.
+     */
+    private static String productionLabel(VisibleSystem sys) {
+        Integer production = sys.productionPerTurn();
+        if (production == null) {
+            return "";
+        }
+        Integer routed = sys.routedProduction();
+        if (routed == null || routed <= 0) {
+            return "P:" + production;
+        }
+        return "P:" + production + " (" + Math.max(0, production - routed) + ")";
     }
 
     private static void attachSystemInteraction(Div dot, VisibleSystem sys, Inputs in) {
@@ -116,6 +169,11 @@ final class MapRenderer {
 
         if (sys.fullyVisible()) {
             dot.addClassName("sys-clickable");
+            dot.getElement().setProperty(HtmlAttributes.TITLE,
+                    UiMapper.systemTooltip(sys, in.view().turn()) + " — "
+                            + I18n.t(selected == null || isSelected
+                            ? UiTexts.MAP_HINT_PICK_SOURCE
+                            : UiTexts.MAP_HINT_PICK_TARGET));
             dot.addClickListener(_ -> {
                 VisibleSystem from = in.selectedFrom();
                 if (from == null) {
@@ -128,6 +186,9 @@ final class MapRenderer {
             });
         } else if (selected != null) {
             dot.addClassName("sys-target");
+            dot.getElement().setProperty(HtmlAttributes.TITLE,
+                    UiMapper.systemTooltip(sys, in.view().turn()) + " — "
+                            + I18n.t(UiTexts.MAP_HINT_PICK_TARGET));
             final VisibleSystem from = selected;
             dot.addClickListener(_ -> in.onOpenSend().accept(from, sys));
         }
@@ -261,6 +322,7 @@ final class MapRenderer {
 
         Div hitArea = new Div();
         hitArea.addClassName("fleet-lane-hit");
+        hitArea.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.MAP_HINT_FLEET_LANE));
         hitArea.getStyle()
                 .set("position", "absolute")
                 .set("left", ax + "px")

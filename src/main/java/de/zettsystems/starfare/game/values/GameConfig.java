@@ -26,6 +26,17 @@ public final class GameConfig {
     public static final boolean DEFAULT_OBSERVERS_ALLOWED = true;
     public static final boolean DEFAULT_REENTRY_ALLOWED = true;
     public static final String DEFAULT_GAME_NAME = "Standardspiel";
+    public static final ProductionDistribution DEFAULT_PRODUCTION_DISTRIBUTION = ProductionDistribution.UNIFORM;
+    public static final GalaxyLayout DEFAULT_GALAXY_LAYOUT = GalaxyLayout.RANDOM;
+
+    /** Anteil aller Systeme (neutrale eingeschlossen), ab dem eine Partie gewonnen ist. */
+    public static final int VICTORY_SYSTEM_PERCENT = 70;
+    /**
+     * Abstand, den Systemmittelpunkte zum Kartenrand halten. Die Punkte werden per
+     * CSS um den halben Durchmesser zentriert (86-94 px), ohne Rand ragt ein System
+     * am Rand also sichtbar aus der Karte heraus.
+     */
+    public static final double SYSTEM_MARGIN = 60.0;
     public static final int SPACEOUT_ITERATIONS = 60;
     public static final double SPACEOUT_MIN_DIST = 110.0;
     public static final List<String> PLAYER_PALETTE = List.of(

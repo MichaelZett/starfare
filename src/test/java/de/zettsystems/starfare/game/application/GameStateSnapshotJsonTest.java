@@ -4,11 +4,14 @@ import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
 import de.zettsystems.starfare.game.values.Player;
+import de.zettsystems.starfare.game.values.StandingOrder;
 import de.zettsystems.starfare.game.values.StarSystem;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -64,5 +67,21 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
 
         assertThat(legacy.intel().get(1).get(1).garrison()).isNull();
         assertThat(legacy.intel().get(1).get(1).turn()).isEqualTo(2);
+    }
+
+    @Test
+    void standingOrderJsonWithoutShipsStillLoads() {
+        GameState state = sampleState();
+        state.standingOrders().put(1, new java.util.ArrayList<>(
+                List.of(new StandingOrder(1, 1, 1, 2, 3))));
+
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+        ((ObjectNode) json.get("standingOrders").get("1").get(0)).remove("ships");
+
+        GameStateSnapshot legacy = objectMapper.treeToValue(json, GameStateSnapshot.class);
+
+        StandingOrder restored = legacy.standingOrders().get(1).getFirst();
+        assertThat(restored.ships()).as("fehlende Menge darf die Partie nicht kosten").isZero();
+        assertThat(restored.toSystemId()).isEqualTo(2);
     }
 }
