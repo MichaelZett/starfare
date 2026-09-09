@@ -23,8 +23,24 @@ public record GameSummary(
         List<Player> players,
         Set<Integer> joinedHumanSeats,
         Map<String, Integer> seatByPlayer,
-        Map<String, Integer> invitedSeats
+        Map<String, Integer> invitedSeats,
+        GameVisibility visibility,
+        GameOutcome outcome
 ) {
+
+    public boolean belongsTo(String account) {
+        return account.equals(hostPlayerId) || seatByPlayer.containsKey(account);
+    }
+
+    public boolean canJoin(String account) {
+        if (account.isBlank() || gameOver) { return false; }
+        Integer seat = seatByPlayer.get(account);
+        if (seat != null) {
+            return !joinedHumanSeats.contains(seat) && (!started || reentryAllowed);
+        }
+        return !started && (invitedSeats.containsKey(account)
+                || ((visibility == GameVisibility.PUBLIC || account.equals(hostPlayerId)) && hasOpenHumanSeat()));
+    }
 
     public boolean allHumansJoined() {
         return players.stream()
@@ -35,6 +51,6 @@ public record GameSummary(
     public boolean hasOpenHumanSeat() {
         return players.stream()
                 .filter(p -> !p.ai())
-                .anyMatch(p -> !joinedHumanSeats.contains(p.id()));
+                .anyMatch(p -> !joinedHumanSeats.contains(p.id()) && !invitedSeats.containsValue(p.id()));
     }
 }

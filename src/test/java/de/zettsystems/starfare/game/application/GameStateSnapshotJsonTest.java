@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.starfare.game.values.GameVisibility;
+
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
@@ -83,5 +85,28 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
         StandingOrder restored = legacy.standingOrders().get(1).getFirst();
         assertThat(restored.ships()).as("fehlende Menge darf die Partie nicht kosten").isZero();
         assertThat(restored.toSystemId()).isEqualTo(2);
+    }
+
+    @Test
+    void legacyArchiveRemainsPublicWithoutInventedCompletionDate() {
+        GameState state = sampleState();
+        state.endGame(1);
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+        json.remove("visibility");
+        json.remove("finishedAt");
+        GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+        assertThat(restored.visibility()).isEqualTo(GameVisibility.PUBLIC);
+        assertThat(restored.gameOver()).isTrue();
+        assertThat(restored.finishedAt()).isNull();
+    }
+
+    @Test
+    void privateArchiveRoundTripPreservesVisibilityAndCompletionDate() {
+        GameState state = sampleState();
+        state.endGame(1, java.time.Instant.parse("2026-09-09T12:00:00Z"));
+        GameState restored = GameState.fromSnapshot(objectMapper.readValue(
+                objectMapper.writeValueAsString(GameState.toSnapshot(state)), GameStateSnapshot.class));
+        assertThat(restored.visibility()).isEqualTo(state.visibility());
+        assertThat(restored.finishedAt()).isEqualTo(state.finishedAt());
     }
 }

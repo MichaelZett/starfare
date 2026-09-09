@@ -89,6 +89,31 @@ and `joinedHumanPlayerIds`. `LobbyView` walks
 `MainView.onAttach` redirects back to the lobby when no game is
 running.
 
+### Game visibility and archive
+
+`GameAccessPolicy` centralizes visibility, spectator and completed-game access.
+`GameVisibility` is independent of the social visibility preference. New states
+are private; snapshots without the optional visibility field restore as public.
+`visibleGamesFor(account, scope)` separates the active lobby from the archive;
+`summaryFor` and `viewForAccount` enforce account access before returning UI data.
+The UI resolves accounts from the authenticated session, not route parameters.
+
+Only the current host may change visibility, and only before the start. Making
+a game private removes unrelated spectator registrations. Invitations grant
+lobby visibility and a reserved seat, but do not independently reveal the map.
+After completion, invitations no longer grant private archive access.
+
+`GameOutcome` carries winner and completion time to the archive. `finishedAt`
+is set at the first game end and preserved by snapshots and copies; old archives
+without the timestamp retain an unknown date. Archive opening calls `reviewFor`
+and does not register spectators or save state. Map actions and service commands
+reject edits after game end. Completed snapshots remain in `game_sessions` until
+an independent statistics/archive retention design is implemented.
+
+Host transfers and snapshot persistence use the session write lock. Saving an
+existing entity updates both its snapshot and current host, so a restart cannot
+restore obsolete host permissions.
+
 ## Configuration and setup
 
 - Tunables: constants in `game.values.GameConfig`.

@@ -65,6 +65,8 @@ final class MapHeaderBar extends HorizontalLayout {
         roundLabel.setText(I18n.t(UiTexts.MAP_ROUND_LABEL, turn));
     }
 
+    void setLeaveVisible(boolean visible) { leaveItem.setVisible(visible); }
+
     void setLeaveText(String text) {
         leaveItem.setText(text);
     }

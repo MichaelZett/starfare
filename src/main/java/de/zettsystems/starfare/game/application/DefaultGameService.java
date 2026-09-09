@@ -5,6 +5,9 @@ import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameVisibility;
+import de.zettsystems.starfare.game.values.GameOutcome;
+import de.zettsystems.starfare.game.values.GameListScope;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.Player;
@@ -33,6 +36,7 @@ public class DefaultGameService implements GameService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultGameService.class);
     private final GameRegistry registry;
+    private final GameAccessPolicy access;
     private final TurnEngine turnEngine;
     private final FleetService fleetService;
     private final ReportService reportService;
@@ -43,8 +47,9 @@ public class DefaultGameService implements GameService {
 
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
-                              PlayerViewBuilder playerViewBuilder, GameTimingProperties timing) {
+                              PlayerViewBuilder playerViewBuilder, GameTimingProperties timing, GameAccessPolicy access) {
         this.registry = registry;
+        this.access = access;
         this.turnEngine = turnEngine;
         this.fleetService = fleetService;
         this.reportService = reportService;
@@ -86,7 +91,7 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean abortGame(GameId gameId, @Nullable String actorPlayerId) {
-        if (!canAbort(gameId, actorPlayerId)) {
+        if (!canAbort(gameId, actorPlayerId) || registry.readState(gameId, GameState::gameOver).booleanValue()) {
             return false;
         }
         abortGame(gameId);
@@ -103,9 +108,9 @@ public class DefaultGameService implements GameService {
         if (playerId == null || playerId.isBlank()) {
             return false;
         }
-        return hostPlayerIdOf(gameId)
-                .map(host -> host.equals(playerId))
-                .orElse(true);
+        return registry.find(gameId).map(session -> registry.readState(gameId, state ->
+                !state.gameOver() && access.visible(state, session.hostPlayerId(), playerId)
+                        && (session.hostPlayerId() == null || playerId.equals(session.hostPlayerId())))).orElse(false);
     }
 
     @Override
@@ -177,7 +182,7 @@ public class DefaultGameService implements GameService {
         if (inviteePlayerId == null) {
             return Optional.empty();
         }
-        Integer seat = registry.writeState(gameId, state -> state.invitedSeats().remove(inviteePlayerId));
+        Integer seat = registry.writeState(gameId, state -> state.gameOver() ? null : state.invitedSeats().remove(inviteePlayerId));
         return Optional.ofNullable(seat);
     }
 
@@ -220,14 +225,14 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean observeGame(GameId gameId, @Nullable String playerId) {
-        if (playerId == null || playerId.isBlank()) {
+        if (registry.find(gameId).isEmpty() || playerId == null || playerId.isBlank()) {
             return false;
         }
         boolean added = registry.writeState(gameId, state -> {
             if (!state.active() || state.gameOver()) {
                 return false;
             }
-            if (!state.observersAllowed()) {
+            if (!access.canObserve(state, registry.require(gameId).hostPlayerId(), playerId)) {
                 return false;
             }
             state.observers().add(playerId);
@@ -244,7 +249,7 @@ public class DefaultGameService implements GameService {
         if (playerId == null) {
             return false;
         }
-        boolean removed = registry.writeState(gameId, state -> state.observers().remove(playerId));
+        boolean removed = registry.writeState(gameId, state -> !state.gameOver() && state.observers().remove(playerId));
         if (removed) {
             broadcaster.publish(new GameEvent.ObserverLeft(gameId, playerId));
             if (shouldAutoplay(gameId)) {
@@ -316,7 +321,8 @@ public class DefaultGameService implements GameService {
                 gameId, name, hostPlayerId, state.turn(), state.started(), state.gameOver(),
                 state.observersAllowed(), state.reentryAllowed(),
                 List.copyOf(state.players()), Set.copyOf(state.joinedHumanPlayerIds()),
-                Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats())));
+                Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats()),
+                state.visibility(), new GameOutcome(state.winnerId(), state.finishedAt())));
     }
 
     @Override
@@ -329,7 +335,7 @@ public class DefaultGameService implements GameService {
         if (!hasStartedGame(gameId)) {
             return false;
         }
-        return registry.writeState(gameId, state -> fleetService.queueSend(state, playerId, fromId, toId, ships));
+        return registry.writeState(gameId, state -> !state.gameOver() && fleetService.queueSend(state, playerId, fromId, toId, ships));
     }
 
     @Override
@@ -338,7 +344,7 @@ public class DefaultGameService implements GameService {
             return false;
         }
         return registry.writeState(gameId,
-                state -> fleetService.addStandingOrder(state, playerId, fromId, toId, ships) > 0);
+                state -> !state.gameOver() && fleetService.addStandingOrder(state, playerId, fromId, toId, ships) > 0);
     }
 
     @Override
@@ -348,12 +354,12 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean removeStandingOrder(GameId gameId, int playerId, int orderId) {
-        return registry.writeState(gameId, state -> fleetService.removeStandingOrder(state, playerId, orderId));
+        return registry.writeState(gameId, state -> !state.gameOver() && fleetService.removeStandingOrder(state, playerId, orderId));
     }
 
     @Override
     public boolean removeStandingOrderFrom(GameId gameId, int playerId, int fromSystemId) {
-        return registry.writeState(gameId, state -> fleetService.removeStandingOrderFrom(state, playerId, fromSystemId));
+        return registry.writeState(gameId, state -> !state.gameOver() && fleetService.removeStandingOrderFrom(state, playerId, fromSystemId));
     }
 
     @Override
@@ -486,24 +492,18 @@ public class DefaultGameService implements GameService {
     }
 
     private void transferHostIfNeeded(GameId gameId, String leavingPlayerId) {
-        GameSession session = registry.find(gameId).orElse(null);
-        if (session == null) {
-            return;
-        }
-        String host = session.hostPlayerId();
-        if (host == null || !host.equals(leavingPlayerId)) {
-            return;
-        }
-
-        String newHost = registry.readState(gameId, state -> state.joinedHumanPlayerIds().stream()
-                .sorted()
-                .map(pid -> state.seatByUser().entrySet().stream()
-                        .filter(e -> e.getValue() != null && e.getValue().equals(pid))
-                        .map(Map.Entry::getKey).findFirst().orElse(null))
-                .filter(Objects::nonNull)
-                .findFirst().orElse(null));
-        session.transferHostTo(newHost);
-        broadcaster.publish(new GameEvent.HostChanged(gameId, newHost));
+        registry.writeState(gameId, state -> {
+            GameSession session = registry.require(gameId);
+            if (!leavingPlayerId.equals(session.hostPlayerId())) { return null; }
+            String newHost = state.joinedHumanPlayerIds().stream().sorted()
+                    .map(pid -> state.seatByUser().entrySet().stream()
+                            .filter(entry -> entry.getValue().equals(pid))
+                            .map(Map.Entry::getKey).findFirst().orElse(null))
+                    .filter(Objects::nonNull).findFirst().orElse(null);
+            session.transferHostTo(newHost);
+            return null;
+        });
+        broadcaster.publish(new GameEvent.HostChanged(gameId, hostPlayerIdOf(gameId).orElse(null)));
     }
 
     private KickResult resolveKick(GameState state, int seatId, @Nullable String actorPlayerId, @Nullable String kickedPlayerId) {
@@ -598,12 +598,13 @@ public class DefaultGameService implements GameService {
         if (!hasStartedGame(gameId)) {
             return false;
         }
-        return registry.writeState(gameId, state -> fleetService.queueWait(state, playerId, fleetId));
+        return registry.writeState(gameId, state -> !state.gameOver() && fleetService.queueWait(state, playerId, fleetId));
     }
 
     @Override
     public boolean cancelOrder(GameId gameId, int playerId, int orderIndex) {
         return registry.writeState(gameId, state -> {
+            if (state.gameOver()) { return false; }
             List<FleetOrder> orders = state.pendingOrders().get(playerId);
             if (orders == null || orderIndex < 0 || orderIndex >= orders.size()) {
                 return false;
@@ -618,7 +619,60 @@ public class DefaultGameService implements GameService {
         if (!hasStartedGame(gameId)) {
             return false;
         }
-        return registry.writeState(gameId, state -> fleetService.queueDisband(state, playerId, fleetId));
+        return registry.writeState(gameId, state -> !state.gameOver() && fleetService.queueDisband(state, playerId, fleetId));
+    }
+
+
+    @Override
+    public List<GameSummary> visibleGamesFor(String account, GameListScope scope) {
+        return registry.listIds().stream().map(id -> summaryFor(id, account))
+                .flatMap(Optional::stream)
+                .filter(summary -> summary.gameOver() == (scope == GameListScope.ARCHIVE)).toList();
+    }
+    @Override
+    public Optional<GameSummary> summaryFor(GameId id, String account) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state ->
+                access.visible(state, session.hostPlayerId(), account)
+                        ? Optional.of(summaryOf(id)) : Optional.empty()));
+    }
+    @Override
+    public boolean changeVisibility(GameId id, String actor, GameVisibility visibility) {
+        if (registry.find(id).isEmpty()) { return false; }
+        boolean changed = registry.writeState(id, state -> {
+            String host = registry.require(id).hostPlayerId();
+            if (!actor.equals(host) || state.started() || state.gameOver() || !state.active()) { return false; }
+            if (visibility == GameVisibility.PUBLIC) { state.publishInLobby(); }
+            else {
+                state.makePrivate();
+                state.observers().removeIf(account -> !access.related(state, host, account));
+            }
+            return true;
+        });
+        if (changed) { broadcaster.publish(new GameEvent.VisibilityChanged(id)); }
+        return changed;
+    }
+    @Override
+    public Optional<PlayerViewState> reviewFor(GameId id, String account) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            if (!access.canReview(state, session.hostPlayerId(), account)) { return Optional.empty(); }
+            Integer seat = state.seatByUser().get(account);
+            return Optional.of(seat == null ? playerViewBuilder.forObserver(state) : playerViewBuilder.forPlayer(state, seat));
+        }));
+    }
+    @Override
+    public Optional<PlayerViewState> viewForAccount(GameId id, String account) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            if (state.gameOver()) { return reviewFor(id, account); }
+            if (!access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
+            Integer seat = state.seatByUser().get(account);
+            if (state.started() && seat != null && state.joinedHumanPlayerIds().contains(seat)) {
+                return Optional.of(playerViewBuilder.forPlayer(state, seat));
+            }
+            if (state.observers().contains(account) && access.canObserve(state, session.hostPlayerId(), account)) {
+                return Optional.of(playerViewBuilder.forObserver(state));
+            }
+            return Optional.empty();
+        }));
     }
 
     private sealed interface TurnResult {

@@ -16,12 +16,9 @@ spring:
     compose:
       enabled: true  # set to false in production (DB is already running there)
   datasource:
-    url: jdbc:postgresql://localhost:5432/starfare
-    username: starfare
-    password: starfare
     hikari:
-      # https://vladmihalcea:com/why-you-should-always-use-hibernate-connection-provider_disables_autocommit-for-resource-local-jpa-transactions/
-      # in combination with jpa:properties:hibernate:connection:provider_disables_autocommit: true
+      # https://vladmihalcea.com/why-you-should-always-use-hibernate-connection-provider_disables_autocommit-for-resource-local-jpa-transactions/
+      # in combination with jpa.properties.hibernate.connection.provider_disables_autocommit: true
       auto-commit: false
   mail:
     host: ${MAIL_HOST:localhost}

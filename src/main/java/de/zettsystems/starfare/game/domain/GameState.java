@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.game.domain;
 
+import de.zettsystems.starfare.game.values.GameVisibility;
+
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.Player;
@@ -40,6 +42,14 @@ public class GameState {
     private final java.util.Set<Integer> waitThisTurn = new java.util.HashSet<>();
     private final java.util.Set<Integer> submittedThisTurn = new java.util.HashSet<>();
     private boolean gameOver;
+    private GameVisibility visibility = GameVisibility.PRIVATE;
+    private @Nullable Instant finishedAt;
+
+    public GameVisibility visibility() { return visibility; }
+    public @Nullable Instant finishedAt() { return finishedAt; }
+    public void publishInLobby() { visibility = GameVisibility.PUBLIC; }
+    public void makePrivate() { visibility = GameVisibility.PRIVATE; }
+
     private @Nullable Integer winnerId;
     private boolean active = true;
     private boolean started;
@@ -170,16 +180,23 @@ public class GameState {
      * Ends the game, optionally recording a winner (null = abort/draw).
      */
     public void endGame(@Nullable Integer winnerId) {
+        endGame(winnerId, Instant.now());
+    }
+
+    public void endGame(@Nullable Integer winnerId, Instant finishedAt) {
+        if (!this.gameOver) { this.finishedAt = finishedAt; }
         this.gameOver = true;
         this.winnerId = winnerId;
     }
 
     public void clearGameOver() {
         this.gameOver = false;
+        this.finishedAt = null;
         this.winnerId = null;
     }
 
     public void resetForNewGame() {
+        makePrivate();
         this.turn = 1;
         this.nextGlobalFleetId = 1;
         this.nextLocalFleetNo.clear();
@@ -355,7 +372,7 @@ public class GameState {
                 new java.util.HashSet<>(s.joinedHumanPlayerIds), new java.util.HashSet<>(s.originalHumanPlayerIds),
                 new java.util.HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
-                s.observersAllowed, s.reentryAllowed, s.turnStartedAt);
+                s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -373,6 +390,8 @@ public class GameState {
         if (s.gameOver()) {
             c.endGame(s.winnerId());
         }
+        c.finishedAt = s.finishedAt();
+        c.visibility = s.visibility() == null ? GameVisibility.PUBLIC : s.visibility();
         c.active = s.active();
         c.started = s.started();
         c.joinedHumanPlayerIds.addAll(s.joinedHumanPlayerIds());
@@ -435,6 +454,8 @@ public class GameState {
             c.endGame(s.winnerId());
         }
 
+        c.finishedAt = s.finishedAt();
+        c.visibility = s.visibility() == null ? GameVisibility.PUBLIC : s.visibility();
         c.active = s.active();
         c.started = s.started();
 

@@ -176,10 +176,10 @@ tasks.register('e2eTest', Test) {
     }
     testLogging {
         events 'failed', 'skipped'
-        exceptionFormat 'full'
-        showCauses true
-        showExceptions true
-        showStackTraces true
+        exceptionFormat = 'full'
+        showCauses = true
+        showExceptions = true
+        showStackTraces = true
     }
     shouldRunAfter tasks.named('test')
 }
@@ -201,8 +201,8 @@ tasks.named('compileTestJava').configure {
 
 spotbugs {
     toolVersion = spotbugsVersion
-    effort = 'max'
-    reportLevel = 'low'
+    effort = com.github.spotbugs.snom.Effort.MAX
+    reportLevel = com.github.spotbugs.snom.Confidence.valueOf('LOW')
     excludeFilter = file('config/spotbugs/exclude.xml')
 }
 
@@ -318,6 +318,11 @@ sonar {
         property 'sonar.projectKey', 'starfare'
         property 'sonar.projectName', 'Starfare'
         property 'sonar.host.url', System.getenv('SONAR_HOST_URL') ?: 'http://localhost:9000'
+        // Include authored frontend files and the custom browser-test source set.
+        property 'sonar.sources', 'src/main'
+        property 'sonar.tests', 'src/test,src/e2eTest'
+        property 'sonar.java.test.binaries', files(sourceSets.test.output.classesDirs, sourceSets.e2eTest.output.classesDirs)
+        property 'sonar.java.test.libraries', sourceSets.e2eTest.runtimeClasspath.files
         property 'sonar.coverage.jacoco.xmlReportPaths', 'build/reports/jacoco/test/jacocoTestReport.xml'
         property 'sonar.exclusions', 'src/main/frontend/generated/**,build/generated/**'
         // Mirrors jacocoExclusions so Sonar's coverage % matches the Jacoco bundle %.
@@ -344,4 +349,4 @@ sonar {
         property 'sonar.issue.ignore.multicriteria.domainEquals.resourceKey', '**/domain/**'
     }
 }
-tasks.named('sonar').configure { dependsOn jacocoTestReport }
+tasks.named('sonar').configure { dependsOn jacocoTestReport, tasks.named('compileE2eTestJava') }

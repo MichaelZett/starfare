@@ -16,6 +16,7 @@ class GameServiceObserveTest extends AbstractIntegrationTest {
         GameId gid = registry.createGame(GameSetup.defaults());
         registry.writeState(gid, state -> {
             state.resetForNewGame();
+            state.publishInLobby();
             state.configureLobby(observersAllowed, false);
             state.players().add(new Player(1, "P1", false, "#111111"));
             state.players().add(new Player(2, "AI1", true, "#222222"));
@@ -138,6 +139,7 @@ class GameServiceObserveTest extends AbstractIntegrationTest {
         GameId id = registry.createGame(GameSetup.defaults());
         registry.writeState(id, state -> {
             state.resetForNewGame();
+            state.publishInLobby();
             state.configureLobby(true, false);
             state.players().add(new Player(1, "P1", false, "#111111"));
             return null;

@@ -50,7 +50,7 @@ public class GameSession {
      * Transfers the host role to {@code newHost} (null clears the host slot).
      */
     public void transferHostTo(@Nullable String newHost) {
-        this.hostPlayerId = newHost;
+        writeState(current -> { this.hostPlayerId = newHost; return null; });
     }
 
     public Instant createdAt() {

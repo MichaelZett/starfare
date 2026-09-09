@@ -54,6 +54,8 @@ public class GameSessionEntity extends AbstractBaseEntity<String> {
     /**
      * Replaces the persisted JSON snapshot with a fresh serialization of the live state.
      */
+    public void transferHostTo(@Nullable String host) { this.hostPlayerId = host; }
+
     public void replaceSnapshot(String stateJson) {
         this.stateJson = stateJson;
     }

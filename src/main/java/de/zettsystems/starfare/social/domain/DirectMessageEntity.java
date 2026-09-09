@@ -13,7 +13,7 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "direct_messages")
-public final class DirectMessageEntity extends AbstractBaseEntity<Long> {
+public class DirectMessageEntity extends AbstractBaseEntity<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "direct_message_seq")

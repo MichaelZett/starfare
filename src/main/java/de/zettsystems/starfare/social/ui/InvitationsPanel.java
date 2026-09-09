@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.social.ui;
 
+import de.zettsystems.starfare.game.values.GameListScope;
+
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -22,7 +24,6 @@ import de.zettsystems.starfare.social.application.SocialBroadcaster;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Inbox for pending game-seat invitations addressed to the current user. Auto-hides when empty.
@@ -87,17 +88,9 @@ public class InvitationsPanel extends VerticalLayout {
     }
 
     private List<PendingInvite> collect(String viewer) {
-        return games.listGames().stream()
-                .flatMap(gid -> {
-                    Map<String, Integer> invited = games.invitedSeatsOf(gid);
-                    if (!invited.containsKey(viewer)) {
-                        return java.util.stream.Stream.empty();
-                    }
-                    String host = games.hostPlayerIdOf(gid).orElse(null);
-                    String name = games.gameNameOf(gid);
-                    return java.util.stream.Stream.of(new PendingInvite(gid, name, host));
-                })
-                .toList();
+        return games.visibleGamesFor(viewer, GameListScope.LOBBY).stream()
+                .filter(summary -> summary.invitedSeats().containsKey(viewer))
+                .map(summary -> new PendingInvite(summary.gameId(), summary.name(), summary.hostPlayerId())).toList();
     }
 
     private Div renderRow(String viewer, PendingInvite invite) {

@@ -20,6 +20,7 @@ class AiOnlyTickTest extends AbstractIntegrationTest {
         GameId id = registry.createGame(GameSetup.defaults());
         registry.writeState(id, state -> {
             state.resetForNewGame();
+            state.publishInLobby();
             state.configureLobby(true, false);
             state.players().add(new Player(1, "AI1", true, "#111111"));
             state.players().add(new Player(2, "AI2", true, "#222222"));
@@ -64,6 +65,7 @@ class AiOnlyTickTest extends AbstractIntegrationTest {
         GameId id = registry.createGame(GameSetup.defaults());
         registry.writeState(id, state -> {
             state.resetForNewGame();
+            state.publishInLobby();
             state.configureLobby(true, false);
             state.players().add(new Player(1, "P1", false, "#111111"));
             state.players().add(new Player(2, "AI1", true, "#222222"));

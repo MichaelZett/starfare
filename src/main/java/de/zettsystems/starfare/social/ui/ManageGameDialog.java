@@ -1,5 +1,9 @@
 package de.zettsystems.starfare.social.ui;
 
+import com.vaadin.flow.component.checkbox.Checkbox;
+
+import de.zettsystems.starfare.game.values.GameVisibility;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -37,6 +41,7 @@ import java.util.Set;
  */
 public class ManageGameDialog extends Dialog {
 
+    private final Checkbox publicGame = new Checkbox();
     private final GameService games;
     private final InvitationService invitations;
     private final PresenceTracker presence;
@@ -93,7 +98,16 @@ public class ManageGameDialog extends Dialog {
         VerticalLayout body = new VerticalLayout(humansHeader, humansList, invitesHeader, invitesList, inviteRow);
         body.setPadding(false);
         body.setSpacing(true);
-        add(body);
+        publicGame.setLabel(I18n.t(UiTexts.GAME_PUBLIC));
+        publicGame.addValueChangeListener(event -> {
+            if (event.isFromClient()) {
+                games.changeVisibility(gameId, host, Boolean.TRUE.equals(event.getValue())
+                        ? GameVisibility.PUBLIC
+                        : GameVisibility.PRIVATE);
+                refresh();
+            }
+        });
+        add(publicGame, body);
 
         Button close = new Button(I18n.t(UiTexts.MANAGE_CLOSE), _ -> close());
         getFooter().add(close);
@@ -122,7 +136,10 @@ public class ManageGameDialog extends Dialog {
     }
 
     private void refresh() {
-        GameSummary summary = games.summaryOf(gameId);
+        GameSummary summary = games.summaryFor(gameId, host).orElse(null);
+        if (summary == null || !host.equals(summary.hostPlayerId()) || summary.gameOver()) { close(); return; }
+        publicGame.setValue(summary.visibility() == GameVisibility.PUBLIC);
+        publicGame.setEnabled(!summary.started());
         renderHumans(summary);
         renderInvites(summary.invitedSeats());
         updateInviteCandidates(summary);

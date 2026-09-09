@@ -80,7 +80,7 @@ public class Browser {
                 .until(_ -> buttonWithText(label));
         try {
             button.click();
-        } catch (ElementClickInterceptedException e) {
+        } catch (ElementClickInterceptedException _) {
             ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", button);
         }
     }
@@ -93,7 +93,7 @@ public class Browser {
                     .filter(button -> label.equals(button.getText().strip()))
                     .findFirst()
                     .orElse(null);
-        } catch (StaleElementReferenceException e) {
+        } catch (StaleElementReferenceException _) {
             return null;
         }
     }
