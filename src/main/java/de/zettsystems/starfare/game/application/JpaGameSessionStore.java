@@ -83,6 +83,7 @@ public class JpaGameSessionStore implements GameSessionStore {
                     .orElse(new GameSessionEntity(session.id().value(), session.name(),
                             session.hostPlayerId(), session.createdAt(), json));
             entity.replaceSnapshot(json);
+            entity.transferHostTo(session.hostPlayerId());
             repository.save(entity);
         } catch (JacksonException e) {
             throw new IllegalStateException("Failed to persist game session " + session.id(), e);

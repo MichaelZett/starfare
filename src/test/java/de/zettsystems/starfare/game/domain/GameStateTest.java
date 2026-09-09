@@ -163,7 +163,7 @@ class GameStateTest {
                 s.fleets(), s.reports(), s.intel(), s.waitThisTurn(), s.submittedThisTurn(), s.gameOver(), s.winnerId(),
                 s.active(), s.started(), s.joinedHumanPlayerIds(), s.originalHumanPlayerIds(), s.observers(),
                 s.seatByUser(), s.invitedSeats(), s.pendingOrders(), s.standingOrders(), s.nextStandingOrderId(),
-                s.observersAllowed(), s.reentryAllowed(), null);
+                s.observersAllowed(), s.reentryAllowed(), null, s.visibility(), s.finishedAt());
     }
 
     @Test

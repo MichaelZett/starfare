@@ -43,6 +43,7 @@ final class CreateGameWizardDialog {
         dialog.addClassName("create-game-dialog");
         dialog.setHeaderTitle(I18n.t(UiTexts.LOBBY_WIZARD_TITLE));
         dialog.setWidth("min(1380px, 96vw)");
+        dialog.add(new Span(I18n.t(UiTexts.GAME_PRIVATE_HINT)));
 
         IntegerField systems = intField(I18n.t(UiTexts.LOBBY_FIELD_SYSTEMS),
                 GameConfig.MIN_SYSTEM_COUNT, GameConfig.MAX_SYSTEM_COUNT, GameConfig.DEFAULT_SYSTEM_COUNT);

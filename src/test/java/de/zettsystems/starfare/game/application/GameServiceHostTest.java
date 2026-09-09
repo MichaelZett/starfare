@@ -71,6 +71,7 @@ class GameServiceHostTest extends AbstractIntegrationTest {
     void legacyGameWithoutHostAllowsAnyAbort() {
         GameId id = game.newGame(GameSetup.defaults());
 
+        registry.writeState(id, state -> { state.publishInLobby(); return null; });
         assertThat(game.canAbort(id, "anyone")).isTrue();
     }
 

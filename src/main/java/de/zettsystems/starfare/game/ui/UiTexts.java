@@ -256,4 +256,14 @@ public final class UiTexts {
     public static final String CHAT_UNREAD_BADGE = "chat.unread.badge";
 
     private UiTexts() {}
+    public static final String GAME_PRIVATE = "game.visibility.private";
+    public static final String GAME_PUBLIC = "game.visibility.public";
+    public static final String GAME_PRIVATE_HINT = "game.visibility.hint";
+    public static final String ARCHIVE_TITLE = "archive.title";
+    public static final String ARCHIVE_VIEW = "archive.view";
+    public static final String ARCHIVE_WINNER = "archive.winner";
+    public static final String ARCHIVE_NO_WINNER = "archive.noWinner";
+    public static final String ARCHIVE_FINISHED = "archive.finished";
+    public static final String ARCHIVE_UNKNOWN_TIME = "archive.unknownTime";
+    public static final String ARCHIVE_EMPTY = "archive.empty";
 }

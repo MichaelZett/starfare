@@ -132,7 +132,6 @@ public class SmokeSteps {
     @Wenn("ich das Spiel starte und zur Karte wechsle")
     public void startGameAndOpenMap() {
         browser.clickButtonWithText("Starten");
-        browser.clickButtonWithText("Zur Karte");
         browser.awaitUrl(url -> url.contains("/map/"), "Die Karte wurde nicht geöffnet.");
     }
 

@@ -1,7 +1,10 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.starfare.game.values.GameVisibility;
+
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameSessionEntity;
+import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
 import org.junit.jupiter.api.AfterEach;
@@ -68,5 +71,27 @@ class JpaGameSessionStoreRestoreTest extends AbstractIntegrationTest {
         assertThatCode(store::loadFromDatabase).doesNotThrowAnyException();
 
         assertThat(store.load(GameId.of(BROKEN_ID))).isEmpty();
+    }
+
+    @Autowired private tools.jackson.databind.ObjectMapper objectMapper;
+
+    @Test
+    void reloadRestoresTransferredHostVisibilityAndInvitations() {
+        GameId id = registry.createGame(GameSetup.defaults(), "alice", "persistent");
+        registry.writeState(id, state -> {
+            registry.require(id).transferHostTo("bob");
+            state.invitedSeats().put("guest", 1);
+            state.makePrivate();
+            return null;
+        });
+        var reloaded = new JpaGameSessionStore(repository, objectMapper);
+        reloaded.loadFromDatabase();
+        var session = reloaded.load(id).orElseThrow();
+        assertThat(session.hostPlayerId()).isEqualTo("bob");
+        Integer reservedSeat = session.readState(state -> state.invitedSeats().get("guest"));
+        var visibility = session.readState(GameState::visibility);
+        assertThat(reservedSeat).isEqualTo(1);
+        assertThat(visibility)
+                .isEqualTo(GameVisibility.PRIVATE);
     }
 }

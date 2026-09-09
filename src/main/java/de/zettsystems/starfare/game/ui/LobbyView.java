@@ -1,5 +1,9 @@
 package de.zettsystems.starfare.game.ui;
 
+import de.zettsystems.starfare.game.values.GameListScope;
+
+import de.zettsystems.starfare.game.values.GameVisibility;
+
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
@@ -68,6 +72,7 @@ public class LobbyView extends VerticalLayout {
     private final ChatDrawer chatDrawer;
     private @Nullable Button newGameButton;
     private @Nullable Subscription broadcasterSubscription;
+    private @Nullable Subscription socialSubscription;
 
     @Autowired
     public LobbyView(GameService game, Broadcaster broadcaster, PresenceTracker presence,
@@ -107,7 +112,8 @@ public class LobbyView extends VerticalLayout {
         Button newGameTopButton = new Button(I18n.t(UiTexts.LOBBY_NEW_GAME), _ -> openCreateGameWizard());
         newGameTopButton.addThemeVariants(ButtonVariant.PRIMARY);
         VisibilityMenu visibilityMenu = new VisibilityMenu(preferencesService, onlineUsersPanel::refresh);
-        toolbarAction.add(new LanguageSwitcher(), visibilityMenu, newGameTopButton);
+        toolbarAction.add(new LanguageSwitcher(), visibilityMenu, new Button(I18n.t(UiTexts.ARCHIVE_TITLE),
+                _ -> getUI().ifPresent(ui -> ui.navigate(ArchiveView.class))), newGameTopButton);
 
         toolbar.add(toolbarText, toolbarAction);
 
@@ -154,11 +160,13 @@ public class LobbyView extends VerticalLayout {
         UI ui = attachEvent.getUI();
         broadcasterSubscription = broadcaster.subscribeAll(_ ->
                 ui.access(this::refresh));
+        socialSubscription = socialBroadcaster.subscribe(_ -> ui.access(this::refresh));
         refresh();
     }
 
     @Override
     protected void onDetach(DetachEvent detachEvent) {
+        if (socialSubscription != null) { socialSubscription.remove(); socialSubscription = null; }
         if (broadcasterSubscription != null) {
             broadcasterSubscription.remove();
             broadcasterSubscription = null;
@@ -201,9 +209,9 @@ public class LobbyView extends VerticalLayout {
     }
 
     private void refresh() {
-        String playerId = UserContext.currentPlayerId().orElse(null);
-        List<LobbyGameRow> rows = game.listGames().stream()
-                .map(id -> LobbyGameRow.from(game.summaryOf(id), playerId))
+        String playerId = UserContext.currentPlayerId().orElse("");
+        List<LobbyGameRow> rows = game.visibleGamesFor(playerId, GameListScope.LOBBY).stream()
+                .map(summary -> LobbyGameRow.from(summary, playerId))
                 .filter(this::matchesFilter)
                 .sorted(ROW_ORDER)
                 .toList();
@@ -229,8 +237,7 @@ public class LobbyView extends VerticalLayout {
         ALL(UiTexts.LOBBY_FILTER_ALL),
         OWN(UiTexts.LOBBY_FILTER_OWN),
         OPEN(UiTexts.LOBBY_FILTER_OPEN),
-        RUNNING(UiTexts.LOBBY_FILTER_RUNNING),
-        FINISHED(UiTexts.LOBBY_FILTER_FINISHED);
+        RUNNING(UiTexts.LOBBY_FILTER_RUNNING);
 
         private final String textKey;
 
@@ -245,10 +252,10 @@ public class LobbyView extends VerticalLayout {
         boolean matches(LobbyGameRow row) {
             return switch (this) {
                 case ALL -> true;
-                case OWN -> row.joinedByCurrentUser();
+                case OWN -> row.knownToCurrentUser() || row.isHostedByCurrentUser();
                 case OPEN -> !row.started() && row.hasOpenHumanSeat();
                 case RUNNING -> row.started() && !row.finished();
-                case FINISHED -> row.finished();
+
             };
         }
     }
@@ -256,7 +263,7 @@ public class LobbyView extends VerticalLayout {
     private Component nameWithHost(LobbyGameRow row) {
         Div container = new Div();
         container.addClassName("lobby-game-name");
-        container.add(new Span(row.name()));
+        container.add(new Span(row.name()), new Span(I18n.t(row.visibilityKey())));
         if (row.isHostedByCurrentUser()) {
             Span badge = new Span(I18n.t(UiTexts.LOBBY_HOST_BADGE));
             badge.addClassName("lobby-host-badge");
@@ -324,10 +331,7 @@ public class LobbyView extends VerticalLayout {
             refresh();
         });
         join.addThemeVariants(ButtonVariant.SMALL);
-        boolean canJoinFresh = !row.started() && !row.joinedByCurrentUser() && row.hasOpenHumanSeat();
-        boolean canRejoin = row.started() && !row.finished() && row.reentryAllowed() && !row.joinedByCurrentUser()
-                && row.knownToCurrentUser();
-        join.setEnabled(canJoinFresh || canRejoin);
+        join.setEnabled(row.canJoin());
         return join;
     }
 
@@ -412,7 +416,7 @@ public class LobbyView extends VerticalLayout {
                                 boolean started, boolean canStart, boolean joinedByCurrentUser,
                                 boolean knownToCurrentUser, boolean hasOpenHumanSeat,
                                 boolean observersAllowed, boolean reentryAllowed,
-                                boolean isHostedByCurrentUser, boolean hasHost) {
+                                boolean isHostedByCurrentUser, boolean hasHost, boolean canJoin, String visibilityKey) {
         static LobbyGameRow from(GameSummary summary, @Nullable String playerId) {
             String players = summary.players().stream()
                     .map(LobbyGameRow::playerLabel)
@@ -428,7 +432,11 @@ public class LobbyView extends VerticalLayout {
             boolean hostedByCurrent = hasHost && host != null && host.equals(playerId);
             return new LobbyGameRow(summary.gameId(), displayName, players, summary.turn(), summary.gameOver(),
                     summary.started(), canStart, joinedByCurrent, known, summary.hasOpenHumanSeat(),
-                    summary.observersAllowed(), summary.reentryAllowed(), hostedByCurrent, hasHost);
+                    summary.observersAllowed() && (summary.visibility() == GameVisibility.PUBLIC
+                            || hostedByCurrent || known), summary.reentryAllowed(), hostedByCurrent, hasHost,
+                    summary.canJoin(playerId == null ? "" : playerId),
+                    summary.visibility() == GameVisibility.PRIVATE
+                            ? UiTexts.GAME_PRIVATE : UiTexts.GAME_PUBLIC);
         }
 
         private static String playerLabel(Player player) {

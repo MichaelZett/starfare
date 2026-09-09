@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.social.application;
 
+import de.zettsystems.starfare.game.values.GameVisibility;
+
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameId;
@@ -128,6 +130,7 @@ class InvitationServiceTest extends AbstractIntegrationTest {
     @Test
     void hostRevokesFreesSeat() {
         GameId id = newTwoHumanGame("host");
+        games.changeVisibility(id, "host", GameVisibility.PUBLIC);
         games.joinGame(id, "host");
         invitations.inviteUser(id, "host", "bob");
 
@@ -162,6 +165,7 @@ class InvitationServiceTest extends AbstractIntegrationTest {
     void cannotInviteWhenAllHumanSeatsTaken() {
         GameId id = newTwoHumanGame("host");
         games.joinGame(id, "host");
+        invitations.inviteUser(id, "host", "alice");
         games.joinGame(id, "alice");
 
         assertThat(invitations.inviteUser(id, "host", "bob")).isEmpty();

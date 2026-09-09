@@ -11,6 +11,19 @@ This repository is a personal showcase of a modern Java backend stack
 (Java 25, Spring Boot 4, Vaadin 25, Spring Modulith, Flyway,
 Testcontainers) wrapped around a small but complete game.
 
+## Lobby and archive
+
+New games are private. Use **Manage** to invite players or publish the game
+before it starts. Public games can be found by other signed-in players; private
+games are visible to the host, seat holders and invitees. Visibility is fixed
+once the game starts.
+
+Finished games move from the lobby to **Archive**. Search by game or player name,
+filter your games and open a completed map without issuing further orders.
+Private archives remain restricted to the host and seat holders. For public
+archives, outsiders can open the map only when spectators are allowed. Games
+are retained; no automatic deletion is enabled.
+
 ## Tech stack
 
 - **Java 25** with virtual threads.
@@ -57,7 +70,10 @@ Prerequisites: Java 25, Docker Desktop (for PostgreSQL).
 ```
 
 On first start, `spring-boot-docker-compose` brings the Postgres
-instance up automatically. Then open
+instance up automatically and supplies its connection details. The local database
+port is bound to loopback. Without Docker Compose, set `SPRING_DATASOURCE_URL`,
+`SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` explicitly; the
+application has no fallback credentials. Then open
 [http://localhost:8080](http://localhost:8080).
 
 For local development with Vaadin hot reload:
@@ -65,6 +81,10 @@ For local development with Vaadin hot reload:
 ```bash
 ./gradlew bootRun -Pvaadin.productionMode=false
 ```
+
+The Sonar analysis includes application sources, authored frontend files and
+both test source sets. Generated frontend files are excluded. Run all checks
+with `./gradlew build e2eTest sonar` against the configured SonarQube server.
 
 ## Sign in
 

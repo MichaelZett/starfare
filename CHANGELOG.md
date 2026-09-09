@@ -9,6 +9,13 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 ## Unreleased
 
 ### Added
+- Neue Partien sind privat. Der Host kann sie vor dem Start veröffentlichen;
+  private Partien bleiben auf Host, Sitzinhaber und Eingeladene beschränkt.
+  Direkte Kartenaufrufe prüfen die Zugriffsrechte ebenfalls.
+- Archiv unter `/archive`: beendete Partien verlassen die Lobby und bleiben
+  mit Sieger, Abschlusszeit und lesender Kartenansicht erreichbar. Alte
+  Spielstände ohne Abschlusszeit zeigen einen unbekannten Zeitpunkt.
+
 - Konten, Login, Registrierung mit E-Mail-Bestätigung und Passwort-Reset
   über den externen Baustein `de.zettsystems:identity-core`/`identity-vaadin`.
 - Direktnachrichten werden persistiert (`direct_messages`); Einladungen
@@ -50,6 +57,11 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 - Nach Spielende deckt die Karte alle Systeme auf.
 
 ### Changed
+- Sonar prüft zusätzlich Frontend und Browser-Testquellen.
+- Eigene Theme-Farben ersetzen undefinierte Lumo-Variablen; Statusanzeigen
+  und Kartenmarkierungen erhalten kontrastreiche Hintergründe.
+- Keine fest eingetragenen Datenbankzugangsdaten in der Anwendung; lokal
+  liefert Docker Compose die Verbindung, der Datenbankport ist nur lokal erreichbar.
 - Siegbedingung von „mehr als die Hälfte" auf 70 % aller Systeme angehoben
   (`GameConfig.VICTORY_SYSTEM_PERCENT`); neutrale Systeme zählen weiterhin
   in die Gesamtzahl. Knappe 13:11-Ausgänge entscheiden damit keine Partie
@@ -62,6 +74,11 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   `ui` ↛ `domain`.
 
 ### Fixed
+- Host-Wechsel werden dauerhaft gespeichert und nach Neustarts wiederhergestellt.
+- Befehle aus alten Dialogen können beendete Partien nicht mehr verändern.
+- Sitzvergabe und Persistenz laufen unter demselben Partie-Lock, damit
+  gleichzeitige Beitritte keine konkurrierenden Snapshots speichern.
+
 - Nach einem Kampf zeigt die Karte die exakte Garnison aus dem Rundenbericht
   statt der gröberen Sensorschätzung: die Reichweitenprüfung lief vor der
   Auswertung der Aufklärung, und ein angegriffenes System liegt fast immer

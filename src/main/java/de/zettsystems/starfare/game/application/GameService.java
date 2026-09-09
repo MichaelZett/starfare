@@ -1,5 +1,9 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.starfare.game.values.GameListScope;
+
+import de.zettsystems.starfare.game.values.GameVisibility;
+
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameSummary;
@@ -11,6 +15,12 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface GameService {
+    List<GameSummary> visibleGamesFor(String account, GameListScope scope);
+    Optional<GameSummary> summaryFor(GameId id, String account);
+    boolean changeVisibility(GameId id, String actor, GameVisibility visibility);
+    Optional<PlayerViewState> reviewFor(GameId id, String account);
+    Optional<PlayerViewState> viewForAccount(GameId id, String account);
+
 
     GameId newGame(GameSetup setup, @Nullable String hostPlayerId, String name);
 

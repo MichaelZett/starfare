@@ -48,6 +48,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     @SuppressWarnings("NullAway.Init")
     private GameId gameId;
+    private boolean reviewing;
     private @Nullable VisibleSystem selectedFrom;
     private @Nullable Integer highlightedFleetId;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
@@ -184,7 +185,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         GameId candidate = GameId.of(parameter);
-        if (!game.hasActiveGame(candidate)) {
+        if (game.viewForAccount(candidate, UserContext.currentPlayerId().orElse("")).isEmpty()) {
             event.forwardTo(LobbyView.class);
             return;
         }
@@ -219,7 +220,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (pid < 0) {
             return;
         }
-        PlayerViewState view = game.viewFor(gameId, pid);
+        PlayerViewState view = game.viewForAccount(gameId, UserContext.currentPlayerId().orElse("")).orElse(null);
+        if (view == null) { return; }
         VisibleSystem home = view.systems().stream()
                 .filter(s -> Objects.equals(s.ownerId(), pid))
                 .findFirst().orElse(null);
@@ -264,17 +266,19 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void refresh() {
-        boolean observer = isObserver();
-        int playerId = observer ? -1 : currentSeat();
-        if (!observer && playerId < 0) {
+        PlayerViewState view = game.viewForAccount(gameId, UserContext.currentPlayerId().orElse("")).orElse(null);
+        if (view == null) {
             getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
             return;
         }
-        PlayerViewState view = observer ? game.viewForObserver(gameId) : game.viewFor(gameId, playerId);
+        reviewing = view.gameOver();
+        boolean observer = isObserver() || reviewing;
+        int playerId = observer ? -1 : currentSeat();
         boolean aiOnly = game.isAiOnly(gameId);
 
-        fleetsPanel.setGridsVisible(!observer);
-        header.setNextVisible(!observer || aiOnly);
+        fleetsPanel.setGridsVisible(!observer || reviewing);
+        header.setNextVisible(!reviewing && (!observer || aiOnly));
+        header.setLeaveVisible(!reviewing);
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer);
         header.setRound(view.turn());
@@ -320,6 +324,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void openSend(VisibleSystem from, VisibleSystem to) {
+        if (reviewing) { return; }
         int pid = currentSeat();
         if (pid < 0) {
             return;

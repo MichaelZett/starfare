@@ -139,7 +139,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         GameId candidate = GameId.of(parameter);
-        if (!game.hasStartedGame(candidate)) {
+        if (game.viewForAccount(candidate, UserContext.currentPlayerId().orElse("")).isEmpty()) {
             event.forwardTo(LobbyView.class);
             return;
         }
@@ -158,7 +158,8 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
             return;
         }
-        PlayerViewState view = game.viewFor(gameId, seat);
+        PlayerViewState view = game.viewForAccount(gameId, UserContext.currentPlayerId().orElse("")).orElse(null);
+        if (view == null) { getUI().ifPresent(ui -> ui.navigate(LobbyView.class)); return; }
         reportHeader.setText(I18n.t(UiTexts.ROUND_REPORT_TITLE, view.turn() - 1));
         if (view.gameOver()) {
             gameOverHeader.setText(I18n.t(UiTexts.ROUND_GAME_OVER, winnerName(view)));
@@ -172,6 +173,12 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
     private void renderTimeline() {
         timeline.removeAll();
+        GameId current = gameId;
+        if (current != null && game.viewForAccount(current, UserContext.currentPlayerId().orElse("")).isEmpty()) {
+            lastEvents = List.of();
+            getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
+            return;
+        }
         if (lastEvents.isEmpty()) {
             timeline.add(new Paragraph(I18n.t(UiTexts.ROUND_NO_EVENTS)));
             return;

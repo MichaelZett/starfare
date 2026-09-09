@@ -37,6 +37,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final Checkbox ordersShowStanding;
 
     private boolean syncingSelection;
+    private boolean readOnly;
 
     FleetAndOrdersPanel(Runnable onRefresh,
                         Consumer<PlannedOrder> onCancelOrder,
@@ -77,6 +78,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     void update(PlayerViewState view) {
+        readOnly = view.gameOver();
+        standingOrdersManageBtn.setVisible(!readOnly);
         List<StandingOrderView> standing = view.standingOrders() != null ? view.standingOrders() : List.of();
 
         var fleetRows = new ArrayList<>(UiMapper.toFleetViews(view));
@@ -162,6 +165,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 .setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_SHIPS)).setAutoWidth(true).setFlexGrow(0);
         ordersGrid.addComponentColumn(o -> {
             var cancelBtn = new Button(I18n.t(UiTexts.MAP_ACTION_CANCEL_ORDER), _ -> onCancelOrder.accept(o));
+            cancelBtn.setVisible(!readOnly);
             cancelBtn.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.SMALL, ButtonVariant.TERTIARY);
             return cancelBtn;
         }).setHeader("").setAutoWidth(true).setFlexGrow(0);

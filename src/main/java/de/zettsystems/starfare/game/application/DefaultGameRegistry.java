@@ -16,9 +16,11 @@ import java.util.function.Function;
         justification = "Spring-injected GameSessionStore is kept by reference for the bean's lifetime by design.")
 public class DefaultGameRegistry implements GameRegistry {
     private final GameSessionStore store;
+    private final GameAccessPolicy access;
 
-    public DefaultGameRegistry(GameSessionStore store) {
+    public DefaultGameRegistry(GameSessionStore store, GameAccessPolicy access) {
         this.store = store;
+        this.access = access;
     }
 
     @Override
@@ -61,9 +63,11 @@ public class DefaultGameRegistry implements GameRegistry {
     @Override
     public <T> T writeState(GameId id, Function<GameState, T> fn) {
         GameSession session = require(id);
-        T result = session.writeState(fn);
-        store.save(session);
-        return result;
+        return session.writeState(state -> {
+            T result = fn.apply(state);
+            store.save(session);
+            return result;
+        });
     }
 
     @Override
@@ -71,7 +75,11 @@ public class DefaultGameRegistry implements GameRegistry {
         if (playerId == null || playerId.isBlank()) {
             return Optional.empty();
         }
-        return Optional.ofNullable(writeState(id, state -> tryClaimSeat(state, playerId)));
+        if (find(id).isEmpty()) { return Optional.empty(); }
+        return Optional.ofNullable(writeState(id, state -> {
+            if (!access.visible(state, require(id).hostPlayerId(), playerId)) { return null; }
+            return tryClaimSeat(state, playerId);
+        }));
     }
 
     private static @Nullable Integer tryClaimSeat(GameState state, String playerId) {
@@ -172,7 +180,7 @@ public class DefaultGameRegistry implements GameRegistry {
     @Override
     public boolean canStartGame(GameId id) {
         return readState(id, state -> {
-            if (!state.active() || state.started()) {
+            if (!state.active() || state.started() || state.gameOver()) {
                 return false;
             }
             var humans = state.players().stream().filter(p -> !p.ai()).map(Player::id).toList();
@@ -183,7 +191,7 @@ public class DefaultGameRegistry implements GameRegistry {
     @Override
     public boolean startGame(GameId id) {
         return writeState(id, state -> {
-            if (!state.active() || state.started()) {
+            if (!state.active() || state.started() || state.gameOver()) {
                 return false;
             }
             var humans = state.players().stream().filter(p -> !p.ai()).map(Player::id).toList();

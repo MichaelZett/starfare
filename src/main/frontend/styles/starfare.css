@@ -9,6 +9,11 @@
     --sf-text-muted: #8b949e;
     --sf-accent: #58a6ff;
     --sf-accent-2: #79c0ff;
+    --sf-on-accent: #0d1117;
+    --sf-accent-subtle: rgba(88, 166, 255, 0.15);
+    --sf-contrast-5: rgba(230, 237, 243, 0.05);
+    --sf-contrast-10: rgba(230, 237, 243, 0.10);
+    --sf-contrast-30: rgba(230, 237, 243, 0.30);
     --sf-page-pad: clamp(16px, 3vw, 36px);
     /* Align Aura's dark background with our palette */
     --aura-background-color-dark: #0d1117;
@@ -46,7 +51,7 @@ html, body, #outlet {
     width: 86px;
     height: 86px;
     border-radius: 50%;
-    border: 2px solid var(--lumo-contrast-30pct);
+    border: 2px solid var(--sf-contrast-30);
     transform: translate(-50%, -50%);
     display: flex;
     align-items: center;
@@ -63,11 +68,11 @@ html, body, #outlet {
 }
 
 .sys-own {
-    background: var(--lumo-contrast-10pct);
+    background: var(--sf-contrast-10);
 }
 
 .sys-fog {
-    background: var(--lumo-contrast-5pct);
+    background: var(--sf-contrast-5);
     opacity: .85;
 }
 
@@ -77,7 +82,7 @@ html, body, #outlet {
     color: #b0c4de;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
     border-color: rgba(176, 196, 222, 0.7) !important;
-    background: radial-gradient(circle at 30% 25%, rgba(176, 196, 222, 0.22), rgba(100, 130, 180, 0.12));
+    background: radial-gradient(circle at 30% 25%, #303944, #17202a);
 }
 
 .sys-clickable {
@@ -207,7 +212,7 @@ html, body, #outlet {
    between table and map is unmistakable. Vaadin's default selection tint
    is too subtle on the dark background. */
 .map-right vaadin-grid::part(selected-row) {
-    background: rgba(255, 193, 79, 0.28) !important;
+    background: #51432b !important;
     box-shadow: inset 3px 0 0 #ffd166 !important;
     color: #ffe9b8 !important;
 }
@@ -431,20 +436,20 @@ html, body, #outlet {
 }
 
 .lobby-status-live {
-    background: rgba(63, 185, 80, 0.15);
-    color: #3fb950;
+    background: #1c3429;
+    color: #56d364;
     border: 1px solid rgba(63, 185, 80, 0.4);
 }
 
 .lobby-status-finished {
-    background: rgba(248, 81, 73, 0.15);
-    color: #f85149;
+    background: #372222;
+    color: #ff7b72;
     border: 1px solid rgba(248, 81, 73, 0.4);
 }
 
 .lobby-status-idle {
-    background: rgba(88, 166, 255, 0.15);
-    color: #58a6ff;
+    background: #203044;
+    color: #79c0ff;
     border: 1px solid rgba(88, 166, 255, 0.4);
 }
 
@@ -879,8 +884,8 @@ html, body, #outlet {
 }
 
 .lobby-host-badge {
-    background: var(--lumo-primary-color, #3b82f6);
-    color: var(--lumo-primary-contrast-color, #fff);
+    background: var(--sf-accent);
+    color: var(--sf-on-accent);
     padding: 2px 8px;
     border-radius: 12px;
     font-size: 0.7rem;
@@ -892,8 +897,8 @@ html, body, #outlet {
 .presence-panel {
     width: 220px;
     padding: 12px 14px 16px;
-    background: var(--lumo-base-color, rgba(255, 255, 255, 0.04));
-    border: 1px solid var(--lumo-contrast-10pct, rgba(255, 255, 255, 0.1));
+    background: var(--sf-surface);
+    border: 1px solid var(--sf-contrast-10);
     border-radius: 12px;
     box-sizing: border-box;
 }
@@ -903,7 +908,7 @@ html, body, #outlet {
     font-size: 0.9rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--lumo-secondary-text-color, #aaa);
+    color: var(--sf-text-muted);
 }
 
 .presence-list {
@@ -913,7 +918,7 @@ html, body, #outlet {
 }
 
 .presence-empty {
-    color: var(--lumo-tertiary-text-color, #888);
+    color: var(--sf-text-muted);
     font-size: 0.85rem;
     font-style: italic;
 }
@@ -934,7 +939,7 @@ html, body, #outlet {
 }
 
 .presence-name {
-    color: var(--lumo-body-text-color, #eee);
+    color: var(--sf-text);
 }
 
 @media (max-width: 900px) {
@@ -959,8 +964,8 @@ html, body, #outlet {
 
 .friend-inbox {
     padding: 12px 14px 16px;
-    background: var(--lumo-base-color, rgba(255, 255, 255, 0.04));
-    border: 1px solid var(--lumo-contrast-10pct, rgba(255, 255, 255, 0.1));
+    background: var(--sf-surface);
+    border: 1px solid var(--sf-contrast-10);
     border-radius: 12px;
     box-sizing: border-box;
 }
@@ -970,7 +975,7 @@ html, body, #outlet {
     font-size: 0.9rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--lumo-secondary-text-color, #aaa);
+    color: var(--sf-text-muted);
 }
 
 .friend-inbox-list {
@@ -987,12 +992,12 @@ html, body, #outlet {
 }
 
 .friend-inbox-from {
-    color: var(--lumo-body-text-color, #eee);
+    color: var(--sf-text);
     font-size: 0.9rem;
 }
 
 .friend-inbox-empty {
-    color: var(--lumo-tertiary-text-color, #888);
+    color: var(--sf-text-muted);
     font-size: 0.85rem;
     font-style: italic;
 }
@@ -1020,18 +1025,18 @@ html, body, #outlet {
 }
 
 .presence-status-accepted {
-    background: rgba(34, 197, 94, 0.15);
-    color: #22c55e;
+    background: #183527;
+    color: #56d364;
 }
 
 .presence-status-pending {
-    background: rgba(234, 179, 8, 0.15);
-    color: #eab308;
+    background: #36321e;
+    color: #f2cc60;
 }
 
 .presence-status-blocked {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    background: #372222;
+    color: #ff7b72;
 }
 
 .visibility-menu vaadin-combo-box {
@@ -1039,7 +1044,7 @@ html, body, #outlet {
 }
 
 .visibility-label {
-    color: var(--lumo-secondary-text-color, #aaa);
+    color: var(--sf-text-muted);
     font-size: 0.85rem;
 }
 
@@ -1051,8 +1056,8 @@ html, body, #outlet {
 
 .chat-drawer {
     padding: 12px 14px 16px;
-    background: var(--lumo-base-color, rgba(255, 255, 255, 0.04));
-    border: 1px solid var(--lumo-contrast-10pct, rgba(255, 255, 255, 0.1));
+    background: var(--sf-surface);
+    border: 1px solid var(--sf-contrast-10);
     border-radius: 12px;
     box-sizing: border-box;
     display: flex;
@@ -1065,7 +1070,7 @@ html, body, #outlet {
     font-size: 0.9rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--lumo-secondary-text-color, #aaa);
+    color: var(--sf-text-muted);
 }
 
 .chat-list {
@@ -1075,7 +1080,7 @@ html, body, #outlet {
 }
 
 .chat-empty-list {
-    color: var(--lumo-tertiary-text-color, #888);
+    color: var(--sf-text-muted);
     font-size: 0.85rem;
     font-style: italic;
 }
@@ -1092,23 +1097,23 @@ html, body, #outlet {
 }
 
 .chat-list-row:hover {
-    background: var(--lumo-contrast-5pct, rgba(255, 255, 255, 0.05));
+    background: var(--sf-contrast-5);
 }
 
 .chat-list-row-active {
-    background: var(--lumo-primary-color-10pct, rgba(37, 99, 235, 0.15));
+    background: var(--sf-accent-subtle);
 }
 
 .chat-list-name {
-    color: var(--lumo-body-text-color, #eee);
+    color: var(--sf-text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .chat-unread-badge {
-    background: var(--lumo-primary-color, #2563eb);
-    color: var(--lumo-primary-contrast-color, #fff);
+    background: var(--sf-accent);
+    color: var(--sf-on-accent);
     border-radius: 10px;
     padding: 1px 8px;
     font-size: 0.7rem;
@@ -1121,13 +1126,13 @@ html, body, #outlet {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    border-top: 1px solid var(--lumo-contrast-10pct, rgba(255, 255, 255, 0.1));
+    border-top: 1px solid var(--sf-contrast-10);
     padding-top: 8px;
 }
 
 .chat-active-header {
     font-weight: 600;
-    color: var(--lumo-body-text-color, #eee);
+    color: var(--sf-text);
 }
 
 .chat-messages {
@@ -1140,7 +1145,7 @@ html, body, #outlet {
 }
 
 .chat-empty-conversation {
-    color: var(--lumo-tertiary-text-color, #888);
+    color: var(--sf-text-muted);
     font-size: 0.85rem;
     font-style: italic;
 }
@@ -1157,14 +1162,14 @@ html, body, #outlet {
 
 .chat-bubble-mine {
     align-self: flex-end;
-    background: var(--lumo-primary-color, #2563eb);
-    color: var(--lumo-primary-contrast-color, #fff);
+    background: var(--sf-accent);
+    color: var(--sf-on-accent);
 }
 
 .chat-bubble-theirs {
     align-self: flex-start;
-    background: var(--lumo-contrast-10pct, rgba(255, 255, 255, 0.1));
-    color: var(--lumo-body-text-color, #eee);
+    background: var(--sf-contrast-10);
+    color: var(--sf-text);
 }
 
 .chat-bubble-text {
@@ -1189,8 +1194,8 @@ html, body, #outlet {
 
 .invitations-panel {
     padding: 12px 14px 16px;
-    background: var(--lumo-base-color, rgba(255, 255, 255, 0.04));
-    border: 1px solid var(--lumo-contrast-10pct, rgba(255, 255, 255, 0.1));
+    background: var(--sf-surface);
+    border: 1px solid var(--sf-contrast-10);
     border-radius: 12px;
     box-sizing: border-box;
 }
@@ -1200,7 +1205,7 @@ html, body, #outlet {
     font-size: 0.9rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--lumo-secondary-text-color, #aaa);
+    color: var(--sf-text-muted);
 }
 
 .invitations-list {
@@ -1217,12 +1222,12 @@ html, body, #outlet {
 }
 
 .invitations-row-label {
-    color: var(--lumo-body-text-color, #eee);
+    color: var(--sf-text);
     font-size: 0.9rem;
 }
 
 .invitations-empty {
-    color: var(--lumo-tertiary-text-color, #888);
+    color: var(--sf-text-muted);
     font-size: 0.85rem;
     font-style: italic;
 }
@@ -1232,7 +1237,7 @@ html, body, #outlet {
     font-size: 0.9rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--lumo-secondary-text-color, #aaa);
+    color: var(--sf-text-muted);
 }
 
 .manage-list {
@@ -1249,16 +1254,16 @@ html, body, #outlet {
     gap: 8px;
     padding: 6px 8px;
     border-radius: 8px;
-    background: var(--lumo-contrast-5pct, rgba(255, 255, 255, 0.04));
+    background: var(--sf-contrast-5);
 }
 
 .manage-row-label {
-    color: var(--lumo-body-text-color, #eee);
+    color: var(--sf-text);
     font-size: 0.9rem;
 }
 
 .manage-empty {
-    color: var(--lumo-tertiary-text-color, #888);
+    color: var(--sf-text-muted);
     font-size: 0.85rem;
     font-style: italic;
 }

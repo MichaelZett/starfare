@@ -25,6 +25,8 @@ public sealed interface GameEvent {
 
     record ObserverLeft(GameId gameId, String playerId) implements GameEvent {}
 
+    record VisibilityChanged(GameId gameId) implements GameEvent {}
+
     record GameCreated(GameId gameId) implements GameEvent {}
 
     record GameAborted(GameId gameId) implements GameEvent {}
