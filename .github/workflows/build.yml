@@ -66,8 +66,11 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
+      # Nur bei Fehlschlag: Im Erfolgsfall stehen die Ergebnisse ohnehin als
+      # Check-Annotation und Coverage-Kommentar da; das Artefakt lag sonst
+      # 90 Tage herum (Default-Aufbewahrung), ohne je geöffnet zu werden.
       - name: Upload build reports
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: build-reports
@@ -75,6 +78,8 @@ jobs:
             build/reports/
             build/test-results/
           if-no-files-found: ignore
+          retention-days: 3
+          compression-level: 9
 
       # Übergabe an den release-Job — kein zweiter Gradle-Build.
       - name: Upload boot jar
