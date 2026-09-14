@@ -81,7 +81,7 @@ public class SmokeSteps {
         browser.open("/register");
         browser.awaitCss("vaadin-text-field input").sendKeys(displayName);
         browser.all("vaadin-email-field input").getFirst().sendKeys(email);
-        List<WebElement> passwordFields = browser.all("vaadin-password-field input");
+        List<WebElement> passwordFields = browser.awaitAtLeast("vaadin-password-field input", 2);
         passwordFields.get(0).sendKeys(Browser.PASSWORD);
         passwordFields.get(1).sendKeys(Browser.PASSWORD);
         browser.clickButtonWithText("Registrieren");
@@ -149,8 +149,9 @@ public class SmokeSteps {
 
     @Dann("sehe ich den Rundenbericht für Runde {int}")
     public void roundReportIsShown(int round) {
-        browser.awaitUrl(url -> url.contains("/round/"), "Der Rundenbericht wurde nicht geöffnet.");
-        browser.awaitText("Rundenbericht Runde " + round);
+        browser.awaitUrl(url -> url.contains("/map/"), "Die Karte wurde nach dem Zug verlassen.");
+        browser.awaitSelectedTabWithText("Bericht");
+        browser.awaitText("Runde " + (round + 1));
     }
 
     private String confirmationUrlFor(String email) {

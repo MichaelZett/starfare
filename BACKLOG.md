@@ -16,26 +16,15 @@ Sichtbarkeit und Archiv sind umgesetzt. Aufräumen folgt erst nach gesicherter D
 
 ## Oberfläche
 
-- [ ] **Navigationsmenü** — Voraussetzung für die drei folgenden Punkte: heute
-      liegt alles auf der Kartenseite. Es braucht einen Einstieg, über den
-      Unterseiten erreichbar sind, ohne die Karte zu verlassen.
-- [ ] **Eigene Ansicht für Produktionsverlegungen** — die eigenen Systeme als
+- [ ] **Grafische Produktionsverlegungen** — die eigenen Systeme als
       Knoten, Verlegungen als Kanten, die man zieht. Ersetzt die Bedienung über
-      den Sendedialog; auf der Kartenseite kann die Verlegungs-Bedienung dann
-      entfallen.
-- [ ] **Flotten- und Befehlslisten auf eigene Seiten** — die Darstellung auf der
-      Karte reicht für den Überblick; die Tabellen daneben machen die Seite eng.
-      Über das Menü erreichbar.
-- [ ] **Layout im Spiel-Setup überarbeiten** — der Dialog aus
-      `CreateGameWizardDialog` sitzt noch nicht rund: der Dialog ist mit
-      `min(1380px, 96vw)` sehr breit, die Abschnitte laufen über
-      `FormLayout`-Raster mit fest gesetzten Spaltenbreiten (`13em`/`16em`) und
-      die Startproduktions-Zeilen wachsen mit der Spielerzahl. Auf einem
-      1366×768-Schirm wird es dadurch eng bzw. unruhig. Gebraucht wird eine
-      Aufteilung, die mit wenigen wie mit vielen Spielern gleich gut aussieht.
+      den Sendedialog; die Karten-Seitenleiste zeigt und verwaltet bis dahin die
+      bestehenden Verlegungen als Tabelle.
 - [ ] **Bericht und Karte verknüpfen** — Systeme, an denen etwas passiert ist,
       auf der Karte markieren und zwischen Markierung und Rundenbericht
       hin- und herspringen können.
+- [ ] **Persönliche Reiter-Voreinstellung** — konfigurierbar machen, ob neue
+      Befehle automatisch die Befehle und eine neue Runde den Bericht öffnen.
 
 ## Future Work
 

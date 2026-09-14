@@ -23,3 +23,4 @@ Funktionalität: Private Lobby und Archiv
     Wenn die Lobby-Partie regulär beendet wird
     Dann liegt die Partie nur im Archiv und lässt sich lesend öffnen
     Und kann ich Perspektive und Kriegsnebel der Nachbetrachtung wechseln
+    Und kann ich die Inhalte der Karten-Seitenleiste wählen

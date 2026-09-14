@@ -158,6 +158,11 @@ public class DefaultTurnEngine implements TurnEngine {
             if (c * 100 >= (long) total * GameConfig.VICTORY_SYSTEM_PERCENT) {
                 state.endGame(pid);
                 reportService.appendEvent(state, pid, new TurnEvent.Victory(pid));
+                String winnerName = state.players().stream().filter(player -> player.id() == pid)
+                        .findFirst().orElseThrow().name();
+                state.players().stream().filter(player -> player.id() != pid)
+                        .forEach(player -> reportService.appendEvent(state, player.id(),
+                                new TurnEvent.Defeat(pid, winnerName)));
             }
         });
     }

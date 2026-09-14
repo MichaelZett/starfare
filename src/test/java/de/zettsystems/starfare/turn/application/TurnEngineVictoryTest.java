@@ -8,6 +8,7 @@ import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.report.application.DefaultReportService;
 import de.zettsystems.starfare.report.application.ReportService;
+import de.zettsystems.starfare.report.values.TurnEvent;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -44,6 +45,17 @@ class TurnEngineVictoryTest {
         assertThat(state.gameOver()).isTrue();
         assertThat(state.winnerId()).isOne();
         assertThat(state.reports().get(1).lines().stream().anyMatch(l -> l.contains("Sieg"))).isTrue();
+    }
+
+    @Test
+    void defeatReportReachesEveryOtherPlayer() {
+        GameState state = fourSystemsWith(3);
+
+        newEngine().advanceTurn(state);
+
+        assertThat(state.reports().get(2).events())
+                .anyMatch(event -> event instanceof TurnEvent.Defeat defeat
+                        && defeat.winnerId() == 1 && defeat.winnerName().equals("P1"));
     }
 
     @Test

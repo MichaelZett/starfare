@@ -103,11 +103,17 @@ final class CreateGameWizardDialog {
         intro.addClassName("wizard-intro");
         intro.setText(I18n.t(UiTexts.LOBBY_WIZARD_INTRO));
 
+        Div overview = new Div(
+                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP),
+                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP_HINT), setupGrid),
+                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL),
+                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid));
+        overview.addClassName("wizard-overview");
         VerticalLayout body = new VerticalLayout(
                 intro,
-                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP), I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP_HINT), setupGrid),
-                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL), I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid),
-                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START), I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START_HINT), startProductionFields));
+                overview,
+                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START),
+                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START_HINT), startProductionFields));
         body.addClassName("wizard-body");
         body.setPadding(false);
         body.setSpacing(true);

@@ -8,6 +8,7 @@ import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameVisibility;
+import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.social.application.InvitationService;
 import de.zettsystems.starfare.social.application.PresenceTracker;
 import io.cucumber.java.de.Dann;
@@ -113,25 +114,43 @@ public class LobbySteps {
     public void switchReviewPerspective() {
         browser.awaitCss("#review-fog").click();
         browser.awaitCss(".sys-fog");
+        String aiName = games.reviewFor(id, host).orElseThrow().players().stream()
+                .filter(Player::ai).findFirst().orElseThrow().name();
         var selection = browser.awaitCss("#review-perspective input");
         selection.sendKeys(Keys.chord(Keys.CONTROL, "a"));
-        selection.sendKeys("AI1");
+        selection.sendKeys(aiName);
         new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
                 .until(_ -> browser.all("vaadin-combo-box-item").stream()
-                        .filter(item -> item.isDisplayed() && item.getText().equals("AI1"))
+                        .filter(item -> item.isDisplayed() && item.getText().equals(aiName))
                         .findFirst().orElse(null)).click();
         var ai = games.reviewFor(id, host).orElseThrow().players().stream()
-                .filter(player -> player.name().equals("AI1")).findFirst().orElseThrow();
+                .filter(player -> player.name().equals(aiName)).findFirst().orElseThrow();
         var home = games.reviewFor(id, host, ai.id(), true).orElseThrow().systems().stream()
                 .filter(system -> java.util.Objects.equals(system.ownerId(), ai.id()))
                 .findFirst().orElseThrow();
         browser.awaitTextIn(".sys-own", home.name());
-        assertThat(browser.awaitCss("#review-perspective input").getDomProperty("value")).isEqualTo("AI1");
+        assertThat(browser.awaitCss("#review-perspective input").getDomProperty("value")).isEqualTo(aiName);
         browser.awaitCss("#review-fog").click();
         new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
                 .until(_ -> browser.all(".sys-fog").isEmpty());
         assertThat(browser.all(".sys-fog")).isEmpty();
         assertThat(browser.pageText()).doesNotContain("Nächste Runde", "Verlegungen verwalten");
+    }
+
+    @Dann("kann ich die Inhalte der Karten-Seitenleiste wählen")
+    public void switchMapSidebarSections() {
+        browser.clickTabWithText("Kontakte");
+        browser.awaitText("Noch keine Feinderkenntnisse.");
+        browser.clickTabWithText("Details");
+        browser.awaitText("System oder Flotte auf der Karte auswählen.");
+        browser.clickTabWithText("Flotten");
+        browser.awaitText("Eigene Flotten");
+        browser.clickTabWithText("Befehle");
+        browser.awaitText("Geplante Befehle");
+        browser.clickTabWithText("Verlegungen");
+        browser.awaitText("Produktionsverlegungen");
+        browser.clickTabWithText("Bericht");
+        browser.awaitSelectedTabWithText("Bericht");
     }
 
 }

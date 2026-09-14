@@ -27,6 +27,17 @@ Private archives remain restricted to the host and seat holders. For public
 archives, outsiders can open the map only when spectators are allowed. Games
 are retained; no automatic deletion is enabled.
 
+## Map sidebar
+
+The right-hand sidebar keeps the map visible and switches between Contacts,
+Details, Fleets, Orders, Relocations and Report. Contacts retain the last
+known hostile systems with an estimate or a counted garrison. Select a system or fleet on
+the map to inspect it in Details: systems show their known ownership history,
+fleets their owner, launch turn, travel time and ETA. The report entry contains
+the complete filterable round timeline, including victory and defeat reports.
+Submitting a new command opens Orders; resolving a new round opens Report.
+All game commands remain available only in a running game.
+
 ## Tech stack
 
 - **Java 25** with virtual threads.
@@ -163,7 +174,7 @@ arrival round and remaining turns.
    **Half**, **Double**, **All** (max garrison).
 4. **Send fleet**.
 
-The order lands in **Planned orders** (left). Until the turn ends you
+The order lands in **Planned orders** in the right-hand sidebar. Until the turn ends you
 can take it back via **Cancel**.
 
 Ticking **as production transfer** turns the order into a standing one: the
@@ -174,7 +185,8 @@ is not routed stays behind as garrison.
 
 ### Own fleets (table)
 
-Already in transit. Columns: No, From, To, Ships, ETA.
+Already in transit. Select a row to see its owner, launch round and elapsed
+travel time. Columns: No, From, To, Ships, ETA.
 
 - **Wait** — the fleet rests one round at its current position
   (ETA +1).

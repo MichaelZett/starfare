@@ -127,7 +127,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             case TurnEvent.BattleLost _ -> EventCategory.BATTLE_LOST;
             case TurnEvent.SystemLost _ -> EventCategory.SYSTEM_LOST;
             case TurnEvent.DefenseHeld _ -> EventCategory.DEFENSE_HELD;
-            case TurnEvent.Victory _ -> null;
+            case TurnEvent.Victory _, TurnEvent.Defeat _ -> null;
         });
     }
 
@@ -256,6 +256,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             case TurnEvent.SystemLost _ -> "☠";
             case TurnEvent.DefenseHeld _ -> "🛡";
             case TurnEvent.Victory _ -> "🏆";
+            case TurnEvent.Defeat _ -> "☠";
         };
     }
 
@@ -268,6 +269,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             case TurnEvent.SystemLost _ -> "event-system-lost";
             case TurnEvent.DefenseHeld _ -> "event-defense-held";
             case TurnEvent.Victory _ -> "event-victory";
+            case TurnEvent.Defeat _ -> "event-system-lost";
         };
     }
 
@@ -286,6 +288,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                             d.systemName(), d.attacking(), d.defendersLeft());
             case TurnEvent.Victory _ -> I18n.t(UiTexts.ROUND_EVENT_VICTORY,
                     GameConfig.VICTORY_SYSTEM_PERCENT);
+            case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
         };
     }
 

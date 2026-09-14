@@ -5,42 +5,65 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
+import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.FleetView;
+import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.PlannedOrder;
+import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.game.values.StandingOrderView;
+import de.zettsystems.starfare.game.values.SystemOwnership;
+import de.zettsystems.starfare.game.values.VisibleSystem;
 import de.zettsystems.starfare.i18n.I18n;
+import de.zettsystems.starfare.report.values.TurnEvent;
+import de.zettsystems.starfare.report.values.TurnReport;
 import de.zettsystems.starfare.style.CssProperties;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
-/**
- * Right-hand panel of the map view: fleet grid, planned-orders grid, and
- * standing-orders manager. Stateless w.r.t. game state — pass a fresh
- * {@link PlayerViewState} to {@link #update(PlayerViewState)} on each refresh.
- */
+/** Switchable right-hand map sidebar that keeps the map context visible. */
 final class FleetAndOrdersPanel extends VerticalLayout {
+
+    private enum Section { CONTACTS, DETAILS, FLEETS, ORDERS, RELOCATIONS, REPORT }
+    private enum EventCategory { PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD }
 
     private final Grid<FleetView> fleetGrid = new Grid<>(FleetView.class, false);
     private final Grid<PlannedOrder> ordersGrid = new Grid<>(PlannedOrder.class, false);
-    private final Span standingOrdersSummary = new Span();
-    private final Button standingOrdersManageBtn;
-    private final Checkbox fleetShowStanding;
-    private final Checkbox ordersShowStanding;
+    private final Grid<StandingOrderView> relocationsGrid = new Grid<>(StandingOrderView.class, false);
+    private final Button standingOrdersManageButton;
+    private final VerticalLayout contactsPage = page();
+    private final VerticalLayout detailsPage = page();
+    private final VerticalLayout fleetsPage = page();
+    private final VerticalLayout ordersPage = page();
+    private final VerticalLayout relocationsPage = page();
+    private final VerticalLayout reportPage = page();
+    private final List<VerticalLayout> pages = List.of(contactsPage, detailsPage, fleetsPage, ordersPage,
+            relocationsPage, reportPage);
+    private final Tabs tabs;
+    private final List<Tab> sectionTabs;
+    private final Tab reportTab;
 
     private boolean syncingSelection;
     private boolean readOnly;
+    private @Nullable VisibleSystem selectedSystem;
+    private @Nullable Integer selectedFleetId;
+    private final EnumSet<EventCategory> enabledEventCategories = EnumSet.allOf(EventCategory.class);
 
-    FleetAndOrdersPanel(Runnable onRefresh,
-                        Consumer<PlannedOrder> onCancelOrder,
+    FleetAndOrdersPanel(Consumer<PlannedOrder> onCancelOrder,
                         Runnable onManageStanding,
                         IntConsumer onFleetRowSelected) {
         setPadding(false);
@@ -49,162 +72,396 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         setHeightFull();
         addClassName("map-right");
 
-        fleetShowStanding = new Checkbox(I18n.t(UiTexts.MAP_SHOW_STANDING_TOGGLE));
-        ordersShowStanding = new Checkbox(I18n.t(UiTexts.MAP_SHOW_STANDING_TOGGLE));
-        fleetShowStanding.addValueChangeListener(_ -> onRefresh.run());
-        ordersShowStanding.addValueChangeListener(_ -> onRefresh.run());
+        sectionTabs = List.of(
+                tab(UiTexts.MAP_SIDEBAR_CONTACTS),
+                tab(UiTexts.MAP_SIDEBAR_DETAILS),
+                tab(UiTexts.MAP_SIDEBAR_FLEETS),
+                tab(UiTexts.MAP_SIDEBAR_ORDERS),
+                tab(UiTexts.MAP_SIDEBAR_RELOCATIONS),
+                tab(UiTexts.MAP_SIDEBAR_REPORT));
+        reportTab = sectionTabs.getLast();
+        tabs = new Tabs();
+        tabs.add(sectionTabs.toArray(Tab[]::new));
+        tabs.setWidthFull();
+        tabs.addClassName("map-sidebar-tabs");
+        tabs.addSelectedChangeListener(event -> showSection(sectionOf(event.getSelectedTab())));
 
-        standingOrdersManageBtn = new Button(I18n.t(UiTexts.MAP_STANDING_ORDERS_MANAGE), _ -> onManageStanding.run());
-        standingOrdersManageBtn.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+        standingOrdersManageButton = new Button(I18n.t(UiTexts.MAP_STANDING_ORDERS_MANAGE), _ -> onManageStanding.run());
+        standingOrdersManageButton.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+        configureFleetGrid(onFleetRowSelected);
+        configureOrdersGrid(onCancelOrder);
+        configureRelocationsGrid();
+        fleetsPage.add(header(UiTexts.MAP_OWN_FLEETS), fleetGrid);
+        ordersPage.add(header(UiTexts.MAP_PLANNED_ORDERS), ordersGrid);
+        relocationsPage.add(header(UiTexts.MAP_STANDING_ORDERS_HEADER), relocationsGrid, standingOrdersManageButton);
+        add(tabs, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, reportPage);
+        showSection(Section.CONTACTS);
+    }
 
-        configureFleetGrid();
+    void update(PlayerViewState view, @Nullable VisibleSystem system, @Nullable Integer fleetId) {
+        currentView = view;
+        selectedSystem = system;
+        selectedFleetId = fleetId;
+        readOnly = view.gameOver();
+        standingOrdersManageButton.setVisible(!readOnly);
+        fleetGrid.setItems(UiMapper.toFleetViews(view));
+        ordersGrid.setItems(view.plannedOrders());
+        relocationsGrid.setItems(view.standingOrders());
+        standingOrdersManageButton.setEnabled(!view.standingOrders().isEmpty());
+        renderContacts(view);
+        renderDetails(view);
+        renderReport(view);
+        syncFleetSelection();
+    }
+
+    void setViewsVisible(boolean visible) {
+        tabs.setVisible(visible);
+        if (!visible) {
+            pages.forEach(page -> page.setVisible(false));
+        } else {
+            showSection(sectionOf(tabs.getSelectedTab()));
+        }
+    }
+
+    void setReportAvailable(boolean available) {
+        reportTab.setVisible(available);
+        if (!available && Objects.equals(tabs.getSelectedTab(), reportTab)) {
+            tabs.setSelectedTab(sectionTabs.getFirst());
+        }
+    }
+
+    void showOrders() {
+        select(Section.ORDERS);
+    }
+
+    void showReport() {
+        select(Section.REPORT);
+    }
+
+    private void renderContacts(PlayerViewState view) {
+        contactsPage.removeAll();
+        contactsPage.add(header(UiTexts.MAP_SIDEBAR_CONTACTS));
+        List<VisibleSystem> contacts = view.systems().stream()
+                .filter(system -> !system.fullyVisible() && system.ownerId() != null)
+                .sorted((left, right) -> Integer.compare(lastSeen(right), lastSeen(left)))
+                .toList();
+        if (contacts.isEmpty()) {
+            contactsPage.add(new Paragraph(I18n.t(UiTexts.MAP_SIDEBAR_CONTACTS_EMPTY)));
+            return;
+        }
+        contacts.forEach(system -> contactsPage.add(contact(view, system)));
+    }
+
+    private static VerticalLayout contact(PlayerViewState view, VisibleSystem system) {
+        VerticalLayout card = page();
+        card.addClassName("map-sidebar-contact");
+        card.add(new H2(system.name()),
+                detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())),
+                detail(I18n.t(system.approximate() ? UiTexts.MAP_SIDEBAR_ESTIMATED_SHIPS
+                                : UiTexts.MAP_SIDEBAR_COUNTED_SHIPS), shipValue(system)),
+                detail(I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())),
+                detail(I18n.t(UiTexts.MAP_SIDEBAR_LAST_CONTACT), contactAge(system)));
+        return card;
+    }
+
+    private static String ownerName(PlayerViewState view, @Nullable Integer ownerId) {
+        if (ownerId == null) {
+            return "—";
+        }
+        return view.players().stream().filter(player -> player.id() == ownerId)
+                .map(Player::name).findFirst().orElse("?");
+    }
+
+    private static String shipValue(VisibleSystem system) {
+        String ships = value(system.garrison());
+        return system.approximate() && system.garrison() != null ? "~" + ships : ships;
+    }
+
+    private static String contactAge(VisibleSystem system) {
+        if (system.lastSeenTurn() == null) {
+            return "—";
+        }
+        return I18n.t(UiTexts.MAP_SIDEBAR_LAST_SEEN_TURN, system.lastSeenTurn());
+    }
+
+    private static int lastSeen(VisibleSystem system) {
+        Integer turn = system.lastSeenTurn();
+        return turn != null ? turn : Integer.MIN_VALUE;
+    }
+
+    private void renderDetails(PlayerViewState view) {
+        detailsPage.removeAll();
+        detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS));
+        if (selectedSystem != null) {
+            VisibleSystem system = selectedSystem;
+            detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_SYSTEM), system.name()),
+                    detail(I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
+                    detail(I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())));
+            renderOwnershipHistory(view, system);
+            return;
+        }
+        Fleet selectedFleet = view.ownFleets().stream()
+                .filter(fleet -> selectedFleetId != null && fleet.globalId() == selectedFleetId)
+                .findFirst().orElse(null);
+        if (selectedFleet != null) {
+            FleetView fleet = UiMapper.toFleetViews(view).stream()
+                    .filter(row -> row.fleetId() == selectedFleet.globalId()).findFirst().orElseThrow();
+            detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET), String.valueOf(fleet.localNo())),
+                    detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, selectedFleet.ownerId())),
+                    detail(I18n.t(UiTexts.MAP_COLUMN_FROM), fleet.fromName()),
+                    detail(I18n.t(UiTexts.MAP_COLUMN_TO), fleet.toName()),
+                    detail(I18n.t(UiTexts.MAP_COLUMN_SHIPS), fleet.ships()),
+                    detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET_LAUNCHED), selectedFleet.launchTurn()),
+                    detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET_TRAVELLING),
+                            Math.max(0, view.turn() - selectedFleet.launchTurn())),
+                    detail(I18n.t(UiTexts.MAP_COLUMN_ETA), fleet.eta()));
+            return;
+        }
+        detailsPage.add(new Paragraph(I18n.t(UiTexts.MAP_SIDEBAR_DETAILS_EMPTY)));
+    }
+
+    private void renderOwnershipHistory(PlayerViewState view, VisibleSystem system) {
+        if (!system.fullyVisible() || system.ownershipHistory().isEmpty()) {
+            return;
+        }
+        List<SystemOwnership> periods = system.ownershipHistory();
+        SystemOwnership current = periods.getLast();
+        detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNED_SINCE), current.sinceTurn()));
+        if (periods.size() == 1) {
+            detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_PREVIOUS_OWNER),
+                    I18n.t(UiTexts.MAP_SIDEBAR_NONE)));
+            return;
+        }
+        for (int index = periods.size() - 2; index >= 0; index--) {
+            SystemOwnership previous = periods.get(index);
+            detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_PREVIOUS_OWNER),
+                    ownerName(view, previous.ownerId()) + " (" + I18n.t(UiTexts.MAP_SIDEBAR_UNTIL_TURN,
+                    periods.get(index + 1).sinceTurn() - 1) + ")"));
+        }
+    }
+
+    private void renderReport(PlayerViewState view) {
+        reportPage.removeAll();
+        reportPage.add(header(UiTexts.MAP_SIDEBAR_REPORT));
+        Div filters = new Div();
+        filters.addClassName("report-filter-bar");
+        filters.add(new Span(I18n.t(UiTexts.ROUND_FILTER_LABEL)));
+        addReportFilter(filters, EventCategory.PRODUCTION, UiTexts.ROUND_FILTER_PRODUCTION);
+        addReportFilter(filters, EventCategory.REINFORCEMENT, UiTexts.ROUND_FILTER_REINFORCEMENT);
+        addReportFilter(filters, EventCategory.BATTLE_WON, UiTexts.ROUND_FILTER_BATTLE_WON);
+        addReportFilter(filters, EventCategory.BATTLE_LOST, UiTexts.ROUND_FILTER_BATTLE_LOST);
+        addReportFilter(filters, EventCategory.SYSTEM_LOST, UiTexts.ROUND_FILTER_SYSTEM_LOST);
+        addReportFilter(filters, EventCategory.DEFENSE_HELD, UiTexts.ROUND_FILTER_DEFENSE_HELD);
+        reportPage.add(filters);
+        TurnReport report = view.report();
+        List<TurnEvent> events = report != null ? report.events() : List.of();
+        List<TurnEvent> filtered = events.stream().filter(this::isEventEnabled).toList();
+        if (events.isEmpty()) {
+            reportPage.add(new Paragraph(I18n.t(UiTexts.ROUND_NO_EVENTS)));
+            return;
+        }
+        if (filtered.isEmpty()) {
+            reportPage.add(new Paragraph(I18n.t(UiTexts.ROUND_NO_EVENTS_FILTERED)));
+            return;
+        }
+        for (int index = 0; index < filtered.size(); index++) {
+            reportPage.add(eventCard(filtered.get(index), index));
+        }
+    }
+
+    private void addReportFilter(Div filters, EventCategory category, String key) {
+        Checkbox filter = new Checkbox(I18n.t(key), enabledEventCategories.contains(category));
+        filter.addClassName("report-filter-item");
+        filter.addValueChangeListener(event -> {
+            if (Boolean.TRUE.equals(event.getValue())) {
+                enabledEventCategories.add(category);
+            } else {
+                enabledEventCategories.remove(category);
+            }
+            PlayerViewState view = currentView;
+            if (view != null) {
+                renderReport(view);
+            }
+        });
+        filters.add(filter);
+    }
+
+    private @Nullable PlayerViewState currentView;
+
+    private boolean isEventEnabled(TurnEvent event) {
+        return categoryOf(event).map(enabledEventCategories::contains).orElse(true);
+    }
+
+    private static Optional<EventCategory> categoryOf(TurnEvent event) {
+        return Optional.ofNullable(switch (event) {
+            case TurnEvent.Production _ -> EventCategory.PRODUCTION;
+            case TurnEvent.Reinforcement _ -> EventCategory.REINFORCEMENT;
+            case TurnEvent.BattleWon _ -> EventCategory.BATTLE_WON;
+            case TurnEvent.BattleLost _ -> EventCategory.BATTLE_LOST;
+            case TurnEvent.SystemLost _ -> EventCategory.SYSTEM_LOST;
+            case TurnEvent.DefenseHeld _ -> EventCategory.DEFENSE_HELD;
+            case TurnEvent.Victory _, TurnEvent.Defeat _ -> null;
+        });
+    }
+
+    private static Div eventCard(TurnEvent event, int index) {
+        Div card = new Div();
+        card.addClassNames("event-card", eventCss(event));
+        card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
+        card.add(new Span(eventIcon(event)), new Span(eventText(event)));
+        return card;
+    }
+
+    private static String eventIcon(TurnEvent event) {
+        return switch (event) {
+            case TurnEvent.Production _ -> "⬆";
+            case TurnEvent.Reinforcement _ -> "→";
+            case TurnEvent.BattleWon _ -> "⚔";
+            case TurnEvent.BattleLost _ -> "✕";
+            case TurnEvent.SystemLost _ -> "☠";
+            case TurnEvent.DefenseHeld _ -> "🛡";
+            case TurnEvent.Victory _ -> "🏆";
+            case TurnEvent.Defeat _ -> "☠";
+        };
+    }
+
+    private static String eventCss(TurnEvent event) {
+        return switch (event) {
+            case TurnEvent.Production _ -> "event-production";
+            case TurnEvent.Reinforcement _ -> "event-reinforcement";
+            case TurnEvent.BattleWon _ -> "event-battle-won";
+            case TurnEvent.BattleLost _ -> "event-battle-lost";
+            case TurnEvent.SystemLost _ -> "event-system-lost";
+            case TurnEvent.DefenseHeld _ -> "event-defense-held";
+            case TurnEvent.Victory _ -> "event-victory";
+            case TurnEvent.Defeat _ -> "event-system-lost";
+        };
+    }
+
+    private static String eventText(TurnEvent event) {
+        return switch (event) {
+            case TurnEvent.Production production -> I18n.t(UiTexts.ROUND_EVENT_PRODUCTION,
+                    production.systemName(), production.amount());
+            case TurnEvent.Reinforcement reinforcement -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
+                    reinforcement.systemName(), reinforcement.ships(), reinforcement.totalGarrison(), reinforcement.fleetLabel());
+            case TurnEvent.BattleWon battle -> I18n.t(battle.wasNeutral() ? UiTexts.ROUND_EVENT_BATTLE_WON_NEUTRAL
+                            : UiTexts.ROUND_EVENT_BATTLE_WON_ENEMY,
+                    battle.systemName(), battle.attacking(), battle.defending(), battle.remaining());
+            case TurnEvent.BattleLost battle -> I18n.t(UiTexts.ROUND_EVENT_BATTLE_LOST,
+                    battle.systemName(), battle.attacking(), battle.defending(), battle.defendersLeft());
+            case TurnEvent.SystemLost lost -> I18n.t(UiTexts.ROUND_EVENT_SYSTEM_LOST, lost.systemName());
+            case TurnEvent.DefenseHeld held -> I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
+                    held.systemName(), held.attacking(), held.defendersLeft());
+            case TurnEvent.Victory _ -> I18n.t(UiTexts.ROUND_EVENT_VICTORY, GameConfig.VICTORY_SYSTEM_PERCENT);
+            case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
+        };
+    }
+
+    private void configureFleetGrid(IntConsumer onFleetRowSelected) {
+        fleetGrid.addColumn(fleet -> String.valueOf(fleet.localNo())).setHeader(I18n.t(UiTexts.MAP_COLUMN_NO))
+                .setSortable(true).setAutoWidth(true).setFlexGrow(0);
+        fleetGrid.addColumn(FleetView::fromName).setHeader(I18n.t(UiTexts.MAP_COLUMN_FROM)).setAutoWidth(true);
+        fleetGrid.addColumn(FleetView::toName).setHeader(I18n.t(UiTexts.MAP_COLUMN_TO)).setAutoWidth(true);
+        fleetGrid.addColumn(FleetView::ships).setHeader(I18n.t(UiTexts.MAP_COLUMN_SHIPS)).setAutoWidth(true).setFlexGrow(0);
+        fleetGrid.addColumn(FleetView::eta).setHeader(I18n.t(UiTexts.MAP_COLUMN_ETA)).setAutoWidth(true).setFlexGrow(0);
         fleetGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT);
         fleetGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        fleetGrid.setHeight("min(58vh, 680px)");
         fleetGrid.addSelectionListener(event -> {
-            if (syncingSelection) {
-                return;
+            if (!syncingSelection) {
+                onFleetRowSelected.accept(event.getFirstSelectedItem().map(FleetView::fleetId).orElse(-1));
             }
-            event.getFirstSelectedItem().ifPresentOrElse(fv -> {
-                if (!fv.standing() && fv.fleetId() >= 0) {
-                    onFleetRowSelected.accept(fv.fleetId());
-                }
-            }, () -> onFleetRowSelected.accept(-1));
         });
-        configureOrdersGrid(onCancelOrder);
-
-        add(buildFleetsHeader(), fleetGrid,
-                buildOrdersHeader(), ordersGrid,
-                buildStandingHeader(), buildStandingRow());
-    }
-
-    void update(PlayerViewState view) {
-        readOnly = view.gameOver();
-        standingOrdersManageBtn.setVisible(!readOnly);
-        List<StandingOrderView> standing = view.standingOrders() != null ? view.standingOrders() : List.of();
-
-        var fleetRows = new ArrayList<>(UiMapper.toFleetViews(view));
-        if (Boolean.TRUE.equals(fleetShowStanding.getValue())) {
-            fleetRows.addAll(UiMapper.standingAsFleetRows(view));
-        }
-        // setItems clears the selection — keep the listener silent so it does not
-        // echo a phantom "deselect" back to the view that just established the highlight.
-        syncingSelection = true;
-        try {
-            fleetGrid.setItems(fleetRows);
-        } finally {
-            syncingSelection = false;
-        }
-
-        var orderRows = new ArrayList<>(view.plannedOrders());
-        if (Boolean.TRUE.equals(ordersShowStanding.getValue())) {
-            for (StandingOrderView so : standing) {
-                orderRows.add(new PlannedOrder(-1, UiTexts.MAP_ORDER_TYPE_STANDING,
-                        so.fromSystemId(), so.toSystemId(), so.fromSystem(), so.toSystem(),
-                        so.productionPerTurn(), true, so.id()));
-            }
-        }
-        ordersGrid.setItems(orderRows);
-
-        standingOrdersSummary.setText(standing.isEmpty()
-                ? I18n.t(UiTexts.MAP_STANDING_ORDERS_EMPTY)
-                : I18n.t(UiTexts.MAP_STANDING_ORDERS_HEADER_COUNT, standing.size()));
-        standingOrdersManageBtn.setEnabled(!standing.isEmpty());
-    }
-
-    void setGridsVisible(boolean visible) {
-        fleetGrid.setVisible(visible);
-        ordersGrid.setVisible(visible);
-    }
-
-    /**
-     * Mirrors the externally tracked highlight onto the grid's selection. A null id
-     * clears the selection. The {@code syncingSelection} latch prevents the selection
-     * listener from echoing this programmatic change back as a user click.
-     */
-    void setHighlightedFleet(@Nullable Integer fleetId) {
-        syncingSelection = true;
-        try {
-            if (fleetId == null) {
-                fleetGrid.deselectAll();
-                return;
-            }
-            fleetGrid.getGenericDataView().getItems()
-                    .filter(fv -> !fv.standing() && fv.fleetId() == fleetId)
-                    .findFirst()
-                    .ifPresentOrElse(fleetGrid::select, fleetGrid::deselectAll);
-        } finally {
-            syncingSelection = false;
-        }
-    }
-
-    private void configureFleetGrid() {
-        fleetGrid.removeAllColumns();
-        fleetGrid.addColumn(f -> f.standing() ? "∞" : String.valueOf(f.localNo()))
-                .setHeader(I18n.t(UiTexts.MAP_COLUMN_NO))
-                .setSortable(true).setAutoWidth(true).setFlexGrow(0);
-        fleetGrid.addColumn(FleetView::fromName).setHeader(I18n.t(UiTexts.MAP_COLUMN_FROM))
-                .setSortable(true).setAutoWidth(true).setFlexGrow(1);
-        fleetGrid.addColumn(FleetView::toName).setHeader(I18n.t(UiTexts.MAP_COLUMN_TO))
-                .setSortable(true).setAutoWidth(true).setFlexGrow(1);
-        fleetGrid.addColumn(FleetView::ships).setHeader(I18n.t(UiTexts.MAP_COLUMN_SHIPS))
-                .setSortable(true).setAutoWidth(true).setFlexGrow(0);
-        fleetGrid.addColumn(f -> f.standing() ? "—" : String.valueOf(f.eta()))
-                .setHeader(I18n.t(UiTexts.MAP_COLUMN_ETA))
-                .setSortable(true).setAutoWidth(true).setFlexGrow(0);
-        fleetGrid.setHeight("min(40vh, 550px)");
     }
 
     private void configureOrdersGrid(Consumer<PlannedOrder> onCancelOrder) {
-        ordersGrid.addColumn(o -> I18n.t(o.type())).setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_TYPE))
-                .setAutoWidth(true).setFlexGrow(0);
-        ordersGrid.addColumn(PlannedOrder::fromSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_FROM))
-                .setAutoWidth(true).setFlexGrow(1);
-        ordersGrid.addColumn(PlannedOrder::toSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_TO))
-                .setAutoWidth(true).setFlexGrow(1);
-        ordersGrid.addColumn(o -> o.ships() != null ? String.valueOf(o.ships()) : "-")
-                .setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_SHIPS)).setAutoWidth(true).setFlexGrow(0);
-        ordersGrid.addComponentColumn(o -> {
-            var cancelBtn = new Button(I18n.t(UiTexts.MAP_ACTION_CANCEL_ORDER), _ -> onCancelOrder.accept(o));
-            cancelBtn.setVisible(!readOnly);
-            cancelBtn.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.SMALL, ButtonVariant.TERTIARY);
-            return cancelBtn;
-        }).setHeader("").setAutoWidth(true).setFlexGrow(0);
+        ordersGrid.addColumn(order -> I18n.t(order.type())).setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_TYPE)).setAutoWidth(true);
+        ordersGrid.addColumn(PlannedOrder::fromSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_FROM)).setAutoWidth(true);
+        ordersGrid.addColumn(PlannedOrder::toSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_TO)).setAutoWidth(true);
+        ordersGrid.addColumn(order -> value(order.ships())).setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_SHIPS)).setAutoWidth(true);
+        ordersGrid.addComponentColumn(order -> {
+            Button cancel = new Button(I18n.t(UiTexts.MAP_ACTION_CANCEL_ORDER), _ -> onCancelOrder.accept(order));
+            cancel.setVisible(!readOnly);
+            cancel.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+            return cancel;
+        }).setHeader("").setAutoWidth(true);
         ordersGrid.setAllRowsVisible(true);
     }
 
-    private HorizontalLayout buildFleetsHeader() {
-        var fleetsHdr = new H2(I18n.t(UiTexts.MAP_OWN_FLEETS));
-        fleetsHdr.getStyle().set(CssProperties.MARGIN, "0");
-        return expandingHeaderRow(fleetsHdr, fleetShowStanding);
+    private void configureRelocationsGrid() {
+        relocationsGrid.addColumn(StandingOrderView::fromSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_FROM)).setAutoWidth(true);
+        relocationsGrid.addColumn(StandingOrderView::toSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_TO)).setAutoWidth(true);
+        relocationsGrid.addColumn(StandingOrderView::productionPerTurn)
+                .setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_PRODUCTION)).setAutoWidth(true);
+        relocationsGrid.setAllRowsVisible(true);
     }
 
-    private HorizontalLayout buildOrdersHeader() {
-        var ordersHdr = new H2(I18n.t(UiTexts.MAP_PLANNED_ORDERS));
-        ordersHdr.getStyle().set(CssProperties.MARGIN, "0");
-        return expandingHeaderRow(ordersHdr, ordersShowStanding);
+    private void syncFleetSelection() {
+        syncingSelection = true;
+        try {
+            fleetGrid.getGenericDataView().getItems().filter(row -> Objects.equals(row.fleetId(), selectedFleetId))
+                    .findFirst().ifPresentOrElse(fleetGrid::select, fleetGrid::deselectAll);
+        } finally {
+            syncingSelection = false;
+        }
     }
 
-    private H2 buildStandingHeader() {
-        var hdr = new H2(I18n.t(UiTexts.MAP_STANDING_ORDERS_HEADER));
-        hdr.getStyle().set(CssProperties.MARGIN, "0");
-        return hdr;
+    private void showSection(Section section) {
+        contactsPage.setVisible(section == Section.CONTACTS);
+        detailsPage.setVisible(section == Section.DETAILS);
+        fleetsPage.setVisible(section == Section.FLEETS);
+        ordersPage.setVisible(section == Section.ORDERS);
+        relocationsPage.setVisible(section == Section.RELOCATIONS);
+        reportPage.setVisible(section == Section.REPORT);
     }
 
-    private HorizontalLayout buildStandingRow() {
-        standingOrdersSummary.addClassName("standing-orders-summary");
-        var row = new HorizontalLayout(standingOrdersSummary, standingOrdersManageBtn);
-        row.setAlignItems(Alignment.CENTER);
-        row.setPadding(false);
-        row.setSpacing(true);
-        return row;
+    private void select(Section section) {
+        tabs.setSelectedTab(tabFor(section));
+        showSection(section);
     }
 
-    private static HorizontalLayout expandingHeaderRow(H2 hdr, Checkbox toggle) {
-        var row = new HorizontalLayout(hdr, toggle);
+    private Tab tabFor(Section section) {
+        return switch (section) {
+            case CONTACTS -> sectionTabs.getFirst();
+            case DETAILS -> sectionTabs.get(1);
+            case FLEETS -> sectionTabs.get(2);
+            case ORDERS -> sectionTabs.get(3);
+            case RELOCATIONS -> sectionTabs.get(4);
+            case REPORT -> reportTab;
+        };
+    }
+
+    private Section sectionOf(Tab tab) {
+        return Section.values()[sectionTabs.indexOf(tab)];
+    }
+
+    private static Tab tab(String key) {
+        return new Tab(I18n.t(key));
+    }
+
+    private static VerticalLayout page() {
+        VerticalLayout page = new VerticalLayout();
+        page.setPadding(false);
+        page.setSpacing(true);
+        page.setWidthFull();
+        return page;
+    }
+
+    private static H2 header(String key) {
+        H2 title = new H2(I18n.t(key));
+        title.getStyle().set(CssProperties.MARGIN, "0");
+        return title;
+    }
+
+    private static HorizontalLayout detail(String label, Object value) {
+        Span labelSpan = new Span(label);
+        Span valueSpan = new Span(String.valueOf(value));
+        HorizontalLayout row = new HorizontalLayout(labelSpan, valueSpan);
         row.setWidthFull();
-        row.setAlignItems(Alignment.BASELINE);
-        row.setPadding(false);
-        row.expand(hdr);
+        row.addClassName("map-sidebar-detail");
+        row.expand(labelSpan);
         return row;
     }
+
+    private static String value(@Nullable Integer value) { return value == null ? "—" : String.valueOf(value); }
 }

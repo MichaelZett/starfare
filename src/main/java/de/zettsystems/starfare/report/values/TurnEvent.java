@@ -18,7 +18,8 @@ import org.jspecify.annotations.Nullable;
         @JsonSubTypes.Type(value = TurnEvent.BattleLost.class,   name = "battleLost"),
         @JsonSubTypes.Type(value = TurnEvent.SystemLost.class,   name = "systemLost"),
         @JsonSubTypes.Type(value = TurnEvent.DefenseHeld.class,  name = "defenseHeld"),
-        @JsonSubTypes.Type(value = TurnEvent.Victory.class,      name = "victory")
+        @JsonSubTypes.Type(value = TurnEvent.Victory.class,      name = "victory"),
+        @JsonSubTypes.Type(value = TurnEvent.Defeat.class,       name = "defeat")
 })
 public sealed interface TurnEvent {
 
@@ -62,4 +63,7 @@ public sealed interface TurnEvent {
             implements TurnEvent {}
 
     record Victory(int winnerId) implements TurnEvent {}
+
+    /** End-of-game notice sent to every player other than the winner. */
+    record Defeat(int winnerId, String winnerName) implements TurnEvent {}
 }
