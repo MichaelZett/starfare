@@ -12,6 +12,7 @@ import de.zettsystems.starfare.social.application.InvitationService;
 import de.zettsystems.starfare.social.application.PresenceTracker;
 import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
+import org.openqa.selenium.Keys;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -108,4 +109,29 @@ public class LobbySteps {
         browser.awaitText(name);
         assertThat(browser.pageText()).doesNotContain("Nächste Runde", "Verlegungen verwalten");
     }
+    @Dann("kann ich Perspektive und Kriegsnebel der Nachbetrachtung wechseln")
+    public void switchReviewPerspective() {
+        browser.awaitCss("#review-fog").click();
+        browser.awaitCss(".sys-fog");
+        var selection = browser.awaitCss("#review-perspective input");
+        selection.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+        selection.sendKeys("AI1");
+        new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
+                .until(_ -> browser.all("vaadin-combo-box-item").stream()
+                        .filter(item -> item.isDisplayed() && item.getText().equals("AI1"))
+                        .findFirst().orElse(null)).click();
+        var ai = games.reviewFor(id, host).orElseThrow().players().stream()
+                .filter(player -> player.name().equals("AI1")).findFirst().orElseThrow();
+        var home = games.reviewFor(id, host, ai.id(), true).orElseThrow().systems().stream()
+                .filter(system -> java.util.Objects.equals(system.ownerId(), ai.id()))
+                .findFirst().orElseThrow();
+        browser.awaitTextIn(".sys-own", home.name());
+        assertThat(browser.awaitCss("#review-perspective input").getDomProperty("value")).isEqualTo("AI1");
+        browser.awaitCss("#review-fog").click();
+        new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
+                .until(_ -> browser.all(".sys-fog").isEmpty());
+        assertThat(browser.all(".sys-fog")).isEmpty();
+        assertThat(browser.pageText()).doesNotContain("Nächste Runde", "Verlegungen verwalten");
+    }
+
 }

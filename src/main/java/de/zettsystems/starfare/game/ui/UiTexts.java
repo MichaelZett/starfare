@@ -4,6 +4,8 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String REVIEW_PERSPECTIVE = "review.perspective";
+    public static final String REVIEW_FOG = "review.fog";
     // Lobby — header / toolbar / empty state
     public static final String LOBBY_HEADER_TITLE = "lobby.header.title";
     public static final String LOBBY_SUBTITLE = "lobby.subtitle";

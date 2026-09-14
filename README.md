@@ -20,6 +20,9 @@ once the game starts.
 
 Finished games move from the lobby to **Archive**. Search by game or player name,
 filter your games and open a completed map without issuing further orders.
+In the completed map, select any participant (including AI) and enable **Fog of war**
+to see their final perspective. Disable fog to reveal all systems and fleets.
+The controls inspect the final state; they do not rewind earlier turns.
 Private archives remain restricted to the host and seat holders. For public
 archives, outsiders can open the map only when spectators are allowed. Games
 are retained; no automatic deletion is enabled.

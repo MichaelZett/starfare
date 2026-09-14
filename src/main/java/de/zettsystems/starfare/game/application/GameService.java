@@ -19,6 +19,8 @@ public interface GameService {
     Optional<GameSummary> summaryFor(GameId id, String account);
     boolean changeVisibility(GameId id, String actor, GameVisibility visibility);
     Optional<PlayerViewState> reviewFor(GameId id, String account);
+
+    Optional<PlayerViewState> reviewFor(GameId id, String account, int perspective, boolean fogOfWar);
     Optional<PlayerViewState> viewForAccount(GameId id, String account);
 
 

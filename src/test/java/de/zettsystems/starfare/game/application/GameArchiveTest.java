@@ -14,6 +14,27 @@ class GameArchiveTest extends AbstractIntegrationTest {
     @Autowired private GameSessionRepository repository;
 
     @Test
+    void reviewSelectionRequiresFinishedAccessibleGameAndExistingParticipant() {
+        var id = games.newGame(GameSetup.defaults(), "host", "Review");
+        games.joinGame(id, "host");
+        assertThat(games.reviewFor(id, "host", 1, false)).isEmpty();
+        games.startGame(id);
+        assertThat(games.reviewFor(id, "host", 2, true)).isEmpty();
+        registry.writeState(id, state -> { state.endGame(1); return null; });
+        var snapshot = registry.readState(id, GameState::toSnapshot);
+        long version = repository.findById(id.value()).orElseThrow().getVersion();
+        assertThat(games.reviewFor(id, "stranger", 1, false)).isEmpty();
+        assertThat(games.reviewFor(id, "", 1, true)).isEmpty();
+        assertThat(games.reviewFor(id, "host", -1, false)).isEmpty();
+        assertThat(games.reviewFor(id, "host", 999, true)).isEmpty();
+        assertThat(games.reviewFor(id, "host", 1, true)).isPresent();
+        assertThat(games.reviewFor(id, "host", 2, true)).isPresent();
+        assertThat(games.reviewFor(id, "host", 2, false)).isPresent();
+        assertThat(registry.readState(id, GameState::toSnapshot)).isEqualTo(snapshot);
+        assertThat(repository.findById(id.value()).orElseThrow().getVersion()).isEqualTo(version);
+    }
+
+    @Test
     void finishedGameMovesToArchiveAndReviewDoesNotWrite() {
         var id = games.newGame(GameSetup.defaults(), "host", "Finished");
         assertThat(games.joinGame(id, "host")).isPresent();

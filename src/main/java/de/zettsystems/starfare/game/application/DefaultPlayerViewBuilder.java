@@ -32,15 +32,25 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
 
     @Override
     public PlayerViewState forPlayer(GameState state, int playerId) {
-        int turn = state.turn();
-        var players = List.copyOf(state.players());
         if (state.gameOver()) {
             // Partie entschieden — der Nebel hat keinen Zweck mehr und verdeckt nur,
             // wie es ausgegangen ist.
             return revealedView(state, playerId);
         }
 
-        List<FleetOrder> orders = state.pendingOrders().getOrDefault(playerId, List.of());
+        return filteredView(state, playerId);
+    }
+
+    @Override
+    public PlayerViewState forReview(GameState state, int playerId, boolean fogOfWar) {
+        return fogOfWar ? filteredView(state, playerId) : forObserver(state);
+    }
+
+    private static PlayerViewState filteredView(GameState state, int playerId) {
+        int turn = state.turn();
+        var players = List.copyOf(state.players());
+        List<FleetOrder> orders = state.gameOver() ? List.of()
+                : state.pendingOrders().getOrDefault(playerId, List.of());
         Map<Integer, Integer> committedBySystem = committedShipsBySystem(orders);
         Map<Integer, Integer> routedBySystem = routedShipsBySystem(state, playerId);
 

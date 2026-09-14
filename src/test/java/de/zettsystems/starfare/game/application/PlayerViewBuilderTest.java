@@ -33,6 +33,39 @@ class PlayerViewBuilderTest {
     }
 
     @Test
+    void reviewFogLimitsFleetsToSelectedPlayer() {
+        var firstFleet = new Fleet(1, 1, 1, 1, 1, 3, 0, 5);
+        var secondFleet = new Fleet(2, 2, 1, 2, 2, 4, 0, 5);
+        state.fleets().addAll(List.of(firstFleet, secondFleet));
+        state.endGame(1);
+        assertThat(builder.forReview(state, 1, true).ownFleets()).containsExactly(firstFleet);
+        assertThat(builder.forReview(state, 2, true).ownFleets()).containsExactly(secondFleet);
+        assertThat(builder.forReview(state, 1, false).ownFleets()).containsExactly(firstFleet, secondFleet);
+    }
+
+    @Test
+    void finishedReviewSwitchesPerspectiveAndFogWithoutChangingState() {
+        var firstBeforeFinish = builder.forPlayer(state, 1);
+        var secondBeforeFinish = builder.forPlayer(state, 2);
+        state.endGame(1);
+        var snapshot = GameState.toSnapshot(state);
+
+        var first = builder.forReview(state, 1, true);
+        var second = builder.forReview(state, 2, true);
+        assertThat(first.systems()).isEqualTo(firstBeforeFinish.systems());
+        assertThat(second.systems()).isEqualTo(secondBeforeFinish.systems());
+        assertThat(visible(first, 1).fullyVisible()).isTrue();
+        assertThat(visible(first, 2).garrison()).isNull();
+        assertThat(visible(second, 2).fullyVisible()).isTrue();
+        assertThat(visible(second, 1).garrison()).isNull();
+        assertThat(first.gameOver()).isTrue();
+        assertThat(first.winnerId()).isOne();
+        assertThat(builder.forReview(state, 1, false)).isEqualTo(builder.forObserver(state));
+        assertThat(builder.forReview(state, 2, false).systems()).allMatch(VisibleSystem::fullyVisible);
+        assertThat(GameState.toSnapshot(state)).isEqualTo(snapshot);
+    }
+
+    @Test
     void ownSystemShowsGarrisonOwnerColorAndCurrentTurn() {
         PlayerViewState view = builder.forPlayer(state, 1);
 

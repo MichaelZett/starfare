@@ -1275,3 +1275,9 @@ html, body, #outlet {
 .manage-invite-row vaadin-combo-box {
     flex-grow: 1;
 }
+
+.review-controls {
+    padding: 0 var(--sf-page-pad) 12px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}

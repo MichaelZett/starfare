@@ -14,17 +14,6 @@ Sichtbarkeit und Archiv sind umgesetzt. Aufräumen folgt erst nach gesicherter D
       Nachbetrachtung und Statistik geklärt sein, sonst löscht man die Daten
       weg, auf denen beide aufbauen.
 
-## Nachbetrachtung beendeter Partien
-
-- [ ] **Kriegsnebel umschaltbar** — in einer beendeten Partie zwischen voller
-      Sicht und Nebel wechseln können. Die volle Sicht liefert
-      `PlayerViewBuilder` seit dem Aufdecken nach Spielende schon; gebraucht
-      wird der Schalter und der Weg zurück auf die gefilterte Sicht.
-- [ ] **Perspektive wechseln** — die Partie aus der Sicht jedes Teilnehmers
-      ansehen. `viewFor(playerId)` kann das bereits; es fehlt die Auswahl in der
-      Oberfläche und eine Regel, ab wann das erlaubt ist (vermutlich erst nach
-      Spielende).
-
 ## Oberfläche
 
 - [ ] **Navigationsmenü** — Voraussetzung für die drei folgenden Punkte: heute
@@ -72,7 +61,7 @@ Sichtbarkeit und Archiv sind umgesetzt. Aufräumen folgt erst nach gesicherter D
 - [ ] **Spielkonzept „Forschung"** — Schiffe/Bauten/etc. erforschbar.
 - [ ] **Zuschauer-Modus mit Perspektivwahl** statt pauschalem God-Mode —
       betrifft die *laufende* Partie, in der ein Zuschauer heute alles sieht.
-      Die Perspektivwahl nach Spielende steht oben unter Nachbetrachtung.
+      Die Perspektivwahl nach Spielende ist bereits umgesetzt.
 
 ## Später: Release und Betrieb
 

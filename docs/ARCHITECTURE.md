@@ -110,6 +110,13 @@ and does not register spectators or save state. Map actions and service commands
 reject edits after game end. Completed snapshots remain in `game_sessions` until
 an independent statistics/archive retention design is implemented.
 
+`reviewFor(id, account, perspective, fogOfWar)` checks completed-game access and
+participant existence inside the read lock. `PlayerViewBuilder.forReview` reuses
+the normal sensor/intel filter even after completion when fog is enabled; without
+fog it returns all systems and fleets. `ReviewControls` stores selection only in
+the view and resets it on route entry. The selected participant never replaces
+the authenticated account or its seat. Rendering remains read-only in both modes.
+
 Host transfers and snapshot persistence use the session write lock. Saving an
 existing entity updates both its snapshot and current host, so a restart cannot
 restore obsolete host permissions.

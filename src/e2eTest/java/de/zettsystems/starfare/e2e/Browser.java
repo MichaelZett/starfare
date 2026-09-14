@@ -112,6 +112,7 @@ public class Browser {
     public void awaitTextIn(String css, String snippet) {
         new WebDriverWait(driver(), LOAD)
                 .withMessage("In " + css + " fehlt der Text: " + snippet)
+                .ignoring(StaleElementReferenceException.class)
                 .until(_ -> all(css).stream()
                         .map(element -> String.valueOf(element.getDomProperty("textContent")))
                         .anyMatch(text -> text.contains(snippet)));
