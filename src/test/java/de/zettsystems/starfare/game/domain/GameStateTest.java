@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.domain;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.game.values.SystemOwnership;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -21,6 +22,19 @@ class GameStateTest {
         state.updateSystem(1, current -> current.reinforce(4));
 
         assertThat(state.getSystem(1).garrison()).isEqualTo(9);
+    }
+
+    @Test
+    void recordsOwnershipChangesWithTheirTurn() {
+        GameState state = new GameState();
+        state.systems().add(new StarSystem(1, "S1", 0, 0, null, 5, 2, true));
+
+        state.updateSystem(1, system -> system.colonize(1, 5, 2));
+        state.nextTurn();
+        state.updateSystem(1, system -> system.captureBy(2, 3));
+
+        assertThat(state.ownershipHistory().get(1))
+                .containsExactly(new SystemOwnership(1, 1), new SystemOwnership(2, 2));
     }
 
     @Test
@@ -163,7 +177,7 @@ class GameStateTest {
                 s.fleets(), s.reports(), s.intel(), s.waitThisTurn(), s.submittedThisTurn(), s.gameOver(), s.winnerId(),
                 s.active(), s.started(), s.joinedHumanPlayerIds(), s.originalHumanPlayerIds(), s.observers(),
                 s.seatByUser(), s.invitedSeats(), s.pendingOrders(), s.standingOrders(), s.nextStandingOrderId(),
-                s.observersAllowed(), s.reentryAllowed(), null, s.visibility(), s.finishedAt());
+                s.observersAllowed(), s.reentryAllowed(), null, s.visibility(), s.finishedAt(), s.ownershipHistory());
     }
 
     @Test

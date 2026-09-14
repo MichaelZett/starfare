@@ -4,6 +4,34 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String MAP_SIDEBAR_CONTACTS = "map.sidebar.contacts";
+    public static final String MAP_SIDEBAR_DETAILS = "map.sidebar.details";
+    public static final String MAP_SIDEBAR_FLEETS = "map.sidebar.fleets";
+    public static final String MAP_SIDEBAR_ORDERS = "map.sidebar.orders";
+    public static final String MAP_SIDEBAR_RELOCATIONS = "map.sidebar.relocations";
+    public static final String MAP_SIDEBAR_REPORT = "map.sidebar.report";
+    public static final String MAP_SIDEBAR_OPEN_REPORT = "map.sidebar.openReport";
+    public static final String MAP_SIDEBAR_REPORT_HINT = "map.sidebar.reportHint";
+    public static final String MAP_SIDEBAR_DETAILS_EMPTY = "map.sidebar.detailsEmpty";
+    public static final String MAP_SIDEBAR_SYSTEMS = "map.sidebar.systems";
+    public static final String MAP_SIDEBAR_PRODUCTION = "map.sidebar.production";
+    public static final String MAP_SIDEBAR_SHIPS = "map.sidebar.ships";
+    public static final String MAP_SIDEBAR_FLEET_COUNT = "map.sidebar.fleetCount";
+    public static final String MAP_SIDEBAR_SYSTEM = "map.sidebar.system";
+    public static final String MAP_SIDEBAR_FLEET = "map.sidebar.fleet";
+    public static final String MAP_SIDEBAR_GARRISON = "map.sidebar.garrison";
+    public static final String MAP_SIDEBAR_CONTACTS_EMPTY = "map.sidebar.contactsEmpty";
+    public static final String MAP_SIDEBAR_OWNER = "map.sidebar.owner";
+    public static final String MAP_SIDEBAR_ESTIMATED_SHIPS = "map.sidebar.estimatedShips";
+    public static final String MAP_SIDEBAR_COUNTED_SHIPS = "map.sidebar.countedShips";
+    public static final String MAP_SIDEBAR_LAST_CONTACT = "map.sidebar.lastContact";
+    public static final String MAP_SIDEBAR_LAST_SEEN_TURN = "map.sidebar.lastSeenTurn";
+    public static final String MAP_SIDEBAR_OWNED_SINCE = "map.sidebar.ownedSince";
+    public static final String MAP_SIDEBAR_PREVIOUS_OWNER = "map.sidebar.previousOwner";
+    public static final String MAP_SIDEBAR_UNTIL_TURN = "map.sidebar.untilTurn";
+    public static final String MAP_SIDEBAR_NONE = "map.sidebar.none";
+    public static final String MAP_SIDEBAR_FLEET_LAUNCHED = "map.sidebar.fleetLaunched";
+    public static final String MAP_SIDEBAR_FLEET_TRAVELLING = "map.sidebar.fleetTravelling";
     public static final String REVIEW_PERSPECTIVE = "review.perspective";
     public static final String REVIEW_FOG = "review.fog";
     // Lobby — header / toolbar / empty state
@@ -183,6 +211,7 @@ public final class UiTexts {
     public static final String ROUND_EVENT_SYSTEM_LOST = "round.event.systemLost";
     public static final String ROUND_EVENT_DEFENSE_HELD = "round.event.defenseHeld";
     public static final String ROUND_EVENT_VICTORY = "round.event.victory";
+    public static final String ROUND_EVENT_DEFEAT = "round.event.defeat";
 
     // Language switcher
     public static final String LANG_LABEL = "lang.label";

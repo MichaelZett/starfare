@@ -7,6 +7,7 @@ import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StandingOrder;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.game.values.SystemOwnership;
 import de.zettsystems.starfare.report.values.TurnReport;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jspecify.annotations.Nullable;
@@ -36,6 +37,7 @@ public class GameState {
     private final List<Fleet> fleets = new ArrayList<>();
     private final Map<Integer, TurnReport> reports = new HashMap<>();
     private final Map<Integer, Map<Integer, Intel>> intel = new HashMap<>();
+    private final Map<Integer, List<SystemOwnership>> ownershipHistory = new HashMap<>();
     private int nextGlobalFleetId = 1;
     private final java.util.Map<Integer, Integer> nextLocalFleetNo = new java.util.HashMap<>();
     // neu
@@ -88,6 +90,11 @@ public class GameState {
 
     public Map<Integer, Map<Integer, Intel>> intel() {
         return intel;
+    }
+
+    /** Ownership periods, oldest first, retained for system details and game review. */
+    public Map<Integer, List<SystemOwnership>> ownershipHistory() {
+        return ownershipHistory;
     }
 
     public java.util.Set<Integer> waitThisTurn() {
@@ -217,6 +224,7 @@ public class GameState {
         this.fleets.clear();
         this.reports.clear();
         this.intel.clear();
+        this.ownershipHistory.clear();
         clearGameOver();
         this.active = true;
         this.started = false;
@@ -324,11 +332,21 @@ public class GameState {
         for (int i = 0; i < systems.size(); i++) {
             StarSystem current = systems.get(i);
             if (current.id() == id) {
-                systems.set(i, updater.apply(current));
+                StarSystem updated = updater.apply(current);
+                systems.set(i, updated);
+                recordOwnershipChange(current, updated);
                 return;
             }
         }
         throw new IllegalArgumentException("System not found: " + id);
+    }
+
+    private void recordOwnershipChange(StarSystem before, StarSystem after) {
+        if (Objects.equals(before.ownerId(), after.ownerId())) {
+            return;
+        }
+        ownershipHistory.computeIfAbsent(after.id(), _ -> new ArrayList<>())
+                .add(new SystemOwnership(after.ownerId(), turn));
     }
 
     public void updatePlayer(int id, UnaryOperator<Player> updater) {
@@ -363,6 +381,8 @@ public class GameState {
         s.pendingOrders.forEach((pid, orders) -> ordersCopy.put(pid, new ArrayList<>(orders)));
         Map<Integer, List<StandingOrder>> standingCopy = new HashMap<>();
         s.standingOrders.forEach((pid, orders) -> standingCopy.put(pid, new ArrayList<>(orders)));
+        Map<Integer, List<SystemOwnership>> historyCopy = new HashMap<>();
+        s.ownershipHistory.forEach((systemId, periods) -> historyCopy.put(systemId, new ArrayList<>(periods)));
         return new GameStateSnapshot(
                 s.turn, s.nextGlobalFleetId, new HashMap<>(s.nextLocalFleetNo),
                 List.copyOf(s.players), List.copyOf(s.systems), List.copyOf(s.fleets),
@@ -372,7 +392,7 @@ public class GameState {
                 new java.util.HashSet<>(s.joinedHumanPlayerIds), new java.util.HashSet<>(s.originalHumanPlayerIds),
                 new java.util.HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
-                s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt);
+                s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -385,6 +405,12 @@ public class GameState {
         c.fleets.addAll(s.fleets());
         c.reports.putAll(s.reports());
         s.intel().forEach((pid, inner) -> c.intel.put(pid, new HashMap<>(inner)));
+        Map<Integer, List<SystemOwnership>> history = s.ownershipHistory();
+        if (history != null) {
+            history.forEach((systemId, periods) -> c.ownershipHistory.put(systemId, new ArrayList<>(periods)));
+        } else {
+            c.initializeOwnershipHistoryFromSystems();
+        }
         c.waitThisTurn.addAll(s.waitThisTurn());
         c.submittedThisTurn.addAll(s.submittedThisTurn());
         if (s.gameOver()) {
@@ -435,6 +461,8 @@ public class GameState {
             var copy = new HashMap<>(inner);
             c.intel().put(pid, copy);
         });
+        s.ownershipHistory().forEach((systemId, periods) ->
+                c.ownershipHistory.put(systemId, new ArrayList<>(periods)));
 
         // Wartemarkierungen übernehmen
         c.waitThisTurn().addAll(s.waitThisTurn());
@@ -465,5 +493,13 @@ public class GameState {
         }
 
         return c;
+    }
+
+    private void initializeOwnershipHistoryFromSystems() {
+        for (StarSystem system : systems) {
+            if (system.ownerId() != null) {
+                ownershipHistory.put(system.id(), new ArrayList<>(List.of(new SystemOwnership(system.ownerId(), turn))));
+            }
+        }
     }
 }

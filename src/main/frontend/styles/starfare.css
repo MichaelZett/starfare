@@ -519,11 +519,20 @@ html, body, #outlet {
 }
 
 .wizard-section {
+    width: 100%;
+    box-sizing: border-box;
     padding: 14px 14px 12px;
     border: 1px solid var(--sf-border);
     border-radius: 14px;
     background: var(--sf-surface-2);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.wizard-overview {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(22rem, 2fr);
+    gap: 14px;
+    width: 100%;
 }
 
 .wizard-section-title {
@@ -552,8 +561,15 @@ html, body, #outlet {
 
 .wizard-grid vaadin-integer-field::part(label),
 .wizard-grid vaadin-combo-box::part(label),
-.wizard-start-production vaadin-integer-field::part(label) {
+.wizard-start-production vaadin-integer-field::part(label),
+.wizard-start-production vaadin-combo-box::part(label) {
     font-weight: 600;
+}
+
+@media (max-width: 900px) {
+    .wizard-overview {
+        grid-template-columns: 1fr;
+    }
 }
 
 .color-option-row {
@@ -1280,4 +1296,28 @@ html, body, #outlet {
     padding: 0 var(--sf-page-pad) 12px;
     box-sizing: border-box;
     flex-shrink: 0;
+}
+
+.map-sidebar-tabs {
+    overflow-x: auto;
+    flex-shrink: 0;
+}
+
+.map-sidebar-detail {
+    padding: 0.45rem 0.6rem;
+    background: var(--sf-surface-2);
+    border: 1px solid var(--sf-border);
+    border-radius: 0.4rem;
+}
+
+.map-sidebar-contact {
+    padding: 0.6rem;
+    background: var(--sf-surface-1);
+    border: 1px solid var(--sf-border);
+    border-radius: 0.45rem;
+}
+
+.map-sidebar-contact h2 {
+    margin: 0;
+    font-size: 1rem;
 }

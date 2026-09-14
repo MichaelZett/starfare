@@ -15,6 +15,8 @@ import java.util.function.Function;
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Spring-injected GameSessionStore is kept by reference for the bean's lifetime by design.")
 public class DefaultGameRegistry implements GameRegistry {
+    private static final List<String> AI_NAMES = List.of("Orion", "Lyra", "Vega", "Nova", "Atlas",
+            "Mira", "Sagan", "Astra", "Kepler", "Selene");
     private final GameSessionStore store;
     private final GameAccessPolicy access;
 
@@ -224,7 +226,7 @@ public class DefaultGameRegistry implements GameRegistry {
             state.originalHumanPlayerIds().add(seatId);
         }
         for (int i = 1; i <= setup.aiPlayers(); i++) {
-            state.players().add(new Player(pid++, "AI" + i, true, setup.colorForSeat(setup.humanPlayers() + i - 1)));
+            state.players().add(new Player(pid++, aiName(i), true, setup.colorForSeat(setup.humanPlayers() + i - 1)));
         }
         for (Player p : state.players()) {
             state.intel().put(p.id(), new HashMap<>());
@@ -240,7 +242,7 @@ public class DefaultGameRegistry implements GameRegistry {
             state.systems().add(new StarSystem(i, names.get(i - 1), pos[0], pos[1], null, garrison, prod, true));
         }
 
-        List<StarSystem> homes = homeSystems(state, setup, r);
+        List<StarSystem> homes = homeSystems(state, r);
         for (int playerSeat = 0; playerSeat < state.players().size(); playerSeat++) {
             Player p = state.players().get(playerSeat);
             StarSystem s = homes.get(playerSeat);
@@ -249,6 +251,12 @@ public class DefaultGameRegistry implements GameRegistry {
             state.updateSystem(s.id(), current -> current.colonize(p.id(), startGarrison, startProduction));
         }
         spaceOut(state, GameConfig.SPACEOUT_ITERATIONS, GameConfig.SPACEOUT_MIN_DIST);
+    }
+
+    private static String aiName(int index) {
+        String name = AI_NAMES.get((index - 1) % AI_NAMES.size());
+        int series = (index - 1) / AI_NAMES.size();
+        return series == 0 ? name : name + " " + (series + 1);
     }
 
     private static int neutralProduction(GameSetup setup, Random r) {
@@ -308,11 +316,11 @@ public class DefaultGameRegistry implements GameRegistry {
         return out;
     }
 
-    private static List<StarSystem> homeSystems(GameState state, GameSetup setup, Random r) {
+    private static List<StarSystem> homeSystems(GameState state, Random r) {
         var candidates = new ArrayList<>(state.systems());
         Collections.shuffle(candidates, r);
         int needed = state.players().size();
-        if (setup.galaxyLayout() == GalaxyLayout.RANDOM || needed >= candidates.size()) {
+        if (needed >= candidates.size()) {
             return candidates.subList(0, Math.min(needed, candidates.size()));
         }
         // Greedy moeglichst weit auseinander: sonst entscheidet der Zufall der

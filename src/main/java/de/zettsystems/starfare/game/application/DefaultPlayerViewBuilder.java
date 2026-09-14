@@ -88,7 +88,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             return new VisibleSystem(
                     s.id(), s.name(), s.x(), s.y(),
                     ownerId, s.garrison(), s.productionPerTurn(),
-                    true, color, turn, false, null);
+                    true, color, turn, false, null, ownershipHistory(state, s.id()));
         }).toList();
     }
 
@@ -189,7 +189,12 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 garrison,
                 own ? s.productionPerTurn() : null,
                 own, color, lastSeen, inRange,
-                own ? routedBySystem.getOrDefault(s.id(), 0) : null);
+                own ? routedBySystem.getOrDefault(s.id(), 0) : null,
+                own ? ownershipHistory(state, s.id()) : List.of());
+    }
+
+    private static List<SystemOwnership> ownershipHistory(GameState state, int systemId) {
+        return List.copyOf(state.ownershipHistory().getOrDefault(systemId, List.of()));
     }
 
     /**

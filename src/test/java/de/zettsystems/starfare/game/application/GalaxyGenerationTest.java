@@ -90,15 +90,14 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void evenLayoutPlacesHomeSystemsApart() {
-        double even = 0;
-        double random = 0;
-        for (int run = 0; run < 8; run++) {
-            even += closestPair(homesOf(systemsOf(setup(GalaxyLayout.EVEN, ProductionDistribution.UNIFORM))));
-            random += closestPair(homesOf(systemsOf(setup(GalaxyLayout.RANDOM, ProductionDistribution.UNIFORM))));
+    void homeSystemsRemainSeparatedForEveryLayout() {
+        for (GalaxyLayout layout : GalaxyLayout.values()) {
+            for (int run = 0; run < 8; run++) {
+                double closestHomes = closestPair(homesOf(systemsOf(setup(layout, ProductionDistribution.UNIFORM))));
+                assertThat(closestHomes).as("%s: Heimatsysteme sollen nicht gehäuft starten", layout)
+                        .isGreaterThan(GameConfig.MAX_Y * 0.15);
+            }
         }
-
-        assertThat(even).as("Heimatsysteme sollen weiter auseinander liegen").isGreaterThan(random);
     }
 
     @Test

@@ -11,7 +11,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteParameters;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
@@ -38,6 +37,7 @@ import java.util.stream.Collectors;
 @CssImport("./styles/starfare.css")
 @PermitAll
 public class MainView extends VerticalLayout implements BeforeEnterObserver {
+    private static final String GAME_ID_PARAMETER = "gameId";
     private final GameService game;
     private final Broadcaster broadcaster;
     private @Nullable Subscription broadcasterSubscription;
@@ -52,6 +52,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private boolean reviewing;
     private @Nullable VisibleSystem selectedFrom;
     private @Nullable Integer highlightedFleetId;
+    private @Nullable Integer displayedTurn;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
 
     @Autowired
@@ -65,7 +66,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         setDefaultHorizontalComponentAlignment(Alignment.STRETCH);
         addClassName("map-root");
 
-        fleetsPanel = new FleetAndOrdersPanel(this::refresh, this::cancelOrder, this::openStandingOrdersDialog,
+        fleetsPanel = new FleetAndOrdersPanel(this::cancelOrder, this::openStandingOrdersDialog,
                 this::onFleetRowSelected);
         mapCanvas = new MapCanvas(gameId == null ? "none" : gameId.value(), this::onMapBackgroundClick);
         header = new MapHeaderBar(this::onNextRound, this::doLeave,
@@ -127,12 +128,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             refresh();
             return;
         }
-        if (game.hasSignificantEventsFor(gameId, pid)) {
-            getUI().ifPresent(ui -> ui.navigate(RoundView.class,
-                    new RouteParameters("gameId", gameId.value())));
-        } else {
-            refresh();
-        }
+        refresh();
     }
 
     private void onMapBackgroundClick() {
@@ -149,6 +145,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         highlightedFleetId = next;
+        selectedFrom = null;
         refresh();
     }
 
@@ -186,7 +183,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        String parameter = event.getRouteParameters().get("gameId").orElse(null);
+        String parameter = event.getRouteParameters().get(GAME_ID_PARAMETER).orElse(null);
         if (parameter == null || parameter.isBlank()) {
             event.forwardTo(LobbyView.class);
             return;
@@ -197,6 +194,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         this.gameId = candidate;
+        displayedTurn = null;
         reviewControls.reset();
     }
 
@@ -274,71 +272,83 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void refresh() {
-        PlayerViewState view = game.viewForAccount(gameId, UserContext.currentPlayerId().orElse("")).orElse(null);
+        PlayerViewState view = viewForCurrentMode();
         if (view == null) {
-            getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
+            navigateToLobby();
             return;
         }
-        reviewing = view.gameOver();
-        if (reviewing) {
-            reviewControls.show(view.players(), currentSeat());
-            view = game.reviewFor(gameId, UserContext.currentPlayerId().orElse(""),
-                    reviewControls.perspective(), reviewControls.fogOfWar()).orElse(null);
-            if (view == null) {
-                getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
-                return;
-            }
-        }
-        reviewControls.setVisible(reviewing);
+        boolean advancedTurn = displayedTurn != null && view.turn() > displayedTurn;
+        displayedTurn = view.turn();
         boolean observer = isObserver() || reviewing;
         int playerId = observer ? -1 : currentSeat();
-        boolean aiOnly = game.isAiOnly(gameId);
+        configureHeader(view, observer);
+        renderMapAndSidebar(view, playerId, observer);
+        if (advancedTurn) {
+            fleetsPanel.showReport();
+        }
+    }
 
-        fleetsPanel.setGridsVisible(!observer || reviewing);
-        header.setNextVisible(!reviewing && (!observer || aiOnly));
+    private @Nullable PlayerViewState viewForCurrentMode() {
+        PlayerViewState view = game.viewForAccount(gameId, UserContext.currentPlayerId().orElse("")).orElse(null);
+        if (view == null) {
+            return null;
+        }
+        reviewing = view.gameOver();
+        if (!reviewing) {
+            return view;
+        }
+        reviewControls.show(view.players(), currentSeat());
+        return game.reviewFor(gameId, UserContext.currentPlayerId().orElse(""),
+                reviewControls.perspective(), reviewControls.fogOfWar()).orElse(null);
+    }
+
+    private void configureHeader(PlayerViewState view, boolean observer) {
+        reviewControls.setVisible(reviewing);
+        fleetsPanel.setViewsVisible(!observer || reviewing);
+        fleetsPanel.setReportAvailable(currentSeat() >= 0);
+        header.setNextVisible(!reviewing && (!observer || game.isAiOnly(gameId)));
         header.setLeaveVisible(!reviewing);
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer);
         header.setRound(view.turn());
         header.setGameName(game.gameNameOf(gameId));
-
+        header.setNextEnabled(!view.gameOver());
+        gameOverBanner.setVisible(view.gameOver());
         if (view.gameOver()) {
             gameOverBanner.setText(I18n.t(UiTexts.MAP_GAME_OVER, winnerName(view)));
-            gameOverBanner.setVisible(true);
-            header.setNextEnabled(false);
-        } else {
-            gameOverBanner.setVisible(false);
-            header.setNextEnabled(true);
         }
-
-        List<VisibleSystem> systems = view.systems().stream()
-                .sorted(Comparator.comparingInt(VisibleSystem::id)).toList();
         if (!observer) {
             header.updateEmpireStats(view);
         }
+    }
 
-        // Drop fleet-specific UI state for fleets that no longer exist (arrived, disbanded, …).
+    private void renderMapAndSidebar(PlayerViewState view, int playerId, boolean observer) {
         Set<Integer> liveFleetIds = view.ownFleets().stream()
                 .map(Fleet::globalId).collect(Collectors.toSet());
         badgesShowingFleetNo.retainAll(liveFleetIds);
         if (highlightedFleetId != null && !liveFleetIds.contains(highlightedFleetId)) {
             highlightedFleetId = null;
         }
-
+        List<VisibleSystem> systems = view.systems().stream()
+                .sorted(Comparator.comparingInt(VisibleSystem::id)).toList();
         mapCanvas.render(new MapRenderer.Inputs(
                 game, gameId, view, playerId, observer, selectedFrom,
                 highlightedFleetId, badgesShowingFleetNo, systems,
-                sel -> {
-                    selectedFrom = sel;
-                    refresh();
-                },
+                this::selectSystem,
                 this::openSend,
                 this::onBadgeToggleLabel,
                 this::onFleetHighlight,
                 this::refresh));
+        fleetsPanel.update(view, selectedFrom, highlightedFleetId);
+    }
 
-        fleetsPanel.update(view);
-        fleetsPanel.setHighlightedFleet(highlightedFleetId);
+    private void selectSystem(VisibleSystem system) {
+        selectedFrom = system;
+        refresh();
+    }
+
+    private void navigateToLobby() {
+        getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
     }
 
     private void openSend(VisibleSystem from, VisibleSystem to) {
@@ -350,6 +360,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         SendFleetDialog.open(game, gameId, pid, from, to, () -> {
             selectedFrom = null;
             refresh();
+            fleetsPanel.showOrders();
         });
     }
 

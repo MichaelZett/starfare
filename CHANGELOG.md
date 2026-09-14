@@ -9,6 +9,16 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 ## Unreleased
 
 ### Added
+- Karten-Seitenleiste mit umschaltbaren Ansichten für Kontakte, Details,
+  Flotten, Befehle, Produktionsverlegungen und Rundenbericht. System- und
+  Flottenauswahl zeigt die Details neben der Karte, einschließlich Besitz- und
+  Reisehistorie; neue Befehle und Züge wählen automatisch den passenden Reiter.
+- Neue KI-Gegner tragen sprechende Namen. Der Spiel-Wizard nutzt auf breiten
+  Bildschirmen ein zweispaltiges Layout, damit seine Erklärungen und Felder
+  lesbar bleiben.
+- Beim Sieg einer anderen Fraktion erhalten alle übrigen Teilnehmer eine
+  Niederlagenmeldung im Rundenbericht. Startsysteme werden bei jeder
+  Galaxieverteilung mit maximalem Abstand gewählt.
 - Nachbetrachtung beendeter Partien: Perspektive jedes Teilnehmers einschließlich
   KI auswählen und Kriegsnebel umschalten. Ohne Nebel sind alle Systeme und
   Flotten sichtbar; die Ansicht bleibt lesend.

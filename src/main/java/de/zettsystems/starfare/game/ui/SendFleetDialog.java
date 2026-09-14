@@ -186,9 +186,11 @@ final class SendFleetDialog {
 
     private static void onSendClicked(SendContext ctx, IntegerField shipsInput,
                                       Checkbox standingCheckbox, Dialog dialog) {
+        boolean accepted;
         if (Boolean.TRUE.equals(standingCheckbox.getValue())) {
             int routed = shipsInput.getValue() == null ? 0 : shipsInput.getValue();
-            if (!ctx.game().addStandingOrder(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), routed)) {
+            accepted = ctx.game().addStandingOrder(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), routed);
+            if (!accepted) {
                 Notification.show(I18n.t(UiTexts.MAP_ADD_STANDING_ORDER_FAILED));
             }
         } else {
@@ -196,9 +198,13 @@ final class SendFleetDialog {
             if (ships == null || ships < 1) {
                 return;
             }
-            if (!ctx.game().sendFleet(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), ships)) {
+            accepted = ctx.game().sendFleet(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), ships);
+            if (!accepted) {
                 Notification.show(I18n.t(UiTexts.MAP_INVALID_COMMAND));
             }
+        }
+        if (!accepted) {
+            return;
         }
         dialog.close();
         ctx.onClose().run();

@@ -75,7 +75,8 @@ Fixed sequence, fully inside one `writeState`:
    then resolve attackers strongest-first via `CombatService`.
 4. `AiService.doAiTurns`.
 5. Victory check (>= 70% of all systems, neutrals included;
-   `GameConfig.VICTORY_SYSTEM_PERCENT`).
+   `GameConfig.VICTORY_SYSTEM_PERCENT`); it sends `Victory` to the winner and
+   `Defeat(winnerId, winnerName)` to every other participant.
 6. `state.nextTurn()`.
 
 If `state.gameOver()` is true, `advanceTurn` is a no-op.
@@ -110,6 +111,17 @@ and does not register spectators or save state. Map actions and service commands
 reject edits after game end. Completed snapshots remain in `game_sessions` until
 an independent statistics/archive retention design is implemented.
 
+### Map sidebar
+
+`FleetAndOrdersPanel` is a view-local, switchable sidebar for Contacts, Details,
+Fleets, Orders, Relocations and Report. Contacts derive their last hostile
+intelligence from fog-filtered `VisibleSystem` values; Report renders the player's
+turn events beside the map. It receives only `PlayerViewState` and
+the view-local map selection from `MainView`; selecting a system or fleet never
+mutates the game. New commands select Orders and a resolved turn selects Report;
+the report stays in the sidebar. Making that automatic choice a user preference
+remains future work.
+
 `reviewFor(id, account, perspective, fogOfWar)` checks completed-game access and
 participant existence inside the read lock. `PlayerViewBuilder.forReview` reuses
 the normal sensor/intel filter even after completion when fog is enabled; without
@@ -131,6 +143,13 @@ restore obsolete host permissions.
   `GameSetup.normalized()` clamps and defaults inputs.
   `GameRegistry.createGame(GameSetup, hostPlayerId, name)` is the main
   entry point (the short overload builds a default, unnamed game).
+- `GameState.ownershipHistory` records each system ownership change and is
+  persisted in the snapshot. `PlayerViewBuilder` exposes it only for fully
+  visible systems, so system details never reveal historical information
+  through fog of war.
+- `DefaultGameRegistry.homeSystems` uses greedy farthest-next placement for
+  every galaxy layout. Random layout controls system distribution, not the
+  separation of player starts.
 
 ## i18n
 

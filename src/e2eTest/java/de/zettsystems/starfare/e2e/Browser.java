@@ -85,6 +85,24 @@ public class Browser {
         }
     }
 
+    /** Klickt einen sichtbaren Reiter mit exakt diesem Text. */
+    public void clickTabWithText(String label) {
+        WebElement tab = new WebDriverWait(driver(), LOAD)
+                .withMessage("Kein Reiter „" + label + "“ auf der Seite.")
+                .until(_ -> driver().findElements(By.tagName("vaadin-tab")).stream()
+                        .filter(WebElement::isDisplayed)
+                        .filter(candidate -> label.equals(candidate.getText().strip()))
+                        .findFirst().orElse(null));
+        ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", tab);
+    }
+
+    public void awaitSelectedTabWithText(String label) {
+        new WebDriverWait(driver(), LOAD).withMessage("Reiter „" + label + "“ wurde nicht ausgewählt.")
+                .until(_ -> driver().findElements(By.tagName("vaadin-tab")).stream()
+                        .filter(WebElement::isDisplayed)
+                        .anyMatch(tab -> label.equals(tab.getText().strip()) && tab.getAttribute("selected") != null));
+    }
+
     /** {@code null}, wenn der Knopf (noch) fehlt oder die Seite gerade neu rendert — die Wait fragt erneut. */
     private @Nullable WebElement buttonWithText(String label) {
         try {
@@ -101,6 +119,14 @@ public class Browser {
     public void awaitText(String snippet) {
         new WebDriverWait(driver(), LOAD).withMessage("Erwarteter Text fehlt: " + snippet)
                 .until(_ -> fullPageText().contains(snippet));
+    }
+
+    public List<WebElement> awaitAtLeast(String css, int count) {
+        return new WebDriverWait(driver(), LOAD).withMessage("Zu wenige Elemente für " + css)
+                .until(_ -> {
+                    List<WebElement> elements = all(css);
+                    return elements.size() >= count ? elements : null;
+                });
     }
 
     public void awaitUrl(Predicate<String> condition, String message) {

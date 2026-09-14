@@ -57,6 +57,7 @@ public class DefaultReportService implements ReportService {
             case TurnEvent.DefenseHeld d ->
                     "Gehalten: %s. %d Verteidiger verbleiben.".formatted(d.systemName(), d.defendersLeft());
             case TurnEvent.Victory _ -> "Sieg: >50%% Systeme unter Kontrolle.";
+            case TurnEvent.Defeat defeat -> "Niederlage: %s gewinnt die Partie.".formatted(defeat.winnerName());
         };
     }
 }

@@ -5,6 +5,7 @@ import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StandingOrder;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.game.values.SystemOwnership;
 import de.zettsystems.starfare.report.values.TurnReport;
 import org.jspecify.annotations.Nullable;
 
@@ -45,5 +46,6 @@ public record GameStateSnapshot(
         boolean reentryAllowed,
         @Nullable Instant turnStartedAt,
         @Nullable GameVisibility visibility,
-        @Nullable Instant finishedAt
+        @Nullable Instant finishedAt,
+        @Nullable Map<Integer, List<SystemOwnership>> ownershipHistory
 ) {}
