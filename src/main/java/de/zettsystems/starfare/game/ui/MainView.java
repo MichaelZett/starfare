@@ -43,6 +43,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private @Nullable Subscription broadcasterSubscription;
     private final MapCanvas mapCanvas;
     private final MapHeaderBar header;
+    private final ReviewControls reviewControls;
     private final Div gameOverBanner = new Div();
     private final FleetAndOrdersPanel fleetsPanel;
 
@@ -73,7 +74,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         gameOverBanner.setVisible(false);
         gameOverBanner.getStyle().set(CssProperties.FONT_WEIGHT, "600");
 
-        add(header, buildContent());
+        reviewControls = new ReviewControls(() -> {
+            selectedFrom = null;
+            highlightedFleetId = null;
+            badgesShowingFleetNo.clear();
+            refresh();
+        });
+        add(header, reviewControls, buildContent());
     }
 
     private HorizontalLayout buildContent() {
@@ -190,6 +197,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         this.gameId = candidate;
+        reviewControls.reset();
     }
 
     @Override
@@ -272,6 +280,16 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         reviewing = view.gameOver();
+        if (reviewing) {
+            reviewControls.show(view.players(), currentSeat());
+            view = game.reviewFor(gameId, UserContext.currentPlayerId().orElse(""),
+                    reviewControls.perspective(), reviewControls.fogOfWar()).orElse(null);
+            if (view == null) {
+                getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
+                return;
+            }
+        }
+        reviewControls.setVisible(reviewing);
         boolean observer = isObserver() || reviewing;
         int playerId = observer ? -1 : currentSeat();
         boolean aiOnly = game.isAiOnly(gameId);

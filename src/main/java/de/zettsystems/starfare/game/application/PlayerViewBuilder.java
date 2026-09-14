@@ -11,5 +11,7 @@ interface PlayerViewBuilder {
 
     PlayerViewState forPlayer(GameState state, int playerId);
 
+    PlayerViewState forReview(GameState state, int playerId, boolean fogOfWar);
+
     PlayerViewState forObserver(GameState state);
 }

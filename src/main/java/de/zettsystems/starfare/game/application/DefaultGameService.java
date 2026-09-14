@@ -660,6 +660,17 @@ public class DefaultGameService implements GameService {
         }));
     }
     @Override
+    public Optional<PlayerViewState> reviewFor(GameId id, String account, int perspective, boolean fogOfWar) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            if (!access.canReview(state, session.hostPlayerId(), account)
+                    || state.players().stream().noneMatch(player -> player.id() == perspective)) {
+                return Optional.empty();
+            }
+            return Optional.of(playerViewBuilder.forReview(state, perspective, fogOfWar));
+        }));
+    }
+
+    @Override
     public Optional<PlayerViewState> viewForAccount(GameId id, String account) {
         return registry.find(id).flatMap(session -> registry.readState(id, state -> {
             if (state.gameOver()) { return reviewFor(id, account); }

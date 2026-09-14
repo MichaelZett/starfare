@@ -9,6 +9,9 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 ## Unreleased
 
 ### Added
+- Nachbetrachtung beendeter Partien: Perspektive jedes Teilnehmers einschließlich
+  KI auswählen und Kriegsnebel umschalten. Ohne Nebel sind alle Systeme und
+  Flotten sichtbar; die Ansicht bleibt lesend.
 - Neue Partien sind privat. Der Host kann sie vor dem Start veröffentlichen;
   private Partien bleiben auf Host, Sitzinhaber und Eingeladene beschränkt.
   Direkte Kartenaufrufe prüfen die Zugriffsrechte ebenfalls.
