@@ -46,6 +46,7 @@ public class DefaultTurnEngine implements TurnEngine {
         resolveArrivals(state);
         aiService.doAiTurns(state, fleetService);
         checkVictory(state);
+        state.captureReplayFrame();
         state.nextTurn();
     }
 

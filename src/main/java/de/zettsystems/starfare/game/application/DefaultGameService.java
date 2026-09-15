@@ -44,10 +44,13 @@ public class DefaultGameService implements GameService {
     private final Broadcaster broadcaster;
     private final PlayerViewBuilder playerViewBuilder;
     private final GameTimingProperties timing;
+    private final GameStatisticsService statistics;
+    private final GameArchiveStore archives;
 
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
-                              PlayerViewBuilder playerViewBuilder, GameTimingProperties timing, GameAccessPolicy access) {
+                              PlayerViewBuilder playerViewBuilder, GameTimingProperties timing, GameAccessPolicy access,
+                              GameStatisticsService statistics, GameArchiveStore archives) {
         this.registry = registry;
         this.access = access;
         this.turnEngine = turnEngine;
@@ -57,6 +60,8 @@ public class DefaultGameService implements GameService {
         this.broadcaster = broadcaster;
         this.playerViewBuilder = playerViewBuilder;
         this.timing = timing;
+        this.statistics = statistics;
+        this.archives = archives;
     }
 
     @Override
@@ -317,12 +322,15 @@ public class DefaultGameService implements GameService {
     public GameSummary summaryOf(GameId gameId) {
         String name = gameNameOf(gameId);
         String hostPlayerId = hostPlayerIdOf(gameId).orElse(null);
-        return registry.readState(gameId, state -> new GameSummary(
-                gameId, name, hostPlayerId, state.turn(), state.started(), state.gameOver(),
+        return registry.readState(gameId, state -> summaryOf(gameId, name, hostPlayerId, state));
+    }
+
+    private GameSummary summaryOf(GameId gameId, String name, @Nullable String hostPlayerId, GameState state) {
+        return new GameSummary(gameId, name, hostPlayerId, state.turn(), state.started(), state.gameOver(),
                 state.observersAllowed(), state.reentryAllowed(),
                 List.copyOf(state.players()), Set.copyOf(state.joinedHumanPlayerIds()),
                 Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats()),
-                state.visibility(), new GameOutcome(state.winnerId(), state.finishedAt())));
+                state.visibility(), new GameOutcome(state.winnerId(), state.finishedAt()));
     }
 
     @Override
@@ -336,6 +344,21 @@ public class DefaultGameService implements GameService {
             return false;
         }
         return registry.writeState(gameId, state -> !state.gameOver() && fleetService.queueSend(state, playerId, fromId, toId, ships));
+    }
+
+    @Override
+    public boolean setGarrisonReserve(GameId gameId, int playerId, int systemId, int reserve) {
+        if (!hasStartedGame(gameId) || reserve < 0) {
+            return false;
+        }
+        return registry.writeState(gameId, state -> {
+            var system = state.getSystem(systemId);
+            if (state.gameOver() || system == null || !Objects.equals(system.ownerId(), playerId)) {
+                return false;
+            }
+            state.updateSystem(systemId, current -> current.reserveGarrison(reserve));
+            return true;
+        });
     }
 
     @Override
@@ -569,6 +592,7 @@ public class DefaultGameService implements GameService {
         switch (result) {
             case TurnResult.Advanced(int turn) -> broadcaster.publish(new GameEvent.TurnAdvanced(gameId, turn));
             case TurnResult.Finished(int turn, Integer winnerId) -> {
+                statistics.recordFinishedGame(gameId);
                 broadcaster.publish(new GameEvent.TurnAdvanced(gameId, turn));
                 broadcaster.publish(new GameEvent.GameFinished(gameId, winnerId));
             }
@@ -625,15 +649,21 @@ public class DefaultGameService implements GameService {
 
     @Override
     public List<GameSummary> visibleGamesFor(String account, GameListScope scope) {
-        return registry.listIds().stream().map(id -> summaryFor(id, account))
-                .flatMap(Optional::stream)
-                .filter(summary -> summary.gameOver() == (scope == GameListScope.ARCHIVE)).toList();
+        List<GameSummary> live = registry.listIds().stream().map(id -> summaryFor(id, account)).flatMap(Optional::stream).toList();
+        if (scope == GameListScope.LOBBY) { return live.stream().filter(summary -> !summary.gameOver()).toList(); }
+        var archived = archives.all().stream()
+                .filter(game -> access.canReview(game.state(), game.hostPlayerId(), account))
+                .map(game -> summaryOf(game.id(), game.name(), game.hostPlayerId(), game.state())).toList();
+        return java.util.stream.Stream.concat(live.stream().filter(GameSummary::gameOver), archived.stream())
+                .collect(Collectors.toMap(GameSummary::gameId, summary -> summary, (first, _) -> first)).values().stream().toList();
     }
     @Override
     public Optional<GameSummary> summaryFor(GameId id, String account) {
-        return registry.find(id).flatMap(session -> registry.readState(id, state ->
+        Optional<GameSummary> live = registry.find(id).flatMap(session -> registry.readState(id, state ->
                 access.visible(state, session.hostPlayerId(), account)
                         ? Optional.of(summaryOf(id)) : Optional.empty()));
+        return live.or(() -> archives.load(id).filter(game -> access.canReview(game.state(), game.hostPlayerId(), account))
+                .map(game -> summaryOf(game.id(), game.name(), game.hostPlayerId(), game.state())));
     }
     @Override
     public boolean changeVisibility(GameId id, String actor, GameVisibility visibility) {
@@ -653,21 +683,54 @@ public class DefaultGameService implements GameService {
     }
     @Override
     public Optional<PlayerViewState> reviewFor(GameId id, String account) {
-        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+        Optional<PlayerViewState> live = registry.find(id).flatMap(session -> registry.readState(id, state -> {
             if (!access.canReview(state, session.hostPlayerId(), account)) { return Optional.empty(); }
             Integer seat = state.seatByUser().get(account);
             return Optional.of(seat == null ? playerViewBuilder.forObserver(state) : playerViewBuilder.forPlayer(state, seat));
         }));
+        return live.or(() -> archives.load(id).filter(game -> access.canReview(game.state(), game.hostPlayerId(), account))
+                .map(game -> { Integer seat = game.state().seatByUser().get(account); return seat == null
+                        ? playerViewBuilder.forObserver(game.state()) : playerViewBuilder.forPlayer(game.state(), seat); }));
     }
     @Override
     public Optional<PlayerViewState> reviewFor(GameId id, String account, int perspective, boolean fogOfWar) {
-        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+        Optional<PlayerViewState> live = registry.find(id).flatMap(session -> registry.readState(id, state -> {
             if (!access.canReview(state, session.hostPlayerId(), account)
                     || state.players().stream().noneMatch(player -> player.id() == perspective)) {
                 return Optional.empty();
             }
             return Optional.of(playerViewBuilder.forReview(state, perspective, fogOfWar));
         }));
+        return live.or(() -> archives.load(id).filter(game -> access.canReview(game.state(), game.hostPlayerId(), account)
+                        && game.state().players().stream().anyMatch(player -> player.id() == perspective))
+                .map(game -> playerViewBuilder.forReview(game.state(), perspective, fogOfWar)));
+    }
+
+    @Override
+    public List<Integer> replayTurns(GameId id, String account) {
+        List<Integer> live = registry.find(id).map(session -> registry.readState(id, state ->
+                access.canReview(state, session.hostPlayerId(), account)
+                        ? state.replayFrames().keySet().stream().sorted().toList() : List.<Integer>of()))
+                .orElseGet(List::of);
+        return !live.isEmpty() || registry.find(id).isPresent() ? live : archives.load(id)
+                .filter(game -> access.canReview(game.state(), game.hostPlayerId(), account))
+                .map(game -> game.state().replayFrames().keySet().stream().sorted().toList()).orElseGet(List::of);
+    }
+
+    @Override
+    public Optional<PlayerViewState> replayFor(GameId id, String account, int perspective, int turn) {
+        Optional<PlayerViewState> live = registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            if (!access.canReview(state, session.hostPlayerId(), account)
+                    || state.players().stream().noneMatch(player -> player.id() == perspective)) {
+                return Optional.empty();
+            }
+            var frame = state.replayFrames().get(turn);
+            return frame == null ? Optional.empty() : Optional.of(playerViewBuilder.forReplay(state, frame, perspective));
+        }));
+        return live.or(() -> archives.load(id).filter(game -> access.canReview(game.state(), game.hostPlayerId(), account)
+                        && game.state().players().stream().anyMatch(player -> player.id() == perspective))
+                .flatMap(game -> Optional.ofNullable(game.state().replayFrames().get(turn))
+                        .map(frame -> playerViewBuilder.forReplay(game.state(), frame, perspective))));
     }
 
     @Override

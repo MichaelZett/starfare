@@ -14,7 +14,7 @@ public final class GameConfig {
     public static final int DEFAULT_AI_PLAYERS = 2;
     public static final int DEFAULT_START_SYSTEM_PRODUCTION = 4;
     public static final int DEFAULT_NEUTRAL_MIN_PRODUCTION = 2;
-    public static final int DEFAULT_NEUTRAL_MAX_PRODUCTION = 6;
+    public static final int DEFAULT_NEUTRAL_MAX_PRODUCTION = 10;
     public static final int DEFAULT_START_GARRISON = 8;
     public static final int MIN_SYSTEM_COUNT = 8;
     public static final int MAX_SYSTEM_COUNT = 120;
@@ -26,8 +26,8 @@ public final class GameConfig {
     public static final boolean DEFAULT_OBSERVERS_ALLOWED = true;
     public static final boolean DEFAULT_REENTRY_ALLOWED = true;
     public static final String DEFAULT_GAME_NAME = "Standardspiel";
-    public static final ProductionDistribution DEFAULT_PRODUCTION_DISTRIBUTION = ProductionDistribution.UNIFORM;
-    public static final GalaxyLayout DEFAULT_GALAXY_LAYOUT = GalaxyLayout.RANDOM;
+    public static final ProductionDistribution DEFAULT_PRODUCTION_DISTRIBUTION = ProductionDistribution.GAUSSIAN;
+    public static final GalaxyLayout DEFAULT_GALAXY_LAYOUT = GalaxyLayout.EVEN;
 
     /** Anteil aller Systeme (neutrale eingeschlossen), ab dem eine Partie gewonnen ist. */
     public static final int VICTORY_SYSTEM_PERCENT = 70;

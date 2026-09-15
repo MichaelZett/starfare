@@ -108,8 +108,14 @@ After completion, invitations no longer grant private archive access.
 is set at the first game end and preserved by snapshots and copies; old archives
 without the timestamp retain an unknown date. Archive opening calls `reviewFor`
 and does not register spectators or save state. Map actions and service commands
-reject edits after game end. Completed snapshots remain in `game_sessions` until
-an independent statistics/archive retention design is implemented.
+reject edits after game end. At the first game end, `GameStatisticsService` writes
+the compact result plus human participants to `game_results`; this data remains
+after `game_sessions` is later pruned.
+
+`GameState.replayFrames` stores immutable systems, fleets and reports at game
+start and after every resolved turn. It is optional in `GameStateSnapshot` so
+older archives still load. During archive review, the map's timeline selects a
+frame through `replayFor`; replay data is read-only and is rendered without fog.
 
 ### Map sidebar
 
@@ -121,6 +127,17 @@ the view-local map selection from `MainView`; selecting a system or fleet never
 mutates the game. New commands select Orders and a resolved turn selects Report;
 the report stays in the sidebar. Making that automatic choice a user preference
 remains future work.
+
+`TurnEvent.affectedSystemId()` is the shared link between the report and the
+map. Every event with a system ID gets a marker. Selecting a report card centres
+the map and highlights its marker; selecting the marker returns to and
+highlights the matching report card. The marker handles its click independently
+so it cannot create a fleet command.
+
+Standing orders render as purple dashed map edges with their fixed per-turn
+amount. Drag-and-drop starts only at an owned, fully visible system and opens
+the existing fleet dialog in relocation mode. It delegates the amount limit and
+same-route replacement to `GameService.routingHeadroom` and `addStandingOrder`.
 
 `reviewFor(id, account, perspective, fogOfWar)` checks completed-game access and
 participant existence inside the read lock. `PlayerViewBuilder.forReview` reuses

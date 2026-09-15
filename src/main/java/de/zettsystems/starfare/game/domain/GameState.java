@@ -8,6 +8,7 @@ import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StandingOrder;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.game.values.SystemOwnership;
+import de.zettsystems.starfare.game.values.ReplayFrame;
 import de.zettsystems.starfare.report.values.TurnReport;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jspecify.annotations.Nullable;
@@ -38,6 +39,7 @@ public class GameState {
     private final Map<Integer, TurnReport> reports = new HashMap<>();
     private final Map<Integer, Map<Integer, Intel>> intel = new HashMap<>();
     private final Map<Integer, List<SystemOwnership>> ownershipHistory = new HashMap<>();
+    private final Map<Integer, ReplayFrame> replayFrames = new HashMap<>();
     private int nextGlobalFleetId = 1;
     private final java.util.Map<Integer, Integer> nextLocalFleetNo = new java.util.HashMap<>();
     // neu
@@ -97,6 +99,11 @@ public class GameState {
         return ownershipHistory;
     }
 
+    /** Turn snapshots used solely by the read-only replay timeline. */
+    public Map<Integer, ReplayFrame> replayFrames() {
+        return replayFrames;
+    }
+
     public java.util.Set<Integer> waitThisTurn() {
         return waitThisTurn;
     }
@@ -127,6 +134,7 @@ public class GameState {
     public void start() {
         this.started = true;
         this.turnStartedAt = Instant.now();
+        captureReplayFrame();
     }
 
     public java.util.Set<Integer> joinedHumanPlayerIds() {
@@ -225,6 +233,7 @@ public class GameState {
         this.reports.clear();
         this.intel.clear();
         this.ownershipHistory.clear();
+        this.replayFrames.clear();
         clearGameOver();
         this.active = true;
         this.started = false;
@@ -243,6 +252,7 @@ public class GameState {
         this.pendingOrders.clear();
         this.standingOrders.clear();
         this.nextStandingOrderId.clear();
+        this.replayFrames.clear();
         this.observersAllowed = false;
         this.reentryAllowed = false;
         clearGameOver();
@@ -365,6 +375,11 @@ public class GameState {
         this.turnStartedAt = Instant.now();
     }
 
+    /** Captures the resolved state of the current turn without keeping mutable collections. */
+    public void captureReplayFrame() {
+        replayFrames.put(turn, new ReplayFrame(turn, systems, fleets, reports));
+    }
+
     private record Bounds(double x, double y, double width, double height) {
     }
 
@@ -383,6 +398,7 @@ public class GameState {
         s.standingOrders.forEach((pid, orders) -> standingCopy.put(pid, new ArrayList<>(orders)));
         Map<Integer, List<SystemOwnership>> historyCopy = new HashMap<>();
         s.ownershipHistory.forEach((systemId, periods) -> historyCopy.put(systemId, new ArrayList<>(periods)));
+        Map<Integer, ReplayFrame> replayCopy = new HashMap<>(s.replayFrames);
         return new GameStateSnapshot(
                 s.turn, s.nextGlobalFleetId, new HashMap<>(s.nextLocalFleetNo),
                 List.copyOf(s.players), List.copyOf(s.systems), List.copyOf(s.fleets),
@@ -392,7 +408,7 @@ public class GameState {
                 new java.util.HashSet<>(s.joinedHumanPlayerIds), new java.util.HashSet<>(s.originalHumanPlayerIds),
                 new java.util.HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
-                s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy);
+                s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -410,6 +426,10 @@ public class GameState {
             history.forEach((systemId, periods) -> c.ownershipHistory.put(systemId, new ArrayList<>(periods)));
         } else {
             c.initializeOwnershipHistoryFromSystems();
+        }
+        Map<Integer, ReplayFrame> frames = s.replayFrames();
+        if (frames != null) {
+            c.replayFrames.putAll(frames);
         }
         c.waitThisTurn.addAll(s.waitThisTurn());
         c.submittedThisTurn.addAll(s.submittedThisTurn());
@@ -463,6 +483,7 @@ public class GameState {
         });
         s.ownershipHistory().forEach((systemId, periods) ->
                 c.ownershipHistory.put(systemId, new ArrayList<>(periods)));
+        c.replayFrames.putAll(s.replayFrames());
 
         // Wartemarkierungen übernehmen
         c.waitThisTurn().addAll(s.waitThisTurn());

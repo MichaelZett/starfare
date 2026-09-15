@@ -157,6 +157,20 @@ class GameStateTest {
     }
 
     @Test
+    void replayFramesSurviveSnapshotRoundTrip() {
+        GameState state = new GameState();
+        state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 2, false));
+        state.start();
+        state.updateSystem(1, system -> system.reinforce(3));
+        state.captureReplayFrame();
+
+        GameState restored = GameState.fromSnapshot(GameState.toSnapshot(state));
+
+        assertThat(restored.replayFrames()).containsKey(1);
+        assertThat(restored.replayFrames().get(1).systems().getFirst().garrison()).isEqualTo(8);
+    }
+
+    @Test
     void snapshotWithoutTurnStartedAtStartsClockOnRestore() {
         GameState state = new GameState();
         state.start();
@@ -177,7 +191,8 @@ class GameStateTest {
                 s.fleets(), s.reports(), s.intel(), s.waitThisTurn(), s.submittedThisTurn(), s.gameOver(), s.winnerId(),
                 s.active(), s.started(), s.joinedHumanPlayerIds(), s.originalHumanPlayerIds(), s.observers(),
                 s.seatByUser(), s.invitedSeats(), s.pendingOrders(), s.standingOrders(), s.nextStandingOrderId(),
-                s.observersAllowed(), s.reentryAllowed(), null, s.visibility(), s.finishedAt(), s.ownershipHistory());
+                s.observersAllowed(), s.reentryAllowed(), null, s.visibility(), s.finishedAt(), s.ownershipHistory(),
+                s.replayFrames());
     }
 
     @Test

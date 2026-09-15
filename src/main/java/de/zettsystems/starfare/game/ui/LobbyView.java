@@ -113,7 +113,8 @@ public class LobbyView extends VerticalLayout {
         newGameTopButton.addThemeVariants(ButtonVariant.PRIMARY);
         VisibilityMenu visibilityMenu = new VisibilityMenu(preferencesService, onlineUsersPanel::refresh);
         toolbarAction.add(new LanguageSwitcher(), visibilityMenu, new Button(I18n.t(UiTexts.ARCHIVE_TITLE),
-                _ -> getUI().ifPresent(ui -> ui.navigate(ArchiveView.class))), newGameTopButton);
+                _ -> getUI().ifPresent(ui -> ui.navigate(ArchiveView.class))), new Button(I18n.t(UiTexts.STATISTICS_TITLE),
+                _ -> getUI().ifPresent(ui -> ui.navigate(StatisticsView.class))), newGameTopButton);
 
         toolbar.add(toolbarText, toolbarAction);
 

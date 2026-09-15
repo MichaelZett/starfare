@@ -12,8 +12,18 @@ public record VisibleSystem(
         int id, String name, double x, double y,
         @Nullable Integer ownerId, @Nullable Integer garrison, @Nullable Integer productionPerTurn,
         boolean fullyVisible, @Nullable String colorHex, @Nullable Integer lastSeenTurn, boolean approximate,
-        @Nullable Integer routedProduction, List<SystemOwnership> ownershipHistory
+        @Nullable Integer routedProduction, @Nullable Integer garrisonReserve, @Nullable Integer availableShips,
+        List<SystemOwnership> ownershipHistory
 ) {
+    /** Compatibility constructor for views created before garrison reserves existed. */
+    public VisibleSystem(int id, String name, double x, double y, @Nullable Integer ownerId,
+                         @Nullable Integer garrison, @Nullable Integer productionPerTurn, boolean fullyVisible,
+                         @Nullable String colorHex, @Nullable Integer lastSeenTurn, boolean approximate,
+                         @Nullable Integer routedProduction, List<SystemOwnership> ownershipHistory) {
+        this(id, name, x, y, ownerId, garrison, productionPerTurn, fullyVisible, colorHex, lastSeenTurn, approximate,
+                routedProduction, null, null, ownershipHistory);
+    }
+
     public VisibleSystem {
         ownershipHistory = List.copyOf(ownershipHistory);
     }

@@ -1,6 +1,8 @@
 package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.dnd.DragSource;
+import com.vaadin.flow.component.dnd.DropTarget;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import de.zettsystems.starfare.game.application.GameService;
@@ -11,6 +13,7 @@ import de.zettsystems.starfare.style.HtmlAttributes;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -32,12 +35,16 @@ final class MapRenderer {
                   int playerId, boolean observer,
                   @Nullable VisibleSystem selectedFrom,
                   @Nullable Integer highlightedFleetId,
+                  Set<Integer> reportedSystemIds,
+                  @Nullable Integer highlightedReportSystemId,
                   Set<Integer> badgesShowingFleetNo,
                   List<VisibleSystem> systems,
                   Consumer<VisibleSystem> onToggleSelect,
                   BiConsumer<VisibleSystem, VisibleSystem> onOpenSend,
+                  BiConsumer<VisibleSystem, VisibleSystem> onOpenRelocation,
                   IntConsumer onBadgeToggleLabel,
                   IntConsumer onFleetHighlight,
+                  IntConsumer onReportSystemSelected,
                   Runnable onRefresh) {
     }
 
@@ -48,6 +55,9 @@ final class MapRenderer {
         }
         for (PlannedOrder order : in.view().plannedOrders()) {
             renderPlannedOrder(map, order, in);
+        }
+        for (StandingOrderView order : in.view().standingOrders()) {
+            renderStandingOrder(map, order, in);
         }
         for (Fleet f : in.view().ownFleets()) {
             renderFleet(map, f, in);
@@ -88,6 +98,32 @@ final class MapRenderer {
         map.add(lane);
     }
 
+    private static void renderStandingOrder(Div map, StandingOrderView order, Inputs in) {
+        VisibleSystem source = findSystem(in, order.fromSystemId()).orElse(null);
+        VisibleSystem target = findSystem(in, order.toSystemId()).orElse(null);
+        if (source == null || target == null) {
+            return;
+        }
+        double length = Math.hypot(target.x() - source.x(), target.y() - source.y());
+        if (length < 1) {
+            return;
+        }
+        LaneGeometry geometry = computeLaneGeometry(source, target, length);
+        String tooltip = I18n.t(UiTexts.MAP_STANDING_LANE_TOOLTIP,
+                order.fromSystem(), order.toSystem(), order.ships());
+        Div lane = buildLaneDiv(geometry, "#bc8cff", tooltip, false);
+        lane.addClassName("fleet-lane-standing");
+        map.add(lane);
+
+        Div badge = new Div();
+        badge.addClassName("standing-order-badge");
+        badge.setText("+" + order.ships());
+        badge.getElement().setProperty(HtmlAttributes.TITLE, tooltip);
+        badge.getStyle().set(CssProperties.LEFT, (source.x() + target.x()) / 2 + "px");
+        badge.getStyle().set(CssProperties.TOP, (source.y() + target.y()) / 2 + "px");
+        map.add(badge);
+    }
+
     private static Div buildSystemDot(VisibleSystem sys, Inputs in) {
         Div dot = new Div();
         dot.addClassName(sys.fullyVisible() ? "sys-own" : "sys-fog");
@@ -107,10 +143,49 @@ final class MapRenderer {
         dot.getStyle().set(CssProperties.LEFT, sys.x() + "px");
         dot.getStyle().set(CssProperties.TOP, sys.y() + "px");
 
+        if (in.reportedSystemIds().contains(sys.id())) {
+            dot.addClassName("sys-report-event");
+            if (Objects.equals(in.highlightedReportSystemId(), sys.id())) {
+                dot.addClassName("sys-report-event-active");
+            }
+            dot.add(buildReportMarker(sys, in));
+        }
+
         if (!in.observer()) {
             attachSystemInteraction(dot, sys, in);
+            attachRelocationDragAndDrop(dot, sys, in);
         }
         return dot;
+    }
+
+    private static void attachRelocationDragAndDrop(Div dot, VisibleSystem target, Inputs in) {
+        if (in.playerId() < 0) {
+            return;
+        }
+        if (target.fullyVisible() && Objects.equals(target.ownerId(), in.playerId())) {
+            DragSource<Div> source = DragSource.create(dot);
+            source.setDragData(target);
+            dot.addClassName("sys-relocation-source");
+            dot.getElement().setProperty(HtmlAttributes.TITLE,
+                    dot.getElement().getProperty(HtmlAttributes.TITLE) + " — "
+                            + I18n.t(UiTexts.MAP_HINT_DRAG_RELOCATION));
+        }
+        DropTarget<Div> dropTarget = DropTarget.create(dot);
+        dropTarget.addDropListener(event -> event.getDragData()
+                .filter(VisibleSystem.class::isInstance)
+                .map(VisibleSystem.class::cast)
+                .filter(source -> source.id() != target.id())
+                .ifPresent(source -> in.onOpenRelocation().accept(source, target)));
+    }
+
+    private static Div buildReportMarker(VisibleSystem sys, Inputs in) {
+        Div marker = new Div();
+        marker.addClassName("sys-report-marker");
+        marker.setText("!");
+        marker.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.MAP_REPORT_MARKER_HINT));
+        marker.getElement().addEventListener("click", _ -> in.onReportSystemSelected().accept(sys.id()))
+                .addEventData("event.stopPropagation()");
+        return marker;
     }
 
     private static void applyColoredDotStyle(Div dot, VisibleSystem sys, String hex) {

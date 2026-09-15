@@ -7,37 +7,10 @@ Offene Punkte für Starfare. Erledigtes wird hier entfernt und im
 ## Lobby und Spielverwaltung
 
 Detaillierter Umsetzungsplan: [.agents-docs/LOBBY-PLAN.md](.agents-docs/LOBBY-PLAN.md).
-Sichtbarkeit und Archiv sind umgesetzt. Aufräumen folgt erst nach gesicherter Datenaufbewahrung.
-
-- [ ] **Aufräumen alter Partien** — beendete Spiele nach einer Frist aus
-      `game_sessions` entfernen. Achtung, Reihenfolge: erst müssen
-      Nachbetrachtung und Statistik geklärt sein, sonst löscht man die Daten
-      weg, auf denen beide aufbauen.
-
-## Oberfläche
-
-- [ ] **Grafische Produktionsverlegungen** — die eigenen Systeme als
-      Knoten, Verlegungen als Kanten, die man zieht. Ersetzt die Bedienung über
-      den Sendedialog; die Karten-Seitenleiste zeigt und verwaltet bis dahin die
-      bestehenden Verlegungen als Tabelle.
-- [ ] **Bericht und Karte verknüpfen** — Systeme, an denen etwas passiert ist,
-      auf der Karte markieren und zwischen Markierung und Rundenbericht
-      hin- und herspringen können.
-- [ ] **Persönliche Reiter-Voreinstellung** — konfigurierbar machen, ob neue
-      Befehle automatisch die Befehle und eine neue Runde den Bericht öffnen.
+Sichtbarkeit, Archiv und die optionale Bereinigung nach gesicherter Datenaufbewahrung sind umgesetzt.
 
 ## Future Work
 
-- [ ] **Statistiken** — welche Partien es gab, wer teilgenommen hat, gegen
-      wen man wie oft gespielt und wie oft gewonnen hat. Braucht Daten, die
-      das Aufräumen alter Partien überleben: entweder eine eigene Tabelle, in
-      die eine beendete Partie ihr Ergebnis schreibt, oder die Partien gar
-      nicht löschen. Diese Entscheidung fällt am besten, bevor aufgeräumt
-      wird.
-- [ ] **Nachrichtenverwaltung** — Read-Status, Aufbewahrungsfristen und
-      Löschung/Archivierung für persistente Direktnachrichten ergänzen.
-- [ ] **Replay** — `TurnReport`-Events + `GameState`-Snapshots →
-      Rewind-Slider über beendete Partien.
 - [ ] **Spielkonzept „Diplomatie"** — eigenes Epic. In-Game-Chat
       zwischen Partie-Teilnehmern, Bündnisse, Verträge.
 - [ ] **Spielkonzept „Wirtschaft"** — Schiffsproduktion eines Systems

@@ -43,7 +43,7 @@ public class DefaultMessageService implements MessageService {
         if (!visibility.canSee(f, t)) {
             return SendResult.NOT_VISIBLE;
         }
-        DirectMessage message = new DirectMessage(f, t, body, Instant.now());
+        DirectMessage message = new DirectMessage(0, f, t, body, Instant.now(), null);
         store.save(message);
         broadcaster.publish(new SocialEvent.DirectMessage(message.from(), message.to(), message.text(), message.sentAt()));
         return SendResult.DELIVERED;
@@ -56,6 +56,19 @@ public class DefaultMessageService implements MessageService {
         if (first == null || second == null || first.equals(second)) {
             return java.util.List.of();
         }
+        store.markConversationRead(first, second);
         return store.conversation(first, second);
+    }
+
+    @Override
+    public void archiveConversation(String viewer, String otherUser) {
+        String first = PlayerIds.normalize(viewer);
+        String second = PlayerIds.normalize(otherUser);
+        if (first != null && second != null && !first.equals(second)) { store.archiveConversation(first, second); }
+    }
+
+    @Override
+    public long removeExpiredMessages() {
+        return store.deleteOlderThan(Instant.now().minus(java.time.Duration.ofDays(365)));
     }
 }

@@ -47,5 +47,6 @@ public record GameStateSnapshot(
         @Nullable Instant turnStartedAt,
         @Nullable GameVisibility visibility,
         @Nullable Instant finishedAt,
-        @Nullable Map<Integer, List<SystemOwnership>> ownershipHistory
+        @Nullable Map<Integer, List<SystemOwnership>> ownershipHistory,
+        @Nullable Map<Integer, de.zettsystems.starfare.game.values.ReplayFrame> replayFrames
 ) {}

@@ -11,6 +11,7 @@ import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import de.zettsystems.starfare.game.values.Fleet;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.IntConsumer;
 
 /** Switchable right-hand map sidebar that keeps the map context visible. */
@@ -62,10 +64,17 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private @Nullable VisibleSystem selectedSystem;
     private @Nullable Integer selectedFleetId;
     private final EnumSet<EventCategory> enabledEventCategories = EnumSet.allOf(EventCategory.class);
+    private final IntConsumer onReportSystemSelected;
+    private final BiConsumer<Integer, Integer> onGarrisonReserveChanged;
+    private @Nullable Integer selectedReportSystemId;
 
     FleetAndOrdersPanel(Consumer<PlannedOrder> onCancelOrder,
                         Runnable onManageStanding,
-                        IntConsumer onFleetRowSelected) {
+                        IntConsumer onFleetRowSelected,
+                        IntConsumer onReportSystemSelected,
+                        BiConsumer<Integer, Integer> onGarrisonReserveChanged) {
+        this.onReportSystemSelected = onReportSystemSelected;
+        this.onGarrisonReserveChanged = onGarrisonReserveChanged;
         setPadding(false);
         setSpacing(true);
         setWidth("25%");
@@ -138,6 +147,14 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         select(Section.REPORT);
     }
 
+    void showDetails() {
+        select(Section.DETAILS);
+    }
+
+    void showRelocations() {
+        select(Section.RELOCATIONS);
+    }
+
     private void renderContacts(PlayerViewState view) {
         contactsPage.removeAll();
         contactsPage.add(header(UiTexts.MAP_SIDEBAR_CONTACTS));
@@ -197,6 +214,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_SYSTEM), system.name()),
                     detail(I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
                     detail(I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())));
+            renderGarrisonReserve(system);
             renderOwnershipHistory(view, system);
             return;
         }
@@ -218,6 +236,27 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return;
         }
         detailsPage.add(new Paragraph(I18n.t(UiTexts.MAP_SIDEBAR_DETAILS_EMPTY)));
+    }
+
+    private void renderGarrisonReserve(VisibleSystem system) {
+        Integer reserveValue = system.garrisonReserve();
+        Integer garrison = system.garrison();
+        if (readOnly || reserveValue == null || garrison == null) {
+            return;
+        }
+        IntegerField reserve = new IntegerField(I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE));
+        reserve.setMin(0);
+        reserve.setMax(garrison);
+        reserve.setValue(reserveValue);
+        reserve.setStepButtonsVisible(true);
+        Button save = new Button(I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE_SAVE), _ -> {
+            Integer value = reserve.getValue();
+            if (value != null) {
+                onGarrisonReserveChanged.accept(system.id(), value);
+            }
+        });
+        save.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+        detailsPage.add(reserve, save);
     }
 
     private void renderOwnershipHistory(PlayerViewState view, VisibleSystem system) {
@@ -304,12 +343,29 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         });
     }
 
-    private static Div eventCard(TurnEvent event, int index) {
+    private Div eventCard(TurnEvent event, int index) {
         Div card = new Div();
         card.addClassNames("event-card", eventCss(event));
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
         card.add(new Span(eventIcon(event)), new Span(eventText(event)));
+        event.battleSystemId().ifPresent(systemId -> {
+            card.addClassName("event-map-linked");
+            if (Objects.equals(selectedReportSystemId, systemId)) {
+                card.addClassName("event-map-selected");
+            }
+            card.getElement().setProperty("title", I18n.t(UiTexts.ROUND_EVENT_OPEN_MAP));
+            card.addClickListener(_ -> onReportSystemSelected.accept(systemId));
+        });
         return card;
+    }
+
+    void selectReportSystem(int systemId) {
+        selectedReportSystemId = systemId;
+        showReport();
+        PlayerViewState view = currentView;
+        if (view != null) {
+            renderReport(view);
+        }
     }
 
     private static String eventIcon(TurnEvent event) {

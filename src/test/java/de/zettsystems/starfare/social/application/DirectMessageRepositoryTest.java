@@ -27,7 +27,7 @@ class DirectMessageRepositoryTest extends AbstractRepositoryTest {
         repository.save(new DirectMessageEntity("eve", "bob", "unrelated", base.plusSeconds(1)));
         repository.save(new DirectMessageEntity("bob", "alice", "second", base.plusSeconds(2)));
 
-        assertThat(repository.findConversation("bob", "alice"))
+        assertThat(repository.findConversation("bob", "alice", "bob"))
                 .extracting(DirectMessageEntity::getText)
                 .containsExactly("first", "second");
     }

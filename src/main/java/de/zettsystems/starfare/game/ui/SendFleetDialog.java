@@ -30,15 +30,14 @@ final class SendFleetDialog {
     }
 
     private record DialogControls(Input slider, IntegerField shipsInput,
-                                  Button halfBtn, Button doubleBtn, Button allBtn,
+                                  Button halfBtn, Button doubleBtn, Button allBtn, Button exceptProductionBtn,
                                   Checkbox standingCheckbox, Button sendBtn) {
     }
 
     private record DialogParams(int maxShips, boolean canSend, int sliderMax, int initial) {
         static DialogParams from(VisibleSystem source) {
-            Integer sourceGarrison = source.garrison();
-            int garrison = sourceGarrison != null ? sourceGarrison : 0;
-            int maxShips = Math.max(0, garrison);
+            Integer available = source.availableShips();
+            int maxShips = Math.max(0, available != null ? available : 0);
             return new DialogParams(maxShips, maxShips >= 1, Math.max(1, maxShips), 1);
         }
     }
@@ -48,6 +47,16 @@ final class SendFleetDialog {
 
     static void open(GameService game, GameId gameId, int pid,
                      VisibleSystem from, VisibleSystem to, Runnable onClose) {
+        open(game, gameId, pid, from, to, false, onClose);
+    }
+
+    static void openRelocation(GameService game, GameId gameId, int pid,
+                               VisibleSystem from, VisibleSystem to, Runnable onClose) {
+        open(game, gameId, pid, from, to, true, onClose);
+    }
+
+    private static void open(GameService game, GameId gameId, int pid,
+                             VisibleSystem from, VisibleSystem to, boolean relocation, Runnable onClose) {
         SendContext ctx = new SendContext(game, gameId, pid, from, to, onClose);
         DialogParams params = DialogParams.from(from);
         Dialog dialog = buildDialog();
@@ -62,6 +71,8 @@ final class SendFleetDialog {
                 _ -> shipsInput.setValue(clamp(currentOr(shipsInput, 1) * 2, 1, params.sliderMax())));
         Button allBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_ALL,
                 _ -> shipsInput.setValue(params.sliderMax()));
+        Button exceptProductionBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_EXCEPT_PRODUCTION,
+                _ -> selectExceptProduction(shipsInput, params, productionOf(from)));
 
         Checkbox standingCheckbox = new Checkbox(I18n.t(UiTexts.MAP_STANDING_ORDER_CHECKBOX));
         Button sendBtn = buildSendButton(ctx, shipsInput, standingCheckbox, dialog);
@@ -70,12 +81,13 @@ final class SendFleetDialog {
             onClose.run();
         });
 
-        DialogControls controls = new DialogControls(slider, shipsInput, halfBtn, doubleBtn, allBtn,
+        DialogControls controls = new DialogControls(slider, shipsInput, halfBtn, doubleBtn, allBtn, exceptProductionBtn,
                 standingCheckbox, sendBtn);
         wireStandingToggle(controls, params,
                 ctx.game().routingHeadroom(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id()));
         setInitialEnablement(controls, params.canSend());
-        if (!params.canSend()) {
+        exceptProductionBtn.setEnabled(params.canSend() && params.maxShips() > productionOf(from));
+        if (relocation || !params.canSend()) {
             standingCheckbox.setValue(true);
         }
 
@@ -171,6 +183,18 @@ final class SendFleetDialog {
         return b;
     }
 
+    private static int productionOf(VisibleSystem system) {
+        Integer production = system.productionPerTurn();
+        return production != null ? production : 0;
+    }
+
+    private static void selectExceptProduction(IntegerField shipsInput, DialogParams params, int production) {
+        int ships = params.maxShips() - production;
+        if (ships > 0) {
+            shipsInput.setValue(clamp(ships, 1, params.sliderMax()));
+        }
+    }
+
     private static int currentOr(IntegerField shipsInput, int fallback) {
         Integer cur = shipsInput.getValue();
         return cur == null ? fallback : cur;
@@ -217,6 +241,7 @@ final class SendFleetDialog {
             // Die Obergrenze ist dann aber die freie Produktion, nicht die Garnison.
             int max = standing ? routingHeadroom : params.sliderMax();
             boolean enabled = max >= 1;
+            c.slider().getElement().setAttribute("max", String.valueOf(Math.max(1, max)));
             c.shipsInput().setMax(Math.max(1, max));
             if (enabled && currentOr(c.shipsInput(), 1) > max) {
                 c.shipsInput().setValue(max);
@@ -226,6 +251,7 @@ final class SendFleetDialog {
             c.halfBtn().setEnabled(enabled);
             c.doubleBtn().setEnabled(enabled);
             c.allBtn().setEnabled(enabled);
+            c.exceptProductionBtn().setEnabled(enabled);
             c.sendBtn().setEnabled(enabled);
         });
     }
@@ -235,6 +261,7 @@ final class SendFleetDialog {
         c.halfBtn().setEnabled(canSend);
         c.doubleBtn().setEnabled(canSend);
         c.allBtn().setEnabled(canSend);
+        c.exceptProductionBtn().setEnabled(canSend);
         c.sendBtn().setEnabled(canSend);
     }
 
@@ -244,7 +271,7 @@ final class SendFleetDialog {
         sliderRow.setPadding(false);
         sliderRow.setSpacing(false);
 
-        var quickRow = new HorizontalLayout(c.halfBtn(), c.doubleBtn(), c.allBtn());
+        var quickRow = new HorizontalLayout(c.halfBtn(), c.doubleBtn(), c.allBtn(), c.exceptProductionBtn());
         quickRow.addClassName("send-fleet-quick-row");
         quickRow.setWidthFull();
         quickRow.setPadding(false);

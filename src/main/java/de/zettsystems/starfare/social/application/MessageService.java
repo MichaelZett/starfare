@@ -9,6 +9,8 @@ public interface MessageService {
     SendResult send(String from, String to, String text);
 
     List<DirectMessage> conversation(String firstUser, String secondUser);
+    void archiveConversation(String viewer, String otherUser);
+    long removeExpiredMessages();
 
     enum SendResult {
         DELIVERED,

@@ -10,6 +10,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -19,6 +20,7 @@ import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameConfig;
+import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameNameGenerator;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.ProductionDistribution;
@@ -43,7 +45,6 @@ final class CreateGameWizardDialog {
         dialog.addClassName("create-game-dialog");
         dialog.setHeaderTitle(I18n.t(UiTexts.LOBBY_WIZARD_TITLE));
         dialog.setWidth("min(1380px, 96vw)");
-        dialog.add(new Span(I18n.t(UiTexts.GAME_PRIVATE_HINT)));
 
         IntegerField systems = intField(I18n.t(UiTexts.LOBBY_FIELD_SYSTEMS),
                 GameConfig.MIN_SYSTEM_COUNT, GameConfig.MAX_SYSTEM_COUNT, GameConfig.DEFAULT_SYSTEM_COUNT);
@@ -79,15 +80,15 @@ final class CreateGameWizardDialog {
         observersAllowed.setValue(GameConfig.DEFAULT_OBSERVERS_ALLOWED);
         Checkbox reentryAllowed = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_REENTRY_ALLOWED));
         reentryAllowed.setValue(GameConfig.DEFAULT_REENTRY_ALLOWED);
+        Checkbox joinAfterCreate = new Checkbox(I18n.t(UiTexts.LOBBY_WIZARD_JOIN_AFTER_CREATE));
+        joinAfterCreate.setValue(true);
 
         FormLayout setupGrid = grid(3, "13em", systems, humans, ai, startGarrison,
-                galaxyLayout, observersAllowed, reentryAllowed);
+                galaxyLayout, observersAllowed, reentryAllowed, joinAfterCreate);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
 
         FormLayout startProductionFields = new FormLayout();
-        startProductionFields.setAutoResponsive(true);
-        startProductionFields.setColumnWidth("13em");
-        startProductionFields.setMaxColumns(3);
+        configureColumns(startProductionFields, 4, "13em");
         startProductionFields.setWidthFull();
         startProductionFields.addClassName("wizard-start-production");
 
@@ -103,6 +104,10 @@ final class CreateGameWizardDialog {
         intro.addClassName("wizard-intro");
         intro.setText(I18n.t(UiTexts.LOBBY_WIZARD_INTRO));
 
+        Div privateHint = new Div();
+        privateHint.addClassName("wizard-private-hint");
+        privateHint.setText(I18n.t(UiTexts.GAME_PRIVATE_HINT));
+
         Div overview = new Div(
                 wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP),
                         I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP_HINT), setupGrid),
@@ -110,6 +115,7 @@ final class CreateGameWizardDialog {
                         I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid));
         overview.addClassName("wizard-overview");
         VerticalLayout body = new VerticalLayout(
+                privateHint,
                 intro,
                 overview,
                 wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START),
@@ -126,7 +132,10 @@ final class CreateGameWizardDialog {
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CREATE), _ -> {
             GameSetup setup = buildSetup(formInputs);
             String hostPlayerId = UserContext.currentPlayerId().orElse(null);
-            game.newGame(setup, hostPlayerId, GameNameGenerator.random());
+            GameId gameId = game.newGame(setup, hostPlayerId, GameNameGenerator.random());
+            if (hostPlayerId != null) {
+                joinNewGame(game, gameId, hostPlayerId, Boolean.TRUE.equals(joinAfterCreate.getValue()));
+            }
             onCreated.run();
             dialog.close();
         });
@@ -255,11 +264,18 @@ final class CreateGameWizardDialog {
     private static FormLayout grid(int maxColumns, String columnWidth, Component... fields) {
         FormLayout layout = new FormLayout(fields);
         layout.addClassName("wizard-grid");
+        configureColumns(layout, maxColumns, columnWidth);
+        return layout;
+    }
+
+    private static void configureColumns(FormLayout layout, int maxColumns, String columnWidth) {
         layout.setWidthFull();
-        layout.setAutoResponsive(true);
+        layout.setResponsiveSteps(
+                new FormLayout.ResponsiveStep("0", 1),
+                new FormLayout.ResponsiveStep("34em", Math.min(2, maxColumns)),
+                new FormLayout.ResponsiveStep("56em", maxColumns));
         layout.setColumnWidth(columnWidth);
         layout.setMaxColumns(maxColumns);
-        return layout;
     }
 
     private static Div wizardSection(String title, String hint, Component content) {
@@ -275,6 +291,12 @@ final class CreateGameWizardDialog {
 
     private static int valueOrDefault(Integer value, int fallback) {
         return value == null ? fallback : value;
+    }
+
+    private static void joinNewGame(GameService game, GameId gameId, String hostPlayerId, boolean joinAfterCreate) {
+        if (joinAfterCreate && hostPlayerId != null && game.joinGame(gameId, hostPlayerId).isEmpty()) {
+            Notification.show(I18n.t(UiTexts.LOBBY_JOIN_FAILED));
+        }
     }
 
     private static List<ColorOption> colorOptions() {
