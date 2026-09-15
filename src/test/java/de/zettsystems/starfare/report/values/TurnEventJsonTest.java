@@ -40,4 +40,14 @@ class TurnEventJsonTest {
         assertThat(decoded).isEqualTo(original);
         assertThat(((TurnEvent.Reinforcement) decoded).totalGarrison()).isEqualTo(12);
     }
+
+    @Test
+    void reportsAffectedSystemOnlyForSystemEvents() {
+        TurnEvent event = new TurnEvent.BattleWon(1, 8, "Vega", 12, 5, 7, false);
+
+        assertThat(event.affectedSystemId()).hasValue(8);
+        assertThat(event.battleSystemId()).hasValue(8);
+        assertThat(new TurnEvent.Production(1, 8, "Vega", 3).battleSystemId()).isEmpty();
+        assertThat(new TurnEvent.Victory(1).affectedSystemId()).isEmpty();
+    }
 }

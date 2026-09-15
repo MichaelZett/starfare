@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.OptionalInt;
+
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -22,6 +24,30 @@ import org.jspecify.annotations.Nullable;
         @JsonSubTypes.Type(value = TurnEvent.Defeat.class,       name = "defeat")
 })
 public sealed interface TurnEvent {
+
+    /** Returns the system affected by this event, if it has one. */
+    default OptionalInt affectedSystemId() {
+        return switch (this) {
+            case Production event -> OptionalInt.of(event.systemId());
+            case Reinforcement event -> OptionalInt.of(event.systemId());
+            case BattleWon event -> OptionalInt.of(event.systemId());
+            case BattleLost event -> OptionalInt.of(event.systemId());
+            case SystemLost event -> OptionalInt.of(event.systemId());
+            case DefenseHeld event -> OptionalInt.of(event.systemId());
+            case Victory _, Defeat _ -> OptionalInt.empty();
+        };
+    }
+
+    /** Returns the system for events that deserve a map marker: resolved combat only. */
+    default OptionalInt battleSystemId() {
+        return switch (this) {
+            case BattleWon event -> OptionalInt.of(event.systemId());
+            case BattleLost event -> OptionalInt.of(event.systemId());
+            case SystemLost event -> OptionalInt.of(event.systemId());
+            case DefenseHeld event -> OptionalInt.of(event.systemId());
+            case Production _, Reinforcement _, Victory _, Defeat _ -> OptionalInt.empty();
+        };
+    }
 
     record Production(int playerId, int systemId, String systemName, int amount)
             implements TurnEvent {}

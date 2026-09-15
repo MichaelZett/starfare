@@ -51,6 +51,9 @@ zs:
 
 starfare:
   game:
+    archive-cleanup:
+      enabled: false
+      retention: P90D
     inactivity-timeout: 5m
     inactivity-check-interval: 30s
 

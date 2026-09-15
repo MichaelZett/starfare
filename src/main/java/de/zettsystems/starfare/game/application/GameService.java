@@ -21,6 +21,8 @@ public interface GameService {
     Optional<PlayerViewState> reviewFor(GameId id, String account);
 
     Optional<PlayerViewState> reviewFor(GameId id, String account, int perspective, boolean fogOfWar);
+    List<Integer> replayTurns(GameId id, String account);
+    Optional<PlayerViewState> replayFor(GameId id, String account, int perspective, int turn);
     Optional<PlayerViewState> viewForAccount(GameId id, String account);
 
 
@@ -84,6 +86,9 @@ public interface GameService {
     int travelTurns(GameId gameId, int fromId, int toId);
 
     boolean sendFleet(GameId gameId, int playerId, int fromId, int toId, int ships);
+
+    /** Sets the permanent garrison that remains at an owned system. */
+    boolean setGarrisonReserve(GameId gameId, int playerId, int systemId, int reserve);
 
     boolean addStandingOrder(GameId gameId, int playerId, int fromId, int toId, int ships);
 

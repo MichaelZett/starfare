@@ -22,7 +22,7 @@ public class DefaultFleetService implements FleetService {
             return false;
         }
         int committed = committedShipsFrom(state, playerId, fromId);
-        if (from.garrison() - committed < ships) {
+        if (from.availableShips() - committed < ships) {
             return false;
         }
         pendingFor(state, playerId).add(new FleetOrder.Send(playerId, fromId, toId, ships));
@@ -69,7 +69,7 @@ public class DefaultFleetService implements FleetService {
         if (!Objects.equals(from.ownerId(), playerId)) {
             return false;
         }
-        if (ships <= 0 || from.garrison() < ships) {
+        if (ships <= 0 || from.availableShips() < ships) {
             return false;
         }
         state.updateSystem(fromId, current -> current.launchFleet(ships));
@@ -211,7 +211,7 @@ public class DefaultFleetService implements FleetService {
         // Was das System diese Runde noch abgeben kann: Produktion plus Garnison,
         // abzueglich dessen, was fruehere Verlegungen desselben Systems schon nehmen.
         int alreadyRouted = routed.getOrDefault(o.fromSystemId(), 0);
-        int available = from.garrison() + from.productionPerTurn() - alreadyRouted;
+        int available = from.availableShips() + from.productionPerTurn() - alreadyRouted;
         int ships = Math.clamp(o.ships(), 0, Math.max(0, available));
         if (ships <= 0) {
             return;

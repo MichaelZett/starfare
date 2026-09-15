@@ -8,7 +8,20 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Produktionsverlegungen sind als violette Kartenkanten sichtbar und lassen
+  sich durch Ziehen zwischen Systemen anlegen oder ersetzen.
+- Berichtssysteme erhalten Kartenmarkierungen: Berichtszeilen zentrieren die
+  Karte, Markierungen öffnen die passende Berichtszeile.
+
 ### Added
+- Wiederholung im Archiv: Die Kartenansicht besitzt für neu beendete Partien
+  eine Zeitleiste über die gespeicherten Kartenstände jeder Runde.
+- Garnisonsreserve je eigenem System: reservierte Schiffe bleiben bei direkten
+  Flotten und Produktionsverlegungen zurück. Der Sendedialog bietet „Alle
+  außer Produktion“ als Schnellwahl.
+- Persönliche Statistik unter `/statistics`: abgeschlossene Partien, Siege,
+  Niederlagen und Bilanz je Gegner. Ergebnisse liegen dauerhaft in
+  `game_results`, unabhängig von später bereinigten Spielsitzungen.
 - Karten-Seitenleiste mit umschaltbaren Ansichten für Kontakte, Details,
   Flotten, Befehle, Produktionsverlegungen und Rundenbericht. System- und
   Flottenauswahl zeigt die Details neben der Karte, einschließlich Besitz- und

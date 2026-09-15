@@ -133,7 +133,7 @@ public class ChatDrawer extends VerticalLayout {
         }
         String other = dm.from().equals(me) ? dm.to() : dm.from();
         Conversation conv = conversations.computeIfAbsent(other, _ -> new Conversation(other, players.displayName(other)));
-        conv.messages.add(new DirectMessage(dm.from(), dm.to(), dm.text(), dm.sentAt()));
+        conv.messages.add(new DirectMessage(0, dm.from(), dm.to(), dm.text(), dm.sentAt(), null));
         if (!other.equals(activeUser) && !dm.from().equals(me)) {
             conv.unread++;
         }

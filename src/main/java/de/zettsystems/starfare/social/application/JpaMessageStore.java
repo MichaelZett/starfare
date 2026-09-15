@@ -5,6 +5,8 @@ import de.zettsystems.starfare.social.values.DirectMessage;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.time.Instant;
+import jakarta.transaction.Transactional;
 
 @Repository
 class JpaMessageStore implements MessageStore {
@@ -22,9 +24,12 @@ class JpaMessageStore implements MessageStore {
 
     @Override
     public List<DirectMessage> conversation(String firstUser, String secondUser) {
-        return repository.findConversation(firstUser, secondUser).stream()
-                .map(message -> new DirectMessage(message.getSenderPlayerId(), message.getRecipientPlayerId(),
-                        message.getText(), message.getSentAt()))
+        return repository.findConversation(firstUser, secondUser, firstUser).stream()
+                .map(message -> new DirectMessage(message.getId(), message.getSenderPlayerId(), message.getRecipientPlayerId(),
+                        message.getText(), message.getSentAt(), message.getReadAt()))
                 .toList();
     }
+    @Override @Transactional public void markConversationRead(String viewer, String otherUser) { repository.markConversationRead(viewer, otherUser, Instant.now()); }
+    @Override @Transactional public void archiveConversation(String viewer, String otherUser) { Instant now = Instant.now(); repository.archiveSent(viewer, otherUser, now); repository.archiveReceived(viewer, otherUser, now); }
+    @Override @Transactional public long deleteOlderThan(Instant cutoff) { return repository.deleteBySentAtBefore(cutoff); }
 }

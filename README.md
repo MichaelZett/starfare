@@ -36,6 +36,12 @@ the map to inspect it in Details: systems show their known ownership history,
 fleets their owner, launch turn, travel time and ETA. The report entry contains
 the complete filterable round timeline, including victory and defeat reports.
 Submitting a new command opens Orders; resolving a new round opens Report.
+Systems mentioned in a report carry a gold marker on the map. Select a report
+entry to centre the map on it, or select the marker to return to its report
+entry.
+Production relocations appear as purple dashed connections with their amount.
+Drag one of your systems onto another system to create or replace a relocation;
+the dialog limits the amount to the available routing capacity.
 All game commands remain available only in a running game.
 
 ## Tech stack
@@ -67,8 +73,14 @@ presence panel, chat, language switcher and a per-user visibility menu.*
 
 ![Send-fleet dialog](docs/screenshots/Flotte.png)
 
-*Send-fleet dialog: ship slider with quick buttons (half / double / all),
-travel-time preview, optional "as production transfer" mode.*
+*Send-fleet dialog: ship slider with quick buttons (half / double / all /
+all except production), travel-time preview, optional "as production transfer"
+mode. A configurable garrison reserve stays at the source system.*
+
+Completed games are retained as compact results for the personal statistics
+page (`/statistics`), including wins, losses and the record against each opponent.
+For newly completed games, the archive map also provides a timeline for replaying
+each resolved round.
 
 ![Round report](docs/screenshots/Runde.png)
 

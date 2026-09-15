@@ -34,6 +34,7 @@ public final class UiTexts {
     public static final String MAP_SIDEBAR_FLEET_TRAVELLING = "map.sidebar.fleetTravelling";
     public static final String REVIEW_PERSPECTIVE = "review.perspective";
     public static final String REVIEW_FOG = "review.fog";
+    public static final String REPLAY_TIMELINE_TURN = "replay.timeline.turn";
     // Lobby — header / toolbar / empty state
     public static final String LOBBY_HEADER_TITLE = "lobby.header.title";
     public static final String LOBBY_SUBTITLE = "lobby.subtitle";
@@ -85,6 +86,7 @@ public final class UiTexts {
     public static final String LOBBY_WIZARD_SECTION_START_HINT = "lobby.wizard.section.start.hint";
     public static final String LOBBY_WIZARD_CREATE = "lobby.wizard.create";
     public static final String LOBBY_WIZARD_CANCEL = "lobby.wizard.cancel";
+    public static final String LOBBY_WIZARD_JOIN_AFTER_CREATE = "lobby.wizard.joinAfterCreate";
     public static final String LOBBY_FIELD_SYSTEMS = "lobby.field.systems";
     public static final String LOBBY_FIELD_HUMANS = "lobby.field.humans";
     public static final String LOBBY_FIELD_AI = "lobby.field.ai";
@@ -125,6 +127,7 @@ public final class UiTexts {
     public static final String MAP_SEND_QUICK_ALL = "map.send.quick.all";
     public static final String MAP_SEND_QUICK_HALF = "map.send.quick.half";
     public static final String MAP_SEND_QUICK_DOUBLE = "map.send.quick.double";
+    public static final String MAP_SEND_QUICK_EXCEPT_PRODUCTION = "map.send.quick.exceptProduction";
     public static final String MAP_STANDING_ORDER_CHECKBOX = "map.standingOrder.checkbox";
     public static final String MAP_INVALID_COMMAND = "map.invalidCommand";
     public static final String MAP_DIALOG_CANCEL = "map.dialog.cancel";
@@ -170,6 +173,9 @@ public final class UiTexts {
     public static final String MAP_HINT_PICK_TARGET = "map.hint.pickTarget";
     public static final String MAP_HINT_FLEET_LANE = "map.hint.fleetLane";
     public static final String MAP_PLANNED_LANE_TOOLTIP = "map.plannedLane.tooltip";
+    public static final String MAP_STANDING_LANE_TOOLTIP = "map.standingLane.tooltip";
+    public static final String MAP_HINT_DRAG_RELOCATION = "map.hint.dragRelocation";
+    public static final String MAP_REPORT_MARKER_HINT = "map.reportMarker.hint";
 
     // Map — fleet badge
     public static final String MAP_FLEET_BADGE_BASE = "map.fleetBadge.base";
@@ -212,6 +218,7 @@ public final class UiTexts {
     public static final String ROUND_EVENT_DEFENSE_HELD = "round.event.defenseHeld";
     public static final String ROUND_EVENT_VICTORY = "round.event.victory";
     public static final String ROUND_EVENT_DEFEAT = "round.event.defeat";
+    public static final String ROUND_EVENT_OPEN_MAP = "round.event.openMap";
 
     // Language switcher
     public static final String LANG_LABEL = "lang.label";
@@ -297,4 +304,13 @@ public final class UiTexts {
     public static final String ARCHIVE_FINISHED = "archive.finished";
     public static final String ARCHIVE_UNKNOWN_TIME = "archive.unknownTime";
     public static final String ARCHIVE_EMPTY = "archive.empty";
+    public static final String MAP_SIDEBAR_GARRISON_RESERVE = "map.sidebar.garrisonReserve";
+    public static final String MAP_SIDEBAR_GARRISON_RESERVE_SAVE = "map.sidebar.garrisonReserve.save";
+    public static final String STATISTICS_TITLE = "statistics.title";
+    public static final String STATISTICS_TOTALS = "statistics.totals";
+    public static final String STATISTICS_OPPONENT = "statistics.opponent";
+    public static final String STATISTICS_GAMES = "statistics.games";
+    public static final String STATISTICS_WINS = "statistics.wins";
+    public static final String STATISTICS_LOSSES = "statistics.losses";
+    public static final String STATISTICS_EMPTY = "statistics.empty";
 }

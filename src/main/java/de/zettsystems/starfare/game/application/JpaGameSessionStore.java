@@ -24,11 +24,13 @@ public class JpaGameSessionStore implements GameSessionStore {
     private static final Logger LOG = LoggerFactory.getLogger(JpaGameSessionStore.class);
 
     private final GameSessionRepository repository;
+    private final GameArchiveStore archives;
     private final ObjectMapper objectMapper;
     private final ConcurrentHashMap<GameId, GameSession> cache = new ConcurrentHashMap<>();
 
-    public JpaGameSessionStore(GameSessionRepository repository, ObjectMapper objectMapper) {
+    public JpaGameSessionStore(GameSessionRepository repository, GameArchiveStore archives, ObjectMapper objectMapper) {
         this.repository = repository;
+        this.archives = archives;
         this.objectMapper = objectMapper;
     }
 
@@ -85,6 +87,7 @@ public class JpaGameSessionStore implements GameSessionStore {
             entity.replaceSnapshot(json);
             entity.transferHostTo(session.hostPlayerId());
             repository.save(entity);
+            archives.save(session, snapshot);
         } catch (JacksonException e) {
             throw new IllegalStateException("Failed to persist game session " + session.id(), e);
         }
@@ -104,7 +107,7 @@ public class JpaGameSessionStore implements GameSessionStore {
 
     @Override
     public void delete(GameId id) {
-        cache.remove(id);
         repository.deleteById(id.value());
+        cache.remove(id);
     }
 }

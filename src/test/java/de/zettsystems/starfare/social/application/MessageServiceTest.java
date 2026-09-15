@@ -194,6 +194,9 @@ class MessageServiceTest {
                     .filter(message -> isBetween(message, firstUser, secondUser))
                     .toList();
         }
+        @Override public void markConversationRead(String viewer, String otherUser) { }
+        @Override public void archiveConversation(String viewer, String otherUser) { messages.removeIf(message -> isBetween(message, viewer, otherUser)); }
+        @Override public long deleteOlderThan(java.time.Instant cutoff) { int before = messages.size(); messages.removeIf(message -> message.sentAt().isBefore(cutoff)); return before - messages.size(); }
 
         private boolean isBetween(DirectMessage message, String firstUser, String secondUser) {
             return (message.from().equals(firstUser) && message.to().equals(secondUser))

@@ -10,6 +10,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import org.jspecify.annotations.Nullable;
 
 @Entity
 @Table(name = "direct_messages")
@@ -31,6 +32,9 @@ public class DirectMessageEntity extends AbstractBaseEntity<Long> {
 
     @Column(name = "sent_at", nullable = false)
     private Instant sentAt;
+    @Column(name = "read_at") private @Nullable Instant readAt;
+    @Column(name = "sender_archived_at") private @Nullable Instant senderArchivedAt;
+    @Column(name = "recipient_archived_at") private @Nullable Instant recipientArchivedAt;
 
     @SuppressWarnings("NullAway.Init")
     protected DirectMessageEntity() {
@@ -64,4 +68,5 @@ public class DirectMessageEntity extends AbstractBaseEntity<Long> {
     public Instant getSentAt() {
         return sentAt;
     }
+    public @Nullable Instant getReadAt() { return readAt; }
 }

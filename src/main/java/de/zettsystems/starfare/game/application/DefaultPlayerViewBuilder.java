@@ -79,6 +79,21 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 List.of(), List.of(), EmpireStats.NONE, Set.of());
     }
 
+    @Override
+    public PlayerViewState forReplay(GameState state, ReplayFrame frame, int playerId) {
+        List<VisibleSystem> systems = frame.systems().stream().map(system -> {
+            Integer owner = system.ownerId();
+            String color = owner != null ? playerById(state, owner).colorHex() : null;
+            return new VisibleSystem(system.id(), system.name(), system.x(), system.y(), owner,
+                    system.garrison(), system.productionPerTurn(), true, color, frame.turn(), false,
+                    null, system.garrisonReserve(), system.availableShips(), ownershipHistory(state, system.id()));
+        }).toList();
+        List<Fleet> ownFleets = frame.fleets().stream().filter(fleet -> fleet.ownerId() == playerId).toList();
+        TurnReport report = frame.reports().getOrDefault(playerId, new TurnReport(frame.turn(), List.of()));
+        return new PlayerViewState(frame.turn(), List.copyOf(state.players()), systems, ownFleets, report,
+                true, state.winnerId(), List.of(), List.of(), EmpireStats.NONE, Set.of());
+    }
+
     /** Alle Systeme ohne Nebel: fuer Zuschauer und fuer die entschiedene Partie. */
     private static List<VisibleSystem> revealedSystems(GameState state) {
         int turn = state.turn();
@@ -88,7 +103,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             return new VisibleSystem(
                     s.id(), s.name(), s.x(), s.y(),
                     ownerId, s.garrison(), s.productionPerTurn(),
-                    true, color, turn, false, null, ownershipHistory(state, s.id()));
+                    true, color, turn, false, null, s.garrisonReserve(), s.availableShips(), ownershipHistory(state, s.id()));
         }).toList();
     }
 
@@ -190,6 +205,8 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 own ? s.productionPerTurn() : null,
                 own, color, lastSeen, inRange,
                 own ? routedBySystem.getOrDefault(s.id(), 0) : null,
+                own ? s.garrisonReserve() : null,
+                own ? Math.max(0, s.availableShips() - committedBySystem.getOrDefault(s.id(), 0)) : null,
                 own ? ownershipHistory(state, s.id()) : List.of());
     }
 

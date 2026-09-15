@@ -1,0 +1,11 @@
+package de.zettsystems.starfare.game.application;
+
+import de.zettsystems.starfare.game.values.PlayerStatistics;
+import de.zettsystems.starfare.game.values.GameId;
+
+/** Stores game outcomes independently from removable detailed sessions. */
+public interface GameStatisticsService {
+    void recordFinishedGame(GameId gameId);
+
+    PlayerStatistics statisticsFor(String account);
+}

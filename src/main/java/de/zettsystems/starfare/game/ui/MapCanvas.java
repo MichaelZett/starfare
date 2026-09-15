@@ -60,6 +60,15 @@ final class MapCanvas extends Div {
                 viewportKey, homeX, homeY);
     }
 
+    void centerOn(double x, double y) {
+        getElement().executeJs(
+                "const el = this; const map = el.querySelector('#map');" +
+                        "const zoom = parseFloat((map && map.style.zoom) || '1');" +
+                        "el.scrollTo({left: $0 * zoom - el.clientWidth / 2," +
+                        "top: $1 * zoom - el.clientHeight / 2, behavior: 'smooth'});",
+                x, y);
+    }
+
     void installDragToPan() {
         getElement().executeJs(
                 "const el = this;" +
