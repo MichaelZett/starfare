@@ -129,6 +129,25 @@ class GameServiceObserveTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void observerCanSwitchToAPlayerPerspectiveWithFogOfWar() {
+        GameId id = setupStartedGameWithObservers(true);
+        assertThat(game.observeGame(id, "alice")).isTrue();
+
+        PlayerViewState view = game.observerViewFor(id, "alice", 1, true).orElseThrow();
+
+        assertThat(view.systems()).hasSize(3);
+        assertThat(view.ownFleets()).allMatch(fleet -> fleet.ownerId() == 1);
+        assertThat(view.plannedOrders()).isEmpty();
+    }
+
+    @Test
+    void observerPerspectiveIsDeniedToNonObservers() {
+        GameId id = setupStartedGameWithObservers(true);
+
+        assertThat(game.observerViewFor(id, "alice", 1, true)).isEmpty();
+    }
+
+    @Test
     void observersAllowedFlagIsReadable() {
         assertThat(game.observersAllowed(setupStartedGameWithObservers(true))).isTrue();
         assertThat(game.observersAllowed(setupStartedGameWithObservers(false))).isFalse();

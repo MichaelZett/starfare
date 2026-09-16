@@ -201,7 +201,7 @@ class PlayerViewBuilderTest {
         assertThat(seen.colorHex()).isEqualTo("#bbbbbb");
         assertThat(seen.lastSeenTurn()).isEqualTo(state.turn());
         assertThat(seen.garrison()).as("nur grob, nicht die echten 42").isEqualTo(35);
-        assertThat(seen.productionPerTurn()).isNull();
+        assertThat(seen.productionPerTurn()).as("nur grob, nicht die echten 3").isEqualTo(4);
     }
 
     @Test

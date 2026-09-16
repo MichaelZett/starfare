@@ -229,6 +229,20 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public Optional<PlayerViewState> observerViewFor(GameId id, String account, int perspective, boolean fogOfWar) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            boolean permitted = state.active() && !state.gameOver()
+                    && state.observers().contains(account)
+                    && access.canObserve(state, session.hostPlayerId(), account);
+            boolean knownPerspective = state.players().stream().anyMatch(player -> player.id() == perspective);
+            if (!permitted || !knownPerspective) {
+                return Optional.empty();
+            }
+            return Optional.of(playerViewBuilder.forReview(state, perspective, fogOfWar));
+        }));
+    }
+
+    @Override
     public boolean observeGame(GameId gameId, @Nullable String playerId) {
         if (registry.find(gameId).isEmpty() || playerId == null || playerId.isBlank()) {
             return false;

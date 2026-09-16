@@ -19,8 +19,17 @@ public record GameSetup(
         boolean reentryAllowed,
         List<String> seatColorHexes,
         ProductionDistribution productionDistribution,
-        GalaxyLayout galaxyLayout
+        GalaxyLayout galaxyLayout,
+        boolean battlePresentationEnabled
 ) {
+    public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
+                     int neutralMinProduction, int neutralMaxProduction, int startGarrison,
+                     boolean observersAllowed, boolean reentryAllowed, List<String> seatColorHexes,
+                     ProductionDistribution productionDistribution, GalaxyLayout galaxyLayout) {
+        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction,
+                neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes,
+                productionDistribution, galaxyLayout, GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED);
+    }
     public static GameSetup defaults() {
         int totalPlayers = GameConfig.DEFAULT_HUMAN_PLAYERS + GameConfig.DEFAULT_AI_PLAYERS;
         List<Integer> startProductions = new ArrayList<>();
@@ -39,7 +48,8 @@ public record GameSetup(
                 GameConfig.DEFAULT_REENTRY_ALLOWED,
                 GameConfig.PLAYER_PALETTE,
                 GameConfig.DEFAULT_PRODUCTION_DISTRIBUTION,
-                GameConfig.DEFAULT_GALAXY_LAYOUT
+                GameConfig.DEFAULT_GALAXY_LAYOUT,
+                GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED
         );
     }
 
@@ -50,22 +60,24 @@ public record GameSetup(
         if (humans + ai > GameConfig.MAX_TOTAL_PLAYERS) {
             ai = Math.max(GameConfig.MIN_AI_PLAYERS, GameConfig.MAX_TOTAL_PLAYERS - humans);
         }
-        int systems = clamp(systemCount, GameConfig.MIN_SYSTEM_COUNT, GameConfig.MAX_SYSTEM_COUNT);
         int totalPlayers = humans + ai;
+        int systems = clamp(systemCount, Math.max(GameConfig.MIN_SYSTEM_COUNT, totalPlayers),
+                GameConfig.MAX_SYSTEM_COUNT);
         List<Integer> startProductions = normalizeStartProductions(startProductionPerPlayer, totalPlayers);
-        int neutralMin = Math.max(1, neutralMinProduction);
-        int neutralMax = Math.max(1, neutralMaxProduction);
+        int neutralMin = clamp(neutralMinProduction, GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION);
+        int neutralMax = clamp(neutralMaxProduction, GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION);
         if (neutralMin > neutralMax) {
             int tmp = neutralMin;
             neutralMin = neutralMax;
             neutralMax = tmp;
         }
-        int garrison = Math.max(1, startGarrison);
+        int garrison = clamp(startGarrison, GameConfig.MIN_START_GARRISON, GameConfig.MAX_START_GARRISON);
         List<String> seatColors = normalizeSeatColors(seatColorHexes, totalPlayers);
         return new GameSetup(systems, humans, ai, startProductions, neutralMin, neutralMax, garrison,
                 observersAllowed, reentryAllowed, seatColors,
                 productionDistribution == null ? GameConfig.DEFAULT_PRODUCTION_DISTRIBUTION : productionDistribution,
-                galaxyLayout == null ? GameConfig.DEFAULT_GALAXY_LAYOUT : galaxyLayout);
+                galaxyLayout == null ? GameConfig.DEFAULT_GALAXY_LAYOUT : galaxyLayout,
+                battlePresentationEnabled);
     }
 
     public int totalPlayers() {
@@ -76,7 +88,7 @@ public record GameSetup(
         if (seatIndex < 0 || seatIndex >= startProductionPerPlayer.size()) {
             return GameConfig.DEFAULT_START_SYSTEM_PRODUCTION;
         }
-        return Math.max(1, startProductionPerPlayer.get(seatIndex));
+        return clamp(startProductionPerPlayer.get(seatIndex), GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION);
     }
 
     public String colorForSeat(int seatIndex) {
@@ -98,7 +110,7 @@ public record GameSetup(
         List<Integer> out = new ArrayList<>(totalPlayers);
         for (int i = 0; i < totalPlayers; i++) {
             int value = i < source.size() ? source.get(i) : GameConfig.DEFAULT_START_SYSTEM_PRODUCTION;
-            out.add(Math.max(1, value));
+            out.add(clamp(value, GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION));
         }
         return List.copyOf(out);
     }

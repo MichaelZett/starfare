@@ -47,6 +47,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private final MapCanvas mapCanvas;
     private final MapHeaderBar header;
     private final ReviewControls reviewControls;
+    private final SpectatorControls spectatorControls;
     private final Div gameOverBanner = new Div();
     private final FleetAndOrdersPanel fleetsPanel;
 
@@ -86,7 +87,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             badgesShowingFleetNo.clear();
             refresh();
         });
-        add(header, reviewControls, buildContent());
+        spectatorControls = new SpectatorControls(() -> {
+            selectedFrom = null;
+            highlightedFleetId = null;
+            highlightedReportSystemId = null;
+            badgesShowingFleetNo.clear();
+            refresh();
+        });
+        add(header, spectatorControls, reviewControls, buildContent());
     }
 
     private HorizontalLayout buildContent() {
@@ -216,6 +224,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         this.gameId = candidate;
         displayedTurn = null;
         reviewControls.reset();
+        spectatorControls.reset();
     }
 
     @Override
@@ -314,7 +323,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return null;
         }
         reviewing = view.gameOver();
+        spectatorControls.setVisible(false);
         if (!reviewing) {
+            if (isObserver()) {
+                spectatorControls.show(view.players());
+                return game.observerViewFor(gameId, UserContext.currentPlayerId().orElse(""),
+                        spectatorControls.perspective(), spectatorControls.fogOfWar()).orElse(null);
+            }
             return view;
         }
         List<Integer> replayTurns = game.replayTurns(gameId, UserContext.currentPlayerId().orElse(""));
@@ -368,7 +383,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::onFleetHighlight,
                 this::onReportMarkerSelected,
                 this::refresh));
-        fleetsPanel.update(view, selectedFrom, highlightedFleetId);
+        fleetsPanel.update(gameId, view, selectedFrom, highlightedFleetId, observer);
     }
 
     private void selectSystem(VisibleSystem system) {

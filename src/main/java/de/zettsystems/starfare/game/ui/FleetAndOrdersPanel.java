@@ -17,6 +17,7 @@ import com.vaadin.flow.component.tabs.Tabs;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.FleetView;
 import de.zettsystems.starfare.game.values.GameConfig;
+import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.PlannedOrder;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.PlayerViewState;
@@ -61,6 +62,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private boolean syncingSelection;
     private boolean readOnly;
+    private boolean battlePresentationEnabled;
+    private @Nullable GameId gameId;
     private @Nullable VisibleSystem selectedSystem;
     private @Nullable Integer selectedFleetId;
     private final EnumSet<EventCategory> enabledEventCategories = EnumSet.allOf(EventCategory.class);
@@ -107,11 +110,17 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         showSection(Section.CONTACTS);
     }
 
-    void update(PlayerViewState view, @Nullable VisibleSystem system, @Nullable Integer fleetId) {
+    void update(GameId gameId, PlayerViewState view, @Nullable VisibleSystem system, @Nullable Integer fleetId,
+                boolean spectator) {
+        this.gameId = gameId;
         currentView = view;
         selectedSystem = system;
         selectedFleetId = fleetId;
-        readOnly = view.gameOver();
+        readOnly = view.gameOver() || spectator;
+        TurnReport report = view.report();
+        int reportTurn = report != null ? report.turn() : view.turn() - 1;
+        battlePresentationEnabled = BattlePresentationPreference.enabled(gameId, reportTurn,
+                view.battlePresentationEnabled());
         standingOrdersManageButton.setVisible(!readOnly);
         fleetGrid.setItems(UiMapper.toFleetViews(view));
         ordersGrid.setItems(view.plannedOrders());
@@ -291,6 +300,18 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         addReportFilter(filters, EventCategory.BATTLE_LOST, UiTexts.ROUND_FILTER_BATTLE_LOST);
         addReportFilter(filters, EventCategory.SYSTEM_LOST, UiTexts.ROUND_FILTER_SYSTEM_LOST);
         addReportFilter(filters, EventCategory.DEFENSE_HELD, UiTexts.ROUND_FILTER_DEFENSE_HELD);
+        Checkbox presentation = new Checkbox(I18n.t(UiTexts.BATTLE_PRESENTATION_TOGGLE), battlePresentationEnabled);
+        presentation.addValueChangeListener(event -> {
+            GameId current = gameId;
+            TurnReport currentReport = view.report();
+            if (current != null) {
+                int reportTurn = currentReport != null ? currentReport.turn() : view.turn() - 1;
+                battlePresentationEnabled = event.getValue();
+                BattlePresentationPreference.set(current, reportTurn, battlePresentationEnabled);
+                renderReport(view);
+            }
+        });
+        filters.add(presentation);
         reportPage.add(filters);
         TurnReport report = view.report();
         List<TurnEvent> events = report != null ? report.events() : List.of();
@@ -348,6 +369,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         card.addClassNames("event-card", eventCss(event));
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
         card.add(new Span(eventIcon(event)), new Span(eventText(event)));
+        de.zettsystems.starfare.report.values.BattleReplay replay = de.zettsystems.starfare.report.values.BattleReplay.from(event).orElse(null);
+        if (battlePresentationEnabled && replay != null) {
+            card.addClassName("event-battle-interactive");
+            BattleReplayDialog.primeAudio(card);
+            card.addClickListener(_ -> BattleReplayDialog.open(replay));
+            return card;
+        }
         event.battleSystemId().ifPresent(systemId -> {
             card.addClassName("event-map-linked");
             if (Objects.equals(selectedReportSystemId, systemId)) {
@@ -394,17 +422,21 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         };
     }
 
-    private static String eventText(TurnEvent event) {
+    private String eventText(TurnEvent event) {
         return switch (event) {
             case TurnEvent.Production production -> I18n.t(UiTexts.ROUND_EVENT_PRODUCTION,
                     production.systemName(), production.amount());
             case TurnEvent.Reinforcement reinforcement -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
                     reinforcement.systemName(), reinforcement.ships(), reinforcement.totalGarrison(), reinforcement.fleetLabel());
-            case TurnEvent.BattleWon battle -> I18n.t(battle.wasNeutral() ? UiTexts.ROUND_EVENT_BATTLE_WON_NEUTRAL
-                            : UiTexts.ROUND_EVENT_BATTLE_WON_ENEMY,
-                    battle.systemName(), battle.attacking(), battle.defending(), battle.remaining());
-            case TurnEvent.BattleLost battle -> I18n.t(UiTexts.ROUND_EVENT_BATTLE_LOST,
-                    battle.systemName(), battle.attacking(), battle.defending(), battle.defendersLeft());
+            case TurnEvent.BattleWon battle -> battlePresentationEnabled
+                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName())
+                    : I18n.t(battle.wasNeutral() ? UiTexts.ROUND_EVENT_BATTLE_WON_NEUTRAL
+                    : UiTexts.ROUND_EVENT_BATTLE_WON_ENEMY, battle.systemName(), battle.attacking(),
+                    battle.defending(), battle.remaining());
+            case TurnEvent.BattleLost battle -> battlePresentationEnabled
+                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName())
+                    : I18n.t(UiTexts.ROUND_EVENT_BATTLE_LOST, battle.systemName(), battle.attacking(),
+                    battle.defending(), battle.defendersLeft());
             case TurnEvent.SystemLost lost -> I18n.t(UiTexts.ROUND_EVENT_SYSTEM_LOST, lost.systemName());
             case TurnEvent.DefenseHeld held -> I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
                     held.systemName(), held.attacking(), held.defendersLeft());

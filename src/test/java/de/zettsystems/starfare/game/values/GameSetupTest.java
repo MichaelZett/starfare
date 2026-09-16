@@ -61,6 +61,30 @@ class GameSetupTest {
     }
 
     @Test
+    void systemsAlwaysCoverEveryParticipant() {
+        GameSetup setup = new GameSetup(
+                GameConfig.MIN_SYSTEM_COUNT, GameConfig.MAX_HUMAN_PLAYERS, GameConfig.MAX_AI_PLAYERS,
+                List.of(), 2, 6, 8, true, true, List.of(), null, null
+        ).normalized();
+
+        assertThat(setup.systemCount()).isGreaterThanOrEqualTo(setup.totalPlayers());
+    }
+
+    @Test
+    void productionAndStartingGarrisonStayWithinSetupLimits() {
+        GameSetup setup = new GameSetup(
+                24, 1, 1, List.of(-3, 999), -2, 999, 999,
+                true, true, List.of(), null, null
+        ).normalized();
+
+        assertThat(setup.startProductionPerPlayer())
+                .containsExactly(GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION);
+        assertThat(setup.neutralMinProduction()).isEqualTo(GameConfig.MIN_PRODUCTION);
+        assertThat(setup.neutralMaxProduction()).isEqualTo(GameConfig.MAX_PRODUCTION);
+        assertThat(setup.startGarrison()).isEqualTo(GameConfig.MAX_START_GARRISON);
+    }
+
+    @Test
     void startProductionListMatchesTotalPlayers() {
         GameSetup setup = new GameSetup(
                 24, 2, 1,
@@ -81,6 +105,16 @@ class GameSetupTest {
 
         assertThat(defaults.observersAllowed()).isTrue();
         assertThat(defaults.reentryAllowed()).isTrue();
+    }
+
+    @Test
+    void battlePresentationChoiceSurvivesNormalization() {
+        GameSetup normalized = new GameSetup(
+                24, 1, 1, List.of(4, 4), 2, 6, 8,
+                true, true, List.of(), null, null, false
+        ).normalized();
+
+        assertThat(normalized.battlePresentationEnabled()).isFalse();
     }
 
     @Test

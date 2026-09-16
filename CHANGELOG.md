@@ -12,6 +12,17 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   sich durch Ziehen zwischen Systemen anlegen oder ersetzen.
 - Berichtssysteme erhalten Kartenmarkierungen: Berichtszeilen zentrieren die
   Karte, Markierungen öffnen die passende Berichtszeile.
+- Zuschauer laufender Partien wählen nun eine Teilnehmerperspektive und den
+  Kriegsnebel. Der Zugriff bleibt vollständig lesend.
+- Schlachten werden aus dem Bericht heraus in einer eigenen, abschaltbar
+  vertonten Wiedergabe gezeigt. Anfangs- und Endstärke animieren getrennt von
+  Besitzwechseln und übrigen Berichtsergebnissen.
+- Die Kampfdarstellung lässt sich im Neue-Spiel-Wizard als Vorgabe und im
+  Rundenbericht je Runde zwischen Wiedergabe und Direktauswertung umschalten.
+  Der erste Klick auf eine Kampfkarte schaltet den Browserton frei.
+- Kartensysteme skalieren bei vollständiger Sicht nach Produktion und bei
+  Sensorreichweite nach der geschätzten Produktion; unbekannte Systeme bleiben
+  gleich groß.
 
 ### Added
 - Unabhängige vollständige Partiearchive in `game_archives`; eine standardmäßig
@@ -78,6 +89,8 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   Sternenverteilung (zufällig oder gleichmäßig) sind wählbar. Bei
   gleichmäßiger Verteilung liegt ein System je Rasterzelle und die
   Heimatsysteme werden maximal auseinandergelegt.
+- Der Wizard begrenzt Produktion auf 1–20 und die Startgarnison auf 1–50;
+  eine Galaxie enthält 8–120 Systeme und mindestens ein System pro Teilnehmer.
 - Karte: für die laufende Runde geplante Flüge erscheinen als gestrichelte
   Bahn; Zoom und Ausschnitt überleben den Rundenwechsel.
 - Produktionsverlegungen haben eine feste Größe statt „die ganze Produktion".

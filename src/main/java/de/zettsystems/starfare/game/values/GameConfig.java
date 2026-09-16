@@ -18,6 +18,10 @@ public final class GameConfig {
     public static final int DEFAULT_START_GARRISON = 8;
     public static final int MIN_SYSTEM_COUNT = 8;
     public static final int MAX_SYSTEM_COUNT = 120;
+    public static final int MIN_PRODUCTION = 1;
+    public static final int MAX_PRODUCTION = 20;
+    public static final int MIN_START_GARRISON = 1;
+    public static final int MAX_START_GARRISON = 50;
     public static final int MIN_AI_PLAYERS = 0;
     public static final int MAX_AI_PLAYERS = 7;
     public static final int MIN_HUMAN_PLAYERS = 1;
@@ -25,6 +29,7 @@ public final class GameConfig {
     public static final int MAX_TOTAL_PLAYERS = 10;
     public static final boolean DEFAULT_OBSERVERS_ALLOWED = true;
     public static final boolean DEFAULT_REENTRY_ALLOWED = true;
+    public static final boolean DEFAULT_BATTLE_PRESENTATION_ENABLED = true;
     public static final String DEFAULT_GAME_NAME = "Standardspiel";
     public static final ProductionDistribution DEFAULT_PRODUCTION_DISTRIBUTION = ProductionDistribution.GAUSSIAN;
     public static final GalaxyLayout DEFAULT_GALAXY_LAYOUT = GalaxyLayout.EVEN;

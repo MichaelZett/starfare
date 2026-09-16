@@ -54,15 +54,18 @@ final class CreateGameWizardDialog {
                 GameConfig.MIN_AI_PLAYERS, GameConfig.MAX_AI_PLAYERS, GameConfig.DEFAULT_AI_PLAYERS);
 
         IntegerField neutralMinProduction = new IntegerField(I18n.t(UiTexts.LOBBY_FIELD_NEUTRAL_MIN_PRODUCTION));
-        neutralMinProduction.setMin(1);
+        neutralMinProduction.setMin(GameConfig.MIN_PRODUCTION);
+        neutralMinProduction.setMax(GameConfig.MAX_PRODUCTION);
         neutralMinProduction.setValue(GameConfig.DEFAULT_NEUTRAL_MIN_PRODUCTION);
 
         IntegerField neutralMaxProduction = new IntegerField(I18n.t(UiTexts.LOBBY_FIELD_NEUTRAL_MAX_PRODUCTION));
-        neutralMaxProduction.setMin(1);
+        neutralMaxProduction.setMin(GameConfig.MIN_PRODUCTION);
+        neutralMaxProduction.setMax(GameConfig.MAX_PRODUCTION);
         neutralMaxProduction.setValue(GameConfig.DEFAULT_NEUTRAL_MAX_PRODUCTION);
 
         IntegerField startGarrison = new IntegerField(I18n.t(UiTexts.LOBBY_FIELD_START_GARRISON));
-        startGarrison.setMin(1);
+        startGarrison.setMin(GameConfig.MIN_START_GARRISON);
+        startGarrison.setMax(GameConfig.MAX_START_GARRISON);
         startGarrison.setValue(GameConfig.DEFAULT_START_GARRISON);
 
         ComboBox<ProductionDistribution> productionDistribution =
@@ -80,12 +83,14 @@ final class CreateGameWizardDialog {
         observersAllowed.setValue(GameConfig.DEFAULT_OBSERVERS_ALLOWED);
         Checkbox reentryAllowed = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_REENTRY_ALLOWED));
         reentryAllowed.setValue(GameConfig.DEFAULT_REENTRY_ALLOWED);
+        Checkbox battlePresentation = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_BATTLE_PRESENTATION));
+        battlePresentation.setValue(GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED);
         Checkbox joinAfterCreate = new Checkbox(I18n.t(UiTexts.LOBBY_WIZARD_JOIN_AFTER_CREATE));
         joinAfterCreate.setId("join-after-create");
         joinAfterCreate.setValue(true);
 
         FormLayout setupGrid = grid(3, "13em", systems, humans, ai, startGarrison,
-                galaxyLayout, observersAllowed, reentryAllowed, joinAfterCreate);
+                galaxyLayout, observersAllowed, reentryAllowed, battlePresentation, joinAfterCreate);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
 
         FormLayout startProductionFields = new FormLayout();
@@ -129,7 +134,7 @@ final class CreateGameWizardDialog {
 
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
-                observersAllowed, reentryAllowed, productionDistribution, galaxyLayout);
+                observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CREATE), _ -> {
             GameSetup setup = buildSetup(formInputs);
             String hostPlayerId = UserContext.currentPlayerId().orElse(null);
@@ -155,7 +160,8 @@ final class CreateGameWizardDialog {
         int humanCount = Math.max(1, valueOrDefault(humans.getValue(), GameConfig.DEFAULT_HUMAN_PLAYERS));
         for (int i = 1; i <= humanCount; i++) {
             IntegerField humanProduction = new IntegerField(I18n.t(UiTexts.LOBBY_FIELD_START_PRODUCTION_HUMAN, i));
-            humanProduction.setMin(1);
+            humanProduction.setMin(GameConfig.MIN_PRODUCTION);
+            humanProduction.setMax(GameConfig.MAX_PRODUCTION);
             humanProduction.setValue(GameConfig.DEFAULT_START_SYSTEM_PRODUCTION);
             ComboBox<ColorOption> color = buildColorCombo();
             color.setLabel(I18n.t(UiTexts.LOBBY_FIELD_COLOR) + " " + i);
@@ -168,7 +174,8 @@ final class CreateGameWizardDialog {
         int aiCount = Math.max(0, valueOrDefault(ai.getValue(), GameConfig.DEFAULT_AI_PLAYERS));
         for (int i = 1; i <= aiCount; i++) {
             IntegerField aiProduction = new IntegerField(I18n.t(UiTexts.LOBBY_FIELD_START_PRODUCTION_AI, i));
-            aiProduction.setMin(1);
+            aiProduction.setMin(GameConfig.MIN_PRODUCTION);
+            aiProduction.setMax(GameConfig.MAX_PRODUCTION);
             aiProduction.setValue(GameConfig.DEFAULT_START_SYSTEM_PRODUCTION);
             ComboBox<ColorOption> color = buildColorCombo();
             color.setLabel(I18n.t(UiTexts.LOBBY_FIELD_COLOR) + " " + (humanCount + i));
@@ -184,7 +191,7 @@ final class CreateGameWizardDialog {
                               List<ComboBox<ColorOption>> seatColorInputs,
                               IntegerField neutralMinProduction, IntegerField neutralMaxProduction,
                               IntegerField startGarrison,
-                              Checkbox observersAllowed, Checkbox reentryAllowed,
+                              Checkbox observersAllowed, Checkbox reentryAllowed, Checkbox battlePresentation,
                               ComboBox<ProductionDistribution> productionDistribution,
                               ComboBox<GalaxyLayout> galaxyLayout) {
     }
@@ -208,7 +215,8 @@ final class CreateGameWizardDialog {
                 in.reentryAllowed().getValue(),
                 seatColors,
                 in.productionDistribution().getValue(),
-                in.galaxyLayout().getValue()
+                in.galaxyLayout().getValue(),
+                in.battlePresentation().getValue()
         ).normalized();
     }
 

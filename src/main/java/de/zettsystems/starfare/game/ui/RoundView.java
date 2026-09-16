@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Visual round-report screen. Shown after a turn with significant events.
@@ -49,6 +48,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private final Button back;
     private @Nullable GameId gameId;
     private List<TurnEvent> lastEvents = List.of();
+    private boolean battlePresentationEnabled;
 
     @Autowired
     public RoundView(GameService game) {
@@ -92,6 +92,16 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         addFilterCheckbox(enabled, EventCategory.BATTLE_LOST, UiTexts.ROUND_FILTER_BATTLE_LOST);
         addFilterCheckbox(enabled, EventCategory.SYSTEM_LOST, UiTexts.ROUND_FILTER_SYSTEM_LOST);
         addFilterCheckbox(enabled, EventCategory.DEFENSE_HELD, UiTexts.ROUND_FILTER_DEFENSE_HELD);
+        Checkbox presentation = new Checkbox(I18n.t(UiTexts.BATTLE_PRESENTATION_TOGGLE), battlePresentationEnabled);
+        presentation.addValueChangeListener(event -> {
+            GameId current = gameId;
+            if (current != null) {
+                battlePresentationEnabled = event.getValue();
+                BattlePresentationPreference.set(current, reportTurn(), battlePresentationEnabled);
+                renderTimeline();
+            }
+        });
+        filterBar.add(presentation);
     }
 
     private void addFilterCheckbox(EnumSet<EventCategory> enabled, EventCategory cat, String textKey) {
@@ -168,6 +178,9 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
         var report = view.report();
         lastEvents = report != null ? report.events() : List.of();
+        battlePresentationEnabled = BattlePresentationPreference.enabled(gameId, view.turn() - 1,
+                view.battlePresentationEnabled());
+        buildFilterBar();
         renderTimeline();
     }
 
@@ -203,48 +216,24 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
         String icon = iconFor(event);
         String cssClass = cssFor(event);
-        String text = textFor(event);
+        String text = textFor(event, battlePresentationEnabled);
 
         card.addClassName(cssClass);
         var iconSpan = new Span(icon);
         iconSpan.addClassName("event-icon");
         var textSpan = new Span(text);
         card.add(iconSpan, textSpan);
-        if (event instanceof TurnEvent.BattleWon || event instanceof TurnEvent.BattleLost
-                || event instanceof TurnEvent.DefenseHeld) {
-            addBattleReveal(card);
+        if (battlePresentationEnabled) {
+            de.zettsystems.starfare.report.values.BattleReplay.from(event)
+                    .ifPresent(replay -> addBattleReplay(card, replay));
         }
         return card;
     }
 
-    /**
-     * Browser deckeln die Zahl der AudioContexts pro Dokument (Chrome bei sechs),
-     * darum genau einen anlegen und an {@code window} merken.
-     */
-    private static final String PLAY_IMPACT_JS = """
-            const C = window.AudioContext || window.webkitAudioContext;
-            if (!C) return;
-            window.__starfareAudio = window.__starfareAudio || new C();
-            const c = window.__starfareAudio;
-            if (c.state === 'suspended') c.resume();
-            const o = c.createOscillator(), g = c.createGain();
-            o.frequency.setValueAtTime(110, c.currentTime); o.frequency.exponentialRampToValueAtTime(48, c.currentTime + .22);
-            g.gain.setValueAtTime(.05, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + .24);
-            o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + .25);
-            """;
-
-    private static void addBattleReveal(Div card) {
-        AtomicBoolean revealed = new AtomicBoolean();
+    private static void addBattleReplay(Div card, de.zettsystems.starfare.report.values.BattleReplay replay) {
         card.addClassName("event-battle-interactive");
-        card.addClickListener(_ -> {
-            if (revealed.getAndSet(true)) {
-                return;
-            }
-            card.removeClassName("event-battle-interactive");
-            card.addClassName("event-battle-revealed");
-            card.addClassName("event-battle-finished");
-            card.getElement().executeJs(PLAY_IMPACT_JS);
-        });
+        BattleReplayDialog.primeAudio(card);
+        card.addClickListener(_ -> BattleReplayDialog.open(replay));
     }
 
     private static String iconFor(TurnEvent e) {
@@ -273,16 +262,19 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         };
     }
 
-    private static String textFor(TurnEvent e) {
+    private String textFor(TurnEvent e, boolean presentationEnabled) {
         return switch (e) {
             case TurnEvent.Production p -> I18n.t(UiTexts.ROUND_EVENT_PRODUCTION, p.systemName(), p.amount());
             case TurnEvent.Reinforcement r -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
                     r.systemName(), r.ships(), r.totalGarrison(), r.fleetLabel());
-            case TurnEvent.BattleWon b -> I18n.t(b.wasNeutral() ? UiTexts.ROUND_EVENT_BATTLE_WON_NEUTRAL
-                            : UiTexts.ROUND_EVENT_BATTLE_WON_ENEMY,
-                    b.systemName(), b.attacking(), b.defending(), b.remaining());
-            case TurnEvent.BattleLost b -> I18n.t(UiTexts.ROUND_EVENT_BATTLE_LOST,
-                            b.systemName(), b.attacking(), b.defending(), b.defendersLeft());
+            case TurnEvent.BattleWon b -> presentationEnabled
+                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, b.systemName())
+                    : I18n.t(b.wasNeutral() ? UiTexts.ROUND_EVENT_BATTLE_WON_NEUTRAL
+                    : UiTexts.ROUND_EVENT_BATTLE_WON_ENEMY, b.systemName(), b.attacking(), b.defending(), b.remaining());
+            case TurnEvent.BattleLost b -> presentationEnabled
+                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, b.systemName())
+                    : I18n.t(UiTexts.ROUND_EVENT_BATTLE_LOST,
+                    b.systemName(), b.attacking(), b.defending(), b.defendersLeft());
             case TurnEvent.SystemLost l -> I18n.t(UiTexts.ROUND_EVENT_SYSTEM_LOST, l.systemName());
             case TurnEvent.DefenseHeld d -> I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
                             d.systemName(), d.attacking(), d.defendersLeft());
@@ -290,6 +282,12 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                     GameConfig.VICTORY_SYSTEM_PERCENT);
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
         };
+    }
+
+    private int reportTurn() {
+        PlayerViewState view = gameId == null ? null
+                : game.viewForAccount(gameId, UserContext.currentPlayerId().orElse("")).orElse(null);
+        return view == null ? 0 : view.turn() - 1;
     }
 
     private String winnerName(PlayerViewState view) {

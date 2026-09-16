@@ -141,12 +141,12 @@ survives navigation and reload; the default is German.
 The landing route `/` is the lobby. From there:
 
 - **New game** — opens the wizard:
-    - Galaxy size (number of systems)
-    - Human players plus AI players
+    - Galaxy size: 8–120 systems, never fewer than the participating players
+    - Up to 8 human players and 7 AI players; at most 10 participants together
     - A colour per seat (duplicates fall back to a free palette entry)
-    - Neutral systems: min/max production
-    - Starting production per player plus ships in the home system
+    - Neutral and starting production: 1–20 per turn; home-system ships: 1–50
     - Allow observers? Allow rejoining?
+    - Battle presentation on by default; it can be changed again for every round
 - **Search / filter** — narrow the list by game or player name, and by
   status: all, mine, open, running or finished games.
 - **Join** — take an open slot. One slot per game; first come, first
@@ -174,6 +174,10 @@ three levels:
   garrison is only a rough estimate (shown as `~G:`).
 - **Everything else** — whatever you last learned in combat there
   (`G:`, with the round it was seen in the tooltip), or nothing at all.
+
+System diameters provide an extra map cue without leaking hidden information:
+your systems follow their production, sensor estimates follow estimated
+production, and systems without current intelligence all have the same size.
 
 Travelling fleets are rendered as SVG lines with arrowheads; halfway
 along sits a small pill with the ship count, whose tooltip shows the
@@ -225,9 +229,14 @@ Bottom left:
 - **Back to lobby** — exit the map view; the game keeps running.
 
 After every turn change the app shows a **round report** with the
-events (production, combat, conquests). Battle entries can be clicked to
-reveal them with a short animation and sound. Continue via **Back to
-map**.
+events (production, combat, conquests). A battle card first only names its
+location. Click it for a separate battle playback: both fleet strengths count
+down over a sun-and-planet background, with scaled ship markers and optional
+sound. The browser activates audio on the first click on a battle card. Use
+**Battle presentation for this round** in the report to switch between this
+playback and direct results; new rounds begin with the setting chosen in the
+game wizard. The result appears after the playback; ownership changes stay
+separate in the ordinary report. Continue via **Back to map**.
 
 ## Victory condition
 
@@ -239,8 +248,9 @@ shown. The threshold is `GameConfig.VICTORY_SYSTEM_PERCENT`.
 ## Observer mode
 
 If "allow observers" was checked at game creation, non-participating
-users can follow the map live. In pure-AI games the round runs
-automatically (autoplay) until the last observer leaves or the game
+users can follow the map live. They select a participant perspective and can
+switch the fog of war on or off; spectator views never permit commands. In
+pure-AI games the round runs automatically (autoplay) until the last observer leaves or the game
 ends.
 
 ## Release
