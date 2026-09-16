@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameListScope;
+import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.GameSetup;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,9 @@ class GameArchiveTest extends AbstractIntegrationTest {
         var before = registry.readState(id, GameState::toSnapshot);
         long version = repository.findById(id.value()).orElseThrow().getVersion();
         assertThat(games.visibleGamesFor("host", GameListScope.LOBBY)).isEmpty();
-        assertThat(games.visibleGamesFor("host", GameListScope.ARCHIVE)).hasSize(1);
+        assertThat(games.visibleGamesFor("host", GameListScope.ARCHIVE))
+                .extracting(GameSummary::gameId)
+                .contains(id);
         assertThat(games.reviewFor(id, "host")).isPresent();
         assertThat(games.reviewFor(id, "stranger")).isEmpty();
         assertThat(registry.readState(id, GameState::toSnapshot)).isEqualTo(before);

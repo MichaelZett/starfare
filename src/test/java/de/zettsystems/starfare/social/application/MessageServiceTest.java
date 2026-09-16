@@ -194,7 +194,9 @@ class MessageServiceTest {
                     .filter(message -> isBetween(message, firstUser, secondUser))
                     .toList();
         }
-        @Override public void markConversationRead(String viewer, String otherUser) { }
+        @Override public void markConversationRead(String viewer, String otherUser) {
+            // In-memory messages do not persist read state; service interaction is covered by repository tests.
+        }
         @Override public void archiveConversation(String viewer, String otherUser) { messages.removeIf(message -> isBetween(message, viewer, otherUser)); }
         @Override public long deleteOlderThan(java.time.Instant cutoff) { int before = messages.size(); messages.removeIf(message -> message.sentAt().isBefore(cutoff)); return before - messages.size(); }
 

@@ -114,11 +114,11 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void defaultsKeepTheHistoricBehaviour() {
+    void defaultsUseCenteredProductionAndEvenSystems() {
         GameSetup defaults = GameSetup.defaults().normalized();
 
-        assertThat(defaults.productionDistribution()).isEqualTo(ProductionDistribution.UNIFORM);
-        assertThat(defaults.galaxyLayout()).isEqualTo(GalaxyLayout.RANDOM);
+        assertThat(defaults.productionDistribution()).isEqualTo(ProductionDistribution.GAUSSIAN);
+        assertThat(defaults.galaxyLayout()).isEqualTo(GalaxyLayout.EVEN);
     }
 
     @Test
@@ -126,8 +126,8 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
         GameSetup normalized = new GameSetup(SYSTEMS, 1, 1, List.of(4, 4),
                 MIN_PROD, MAX_PROD, 8, true, true, List.of(), null, null).normalized();
 
-        assertThat(normalized.productionDistribution()).isEqualTo(ProductionDistribution.UNIFORM);
-        assertThat(normalized.galaxyLayout()).isEqualTo(GalaxyLayout.RANDOM);
+        assertThat(normalized.productionDistribution()).isEqualTo(ProductionDistribution.GAUSSIAN);
+        assertThat(normalized.galaxyLayout()).isEqualTo(GalaxyLayout.EVEN);
     }
 
     @Test

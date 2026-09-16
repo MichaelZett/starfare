@@ -51,11 +51,6 @@ dependencyManagement {
         mavenBom "com.vaadin:vaadin-bom:${vaadinVersion}"
         mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
     }
-    dependencies {
-        dependency "org.flywaydb:flyway-core:${flywayVersion}"
-        dependency "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
-        dependency "org.postgresql:postgresql:${postgresqlVersion}"
-    }
 }
 
 springBoot {

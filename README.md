@@ -22,10 +22,12 @@ Finished games move from the lobby to **Archive**. Search by game or player name
 filter your games and open a completed map without issuing further orders.
 In the completed map, select any participant (including AI) and enable **Fog of war**
 to see their final perspective. Disable fog to reveal all systems and fleets.
-The controls inspect the final state; they do not rewind earlier turns.
+For newly completed games, the timeline can rewind to every resolved round;
+**Final state** returns to the perspective and fog controls.
 Private archives remain restricted to the host and seat holders. For public
 archives, outsiders can open the map only when spectators are allowed. Games
-are retained; no automatic deletion is enabled.
+are copied to an independent archive. Optional cleanup of the operative session
+is disabled by default and retains archive replay and statistics.
 
 ## Map sidebar
 
@@ -81,6 +83,10 @@ Completed games are retained as compact results for the personal statistics
 page (`/statistics`), including wins, losses and the record against each opponent.
 For newly completed games, the archive map also provides a timeline for replaying
 each resolved round.
+
+Direct-message conversations track read state and can be archived independently
+by either participant. Messages older than one year can be removed through the
+message service without affecting invitations or game archives.
 
 ![Round report](docs/screenshots/Runde.png)
 

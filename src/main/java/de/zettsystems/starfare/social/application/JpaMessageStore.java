@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.time.Instant;
 import jakarta.transaction.Transactional;
+import java.util.Objects;
 
 @Repository
 class JpaMessageStore implements MessageStore {
@@ -25,7 +26,7 @@ class JpaMessageStore implements MessageStore {
     @Override
     public List<DirectMessage> conversation(String firstUser, String secondUser) {
         return repository.findConversation(firstUser, secondUser, firstUser).stream()
-                .map(message -> new DirectMessage(message.getId(), message.getSenderPlayerId(), message.getRecipientPlayerId(),
+                .map(message -> new DirectMessage(Objects.requireNonNull(message.getId(), "Persisted message must have an id"), message.getSenderPlayerId(), message.getRecipientPlayerId(),
                         message.getText(), message.getSentAt(), message.getReadAt()))
                 .toList();
     }

@@ -4,10 +4,13 @@ import de.zettsystems.starfare.social.values.DirectMessage;
 import de.zettsystems.starfare.social.values.SocialEvent;
 import de.zettsystems.starfare.social.values.PlayerIds;
 import org.springframework.stereotype.Service;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.time.Instant;
 
 @Service
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2",
+        justification = "Spring-injected collaborators are kept by reference for the bean's lifetime by design.")
 public class DefaultMessageService implements MessageService {
 
     private final PresenceTracker presence;

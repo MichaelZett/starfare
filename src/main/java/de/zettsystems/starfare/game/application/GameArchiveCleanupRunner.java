@@ -6,8 +6,18 @@ import org.springframework.stereotype.Component;
 
 @Component
 class GameArchiveCleanupRunner {
-    private final GameArchiveCleanupService cleanup; private final GameArchiveCleanupProperties properties;
-    GameArchiveCleanupRunner(GameArchiveCleanupService cleanup, GameArchiveCleanupProperties properties) { this.cleanup = cleanup; this.properties = properties; }
+    private final GameArchiveCleanupService cleanup;
+    private final GameArchiveCleanupProperties properties;
+
+    GameArchiveCleanupRunner(GameArchiveCleanupService cleanup, GameArchiveCleanupProperties properties) {
+        this.cleanup = cleanup;
+        this.properties = properties;
+    }
+
     @Scheduled(cron = "${starfare.game.archive-cleanup.cron:0 15 3 * * *}")
-    void removeExpiredGames() { if (properties.enabled()) cleanup.removeExpired(); }
+    void removeExpiredGames() {
+        if (properties.enabled()) {
+            cleanup.removeExpired();
+        }
+    }
 }

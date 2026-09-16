@@ -118,8 +118,7 @@ public class SmokeSteps {
     public void createDefaultGameAndJoin() {
         browser.clickButtonWithText("Neues Spiel");
         browser.clickButtonWithText("Spiel anlegen");
-        browser.clickButtonWithText("Beitreten");
-        browser.awaitText("Du bist beigetreten");
+        browser.awaitText("Verwalten");
     }
 
     @Dann("zeigt der Verwalten-Dialog den Spieler {string}")

@@ -35,6 +35,7 @@ public final class UiTexts {
     public static final String REVIEW_PERSPECTIVE = "review.perspective";
     public static final String REVIEW_FOG = "review.fog";
     public static final String REPLAY_TIMELINE_TURN = "replay.timeline.turn";
+    public static final String REPLAY_TIMELINE_FINAL = "replay.timeline.final";
     // Lobby — header / toolbar / empty state
     public static final String LOBBY_HEADER_TITLE = "lobby.header.title";
     public static final String LOBBY_SUBTITLE = "lobby.subtitle";
