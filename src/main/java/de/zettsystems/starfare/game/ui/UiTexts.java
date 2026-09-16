@@ -34,6 +34,7 @@ public final class UiTexts {
     public static final String MAP_SIDEBAR_FLEET_TRAVELLING = "map.sidebar.fleetTravelling";
     public static final String REVIEW_PERSPECTIVE = "review.perspective";
     public static final String REVIEW_FOG = "review.fog";
+    public static final String SPECTATOR_PERSPECTIVE = "spectator.perspective";
     public static final String REPLAY_TIMELINE_TURN = "replay.timeline.turn";
     public static final String REPLAY_TIMELINE_FINAL = "replay.timeline.final";
     // Lobby — header / toolbar / empty state
@@ -105,6 +106,7 @@ public final class UiTexts {
     public static final String LOBBY_FIELD_START_GARRISON = "lobby.field.startGarrison";
     public static final String LOBBY_FIELD_OBSERVERS_ALLOWED = "lobby.field.observersAllowed";
     public static final String LOBBY_FIELD_REENTRY_ALLOWED = "lobby.field.reentryAllowed";
+    public static final String LOBBY_FIELD_BATTLE_PRESENTATION = "lobby.field.battlePresentation";
 
     // Map — header / submit / game-over
     public static final String MAP_HEADER_TITLE = "map.header.title";
@@ -220,6 +222,14 @@ public final class UiTexts {
     public static final String ROUND_EVENT_VICTORY = "round.event.victory";
     public static final String ROUND_EVENT_DEFEAT = "round.event.defeat";
     public static final String ROUND_EVENT_OPEN_MAP = "round.event.openMap";
+    public static final String ROUND_EVENT_BATTLE_READY = "round.event.battleReady";
+    public static final String BATTLE_REPLAY_TITLE = "battleReplay.title";
+    public static final String BATTLE_REPLAY_ATTACKERS = "battleReplay.attackers";
+    public static final String BATTLE_REPLAY_DEFENDERS = "battleReplay.defenders";
+    public static final String BATTLE_REPLAY_RESULT = "battleReplay.result";
+    public static final String BATTLE_REPLAY_SOUND = "battleReplay.sound";
+    public static final String BATTLE_REPLAY_CLOSE = "battleReplay.close";
+    public static final String BATTLE_PRESENTATION_TOGGLE = "battlePresentation.toggle";
 
     // Language switcher
     public static final String LANG_LABEL = "lang.label";

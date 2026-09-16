@@ -68,6 +68,9 @@ public interface GameService {
 
     PlayerViewState viewForObserver(GameId gameId);
 
+    /** Read-only running-game view from a selected player's perspective. */
+    Optional<PlayerViewState> observerViewFor(GameId gameId, String account, int perspective, boolean fogOfWar);
+
     boolean observeGame(GameId gameId, @Nullable String playerId);
 
     boolean leaveObserve(GameId gameId, @Nullable String playerId);

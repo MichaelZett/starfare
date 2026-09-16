@@ -22,5 +22,14 @@ public record PlayerViewState(
         List<PlannedOrder> plannedOrders,
         List<StandingOrderView> standingOrders,
         EmpireStats empire,
-        Set<Integer> waitingFleetIds
-) { }
+        Set<Integer> waitingFleetIds,
+        boolean battlePresentationEnabled
+) {
+    public PlayerViewState(int turn, List<Player> players, List<VisibleSystem> systems, List<Fleet> ownFleets,
+                           @Nullable TurnReport report, boolean gameOver, @Nullable Integer winnerId,
+                           List<PlannedOrder> plannedOrders, List<StandingOrderView> standingOrders,
+                           EmpireStats empire, Set<Integer> waitingFleetIds) {
+        this(turn, players, systems, ownFleets, report, gameOver, winnerId, plannedOrders, standingOrders, empire,
+                waitingFleetIds, GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED);
+    }
+}

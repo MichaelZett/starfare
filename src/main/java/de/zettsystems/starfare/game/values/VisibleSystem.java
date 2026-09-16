@@ -7,6 +7,7 @@ import java.util.List;
 /**
  * Client-facing view of a star system with fog-of-war data.
  * Ownership/garrison/production/color/lastSeen are null when unknown due to fog-of-war.
+ * Sensor-range garrison and production values are estimates when {@code approximate} is true.
  */
 public record VisibleSystem(
         int id, String name, double x, double y,

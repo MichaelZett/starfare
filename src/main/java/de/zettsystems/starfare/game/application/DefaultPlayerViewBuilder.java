@@ -68,7 +68,8 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var ownFleets = state.fleets().stream().filter(f -> f.ownerId() == playerId).toList();
         var report = state.reports().getOrDefault(playerId, new TurnReport(turn - 1, List.of()));
         return new PlayerViewState(turn, players, vis, ownFleets, report, state.gameOver(), state.winnerId(),
-                plannedOrders, standing, empireStats(state, playerId, ownFleets), waitingFleetIds(state, orders));
+                plannedOrders, standing, empireStats(state, playerId, ownFleets), waitingFleetIds(state, orders),
+                state.battlePresentationEnabled());
     }
 
     @Override
@@ -76,7 +77,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         int turn = state.turn();
         return new PlayerViewState(turn, List.copyOf(state.players()), revealedSystems(state),
                 List.copyOf(state.fleets()), null, state.gameOver(), state.winnerId(),
-                List.of(), List.of(), EmpireStats.NONE, Set.of());
+                List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled());
     }
 
     @Override
@@ -91,7 +92,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         List<Fleet> ownFleets = frame.fleets().stream().filter(fleet -> fleet.ownerId() == playerId).toList();
         TurnReport report = frame.reports().getOrDefault(playerId, new TurnReport(frame.turn(), List.of()));
         return new PlayerViewState(frame.turn(), List.copyOf(state.players()), systems, ownFleets, report,
-                true, state.winnerId(), List.of(), List.of(), EmpireStats.NONE, Set.of());
+                true, state.winnerId(), List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled());
     }
 
     /** Alle Systeme ohne Nebel: fuer Zuschauer und fuer die entschiedene Partie. */
@@ -113,7 +114,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var report = state.reports().getOrDefault(playerId, new TurnReport(turn - 1, List.of()));
         return new PlayerViewState(turn, List.copyOf(state.players()), revealedSystems(state),
                 ownFleets, report, state.gameOver(), state.winnerId(),
-                List.of(), List.of(), empireStats(state, playerId, ownFleets), Set.of());
+                List.of(), List.of(), empireStats(state, playerId, ownFleets), Set.of(), state.battlePresentationEnabled());
     }
 
     private static EmpireStats empireStats(GameState state, int playerId, List<Fleet> ownFleets) {
@@ -171,11 +172,13 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
 
         Integer visibleOwner;
         Integer garrison;
+        Integer production = null;
         String color = null;
         Integer lastSeen = null;
         if (own) {
             visibleOwner = s.ownerId();
             garrison = s.garrison() - committedBySystem.getOrDefault(s.id(), 0);
+            production = s.productionPerTurn();
             color = playerById(state, playerId).colorHex();
             lastSeen = state.turn();
         } else if (inRange) {
@@ -184,6 +187,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             // aus dem Rundenbericht und dürfte sie auf der Karte nicht gröber sehen.
             visibleOwner = s.ownerId();
             garrison = freshIntelGarrison(state, intel).orElseGet(() -> approximateGarrison(s.garrison()));
+            production = approximateProduction(s.productionPerTurn());
             color = visibleOwner != null ? playerById(state, visibleOwner).colorHex() : null;
             lastSeen = state.turn();
         } else if (intel != null) {
@@ -202,7 +206,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 s.id(), s.name(), s.x(), s.y(),
                 visibleOwner,
                 garrison,
-                own ? s.productionPerTurn() : null,
+                production,
                 own, color, lastSeen, inRange,
                 own ? routedBySystem.getOrDefault(s.id(), 0) : null,
                 own ? s.garrisonReserve() : null,
@@ -248,6 +252,15 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         if (ships < 25) return 15;
         if (ships < 50) return 35;
         return 75;
+    }
+
+    private static int approximateProduction(int production) {
+        if (production <= 2) return 2;
+        if (production <= 4) return 4;
+        if (production <= 7) return 7;
+        if (production <= 11) return 11;
+        if (production <= 16) return 16;
+        return 20;
     }
 
     private static List<StandingOrderView> buildStandingOrderViews(GameState state, List<StandingOrder> orders,

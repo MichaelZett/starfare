@@ -155,6 +155,13 @@ fog it returns all systems and fleets. `ReviewControls` stores selection only in
 the view and resets it on route entry. The selected participant never replaces
 the authenticated account or its seat. Rendering remains read-only in both modes.
 
+For a running spectator, `observerViewFor(id, account, perspective, fogOfWar)`
+uses the same perspective builder after checking the observer registration and
+the access policy. `SpectatorControls` keep the selection in the current view;
+they never create a seat or expose commands. `BattleReplay` is a combat-only
+report value used by the UI dialog: it transports initial and remaining fleets,
+but deliberately carries no ownership transition.
+
 Host transfers and snapshot persistence use the session write lock. Saving an
 existing entity updates both its snapshot and current host, so a restart cannot
 restore obsolete host permissions.
@@ -166,7 +173,13 @@ restore obsolete host permissions.
   `@Value`. `@Configuration` classes live in the `<module>/config/`
   package (they fit neither `ui` nor `application/domain/values`).
 - New game: wizard in `LobbyView` → `GameSetup` (`game.values`);
-  `GameSetup.normalized()` clamps and defaults inputs.
+  `GameSetup.normalized()` clamps and defaults inputs. The fixed limits are
+  8–120 systems, 0–8 human and 0–7 AI participants (at most 10 combined),
+  production 1–20 and starting garrison 1–50. The system count is raised to
+  the participant count when necessary.
+  The setup also persists the default for battle presentation. Each player can
+  override it for the currently shown round in their Vaadin session; the next
+  round starts from the game's stored default.
   `GameRegistry.createGame(GameSetup, hostPlayerId, name)` is the main
   entry point (the short overload builds a default, unnamed game).
 - `GameState.ownershipHistory` records each system ownership change and is

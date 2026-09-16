@@ -9,7 +9,17 @@ Offene Punkte für Starfare. Erledigtes wird hier entfernt und im
 Detaillierter Umsetzungsplan: [.agents-docs/LOBBY-PLAN.md](.agents-docs/LOBBY-PLAN.md).
 Sichtbarkeit, Archiv und die optionale Bereinigung nach gesicherter Datenaufbewahrung sind umgesetzt.
 
-## Future Work
+## Bedienkomfort
+
+- [ ] **Schlacht erst beim Abhaken auflösen** — Der Bericht zeigt zunächst nur
+      ein deutliches Schlachtsymbol und keinen neuen Besitzer. Erst das bewusste
+      Abhaken nach der Wiedergabe übernimmt Ergebnis und Besitzwechsel sichtbar
+      in die Karte.
+- [ ] **Produktionsverlegungen direkt in der Tabelle bearbeiten** — Neben jeder
+      Verlegung im Reiter stehen Anpassen und Löschen; Anpassen verwendet den
+      vorhandenen Kapazitätsdialog statt eines separaten Verwaltungsfensters.
+
+## Version 2
 
 - [ ] **Spielkonzept „Diplomatie"** — eigenes Epic. In-Game-Chat
       zwischen Partie-Teilnehmern, Bündnisse, Verträge.
@@ -21,10 +31,6 @@ Sichtbarkeit, Archiv und die optionale Bereinigung nach gesicherter Datenaufbewa
       Typen.
 - [ ] **Spielkonzept „Planet"** — kolonisierbar, ausbaubar.
 - [ ] **Spielkonzept „Forschung"** — Schiffe/Bauten/etc. erforschbar.
-- [ ] **Zuschauer-Modus mit Perspektivwahl** statt pauschalem God-Mode —
-      betrifft die *laufende* Partie, in der ein Zuschauer heute alles sieht.
-      Die Perspektivwahl nach Spielende ist bereits umgesetzt.
-
 ## Später: Release und Betrieb
 
 Ziel: ein schlankes, aber rundes Feature-Set öffentlich betreiben.

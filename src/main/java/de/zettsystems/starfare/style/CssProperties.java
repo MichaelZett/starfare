@@ -7,6 +7,7 @@ public final class CssProperties {
     public static final String BORDER_COLOR = "borderColor";
     public static final String COLOR = "color";
     public static final String FONT_WEIGHT = "fontWeight";
+    public static final String HEIGHT = "height";
     public static final String LEFT = "left";
     public static final String MARGIN = "margin";
     public static final String OVERFLOW = "overflow";

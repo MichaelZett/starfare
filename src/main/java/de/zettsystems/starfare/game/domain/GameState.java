@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.game.domain;
 
 import de.zettsystems.starfare.game.values.GameVisibility;
+import de.zettsystems.starfare.game.values.GameConfig;
 
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.values.Fleet;
@@ -68,6 +69,7 @@ public class GameState {
     private final Map<Integer, Integer> nextStandingOrderId = new HashMap<>();
     private boolean observersAllowed;
     private boolean reentryAllowed;
+    private boolean battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
     private Instant turnStartedAt = Instant.now();
 
     public int turn() {
@@ -179,6 +181,10 @@ public class GameState {
         return reentryAllowed;
     }
 
+    public boolean battlePresentationEnabled() {
+        return battlePresentationEnabled;
+    }
+
     public Instant turnStartedAt() {
         return turnStartedAt;
     }
@@ -187,8 +193,14 @@ public class GameState {
      * Applies the lobby-level policies (observer access, re-entry of dropped humans).
      */
     public void configureLobby(boolean observersAllowed, boolean reentryAllowed) {
+        configureLobby(observersAllowed, reentryAllowed, GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED);
+    }
+
+    /** Applies lobby policies and the default presentation mode for each new round report. */
+    public void configureLobby(boolean observersAllowed, boolean reentryAllowed, boolean battlePresentationEnabled) {
         this.observersAllowed = observersAllowed;
         this.reentryAllowed = reentryAllowed;
+        this.battlePresentationEnabled = battlePresentationEnabled;
     }
 
     /**
@@ -227,6 +239,7 @@ public class GameState {
         this.nextStandingOrderId.clear();
         this.observersAllowed = false;
         this.reentryAllowed = false;
+        this.battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
         this.players.clear();
         this.systems.clear();
         this.fleets.clear();
@@ -255,6 +268,7 @@ public class GameState {
         this.replayFrames.clear();
         this.observersAllowed = false;
         this.reentryAllowed = false;
+        this.battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
         clearGameOver();
         this.active = false;
         this.started = false;
@@ -408,7 +422,8 @@ public class GameState {
                 new java.util.HashSet<>(s.joinedHumanPlayerIds), new java.util.HashSet<>(s.originalHumanPlayerIds),
                 new java.util.HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
-                s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy);
+                s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
+                s.battlePresentationEnabled);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -458,6 +473,9 @@ public class GameState {
         }
         c.observersAllowed = s.observersAllowed();
         c.reentryAllowed = s.reentryAllowed();
+        Boolean presentationEnabled = s.battlePresentationEnabled();
+        c.battlePresentationEnabled = presentationEnabled != null ? presentationEnabled
+                : GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
         // Aeltere Snapshots kennen das Feld nicht; dann laeuft die Zug-Uhr ab Wiederherstellung.
         Instant startedAt = s.turnStartedAt();
         c.turnStartedAt = startedAt != null ? startedAt : Instant.now();
@@ -498,6 +516,7 @@ public class GameState {
         c.nextStandingOrderId.putAll(s.nextStandingOrderId);
         c.observersAllowed = s.observersAllowed();
         c.reentryAllowed = s.reentryAllowed();
+        c.battlePresentationEnabled = s.battlePresentationEnabled();
 
         if (s.gameOver()) {
             c.endGame(s.winnerId());

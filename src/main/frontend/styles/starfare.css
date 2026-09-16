@@ -868,13 +868,82 @@ html, body, #outlet {
 
 .event-battle-interactive { cursor: pointer; user-select: none; }
 .event-battle-interactive:hover { filter: brightness(1.16); }
-.event-battle-revealed { animation: battleImpact .55s ease-out; }
-.event-battle-finished { opacity: .82; }
-@keyframes battleImpact {
-    0% { transform: scale(1); }
-    25% { transform: translateX(-4px) scale(1.02); }
-    50% { transform: translateX(4px) scale(.98); }
-    100% { transform: translateX(0) scale(1); }
+
+.battle-replay-dialog::part(content) {
+    background: var(--sf-surface);
+    overflow: hidden;
+}
+
+.battle-replay {
+    min-height: min(58vh, 520px);
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: clamp(1rem, 6vw, 4rem);
+    padding: clamp(2rem, 7vw, 5rem) clamp(1rem, 5vw, 4rem);
+    color: #f7fbff;
+    background-image: linear-gradient(90deg, rgba(3, 8, 21, .35), rgba(3, 8, 21, .1) 55%, rgba(3, 8, 21, .38)), url('/images/battle-background.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.battle-side {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    font-weight: 700;
+    font-size: clamp(.8rem, 1.8vw, 1.05rem);
+    text-shadow: 0 2px 5px #02050e;
+}
+
+.battle-attacker { align-items: flex-start; color: #b9dcff; }
+.battle-defender { align-items: flex-end; color: #ffd2b0; text-align: right; }
+
+.battle-number {
+    font-size: clamp(3rem, 9vw, 6.5rem);
+    line-height: .9;
+    font-variant-numeric: tabular-nums;
+}
+
+.battle-ships { display: flex; flex-wrap: wrap; gap: .22rem; max-width: 9rem; }
+.battle-defender .battle-ships { justify-content: flex-end; }
+.battle-ship { font-size: 1.05rem; transition: opacity .2s ease, transform .2s ease; }
+.battle-ship-lost { opacity: .08; transform: scale(.35) rotate(35deg); }
+
+.battle-replay-flash {
+    font-size: clamp(2.2rem, 6vw, 4.5rem);
+    color: #fff3be;
+    text-shadow: 0 0 22px #ffb844, 0 0 60px #ff5e27;
+    animation: battle-pulse .85s ease-in-out infinite alternate;
+}
+
+.battle-replay-result {
+    position: absolute;
+    left: 50%;
+    bottom: 1.25rem;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100% - 2rem);
+    padding: .5rem .8rem;
+    border-radius: .5rem;
+    background: rgba(3, 8, 21, .82);
+    font-weight: 650;
+    opacity: 0;
+    transition: opacity .35s ease;
+}
+
+.battle-replay-result-visible { opacity: 1; }
+
+@keyframes battle-pulse {
+    from { transform: scale(.84); opacity: .55; }
+    to { transform: scale(1.15); opacity: 1; }
+}
+
+@media (max-width: 600px) {
+    .battle-replay { min-height: 420px; gap: .65rem; padding-inline: .75rem; }
+    .battle-number { font-size: 3rem; }
+    .battle-ships { max-width: 5rem; }
 }
 
 .event-battle-lost {

@@ -142,6 +142,9 @@ final class MapRenderer {
         dot.getElement().setProperty(HtmlAttributes.TITLE, UiMapper.systemTooltip(sys, in.view().turn()));
         dot.getStyle().set(CssProperties.LEFT, sys.x() + "px");
         dot.getStyle().set(CssProperties.TOP, sys.y() + "px");
+        int size = SystemDisplaySize.pixelsFor(sys);
+        dot.getStyle().set(CssProperties.WIDTH, size + "px");
+        dot.getStyle().set(CssProperties.HEIGHT, size + "px");
 
         if (in.reportedSystemIds().contains(sys.id())) {
             dot.addClassName("sys-report-event");
@@ -216,7 +219,9 @@ final class MapRenderer {
             return sys.name();
         }
         String prefix = sys.approximate() ? "~G:" : "G:";
-        return String.join("\n", sys.name(), prefix + garrison);
+        String production = productionLabel(sys);
+        return production.isEmpty() ? String.join("\n", sys.name(), prefix + garrison)
+                : String.join("\n", sys.name(), prefix + garrison, production);
     }
 
     /**
@@ -227,6 +232,9 @@ final class MapRenderer {
         Integer production = sys.productionPerTurn();
         if (production == null) {
             return "";
+        }
+        if (sys.approximate()) {
+            return "~P:" + production;
         }
         Integer routed = sys.routedProduction();
         if (routed == null || routed <= 0) {

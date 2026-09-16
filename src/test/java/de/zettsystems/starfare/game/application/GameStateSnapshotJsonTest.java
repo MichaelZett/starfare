@@ -5,6 +5,7 @@ import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
+import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StandingOrder;
 import de.zettsystems.starfare.game.values.StarSystem;
@@ -68,6 +69,17 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
         GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
 
         assertThat(restored.replayFrames()).isEmpty();
+    }
+
+    @Test
+    void snapshotJsonWithoutBattlePresentationChoiceUsesDefault() {
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(sampleState()));
+        json.remove("battlePresentationEnabled");
+
+        GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+
+        assertThat(restored.battlePresentationEnabled())
+                .isEqualTo(GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED);
     }
 
     @Test
