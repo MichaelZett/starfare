@@ -112,10 +112,19 @@ reject edits after game end. At the first game end, `GameStatisticsService` writ
 the compact result plus human participants to `game_results`; this data remains
 after `game_sessions` is later pruned.
 
+`JpaGameSessionStore` also writes a complete idempotent copy to `game_archives`.
+The optional `GameArchiveCleanupRunner` removes only operative `game_sessions`
+older than `starfare.game.archive-cleanup.retention` (90 days by default), and
+only when cleanup is enabled. It rechecks that the session is completed before
+deleting it; archive review, replay and statistics then read from their durable
+stores.
+
 `GameState.replayFrames` stores immutable systems, fleets and reports at game
 start and after every resolved turn. It is optional in `GameStateSnapshot` so
 older archives still load. During archive review, the map's timeline selects a
 frame through `replayFor`; replay data is read-only and is rendered without fog.
+The final timeline position returns to `reviewFor`, where participant perspective
+and fog remain selectable.
 
 ### Map sidebar
 
@@ -208,7 +217,10 @@ messages and invitations. Sub-layers as usual (`values`, `domain`,
   (`ALL | FRIENDS_ONLY | NONE`, default `ALL`).
 - `direct_messages` stores the chronological history between two users;
   `SocialBroadcaster` still delivers newly sent messages immediately to
-  attached UIs. Sending remains limited to visible, online recipients.
+  attached UIs. Sending remains limited to visible, online recipients. Opening
+  a conversation records incoming messages as read. Each participant can archive
+  a conversation independently; the other participant retains it. The store also
+  supports removing messages older than the one-year retention period.
 - Invitations are stored as `GameState.invitedSeats` in the persisted
   `game_sessions.state_json` snapshot, so a restart retains the seat
   reservation.

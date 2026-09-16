@@ -81,6 +81,7 @@ final class CreateGameWizardDialog {
         Checkbox reentryAllowed = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_REENTRY_ALLOWED));
         reentryAllowed.setValue(GameConfig.DEFAULT_REENTRY_ALLOWED);
         Checkbox joinAfterCreate = new Checkbox(I18n.t(UiTexts.LOBBY_WIZARD_JOIN_AFTER_CREATE));
+        joinAfterCreate.setId("join-after-create");
         joinAfterCreate.setValue(true);
 
         FormLayout setupGrid = grid(3, "13em", systems, humans, ai, startGarrison,

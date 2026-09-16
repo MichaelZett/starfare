@@ -17,6 +17,7 @@ final class ReviewControls extends HorizontalLayout {
     private final Input timeline = new Input();
     private final Span timelineLabel = new Span();
     private boolean initialized;
+    private int latestReplayTurn = -1;
 
     ReviewControls(Runnable onChange) {
         setVisible(false);
@@ -48,6 +49,7 @@ final class ReviewControls extends HorizontalLayout {
         });
         timeline.addValueChangeListener(event -> {
             updateTimelineLabel();
+            fog.setVisible(replayTurn() < 0);
             if (event.isFromClient()) { onChange.run(); }
         });
     }
@@ -56,6 +58,8 @@ final class ReviewControls extends HorizontalLayout {
         initialized = false;
         perspective.clear();
         fog.setValue(false);
+        timeline.setValue("");
+        latestReplayTurn = -1;
         timeline.setVisible(false);
         timelineLabel.setVisible(false);
         setVisible(false);
@@ -81,7 +85,8 @@ final class ReviewControls extends HorizontalLayout {
 
     int replayTurn() {
         try {
-            return Integer.parseInt(timeline.getValue());
+            int selected = Integer.parseInt(timeline.getValue());
+            return selected <= latestReplayTurn ? selected : -1;
         } catch (NumberFormatException _) {
             return -1;
         }
@@ -97,15 +102,20 @@ final class ReviewControls extends HorizontalLayout {
         }
         int first = turns.getFirst();
         int last = turns.getLast();
+        latestReplayTurn = last;
         timeline.getElement().setAttribute("min", String.valueOf(first));
-        timeline.getElement().setAttribute("max", String.valueOf(last));
-        if (timeline.getValue().isBlank() || replayTurn() < first || replayTurn() > last) {
-            timeline.setValue(String.valueOf(last));
+        timeline.getElement().setAttribute("max", String.valueOf(last + 1));
+        if (timeline.getValue().isBlank()) {
+            timeline.setValue(String.valueOf(last + 1));
         }
+        fog.setVisible(replayTurn() < 0);
         updateTimelineLabel();
     }
 
     private void updateTimelineLabel() {
-        timelineLabel.setText(I18n.t(UiTexts.REPLAY_TIMELINE_TURN, replayTurn()));
+        int selectedTurn = replayTurn();
+        timelineLabel.setText(selectedTurn < 0
+                ? I18n.t(UiTexts.REPLAY_TIMELINE_FINAL)
+                : I18n.t(UiTexts.REPLAY_TIMELINE_TURN, selectedTurn));
     }
 }

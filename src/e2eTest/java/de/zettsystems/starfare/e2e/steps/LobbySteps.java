@@ -44,6 +44,7 @@ public class LobbySteps {
     public void createPrivateGame() {
         browser.clickButtonWithText("Neues Spiel");
         browser.awaitText("Neue Partien sind privat.");
+        browser.awaitCss("#join-after-create").click();
         browser.clickButtonWithText("Spiel anlegen");
         browser.awaitText("Privat");
         id = games.listGames().getLast();

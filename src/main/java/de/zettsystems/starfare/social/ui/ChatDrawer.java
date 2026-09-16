@@ -23,6 +23,7 @@ import de.zettsystems.starfare.social.application.SocialBroadcaster;
 import de.zettsystems.starfare.social.values.DirectMessage;
 import de.zettsystems.starfare.social.values.SocialEvent;
 import org.jspecify.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -32,6 +33,8 @@ import java.util.*;
  * Chat panel. It loads a persisted conversation when opened; incoming
  * {@link SocialEvent.DirectMessage} events update the visible session immediately.
  */
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2",
+        justification = "Vaadin components keep their injected application services for the component lifetime.")
 public class ChatDrawer extends VerticalLayout {
 
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm")

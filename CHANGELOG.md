@@ -14,6 +14,11 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   Karte, Markierungen öffnen die passende Berichtszeile.
 
 ### Added
+- Unabhängige vollständige Partiearchive in `game_archives`; eine standardmäßig
+  deaktivierte Bereinigung kann operative Sitzungen nach 90 Tagen entfernen,
+  ohne Nachbetrachtung, Wiederholung oder Statistik zu verlieren.
+- Nachrichtenverwaltung mit Lesestatus, nutzerbezogenem Archivieren von
+  Unterhaltungen und einer Aufbewahrungsgrenze von 365 Tagen.
 - Wiederholung im Archiv: Die Kartenansicht besitzt für neu beendete Partien
   eine Zeitleiste über die gespeicherten Kartenstände jeder Runde.
 - Garnisonsreserve je eigenem System: reservierte Schiffe bleiben bei direkten
@@ -83,6 +88,11 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 - Nach Spielende deckt die Karte alle Systeme auf.
 
 ### Changed
+- Abhängigkeiten und Build-Werkzeuge aktualisiert, darunter Vaadin 25.2.8,
+  Identity 0.5.1, Sonar-Plugin 7.5.0, JaCoCo 0.8.15,
+  NullAway 0.14.1 und Gradle 9.7.1.
+- Die Wiederholungszeitleiste besitzt einen expliziten Endstand; dort sind
+  Teilnehmerperspektive und Kriegsnebel wieder verfügbar.
 - Sonar prüft zusätzlich Frontend und Browser-Testquellen.
 - Eigene Theme-Farben ersetzen undefinierte Lumo-Variablen; Statusanzeigen
   und Kartenmarkierungen erhalten kontrastreiche Hintergründe.

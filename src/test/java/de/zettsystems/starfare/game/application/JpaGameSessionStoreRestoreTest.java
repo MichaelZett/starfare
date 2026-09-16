@@ -74,6 +74,7 @@ class JpaGameSessionStoreRestoreTest extends AbstractIntegrationTest {
     }
 
     @Autowired private tools.jackson.databind.ObjectMapper objectMapper;
+    @Autowired private GameArchiveStore archiveStore;
 
     @Test
     void reloadRestoresTransferredHostVisibilityAndInvitations() {
@@ -84,7 +85,7 @@ class JpaGameSessionStoreRestoreTest extends AbstractIntegrationTest {
             state.makePrivate();
             return null;
         });
-        var reloaded = new JpaGameSessionStore(repository, objectMapper);
+        var reloaded = new JpaGameSessionStore(repository, archiveStore, objectMapper);
         reloaded.loadFromDatabase();
         var session = reloaded.load(id).orElseThrow();
         assertThat(session.hostPlayerId()).isEqualTo("bob");

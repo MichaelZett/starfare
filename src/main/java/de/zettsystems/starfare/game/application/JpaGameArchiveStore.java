@@ -11,6 +11,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 
 @Repository
 class JpaGameArchiveStore implements GameArchiveStore {
@@ -28,13 +29,14 @@ class JpaGameArchiveStore implements GameArchiveStore {
             repository.save(entity);
         } catch (JacksonException e) { throw new IllegalStateException("Failed to archive game " + session.id(), e); }
     }
-    @Override public Optional<ArchivedGame> load(GameId id) { return repository.findById(id.value()).flatMap(this::read); }
-    @Override public List<ArchivedGame> all() { return repository.findAll().stream().map(this::read).flatMap(Optional::stream).toList(); }
-    @Override public List<ArchivedGame> finishedBefore(Instant cutoff) { return repository.findAllByFinishedAtBeforeOrderByFinishedAtAsc(cutoff).stream().map(this::read).flatMap(Optional::stream).toList(); }
-    private Optional<ArchivedGame> read(GameArchiveEntity entity) {
+    @Override public Optional<GameArchiveStore.ArchivedGame> load(GameId id) { return repository.findById(id.value()).flatMap(this::read); }
+    @Override public List<GameArchiveStore.ArchivedGame> all() { return repository.findAll().stream().map(this::read).flatMap(Optional::stream).toList(); }
+    @Override public List<GameArchiveStore.ArchivedGame> finishedBefore(Instant cutoff) { return repository.findAllByFinishedAtBeforeOrderByFinishedAtAsc(cutoff).stream().map(this::read).flatMap(Optional::stream).toList(); }
+    private Optional<GameArchiveStore.ArchivedGame> read(GameArchiveEntity entity) {
         try {
             GameStateSnapshot snapshot = objectMapper.readValue(entity.getStateJson(), GameStateSnapshot.class);
-            return Optional.of(new ArchivedGame(GameId.of(entity.getId()), entity.getName(), entity.getHostPlayerId(), entity.getFinishedAt(), GameState.fromSnapshot(snapshot)));
-        } catch (RuntimeException e) { return Optional.empty(); }
+            String entityId = Objects.requireNonNull(entity.getId(), "Persisted archive must have an id");
+            return Optional.of(new GameArchiveStore.ArchivedGame(GameId.of(entityId), entity.getName(), entity.getHostPlayerId(), entity.getFinishedAt(), GameState.fromSnapshot(snapshot)));
+        } catch (RuntimeException _) { return Optional.empty(); }
     }
 }
