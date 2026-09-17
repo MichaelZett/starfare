@@ -55,7 +55,7 @@ class TurnEngineVictoryTest {
 
         assertThat(state.reports().get(2).events())
                 .anyMatch(event -> event instanceof TurnEvent.Defeat defeat
-                        && defeat.winnerId() == 1 && defeat.winnerName().equals("P1"));
+                        && defeat.winnerId() == 1 && "P1".equals(defeat.winnerName()));
     }
 
     @Test

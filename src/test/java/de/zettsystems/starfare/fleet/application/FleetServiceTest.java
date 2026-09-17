@@ -2,6 +2,7 @@ package de.zettsystems.starfare.fleet.application;
 
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
 import org.junit.jupiter.api.BeforeEach;
@@ -116,7 +117,7 @@ class FleetServiceTest {
         int fleetId = state.fleets().getFirst().globalId();
         // Simulate the fleet having launched in a prior turn
         var f = state.fleets().getFirst();
-        state.fleets().set(0, new de.zettsystems.starfare.game.values.Fleet(
+        state.fleets().set(0, new Fleet(
                 f.globalId(), f.ownerId(), f.localNo(), f.fromSystemId(), f.toSystemId(),
                 f.ships(), f.launchTurn() - 1, f.arrivalTurn()));
 

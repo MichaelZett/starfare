@@ -8,6 +8,12 @@ import de.zettsystems.starfare.game.values.GameVisibility;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GameVisibilityTest extends AbstractIntegrationTest {
@@ -63,7 +69,7 @@ class GameVisibilityTest extends AbstractIntegrationTest {
     @Test
     void onlyAcceptedVisibilityChangesPublishEvents() {
         GameId id = games.newGame(GameSetup.defaults(), "host", "Events");
-        var events = new java.util.ArrayList<GameEvent>();
+        var events = new ArrayList<GameEvent>();
         var subscription = broadcaster.subscribe(id, events::add);
         try {
             assertThat(games.changeVisibility(id, "intruder", GameVisibility.PUBLIC)).isFalse();
@@ -79,13 +85,13 @@ class GameVisibilityTest extends AbstractIntegrationTest {
     void simultaneousClaimsCannotTakeTheSameSeat() throws Exception {
         GameId id = games.newGame(GameSetup.defaults(), "host", "Concurrent");
         games.changeVisibility(id, "host", GameVisibility.PUBLIC);
-        var start = new java.util.concurrent.CountDownLatch(1);
-        try (var executor = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+        var start = new CountDownLatch(1);
+        try (var executor = Executors.newFixedThreadPool(2)) {
             var first = executor.submit(() -> { start.await(); return games.joinGame(id, "first"); });
             var second = executor.submit(() -> { start.await(); return games.joinGame(id, "second"); });
             start.countDown();
-            var results = java.util.List.of(first.get(), second.get());
-            assertThat(results.stream().filter(java.util.Optional::isPresent).count()).isEqualTo(1);
+            var results = List.of(first.get(), second.get());
+            assertThat(results.stream().filter(Optional::isPresent).count()).isEqualTo(1);
             assertThat(games.summaryOf(id).seatByPlayer()).hasSize(1);
         }
     }

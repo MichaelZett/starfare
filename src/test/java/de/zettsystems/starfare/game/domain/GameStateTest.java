@@ -7,6 +7,7 @@ import de.zettsystems.starfare.game.values.SystemOwnership;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -122,7 +123,7 @@ class GameStateTest {
     @Test
     void copyOfCreatesIndependentPendingOrders() {
         GameState state = new GameState();
-        state.pendingOrders().put(1, new java.util.ArrayList<>(List.of(new FleetOrder.Send(1, 1, 2, 3))));
+        state.pendingOrders().put(1, new ArrayList<>(List.of(new FleetOrder.Send(1, 1, 2, 3))));
 
         GameState copy = GameState.copyOf(state);
         state.pendingOrders().get(1).add(new FleetOrder.Disband(1, 99));

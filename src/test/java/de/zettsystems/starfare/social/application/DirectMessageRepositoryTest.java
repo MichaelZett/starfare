@@ -3,11 +3,13 @@ package de.zettsystems.starfare.social.application;
 import de.zettsystems.starfare.AbstractRepositoryTest;
 import de.zettsystems.starfare.social.domain.DirectMessageEntity;
 import de.zettsystems.starfare.social.values.DirectMessage;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 
 import java.time.Instant;
 
@@ -38,13 +40,13 @@ class DirectMessageRepositoryTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @jakarta.transaction.Transactional
+    @Transactional
     void storeTracksReadAndPerUserArchiveStateAndDeletesExpiredMessages() {
         Instant old = Instant.parse("2025-01-01T00:00:00Z");
         Instant current = Instant.parse("2026-09-16T00:00:00Z");
         JpaMessageStore store = new JpaMessageStore(repository);
-        store.save(new de.zettsystems.starfare.social.values.DirectMessage(0, "alice", "bob", "old", old, null));
-        store.save(new de.zettsystems.starfare.social.values.DirectMessage(0, "bob", "alice", "current", current, null));
+        store.save(new DirectMessage(0, "alice", "bob", "old", old, null));
+        store.save(new DirectMessage(0, "bob", "alice", "current", current, null));
 
         store.markConversationRead("bob", "alice");
         entityManager.flush();
@@ -52,8 +54,8 @@ class DirectMessageRepositoryTest extends AbstractRepositoryTest {
 
         assertThat(store.conversation("bob", "alice"))
                 .extracting(DirectMessage::text, message -> message.readAt() != null)
-                .containsExactly(org.assertj.core.groups.Tuple.tuple("old", true),
-                        org.assertj.core.groups.Tuple.tuple("current", false));
+                .containsExactly(Tuple.tuple("old", true),
+                        Tuple.tuple("current", false));
 
         store.archiveConversation("alice", "bob");
         entityManager.flush();

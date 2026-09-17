@@ -1,9 +1,6 @@
 package de.zettsystems.starfare.social.ui;
 
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.DetachEvent;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
@@ -22,12 +19,15 @@ import de.zettsystems.starfare.social.application.MessageService;
 import de.zettsystems.starfare.social.application.SocialBroadcaster;
 import de.zettsystems.starfare.social.values.DirectMessage;
 import de.zettsystems.starfare.social.values.SocialEvent;
-import org.jspecify.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.jspecify.annotations.Nullable;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Chat panel. It loads a persisted conversation when opened; incoming
@@ -80,7 +80,7 @@ public class ChatDrawer extends VerticalLayout {
 
         sendButton.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
         sendButton.addClickListener(_ -> sendActive());
-        input.addKeyPressListener(com.vaadin.flow.component.Key.ENTER, _ -> sendActive());
+        input.addKeyPressListener(Key.ENTER, _ -> sendActive());
 
         HorizontalLayout inputRow = new HorizontalLayout(input, sendButton);
         inputRow.setWidthFull();

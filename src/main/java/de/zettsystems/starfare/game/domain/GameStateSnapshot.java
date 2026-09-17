@@ -1,16 +1,11 @@
 package de.zettsystems.starfare.game.domain;
 
 import de.zettsystems.starfare.fleet.values.FleetOrder;
-import de.zettsystems.starfare.game.values.Fleet;
-import de.zettsystems.starfare.game.values.Player;
-import de.zettsystems.starfare.game.values.StandingOrder;
-import de.zettsystems.starfare.game.values.StarSystem;
-import de.zettsystems.starfare.game.values.SystemOwnership;
+import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.report.values.TurnReport;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
-import de.zettsystems.starfare.game.values.GameVisibility;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +43,7 @@ public record GameStateSnapshot(
         @Nullable GameVisibility visibility,
         @Nullable Instant finishedAt,
         @Nullable Map<Integer, List<SystemOwnership>> ownershipHistory,
-        @Nullable Map<Integer, de.zettsystems.starfare.game.values.ReplayFrame> replayFrames,
+        @Nullable Map<Integer, ReplayFrame> replayFrames,
         @Nullable Boolean battlePresentationEnabled
 ) {
     public GameStateSnapshot(int turn, int nextGlobalFleetId, Map<Integer, Integer> nextLocalFleetNo,
@@ -65,7 +60,7 @@ public record GameStateSnapshot(
                              boolean reentryAllowed, @Nullable Instant turnStartedAt,
                              @Nullable GameVisibility visibility, @Nullable Instant finishedAt,
                              @Nullable Map<Integer, List<SystemOwnership>> ownershipHistory,
-                             @Nullable Map<Integer, de.zettsystems.starfare.game.values.ReplayFrame> replayFrames) {
+                             @Nullable Map<Integer, ReplayFrame> replayFrames) {
         this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn,
                 submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds,
                 observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId,

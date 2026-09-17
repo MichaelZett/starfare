@@ -8,6 +8,8 @@ import de.zettsystems.starfare.game.values.StarSystem;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SeatsTest extends AbstractIntegrationTest {
@@ -109,8 +111,8 @@ class SeatsTest extends AbstractIntegrationTest {
     void originalHumansTrackedAfterNewGame() {
         GameSetup setup = new GameSetup(
                 10, 2, 1,
-                java.util.List.of(4, 4, 4),
-                2, 4, 6, true, true, java.util.List.of(), null, null);
+                List.of(4, 4, 4),
+                2, 4, 6, true, true, List.of(), null, null);
         GameId id = registry.createGame(setup);
 
         assertThat((int) registry.readState(id, state -> state.originalHumanPlayerIds().size())).isEqualTo(2);

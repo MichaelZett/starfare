@@ -248,18 +248,34 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
     }
 
     private static int approximateGarrison(int ships) {
-        if (ships < 10) return 5;
-        if (ships < 25) return 15;
-        if (ships < 50) return 35;
+        if (ships < 10) {
+            return 5;
+        }
+        if (ships < 25) {
+            return 15;
+        }
+        if (ships < 50) {
+            return 35;
+        }
         return 75;
     }
 
     private static int approximateProduction(int production) {
-        if (production <= 2) return 2;
-        if (production <= 4) return 4;
-        if (production <= 7) return 7;
-        if (production <= 11) return 11;
-        if (production <= 16) return 16;
+        if (production <= 2) {
+            return 2;
+        }
+        if (production <= 4) {
+            return 4;
+        }
+        if (production <= 7) {
+            return 7;
+        }
+        if (production <= 11) {
+            return 11;
+        }
+        if (production <= 16) {
+            return 16;
+        }
         return 20;
     }
 

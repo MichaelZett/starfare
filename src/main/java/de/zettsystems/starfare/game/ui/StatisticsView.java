@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.ui;
 
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
@@ -43,7 +44,7 @@ public class StatisticsView extends VerticalLayout {
     }
 
     @Override
-    protected void onAttach(com.vaadin.flow.component.AttachEvent event) {
+    protected void onAttach(AttachEvent event) {
         refresh();
     }
 

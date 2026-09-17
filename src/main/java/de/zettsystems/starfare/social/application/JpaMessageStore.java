@@ -2,11 +2,11 @@ package de.zettsystems.starfare.social.application;
 
 import de.zettsystems.starfare.social.domain.DirectMessageEntity;
 import de.zettsystems.starfare.social.values.DirectMessage;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.time.Instant;
-import jakarta.transaction.Transactional;
+import java.util.List;
 import java.util.Objects;
 
 @Repository

@@ -5,6 +5,7 @@ import de.zettsystems.starfare.social.values.SocialEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -198,7 +199,7 @@ class MessageServiceTest {
             // In-memory messages do not persist read state; service interaction is covered by repository tests.
         }
         @Override public void archiveConversation(String viewer, String otherUser) { messages.removeIf(message -> isBetween(message, viewer, otherUser)); }
-        @Override public long deleteOlderThan(java.time.Instant cutoff) { int before = messages.size(); messages.removeIf(message -> message.sentAt().isBefore(cutoff)); return before - messages.size(); }
+        @Override public long deleteOlderThan(Instant cutoff) { int before = messages.size(); messages.removeIf(message -> message.sentAt().isBefore(cutoff)); return before - messages.size(); }
 
         private boolean isBetween(DirectMessage message, String firstUser, String secondUser) {
             return (message.from().equals(firstUser) && message.to().equals(secondUser))

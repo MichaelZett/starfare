@@ -8,10 +8,11 @@ import de.zettsystems.starfare.game.values.GameId;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 
 @Repository
 class JpaGameArchiveStore implements GameArchiveStore {

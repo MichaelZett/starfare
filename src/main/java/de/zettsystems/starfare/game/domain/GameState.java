@@ -1,28 +1,13 @@
 package de.zettsystems.starfare.game.domain;
 
-import de.zettsystems.starfare.game.values.GameVisibility;
-import de.zettsystems.starfare.game.values.GameConfig;
-
 import de.zettsystems.starfare.fleet.values.FleetOrder;
-import de.zettsystems.starfare.game.values.Fleet;
-import de.zettsystems.starfare.game.values.Player;
-import de.zettsystems.starfare.game.values.StandingOrder;
-import de.zettsystems.starfare.game.values.StarSystem;
-import de.zettsystems.starfare.game.values.SystemOwnership;
-import de.zettsystems.starfare.game.values.ReplayFrame;
+import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.report.values.TurnReport;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.UnaryOperator;
 
 /**
@@ -42,10 +27,10 @@ public class GameState {
     private final Map<Integer, List<SystemOwnership>> ownershipHistory = new HashMap<>();
     private final Map<Integer, ReplayFrame> replayFrames = new HashMap<>();
     private int nextGlobalFleetId = 1;
-    private final java.util.Map<Integer, Integer> nextLocalFleetNo = new java.util.HashMap<>();
+    private final Map<Integer, Integer> nextLocalFleetNo = new HashMap<>();
     // neu
-    private final java.util.Set<Integer> waitThisTurn = new java.util.HashSet<>();
-    private final java.util.Set<Integer> submittedThisTurn = new java.util.HashSet<>();
+    private final Set<Integer> waitThisTurn = new HashSet<>();
+    private final Set<Integer> submittedThisTurn = new HashSet<>();
     private boolean gameOver;
     private GameVisibility visibility = GameVisibility.PRIVATE;
     private @Nullable Instant finishedAt;
@@ -58,9 +43,9 @@ public class GameState {
     private @Nullable Integer winnerId;
     private boolean active = true;
     private boolean started;
-    private final java.util.Set<Integer> joinedHumanPlayerIds = new java.util.HashSet<>();
-    private final java.util.Set<Integer> originalHumanPlayerIds = new java.util.HashSet<>();
-    private final java.util.Set<String> observers = new java.util.HashSet<>();
+    private final Set<Integer> joinedHumanPlayerIds = new HashSet<>();
+    private final Set<Integer> originalHumanPlayerIds = new HashSet<>();
+    private final Set<String> observers = new HashSet<>();
     private final Map<String, Integer> seatByUser = new HashMap<>();
     /** Player id → reserved seat id. Persisted as part of the game session snapshot. */
     private final Map<String, Integer> invitedSeats = new HashMap<>();
@@ -106,11 +91,11 @@ public class GameState {
         return replayFrames;
     }
 
-    public java.util.Set<Integer> waitThisTurn() {
+    public Set<Integer> waitThisTurn() {
         return waitThisTurn;
     }
 
-    public java.util.Set<Integer> submittedThisTurn() {
+    public Set<Integer> submittedThisTurn() {
         return submittedThisTurn;
     }
 
@@ -139,15 +124,15 @@ public class GameState {
         captureReplayFrame();
     }
 
-    public java.util.Set<Integer> joinedHumanPlayerIds() {
+    public Set<Integer> joinedHumanPlayerIds() {
         return joinedHumanPlayerIds;
     }
 
-    public java.util.Set<Integer> originalHumanPlayerIds() {
+    public Set<Integer> originalHumanPlayerIds() {
         return originalHumanPlayerIds;
     }
 
-    public java.util.Set<String> observers() {
+    public Set<String> observers() {
         return observers;
     }
 
@@ -417,10 +402,10 @@ public class GameState {
                 s.turn, s.nextGlobalFleetId, new HashMap<>(s.nextLocalFleetNo),
                 List.copyOf(s.players), List.copyOf(s.systems), List.copyOf(s.fleets),
                 new HashMap<>(s.reports), intelCopy,
-                new java.util.HashSet<>(s.waitThisTurn), new java.util.HashSet<>(s.submittedThisTurn),
+                new HashSet<>(s.waitThisTurn), new HashSet<>(s.submittedThisTurn),
                 s.gameOver, s.winnerId, s.active, s.started,
-                new java.util.HashSet<>(s.joinedHumanPlayerIds), new java.util.HashSet<>(s.originalHumanPlayerIds),
-                new java.util.HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
+                new HashSet<>(s.joinedHumanPlayerIds), new HashSet<>(s.originalHumanPlayerIds),
+                new HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled);

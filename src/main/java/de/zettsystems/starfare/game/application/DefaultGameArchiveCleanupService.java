@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.game.config.GameArchiveCleanupProperties;
 import de.zettsystems.starfare.game.values.GameId;
 import org.springframework.stereotype.Service;
+
 import java.time.Instant;
 import java.util.List;
 

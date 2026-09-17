@@ -1,16 +1,10 @@
 package de.zettsystems.starfare.social.domain;
 
 import de.zettsystems.starfare.persistence.AbstractBaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
-import org.jspecify.annotations.Nullable;
 
 @Entity
 @Table(name = "direct_messages")

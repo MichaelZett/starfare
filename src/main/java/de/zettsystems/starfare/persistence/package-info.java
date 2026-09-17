@@ -1,2 +1,4 @@
-@org.springframework.modulith.ApplicationModule(type = org.springframework.modulith.ApplicationModule.Type.OPEN)
+@ApplicationModule(type = ApplicationModule.Type.OPEN)
 package de.zettsystems.starfare.persistence;
+
+import org.springframework.modulith.ApplicationModule;

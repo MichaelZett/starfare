@@ -18,6 +18,7 @@ import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.i18n.I18n;
+import de.zettsystems.starfare.report.values.BattleReplay;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.style.CssProperties;
 import jakarta.annotation.security.PermitAll;
@@ -224,13 +225,13 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         var textSpan = new Span(text);
         card.add(iconSpan, textSpan);
         if (battlePresentationEnabled) {
-            de.zettsystems.starfare.report.values.BattleReplay.from(event)
+            BattleReplay.from(event)
                     .ifPresent(replay -> addBattleReplay(card, replay));
         }
         return card;
     }
 
-    private static void addBattleReplay(Div card, de.zettsystems.starfare.report.values.BattleReplay replay) {
+    private static void addBattleReplay(Div card, BattleReplay replay) {
         card.addClassName("event-battle-interactive");
         BattleReplayDialog.primeAudio(card);
         card.addClickListener(_ -> BattleReplayDialog.open(replay));

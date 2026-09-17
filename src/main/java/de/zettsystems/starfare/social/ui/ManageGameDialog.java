@@ -1,11 +1,8 @@
 package de.zettsystems.starfare.social.ui;
 
-import com.vaadin.flow.component.checkbox.Checkbox;
-
-import de.zettsystems.starfare.game.values.GameVisibility;
-
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
@@ -21,6 +18,7 @@ import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSummary;
+import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.Subscription;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.social.application.InvitationService;

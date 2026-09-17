@@ -1,11 +1,10 @@
 package de.zettsystems.starfare.social.application;
 
-import de.zettsystems.starfare.game.values.GameVisibility;
-
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.social.values.SocialEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

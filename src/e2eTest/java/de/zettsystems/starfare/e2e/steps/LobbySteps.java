@@ -14,6 +14,10 @@ import de.zettsystems.starfare.social.application.PresenceTracker;
 import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -120,19 +124,19 @@ public class LobbySteps {
         var selection = browser.awaitCss("#review-perspective input");
         selection.sendKeys(Keys.chord(Keys.CONTROL, "a"));
         selection.sendKeys(aiName);
-        new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                 .until(_ -> browser.all("vaadin-combo-box-item").stream()
                         .filter(item -> item.isDisplayed() && item.getText().equals(aiName))
                         .findFirst().orElse(null)).click();
         var ai = games.reviewFor(id, host).orElseThrow().players().stream()
                 .filter(player -> player.name().equals(aiName)).findFirst().orElseThrow();
         var home = games.reviewFor(id, host, ai.id(), true).orElseThrow().systems().stream()
-                .filter(system -> java.util.Objects.equals(system.ownerId(), ai.id()))
+                .filter(system -> Objects.equals(system.ownerId(), ai.id()))
                 .findFirst().orElseThrow();
         browser.awaitTextIn(".sys-own", home.name());
         assertThat(browser.awaitCss("#review-perspective input").getDomProperty("value")).isEqualTo(aiName);
         browser.awaitCss("#review-fog").click();
-        new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                 .until(_ -> browser.all(".sys-fog").isEmpty());
         assertThat(browser.all(".sys-fog")).isEmpty();
         assertThat(browser.pageText()).doesNotContain("Nächste Runde", "Verlegungen verwalten");

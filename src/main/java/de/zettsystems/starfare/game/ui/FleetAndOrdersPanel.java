@@ -11,20 +11,12 @@ import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
-import de.zettsystems.starfare.game.values.Fleet;
-import de.zettsystems.starfare.game.values.FleetView;
-import de.zettsystems.starfare.game.values.GameConfig;
-import de.zettsystems.starfare.game.values.GameId;
-import de.zettsystems.starfare.game.values.PlannedOrder;
-import de.zettsystems.starfare.game.values.Player;
-import de.zettsystems.starfare.game.values.PlayerViewState;
-import de.zettsystems.starfare.game.values.StandingOrderView;
-import de.zettsystems.starfare.game.values.SystemOwnership;
-import de.zettsystems.starfare.game.values.VisibleSystem;
+import com.vaadin.flow.component.textfield.IntegerField;
+import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
+import de.zettsystems.starfare.report.values.BattleReplay;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.report.values.TurnReport;
 import de.zettsystems.starfare.style.CssProperties;
@@ -42,6 +34,7 @@ import java.util.function.IntConsumer;
 final class FleetAndOrdersPanel extends VerticalLayout {
 
     private enum Section { CONTACTS, DETAILS, FLEETS, ORDERS, RELOCATIONS, REPORT }
+
     private enum EventCategory { PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD }
 
     private final Grid<FleetView> fleetGrid = new Grid<>(FleetView.class, false);
@@ -372,7 +365,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         card.addClassNames("event-card", eventCss(event));
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
         card.add(new Span(eventIcon(event)), new Span(eventText(event)));
-        de.zettsystems.starfare.report.values.BattleReplay replay = de.zettsystems.starfare.report.values.BattleReplay.from(event).orElse(null);
+        BattleReplay replay = BattleReplay.from(event).orElse(null);
         if (battlePresentationEnabled && replay != null) {
             card.addClassName("event-battle-interactive");
             BattleReplayDialog.primeAudio(card);

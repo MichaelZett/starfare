@@ -1,7 +1,5 @@
 package de.zettsystems.starfare.social.ui;
 
-import de.zettsystems.starfare.game.values.GameListScope;
-
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -17,6 +15,7 @@ import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameListScope;
 import de.zettsystems.starfare.game.values.Subscription;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.social.application.InvitationService;

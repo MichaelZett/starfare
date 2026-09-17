@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
@@ -40,7 +41,7 @@ public class DefaultTurnEngine implements TurnEngine {
             return;
         }
         applyOrders(state);
-        java.util.Map<Integer, Integer> routedShips = fleetService.applyStandingOrdersForProduction(state);
+        Map<Integer, Integer> routedShips = fleetService.applyStandingOrdersForProduction(state);
         applyProduction(state, routedShips);
         applyWaitOrders(state);
         resolveArrivals(state);
@@ -50,7 +51,7 @@ public class DefaultTurnEngine implements TurnEngine {
         state.nextTurn();
     }
 
-    private void applyProduction(GameState state, java.util.Map<Integer, Integer> routedShips) {
+    private void applyProduction(GameState state, Map<Integer, Integer> routedShips) {
         for (StarSystem s : state.systems()) {
             Integer ownerId = s.ownerId();
             if (ownerId == null || s.neutral()) {
@@ -153,7 +154,7 @@ public class DefaultTurnEngine implements TurnEngine {
         }
         int total = state.systems().size();
         var counts = state.systems().stream().filter(s -> s.ownerId() != null)
-                .collect(java.util.stream.Collectors.groupingBy(StarSystem::ownerId, java.util.stream.Collectors.counting()));
+                .collect(Collectors.groupingBy(StarSystem::ownerId, Collectors.counting()));
         counts.forEach((pid, c) -> {
             // Ganzzahlig statt ueber Prozent-Division, damit nichts weggerundet wird.
             if (c * 100 >= (long) total * GameConfig.VICTORY_SYSTEM_PERCENT) {

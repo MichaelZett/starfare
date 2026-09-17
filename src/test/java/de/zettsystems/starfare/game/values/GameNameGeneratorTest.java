@@ -1,6 +1,10 @@
 package de.zettsystems.starfare.game.values;
 
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,19 +26,19 @@ class GameNameGeneratorTest {
     void randomNamesAreNotAlwaysIdentical() {
         // Sanity check that the generator actually picks different combinations.
         // With ~14*5*19 = 1330 combinations, two draws of 25 should almost certainly differ.
-        long distinct = java.util.stream.IntStream.range(0, 25)
+        long distinct = IntStream.range(0, 25)
                 .mapToObj(_ -> GameNameGenerator.random())
                 .distinct()
                 .count();
         assertThat(distinct).as("generator should produce variation across draws").isGreaterThan(1);
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void randomNameUsesGermanConnectorVocabulary() {
         // Must contain one of the documented connectors in the middle slot.
         String name = GameNameGenerator.random();
 
-        boolean hasConnector = java.util.List.of(" von ", " um ", " über ", " bei ", " jenseits von ")
+        boolean hasConnector = List.of(" von ", " um ", " über ", " bei ", " jenseits von ")
                 .stream().anyMatch(name::contains);
         assertThat(hasConnector).as("name '" + name + "' has no known connector").isTrue();
     }

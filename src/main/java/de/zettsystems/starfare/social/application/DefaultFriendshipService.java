@@ -3,8 +3,8 @@ package de.zettsystems.starfare.social.application;
 import de.zettsystems.starfare.social.domain.FriendshipEntity;
 import de.zettsystems.starfare.social.values.Friendship;
 import de.zettsystems.starfare.social.values.FriendshipStatus;
-import de.zettsystems.starfare.social.values.SocialEvent;
 import de.zettsystems.starfare.social.values.PlayerIds;
+import de.zettsystems.starfare.social.values.SocialEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

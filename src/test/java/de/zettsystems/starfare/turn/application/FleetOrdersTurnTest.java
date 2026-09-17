@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,8 +39,8 @@ class FleetOrdersTurnTest {
         state.players().add(new Player(2, "P2", false, "#000"));
         state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 10, 2, false));
         state.systems().add(new StarSystem(2, "S2", 2000, 0, 2, 10, 2, false));
-        state.intel().put(1, new java.util.HashMap<>());
-        state.intel().put(2, new java.util.HashMap<>());
+        state.intel().put(1, new HashMap<>());
+        state.intel().put(2, new HashMap<>());
     }
 
     @Test

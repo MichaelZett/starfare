@@ -2,18 +2,12 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
+import de.zettsystems.starfare.game.config.GameTimingProperties;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
-import de.zettsystems.starfare.game.values.GameId;
-import de.zettsystems.starfare.game.values.GameVisibility;
-import de.zettsystems.starfare.game.values.GameOutcome;
-import de.zettsystems.starfare.game.values.GameOutcomeStatistics;
-import de.zettsystems.starfare.game.values.GameListScope;
-import de.zettsystems.starfare.game.values.GameSetup;
-import de.zettsystems.starfare.game.values.GameSummary;
-import de.zettsystems.starfare.game.values.Player;
-import de.zettsystems.starfare.game.values.PlayerViewState;
+import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.report.application.ReportService;
+import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.turn.application.TurnEngine;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jspecify.annotations.Nullable;
@@ -21,14 +15,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.time.Instant;
-import de.zettsystems.starfare.game.config.GameTimingProperties;
+import java.util.stream.Stream;
 
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
@@ -167,7 +162,7 @@ public class DefaultGameService implements GameService {
             if (state.seatByUser().containsKey(inviteePlayerId)) {
                 return null;
             }
-            java.util.Set<Integer> reserved = new java.util.HashSet<>(state.invitedSeats().values());
+            Set<Integer> reserved = new HashSet<>(state.invitedSeats().values());
             Integer candidate = state.players().stream()
                     .filter(p -> !p.ai())
                     .map(Player::id)
@@ -669,7 +664,7 @@ public class DefaultGameService implements GameService {
         var archived = archives.all().stream()
                 .filter(game -> access.canReview(game.state(), game.hostPlayerId(), account))
                 .map(game -> summaryOf(game.id(), game.name(), game.hostPlayerId(), game.state())).toList();
-        return java.util.stream.Stream.concat(live.stream().filter(GameSummary::gameOver), archived.stream())
+        return Stream.concat(live.stream().filter(GameSummary::gameOver), archived.stream())
                 .collect(Collectors.toMap(GameSummary::gameId, summary -> summary, (first, _) -> first)).values().stream().toList();
     }
     @Override
@@ -686,8 +681,7 @@ public class DefaultGameService implements GameService {
         boolean changed = registry.writeState(id, state -> {
             String host = registry.require(id).hostPlayerId();
             if (!actor.equals(host) || state.started() || state.gameOver() || !state.active()) { return false; }
-            if (visibility == GameVisibility.PUBLIC) { state.publishInLobby(); }
-            else {
+            if (visibility == GameVisibility.PUBLIC) { state.publishInLobby(); } else {
                 state.makePrivate();
                 state.observers().removeIf(account -> !access.related(state, host, account));
             }
@@ -796,26 +790,26 @@ public class DefaultGameService implements GameService {
             private int destroyed;
             private int lost;
 
-            private void record(de.zettsystems.starfare.report.values.TurnEvent event, int playerId) {
+            private void record(TurnEvent event, int playerId) {
                 switch (event) {
-                    case de.zettsystems.starfare.report.values.TurnEvent.Production production -> {
+                    case TurnEvent.Production production -> {
                         if (production.playerId() == playerId) { built += production.amount(); }
                     }
-                    case de.zettsystems.starfare.report.values.TurnEvent.BattleWon battle -> {
+                    case TurnEvent.BattleWon battle -> {
                         if (battle.attackerId() == playerId) { destroyed += battle.defending(); }
                     }
-                    case de.zettsystems.starfare.report.values.TurnEvent.BattleLost battle -> {
+                    case TurnEvent.BattleLost battle -> {
                         if (battle.attackerId() == playerId) { lost += battle.attacking(); }
                     }
-                    case de.zettsystems.starfare.report.values.TurnEvent.SystemLost loss -> {
+                    case TurnEvent.SystemLost loss -> {
                         if (loss.defenderId() == playerId) { lost += loss.defending(); }
                     }
-                    case de.zettsystems.starfare.report.values.TurnEvent.DefenseHeld held -> {
+                    case TurnEvent.DefenseHeld held -> {
                         if (held.defenderId() == playerId) { destroyed += held.attacking(); }
                     }
-                    case de.zettsystems.starfare.report.values.TurnEvent.Reinforcement _,
-                            de.zettsystems.starfare.report.values.TurnEvent.Victory _,
-                            de.zettsystems.starfare.report.values.TurnEvent.Defeat _ -> { }
+                    case TurnEvent.Reinforcement _,
+                            TurnEvent.Victory _,
+                            TurnEvent.Defeat _ -> { }
                 }
             }
         }
