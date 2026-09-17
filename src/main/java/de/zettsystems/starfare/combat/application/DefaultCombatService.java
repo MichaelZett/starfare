@@ -51,7 +51,8 @@ public class DefaultCombatService implements CombatService {
 
             if (oldOwner != null && !Objects.equals(oldOwner, attackerId)) {
                 reportService.appendEvent(state, oldOwner,
-                        new TurnEvent.SystemLost(oldOwner, attackerId, toSystemId, target.name()));
+                        new TurnEvent.SystemLost(oldOwner, attackerId, toSystemId, target.name(),
+                                ships, defendersBefore, res.attackersLeft()));
                 intelFor(state, oldOwner).put(toSystemId, new GameState.Intel(attackerId, state.turn(), res.attackersLeft()));
             }
             intelFor(state, attackerId).put(toSystemId, new GameState.Intel(attackerId, state.turn(), res.attackersLeft()));
@@ -64,7 +65,7 @@ public class DefaultCombatService implements CombatService {
             if (oldOwner != null) {
                 reportService.appendEvent(state, oldOwner,
                         new TurnEvent.DefenseHeld(oldOwner, toSystemId, target.name(),
-                                ships, res.defendersLeft()));
+                                ships, defendersBefore, res.defendersLeft()));
             }
         }
     }

@@ -26,4 +26,20 @@ class BattleReplayTest {
     void nonCombatEventsDoNotCreateAReplay() {
         assertThat(BattleReplay.from(new TurnEvent.SystemLost(1, 2, 3, "Vega"))).isEmpty();
     }
+
+    @Test
+    void systemLossContainsTheDefenderBattleReplay() {
+        BattleReplay replay = BattleReplay.from(new TurnEvent.SystemLost(1, 2, 3, "Vega", 20, 12, 7))
+                .orElseThrow();
+
+        assertThat(replay).isEqualTo(new BattleReplay("Vega", 20, 12, 7, 0));
+    }
+
+    @Test
+    void heldDefenseContainsTheDefenderBattleReplay() {
+        BattleReplay replay = BattleReplay.from(new TurnEvent.DefenseHeld(1, 3, "Vega", 20, 12, 4))
+                .orElseThrow();
+
+        assertThat(replay).isEqualTo(new BattleReplay("Vega", 20, 12, 0, 4));
+    }
 }

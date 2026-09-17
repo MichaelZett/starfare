@@ -37,6 +37,7 @@ final class MapRenderer {
                   @Nullable Integer highlightedFleetId,
                   Set<Integer> reportedSystemIds,
                   @Nullable Integer highlightedReportSystemId,
+                  Set<Integer> pendingBattleSystemIds,
                   Set<Integer> badgesShowingFleetNo,
                   List<VisibleSystem> systems,
                   Consumer<VisibleSystem> onToggleSelect,
@@ -125,21 +126,28 @@ final class MapRenderer {
     }
 
     private static Div buildSystemDot(VisibleSystem sys, Inputs in) {
+        boolean pendingBattle = in.pendingBattleSystemIds().contains(sys.id());
+        VisibleSystem display = pendingBattle ? concealedBattleSystem(sys) : sys;
         Div dot = new Div();
-        dot.addClassName(sys.fullyVisible() ? "sys-own" : "sys-fog");
-        if (sys.ownerId() == null) {
+        dot.addClassName(display.fullyVisible() ? "sys-own" : "sys-fog");
+        if (display.ownerId() == null) {
             dot.addClassName("sys-neutral");
         }
-
-        String hex = sys.colorHex();
-        if (hex != null) {
-            applyColoredDotStyle(dot, sys, hex);
-        } else {
-            applyFogDotStyle(dot, sys);
+        if (pendingBattle) {
+            dot.addClassName("sys-battle-pending");
         }
 
-        dot.setText(systemLabel(sys));
-        dot.getElement().setProperty(HtmlAttributes.TITLE, UiMapper.systemTooltip(sys, in.view().turn()));
+        String hex = display.colorHex();
+        if (hex != null) {
+            applyColoredDotStyle(dot, display, hex);
+        } else {
+            applyFogDotStyle(dot, display);
+        }
+
+        dot.setText(pendingBattle ? sys.name() + "\n⚔" : systemLabel(display));
+        dot.getElement().setProperty(HtmlAttributes.TITLE, pendingBattle
+                ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, sys.name())
+                : UiMapper.systemTooltip(display, in.view().turn()));
         dot.getStyle().set(CssProperties.LEFT, sys.x() + "px");
         dot.getStyle().set(CssProperties.TOP, sys.y() + "px");
         int size = SystemDisplaySize.pixelsFor(sys);
@@ -154,11 +162,16 @@ final class MapRenderer {
             dot.add(buildReportMarker(sys, in));
         }
 
-        if (!in.observer()) {
+        if (!in.observer() && !pendingBattle) {
             attachSystemInteraction(dot, sys, in);
             attachRelocationDragAndDrop(dot, sys, in);
         }
         return dot;
+    }
+
+    private static VisibleSystem concealedBattleSystem(VisibleSystem system) {
+        return new VisibleSystem(system.id(), system.name(), system.x(), system.y(), null, null, null,
+                false, system.colorHex(), null, false, null, List.of());
     }
 
     private static void attachRelocationDragAndDrop(Div dot, VisibleSystem target, Inputs in) {

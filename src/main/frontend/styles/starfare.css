@@ -85,6 +85,12 @@ html, body, #outlet {
     background: radial-gradient(circle at 30% 25%, #303944, #17202a);
 }
 
+.sys-battle-pending {
+    box-shadow: 0 0 0 3px rgba(255, 193, 79, .7), 0 0 26px rgba(255, 110, 60, .75) !important;
+    font-size: 18px;
+    filter: saturate(.68);
+}
+
 .sys-clickable {
     cursor: pointer;
     transition: box-shadow 0.15s ease, transform 0.12s ease;
@@ -862,8 +868,13 @@ html, body, #outlet {
 }
 
 .event-battle-won {
-    border-left-color: #e3b341;
-    background: rgba(227, 179, 65, 0.08);
+    border-left-color: #56d990;
+    background: rgba(86, 217, 144, 0.08);
+}
+
+.event-battle-pending {
+    border-left-color: #ffd86a;
+    background: rgba(255, 216, 106, 0.1);
 }
 
 .event-battle-interactive { cursor: pointer; user-select: none; }
@@ -897,8 +908,12 @@ html, body, #outlet {
     text-shadow: 0 2px 5px #02050e;
 }
 
-.battle-attacker { align-items: flex-start; color: #b9dcff; }
-.battle-defender { align-items: flex-end; color: #ffd2b0; text-align: right; }
+.battle-attacker { align-items: flex-start; color: #ffd86a; }
+.battle-defender { align-items: flex-end; color: #ffd86a; text-align: right; }
+.battle-replay-result-known.battle-replay-attacker-won .battle-attacker,
+.battle-replay-result-known:not(.battle-replay-attacker-won) .battle-defender { color: #56d990; }
+.battle-replay-result-known.battle-replay-attacker-won .battle-defender,
+.battle-replay-result-known:not(.battle-replay-attacker-won) .battle-attacker { color: #ff7373; }
 
 .battle-number {
     font-size: clamp(3rem, 9vw, 6.5rem);

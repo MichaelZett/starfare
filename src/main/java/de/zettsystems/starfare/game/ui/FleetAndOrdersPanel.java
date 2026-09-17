@@ -34,8 +34,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 /** Switchable right-hand map sidebar that keeps the map context visible. */
@@ -47,7 +47,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final Grid<FleetView> fleetGrid = new Grid<>(FleetView.class, false);
     private final Grid<PlannedOrder> ordersGrid = new Grid<>(PlannedOrder.class, false);
     private final Grid<StandingOrderView> relocationsGrid = new Grid<>(StandingOrderView.class, false);
-    private final Button standingOrdersManageButton;
     private final VerticalLayout contactsPage = page();
     private final VerticalLayout detailsPage = page();
     private final VerticalLayout fleetsPage = page();
@@ -69,15 +68,23 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final EnumSet<EventCategory> enabledEventCategories = EnumSet.allOf(EventCategory.class);
     private final IntConsumer onReportSystemSelected;
     private final BiConsumer<Integer, Integer> onGarrisonReserveChanged;
+    private final Consumer<StandingOrderView> onEditStandingOrder;
+    private final Consumer<StandingOrderView> onDeleteStandingOrder;
+    private final Runnable onBattleAcknowledged;
     private @Nullable Integer selectedReportSystemId;
 
     FleetAndOrdersPanel(Consumer<PlannedOrder> onCancelOrder,
-                        Runnable onManageStanding,
+                        Consumer<StandingOrderView> onEditStandingOrder,
+                        Consumer<StandingOrderView> onDeleteStandingOrder,
+                        Runnable onBattleAcknowledged,
                         IntConsumer onFleetRowSelected,
                         IntConsumer onReportSystemSelected,
                         BiConsumer<Integer, Integer> onGarrisonReserveChanged) {
         this.onReportSystemSelected = onReportSystemSelected;
         this.onGarrisonReserveChanged = onGarrisonReserveChanged;
+        this.onEditStandingOrder = onEditStandingOrder;
+        this.onDeleteStandingOrder = onDeleteStandingOrder;
+        this.onBattleAcknowledged = onBattleAcknowledged;
         setPadding(false);
         setSpacing(true);
         setWidth("25%");
@@ -98,14 +105,12 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         tabs.addClassName("map-sidebar-tabs");
         tabs.addSelectedChangeListener(event -> showSection(sectionOf(event.getSelectedTab())));
 
-        standingOrdersManageButton = new Button(I18n.t(UiTexts.MAP_STANDING_ORDERS_MANAGE), _ -> onManageStanding.run());
-        standingOrdersManageButton.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
         configureFleetGrid(onFleetRowSelected);
         configureOrdersGrid(onCancelOrder);
         configureRelocationsGrid();
         fleetsPage.add(header(UiTexts.MAP_OWN_FLEETS), fleetGrid);
         ordersPage.add(header(UiTexts.MAP_PLANNED_ORDERS), ordersGrid);
-        relocationsPage.add(header(UiTexts.MAP_STANDING_ORDERS_HEADER), relocationsGrid, standingOrdersManageButton);
+        relocationsPage.add(header(UiTexts.MAP_STANDING_ORDERS_HEADER), relocationsGrid);
         add(tabs, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, reportPage);
         showSection(Section.CONTACTS);
     }
@@ -121,11 +126,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         int reportTurn = report != null ? report.turn() : view.turn() - 1;
         battlePresentationEnabled = BattlePresentationPreference.enabled(gameId, reportTurn,
                 view.battlePresentationEnabled());
-        standingOrdersManageButton.setVisible(!readOnly);
         fleetGrid.setItems(UiMapper.toFleetViews(view));
         ordersGrid.setItems(view.plannedOrders());
         relocationsGrid.setItems(view.standingOrders());
-        standingOrdersManageButton.setEnabled(!view.standingOrders().isEmpty());
         renderContacts(view);
         renderDetails(view);
         renderReport(view);
@@ -373,8 +376,16 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (battlePresentationEnabled && replay != null) {
             card.addClassName("event-battle-interactive");
             BattleReplayDialog.primeAudio(card);
-            card.addClickListener(_ -> BattleReplayDialog.open(replay));
+            card.addClickListener(_ -> BattleReplayDialog.open(replay, () -> acknowledgeBattle(event)));
             return card;
+        }
+        if (event.battleSystemId().isPresent()) {
+            int systemId = event.battleSystemId().getAsInt();
+            if (isBattlePending(systemId)) {
+                card.addClassName("event-battle-interactive");
+                card.addClickListener(_ -> acknowledgeBattle(event));
+                return card;
+            }
         }
         event.battleSystemId().ifPresent(systemId -> {
             card.addClassName("event-map-linked");
@@ -385,6 +396,23 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             card.addClickListener(_ -> onReportSystemSelected.accept(systemId));
         });
         return card;
+    }
+
+    private boolean isBattlePending(int systemId) {
+        GameId current = gameId;
+        TurnReport report = currentView == null ? null : currentView.report();
+        return current != null && report != null && BattleAcknowledgements.pending(current, report).contains(systemId);
+    }
+
+    private void acknowledgeBattle(TurnEvent event) {
+        GameId current = gameId;
+        TurnReport report = currentView == null ? null : currentView.report();
+        event.battleSystemId().ifPresent(systemId -> {
+            if (current != null && report != null) {
+                BattleAcknowledgements.acknowledge(current, report, systemId);
+                onBattleAcknowledged.run();
+            }
+        });
     }
 
     void selectReportSystem(int systemId) {
@@ -409,7 +437,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         };
     }
 
-    private static String eventCss(TurnEvent event) {
+    private String eventCss(TurnEvent event) {
+        if (event.battleSystemId().isPresent() && isBattlePending(event.battleSystemId().getAsInt())) {
+            return "event-battle-pending";
+        }
         return switch (event) {
             case TurnEvent.Production _ -> "event-production";
             case TurnEvent.Reinforcement _ -> "event-reinforcement";
@@ -428,17 +459,21 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     production.systemName(), production.amount());
             case TurnEvent.Reinforcement reinforcement -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
                     reinforcement.systemName(), reinforcement.ships(), reinforcement.totalGarrison(), reinforcement.fleetLabel());
-            case TurnEvent.BattleWon battle -> battlePresentationEnabled
+            case TurnEvent.BattleWon battle -> isBattlePending(battle.systemId())
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName())
                     : I18n.t(battle.wasNeutral() ? UiTexts.ROUND_EVENT_BATTLE_WON_NEUTRAL
                     : UiTexts.ROUND_EVENT_BATTLE_WON_ENEMY, battle.systemName(), battle.attacking(),
                     battle.defending(), battle.remaining());
-            case TurnEvent.BattleLost battle -> battlePresentationEnabled
+            case TurnEvent.BattleLost battle -> isBattlePending(battle.systemId())
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName())
                     : I18n.t(UiTexts.ROUND_EVENT_BATTLE_LOST, battle.systemName(), battle.attacking(),
                     battle.defending(), battle.defendersLeft());
-            case TurnEvent.SystemLost lost -> I18n.t(UiTexts.ROUND_EVENT_SYSTEM_LOST, lost.systemName());
-            case TurnEvent.DefenseHeld held -> I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
+            case TurnEvent.SystemLost lost -> isBattlePending(lost.systemId())
+                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, lost.systemName())
+                    : I18n.t(UiTexts.ROUND_EVENT_SYSTEM_LOST, lost.systemName());
+            case TurnEvent.DefenseHeld held -> isBattlePending(held.systemId())
+                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, held.systemName())
+                    : I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
                     held.systemName(), held.attacking(), held.defendersLeft());
             case TurnEvent.Victory _ -> I18n.t(UiTexts.ROUND_EVENT_VICTORY, GameConfig.VICTORY_SYSTEM_PERCENT);
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
@@ -481,6 +516,18 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         relocationsGrid.addColumn(StandingOrderView::toSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_TO)).setAutoWidth(true);
         relocationsGrid.addColumn(StandingOrderView::productionPerTurn)
                 .setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_PRODUCTION)).setAutoWidth(true);
+        relocationsGrid.addComponentColumn(order -> {
+            Button edit = new Button(I18n.t(UiTexts.MAP_ACTION_EDIT_STANDING), _ -> onEditStandingOrder.accept(order));
+            edit.setVisible(!readOnly);
+            edit.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+            return edit;
+        }).setHeader("").setAutoWidth(true).setFlexGrow(0);
+        relocationsGrid.addComponentColumn(order -> {
+            Button delete = new Button(I18n.t(UiTexts.MAP_ACTION_DELETE_STANDING), _ -> onDeleteStandingOrder.accept(order));
+            delete.setVisible(!readOnly);
+            delete.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY, ButtonVariant.ERROR);
+            return delete;
+        }).setHeader("").setAutoWidth(true).setFlexGrow(0);
         relocationsGrid.setAllRowsVisible(true);
     }
 

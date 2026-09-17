@@ -18,6 +18,7 @@ final class BattleReplayDialog {
             const root = this;
             const attacking = $0, defending = $1, attackingRemaining = $2, defendingRemaining = $3;
             const sound = $4;
+            const attackerWon = $5;
             const attackNumber = root.querySelector('[data-battle-attacking]');
             const defenseNumber = root.querySelector('[data-battle-defending]');
             const result = root.querySelector('[data-battle-result]');
@@ -56,6 +57,8 @@ final class BattleReplayDialog {
                     requestAnimationFrame(animate);
                 } else {
                     result.classList.add('battle-replay-result-visible');
+                    root.classList.add('battle-replay-result-known');
+                    root.classList.toggle('battle-replay-attacker-won', attackerWon);
                 }
             };
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -64,6 +67,8 @@ final class BattleReplayDialog {
                 hideShips(attackShips, attackingRemaining, attacking);
                 hideShips(defenseShips, defendingRemaining, defending);
                 result.classList.add('battle-replay-result-visible');
+                root.classList.add('battle-replay-result-known');
+                root.classList.toggle('battle-replay-attacker-won', attackerWon);
             } else {
                 requestAnimationFrame(animate);
             }
@@ -73,6 +78,10 @@ final class BattleReplayDialog {
     }
 
     static void open(BattleReplay replay) {
+        open(replay, () -> { });
+    }
+
+    static void open(BattleReplay replay, Runnable onAcknowledge) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(I18n.t(UiTexts.BATTLE_REPLAY_TITLE, replay.systemName()));
         dialog.addClassName("battle-replay-dialog");
@@ -97,12 +106,15 @@ final class BattleReplayDialog {
             VaadinSession.getCurrent().setAttribute(SOUND_SESSION_KEY, event.getValue());
             sound.getElement().executeJs("localStorage.setItem('starfare.battleSound', $0)", event.getValue());
         });
-        Button close = new Button(I18n.t(UiTexts.BATTLE_REPLAY_CLOSE), _ -> dialog.close());
-        dialog.getFooter().add(sound, close);
+        Button acknowledge = new Button(I18n.t(UiTexts.BATTLE_REPLAY_ACKNOWLEDGE), _ -> {
+            dialog.close();
+            onAcknowledge.run();
+        });
+        dialog.getFooter().add(sound, acknowledge);
         dialog.add(visual);
         dialog.open();
         visual.getElement().executeJs(PLAY_JS, replay.attacking(), replay.defending(), replay.attackingRemaining(),
-                replay.defendingRemaining(), soundEnabled);
+                replay.defendingRemaining(), soundEnabled, replay.attackingRemaining() > replay.defendingRemaining());
     }
 
     /** Prepares audio in the browser's actual click handler, before the Vaadin round-trip. */

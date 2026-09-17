@@ -17,6 +17,7 @@ import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.VisibleSystem;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
@@ -35,10 +36,12 @@ final class SendFleetDialog {
     }
 
     private record DialogParams(int maxShips, boolean canSend, int sliderMax, int initial) {
-        static DialogParams from(VisibleSystem source) {
+        static DialogParams from(VisibleSystem source, @Nullable Integer initialShips) {
             Integer available = source.availableShips();
             int maxShips = Math.max(0, available != null ? available : 0);
-            return new DialogParams(maxShips, maxShips >= 1, Math.max(1, maxShips), 1);
+            int initial = initialShips == null ? 1 : Math.max(1, initialShips);
+            int sliderMax = Math.max(1, Math.max(maxShips, initial));
+            return new DialogParams(maxShips, maxShips >= 1, sliderMax, initial);
         }
     }
 
@@ -47,18 +50,21 @@ final class SendFleetDialog {
 
     static void open(GameService game, GameId gameId, int pid,
                      VisibleSystem from, VisibleSystem to, Runnable onClose) {
-        open(game, gameId, pid, from, to, false, onClose);
+        open(new SendContext(game, gameId, pid, from, to, onClose), false, null);
     }
 
     static void openRelocation(GameService game, GameId gameId, int pid,
                                VisibleSystem from, VisibleSystem to, Runnable onClose) {
-        open(game, gameId, pid, from, to, true, onClose);
+        open(new SendContext(game, gameId, pid, from, to, onClose), true, null);
     }
 
-    private static void open(GameService game, GameId gameId, int pid,
-                             VisibleSystem from, VisibleSystem to, boolean relocation, Runnable onClose) {
-        SendContext ctx = new SendContext(game, gameId, pid, from, to, onClose);
-        DialogParams params = DialogParams.from(from);
+    static void editRelocation(GameService game, GameId gameId, int pid, VisibleSystem from, VisibleSystem to,
+                               int ships, Runnable onClose) {
+        open(new SendContext(game, gameId, pid, from, to, onClose), true, ships);
+    }
+
+    private static void open(SendContext ctx, boolean relocation, @Nullable Integer initialShips) {
+        DialogParams params = DialogParams.from(ctx.from(), initialShips);
         Dialog dialog = buildDialog();
 
         Input slider = buildSlider(params);
@@ -72,13 +78,13 @@ final class SendFleetDialog {
         Button allBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_ALL,
                 _ -> shipsInput.setValue(params.sliderMax()));
         Button exceptProductionBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_EXCEPT_PRODUCTION,
-                _ -> selectExceptProduction(shipsInput, params, productionOf(from)));
+                _ -> selectExceptProduction(shipsInput, params, productionOf(ctx.from())));
 
         Checkbox standingCheckbox = new Checkbox(I18n.t(UiTexts.MAP_STANDING_ORDER_CHECKBOX));
         Button sendBtn = buildSendButton(ctx, shipsInput, standingCheckbox, dialog);
         Button cancelBtn = new Button(I18n.t(UiTexts.MAP_DIALOG_CANCEL), _ -> {
             dialog.close();
-            onClose.run();
+            ctx.onClose().run();
         });
 
         DialogControls controls = new DialogControls(slider, shipsInput, halfBtn, doubleBtn, allBtn, exceptProductionBtn,
@@ -86,7 +92,7 @@ final class SendFleetDialog {
         wireStandingToggle(controls, params,
                 ctx.game().routingHeadroom(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id()));
         setInitialEnablement(controls, params.canSend());
-        exceptProductionBtn.setEnabled(params.canSend() && params.maxShips() > productionOf(from));
+        exceptProductionBtn.setEnabled(params.canSend() && params.maxShips() > productionOf(ctx.from()));
         if (relocation || !params.canSend()) {
             standingCheckbox.setValue(true);
         }
