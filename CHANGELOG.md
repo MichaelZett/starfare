@@ -10,6 +10,8 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 - Produktionsverlegungen sind als violette Kartenkanten sichtbar und lassen
   sich durch Ziehen zwischen Systemen anlegen oder ersetzen.
+- Der Reiter Produktionsverlegungen bietet je Route Anpassen im vorhandenen
+  Kapazitätsdialog sowie Löschen.
 - Berichtssysteme erhalten Kartenmarkierungen: Berichtszeilen zentrieren die
   Karte, Markierungen öffnen die passende Berichtszeile.
 - Zuschauer laufender Partien wählen nun eine Teilnehmerperspektive und den
@@ -17,6 +19,8 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 - Schlachten werden aus dem Bericht heraus in einer eigenen, abschaltbar
   vertonten Wiedergabe gezeigt. Anfangs- und Endstärke animieren getrennt von
   Besitzwechseln und übrigen Berichtsergebnissen.
+- Das Ergebnis einer Schlacht bleibt bis zur bewussten Bestätigung verborgen;
+  ein großer Kartenmarker markiert das betroffene System bis dahin.
 - Die Kampfdarstellung lässt sich im Neue-Spiel-Wizard als Vorgabe und im
   Rundenbericht je Runde zwischen Wiedergabe und Direktauswertung umschalten.
   Der erste Klick auf eine Kampfkarte schaltet den Browserton frei.

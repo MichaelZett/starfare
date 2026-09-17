@@ -81,15 +81,50 @@ public sealed interface TurnEvent {
                       int attacking, int defending, int defendersLeft)
             implements TurnEvent {}
 
-    record SystemLost(int defenderId, int attackerId, int systemId, String systemName)
-            implements TurnEvent {}
+    record SystemLost(int defenderId, int attackerId, int systemId, String systemName,
+                      int attacking, int defending, int attackersRemaining)
+            implements TurnEvent {
+        public SystemLost(int defenderId, int attackerId, int systemId, String systemName) {
+            this(defenderId, attackerId, systemId, systemName, 0, 0, 0);
+        }
+
+        @JsonCreator
+        public static SystemLost of(
+                @JsonProperty("defenderId") int defenderId, @JsonProperty("attackerId") int attackerId,
+                @JsonProperty("systemId") int systemId, @JsonProperty("systemName") String systemName,
+                @JsonProperty("attacking") @Nullable Integer attacking,
+                @JsonProperty("defending") @Nullable Integer defending,
+                @JsonProperty("attackersRemaining") @Nullable Integer attackersRemaining) {
+            return new SystemLost(defenderId, attackerId, systemId, systemName,
+                    zeroIfMissing(attacking), zeroIfMissing(defending), zeroIfMissing(attackersRemaining));
+        }
+    }
 
     record DefenseHeld(int defenderId, int systemId, String systemName,
-                       int attacking, int defendersLeft)
-            implements TurnEvent {}
+                       int attacking, int defending, int defendersLeft)
+            implements TurnEvent {
+        public DefenseHeld(int defenderId, int systemId, String systemName,
+                           int attacking, int defendersLeft) {
+            this(defenderId, systemId, systemName, attacking, 0, defendersLeft);
+        }
+
+        @JsonCreator
+        public static DefenseHeld of(
+                @JsonProperty("defenderId") int defenderId, @JsonProperty("systemId") int systemId,
+                @JsonProperty("systemName") String systemName, @JsonProperty("attacking") @Nullable Integer attacking,
+                @JsonProperty("defending") @Nullable Integer defending,
+                @JsonProperty("defendersLeft") @Nullable Integer defendersLeft) {
+            return new DefenseHeld(defenderId, systemId, systemName, zeroIfMissing(attacking),
+                    zeroIfMissing(defending), zeroIfMissing(defendersLeft));
+        }
+    }
 
     record Victory(int winnerId) implements TurnEvent {}
 
     /** End-of-game notice sent to every player other than the winner. */
     record Defeat(int winnerId, String winnerName) implements TurnEvent {}
+
+    private static int zeroIfMissing(@Nullable Integer value) {
+        return value != null ? value : 0;
+    }
 }

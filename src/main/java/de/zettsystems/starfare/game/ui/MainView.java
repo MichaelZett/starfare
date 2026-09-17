@@ -58,6 +58,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private @Nullable Integer highlightedFleetId;
     private @Nullable Integer highlightedReportSystemId;
     private @Nullable Integer displayedTurn;
+    private boolean outcomeAcknowledged;
+    private boolean outcomeDialogOpen;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
 
     @Autowired
@@ -71,7 +73,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         setDefaultHorizontalComponentAlignment(Alignment.STRETCH);
         addClassName("map-root");
 
-        fleetsPanel = new FleetAndOrdersPanel(this::cancelOrder, this::openStandingOrdersDialog,
+        fleetsPanel = new FleetAndOrdersPanel(this::cancelOrder, this::editStandingOrder, this::deleteStandingOrder,
+                this::onBattleAcknowledged,
                 this::onFleetRowSelected, this::onReportSystemSelected, this::setGarrisonReserve);
         mapCanvas = new MapCanvas(gameId == null ? "none" : gameId.value(), this::onMapBackgroundClick);
         header = new MapHeaderBar(this::onNextRound, this::doLeave,
@@ -202,11 +205,36 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         refresh();
     }
 
-    private void openStandingOrdersDialog() {
+    private void deleteStandingOrder(StandingOrderView order) {
         int pid = currentSeat();
-        if (pid >= 0) {
-            StandingOrdersDialog.open(game, gameId, pid, this::refresh);
+        if (pid < 0 || !game.removeStandingOrder(gameId, pid, order.id())) {
+            Notification.show(I18n.t(UiTexts.MAP_REMOVE_STANDING_ORDER_FAILED));
+            return;
         }
+        refresh();
+    }
+
+    private void editStandingOrder(StandingOrderView order) {
+        int pid = currentSeat();
+        if (pid < 0) {
+            return;
+        }
+        PlayerViewState view = viewForCurrentMode();
+        if (view == null) {
+            return;
+        }
+        VisibleSystem from = view.systems().stream().filter(system -> system.id() == order.fromSystemId())
+                .findFirst().orElse(null);
+        VisibleSystem to = view.systems().stream().filter(system -> system.id() == order.toSystemId())
+                .findFirst().orElse(null);
+        if (from == null || to == null) {
+            Notification.show(I18n.t(UiTexts.MAP_REMOVE_STANDING_ORDER_FAILED));
+            return;
+        }
+        SendFleetDialog.editRelocation(game, gameId, pid, from, to, order.ships(), () -> {
+            refresh();
+            fleetsPanel.showRelocations();
+        });
     }
 
     @Override
@@ -223,6 +251,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
         this.gameId = candidate;
         displayedTurn = null;
+        outcomeAcknowledged = false;
+        outcomeDialogOpen = false;
         reviewControls.reset();
         spectatorControls.reset();
     }
@@ -322,7 +352,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (view == null) {
             return null;
         }
-        reviewing = view.gameOver();
+        boolean awaitingOutcome = view.gameOver() && !outcomeAcknowledged && currentSeat() >= 0;
+        reviewing = view.gameOver() && !awaitingOutcome;
         spectatorControls.setVisible(false);
         if (!reviewing) {
             if (isObserver()) {
@@ -354,13 +385,34 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         header.setRound(view.turn());
         header.setGameName(game.gameNameOf(gameId));
         header.setNextEnabled(!view.gameOver());
-        gameOverBanner.setVisible(view.gameOver());
-        if (view.gameOver()) {
+        gameOverBanner.setVisible(view.gameOver() && reviewing);
+        if (view.gameOver() && reviewing) {
             gameOverBanner.setText(I18n.t(UiTexts.MAP_GAME_OVER, winnerName(view)));
         }
         if (!observer) {
             header.updateEmpireStats(view);
         }
+    }
+
+    private void onBattleAcknowledged() {
+        refresh();
+        PlayerViewState view = viewForCurrentMode();
+        if (view == null || !view.gameOver() || outcomeAcknowledged || outcomeDialogOpen) {
+            return;
+        }
+        TurnReport report = view.report();
+        if (report == null || !BattleAcknowledgements.pending(gameId, report).isEmpty()) {
+            return;
+        }
+        String account = UserContext.currentPlayerId().orElse("");
+        game.outcomeStatisticsFor(gameId, account).ifPresent(statistics -> {
+            outcomeDialogOpen = true;
+            GameOutcomeDialog.open(Objects.equals(view.winnerId(), currentSeat()), winnerName(view), statistics, () -> {
+                outcomeDialogOpen = false;
+                outcomeAcknowledged = true;
+                refresh();
+            });
+        });
     }
 
     private void renderMapAndSidebar(PlayerViewState view, int playerId, boolean observer) {
@@ -375,6 +427,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         mapCanvas.render(new MapRenderer.Inputs(
                 game, gameId, view, playerId, observer, selectedFrom,
                 highlightedFleetId, reportedSystemIds(view), highlightedReportSystemId,
+                pendingBattleSystemIds(view),
                 badgesShowingFleetNo, systems,
                 this::selectSystem,
                 this::openSend,
@@ -403,6 +456,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 .filter(OptionalInt::isPresent)
                 .map(OptionalInt::getAsInt)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    private Set<Integer> pendingBattleSystemIds(PlayerViewState view) {
+        TurnReport report = view.report();
+        return report == null ? Set.of() : BattleAcknowledgements.pending(gameId, report);
     }
 
     private void onReportSystemSelected(int systemId) {

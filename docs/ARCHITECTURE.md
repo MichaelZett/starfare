@@ -147,6 +147,8 @@ Standing orders render as purple dashed map edges with their fixed per-turn
 amount. Drag-and-drop starts only at an owned, fully visible system and opens
 the existing fleet dialog in relocation mode. It delegates the amount limit and
 same-route replacement to `GameService.routingHeadroom` and `addStandingOrder`.
+The Relocations table uses that same dialog for edits and offers direct deletion
+per row.
 
 `reviewFor(id, account, perspective, fogOfWar)` checks completed-game access and
 participant existence inside the read lock. `PlayerViewBuilder.forReview` reuses
@@ -160,7 +162,11 @@ uses the same perspective builder after checking the observer registration and
 the access policy. `SpectatorControls` keep the selection in the current view;
 they never create a seat or expose commands. `BattleReplay` is a combat-only
 report value used by the UI dialog: it transports initial and remaining fleets,
-but deliberately carries no ownership transition.
+but deliberately carries no ownership transition. `BattleAcknowledgements`
+stores a per-browser-session acknowledgement for the report's battle systems.
+Until acknowledgement, report text remains neutral and the map uses a battle
+marker that hides the affected system's result; this presentation state never
+changes the persisted game state.
 
 Host transfers and snapshot persistence use the session write lock. Saving an
 existing entity updates both its snapshot and current host, so a restart cannot

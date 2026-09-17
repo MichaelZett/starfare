@@ -20,6 +20,9 @@ once the game starts.
 
 Finished games move from the lobby to **Archive**. Search by game or player name,
 filter your games and open a completed map without issuing further orders.
+When the final round contains a battle, the normal round report remains open first.
+Play every battle from that report; only then does the victory or defeat dialog appear,
+with personal totals for built, destroyed and lost ships.
 In the completed map, select any participant (including AI) and enable **Fog of war**
 to see their final perspective. Disable fog to reveal all systems and fleets.
 For newly completed games, the timeline can rewind to every resolved round;
@@ -203,7 +206,9 @@ Ticking **as production transfer** turns the order into a standing one: the
 given number of ships is shipped every turn. A system may route at most its
 own production plus whatever is routed into it, and several targets share that
 budget — the map shows the still-free share in brackets after `P:`. Whatever
-is not routed stays behind as garrison.
+is not routed stays behind as garrison. The **Relocations** tab also offers
+**Edit** and **Delete** on every route; editing opens the same capacity-aware
+dialog.
 
 ### Own fleets (table)
 
@@ -235,8 +240,12 @@ down over a sun-and-planet background, with scaled ship markers and optional
 sound. The browser activates audio on the first click on a battle card. Use
 **Battle presentation for this round** in the report to switch between this
 playback and direct results; new rounds begin with the setting chosen in the
-game wizard. The result appears after the playback; ownership changes stay
-separate in the ordinary report. Continue via **Back to map**.
+game wizard. The result appears only after consciously applying the playback;
+until then the map shows a large battle marker and conceals the affected
+system's owner and values. Continue via **Back to map**.
+Both fleets begin in neutral yellow and turn green or red only with the final
+result. A pending map marker keeps neutral systems grey and known player-system
+colours faded, without revealing combat details.
 
 ## Victory condition
 

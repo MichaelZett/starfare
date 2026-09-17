@@ -15,10 +15,10 @@ final class SystemDisplaySize {
     static int pixelsFor(VisibleSystem system) {
         Integer production = system.productionPerTurn();
         if (system.fullyVisible() && production != null) {
-            return Math.clamp(MIN_EXACT_SIZE + production * 3, MIN_EXACT_SIZE, MAX_EXACT_SIZE);
+            return Math.clamp(MIN_EXACT_SIZE + production * 3L, MIN_EXACT_SIZE, MAX_EXACT_SIZE);
         }
         if (system.approximate() && production != null) {
-            return Math.clamp(MIN_EXACT_SIZE + production * 3, MIN_EXACT_SIZE, MAX_EXACT_SIZE);
+            return Math.clamp(MIN_EXACT_SIZE + production * 3L, MIN_EXACT_SIZE, MAX_EXACT_SIZE);
         }
         return UNKNOWN_SIZE;
     }

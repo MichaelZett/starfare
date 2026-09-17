@@ -7,6 +7,7 @@ import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.GameOutcome;
+import de.zettsystems.starfare.game.values.GameOutcomeStatistics;
 import de.zettsystems.starfare.game.values.GameListScope;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameSummary;
@@ -761,6 +762,63 @@ public class DefaultGameService implements GameService {
             }
             return Optional.empty();
         }));
+    }
+
+    @Override
+    public Optional<GameOutcomeStatistics> outcomeStatisticsFor(GameId id, String account) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            Integer seat = state.seatByUser().get(account);
+            if (!state.gameOver() || seat == null) {
+                return Optional.empty();
+            }
+            return Optional.of(GameOutcomeStatisticsCalculator.calculate(state, seat));
+        }));
+    }
+
+    private static final class GameOutcomeStatisticsCalculator {
+        private GameOutcomeStatisticsCalculator() {}
+
+        private static GameOutcomeStatistics calculate(GameState state, int playerId) {
+            Totals totals = new Totals();
+            state.replayFrames().values().stream()
+                    .map(frame -> frame.reports().get(playerId))
+                    .filter(Objects::nonNull)
+                    .flatMap(report -> report.events().stream())
+                    .forEach(event -> totals.record(event, playerId));
+            int systems = (int) state.systems().stream()
+                    .filter(system -> Objects.equals(system.ownerId(), playerId)).count();
+            return new GameOutcomeStatistics(Math.max(0, state.turn() - 1), systems, totals.built, totals.destroyed,
+                    totals.lost);
+        }
+
+        private static final class Totals {
+            private int built;
+            private int destroyed;
+            private int lost;
+
+            private void record(de.zettsystems.starfare.report.values.TurnEvent event, int playerId) {
+                switch (event) {
+                    case de.zettsystems.starfare.report.values.TurnEvent.Production production -> {
+                        if (production.playerId() == playerId) { built += production.amount(); }
+                    }
+                    case de.zettsystems.starfare.report.values.TurnEvent.BattleWon battle -> {
+                        if (battle.attackerId() == playerId) { destroyed += battle.defending(); }
+                    }
+                    case de.zettsystems.starfare.report.values.TurnEvent.BattleLost battle -> {
+                        if (battle.attackerId() == playerId) { lost += battle.attacking(); }
+                    }
+                    case de.zettsystems.starfare.report.values.TurnEvent.SystemLost loss -> {
+                        if (loss.defenderId() == playerId) { lost += loss.defending(); }
+                    }
+                    case de.zettsystems.starfare.report.values.TurnEvent.DefenseHeld held -> {
+                        if (held.defenderId() == playerId) { destroyed += held.attacking(); }
+                    }
+                    case de.zettsystems.starfare.report.values.TurnEvent.Reinforcement _,
+                            de.zettsystems.starfare.report.values.TurnEvent.Victory _,
+                            de.zettsystems.starfare.report.values.TurnEvent.Defeat _ -> { }
+                }
+            }
+        }
     }
 
     private sealed interface TurnResult {

@@ -7,6 +7,7 @@ import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameSummary;
+import de.zettsystems.starfare.game.values.GameOutcomeStatistics;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import org.jspecify.annotations.Nullable;
 
@@ -24,6 +25,8 @@ public interface GameService {
     List<Integer> replayTurns(GameId id, String account);
     Optional<PlayerViewState> replayFor(GameId id, String account, int perspective, int turn);
     Optional<PlayerViewState> viewForAccount(GameId id, String account);
+
+    Optional<GameOutcomeStatistics> outcomeStatisticsFor(GameId id, String account);
 
 
     GameId newGame(GameSetup setup, @Nullable String hostPlayerId, String name);

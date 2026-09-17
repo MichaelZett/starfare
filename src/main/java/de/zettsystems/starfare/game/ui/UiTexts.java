@@ -169,6 +169,7 @@ public final class UiTexts {
     public static final String MAP_COLUMN_STANDING_TO = "map.column.standing.to";
     public static final String MAP_COLUMN_STANDING_PRODUCTION = "map.column.standing.production";
     public static final String MAP_ACTION_DELETE_STANDING = "map.action.deleteStanding";
+    public static final String MAP_ACTION_EDIT_STANDING = "map.action.editStanding";
     public static final String MAP_REMOVE_STANDING_ORDER_FAILED = "map.removeStandingOrder.failed";
     public static final String MAP_SHOW_STANDING_TOGGLE = "map.showStanding.toggle";
     public static final String MAP_ORDER_TYPE_STANDING = "map.orderType.standing";
@@ -229,7 +230,16 @@ public final class UiTexts {
     public static final String BATTLE_REPLAY_RESULT = "battleReplay.result";
     public static final String BATTLE_REPLAY_SOUND = "battleReplay.sound";
     public static final String BATTLE_REPLAY_CLOSE = "battleReplay.close";
+    public static final String BATTLE_REPLAY_ACKNOWLEDGE = "battleReplay.acknowledge";
     public static final String BATTLE_PRESENTATION_TOGGLE = "battlePresentation.toggle";
+    public static final String GAME_OUTCOME_VICTORY = "gameOutcome.victory";
+    public static final String GAME_OUTCOME_DEFEAT = "gameOutcome.defeat";
+    public static final String GAME_OUTCOME_ROUNDS = "gameOutcome.rounds";
+    public static final String GAME_OUTCOME_SYSTEMS = "gameOutcome.systems";
+    public static final String GAME_OUTCOME_BUILT = "gameOutcome.built";
+    public static final String GAME_OUTCOME_DESTROYED = "gameOutcome.destroyed";
+    public static final String GAME_OUTCOME_LOST = "gameOutcome.lost";
+    public static final String GAME_OUTCOME_CONTINUE = "gameOutcome.continue";
 
     // Language switcher
     public static final String LANG_LABEL = "lang.label";
