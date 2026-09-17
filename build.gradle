@@ -1,3 +1,9 @@
+import com.github.spotbugs.snom.Confidence
+import com.github.spotbugs.snom.Effort
+import net.ltgt.gradle.errorprone.CheckSeverity
+
+import java.util.Locale
+
 plugins {
     id 'java'
     id 'jacoco'
@@ -90,10 +96,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'com.vaadin:vaadin-spring-boot-starter'
     developmentOnly 'com.vaadin:vaadin-dev'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -104,7 +107,7 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
     testImplementation 'org.springframework.modulith:spring-modulith-docs'
     testImplementation "com.tngtech.archunit:archunit-junit5:${archunitJunit5Version}"
@@ -126,19 +129,51 @@ dependencies {
     errorprone "com.uber.nullaway:nullaway:${nullawayVersion}"
 
     rewrite platform("org.openrewrite.recipe:rewrite-recipe-bom:${rewriteRecipeBomVersion}")
+    rewrite "de.zettsystems:zettsystems-recipes:${zettsystemsRecipesVersion}"
     rewrite 'org.openrewrite.recipe:rewrite-migrate-java'
     rewrite 'org.openrewrite.recipe:rewrite-static-analysis'
     rewrite 'org.openrewrite.recipe:rewrite-spring'
     rewrite 'org.openrewrite.recipe:rewrite-testing-frameworks'
 }
 
+// OpenRewrite läuft nur auf Zuruf, nie als Teil von `build`:
+//   ./gradlew rewriteDryRun --no-parallel --no-configuration-cache   (danach rewriteRun)
+// Das Plugin verträgt weder parallele Ausführung noch den Configuration-Cache;
+// die Flags gehören an den Aufruf, nicht in gradle.properties.
+// Plugin bewusst auf 7.39.0 + rewrite-recipe-bom 3.37.0: 7.40.0/7.41.0 und BOM
+// 3.38.0 verweisen auf ein rewrite-bom 8.91.0, das nicht in Maven Central liegt
+// (Stand 2026-09-17, dort endet es bei 8.90.4).
 rewrite {
-    activeRecipe(
-            'org.openrewrite.java.migrate.UpgradeToJava25',
-            'org.openrewrite.staticanalysis.CommonStaticAnalysis',
-            'org.openrewrite.java.testing.assertj.JUnitToAssertj',
-            'org.openrewrite.java.testing.assertj.Assertj'
-    )
+    // Kuratiert: jedes Recipe lief als Dry-Run, der Diff wurde gelesen.
+    activeRecipe('de.zettsystems.ZettSystemsRecipes')
+    activeRecipe('org.openrewrite.staticanalysis.CodeCleanup')
+    activeRecipe('org.openrewrite.java.RemoveUnusedImports')
+    // CodeCleanup > HideUtilityClassConstructor hält Klassen mit nur statischen
+    // Mitgliedern für Utility-Klassen und gibt ihnen einen privaten Konstruktor.
+    // Diese beiden werden aber vom Framework instanziiert (Cucumber-Spring, ArchUnit).
+    exclusion('src/e2eTest/java/de/zettsystems/starfare/e2e/CucumberSpringConfiguration.java')
+    exclusion('src/test/java/de/zettsystems/starfare/architecture/LayerRulesTest.java')
+    //
+    // Geprüft und BEWUSST nicht aktiv (Befunde großteils aus zs-identity,
+    // 2026-09-17; die Gründe gelten projektübergreifend):
+    //  - java.migrate.UpgradeToJava25, staticanalysis.CommonStaticAnalysis,
+    //    testing.assertj.JUnitToAssertj / Assertj: Migrations-Composites. Die
+    //    Migration ist erledigt (7d38993 / fbb60a5); auf gepflegtem Code finden sie
+    //    nichts mehr, hinterlassen aber Marker-Kommentare im Build-Skript und
+    //    übersetzen assertInstanceOf(..) falsch. Nur für eine echte Migration.
+    //  - java.logging.slf4j.Slf4jBestPractices: hebt LOG.debug(.., e) auf error und
+    //    stellt auf die Fluent-API um. Log-Level sind Entscheidungen.
+    //  - java.migrate.lang.UseTextBlocks: macht aus umbrochenen Sätzen Textblöcke
+    //    mit `\` am Zeilenende.
+    //  - java.migrate.lang.var.UseVarForObject: Stilfrage, keine Nachlässigkeit.
+    //  - Spring Boot 4: kein `SpringBoot4BestPractices` vorhanden; der eine Befund
+    //    aus spring.boot4.MigrateToModularStarters (spring-security-test ->
+    //    spring-boot-starter-security-test) ist von Hand übernommen.
+    //  - de.zettsystems.UseToListTrue / UseFloorMod ändern Verhalten: nur einzeln
+    //    und mit gelesenem Diff.
+    // Build-Skripte laufen trotz `exclusion(..)` mit; Rewrite kürzt dort
+    // qualifizierte Klassennamen, ohne den Import zu ergänzen — deshalb stehen die
+    // Importe von Hand am Skriptanfang.
 }
 
 test {
@@ -179,8 +214,6 @@ tasks.register('e2eTest', Test) {
     shouldRunAfter tasks.named('test')
 }
 
-import net.ltgt.gradle.errorprone.CheckSeverity
-
 tasks.withType(JavaCompile).configureEach {
     options.errorprone.disableWarningsInGeneratedCode = true
     options.errorprone.excludedPaths = ".*/build/generated/.*"
@@ -196,8 +229,8 @@ tasks.named('compileTestJava').configure {
 
 spotbugs {
     toolVersion = spotbugsVersion
-    effort = com.github.spotbugs.snom.Effort.MAX
-    reportLevel = com.github.spotbugs.snom.Confidence.valueOf('LOW')
+    effort = Effort.MAX
+    reportLevel = Confidence.valueOf('LOW')
     excludeFilter = file('config/spotbugs/exclude.xml')
 }
 
@@ -224,7 +257,7 @@ tasks.named('spotbugsE2eTest').configure { enabled = false }
 //   -Pmajor      include major version bumps
 def depUpdateIsUnstable = { String version ->
     def stableKeywords = ['RELEASE', 'FINAL', 'GA']
-    def stable = stableKeywords.any { version.toUpperCase().contains(it) }
+    def stable = stableKeywords.any { version.toUpperCase(Locale.ROOT).contains(it) }
     def numericLooking = version ==~ /^[0-9,.v-]+(-r)?$/
     return !stable && !numericLooking
 }

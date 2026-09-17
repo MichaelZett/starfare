@@ -4,9 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import java.util.OptionalInt;
-
 import org.jspecify.annotations.Nullable;
+
+import java.util.Objects;
+import java.util.OptionalInt;
 
 /**
  * Structured event emitted during a turn advance. Each subtype captures
@@ -14,14 +15,14 @@ import org.jspecify.annotations.Nullable;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = TurnEvent.Production.class,   name = "production"),
+        @JsonSubTypes.Type(value = TurnEvent.Production.class, name = "production"),
         @JsonSubTypes.Type(value = TurnEvent.Reinforcement.class, name = "reinforcement"),
-        @JsonSubTypes.Type(value = TurnEvent.BattleWon.class,    name = "battleWon"),
-        @JsonSubTypes.Type(value = TurnEvent.BattleLost.class,   name = "battleLost"),
-        @JsonSubTypes.Type(value = TurnEvent.SystemLost.class,   name = "systemLost"),
-        @JsonSubTypes.Type(value = TurnEvent.DefenseHeld.class,  name = "defenseHeld"),
-        @JsonSubTypes.Type(value = TurnEvent.Victory.class,      name = "victory"),
-        @JsonSubTypes.Type(value = TurnEvent.Defeat.class,       name = "defeat")
+        @JsonSubTypes.Type(value = TurnEvent.BattleWon.class, name = "battleWon"),
+        @JsonSubTypes.Type(value = TurnEvent.BattleLost.class, name = "battleLost"),
+        @JsonSubTypes.Type(value = TurnEvent.SystemLost.class, name = "systemLost"),
+        @JsonSubTypes.Type(value = TurnEvent.DefenseHeld.class, name = "defenseHeld"),
+        @JsonSubTypes.Type(value = TurnEvent.Victory.class, name = "victory"),
+        @JsonSubTypes.Type(value = TurnEvent.Defeat.class, name = "defeat")
 })
 public sealed interface TurnEvent {
 
@@ -96,7 +97,8 @@ public sealed interface TurnEvent {
                 @JsonProperty("defending") @Nullable Integer defending,
                 @JsonProperty("attackersRemaining") @Nullable Integer attackersRemaining) {
             return new SystemLost(defenderId, attackerId, systemId, systemName,
-                    zeroIfMissing(attacking), zeroIfMissing(defending), zeroIfMissing(attackersRemaining));
+                    Objects.requireNonNullElse(attacking, 0), Objects.requireNonNullElse(defending, 0),
+                    Objects.requireNonNullElse(attackersRemaining, 0));
         }
     }
 
@@ -114,8 +116,8 @@ public sealed interface TurnEvent {
                 @JsonProperty("systemName") String systemName, @JsonProperty("attacking") @Nullable Integer attacking,
                 @JsonProperty("defending") @Nullable Integer defending,
                 @JsonProperty("defendersLeft") @Nullable Integer defendersLeft) {
-            return new DefenseHeld(defenderId, systemId, systemName, zeroIfMissing(attacking),
-                    zeroIfMissing(defending), zeroIfMissing(defendersLeft));
+            return new DefenseHeld(defenderId, systemId, systemName, Objects.requireNonNullElse(attacking, 0),
+                    Objects.requireNonNullElse(defending, 0), Objects.requireNonNullElse(defendersLeft, 0));
         }
     }
 
@@ -123,8 +125,4 @@ public sealed interface TurnEvent {
 
     /** End-of-game notice sent to every player other than the winner. */
     record Defeat(int winnerId, String winnerName) implements TurnEvent {}
-
-    private static int zeroIfMissing(@Nullable Integer value) {
-        return value != null ? value : 0;
-    }
 }

@@ -58,6 +58,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private @Nullable Integer highlightedFleetId;
     private @Nullable Integer highlightedReportSystemId;
     private @Nullable Integer displayedTurn;
+    /** Only a view that saw the game running waits for the outcome; the archive opens in review. */
+    private boolean witnessedRunningGame;
     private boolean outcomeAcknowledged;
     private boolean outcomeDialogOpen;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
@@ -74,7 +76,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         addClassName("map-root");
 
         fleetsPanel = new FleetAndOrdersPanel(this::cancelOrder, this::editStandingOrder, this::deleteStandingOrder,
-                this::onBattleAcknowledged,
+                this::refresh,
                 this::onFleetRowSelected, this::onReportSystemSelected, this::setGarrisonReserve);
         mapCanvas = new MapCanvas(gameId == null ? "none" : gameId.value(), this::onMapBackgroundClick);
         header = new MapHeaderBar(this::onNextRound, this::doLeave,
@@ -251,6 +253,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
         this.gameId = candidate;
         displayedTurn = null;
+        witnessedRunningGame = false;
         outcomeAcknowledged = false;
         outcomeDialogOpen = false;
         reviewControls.reset();
@@ -345,6 +348,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (advancedTurn) {
             fleetsPanel.showReport();
         }
+        showOutcomeWhenDue(view);
     }
 
     private @Nullable PlayerViewState viewForCurrentMode() {
@@ -352,7 +356,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (view == null) {
             return null;
         }
-        boolean awaitingOutcome = view.gameOver() && !outcomeAcknowledged && currentSeat() >= 0;
+        if (!view.gameOver()) {
+            witnessedRunningGame = true;
+        }
+        boolean awaitingOutcome = view.gameOver() && witnessedRunningGame && !outcomeAcknowledged
+                && currentSeat() >= 0;
         reviewing = view.gameOver() && !awaitingOutcome;
         spectatorControls.setVisible(false);
         if (!reviewing) {
@@ -394,24 +402,31 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
     }
 
-    private void onBattleAcknowledged() {
-        refresh();
-        PlayerViewState view = viewForCurrentMode();
-        if (view == null || !view.gameOver() || outcomeAcknowledged || outcomeDialogOpen) {
+    /**
+     * Opens the outcome dialog once the last battle of the final round is acknowledged. A final
+     * round without own battles (a defeat decided elsewhere) opens it right away; otherwise the
+     * player would stay in the waiting state with no way into the review.
+     */
+    private void showOutcomeWhenDue(PlayerViewState view) {
+        if (reviewing || !view.gameOver() || outcomeDialogOpen) {
             return;
         }
         TurnReport report = view.report();
-        if (report == null || !BattleAcknowledgements.pending(gameId, report).isEmpty()) {
+        if (report != null && !BattleAcknowledgements.pending(gameId, report).isEmpty()) {
             return;
         }
         String account = UserContext.currentPlayerId().orElse("");
-        game.outcomeStatisticsFor(gameId, account).ifPresent(statistics -> {
-            outcomeDialogOpen = true;
-            GameOutcomeDialog.open(Objects.equals(view.winnerId(), currentSeat()), winnerName(view), statistics, () -> {
-                outcomeDialogOpen = false;
-                outcomeAcknowledged = true;
-                refresh();
-            });
+        GameOutcomeStatistics statistics = game.outcomeStatisticsFor(gameId, account).orElse(null);
+        if (statistics == null) {
+            outcomeAcknowledged = true;
+            refresh();
+            return;
+        }
+        outcomeDialogOpen = true;
+        GameOutcomeDialog.open(Objects.equals(view.winnerId(), currentSeat()), winnerName(view), statistics, () -> {
+            outcomeDialogOpen = false;
+            outcomeAcknowledged = true;
+            refresh();
         });
     }
 

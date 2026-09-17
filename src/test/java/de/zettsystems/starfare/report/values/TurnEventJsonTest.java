@@ -3,6 +3,8 @@ package de.zettsystems.starfare.report.values;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class TurnEventJsonTest {
@@ -42,12 +44,63 @@ class TurnEventJsonTest {
     }
 
     @Test
-    void reportsAffectedSystemOnlyForSystemEvents() {
-        TurnEvent event = new TurnEvent.BattleWon(1, 8, "Vega", 12, 5, 7, false);
+    void systemLostWithoutStrengthsDeserializesAsZero() {
+        String legacyJson = """
+                {"type": "systemLost", "defenderId": 1, "attackerId": 2, "systemId": 5, "systemName": "Sirius"}
+                """;
 
-        assertThat(event.affectedSystemId()).hasValue(8);
-        assertThat(event.battleSystemId()).hasValue(8);
-        assertThat(new TurnEvent.Production(1, 8, "Vega", 3).battleSystemId()).isEmpty();
-        assertThat(new TurnEvent.Victory(1).affectedSystemId()).isEmpty();
+        TurnEvent event = mapper.readValue(legacyJson, TurnEvent.class);
+
+        assertThat(event).isEqualTo(new TurnEvent.SystemLost(1, 2, 5, "Sirius"))
+                .isEqualTo(new TurnEvent.SystemLost(1, 2, 5, "Sirius", 0, 0, 0));
+    }
+
+    @Test
+    void defenseHeldWithoutDefendingDeserializesAsZero() {
+        String legacyJson = """
+                {"type": "defenseHeld", "defenderId": 1, "systemId": 5, "systemName": "Sirius",
+                 "attacking": 4, "defendersLeft": 3}
+                """;
+
+        TurnEvent event = mapper.readValue(legacyJson, TurnEvent.class);
+
+        assertThat(event).isEqualTo(new TurnEvent.DefenseHeld(1, 5, "Sirius", 4, 3));
+    }
+
+    @Test
+    void battleEventsRoundTripTheirStrengths() {
+        List<TurnEvent> events = List.of(
+                new TurnEvent.SystemLost(1, 2, 5, "Sirius", 9, 6, 3),
+                new TurnEvent.DefenseHeld(1, 5, "Sirius", 4, 8, 5));
+
+        for (TurnEvent original : events) {
+            assertThat(mapper.readValue(mapper.writeValueAsString(original), TurnEvent.class)).isEqualTo(original);
+        }
+    }
+
+    @Test
+    void everyEventTypeReportsItsSystems() {
+        List<TurnEvent> battles = List.of(
+                new TurnEvent.BattleWon(1, 8, "Vega", 12, 5, 7, false),
+                new TurnEvent.BattleLost(1, 8, "Vega", 12, 15, 4),
+                new TurnEvent.SystemLost(1, 2, 8, "Vega", 9, 6, 3),
+                new TurnEvent.DefenseHeld(1, 8, "Vega", 4, 8, 5));
+        List<TurnEvent> systemOnly = List.of(
+                new TurnEvent.Production(1, 8, "Vega", 3),
+                new TurnEvent.Reinforcement(1, 8, "Vega", 7, 12, "F1"));
+        List<TurnEvent> gameEnd = List.of(new TurnEvent.Victory(1), new TurnEvent.Defeat(1, "Hans"));
+
+        assertThat(battles).isNotEmpty().allSatisfy(event -> {
+            assertThat(event.affectedSystemId()).hasValue(8);
+            assertThat(event.battleSystemId()).hasValue(8);
+        });
+        assertThat(systemOnly).isNotEmpty().allSatisfy(event -> {
+            assertThat(event.affectedSystemId()).hasValue(8);
+            assertThat(event.battleSystemId()).isEmpty();
+        });
+        assertThat(gameEnd).isNotEmpty().allSatisfy(event -> {
+            assertThat(event.affectedSystemId()).isEmpty();
+            assertThat(event.battleSystemId()).isEmpty();
+        });
     }
 }
