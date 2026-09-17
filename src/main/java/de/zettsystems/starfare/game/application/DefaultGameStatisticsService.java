@@ -2,18 +2,15 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.game.domain.GameResultEntity;
 import de.zettsystems.starfare.game.domain.GameSession;
+import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.OpponentStatistics;
 import de.zettsystems.starfare.game.values.PlayerStatistics;
-import de.zettsystems.starfare.game.values.GameId;
 import jakarta.transaction.Transactional;
-import org.springframework.stereotype.Service;
 import org.jspecify.annotations.Nullable;
+import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 class DefaultGameStatisticsService implements GameStatisticsService {
@@ -76,7 +73,7 @@ class DefaultGameStatisticsService implements GameStatisticsService {
         }
         var rows = opponents.entrySet().stream()
                 .map(entry -> new OpponentStatistics(entry.getKey(), entry.getValue().games, entry.getValue().wins, entry.getValue().losses))
-                .sorted(java.util.Comparator.comparingInt(OpponentStatistics::games).reversed()
+                .sorted(Comparator.comparingInt(OpponentStatistics::games).reversed()
                         .thenComparing(OpponentStatistics::opponentId))
                 .toList();
         return new PlayerStatistics(games.size(), wins, losses, rows);

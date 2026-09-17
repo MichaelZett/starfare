@@ -18,12 +18,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.values.GalaxyLayout;
-import de.zettsystems.starfare.game.values.GameConfig;
-import de.zettsystems.starfare.game.values.GameId;
-import de.zettsystems.starfare.game.values.GameNameGenerator;
-import de.zettsystems.starfare.game.values.GameSetup;
-import de.zettsystems.starfare.game.values.ProductionDistribution;
+import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
 

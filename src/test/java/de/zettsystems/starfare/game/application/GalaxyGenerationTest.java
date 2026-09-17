@@ -1,12 +1,7 @@
 package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.AbstractIntegrationTest;
-import de.zettsystems.starfare.game.values.GalaxyLayout;
-import de.zettsystems.starfare.game.values.GameConfig;
-import de.zettsystems.starfare.game.values.GameId;
-import de.zettsystems.starfare.game.values.GameSetup;
-import de.zettsystems.starfare.game.values.ProductionDistribution;
-import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.game.values.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

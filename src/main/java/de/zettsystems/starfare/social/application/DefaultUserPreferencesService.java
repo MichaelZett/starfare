@@ -1,8 +1,8 @@
 package de.zettsystems.starfare.social.application;
 
 import de.zettsystems.starfare.social.domain.UserPreferencesEntity;
-import de.zettsystems.starfare.social.values.SocialEvent;
 import de.zettsystems.starfare.social.values.PlayerIds;
+import de.zettsystems.starfare.social.values.SocialEvent;
 import de.zettsystems.starfare.social.values.Visibility;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

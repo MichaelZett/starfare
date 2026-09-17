@@ -1,15 +1,12 @@
 package de.zettsystems.starfare.game.ui;
 
-import de.zettsystems.starfare.game.values.GameListScope;
-
-import de.zettsystems.starfare.game.values.GameVisibility;
-
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
@@ -19,19 +16,14 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
-import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
+import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.values.GameConfig;
-import de.zettsystems.starfare.game.values.GameId;
-import de.zettsystems.starfare.game.values.GameSummary;
-import de.zettsystems.starfare.game.values.Player;
-import de.zettsystems.starfare.game.values.Subscription;
+import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.social.application.*;
 import de.zettsystems.starfare.social.ui.*;

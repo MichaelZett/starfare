@@ -1,12 +1,14 @@
 package de.zettsystems.starfare.social.application;
 
 import de.zettsystems.starfare.social.values.DirectMessage;
-import de.zettsystems.starfare.social.values.SocialEvent;
 import de.zettsystems.starfare.social.values.PlayerIds;
-import org.springframework.stereotype.Service;
+import de.zettsystems.starfare.social.values.SocialEvent;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
@@ -53,11 +55,11 @@ public class DefaultMessageService implements MessageService {
     }
 
     @Override
-    public java.util.List<DirectMessage> conversation(String firstUser, String secondUser) {
+    public List<DirectMessage> conversation(String firstUser, String secondUser) {
         String first = PlayerIds.normalize(firstUser);
         String second = PlayerIds.normalize(secondUser);
         if (first == null || second == null || first.equals(second)) {
-            return java.util.List.of();
+            return List.of();
         }
         store.markConversationRead(first, second);
         return store.conversation(first, second);
@@ -72,6 +74,6 @@ public class DefaultMessageService implements MessageService {
 
     @Override
     public long removeExpiredMessages() {
-        return store.deleteOlderThan(Instant.now().minus(java.time.Duration.ofDays(365)));
+        return store.deleteOlderThan(Instant.now().minus(Duration.ofDays(365)));
     }
 }

@@ -1,19 +1,17 @@
 package de.zettsystems.starfare.game.application;
 
-import de.zettsystems.starfare.game.values.GameVisibility;
-
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
-import de.zettsystems.starfare.game.values.GameConfig;
-import de.zettsystems.starfare.game.values.Player;
-import de.zettsystems.starfare.game.values.StandingOrder;
-import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.game.values.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +29,7 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
         GameState state = new GameState();
         state.players().add(new Player(1, "P1", false, "#111111"));
         state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 10, 2, false));
-        state.intel().put(1, new java.util.HashMap<>());
+        state.intel().put(1, new HashMap<>());
         state.intel().get(1).put(1, new GameState.Intel(1, 2, 7));
         state.start();
         state.nextTurn();
@@ -106,7 +104,7 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     @Test
     void standingOrderJsonWithoutShipsStillLoads() {
         GameState state = sampleState();
-        state.standingOrders().put(1, new java.util.ArrayList<>(
+        state.standingOrders().put(1, new ArrayList<>(
                 List.of(new StandingOrder(1, 1, 1, 2, 3))));
 
         ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
@@ -135,7 +133,7 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     @Test
     void privateArchiveRoundTripPreservesVisibilityAndCompletionDate() {
         GameState state = sampleState();
-        state.endGame(1, java.time.Instant.parse("2026-09-09T12:00:00Z"));
+        state.endGame(1, Instant.parse("2026-09-09T12:00:00Z"));
         GameState restored = GameState.fromSnapshot(objectMapper.readValue(
                 objectMapper.writeValueAsString(GameState.toSnapshot(state)), GameStateSnapshot.class));
         assertThat(restored.visibility()).isEqualTo(state.visibility());

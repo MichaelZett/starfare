@@ -1,15 +1,15 @@
 package de.zettsystems.starfare.game.application;
 
-import de.zettsystems.starfare.game.values.GameVisibility;
-
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameSessionEntity;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.GameVisibility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 
@@ -73,7 +73,7 @@ class JpaGameSessionStoreRestoreTest extends AbstractIntegrationTest {
         assertThat(store.load(GameId.of(BROKEN_ID))).isEmpty();
     }
 
-    @Autowired private tools.jackson.databind.ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
     @Autowired private GameArchiveStore archiveStore;
 
     @Test

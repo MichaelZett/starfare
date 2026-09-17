@@ -1,14 +1,7 @@
 package de.zettsystems.starfare.game.domain;
 
 import de.zettsystems.starfare.persistence.AbstractBaseEntity;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;

@@ -1,7 +1,8 @@
 package de.zettsystems.starfare.social.values;
 
-import java.time.Instant;
 import org.jspecify.annotations.Nullable;
+
+import java.time.Instant;
 
 /**
  * A direct message between two users. The social module persists it and broadcasts it live to

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -59,7 +60,7 @@ class GameRegistryTest extends AbstractIntegrationTest {
         GameId id = registry.createGame(setup);
 
         registry.readState(id, state -> {
-            var byId = state.systems().stream().collect(java.util.stream.Collectors.toMap(s -> s.id(), s -> s));
+            var byId = state.systems().stream().collect(Collectors.toMap(s -> s.id(), s -> s));
             var p1Home = state.systems().stream().filter(s -> s.ownerId() != null && s.ownerId() == 1).findFirst().orElseThrow();
             var p2Home = state.systems().stream().filter(s -> s.ownerId() != null && s.ownerId() == 2).findFirst().orElseThrow();
             var p3Home = state.systems().stream().filter(s -> s.ownerId() != null && s.ownerId() == 3).findFirst().orElseThrow();

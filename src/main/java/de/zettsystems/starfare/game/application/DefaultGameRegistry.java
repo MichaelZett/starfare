@@ -126,7 +126,7 @@ public class DefaultGameRegistry implements GameRegistry {
     }
 
     private static @Nullable Integer tryClaimFreeSeat(GameState state, String playerId) {
-        java.util.Set<Integer> reserved = new java.util.HashSet<>(state.invitedSeats().values());
+        Set<Integer> reserved = new HashSet<>(state.invitedSeats().values());
         Integer seat = state.players().stream()
                 .filter(p -> !p.ai())
                 .map(Player::id)
