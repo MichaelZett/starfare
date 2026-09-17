@@ -3,10 +3,18 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameListScope;
-import de.zettsystems.starfare.game.values.GameSummary;
+import de.zettsystems.starfare.game.values.GameOutcomeStatistics;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.GameSummary;
+import de.zettsystems.starfare.game.values.ReplayFrame;
+import de.zettsystems.starfare.report.values.TurnEvent;
+import de.zettsystems.starfare.report.values.TurnReport;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,6 +59,35 @@ class GameArchiveTest extends AbstractIntegrationTest {
         assertThat(games.reviewFor(id, "stranger")).isEmpty();
         assertThat(registry.readState(id, GameState::toSnapshot)).isEqualTo(before);
         assertThat(repository.findById(id.value()).orElseThrow().getVersion()).isEqualTo(version);
+    }
+
+    @Test
+    void outcomeStatisticsSumOnlyOwnEventsOfFinishedGame() {
+        var id = games.newGame(GameSetup.defaults(), "host", "Outcome");
+        games.joinGame(id, "host");
+        games.startGame(id);
+        assertThat(games.outcomeStatisticsFor(id, "host")).isEmpty();
+        int seat = games.seatFor(id, "host").orElseThrow();
+        int rival = seat + 1;
+        TurnReport report = new TurnReport(90, List.of(), List.of(
+                new TurnEvent.Production(seat, 1, "A", 5),
+                new TurnEvent.Production(rival, 2, "B", 9),
+                new TurnEvent.BattleWon(seat, 3, "C", 10, 4, 6, false),
+                new TurnEvent.BattleWon(rival, 3, "C", 10, 4, 6, false),
+                new TurnEvent.BattleLost(seat, 4, "D", 7, 9, 2),
+                new TurnEvent.SystemLost(seat, rival, 5, "E", 8, 3, 5),
+                new TurnEvent.DefenseHeld(seat, 6, "F", 2, 6, 4),
+                new TurnEvent.Reinforcement(seat, 1, "A", 3, 8, "F1"),
+                new TurnEvent.Victory(seat)));
+        int ownSystems = registry.writeState(id, state -> {
+            state.replayFrames().put(90, new ReplayFrame(90, state.systems(), state.fleets(), Map.of(seat, report)));
+            state.endGame(seat);
+            return (int) state.systems().stream().filter(system -> Objects.equals(system.ownerId(), seat)).count();
+        });
+
+        assertThat(games.outcomeStatisticsFor(id, "stranger")).isEmpty();
+        assertThat(games.outcomeStatisticsFor(id, "host"))
+                .contains(new GameOutcomeStatistics(0, ownSystems, 5, 6, 10));
     }
 
     @Test

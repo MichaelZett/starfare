@@ -106,11 +106,16 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ### Changed
 - Abhängigkeiten und Build-Werkzeuge aktualisiert, darunter Vaadin 25.2.8,
-  Identity 0.5.1, Sonar-Plugin 7.5.0, JaCoCo 0.8.15,
+  Identity 0.7.1, Sonar-Plugin 7.5.0, JaCoCo 0.8.15,
   NullAway 0.14.1 und Gradle 9.7.1.
 - Die Wiederholungszeitleiste besitzt einen expliziten Endstand; dort sind
   Teilnehmerperspektive und Kriegsnebel wieder verfügbar.
 - Sonar prüft zusätzlich Frontend und Browser-Testquellen.
+- OpenRewrite läuft mit einem kuratierten Satz (`ZettSystemsRecipes`,
+  `CodeCleanup`, `RemoveUnusedImports`) statt der Migrations-Composites; die
+  abgelehnten Recipes stehen begründet im `rewrite`-Block. Einmal über den
+  Code gelaufen: Importe vereinheitlicht, qualifizierte Klassennamen ersetzt.
+- `spring-security-test` durch `spring-boot-starter-security-test` ersetzt.
 - Eigene Theme-Farben ersetzen undefinierte Lumo-Variablen; Statusanzeigen
   und Kartenmarkierungen erhalten kontrastreiche Hintergründe.
 - Keine fest eingetragenen Datenbankzugangsdaten in der Anwendung; lokal
@@ -127,6 +132,12 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   `ui` ↛ `domain`.
 
 ### Fixed
+- Beendete Partien öffnen aus dem Archiv wieder lesend: Sitzinhaber landeten
+  im Wartezustand vor dem Ergebnisdialog, mit sichtbarem „Nächste Runde" und
+  ohne Nachbetrachtung. Der Wartezustand gilt nur noch für eine Ansicht, die
+  das Spielende selbst miterlebt hat.
+- Der Ergebnisdialog erscheint auch ohne eigene Schlacht in der letzten Runde;
+  ein unbeteiligter Verlierer blieb sonst im Wartezustand hängen.
 - Host-Wechsel werden dauerhaft gespeichert und nach Neustarts wiederhergestellt.
 - Befehle aus alten Dialogen können beendete Partien nicht mehr verändern.
 - Sitzvergabe und Persistenz laufen unter demselben Partie-Lock, damit
@@ -153,4 +164,5 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   `V1_x` (`spring.flyway.out-of-order: true`).
 
 ### Removed
+- Ungenutzte Abhängigkeiten `spring-boot-starter-validation` und Lombok.
 - Eigene Benutzerverwaltung (`user_accounts`, `RegisterView`, `LoginView`).
