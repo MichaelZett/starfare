@@ -26,7 +26,7 @@ final class ReviewControls extends HorizontalLayout {
         setWrap(true);
         setAlignItems(Alignment.BASELINE);
         perspective.setId("review-perspective");
-        perspective.setItemLabelGenerator(Player::name);
+        perspective.setItemLabelGenerator(Player::label);
         perspective.setAllowCustomValue(false);
         perspective.setClearButtonVisible(false);
         fog.setId("review-fog");

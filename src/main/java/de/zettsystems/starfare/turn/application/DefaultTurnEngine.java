@@ -161,7 +161,7 @@ public class DefaultTurnEngine implements TurnEngine {
                 state.endGame(pid);
                 reportService.appendEvent(state, pid, new TurnEvent.Victory(pid));
                 String winnerName = state.players().stream().filter(player -> player.id() == pid)
-                        .findFirst().orElseThrow().name();
+                        .findFirst().orElseThrow().label();
                 state.players().stream().filter(player -> player.id() != pid)
                         .forEach(player -> reportService.appendEvent(state, player.id(),
                                 new TurnEvent.Defeat(pid, winnerName)));

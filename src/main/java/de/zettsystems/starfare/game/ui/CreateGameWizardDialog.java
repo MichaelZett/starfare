@@ -15,8 +15,10 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import de.zettsystems.starfare.auth.ui.UserContext;
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
@@ -35,7 +37,7 @@ final class CreateGameWizardDialog {
     private CreateGameWizardDialog() {
     }
 
-    static void open(GameService game, Runnable onCreated) {
+    static void open(GameService game, PlayerDirectory players, Runnable onCreated) {
         Dialog dialog = new Dialog();
         dialog.addClassName("create-game-dialog");
         dialog.setHeaderTitle(I18n.t(UiTexts.LOBBY_WIZARD_TITLE));
@@ -83,9 +85,14 @@ final class CreateGameWizardDialog {
         Checkbox joinAfterCreate = new Checkbox(I18n.t(UiTexts.LOBBY_WIZARD_JOIN_AFTER_CREATE));
         joinAfterCreate.setId("join-after-create");
         joinAfterCreate.setValue(true);
+        String hostPlayerId = UserContext.currentPlayerId().orElse("");
+        String hostName = hostPlayerId.isBlank() ? "" : players.displayName(hostPlayerId);
+        TextField empireName = new TextField(I18n.t(UiTexts.LOBBY_FIELD_EMPIRE_NAME));
+        empireName.setValue(EmpireNameGenerator.forHuman(hostName));
+        empireName.setRequiredIndicatorVisible(true);
 
         FormLayout setupGrid = grid(3, "13em", systems, humans, ai, startGarrison,
-                galaxyLayout, observersAllowed, reentryAllowed, battlePresentation, joinAfterCreate);
+                galaxyLayout, observersAllowed, reentryAllowed, battlePresentation, empireName, joinAfterCreate);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
 
         FormLayout startProductionFields = new FormLayout();
@@ -131,11 +138,17 @@ final class CreateGameWizardDialog {
                 neutralMinProduction, neutralMaxProduction, startGarrison,
                 observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CREATE), _ -> {
+            if (empireName.getValue().trim().isEmpty()) {
+                empireName.setInvalid(true);
+                empireName.setErrorMessage(I18n.t(UiTexts.LOBBY_EMPIRE_NAME_REQUIRED));
+                return;
+            }
             GameSetup setup = buildSetup(formInputs);
-            String hostPlayerId = UserContext.currentPlayerId().orElse(null);
-            GameId gameId = game.newGame(setup, hostPlayerId, GameNameGenerator.random());
-            if (hostPlayerId != null) {
-                joinNewGame(game, gameId, hostPlayerId, Boolean.TRUE.equals(joinAfterCreate.getValue()));
+            String accountId = UserContext.currentPlayerId().orElse(null);
+            GameId gameId = game.newGame(setup, accountId, GameNameGenerator.random());
+            if (accountId != null) {
+                joinNewGame(game, gameId, accountId, hostName, empireName.getValue(),
+                        Boolean.TRUE.equals(joinAfterCreate.getValue()));
             }
             onCreated.run();
             dialog.close();
@@ -297,8 +310,9 @@ final class CreateGameWizardDialog {
         return value == null ? fallback : value;
     }
 
-    private static void joinNewGame(GameService game, GameId gameId, String hostPlayerId, boolean joinAfterCreate) {
-        if (joinAfterCreate && hostPlayerId != null && game.joinGame(gameId, hostPlayerId).isEmpty()) {
+    private static void joinNewGame(GameService game, GameId gameId, String hostPlayerId, String hostName,
+                                    String empireName, boolean joinAfterCreate) {
+        if (joinAfterCreate && game.joinGame(gameId, hostPlayerId, hostName, empireName).isEmpty()) {
             Notification.show(I18n.t(UiTexts.LOBBY_JOIN_FAILED));
         }
     }

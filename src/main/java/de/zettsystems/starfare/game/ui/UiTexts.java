@@ -45,6 +45,8 @@ public final class UiTexts {
     public static final String LOBBY_NEW_GAME = "lobby.newGame";
     public static final String LOBBY_JOINED = "lobby.joined";
     public static final String LOBBY_JOIN_FAILED = "lobby.joinFailed";
+    public static final String LOBBY_JOIN_TITLE = "lobby.join.title";
+    public static final String LOBBY_EMPIRE_NAME_REQUIRED = "lobby.empireName.required";
     public static final String LOBBY_START_FAILED = "lobby.startFailed";
 
     // Lobby — grid
@@ -93,6 +95,7 @@ public final class UiTexts {
     public static final String LOBBY_FIELD_HUMANS = "lobby.field.humans";
     public static final String LOBBY_FIELD_AI = "lobby.field.ai";
     public static final String LOBBY_FIELD_COLOR = "lobby.field.color";
+    public static final String LOBBY_FIELD_EMPIRE_NAME = "lobby.field.empireName";
     public static final String LOBBY_FIELD_PRODUCTION_DISTRIBUTION = "lobby.field.productionDistribution";
     public static final String LOBBY_PRODUCTION_DISTRIBUTION_UNIFORM = "lobby.productionDistribution.uniform";
     public static final String LOBBY_PRODUCTION_DISTRIBUTION_GAUSSIAN = "lobby.productionDistribution.gaussian";

@@ -21,7 +21,7 @@ final class SpectatorControls extends HorizontalLayout {
         setAlignItems(Alignment.BASELINE);
         addClassName("review-controls");
         perspective.setId("spectator-perspective");
-        perspective.setItemLabelGenerator(Player::name);
+        perspective.setItemLabelGenerator(Player::label);
         perspective.setAllowCustomValue(false);
         perspective.setClearButtonVisible(false);
         fog.setId("spectator-fog");

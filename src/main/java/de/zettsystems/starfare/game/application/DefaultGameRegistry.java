@@ -74,13 +74,23 @@ public class DefaultGameRegistry implements GameRegistry {
 
     @Override
     public Optional<Integer> claimSeat(GameId id, @Nullable String playerId) {
+        return claimSeat(id, playerId, "", "");
+    }
+
+    @Override
+    public Optional<Integer> claimSeat(GameId id, @Nullable String playerId, String playerName, String empireName) {
         if (playerId == null || playerId.isBlank()) {
             return Optional.empty();
         }
         if (find(id).isEmpty()) { return Optional.empty(); }
         return Optional.ofNullable(writeState(id, state -> {
             if (!access.visible(state, require(id).hostPlayerId(), playerId)) { return null; }
-            return tryClaimSeat(state, playerId);
+            boolean knownAccount = state.seatByUser().containsKey(playerId);
+            Integer seat = tryClaimSeat(state, playerId);
+            if (seat != null && !knownAccount) {
+                state.updatePlayer(seat, player -> player.identifiedAs(playerName, empireName));
+            }
+            return seat;
         }));
     }
 
@@ -226,7 +236,9 @@ public class DefaultGameRegistry implements GameRegistry {
             state.originalHumanPlayerIds().add(seatId);
         }
         for (int i = 1; i <= setup.aiPlayers(); i++) {
-            state.players().add(new Player(pid++, aiName(i), true, setup.colorForSeat(setup.humanPlayers() + i - 1)));
+            String aiName = aiName(i);
+            state.players().add(new Player(pid++, aiName, true,
+                    setup.colorForSeat(setup.humanPlayers() + i - 1), EmpireNameGenerator.forAi(i)));
         }
         for (Player p : state.players()) {
             state.intel().put(p.id(), new HashMap<>());

@@ -91,6 +91,16 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void playerJsonWithoutEmpireNameStillLoads() {
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(sampleState()));
+        ((ObjectNode) json.get("players").get(0)).remove("empireName");
+
+        GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+
+        assertThat(restored.players().getFirst().empireNameOrName()).isEqualTo("P1");
+    }
+
+    @Test
     void intelJsonWithoutGarrisonStillLoads() {
         ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(sampleState()));
         ((ObjectNode) json.get("intel").get("1").get("1")).remove("garrison");
