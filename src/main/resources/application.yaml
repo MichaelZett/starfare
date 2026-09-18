@@ -35,12 +35,11 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
-    # Nur die eigenen Migrationen (V2_x). Der Identity-Baustein haengt seinen
-    # Ablageort (classpath:db/identity, V1_x) per Auto-Konfiguration selbst an.
+    # Nur die eigenen Migrationen. Der Identity-Baustein (seit 0.8.0) migriert
+    # sein eigenes Schema `identity` mit eigener History selbst, vor diesem
+    # Lauf — kein out-of-order und kein fremder Ablageort mehr. Beim ersten
+    # Start mit 0.8.0 zieht er die auth_*-Tabellen einmalig nach `identity` um.
     locations: classpath:db/migration
-    # Neue Baustein-Migrationen (V1_x) sind niedriger nummeriert als bereits
-    # angewendete App-Migrationen; ohne out-of-order lehnt Flyway sie ab.
-    out-of-order: true
 
 zs:
   identity:

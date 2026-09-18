@@ -35,8 +35,9 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
   repository, consumed as Maven artifacts). Authentication uses email; game and
   social references use the immutable account ID, while the public player name
   (`zs.identity.name-mode: DISPLAY_NAME`) is presentation-only. The building
-  block ships its own Flyway migrations (`V1_x`); Starfare's schema lives in
-  `V2_x` with `spring.flyway.out-of-order: true`.
+  block migrates its own database schema `identity` (own Flyway history, run
+  before the application's); Starfare's schema lives in `V2_x` under
+  `db/migration`.
 - `i18n` — `StarfareI18NProvider` (Vaadin `I18NProvider`),
   `I18n.t(...)` facade, `LocaleServiceInitListener` (restores the UI
   locale from the session).
