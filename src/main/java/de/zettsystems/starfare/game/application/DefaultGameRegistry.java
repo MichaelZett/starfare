@@ -223,6 +223,7 @@ public class DefaultGameRegistry implements GameRegistry {
     private void initializeState(GameState state, GameSetup setup) {
         state.resetForNewGame();
         state.configureLobby(setup.observersAllowed(), setup.reentryAllowed(), setup.battlePresentationEnabled());
+        state.configureRoundRules(setup.roundRules());
         state.players().clear();
         state.systems().clear();
         state.fleets().clear();

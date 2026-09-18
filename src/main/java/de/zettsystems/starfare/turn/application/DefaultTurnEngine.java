@@ -5,6 +5,7 @@ import de.zettsystems.starfare.combat.application.CombatService;
 import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.AttackOrder;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.StarSystem;
@@ -14,9 +15,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,12 +44,14 @@ public class DefaultTurnEngine implements TurnEngine {
         if (state.gameOver()) {
             return;
         }
+        // Die KI plant auf demselben Stand, den die Menschen waehrend der Runde gesehen haben,
+        // und ihre Befehle laufen zusammen mit deren Befehlen ein: kein Informationsvorsprung.
+        aiService.planAiTurns(state, fleetService);
         applyOrders(state);
         Map<Integer, Integer> routedShips = fleetService.applyStandingOrdersForProduction(state);
         applyProduction(state, routedShips);
         applyWaitOrders(state);
         resolveArrivals(state);
-        aiService.doAiTurns(state, fleetService);
         checkVictory(state);
         state.captureReplayFrame();
         state.nextTurn();
@@ -110,12 +116,23 @@ public class DefaultTurnEngine implements TurnEngine {
         if (ownerOnTarget != null) {
             applyReinforcement(state, toId, ownerOnTarget, ownerMap);
         }
-        var attackers = ownerMap.entrySet().stream()
-                .sorted((a, b) -> Integer.compare(b.getValue().ships, a.getValue().ships))
-                .toList();
-        for (var atk : attackers) {
+        for (var atk : attackOrder(state, ownerMap)) {
             combatService.resolveAttack(state, atk.getKey(), toId, atk.getValue().ships, atk.getValue().localNos);
         }
+    }
+
+    /** Reihenfolge der Angreifer laut Spielregel; jeder kämpft gegen die dann stehende Garnison. */
+    private static List<Map.Entry<Integer, MergedArrival>> attackOrder(GameState state,
+                                                                       Map<Integer, MergedArrival> ownerMap) {
+        List<Map.Entry<Integer, MergedArrival>> attackers = new ArrayList<>(ownerMap.entrySet());
+        if (state.roundRules().attackOrder() == AttackOrder.RANDOM) {
+            Collections.shuffle(attackers, ThreadLocalRandom.current());
+        } else {
+            attackers.sort(Comparator.comparingInt((Map.Entry<Integer, MergedArrival> e) -> e.getValue().ships)
+                    .reversed()
+                    .thenComparing(Map.Entry::getKey));
+        }
+        return attackers;
     }
 
     private void applyReinforcement(GameState state, int toId, int ownerOnTarget, Map<Integer, MergedArrival> ownerMap) {

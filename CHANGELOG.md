@@ -92,9 +92,20 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   doppelt gewählte Farben werden auf freie Palettenwerte ausgewichen.
 - Lobby: Freitextsuche über Partie- und Spielernamen sowie ein Filter
   (alle / meine / offene / laufende / beendete Partien).
-- Echtzeit-Timeout: Sitze, die einen Zug nicht abgeben, übernimmt nach
-  `starfare.game.inactivity-timeout` (Standard 5 min) die KI. Erlaubt die
-  Partie den Wiedereinstieg, kann der Spieler seinen Sitz zurückholen.
+- Rundenfristen je Partie: Rundenlimit ab Rundenbeginn (Standard 5 min) und
+  Nachzügler-Limit, sobald nur noch einer fehlt (Standard 1 min), beide im
+  Wizard von 30 s bis 7 Tage wählbar. Ab zwei Menschen endet die Runde mit der
+  ersten abgelaufenen Frist; wer sie verpasst, zieht mit den bis dahin
+  erteilten Befehlen. Erst nach drei verpassten Runden in Folge übernimmt die
+  KI den Sitz; erlaubt die Partie den Wiedereinstieg, kann der Spieler ihn
+  zurückholen. Ersetzt `starfare.game.inactivity-timeout`.
+- Eine Leiste unter dem Kopf zeigt alle Mitspieler mit Haken nach der Abgabe
+  und den Countdown beim letzten Fehlenden bzw. bis zum Rundenende.
+- Die KI plant ihre Züge parallel zu den Menschen auf demselben Stand und hat
+  keinen Informationsvorsprung mehr; ihre Befehle laufen zusammen mit denen
+  der Menschen ein.
+- Neue Spielregel „Reihenfolge mehrerer Angreifer" an einem System: zufällig
+  (Standard) oder stärkster zuerst.
 - Rundenbericht: Kampfereignisse lassen sich per Klick mit kurzer Animation
   und Ton aufdecken.
 - Wizard: Produktionsverteilung (gleichmäßig oder um die Mitte gehäuft) und

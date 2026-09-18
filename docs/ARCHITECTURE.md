@@ -70,17 +70,35 @@ other modules. New modules need the same declaration.
 
 Fixed sequence, fully inside one `writeState`:
 
-1. Production on owned, non-neutral systems.
-2. Apply `waitThisTurn` (arrival +1, clear flag).
-3. Group arrivals by `toSystemId` + owner; reinforce the owner first,
-   then resolve attackers strongest-first via `CombatService`.
-4. `AiService.doAiTurns`.
-5. Victory check (>= 70% of all systems, neutrals included;
+1. `AiService.planAiTurns` queues the AI's orders, exactly like a human's.
+   The AI plans on the state the humans saw during the round, so it has no
+   information advantage and its fleets launch in the same round.
+2. Apply all queued orders (send, wait, disband), then standing relocations.
+3. Production on owned, non-neutral systems.
+4. Apply `waitThisTurn` (arrival +1, clear flag).
+5. Group all arrivals of the round by `toSystemId` + owner before any combat;
+   reinforce the owner first, then resolve the attackers one after another via
+   `CombatService`, each against the garrison left by the previous one. The
+   order is a game rule (`RoundRules.attackOrder`): random (default) or
+   strongest first.
+6. Victory check (>= 70% of all systems, neutrals included;
    `GameConfig.VICTORY_SYSTEM_PERCENT`); it sends `Victory` to the winner and
    `Defeat(winnerId, winnerName)` to every other participant.
-6. `state.nextTurn()`.
+7. `state.nextTurn()`.
 
 If `state.gameOver()` is true, `advanceTurn` is a no-op.
+
+## Round limits
+
+A round ends once every human has submitted, or at the round deadline
+(`GameState.roundDeadline`): the round limit counts from the start of the
+round, the straggler limit from the moment only one human is still missing;
+whichever comes first. Both are chosen per game in the wizard (defaults 5 min
+and 1 min). Games with fewer than two humans have no deadline.
+`RoundDeadlineRunner` checks every `starfare.game.round-check-interval` (5 s).
+At the deadline, late players move with the orders they had queued; after
+`GameConfig.MAX_MISSED_ROUNDS` (3) missed deadlines in a row the AI takes the
+seat, which can be reclaimed if the game allows re-entry.
 
 ## Lifecycle and lobby
 

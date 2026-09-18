@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class DefaultAiService implements AiService {
 
     @Override
-    public void doAiTurns(GameState state, FleetService fleetService) {
+    public void planAiTurns(GameState state, FleetService fleetService) {
         Map<Integer, List<StarSystem>> byOwner = state.systems().stream()
                 .filter(s -> s.ownerId() != null)
                 .collect(Collectors.groupingBy(StarSystem::ownerId));
@@ -38,6 +38,6 @@ public class DefaultAiService implements AiService {
         state.systems().stream()
                 .filter(s -> !Objects.equals(s.ownerId(), p.id()))
                 .min(Comparator.comparingDouble(s -> state.distance(base.id(), s.id())))
-                .ifPresent(t -> fleetService.sendFleet(state, p.id(), base.id(), t.id(), Math.max(1, available / 2)));
+                .ifPresent(t -> fleetService.queueSend(state, p.id(), base.id(), t.id(), Math.max(1, available / 2)));
     }
 }
