@@ -13,7 +13,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
-import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
@@ -35,17 +34,15 @@ import java.util.stream.Collectors;
 public class ArchiveView extends VerticalLayout {
     private final GameService games;
     private final Broadcaster broadcaster;
-    private final PlayerDirectory players;
     private final Grid<GameSummary> grid = new Grid<>(GameSummary.class, false);
     private final TextField search = new TextField();
     private final Checkbox own = new Checkbox();
     private final Span empty = new Span(I18n.t(UiTexts.ARCHIVE_EMPTY));
     private @Nullable Subscription subscription;
 
-    public ArchiveView(GameService games, Broadcaster broadcaster, PlayerDirectory players) {
+    public ArchiveView(GameService games, Broadcaster broadcaster) {
         this.games = games;
         this.broadcaster = broadcaster;
-        this.players = players;
         setSizeFull();
         search.setPlaceholder(I18n.t(UiTexts.LOBBY_SEARCH));
         search.setClearButtonVisible(true);
