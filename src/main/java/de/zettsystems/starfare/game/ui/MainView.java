@@ -48,6 +48,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private final MapHeaderBar header;
     private final ReviewControls reviewControls;
     private final SpectatorControls spectatorControls;
+    private final RoundStatusBar roundStatus = new RoundStatusBar();
     private final Div gameOverBanner = new Div();
     private final FleetAndOrdersPanel fleetsPanel;
 
@@ -99,7 +100,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             badgesShowingFleetNo.clear();
             refresh();
         });
-        add(header, spectatorControls, reviewControls, buildContent());
+        add(header, roundStatus, spectatorControls, reviewControls, buildContent());
     }
 
     private HorizontalLayout buildContent() {
@@ -391,6 +392,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer);
         header.setRound(view.turn());
+        roundStatus.update(reviewing ? RoundStatus.NONE : view.roundStatus());
         header.setGameName(game.gameNameOf(gameId));
         header.setNextEnabled(!view.gameOver());
         gameOverBanner.setVisible(view.gameOver() && reviewing);

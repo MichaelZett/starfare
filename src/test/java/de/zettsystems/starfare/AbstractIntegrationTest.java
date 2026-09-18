@@ -1,7 +1,7 @@
 package de.zettsystems.starfare;
 
 import de.zettsystems.starfare.game.application.GameRegistry;
-import de.zettsystems.starfare.game.application.InactivityTimeoutRunner;
+import de.zettsystems.starfare.game.application.RoundDeadlineRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,7 +20,7 @@ public abstract class AbstractIntegrationTest {
 
     // Tests invoke timeout processing explicitly; a scheduler must not race fixture cleanup.
     @MockitoBean
-    private InactivityTimeoutRunner inactivityTimeoutRunner;
+    private RoundDeadlineRunner roundDeadlineRunner;
 
     @ServiceConnection
     @SuppressWarnings("rawtypes")

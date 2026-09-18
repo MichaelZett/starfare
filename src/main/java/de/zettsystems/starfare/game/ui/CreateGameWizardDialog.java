@@ -24,6 +24,7 @@ import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -95,6 +96,16 @@ final class CreateGameWizardDialog {
                 galaxyLayout, observersAllowed, reentryAllowed, battlePresentation, empireName, joinAfterCreate);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
 
+        ComboBox<Duration> roundLimit = durationCombo(I18n.t(UiTexts.LOBBY_FIELD_ROUND_LIMIT),
+                RoundRules.ROUND_LIMIT_CHOICES, RoundRules.DEFAULT_ROUND_LIMIT);
+        ComboBox<Duration> stragglerLimit = durationCombo(I18n.t(UiTexts.LOBBY_FIELD_STRAGGLER_LIMIT),
+                RoundRules.STRAGGLER_LIMIT_CHOICES, RoundRules.DEFAULT_STRAGGLER_LIMIT);
+        ComboBox<AttackOrder> attackOrder = new ComboBox<>(I18n.t(UiTexts.LOBBY_FIELD_ATTACK_ORDER));
+        attackOrder.setItems(AttackOrder.values());
+        attackOrder.setItemLabelGenerator(CreateGameWizardDialog::labelFor);
+        attackOrder.setValue(RoundRules.DEFAULT_ATTACK_ORDER);
+        FormLayout roundGrid = grid(3, "16em", roundLimit, stragglerLimit, attackOrder);
+
         FormLayout startProductionFields = new FormLayout();
         configureColumns(startProductionFields, 4, "13em");
         startProductionFields.setWidthFull();
@@ -116,11 +127,16 @@ final class CreateGameWizardDialog {
         privateHint.addClassName("wizard-private-hint");
         privateHint.setText(I18n.t(UiTexts.GAME_PRIVATE_HINT));
 
+        Div sideSections = new Div(
+                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL),
+                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid),
+                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS),
+                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS_HINT, GameConfig.MAX_MISSED_ROUNDS), roundGrid));
+        sideSections.addClassName("wizard-overview-side");
         Div overview = new Div(
                 wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP),
                         I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP_HINT), setupGrid),
-                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL),
-                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid));
+                sideSections);
         overview.addClassName("wizard-overview");
         VerticalLayout body = new VerticalLayout(
                 privateHint,
@@ -136,7 +152,8 @@ final class CreateGameWizardDialog {
 
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
-                observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout);
+                observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout,
+                roundLimit, stragglerLimit, attackOrder);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CREATE), _ -> {
             if (empireName.getValue().trim().isEmpty()) {
                 empireName.setInvalid(true);
@@ -201,7 +218,9 @@ final class CreateGameWizardDialog {
                               IntegerField startGarrison,
                               Checkbox observersAllowed, Checkbox reentryAllowed, Checkbox battlePresentation,
                               ComboBox<ProductionDistribution> productionDistribution,
-                              ComboBox<GalaxyLayout> galaxyLayout) {
+                              ComboBox<GalaxyLayout> galaxyLayout,
+                              ComboBox<Duration> roundLimit, ComboBox<Duration> stragglerLimit,
+                              ComboBox<AttackOrder> attackOrder) {
     }
 
     private static GameSetup buildSetup(FormInputs in) {
@@ -224,7 +243,8 @@ final class CreateGameWizardDialog {
                 seatColors,
                 in.productionDistribution().getValue(),
                 in.galaxyLayout().getValue(),
-                in.battlePresentation().getValue()
+                in.battlePresentation().getValue(),
+                new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), in.attackOrder().getValue())
         ).normalized();
     }
 
@@ -238,6 +258,20 @@ final class CreateGameWizardDialog {
         return I18n.t(value == GalaxyLayout.EVEN
                 ? UiTexts.LOBBY_GALAXY_LAYOUT_EVEN
                 : UiTexts.LOBBY_GALAXY_LAYOUT_RANDOM);
+    }
+
+    private static String labelFor(AttackOrder value) {
+        return I18n.t(value == AttackOrder.STRONGEST_FIRST
+                ? UiTexts.LOBBY_ATTACK_ORDER_STRONGEST_FIRST
+                : UiTexts.LOBBY_ATTACK_ORDER_RANDOM);
+    }
+
+    private static ComboBox<Duration> durationCombo(String label, List<Duration> choices, Duration value) {
+        ComboBox<Duration> combo = new ComboBox<>(label);
+        combo.setItems(choices);
+        combo.setItemLabelGenerator(DurationLabels::label);
+        combo.setValue(value);
+        return combo;
     }
 
     private static ComboBox<ColorOption> buildColorCombo() {

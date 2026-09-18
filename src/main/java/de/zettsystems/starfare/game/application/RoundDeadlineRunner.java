@@ -7,28 +7,32 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-/** Periodically lets the server take over abandoned real-time seats. */
+import java.time.Instant;
+
+/** Ends rounds whose round or straggler limit has passed. */
 @Component
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Spring-injected GameService is kept by reference for the bean's lifetime by design.")
-public class InactivityTimeoutRunner {
-    private static final Logger LOG = LoggerFactory.getLogger(InactivityTimeoutRunner.class);
+public class RoundDeadlineRunner {
+    private static final Logger LOG = LoggerFactory.getLogger(RoundDeadlineRunner.class);
 
     private final GameService gameService;
 
-    public InactivityTimeoutRunner(GameService gameService) {
+    public RoundDeadlineRunner(GameService gameService) {
         this.gameService = gameService;
     }
 
-    @Scheduled(fixedDelayString = "${starfare.game.inactivity-check-interval:30s}")
-    public void expireInactiveSeats() {
+    // Kurzes Intervall: das Nachzuegler-Limit kann bei 30 s liegen.
+    @Scheduled(fixedDelayString = "${starfare.game.round-check-interval:5s}")
+    public void enforceRoundDeadlines() {
+        Instant now = Instant.now();
         for (GameId gameId : gameService.listGames()) {
             try {
-                gameService.expireInactiveSeats(gameId);
+                gameService.enforceRoundDeadline(gameId, now);
             } catch (RuntimeException e) {
                 // Eine zwischenzeitlich geloeschte oder defekte Partie darf die
                 // uebrigen dieses Durchlaufs nicht ueberspringen.
-                LOG.warn("Inactivity check failed for game {}", gameId, e);
+                LOG.warn("Round deadline check failed for game {}", gameId, e);
             }
         }
     }
