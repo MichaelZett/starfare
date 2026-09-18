@@ -120,7 +120,7 @@ public class LobbySteps {
         browser.awaitCss("#review-fog").click();
         browser.awaitCss(".sys-fog");
         String aiName = games.reviewFor(id, host).orElseThrow().players().stream()
-                .filter(Player::ai).findFirst().orElseThrow().name();
+                .filter(Player::ai).findFirst().orElseThrow().label();
         var selection = browser.awaitCss("#review-perspective input");
         selection.sendKeys(Keys.chord(Keys.CONTROL, "a"));
         selection.sendKeys(aiName);
@@ -129,7 +129,7 @@ public class LobbySteps {
                         .filter(item -> item.isDisplayed() && item.getText().equals(aiName))
                         .findFirst().orElse(null)).click();
         var ai = games.reviewFor(id, host).orElseThrow().players().stream()
-                .filter(player -> player.name().equals(aiName)).findFirst().orElseThrow();
+                .filter(player -> player.label().equals(aiName)).findFirst().orElseThrow();
         var home = games.reviewFor(id, host, ai.id(), true).orElseThrow().systems().stream()
                 .filter(system -> Objects.equals(system.ownerId(), ai.id()))
                 .findFirst().orElseThrow();
