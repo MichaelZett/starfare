@@ -8,6 +8,10 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Identity-Baustein 0.9.1 (eigene Mail-Zustellung und Kopfbereich über den
+  Formularen als optionale Erweiterungspunkte; für Starfare ohne Änderung).
+- Die Lobby-Tabelle passt auf Desktop-Breite: Spielname und Spielerliste
+  werden bei Überlänge mit „…" gekürzt, der volle Text steht im Tooltip.
 - Identity-Baustein 0.8.0: Konten, Rollen und Tokens liegen im eigenen
   Datenbankschema `identity` mit eigener Migrationshistorie; der erste Start
   nach dem Update zieht die bestehenden Tabellen einmalig dorthin um.

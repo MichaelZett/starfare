@@ -169,14 +169,19 @@ public class LobbyView extends VerticalLayout {
     private void configureGrid() {
         grid.addClassName("lobby-grid");
         grid.setWidthFull();
+        // Spiel und Spieler bekommen feste Mindestbreiten statt Auto-Breite: lange
+        // Reichsnamen würden sonst die Aktionsspalte aus dem Bild schieben. Was nicht
+        // passt, endet mit "…" und steht vollständig im Tooltip.
         grid.addComponentColumn(this::nameWithHost)
                 .setHeader(I18n.t(UiTexts.LOBBY_COLUMN_GAME))
-                .setAutoWidth(true).setFlexGrow(2);
+                .setTooltipGenerator(LobbyGameRow::name)
+                .setWidth("12em").setFlexGrow(2);
         grid.addColumn(row -> I18n.t(UiTexts.LOBBY_TURN_LABEL, row.turn()))
                 .setHeader(I18n.t(UiTexts.LOBBY_COLUMN_TURN)).setAutoWidth(true).setFlexGrow(0);
         grid.addColumn(LobbyGameRow::players)
                 .setHeader(I18n.t(UiTexts.LOBBY_COLUMN_PLAYERS))
-                .setAutoWidth(true).setFlexGrow(3);
+                .setTooltipGenerator(LobbyGameRow::players)
+                .setWidth("12em").setFlexGrow(3);
         grid.addComponentColumn(this::statusBadge)
                 .setHeader(I18n.t(UiTexts.LOBBY_COLUMN_STATUS)).setAutoWidth(true).setFlexGrow(0);
         grid.addComponentColumn(this::actionButtons)
@@ -256,7 +261,9 @@ public class LobbyView extends VerticalLayout {
     private Component nameWithHost(LobbyGameRow row) {
         Div container = new Div();
         container.addClassName("lobby-game-name");
-        container.add(new Span(row.name()), new Span(I18n.t(row.visibilityKey())));
+        Span name = new Span(row.name());
+        name.addClassName("lobby-game-name-text");
+        container.add(name, new Span(I18n.t(row.visibilityKey())));
         if (row.isHostedByCurrentUser()) {
             Span badge = new Span(I18n.t(UiTexts.LOBBY_HOST_BADGE));
             badge.addClassName("lobby-host-badge");
