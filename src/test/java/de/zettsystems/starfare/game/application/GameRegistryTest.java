@@ -107,10 +107,11 @@ class GameRegistryTest extends AbstractIntegrationTest {
 
     @Test
     void claimingSeatRecordsAccountAndEmpireName() {
-        GameId id = registry.createGame(GameSetup.defaults());
+        GameId id = registry.createGame(GameSetup.defaults(), "42", "Names");
 
         assertThat(registry.claimSeat(id, "42", "Ada", "Andromeda Union")).contains(1);
-        assertThat(registry.readState(id, state -> state.players().getFirst()))
+        Player first = registry.readState(id, state -> state.players().getFirst());
+        assertThat(first)
                 .extracting(Player::name, Player::empireNameOrName)
                 .containsExactly("Ada", "Andromeda Union");
     }
