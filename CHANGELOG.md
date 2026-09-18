@@ -8,6 +8,10 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Identity-Baustein 0.8.0: Konten, Rollen und Tokens liegen im eigenen
+  Datenbankschema `identity` mit eigener Migrationshistorie; der erste Start
+  nach dem Update zieht die bestehenden Tabellen einmalig dorthin um.
+  `spring.flyway.out-of-order` entfällt.
 - Produktionsverlegungen sind als violette Kartenkanten sichtbar und lassen
   sich durch Ziehen zwischen Systemen anlegen oder ersetzen.
 - Der Reiter Produktionsverlegungen bietet je Route Anpassen im vorhandenen
