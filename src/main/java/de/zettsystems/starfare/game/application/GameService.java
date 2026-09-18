@@ -45,6 +45,8 @@ public interface GameService {
 
     Optional<Integer> joinGame(GameId gameId, @Nullable String playerId);
 
+    Optional<Integer> joinGame(GameId gameId, @Nullable String playerId, String playerName, String empireName);
+
     Optional<Integer> seatFor(GameId gameId, @Nullable String playerId);
 
     Optional<Integer> inviteUser(GameId gameId, @Nullable String inviteePlayerId);

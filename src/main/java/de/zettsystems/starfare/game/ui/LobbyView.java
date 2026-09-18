@@ -316,12 +316,11 @@ public class LobbyView extends VerticalLayout {
     private Button buildJoinButton(LobbyGameRow row) {
         Button join = new Button(I18n.t(UiTexts.LOBBY_ACTION_JOIN), _ -> {
             String playerId = UserContext.currentPlayerId().orElse(null);
-            if (game.joinGame(row.gameId(), playerId).isEmpty()) {
+            if (playerId == null) {
                 Notification.show(I18n.t(UiTexts.LOBBY_JOIN_FAILED));
-            } else {
-                Notification.show(I18n.t(UiTexts.LOBBY_JOINED));
+                return;
             }
-            refresh();
+            JoinGameDialog.open(game, row.gameId(), playerId, players.displayName(playerId), this::refresh);
         });
         join.addThemeVariants(ButtonVariant.SMALL);
         join.setEnabled(row.canJoin());
@@ -387,7 +386,7 @@ public class LobbyView extends VerticalLayout {
     }
 
     private void openCreateGameWizard() {
-        CreateGameWizardDialog.open(game, this::refresh);
+        CreateGameWizardDialog.open(game, players, this::refresh);
     }
 
     private void openManageDialog(LobbyGameRow row) {
@@ -433,7 +432,7 @@ public class LobbyView extends VerticalLayout {
         }
 
         private static String playerLabel(Player player) {
-            return player.name() + (player.ai() ? " (AI)" : "");
+            return player.label() + (player.ai() ? " (AI)" : "");
         }
     }
 }

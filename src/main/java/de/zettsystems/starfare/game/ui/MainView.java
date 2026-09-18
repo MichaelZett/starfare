@@ -534,7 +534,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
         return view.players().stream()
                 .filter(p -> p.id() == winnerId)
-                .map(Player::name)
+                .map(Player::label)
                 .findFirst()
                 .orElse("?");
     }

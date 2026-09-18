@@ -151,6 +151,48 @@ Whitefall
 Shadow
 Lilac
 
+# Classic science fiction and original settings
+Avalon
+Erebus
+Hyperion
+Icarus
+Janus
+Kronos
+Nereid
+Nyx
+Oberon
+Orpheus
+Phaeton
+Phoebe
+Themis
+Umbra
+Valhalla
+Xanthe
+Zephyrus
+Eidolon
+Halcyon
+Meridian
+Solace
+Elysium
+Haven
+New Terra
+Port Meridian
+Farpoint
+Argon
+Cygnus
+Draco
+Hydra
+Perseus
+Scorpius
+Auriga
+Cassiopeia
+Carina
+Delphinus
+Equinox
+Gemini
+Lupus
+Phoenix
+
 # Mass Effect / Halo / Battlestar / Warhammer
 Palaven
 Thessia

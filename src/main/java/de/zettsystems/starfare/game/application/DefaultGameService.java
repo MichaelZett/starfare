@@ -143,6 +143,13 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public Optional<Integer> joinGame(GameId gameId, @Nullable String playerId, String playerName, String empireName) {
+        Optional<Integer> seat = registry.claimSeat(gameId, playerId, playerName, empireName);
+        seat.ifPresent(pid -> broadcaster.publish(new GameEvent.PlayerJoined(gameId, pid)));
+        return seat;
+    }
+
+    @Override
     public Optional<Integer> seatFor(GameId gameId, @Nullable String playerId) {
         return registry.seatOf(gameId, playerId);
     }

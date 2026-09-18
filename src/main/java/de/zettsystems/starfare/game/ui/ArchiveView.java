@@ -76,19 +76,15 @@ public class ArchiveView extends VerticalLayout {
     }
 
     private String participants(GameSummary summary) {
-        return summary.players().stream().map(player -> summary.seatByPlayer().entrySet().stream()
-                .filter(entry -> entry.getValue() == player.id())
-                .map(entry -> players.displayName(entry.getKey())).findFirst().orElse(player.name()))
+        return summary.players().stream().map(Player::label)
                 .collect(Collectors.joining(", "));
     }
 
     private String winner(GameSummary summary) {
         Integer winner = summary.outcome().winnerId();
         if (winner == null) { return I18n.t(UiTexts.ARCHIVE_NO_WINNER); }
-        return summary.seatByPlayer().entrySet().stream().filter(e -> e.getValue().equals(winner))
-                .map(e -> players.displayName(e.getKey())).findFirst().orElseGet(() ->
-                        summary.players().stream().filter(p -> p.id() == winner).map(Player::name)
-                                .findFirst().orElse(I18n.t(UiTexts.ARCHIVE_NO_WINNER)));
+        return summary.players().stream().filter(player -> player.id() == winner).map(Player::label)
+                .findFirst().orElse(I18n.t(UiTexts.ARCHIVE_NO_WINNER));
     }
 
     private String finishedAt(GameSummary summary) {
