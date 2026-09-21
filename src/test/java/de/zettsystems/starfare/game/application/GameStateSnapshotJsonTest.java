@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,6 +47,35 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
         assertThat(restored.turn()).isEqualTo(state.turn());
         assertThat(restored.turnStartedAt()).isEqualTo(state.turnStartedAt());
         assertThat(restored.intel().get(1).get(1).garrison()).isEqualTo(7);
+    }
+
+    @Test
+    void roundRulesAndClocksSurviveJsonRoundTrip() {
+        GameState state = sampleState();
+        state.configureRoundRules(new RoundRules(Duration.ofDays(2), Duration.ofHours(6), AttackOrder.STRONGEST_FIRST));
+        state.joinedHumanPlayerIds().addAll(List.of(1, 2));
+        state.submittedThisTurn().add(1);
+        state.updateStragglerClock(Instant.parse("2026-09-18T10:00:00Z"));
+        state.missedRounds().put(2, 1);
+
+        String json = objectMapper.writeValueAsString(GameState.toSnapshot(state));
+        GameState restored = GameState.fromSnapshot(objectMapper.readValue(json, GameStateSnapshot.class));
+
+        assertThat(restored.roundRules()).isEqualTo(state.roundRules());
+        assertThat(restored.stragglerSince()).isEqualTo(Instant.parse("2026-09-18T10:00:00Z"));
+        assertThat(restored.missedRounds()).containsEntry(2, 1);
+    }
+
+    @Test
+    void snapshotJsonWithoutRoundRulesUsesDefaults() {
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(sampleState()));
+        json.remove(List.of("roundRules", "stragglerSince", "missedRounds"));
+
+        GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+
+        assertThat(restored.roundRules()).isEqualTo(RoundRules.defaults());
+        assertThat(restored.stragglerSince()).isNull();
+        assertThat(restored.missedRounds()).isEmpty();
     }
 
     @Test
@@ -88,6 +118,16 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
         GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
 
         assertThat(restored.systems().getFirst().garrisonReserve()).isZero();
+    }
+
+    @Test
+    void playerJsonWithoutEmpireNameStillLoads() {
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(sampleState()));
+        ((ObjectNode) json.get("players").get(0)).remove("empireName");
+
+        GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+
+        assertThat(restored.players().getFirst().empireNameOrName()).isEqualTo("P1");
     }
 
     @Test

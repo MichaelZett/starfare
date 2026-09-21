@@ -45,6 +45,8 @@ public final class UiTexts {
     public static final String LOBBY_NEW_GAME = "lobby.newGame";
     public static final String LOBBY_JOINED = "lobby.joined";
     public static final String LOBBY_JOIN_FAILED = "lobby.joinFailed";
+    public static final String LOBBY_JOIN_TITLE = "lobby.join.title";
+    public static final String LOBBY_EMPIRE_NAME_REQUIRED = "lobby.empireName.required";
     public static final String LOBBY_START_FAILED = "lobby.startFailed";
 
     // Lobby — grid
@@ -93,12 +95,28 @@ public final class UiTexts {
     public static final String LOBBY_FIELD_HUMANS = "lobby.field.humans";
     public static final String LOBBY_FIELD_AI = "lobby.field.ai";
     public static final String LOBBY_FIELD_COLOR = "lobby.field.color";
+    public static final String LOBBY_FIELD_EMPIRE_NAME = "lobby.field.empireName";
     public static final String LOBBY_FIELD_PRODUCTION_DISTRIBUTION = "lobby.field.productionDistribution";
     public static final String LOBBY_PRODUCTION_DISTRIBUTION_UNIFORM = "lobby.productionDistribution.uniform";
     public static final String LOBBY_PRODUCTION_DISTRIBUTION_GAUSSIAN = "lobby.productionDistribution.gaussian";
     public static final String LOBBY_FIELD_GALAXY_LAYOUT = "lobby.field.galaxyLayout";
     public static final String LOBBY_GALAXY_LAYOUT_RANDOM = "lobby.galaxyLayout.random";
     public static final String LOBBY_GALAXY_LAYOUT_EVEN = "lobby.galaxyLayout.even";
+    public static final String LOBBY_WIZARD_SECTION_ROUNDS = "lobby.wizard.section.rounds";
+    public static final String LOBBY_WIZARD_SECTION_ROUNDS_HINT = "lobby.wizard.section.rounds.hint";
+    public static final String LOBBY_FIELD_ROUND_LIMIT = "lobby.field.roundLimit";
+    public static final String LOBBY_FIELD_STRAGGLER_LIMIT = "lobby.field.stragglerLimit";
+    public static final String LOBBY_FIELD_ATTACK_ORDER = "lobby.field.attackOrder";
+    public static final String LOBBY_ATTACK_ORDER_RANDOM = "lobby.attackOrder.random";
+    public static final String LOBBY_ATTACK_ORDER_STRONGEST_FIRST = "lobby.attackOrder.strongestFirst";
+    public static final String DURATION_SECONDS = "duration.seconds";
+    public static final String DURATION_MINUTES = "duration.minutes";
+    public static final String DURATION_HOURS = "duration.hours";
+    public static final String DURATION_DAYS = "duration.days";
+    public static final String ROUND_STATUS_ENDS_IN = "roundStatus.endsIn";
+    public static final String ROUND_STATUS_SUBMITTED = "roundStatus.submitted";
+    public static final String ROUND_STATUS_PENDING = "roundStatus.pending";
+    public static final String ROUND_STATUS_STRAGGLER = "roundStatus.straggler";
     public static final String LOBBY_FIELD_NEUTRAL_MIN_PRODUCTION = "lobby.field.neutralMinProduction";
     public static final String LOBBY_FIELD_NEUTRAL_MAX_PRODUCTION = "lobby.field.neutralMaxProduction";
     public static final String LOBBY_FIELD_START_PRODUCTION_HUMAN = "lobby.field.startProduction.human";

@@ -191,7 +191,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return "—";
         }
         return view.players().stream().filter(player -> player.id() == ownerId)
-                .map(Player::name).findFirst().orElse("?");
+                .map(Player::label).findFirst().orElse("?");
     }
 
     private static String shipValue(VisibleSystem system) {

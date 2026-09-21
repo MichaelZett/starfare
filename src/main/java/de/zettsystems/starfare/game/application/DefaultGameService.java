@@ -2,9 +2,9 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
-import de.zettsystems.starfare.game.config.GameTimingProperties;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.config.GameTimingProperties;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.report.application.ReportService;
 import de.zettsystems.starfare.report.values.TurnEvent;
@@ -39,14 +39,14 @@ public class DefaultGameService implements GameService {
     private final AutoplayRunner autoplayRunner;
     private final Broadcaster broadcaster;
     private final PlayerViewBuilder playerViewBuilder;
-    private final GameTimingProperties timing;
     private final GameStatisticsService statistics;
     private final GameArchiveStore archives;
+    private final GameTimingProperties timing;
 
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
-                              PlayerViewBuilder playerViewBuilder, GameTimingProperties timing, GameAccessPolicy access,
-                              GameStatisticsService statistics, GameArchiveStore archives) {
+                              PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
+                              GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing) {
         this.registry = registry;
         this.access = access;
         this.turnEngine = turnEngine;
@@ -55,9 +55,9 @@ public class DefaultGameService implements GameService {
         this.autoplayRunner = autoplayRunner;
         this.broadcaster = broadcaster;
         this.playerViewBuilder = playerViewBuilder;
-        this.timing = timing;
         this.statistics = statistics;
         this.archives = archives;
+        this.timing = timing;
     }
 
     @Override
@@ -145,6 +145,13 @@ public class DefaultGameService implements GameService {
     @Override
     public Optional<Integer> joinGame(GameId gameId, @Nullable String playerId) {
         Optional<Integer> seat = registry.claimSeat(gameId, playerId);
+        seat.ifPresent(pid -> broadcaster.publish(new GameEvent.PlayerJoined(gameId, pid)));
+        return seat;
+    }
+
+    @Override
+    public Optional<Integer> joinGame(GameId gameId, @Nullable String playerId, String playerName, String empireName) {
+        Optional<Integer> seat = registry.claimSeat(gameId, playerId, playerName, empireName);
         seat.ifPresent(pid -> broadcaster.publish(new GameEvent.PlayerJoined(gameId, pid)));
         return seat;
     }
@@ -416,6 +423,7 @@ public class DefaultGameService implements GameService {
                 return new SubmitResult(false, TurnResult.REJECTED);
             }
             state.submittedThisTurn().add(playerId);
+            state.missedRounds().remove(playerId);
             TurnResult turn = maybeAdvance(state);
             return new SubmitResult(true, turn);
         });
@@ -427,42 +435,46 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public boolean expireInactiveSeats(GameId gameId) {
+    public boolean enforceRoundDeadline(GameId gameId, Instant now) {
         // Billiger Vorfilter: writeState persistiert bei jedem Aufruf einen Snapshot,
-        // der Scheduler laeuft aber alle 30 s ueber saemtliche Partien.
-        boolean expired = registry.readState(gameId, this::hasExpiredSeats);
-        if (!expired) {
+        // der Scheduler laeuft aber alle paar Sekunden ueber saemtliche Partien.
+        if (!registry.readState(gameId, state -> deadlinePassed(state, now))) {
             return false;
         }
-        ExpiryResult result = registry.writeState(gameId, state -> {
-            if (!hasExpiredSeats(state)) {
-                return ExpiryResult.none();
+        DeadlineResult result = registry.writeState(gameId, state -> {
+            if (!deadlinePassed(state, now)) {
+                return DeadlineResult.none();
             }
-            Set<Integer> inactive = state.joinedHumanPlayerIds().stream()
-                    .filter(id -> !state.submittedThisTurn().contains(id))
-                    .collect(Collectors.toUnmodifiableSet());
-            List<String> abandonedBy = inactive.stream()
+            Set<Integer> late = Set.copyOf(state.pendingHumanPlayerIds());
+            Set<Integer> handedOver = new HashSet<>();
+            for (int id : late) {
+                if (state.missedRounds().merge(id, 1, Integer::sum) >= GameConfig.MAX_MISSED_ROUNDS) {
+                    handedOver.add(id);
+                }
+            }
+            List<String> abandonedBy = handedOver.stream()
                     .map(id -> state.seatByUser().entrySet().stream()
                             .filter(entry -> Objects.equals(entry.getValue(), id))
                             .map(Map.Entry::getKey).findFirst().orElse(null))
                     .filter(Objects::nonNull)
                     .toList();
-            inactive.forEach(id -> {
+            handedOver.forEach(id -> {
                 state.updatePlayer(id, Player::asAi);
                 state.joinedHumanPlayerIds().remove(id);
                 state.pendingOrders().remove(id);
+                state.missedRounds().remove(id);
                 // seatByUser bleibt bewusst stehen: nur so greift tryReclaimExistingSeat
                 // spaeter wieder. Ein Timeout darf nicht haerter sein als freiwilliges Verlassen.
             });
-            return new ExpiryResult(inactive, abandonedBy, maybeAdvance(state));
+            // Wer die Frist verpasst, zieht mit den bis dahin erteilten Befehlen.
+            return new DeadlineResult(late, handedOver, abandonedBy, advance(state));
         });
-        if (result.seats().isEmpty()) {
+        if (result.late().isEmpty()) {
             return false;
         }
-        // Der Sitz ist danach dauerhaft weg — das muss nachvollziehbar sein.
-        LOG.info("Inactivity timeout in game {}: seat(s) {} handed to the AI after {} without a submission",
-                gameId, result.seats(), timing.inactivityTimeout());
-        result.seats().forEach(seatId -> broadcaster.publish(new GameEvent.SeatAbandoned(gameId, seatId)));
+        LOG.info("Round deadline passed in game {}: seat(s) {} missed it, seat(s) {} handed to the AI",
+                gameId, result.late(), result.handedOver());
+        result.handedOver().forEach(seatId -> broadcaster.publish(new GameEvent.SeatAbandoned(gameId, seatId)));
         publishTurnResult(gameId, result.turnResult());
         result.abandonedBy().forEach(playerId -> transferHostIfNeeded(gameId, playerId));
         if (shouldAutoplay(gameId)) {
@@ -476,15 +488,15 @@ public class DefaultGameService implements GameService {
         return registry.unloadInactiveSingleHumanGames(timing.singlePlayerUnloadAfter());
     }
 
-    private boolean hasExpiredSeats(GameState state) {
-        return state.originalHumanPlayerIds().size() > 1 && state.active() && state.started() && !state.gameOver()
-                && !state.turnStartedAt().plus(timing.inactivityTimeout()).isAfter(Instant.now())
-                && !state.joinedHumanPlayerIds().stream().allMatch(state.submittedThisTurn()::contains);
+    private static boolean deadlinePassed(GameState state, Instant now) {
+        Instant deadline = state.roundDeadline();
+        return deadline != null && !deadline.isAfter(now) && !state.pendingHumanPlayerIds().isEmpty();
     }
 
-    private record ExpiryResult(Set<Integer> seats, List<String> abandonedBy, TurnResult turnResult) {
-        static ExpiryResult none() {
-            return new ExpiryResult(Set.of(), List.of(), TurnResult.REJECTED);
+    private record DeadlineResult(Set<Integer> late, Set<Integer> handedOver, List<String> abandonedBy,
+                                  TurnResult turnResult) {
+        static DeadlineResult none() {
+            return new DeadlineResult(Set.of(), Set.of(), List.of(), TurnResult.REJECTED);
         }
     }
 
@@ -600,11 +612,16 @@ public class DefaultGameService implements GameService {
             return TurnResult.NONE;
         }
         if (state.submittedThisTurn().containsAll(state.joinedHumanPlayerIds())) {
-            turnEngine.advanceTurn(state);
-            state.submittedThisTurn().clear();
-            return captureTurnResult(state);
+            return advance(state);
         }
+        state.updateStragglerClock(Instant.now());
         return TurnResult.NONE;
+    }
+
+    private TurnResult advance(GameState state) {
+        turnEngine.advanceTurn(state);
+        state.submittedThisTurn().clear();
+        return captureTurnResult(state);
     }
 
     private TurnResult captureTurnResult(GameState state) {

@@ -56,6 +56,11 @@ public class GameState {
     private boolean reentryAllowed;
     private boolean battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
     private Instant turnStartedAt = Instant.now();
+    private RoundRules roundRules = RoundRules.defaults();
+    /** Seit wann nur noch ein Mensch fehlt; {@code null}, solange die Nachzügler-Uhr nicht läuft. */
+    private @Nullable Instant stragglerSince;
+    /** Spieler-ID → verpasste Rundenfristen in Folge. */
+    private final Map<Integer, Integer> missedRounds = new HashMap<>();
 
     public int turn() {
         return turn;
@@ -121,6 +126,7 @@ public class GameState {
     public void start() {
         this.started = true;
         this.turnStartedAt = Instant.now();
+        this.stragglerSince = null;
         captureReplayFrame();
     }
 
@@ -174,6 +180,64 @@ public class GameState {
         return turnStartedAt;
     }
 
+    public RoundRules roundRules() {
+        return roundRules;
+    }
+
+    public void configureRoundRules(RoundRules rules) {
+        this.roundRules = rules;
+    }
+
+    public @Nullable Instant stragglerSince() {
+        return stragglerSince;
+    }
+
+    public Map<Integer, Integer> missedRounds() {
+        return missedRounds;
+    }
+
+    /** Menschen, die in dieser Runde noch nicht abgegeben haben. */
+    public Set<Integer> pendingHumanPlayerIds() {
+        Set<Integer> pending = new HashSet<>(joinedHumanPlayerIds);
+        pending.removeAll(submittedThisTurn);
+        return pending;
+    }
+
+    /**
+     * Startet die Nachzügler-Uhr, sobald nur noch ein Mensch fehlt, und hält sie sonst an.
+     * Nach jeder Abgabe und jedem Wechsel der Mitspieler aufrufen.
+     */
+    public void updateStragglerClock(Instant now) {
+        if (!timed() || pendingHumanPlayerIds().size() != 1) {
+            stragglerSince = null;
+        } else if (stragglerSince == null) {
+            stragglerSince = now;
+        }
+    }
+
+    /**
+     * Wann die laufende Runde spätestens endet: Rundenlimit ab Rundenbeginn oder, falls früher,
+     * Nachzügler-Limit ab dem Moment, in dem nur noch einer fehlt. Mit weniger als zwei
+     * Menschen läuft keine Frist.
+     */
+    public @Nullable Instant roundDeadline() {
+        if (!timed()) {
+            return null;
+        }
+        Instant roundEnd = turnStartedAt.plus(roundRules.roundLimit());
+        Instant since = stragglerSince;
+        // Steigt jemand wieder ein, fehlen erneut mehrere: dann gilt nur das Rundenlimit.
+        if (since == null || pendingHumanPlayerIds().size() != 1) {
+            return roundEnd;
+        }
+        Instant stragglerEnd = since.plus(roundRules.stragglerLimit());
+        return stragglerEnd.isBefore(roundEnd) ? stragglerEnd : roundEnd;
+    }
+
+    private boolean timed() {
+        return active && started && !gameOver && joinedHumanPlayerIds.size() >= 2;
+    }
+
     /**
      * Applies the lobby-level policies (observer access, re-entry of dropped humans).
      */
@@ -225,6 +289,9 @@ public class GameState {
         this.observersAllowed = false;
         this.reentryAllowed = false;
         this.battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
+        this.roundRules = RoundRules.defaults();
+        this.stragglerSince = null;
+        this.missedRounds.clear();
         this.players.clear();
         this.systems.clear();
         this.fleets.clear();
@@ -254,6 +321,9 @@ public class GameState {
         this.observersAllowed = false;
         this.reentryAllowed = false;
         this.battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
+        this.roundRules = RoundRules.defaults();
+        this.stragglerSince = null;
+        this.missedRounds.clear();
         clearGameOver();
         this.active = false;
         this.started = false;
@@ -372,6 +442,7 @@ public class GameState {
     public void nextTurn() {
         this.turn++;
         this.turnStartedAt = Instant.now();
+        this.stragglerSince = null;
     }
 
     /** Captures the resolved state of the current turn without keeping mutable collections. */
@@ -408,7 +479,7 @@ public class GameState {
                 new HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
-                s.battlePresentationEnabled);
+                s.battlePresentationEnabled, s.roundRules, s.stragglerSince, new HashMap<>(s.missedRounds));
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -464,6 +535,13 @@ public class GameState {
         // Aeltere Snapshots kennen das Feld nicht; dann laeuft die Zug-Uhr ab Wiederherstellung.
         Instant startedAt = s.turnStartedAt();
         c.turnStartedAt = startedAt != null ? startedAt : Instant.now();
+        RoundRules rules = s.roundRules();
+        c.roundRules = rules != null ? rules : RoundRules.defaults();
+        c.stragglerSince = s.stragglerSince();
+        Map<Integer, Integer> missed = s.missedRounds();
+        if (missed != null) {
+            c.missedRounds.putAll(missed);
+        }
         return c;
     }
 
@@ -502,6 +580,8 @@ public class GameState {
         c.observersAllowed = s.observersAllowed();
         c.reentryAllowed = s.reentryAllowed();
         c.battlePresentationEnabled = s.battlePresentationEnabled();
+        c.roundRules = s.roundRules();
+        c.missedRounds.putAll(s.missedRounds());
 
         if (s.gameOver()) {
             c.endGame(s.winnerId());
