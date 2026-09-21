@@ -171,7 +171,7 @@ final class MapRenderer {
 
     private static VisibleSystem concealedBattleSystem(VisibleSystem system) {
         return new VisibleSystem(system.id(), system.name(), system.x(), system.y(), null, null, null,
-                false, system.colorHex(), null, false, null, List.of());
+                false, null, null, false, null, List.of());
     }
 
     private static void attachRelocationDragAndDrop(Div dot, VisibleSystem target, Inputs in) {

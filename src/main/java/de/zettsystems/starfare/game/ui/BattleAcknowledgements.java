@@ -21,9 +21,11 @@ final class BattleAcknowledgements {
 
     static Set<Integer> pending(GameId gameId, TurnReport report, Set<String> acknowledged) {
         Set<Integer> pending = new HashSet<>();
-        for (TurnEvent event : report.events()) {
+        for (int eventIndex = 0; eventIndex < report.events().size(); eventIndex++) {
+            TurnEvent event = report.events().get(eventIndex);
+            int currentIndex = eventIndex;
             event.battleSystemId().ifPresent(systemId -> {
-                if (!acknowledged.contains(key(gameId, report.turn(), systemId))) {
+                if (!acknowledged.contains(key(gameId, report.turn(), currentIndex))) {
                     pending.add(systemId);
                 }
             });
@@ -31,14 +33,17 @@ final class BattleAcknowledgements {
         return Set.copyOf(pending);
     }
 
-    static void acknowledge(GameId gameId, TurnReport report, int systemId) {
+    static void acknowledge(GameId gameId, TurnReport report, TurnEvent event) {
         VaadinSession.getCurrent().setAttribute(SESSION_KEY,
-                acknowledge(gameId, report, systemId, acknowledged()));
+                acknowledge(gameId, report, event, acknowledged()));
     }
 
-    static Set<String> acknowledge(GameId gameId, TurnReport report, int systemId, Set<String> acknowledged) {
+    static Set<String> acknowledge(GameId gameId, TurnReport report, TurnEvent event, Set<String> acknowledged) {
         Set<String> updated = new HashSet<>(acknowledged);
-        updated.add(key(gameId, report.turn(), systemId));
+        int eventIndex = report.events().indexOf(event);
+        if (eventIndex >= 0) {
+            updated.add(key(gameId, report.turn(), eventIndex));
+        }
         return Set.copyOf(updated);
     }
 
@@ -51,7 +56,7 @@ final class BattleAcknowledgements {
         return new HashSet<>();
     }
 
-    private static String key(GameId gameId, int turn, int systemId) {
-        return gameId.value() + ":" + turn + ":" + systemId;
+    private static String key(GameId gameId, int turn, int eventIndex) {
+        return gameId.value() + ":" + turn + ":" + eventIndex;
     }
 }

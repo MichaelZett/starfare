@@ -80,8 +80,14 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public List<GameId> loadedGames() {
+        return registry.loadedIds();
+    }
+
+    @Override
     public String gameNameOf(GameId gameId) {
-        return registry.find(gameId).map(GameSession::name).orElse("");
+        return registry.find(gameId).map(GameSession::name)
+                .or(() -> archives.load(gameId).map(GameArchiveStore.ArchivedGame::name)).orElse("");
     }
 
     @Override
@@ -123,7 +129,8 @@ public class DefaultGameService implements GameService {
     public boolean hasStartedGame(GameId gameId) {
         return registry.find(gameId)
                 .map(s -> s.readState(state -> state.active() && state.started()))
-                .orElse(false);
+                .orElseGet(() -> archives.load(gameId).map(game -> game.state().started() && game.state().gameOver())
+                        .orElse(false));
     }
 
     @Override
@@ -144,7 +151,11 @@ public class DefaultGameService implements GameService {
 
     @Override
     public Optional<Integer> seatFor(GameId gameId, @Nullable String playerId) {
-        return registry.seatOf(gameId, playerId);
+        Optional<Integer> liveSeat = registry.seatOf(gameId, playerId);
+        if (liveSeat.isPresent() || playerId == null) {
+            return liveSeat;
+        }
+        return archives.load(gameId).map(game -> game.state().seatByUser().get(playerId));
     }
 
     @Override
@@ -460,8 +471,13 @@ public class DefaultGameService implements GameService {
         return true;
     }
 
+    @Override
+    public int unloadInactiveSingleHumanGames() {
+        return registry.unloadInactiveSingleHumanGames(timing.singlePlayerUnloadAfter());
+    }
+
     private boolean hasExpiredSeats(GameState state) {
-        return state.active() && state.started() && !state.gameOver()
+        return state.originalHumanPlayerIds().size() > 1 && state.active() && state.started() && !state.gameOver()
                 && !state.turnStartedAt().plus(timing.inactivityTimeout()).isAfter(Instant.now())
                 && !state.joinedHumanPlayerIds().stream().allMatch(state.submittedThisTurn()::contains);
     }
@@ -744,7 +760,7 @@ public class DefaultGameService implements GameService {
 
     @Override
     public Optional<PlayerViewState> viewForAccount(GameId id, String account) {
-        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+        Optional<PlayerViewState> live = registry.find(id).flatMap(session -> registry.readState(id, state -> {
             if (state.gameOver()) { return reviewFor(id, account); }
             if (!access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
             Integer seat = state.seatByUser().get(account);
@@ -756,6 +772,10 @@ public class DefaultGameService implements GameService {
             }
             return Optional.empty();
         }));
+        if (live.isPresent()) {
+            registry.touch(id);
+        }
+        return live.or(() -> reviewFor(id, account));
     }
 
     @Override
@@ -796,16 +816,28 @@ public class DefaultGameService implements GameService {
                         if (production.playerId() == playerId) { built += production.amount(); }
                     }
                     case TurnEvent.BattleWon battle -> {
-                        if (battle.attackerId() == playerId) { destroyed += battle.defending(); }
+                        if (battle.attackerId() == playerId) {
+                            destroyed += battle.defending();
+                            lost += battle.attacking() - battle.remaining();
+                        }
                     }
                     case TurnEvent.BattleLost battle -> {
-                        if (battle.attackerId() == playerId) { lost += battle.attacking(); }
+                        if (battle.attackerId() == playerId) {
+                            lost += battle.attacking();
+                            destroyed += battle.defending() - battle.defendersLeft();
+                        }
                     }
                     case TurnEvent.SystemLost loss -> {
-                        if (loss.defenderId() == playerId) { lost += loss.defending(); }
+                        if (loss.defenderId() == playerId) {
+                            lost += loss.defending();
+                            destroyed += loss.attacking() - loss.attackersRemaining();
+                        }
                     }
                     case TurnEvent.DefenseHeld held -> {
-                        if (held.defenderId() == playerId) { destroyed += held.attacking(); }
+                        if (held.defenderId() == playerId) {
+                            destroyed += held.attacking();
+                            lost += held.defending() - held.defendersLeft();
+                        }
                     }
                     case TurnEvent.Reinforcement _,
                             TurnEvent.Victory _,

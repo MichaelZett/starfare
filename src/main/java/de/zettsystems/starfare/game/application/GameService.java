@@ -27,6 +27,10 @@ public interface GameService {
 
     List<GameId> listGames();
 
+    default List<GameId> loadedGames() {
+        return listGames();
+    }
+
     String gameNameOf(GameId gameId);
 
     void abortGame(GameId gameId);
@@ -100,6 +104,8 @@ public interface GameService {
     boolean submitTurn(GameId gameId, int playerId);
 
     boolean expireInactiveSeats(GameId gameId);
+
+    int unloadInactiveSingleHumanGames();
 
     boolean kickHuman(GameId gameId, @Nullable String actorPlayerId, int seatId);
 

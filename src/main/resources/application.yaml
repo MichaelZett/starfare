@@ -54,6 +54,7 @@ starfare:
       enabled: false
       retention: P90D
     inactivity-timeout: 5m
+    single-player-unload-after: 30m
     inactivity-check-interval: 30s
 
 management:

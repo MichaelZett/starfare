@@ -22,7 +22,7 @@ class BattleAcknowledgementsTest {
         Set<String> acknowledgements = Set.of();
         assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).containsExactlyInAnyOrder(10, 11);
 
-        acknowledgements = BattleAcknowledgements.acknowledge(gameId, report, 10, acknowledgements);
+        acknowledgements = BattleAcknowledgements.acknowledge(gameId, report, report.events().getFirst(), acknowledgements);
 
         assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).containsExactly(11);
     }
@@ -33,5 +33,18 @@ class BattleAcknowledgementsTest {
                 new TurnEvent.Production(1, 10, "Vega", 2)));
 
         assertThat(BattleAcknowledgements.pending(GameId.of("game-1"), report, Set.of())).isEmpty();
+    }
+
+    @Test
+    void acknowledgementDoesNotClearAnotherBattleAtTheSameSystem() {
+        GameId gameId = GameId.of("game-1");
+        TurnReport report = new TurnReport(4, List.of(), List.of(
+                new TurnEvent.BattleWon(1, 10, "Vega", 12, 8, 4, false),
+                new TurnEvent.BattleLost(2, 10, "Vega", 9, 7, 2)));
+
+        Set<String> acknowledgements = BattleAcknowledgements.acknowledge(gameId, report,
+                report.events().getFirst(), Set.of());
+
+        assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).containsExactly(10);
     }
 }
