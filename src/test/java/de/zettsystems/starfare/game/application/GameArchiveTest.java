@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GameArchiveTest extends AbstractIntegrationTest {
     @Autowired private GameService games;
     @Autowired private GameSessionRepository repository;
+    @Autowired private GameSessionStore sessions;
 
     @Test
     void reviewSelectionRequiresFinishedAccessibleGameAndExistingParticipant() {
@@ -62,6 +63,20 @@ class GameArchiveTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void archivedGameRemainsOpenableAfterTheOperationalSessionWasRemoved() {
+        var id = games.newGame(GameSetup.defaults(), "host", "Archived");
+        games.joinGame(id, "host");
+        games.startGame(id);
+        registry.writeState(id, state -> { state.endGame(1); return null; });
+        sessions.delete(id);
+
+        assertThat(games.viewForAccount(id, "host")).isPresent();
+        assertThat(games.hasStartedGame(id)).isTrue();
+        assertThat(games.gameNameOf(id)).isEqualTo("Archived");
+        assertThat(games.seatFor(id, "host")).isPresent();
+    }
+
+    @Test
     void outcomeStatisticsSumOnlyOwnEventsOfFinishedGame() {
         var id = games.newGame(GameSetup.defaults(), "host", "Outcome");
         games.joinGame(id, "host");
@@ -87,7 +102,7 @@ class GameArchiveTest extends AbstractIntegrationTest {
 
         assertThat(games.outcomeStatisticsFor(id, "stranger")).isEmpty();
         assertThat(games.outcomeStatisticsFor(id, "host"))
-                .contains(new GameOutcomeStatistics(0, ownSystems, 5, 6, 10));
+                .contains(new GameOutcomeStatistics(0, ownSystems, 5, 16, 16));
     }
 
     @Test

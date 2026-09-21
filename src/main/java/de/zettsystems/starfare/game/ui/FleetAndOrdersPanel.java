@@ -402,7 +402,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         TurnReport report = currentView == null ? null : currentView.report();
         event.battleSystemId().ifPresent(systemId -> {
             if (current != null && report != null) {
-                BattleAcknowledgements.acknowledge(current, report, systemId);
+                BattleAcknowledgements.acknowledge(current, report, event);
                 onBattleAcknowledged.run();
             }
         });

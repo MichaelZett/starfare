@@ -5,6 +5,7 @@ import de.zettsystems.starfare.game.values.GameId;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Duration;
 
 /**
  * Persistence contract for {@link GameSession} instances. Only the in-memory implementation exists
@@ -17,5 +18,16 @@ public interface GameSessionStore {
 
     List<GameId> listIds();
 
+    default List<GameId> loadedIds() {
+        return listIds();
+    }
+
     void delete(GameId id);
+
+    default void touch(GameId id) {
+    }
+
+    default int unloadInactiveSingleHumanGames(Duration inactivity) {
+        return 0;
+    }
 }

@@ -140,6 +140,21 @@ class InactivityTimeoutTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void singleHumanGameNeverHandsItsPlayerToAi() {
+        GameId id = runningGameWithTwoHumans();
+        registry.writeState(id, state -> {
+            state.players().removeIf(player -> player.id() == 2);
+            state.originalHumanPlayerIds().remove(2);
+            state.joinedHumanPlayerIds().remove(2);
+            state.seatByUser().remove("bob");
+            return null;
+        });
+
+        assertThat(game.expireInactiveSeats(id)).isFalse();
+        assertThat(isAi(id, 1)).isFalse();
+    }
+
+    @Test
     void hostRoleMovesOnWhenTheHostTimesOut() {
         GameId id = registry.createGame(GameSetup.defaults(), "alice", "timeout-game");
         registry.writeState(id, state -> {

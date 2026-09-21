@@ -211,7 +211,7 @@ public class DefaultFleetService implements FleetService {
         // Was das System diese Runde noch abgeben kann: Produktion plus Garnison,
         // abzueglich dessen, was fruehere Verlegungen desselben Systems schon nehmen.
         int alreadyRouted = routed.getOrDefault(o.fromSystemId(), 0);
-        int available = from.availableShips() + from.productionPerTurn() - alreadyRouted;
+        int available = from.garrison() + from.productionPerTurn() - from.garrisonReserve() - alreadyRouted;
         int ships = Math.clamp(o.ships(), 0, Math.max(0, available));
         if (ships <= 0) {
             return;

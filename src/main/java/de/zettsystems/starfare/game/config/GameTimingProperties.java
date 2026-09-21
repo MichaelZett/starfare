@@ -12,11 +12,14 @@ import java.time.Duration;
  * {@code starfare.game.inactivity-check-interval} direkt aus der Umgebung.
  */
 @ConfigurationProperties("starfare.game")
-public record GameTimingProperties(Duration inactivityTimeout) {
+public record GameTimingProperties(Duration inactivityTimeout, Duration singlePlayerUnloadAfter) {
 
     public GameTimingProperties {
         if (inactivityTimeout == null || inactivityTimeout.isNegative() || inactivityTimeout.isZero()) {
             inactivityTimeout = Duration.ofMinutes(5);
+        }
+        if (singlePlayerUnloadAfter == null || singlePlayerUnloadAfter.isNegative() || singlePlayerUnloadAfter.isZero()) {
+            singlePlayerUnloadAfter = Duration.ofMinutes(30);
         }
     }
 }

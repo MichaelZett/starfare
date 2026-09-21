@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Duration;
 import java.util.function.Function;
 
 public interface GameRegistry {
@@ -18,9 +19,15 @@ public interface GameRegistry {
 
     List<GameId> listIds();
 
+    default List<GameId> loadedIds() {
+        return listIds();
+    }
+
     Optional<GameSession> find(GameId id);
 
     GameSession require(GameId id);
+
+    void touch(GameId id);
 
     <T> T readState(GameId id, Function<GameState, T> fn);
 
@@ -37,4 +44,6 @@ public interface GameRegistry {
     boolean startGame(GameId id);
 
     void abortGame(GameId id);
+
+    int unloadInactiveSingleHumanGames(Duration inactivity);
 }

@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 
@@ -48,6 +49,11 @@ public class DefaultGameRegistry implements GameRegistry {
     }
 
     @Override
+    public List<GameId> loadedIds() {
+        return store.loadedIds();
+    }
+
+    @Override
     public Optional<GameSession> find(GameId id) {
         return store.load(id);
     }
@@ -65,11 +71,14 @@ public class DefaultGameRegistry implements GameRegistry {
     @Override
     public <T> T writeState(GameId id, Function<GameState, T> fn) {
         GameSession session = require(id);
-        return session.writeState(state -> {
-            T result = fn.apply(state);
-            store.save(session);
-            return result;
-        });
+        T result = session.writeState(fn);
+        store.save(session);
+        return result;
+    }
+
+    @Override
+    public void touch(GameId id) {
+        store.touch(id);
     }
 
     @Override
@@ -208,6 +217,11 @@ public class DefaultGameRegistry implements GameRegistry {
     @Override
     public void abortGame(GameId id) {
         store.delete(id);
+    }
+
+    @Override
+    public int unloadInactiveSingleHumanGames(Duration inactivity) {
+        return store.unloadInactiveSingleHumanGames(inactivity);
     }
 
     private void initializeState(GameState state, GameSetup setup) {

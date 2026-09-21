@@ -233,6 +233,18 @@ class FleetServiceTest {
     }
 
     @Test
+    void routingRefillsAnUndershotReserveBeforeSendingProduction() {
+        state.updateSystem(1, system -> new StarSystem(system.id(), system.name(), system.x(), system.y(),
+                system.ownerId(), 4, 3, system.neutral(), 8));
+        service.addStandingOrder(state, 1, 1, 2, 3);
+
+        var routed = service.applyStandingOrdersForProduction(state);
+
+        assertThat(routed).isEmpty();
+        assertThat(state.fleets()).isEmpty();
+    }
+
+    @Test
     void routingNeverShipsMoreThanTheSystemHas() {
         state.updateSystem(1, s -> new StarSystem(s.id(), s.name(), s.x(), s.y(),
                 s.ownerId(), 0, 2, s.neutral()));

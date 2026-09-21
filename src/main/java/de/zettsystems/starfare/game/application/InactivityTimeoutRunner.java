@@ -22,7 +22,7 @@ public class InactivityTimeoutRunner {
 
     @Scheduled(fixedDelayString = "${starfare.game.inactivity-check-interval:30s}")
     public void expireInactiveSeats() {
-        for (GameId gameId : gameService.listGames()) {
+        for (GameId gameId : gameService.loadedGames()) {
             try {
                 gameService.expireInactiveSeats(gameId);
             } catch (RuntimeException e) {
@@ -31,5 +31,6 @@ public class InactivityTimeoutRunner {
                 LOG.warn("Inactivity check failed for game {}", gameId, e);
             }
         }
+        gameService.unloadInactiveSingleHumanGames();
     }
 }
