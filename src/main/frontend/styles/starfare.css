@@ -613,6 +613,13 @@ html, body, #outlet {
     width: 100%;
 }
 
+.wizard-overview-side {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
 .wizard-section-title {
     margin: 0 0 4px 0;
     font-size: 1.05rem;
@@ -1068,6 +1075,19 @@ html, body, #outlet {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+}
+
+.lobby-game-name > * {
+    flex-shrink: 0;
+}
+
+.lobby-game-name > .lobby-game-name-text {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .lobby-host-badge {
@@ -1491,4 +1511,72 @@ html, body, #outlet {
 .map-sidebar-contact h2 {
     margin: 0;
     font-size: 1rem;
+}
+
+/* Rundenstatus: Mitspieler mit Abgabe-Haken und Countdown */
+.round-status {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 var(--sf-page-pad) 8px var(--sf-page-pad);
+    font-size: 0.85rem;
+}
+
+.round-status-seat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border: 1px solid var(--sf-border);
+    border-radius: 999px;
+    background: var(--sf-surface);
+    color: var(--sf-text-muted);
+    max-width: 18em;
+}
+
+.round-status-seat.submitted {
+    color: var(--sf-text);
+}
+
+.round-status-seat.straggler {
+    border-color: var(--sf-accent);
+    color: var(--sf-text);
+}
+
+.round-status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.round-status-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.round-status-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.round-status-seat.submitted .round-status-icon {
+    color: #3fb950;
+}
+
+.round-status-clock {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--sf-accent);
+    flex-shrink: 0;
+}
+
+.round-status-ends {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    color: var(--sf-text-muted);
 }

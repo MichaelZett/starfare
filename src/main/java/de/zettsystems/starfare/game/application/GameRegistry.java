@@ -35,6 +35,8 @@ public interface GameRegistry {
 
     Optional<Integer> claimSeat(GameId id, @Nullable String playerId);
 
+    Optional<Integer> claimSeat(GameId id, @Nullable String playerId, String playerName, String empireName);
+
     Optional<Integer> seatOf(GameId id, @Nullable String playerId);
 
     boolean joinHumanPlayer(GameId id, int playerId);

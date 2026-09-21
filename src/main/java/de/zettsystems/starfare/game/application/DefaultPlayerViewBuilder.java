@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -69,7 +70,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var report = state.reports().getOrDefault(playerId, new TurnReport(turn - 1, List.of()));
         return new PlayerViewState(turn, players, vis, ownFleets, report, state.gameOver(), state.winnerId(),
                 plannedOrders, standing, empireStats(state, playerId, ownFleets), waitingFleetIds(state, orders),
-                state.battlePresentationEnabled());
+                state.battlePresentationEnabled(), roundStatus(state));
     }
 
     @Override
@@ -77,7 +78,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         int turn = state.turn();
         return new PlayerViewState(turn, List.copyOf(state.players()), revealedSystems(state),
                 List.copyOf(state.fleets()), null, state.gameOver(), state.winnerId(),
-                List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled());
+                List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled(), roundStatus(state));
     }
 
     @Override
@@ -92,7 +93,8 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         List<Fleet> ownFleets = frame.fleets().stream().filter(fleet -> fleet.ownerId() == playerId).toList();
         TurnReport report = frame.reports().getOrDefault(playerId, new TurnReport(frame.turn(), List.of()));
         return new PlayerViewState(frame.turn(), List.copyOf(state.players()), systems, ownFleets, report,
-                true, state.winnerId(), List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled());
+                true, state.winnerId(), List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled(),
+                RoundStatus.NONE);
     }
 
     /** Alle Systeme ohne Nebel: fuer Zuschauer und fuer die entschiedene Partie. */
@@ -114,7 +116,24 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var report = state.reports().getOrDefault(playerId, new TurnReport(turn - 1, List.of()));
         return new PlayerViewState(turn, List.copyOf(state.players()), revealedSystems(state),
                 ownFleets, report, state.gameOver(), state.winnerId(),
-                List.of(), List.of(), empireStats(state, playerId, ownFleets), Set.of(), state.battlePresentationEnabled());
+                List.of(), List.of(), empireStats(state, playerId, ownFleets), Set.of(), state.battlePresentationEnabled(),
+                RoundStatus.NONE);
+    }
+
+    /** Nur Menschen haben eine Abgabe; die KI plant beim Rundenwechsel und gilt stets als fertig. */
+    private static RoundStatus roundStatus(GameState state) {
+        if (state.gameOver() || !state.started()) {
+            return RoundStatus.NONE;
+        }
+        List<RoundStatus.Seat> seats = state.players().stream()
+                .filter(player -> state.joinedHumanPlayerIds().contains(player.id()))
+                .sorted(Comparator.comparingInt(Player::id))
+                .map(player -> new RoundStatus.Seat(player.id(), player.label(), player.colorHex(),
+                        state.submittedThisTurn().contains(player.id())))
+                .toList();
+        Set<Integer> pending = state.pendingHumanPlayerIds();
+        Integer straggler = state.stragglerSince() != null && pending.size() == 1 ? pending.iterator().next() : null;
+        return new RoundStatus(seats, state.roundDeadline(), straggler);
     }
 
     private static EmpireStats empireStats(GameState state, int playerId, List<Fleet> ownFleets) {

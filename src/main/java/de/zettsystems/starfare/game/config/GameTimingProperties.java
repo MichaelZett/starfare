@@ -5,19 +5,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.time.Duration;
 
 /**
- * Timing settings for real-time matches.
- *
- * <p>Das Prüfintervall des Schedulers steht bewusst nicht hier: {@code @Scheduled}
- * braucht einen Konstantenausdruck und liest
- * {@code starfare.game.inactivity-check-interval} direkt aus der Umgebung.
+ * Memory-management settings for single-human matches.
  */
 @ConfigurationProperties("starfare.game")
-public record GameTimingProperties(Duration inactivityTimeout, Duration singlePlayerUnloadAfter) {
+public record GameTimingProperties(Duration singlePlayerUnloadAfter) {
 
     public GameTimingProperties {
-        if (inactivityTimeout == null || inactivityTimeout.isNegative() || inactivityTimeout.isZero()) {
-            inactivityTimeout = Duration.ofMinutes(5);
-        }
         if (singlePlayerUnloadAfter == null || singlePlayerUnloadAfter.isNegative() || singlePlayerUnloadAfter.isZero()) {
             singlePlayerUnloadAfter = Duration.ofMinutes(30);
         }

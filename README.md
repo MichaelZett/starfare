@@ -225,10 +225,16 @@ travel time. Columns: No, From, To, Ships, ETA.
 Bottom left:
 
 - **Next round** — submits your turn. Once all humans have submitted,
-  the turn pipeline runs (production → wait orders →
-  arrivals/combat → AI turns → victory check → next round).
-  A seat that does not submit within five minutes is handed to the AI
-  permanently, so a single idle player cannot stall the game.
+  the turn pipeline runs (AI orders → all orders → production → wait
+  orders → arrivals/combat → victory check → next round).
+  A bar below the header shows every human with a check mark once they
+  have submitted. With two or more humans each round has a deadline: the
+  round limit (default 5 min) from the start of the round, and the
+  straggler limit (default 1 min) as soon as only one player is missing —
+  their chip then shows the countdown. Both are set per game in the
+  wizard, from 30 seconds up to several days. Whoever misses the deadline
+  moves with the orders given so far; after three missed rounds in a row
+  the AI takes over the seat.
 - **Leave game** — your seat becomes AI. If rejoining is allowed, you
   can come back later.
 - **Back to lobby** — exit the map view; the game keeps running.

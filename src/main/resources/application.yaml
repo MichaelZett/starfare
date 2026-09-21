@@ -53,9 +53,8 @@ starfare:
     archive-cleanup:
       enabled: false
       retention: P90D
-    inactivity-timeout: 5m
     single-player-unload-after: 30m
-    inactivity-check-interval: 30s
+    round-check-interval: 5s
 
 management:
   endpoints:

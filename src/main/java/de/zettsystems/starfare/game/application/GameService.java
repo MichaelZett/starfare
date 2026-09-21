@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.game.values.*;
 import org.jspecify.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,6 +49,8 @@ public interface GameService {
     boolean joinGame(GameId gameId, int playerId);
 
     Optional<Integer> joinGame(GameId gameId, @Nullable String playerId);
+
+    Optional<Integer> joinGame(GameId gameId, @Nullable String playerId, String playerName, String empireName);
 
     Optional<Integer> seatFor(GameId gameId, @Nullable String playerId);
 
@@ -103,7 +106,12 @@ public interface GameService {
 
     boolean submitTurn(GameId gameId, int playerId);
 
-    boolean expireInactiveSeats(GameId gameId);
+    /**
+     * Beendet die Runde, wenn ihre Frist (Runden- oder Nachzügler-Limit) abgelaufen ist. Wer nicht
+     * abgegeben hat, zieht mit den bis dahin erteilten Befehlen; nach
+     * {@link GameConfig#MAX_MISSED_ROUNDS} verpassten Fristen in Folge übernimmt die KI den Sitz.
+     */
+    boolean enforceRoundDeadline(GameId gameId, Instant now);
 
     int unloadInactiveSingleHumanGames();
 

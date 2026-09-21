@@ -44,7 +44,10 @@ public record GameStateSnapshot(
         @Nullable Instant finishedAt,
         @Nullable Map<Integer, List<SystemOwnership>> ownershipHistory,
         @Nullable Map<Integer, ReplayFrame> replayFrames,
-        @Nullable Boolean battlePresentationEnabled
+        @Nullable Boolean battlePresentationEnabled,
+        @Nullable RoundRules roundRules,
+        @Nullable Instant stragglerSince,
+        @Nullable Map<Integer, Integer> missedRounds
 ) {
     public GameStateSnapshot(int turn, int nextGlobalFleetId, Map<Integer, Integer> nextLocalFleetNo,
                              List<Player> players, List<StarSystem> systems, List<Fleet> fleets,
@@ -65,6 +68,6 @@ public record GameStateSnapshot(
                 submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds,
                 observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId,
                 observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory,
-                replayFrames, null);
+                replayFrames, null, null, null, null);
     }
 }

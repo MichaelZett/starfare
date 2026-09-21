@@ -147,7 +147,7 @@ public class ManageGameDialog extends Dialog {
         humansList.removeAll();
         List<HumanRow> rows = summary.players().stream()
                 .filter(p -> !p.ai())
-                .map(p -> new HumanRow(p.id(), p.name(), playerIdForSeat(summary, p.id()).orElse(null)))
+                .map(p -> new HumanRow(p.id(), p.label(), playerIdForSeat(summary, p.id()).orElse(null)))
                 .toList();
         if (rows.isEmpty()) {
             Span empty = new Span(I18n.t(UiTexts.MANAGE_PLAYERS_EMPTY));

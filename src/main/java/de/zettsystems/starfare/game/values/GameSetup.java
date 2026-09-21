@@ -20,8 +20,19 @@ public record GameSetup(
         List<String> seatColorHexes,
         ProductionDistribution productionDistribution,
         GalaxyLayout galaxyLayout,
-        boolean battlePresentationEnabled
+        boolean battlePresentationEnabled,
+        RoundRules roundRules
 ) {
+    public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
+                     int neutralMinProduction, int neutralMaxProduction, int startGarrison,
+                     boolean observersAllowed, boolean reentryAllowed, List<String> seatColorHexes,
+                     ProductionDistribution productionDistribution, GalaxyLayout galaxyLayout,
+                     boolean battlePresentationEnabled) {
+        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction,
+                neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes,
+                productionDistribution, galaxyLayout, battlePresentationEnabled, RoundRules.defaults());
+    }
+
     public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
                      int neutralMinProduction, int neutralMaxProduction, int startGarrison,
                      boolean observersAllowed, boolean reentryAllowed, List<String> seatColorHexes,
@@ -49,7 +60,8 @@ public record GameSetup(
                 GameConfig.PLAYER_PALETTE,
                 GameConfig.DEFAULT_PRODUCTION_DISTRIBUTION,
                 GameConfig.DEFAULT_GALAXY_LAYOUT,
-                GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED
+                GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED,
+                RoundRules.defaults()
         );
     }
 
@@ -77,7 +89,7 @@ public record GameSetup(
                 observersAllowed, reentryAllowed, seatColors,
                 productionDistribution == null ? GameConfig.DEFAULT_PRODUCTION_DISTRIBUTION : productionDistribution,
                 galaxyLayout == null ? GameConfig.DEFAULT_GALAXY_LAYOUT : galaxyLayout,
-                battlePresentationEnabled);
+                battlePresentationEnabled, roundRules == null ? RoundRules.defaults() : roundRules);
     }
 
     public int totalPlayers() {
