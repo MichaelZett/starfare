@@ -138,9 +138,10 @@ public class JpaGameSessionStore implements GameSessionStore {
 
     @Override
     public void touch(GameId id) {
-        if (cache.containsKey(id)) {
-            lastAccess.put(id, Instant.now());
-        }
+        cache.computeIfPresent(id, (key, session) -> {
+            lastAccess.put(key, Instant.now());
+            return session;
+        });
     }
 
     @Override

@@ -6,6 +6,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -70,6 +71,21 @@ public class GameSession {
         lock.writeLock().lock();
         try {
             return fn.apply(state);
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Applies a state change and completes the supplied follow-up while the
+     * session write lock is still held.
+     */
+    public <T> T writeStateAndThen(Function<GameState, T> fn, Consumer<GameSession> followUp) {
+        lock.writeLock().lock();
+        try {
+            T result = fn.apply(state);
+            followUp.accept(this);
+            return result;
         } finally {
             lock.writeLock().unlock();
         }

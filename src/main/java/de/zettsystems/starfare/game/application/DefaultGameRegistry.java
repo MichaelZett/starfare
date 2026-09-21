@@ -71,9 +71,7 @@ public class DefaultGameRegistry implements GameRegistry {
     @Override
     public <T> T writeState(GameId id, Function<GameState, T> fn) {
         GameSession session = require(id);
-        T result = session.writeState(fn);
-        store.save(session);
-        return result;
+        return session.writeStateAndThen(fn, store::save);
     }
 
     @Override
