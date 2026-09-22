@@ -119,6 +119,8 @@ public class BattleSteps {
             assertThat(browser.textsOf("[data-battle-attacking]")).contains(battle == 0 ? "20" : "60");
             assertThat(browser.textsOf("[data-battle-defending]")).contains("0");
             browser.clickButtonWithText("Ergebnis übernehmen");
+            browser.awaitText("erobert");
+            browser.clickButtonWithText("Weiter");
             if (battle == 0) {
                 new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                         .until(_ -> browser.all(PENDING).size() == 1);
