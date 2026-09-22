@@ -24,6 +24,8 @@ public final class UiTexts {
     public static final String MAP_SIDEBAR_SYSTEM = "map.sidebar.system";
     public static final String MAP_SIDEBAR_FLEET = "map.sidebar.fleet";
     public static final String MAP_SIDEBAR_GARRISON = "map.sidebar.garrison";
+    public static final String MAP_CAPTURE_SUMMARY_TITLE = "map.captureSummary.title";
+    public static final String MAP_CAPTURE_SUMMARY_CLOSE = "map.captureSummary.close";
     public static final String MAP_SIDEBAR_CONTACTS_EMPTY = "map.sidebar.contactsEmpty";
     public static final String MAP_SIDEBAR_OWNER = "map.sidebar.owner";
     public static final String MAP_SIDEBAR_ESTIMATED_SHIPS = "map.sidebar.estimatedShips";
@@ -133,6 +135,8 @@ public final class UiTexts {
     public static final String LOBBY_FIELD_REENTRY_ALLOWED = "lobby.field.reentryAllowed";
     public static final String LOBBY_FIELD_BATTLE_PRESENTATION = "lobby.field.battlePresentation";
     public static final String LOBBY_FIELD_COMBAT_RANDOMNESS = "lobby.field.combatRandomness";
+    public static final String LOBBY_FIELD_COMBAT_RANDOMNESS_VALUE = "lobby.field.combatRandomness.value";
+    public static final String LOBBY_FIELD_COMBAT_RANDOMNESS_HINT = "lobby.field.combatRandomness.hint";
 
     // Map — header / submit / game-over
     public static final String MAP_HEADER_TITLE = "map.header.title";
@@ -194,6 +198,7 @@ public final class UiTexts {
     public static final String MAP_COLUMN_STANDING_FROM = "map.column.standing.from";
     public static final String MAP_COLUMN_STANDING_TO = "map.column.standing.to";
     public static final String MAP_COLUMN_STANDING_PRODUCTION = "map.column.standing.production";
+    public static final String MAP_COLUMN_STANDING_SHIPS = "map.column.standing.ships";
     public static final String MAP_ACTION_DELETE_STANDING = "map.action.deleteStanding";
     public static final String MAP_ACTION_EDIT_STANDING = "map.action.editStanding";
     public static final String MAP_REMOVE_STANDING_ORDER_FAILED = "map.removeStandingOrder.failed";

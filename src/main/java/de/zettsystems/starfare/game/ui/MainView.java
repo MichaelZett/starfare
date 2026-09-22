@@ -60,6 +60,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private @Nullable VisibleSystem selectedSystem;
     private @Nullable VisibleSystem selectedFrom;
     private @Nullable Integer highlightedFleetId;
+    private @Nullable Integer highlightedStandingOrderId;
     private @Nullable Integer highlightedReportSystemId;
     private @Nullable Integer displayedTurn;
     /** Remember the pending outcome even when the view was reloaded during the final battles. */
@@ -81,7 +82,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
         fleetsPanel = new FleetAndOrdersPanel(this::cancelOrder, this::editStandingOrder, this::deleteStandingOrder,
                 this::refresh,
-                this::onFleetRowSelected, this::onReportSystemSelected, this::onResolvedBattleSelected,
+                this::onFleetRowSelected, this::onStandingOrderSelected, this::onReportSystemSelected,
+                this::onResolvedBattleSelected,
                 this::setGarrisonReserve);
         mapCanvas = new MapCanvas(gameId == null ? "none" : gameId.value(), this::onMapBackgroundClick);
         header = new MapHeaderBar(this::onNextRound, this::doLeave,
@@ -155,9 +157,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void onMapBackgroundClick() {
-        if (selectedFrom != null || highlightedFleetId != null) {
+        if (selectedFrom != null || highlightedFleetId != null || highlightedStandingOrderId != null) {
             selectedFrom = null;
             highlightedFleetId = null;
+            highlightedStandingOrderId = null;
             refresh();
         }
     }
@@ -186,6 +189,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private void onFleetHighlight(int fleetId) {
         highlightedFleetId = highlightedFleetId != null && highlightedFleetId == fleetId ? null : fleetId;
+    }
+
+    private void onStandingOrderSelected(int standingOrderId) {
+        Integer next = standingOrderId < 0 ? null : standingOrderId;
+        highlightedStandingOrderId = Objects.equals(highlightedStandingOrderId, next) ? null : next;
+        refresh();
     }
 
     private void cancelOrder(PlannedOrder o) {
@@ -452,7 +461,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 .sorted(Comparator.comparingInt(VisibleSystem::id)).toList();
         mapCanvas.render(new MapRenderer.Inputs(
                 game, gameId, view, playerId, observer, selectedFrom,
-                highlightedFleetId, reportedSystemIds(view), highlightedReportSystemId,
+                highlightedFleetId, highlightedStandingOrderId, reportedSystemIds(view), highlightedReportSystemId,
                 pendingBattleSystemIds(view),
                 badgesShowingFleetNo, systems,
                 this::inspectSystem,
@@ -463,7 +472,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::onFleetHighlight,
                 this::onReportMarkerSelected,
                 this::refresh));
-        fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, observer);
+        fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer);
     }
 
     private void inspectSystem(VisibleSystem system) {

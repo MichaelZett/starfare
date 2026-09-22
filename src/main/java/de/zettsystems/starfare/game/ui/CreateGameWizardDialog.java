@@ -85,7 +85,17 @@ final class CreateGameWizardDialog {
         Checkbox battlePresentation = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_BATTLE_PRESENTATION));
         battlePresentation.setValue(GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED);
         Input combatRandomness = combatRandomnessSlider();
-        Div combatRandomnessField = new Div(new Span(I18n.t(UiTexts.LOBBY_FIELD_COMBAT_RANDOMNESS)), combatRandomness);
+        Span combatRandomnessValue = new Span();
+        combatRandomnessValue.addClassName("combat-randomness-value");
+        Runnable updateCombatRandomnessValue = () -> combatRandomnessValue.setText(I18n.t(
+                UiTexts.LOBBY_FIELD_COMBAT_RANDOMNESS_VALUE,
+                sliderValue(combatRandomness, GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT)));
+        combatRandomness.addValueChangeListener(_ -> updateCombatRandomnessValue.run());
+        updateCombatRandomnessValue.run();
+        Span combatRandomnessHint = new Span(I18n.t(UiTexts.LOBBY_FIELD_COMBAT_RANDOMNESS_HINT));
+        combatRandomnessHint.addClassName("combat-randomness-hint");
+        Div combatRandomnessField = new Div(new Span(I18n.t(UiTexts.LOBBY_FIELD_COMBAT_RANDOMNESS)),
+                combatRandomness, combatRandomnessValue, combatRandomnessHint);
         combatRandomnessField.addClassName("combat-randomness-field");
         Checkbox joinAfterCreate = new Checkbox(I18n.t(UiTexts.LOBBY_WIZARD_JOIN_AFTER_CREATE));
         joinAfterCreate.setId("join-after-create");

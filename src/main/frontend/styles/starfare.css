@@ -223,6 +223,43 @@ html, body, #outlet {
     z-index: 2;
 }
 
+.standing-order-badge-highlighted {
+    border-color: #ffc14f;
+    color: #ffc14f;
+    box-shadow: 0 0 14px 2px rgba(255, 193, 79, .9);
+}
+
+.fleet-travel-card {
+    display: grid;
+    gap: .35rem;
+    padding: .75rem .85rem;
+    border: 1px solid var(--sf-border);
+    border-radius: .55rem;
+    background: var(--sf-surface-2);
+}
+
+.fleet-travel-card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+    font-weight: 700;
+}
+
+.fleet-travel-route {
+    font-size: 1.05rem;
+    font-weight: 750;
+}
+
+.fleet-travel-ships {
+    color: var(--sf-accent);
+    font-size: 1.15rem;
+}
+
+.fleet-travel-arrival {
+    color: var(--sf-text-muted);
+    font-size: .85rem;
+}
+
 .fleet-row-standing {
     background: rgba(188, 140, 255, 0.08);
     font-style: italic;
@@ -1597,6 +1634,50 @@ html, body, #outlet {
 
 .combat-randomness-slider {
     inline-size: 100%;
+}
+
+.combat-randomness-value {
+    color: var(--sf-accent);
+    font-size: 1.05rem;
+    font-weight: 750;
+}
+
+.combat-randomness-hint {
+    color: var(--sf-text-muted);
+    font-size: 0.85rem;
+    line-height: 1.35;
+}
+
+.system-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+    gap: 0.55rem;
+}
+
+.system-metric {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 3.25rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--sf-border);
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--sf-surface) 86%, var(--sf-accent));
+}
+
+.system-metric-icon {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--sf-accent) 25%, transparent);
+    font-size: 1rem;
+}
+
+.system-metric-value {
+    font-size: 1.25rem;
+    font-weight: 800;
 }
 
 .battle-strength {
