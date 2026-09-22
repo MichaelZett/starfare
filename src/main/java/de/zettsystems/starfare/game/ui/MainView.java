@@ -3,10 +3,11 @@ package de.zettsystems.starfare.game.ui;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
  */
 @Route("map/:gameId")
 @CssImport("./styles/starfare.css")
+@JsModule("./battle-replay.js")
 @PermitAll
 public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private static final String GAME_ID_PARAMETER = "gameId";
@@ -55,11 +57,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     @SuppressWarnings("NullAway.Init")
     private GameId gameId;
     private boolean reviewing;
+    private @Nullable VisibleSystem selectedSystem;
     private @Nullable VisibleSystem selectedFrom;
     private @Nullable Integer highlightedFleetId;
     private @Nullable Integer highlightedReportSystemId;
     private @Nullable Integer displayedTurn;
-    /** Only a view that saw the game running waits for the outcome; the archive opens in review. */
+    /** Remember the pending outcome even when the view was reloaded during the final battles. */
     private boolean witnessedRunningGame;
     private boolean outcomeAcknowledged;
     private boolean outcomeDialogOpen;
@@ -78,7 +81,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
         fleetsPanel = new FleetAndOrdersPanel(this::cancelOrder, this::editStandingOrder, this::deleteStandingOrder,
                 this::refresh,
-                this::onFleetRowSelected, this::onReportSystemSelected, this::setGarrisonReserve);
+                this::onFleetRowSelected, this::onReportSystemSelected, this::onResolvedBattleSelected,
+                this::setGarrisonReserve);
         mapCanvas = new MapCanvas(gameId == null ? "none" : gameId.value(), this::onMapBackgroundClick);
         header = new MapHeaderBar(this::onNextRound, this::doLeave,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)));
@@ -87,6 +91,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         gameOverBanner.getStyle().set(CssProperties.FONT_WEIGHT, "600");
 
         reviewControls = new ReviewControls(() -> {
+            selectedSystem = null;
             selectedFrom = null;
             highlightedFleetId = null;
             highlightedReportSystemId = null;
@@ -94,6 +99,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             refresh();
         });
         spectatorControls = new SpectatorControls(() -> {
+            selectedSystem = null;
             selectedFrom = null;
             highlightedFleetId = null;
             highlightedReportSystemId = null;
@@ -103,23 +109,21 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         add(header, roundStatus, spectatorControls, reviewControls, buildContent());
     }
 
-    private HorizontalLayout buildContent() {
+    private SplitLayout buildContent() {
         var left = new VerticalLayout();
         left.setPadding(false);
         left.setSpacing(true);
-        left.setWidth("75%");
+        left.setWidthFull();
         left.setHeightFull();
         left.addClassName("map-left");
         left.add(gameOverBanner, mapCanvas);
         left.setFlexGrow(1, mapCanvas);
 
-        var content = new HorizontalLayout(left, fleetsPanel);
+        var content = new SplitLayout(left, fleetsPanel);
         content.setWidthFull();
         content.setHeightFull();
-        content.setSpacing(true);
+        content.setSplitterPosition(70);
         content.addClassName("map-content");
-        content.setFlexGrow(1, left);
-        content.setFlexGrow(0, fleetsPanel);
         return content;
     }
 
@@ -360,8 +364,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (!view.gameOver()) {
             witnessedRunningGame = true;
         }
-        boolean awaitingOutcome = view.gameOver() && witnessedRunningGame && !outcomeAcknowledged
-                && currentSeat() >= 0;
+        TurnReport report = view.report();
+        boolean hasPendingBattles = report != null && !BattleAcknowledgements.pending(gameId, report).isEmpty();
+        if (hasPendingBattles) {
+            witnessedRunningGame = true;
+        }
+        boolean awaitingOutcome = view.gameOver() && !outcomeAcknowledged && currentSeat() >= 0
+                && (witnessedRunningGame || hasPendingBattles);
         reviewing = view.gameOver() && !awaitingOutcome;
         spectatorControls.setVisible(false);
         if (!reviewing) {
@@ -390,7 +399,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         header.setNextVisible(!reviewing && (!observer || game.isAiOnly(gameId)));
         header.setLeaveVisible(!reviewing);
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
-        header.setEmpireStatsVisible(!observer);
+        header.setEmpireStatsVisible(!observer && pendingBattleSystemIds(view).isEmpty());
         header.setRound(view.turn());
         roundStatus.update(reviewing ? RoundStatus.NONE : view.roundStatus());
         header.setGameName(game.gameNameOf(gameId));
@@ -446,18 +455,28 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 highlightedFleetId, reportedSystemIds(view), highlightedReportSystemId,
                 pendingBattleSystemIds(view),
                 badgesShowingFleetNo, systems,
-                this::selectSystem,
+                this::inspectSystem,
+                this::selectSource,
                 this::openSend,
                 this::openRelocation,
                 this::onBadgeToggleLabel,
                 this::onFleetHighlight,
                 this::onReportMarkerSelected,
                 this::refresh));
-        fleetsPanel.update(gameId, view, selectedFrom, highlightedFleetId, observer);
+        fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, observer);
     }
 
-    private void selectSystem(VisibleSystem system) {
-        selectedFrom = system;
+    private void inspectSystem(VisibleSystem system) {
+        selectedSystem = system;
+        selectedFrom = null;
+        highlightedFleetId = null;
+        fleetsPanel.showDetails();
+        refresh();
+    }
+
+    private void selectSource(VisibleSystem system) {
+        selectedFrom = selectedFrom != null && selectedFrom.id() == system.id() ? null : system;
+        selectedSystem = system;
         highlightedFleetId = null;
         fleetsPanel.showDetails();
         refresh();
@@ -497,6 +516,19 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         refresh();
     }
 
+    private void onResolvedBattleSelected(int systemId) {
+        highlightedReportSystemId = systemId;
+        PlayerViewState view = viewForCurrentMode();
+        if (view != null) {
+            view.systems().stream().filter(system -> system.id() == systemId).findFirst().ifPresent(system -> {
+                selectedSystem = system;
+                mapCanvas.centerOn(system.x(), system.y());
+            });
+        }
+        fleetsPanel.showDetails();
+        refresh();
+    }
+
     private void navigateToLobby() {
         getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
     }
@@ -509,6 +541,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
         SendFleetDialog.open(game, gameId, pid, from, to, () -> {
             selectedFrom = null;
+            selectedSystem = to;
             refresh();
             fleetsPanel.showOrders();
         });
@@ -524,6 +557,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
         SendFleetDialog.openRelocation(game, gameId, pid, from, to, () -> {
             selectedFrom = null;
+            selectedSystem = to;
             refresh();
             fleetsPanel.showRelocations();
         });

@@ -45,6 +45,7 @@ public record GameStateSnapshot(
         @Nullable Map<Integer, List<SystemOwnership>> ownershipHistory,
         @Nullable Map<Integer, ReplayFrame> replayFrames,
         @Nullable Boolean battlePresentationEnabled,
+        @Nullable Integer combatRandomnessPercent,
         @Nullable RoundRules roundRules,
         @Nullable Instant stragglerSince,
         @Nullable Map<Integer, Integer> missedRounds
@@ -68,6 +69,6 @@ public record GameStateSnapshot(
                 submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds,
                 observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId,
                 observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory,
-                replayFrames, null, null, null, null);
+                replayFrames, null, null, null, null, null);
     }
 }

@@ -9,6 +9,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
@@ -83,6 +84,9 @@ final class CreateGameWizardDialog {
         reentryAllowed.setValue(GameConfig.DEFAULT_REENTRY_ALLOWED);
         Checkbox battlePresentation = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_BATTLE_PRESENTATION));
         battlePresentation.setValue(GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED);
+        Input combatRandomness = combatRandomnessSlider();
+        Div combatRandomnessField = new Div(new Span(I18n.t(UiTexts.LOBBY_FIELD_COMBAT_RANDOMNESS)), combatRandomness);
+        combatRandomnessField.addClassName("combat-randomness-field");
         Checkbox joinAfterCreate = new Checkbox(I18n.t(UiTexts.LOBBY_WIZARD_JOIN_AFTER_CREATE));
         joinAfterCreate.setId("join-after-create");
         joinAfterCreate.setValue(true);
@@ -93,7 +97,7 @@ final class CreateGameWizardDialog {
         empireName.setRequiredIndicatorVisible(true);
 
         FormLayout setupGrid = grid(3, "13em", systems, humans, ai, startGarrison,
-                galaxyLayout, observersAllowed, reentryAllowed, battlePresentation, empireName, joinAfterCreate);
+                galaxyLayout, combatRandomnessField, observersAllowed, reentryAllowed, battlePresentation, empireName, joinAfterCreate);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
 
         ComboBox<Duration> roundLimit = durationCombo(I18n.t(UiTexts.LOBBY_FIELD_ROUND_LIMIT),
@@ -104,7 +108,16 @@ final class CreateGameWizardDialog {
         attackOrder.setItems(AttackOrder.values());
         attackOrder.setItemLabelGenerator(CreateGameWizardDialog::labelFor);
         attackOrder.setValue(RoundRules.DEFAULT_ATTACK_ORDER);
-        FormLayout roundGrid = grid(3, "16em", roundLimit, stragglerLimit, attackOrder);
+        FormLayout timerGrid = grid(2, "16em", roundLimit, stragglerLimit);
+        Div timerSection = wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS),
+                I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS_HINT, GameConfig.MAX_MISSED_ROUNDS), timerGrid);
+        FormLayout combatGrid = grid(1, "16em", attackOrder);
+        Div combatSection = wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_COMBAT),
+                I18n.t(UiTexts.LOBBY_WIZARD_SECTION_COMBAT_HINT), combatGrid);
+        Runnable updateRoundTimerVisibility = () -> timerSection.setVisible(
+                valueOrDefault(humans.getValue(), GameConfig.DEFAULT_HUMAN_PLAYERS) > 1);
+        humans.addValueChangeListener(_ -> updateRoundTimerVisibility.run());
+        updateRoundTimerVisibility.run();
 
         FormLayout startProductionFields = new FormLayout();
         configureColumns(startProductionFields, 4, "13em");
@@ -129,9 +142,7 @@ final class CreateGameWizardDialog {
 
         Div sideSections = new Div(
                 wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL),
-                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid),
-                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS),
-                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS_HINT, GameConfig.MAX_MISSED_ROUNDS), roundGrid));
+                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid), timerSection, combatSection);
         sideSections.addClassName("wizard-overview-side");
         Div overview = new Div(
                 wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP),
@@ -153,7 +164,7 @@ final class CreateGameWizardDialog {
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
                 observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout,
-                roundLimit, stragglerLimit, attackOrder);
+                combatRandomness, roundLimit, stragglerLimit, attackOrder);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CREATE), _ -> {
             if (empireName.getValue().trim().isEmpty()) {
                 empireName.setInvalid(true);
@@ -219,6 +230,7 @@ final class CreateGameWizardDialog {
                               Checkbox observersAllowed, Checkbox reentryAllowed, Checkbox battlePresentation,
                               ComboBox<ProductionDistribution> productionDistribution,
                               ComboBox<GalaxyLayout> galaxyLayout,
+                              Input combatRandomness,
                               ComboBox<Duration> roundLimit, ComboBox<Duration> stragglerLimit,
                               ComboBox<AttackOrder> attackOrder) {
     }
@@ -244,6 +256,7 @@ final class CreateGameWizardDialog {
                 in.productionDistribution().getValue(),
                 in.galaxyLayout().getValue(),
                 in.battlePresentation().getValue(),
+                sliderValue(in.combatRandomness(), GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT),
                 new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), in.attackOrder().getValue())
         ).normalized();
     }
@@ -310,6 +323,26 @@ final class CreateGameWizardDialog {
         field.setMax(max);
         field.setValue(value);
         return field;
+    }
+
+    private static Input combatRandomnessSlider() {
+        Input slider = new Input();
+        slider.setType("range");
+        slider.setValue(String.valueOf(GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT));
+        slider.getElement().setAttribute("min", String.valueOf(GameConfig.MIN_COMBAT_RANDOMNESS_PERCENT));
+        slider.getElement().setAttribute("max", String.valueOf(GameConfig.MAX_COMBAT_RANDOMNESS_PERCENT));
+        slider.getElement().setAttribute("step", "1");
+        slider.getElement().setAttribute("aria-label", I18n.t(UiTexts.LOBBY_FIELD_COMBAT_RANDOMNESS));
+        slider.addClassName("combat-randomness-slider");
+        return slider;
+    }
+
+    private static int sliderValue(Input slider, int fallback) {
+        try {
+            return Integer.parseInt(slider.getValue());
+        } catch (NumberFormatException _) {
+            return fallback;
+        }
     }
 
     private static FormLayout grid(int maxColumns, String columnWidth, Component... fields) {

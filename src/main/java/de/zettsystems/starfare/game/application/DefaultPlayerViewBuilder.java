@@ -33,12 +33,6 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
 
     @Override
     public PlayerViewState forPlayer(GameState state, int playerId) {
-        if (state.gameOver()) {
-            // Partie entschieden — der Nebel hat keinen Zweck mehr und verdeckt nur,
-            // wie es ausgegangen ist.
-            return revealedView(state, playerId);
-        }
-
         return filteredView(state, playerId);
     }
 
@@ -62,7 +56,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
 
         Map<Integer, String> sysNames = state.systems().stream()
                 .collect(Collectors.toMap(StarSystem::id, StarSystem::name));
-        List<PlannedOrder> plannedOrders = buildPlannedOrders(orders, sysNames);
+        List<PlannedOrder> plannedOrders = buildPlannedOrders(state, orders, sysNames);
         List<StandingOrderView> standing = buildStandingOrderViews(state,
                 state.standingOrders().getOrDefault(playerId, List.of()), sysNames);
 
@@ -108,16 +102,6 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                     ownerId, s.garrison(), s.productionPerTurn(),
                     true, color, turn, false, null, s.garrisonReserve(), s.availableShips(), ownershipHistory(state, s.id()));
         }).toList();
-    }
-
-    private static PlayerViewState revealedView(GameState state, int playerId) {
-        int turn = state.turn();
-        var ownFleets = state.fleets().stream().filter(f -> f.ownerId() == playerId).toList();
-        var report = state.reports().getOrDefault(playerId, new TurnReport(turn - 1, List.of()));
-        return new PlayerViewState(turn, List.copyOf(state.players()), revealedSystems(state),
-                ownFleets, report, state.gameOver(), state.winnerId(),
-                List.of(), List.of(), empireStats(state, playerId, ownFleets), Set.of(), state.battlePresentationEnabled(),
-                RoundStatus.NONE);
     }
 
     /** Nur Menschen haben eine Abgabe; die KI plant beim Rundenwechsel und gilt stets als fertig. */
@@ -312,7 +296,8 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         return List.copyOf(out);
     }
 
-    private static List<PlannedOrder> buildPlannedOrders(List<FleetOrder> orders, Map<Integer, String> sysNames) {
+    private static List<PlannedOrder> buildPlannedOrders(GameState state, List<FleetOrder> orders,
+                                                       Map<Integer, String> sysNames) {
         var result = new ArrayList<PlannedOrder>();
         for (int i = 0; i < orders.size(); i++) {
             FleetOrder o = orders.get(i);
@@ -321,14 +306,24 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                         s.fromSystemId(), s.toSystemId(),
                         sysNames.getOrDefault(s.fromSystemId(), "?"),
                         sysNames.getOrDefault(s.toSystemId(), "?"),
-                        s.ships(), false, null);
-                case FleetOrder.Wait _ ->
-                        new PlannedOrder(i, "map.orderType.wait", null, null, "-", "-", null, false, null);
+                        s.ships(), false, null, state.turn() + state.travelRounds(s.fromSystemId(), s.toSystemId()));
+                case FleetOrder.Wait wait -> waitOrder(state, i, wait, sysNames);
                 case FleetOrder.Disband _ ->
                         new PlannedOrder(i, "map.orderType.disband", null, null, "-", "-", null, false, null);
             });
         }
         return List.copyOf(result);
+    }
+
+    private static PlannedOrder waitOrder(GameState state, int index, FleetOrder.Wait order,
+                                           Map<Integer, String> names) {
+        return state.fleets().stream().filter(fleet -> fleet.globalId() == order.fleetId())
+                .findFirst().map(fleet -> new PlannedOrder(index, "map.orderType.wait",
+                        fleet.fromSystemId(), fleet.toSystemId(), names.getOrDefault(fleet.fromSystemId(), "?"),
+                        names.getOrDefault(fleet.toSystemId(), "?"), fleet.ships(), false, null,
+                        fleet.arrivalTurn() + 1))
+                .orElseGet(() -> new PlannedOrder(index, "map.orderType.wait", null, null,
+                        "-", "-", null, false, null));
     }
 
     private static Player playerById(GameState state, int id) {

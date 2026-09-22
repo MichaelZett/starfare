@@ -48,4 +48,12 @@ class UiMapperTest {
         assertThat(fleetViews.getFirst().toName()).isEqualTo("Beta");
         assertThat(fleetViews.getFirst().eta()).isEqualTo(2);
     }
+
+    @Test
+    void pendingWaitDelaysDisplayedArrivalByOneRound() {
+        Fleet fleet = new Fleet(10, 1, 3, 1, 2, 5, 1, 4);
+        PlayerViewState view = new PlayerViewState(2, List.of(), List.of(), List.of(fleet), null,
+                false, null, List.of(), List.of(), EmpireStats.NONE, Set.of(10));
+        assertThat(UiMapper.toFleetViews(view).getFirst().eta()).isEqualTo(3);
+    }
 }

@@ -14,6 +14,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.ProductionFlow;
 import de.zettsystems.starfare.game.values.VisibleSystem;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
@@ -45,7 +46,7 @@ final class SendFleetDialog {
         }
     }
 
-    private record HeaderLabels(Span route, Span duration, Span available) {
+    private record HeaderLabels(Span route, Span duration, Span available, Span production) {
     }
 
     static void open(GameService game, GameId gameId, int pid,
@@ -120,7 +121,12 @@ final class SendFleetDialog {
 
         var availableLabel = new Span(I18n.t(UiTexts.MAP_AVAILABLE, params.maxShips()));
         availableLabel.addClassName("send-fleet-available");
-        return new HeaderLabels(routeLabel, durationLabel, availableLabel);
+        ProductionFlow flow = ProductionFlow.at(ctx.from().id(),
+                ctx.game().viewFor(ctx.gameId(), ctx.pid()).standingOrders());
+        Span production = new Span(I18n.t(UiTexts.MAP_PRODUCTION_FLOW, productionOf(ctx.from()),
+                flow.incoming(), flow.outgoing()));
+        production.addClassName("send-fleet-production");
+        return new HeaderLabels(routeLabel, durationLabel, availableLabel, production);
     }
 
     private static Input buildSlider(DialogParams params) {
@@ -283,7 +289,7 @@ final class SendFleetDialog {
         quickRow.setPadding(false);
         quickRow.setSpacing(true);
 
-        var body = new VerticalLayout(labels.route(), labels.duration(), labels.available(),
+        var body = new VerticalLayout(labels.route(), labels.duration(), labels.available(), labels.production(),
                 sliderRow, c.shipsInput(), quickRow, c.standingCheckbox());
         body.setPadding(false);
         body.setSpacing(false);

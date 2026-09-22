@@ -10,5 +10,10 @@ import org.jspecify.annotations.Nullable;
 public record PlannedOrder(int index, String type,
                            @Nullable Integer fromSystemId, @Nullable Integer toSystemId,
                            String fromSystem, String toSystem, @Nullable Integer ships,
-                           boolean standing, @Nullable Integer standingOrderId) {
+                           boolean standing, @Nullable Integer standingOrderId, @Nullable Integer arrivalTurn) {
+    public PlannedOrder(int index, String type, @Nullable Integer fromSystemId, @Nullable Integer toSystemId,
+                        String fromSystem, String toSystem, @Nullable Integer ships,
+                        boolean standing, @Nullable Integer standingOrderId) {
+        this(index, type, fromSystemId, toSystemId, fromSystem, toSystem, ships, standing, standingOrderId, null);
+    }
 }
