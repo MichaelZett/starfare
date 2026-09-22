@@ -76,10 +76,16 @@ public sealed interface TurnEvent {
 
     record BattleWon(int attackerId, int systemId, String systemName,
                      int attacking, int defending, int remaining, boolean wasNeutral,
-                     int attackerStrength, int defenderStrength) implements TurnEvent {
+                     int attackerStrength, int defenderStrength, String attackerName, String defenderName) implements TurnEvent {
         public BattleWon(int attackerId, int systemId, String systemName,
                          int attacking, int defending, int remaining, boolean wasNeutral) {
-            this(attackerId, systemId, systemName, attacking, defending, remaining, wasNeutral, attacking, defending);
+            this(attackerId, systemId, systemName, attacking, defending, remaining, wasNeutral, attacking, defending, "", "");
+        }
+
+        public BattleWon(int attackerId, int systemId, String systemName, int attacking, int defending, int remaining,
+                         boolean wasNeutral, int attackerStrength, int defenderStrength) {
+            this(attackerId, systemId, systemName, attacking, defending, remaining, wasNeutral,
+                    attackerStrength, defenderStrength, "", "");
         }
 
         @JsonCreator
@@ -89,19 +95,28 @@ public sealed interface TurnEvent {
                 @JsonProperty("defending") int defending, @JsonProperty("remaining") int remaining,
                 @JsonProperty("wasNeutral") boolean wasNeutral,
                 @JsonProperty("attackerStrength") @Nullable Integer attackerStrength,
-                @JsonProperty("defenderStrength") @Nullable Integer defenderStrength) {
+                @JsonProperty("defenderStrength") @Nullable Integer defenderStrength,
+                @JsonProperty("attackerName") @Nullable String attackerName,
+                @JsonProperty("defenderName") @Nullable String defenderName) {
             return new BattleWon(attackerId, systemId, systemName, attacking, defending, remaining, wasNeutral,
                     Objects.requireNonNullElse(attackerStrength, attacking),
-                    Objects.requireNonNullElse(defenderStrength, defending));
+                    Objects.requireNonNullElse(defenderStrength, defending),
+                    Objects.requireNonNullElse(attackerName, ""), Objects.requireNonNullElse(defenderName, ""));
         }
     }
 
     record BattleLost(int attackerId, int systemId, String systemName,
                       int attacking, int defending, int defendersLeft,
-                      int attackerStrength, int defenderStrength) implements TurnEvent {
+                      int attackerStrength, int defenderStrength, String attackerName, String defenderName) implements TurnEvent {
         public BattleLost(int attackerId, int systemId, String systemName,
                           int attacking, int defending, int defendersLeft) {
-            this(attackerId, systemId, systemName, attacking, defending, defendersLeft, attacking, defending);
+            this(attackerId, systemId, systemName, attacking, defending, defendersLeft, attacking, defending, "", "");
+        }
+
+        public BattleLost(int attackerId, int systemId, String systemName, int attacking, int defending, int defendersLeft,
+                          int attackerStrength, int defenderStrength) {
+            this(attackerId, systemId, systemName, attacking, defending, defendersLeft,
+                    attackerStrength, defenderStrength, "", "");
         }
 
         @JsonCreator
@@ -110,25 +125,34 @@ public sealed interface TurnEvent {
                 @JsonProperty("systemName") String systemName, @JsonProperty("attacking") int attacking,
                 @JsonProperty("defending") int defending, @JsonProperty("defendersLeft") int defendersLeft,
                 @JsonProperty("attackerStrength") @Nullable Integer attackerStrength,
-                @JsonProperty("defenderStrength") @Nullable Integer defenderStrength) {
+                @JsonProperty("defenderStrength") @Nullable Integer defenderStrength,
+                @JsonProperty("attackerName") @Nullable String attackerName,
+                @JsonProperty("defenderName") @Nullable String defenderName) {
             return new BattleLost(attackerId, systemId, systemName, attacking, defending, defendersLeft,
                     Objects.requireNonNullElse(attackerStrength, attacking),
-                    Objects.requireNonNullElse(defenderStrength, defending));
+                    Objects.requireNonNullElse(defenderStrength, defending),
+                    Objects.requireNonNullElse(attackerName, ""), Objects.requireNonNullElse(defenderName, ""));
         }
     }
 
     record SystemLost(int defenderId, int attackerId, int systemId, String systemName,
                       int attacking, int defending, int attackersRemaining,
-                      int attackerStrength, int defenderStrength)
+                      int attackerStrength, int defenderStrength, String attackerName, String defenderName)
             implements TurnEvent {
         public SystemLost(int defenderId, int attackerId, int systemId, String systemName) {
-            this(defenderId, attackerId, systemId, systemName, 0, 0, 0, 0, 0);
+            this(defenderId, attackerId, systemId, systemName, 0, 0, 0, 0, 0, "", "");
         }
 
         public SystemLost(int defenderId, int attackerId, int systemId, String systemName,
                           int attacking, int defending, int attackersRemaining) {
             this(defenderId, attackerId, systemId, systemName, attacking, defending, attackersRemaining,
-                    attacking, defending);
+                    attacking, defending, "", "");
+        }
+
+        public SystemLost(int defenderId, int attackerId, int systemId, String systemName, int attacking, int defending,
+                          int attackersRemaining, int attackerStrength, int defenderStrength) {
+            this(defenderId, attackerId, systemId, systemName, attacking, defending, attackersRemaining,
+                    attackerStrength, defenderStrength, "", "");
         }
 
         @JsonCreator
@@ -139,28 +163,37 @@ public sealed interface TurnEvent {
                 @JsonProperty("defending") @Nullable Integer defending,
                 @JsonProperty("attackersRemaining") @Nullable Integer attackersRemaining,
                 @JsonProperty("attackerStrength") @Nullable Integer attackerStrength,
-                @JsonProperty("defenderStrength") @Nullable Integer defenderStrength) {
+                @JsonProperty("defenderStrength") @Nullable Integer defenderStrength,
+                @JsonProperty("attackerName") @Nullable String attackerName,
+                @JsonProperty("defenderName") @Nullable String defenderName) {
             int actualAttacking = Objects.requireNonNullElse(attacking, 0);
             int actualDefending = Objects.requireNonNullElse(defending, 0);
             return new SystemLost(defenderId, attackerId, systemId, systemName,
                     actualAttacking, actualDefending, Objects.requireNonNullElse(attackersRemaining, 0),
                     Objects.requireNonNullElse(attackerStrength, actualAttacking),
-                    Objects.requireNonNullElse(defenderStrength, actualDefending));
+                    Objects.requireNonNullElse(defenderStrength, actualDefending),
+                    Objects.requireNonNullElse(attackerName, ""), Objects.requireNonNullElse(defenderName, ""));
         }
     }
 
     record DefenseHeld(int defenderId, int systemId, String systemName,
                        int attacking, int defending, int defendersLeft,
-                       int attackerStrength, int defenderStrength)
+                       int attackerStrength, int defenderStrength, String attackerName, String defenderName)
             implements TurnEvent {
         public DefenseHeld(int defenderId, int systemId, String systemName,
                            int attacking, int defendersLeft) {
-            this(defenderId, systemId, systemName, attacking, 0, defendersLeft, attacking, 0);
+            this(defenderId, systemId, systemName, attacking, 0, defendersLeft, attacking, 0, "", "");
         }
 
         public DefenseHeld(int defenderId, int systemId, String systemName,
                            int attacking, int defending, int defendersLeft) {
-            this(defenderId, systemId, systemName, attacking, defending, defendersLeft, attacking, defending);
+            this(defenderId, systemId, systemName, attacking, defending, defendersLeft, attacking, defending, "", "");
+        }
+
+        public DefenseHeld(int defenderId, int systemId, String systemName, int attacking, int defending,
+                           int defendersLeft, int attackerStrength, int defenderStrength) {
+            this(defenderId, systemId, systemName, attacking, defending, defendersLeft,
+                    attackerStrength, defenderStrength, "", "");
         }
 
         @JsonCreator
@@ -170,13 +203,16 @@ public sealed interface TurnEvent {
                 @JsonProperty("defending") @Nullable Integer defending,
                 @JsonProperty("defendersLeft") @Nullable Integer defendersLeft,
                 @JsonProperty("attackerStrength") @Nullable Integer attackerStrength,
-                @JsonProperty("defenderStrength") @Nullable Integer defenderStrength) {
+                @JsonProperty("defenderStrength") @Nullable Integer defenderStrength,
+                @JsonProperty("attackerName") @Nullable String attackerName,
+                @JsonProperty("defenderName") @Nullable String defenderName) {
             int actualAttacking = Objects.requireNonNullElse(attacking, 0);
             int actualDefending = Objects.requireNonNullElse(defending, 0);
             return new DefenseHeld(defenderId, systemId, systemName, actualAttacking, actualDefending,
                     Objects.requireNonNullElse(defendersLeft, 0),
                     Objects.requireNonNullElse(attackerStrength, actualAttacking),
-                    Objects.requireNonNullElse(defenderStrength, actualDefending));
+                    Objects.requireNonNullElse(defenderStrength, actualDefending),
+                    Objects.requireNonNullElse(attackerName, ""), Objects.requireNonNullElse(defenderName, ""));
         }
     }
 

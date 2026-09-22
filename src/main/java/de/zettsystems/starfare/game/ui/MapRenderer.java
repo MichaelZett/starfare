@@ -35,6 +35,7 @@ final class MapRenderer {
                   int playerId, boolean observer,
                   @Nullable VisibleSystem selectedFrom,
                   @Nullable Integer highlightedFleetId,
+                  @Nullable Integer highlightedStandingOrderId,
                   Set<Integer> reportedSystemIds,
                   @Nullable Integer highlightedReportSystemId,
                   Set<Integer> pendingBattleSystemIds,
@@ -113,12 +114,16 @@ final class MapRenderer {
         LaneGeometry geometry = computeLaneGeometry(source, target, length);
         String tooltip = I18n.t(UiTexts.MAP_STANDING_LANE_TOOLTIP,
                 order.fromSystem(), order.toSystem(), order.ships());
-        Div lane = buildLaneDiv(geometry, "#bc8cff", tooltip, false);
+        boolean highlighted = Objects.equals(order.id(), in.highlightedStandingOrderId());
+        Div lane = buildLaneDiv(geometry, "#bc8cff", tooltip, highlighted);
         lane.addClassName("fleet-lane-standing");
         map.add(lane);
 
         Div badge = new Div();
         badge.addClassName("standing-order-badge");
+        if (highlighted) {
+            badge.addClassName("standing-order-badge-highlighted");
+        }
         badge.setText("+" + order.ships());
         badge.getElement().setProperty(HtmlAttributes.TITLE, tooltip);
         badge.getStyle().set(CssProperties.LEFT, (source.x() + target.x()) / 2 + "px");

@@ -40,6 +40,8 @@ public class DefaultCombatService implements CombatService {
         Integer oldOwner = target.ownerId();
         int defendersBefore = target.garrison();
         boolean neutral = oldOwner == null;
+        String attackerName = playerName(state, attackerId);
+        String defenderName = oldOwner == null ? "" : playerName(state, oldOwner);
 
         var res = CombatResolver.resolve(ships, defendersBefore, state.combatRandomnessPercent());
         if (res.attackerWon()) {
@@ -48,13 +50,13 @@ public class DefaultCombatService implements CombatService {
             reportService.appendEvent(state, attackerId,
                     new TurnEvent.BattleWon(attackerId, toSystemId, target.name(),
                             ships, defendersBefore, res.attackersLeft(), neutral,
-                            res.attackerStrength(), res.defenderStrength()));
+                            res.attackerStrength(), res.defenderStrength(), attackerName, defenderName));
 
             if (oldOwner != null && !Objects.equals(oldOwner, attackerId)) {
                 reportService.appendEvent(state, oldOwner,
                         new TurnEvent.SystemLost(oldOwner, attackerId, toSystemId, target.name(),
                                 ships, defendersBefore, res.attackersLeft(),
-                                res.attackerStrength(), res.defenderStrength()));
+                                res.attackerStrength(), res.defenderStrength(), attackerName, defenderName));
                 intelFor(state, oldOwner).put(toSystemId, new GameState.Intel(attackerId, state.turn(), res.attackersLeft()));
             }
             intelFor(state, attackerId).put(toSystemId, new GameState.Intel(attackerId, state.turn(), res.attackersLeft()));
@@ -64,18 +66,23 @@ public class DefaultCombatService implements CombatService {
             reportService.appendEvent(state, attackerId,
                     new TurnEvent.BattleLost(attackerId, toSystemId, target.name(),
                             ships, defendersBefore, res.defendersLeft(),
-                            res.attackerStrength(), res.defenderStrength()));
+                            res.attackerStrength(), res.defenderStrength(), attackerName, defenderName));
             if (oldOwner != null) {
                 reportService.appendEvent(state, oldOwner,
                         new TurnEvent.DefenseHeld(oldOwner, toSystemId, target.name(),
                                 ships, defendersBefore, res.defendersLeft(),
-                                res.attackerStrength(), res.defenderStrength()));
+                                res.attackerStrength(), res.defenderStrength(), attackerName, defenderName));
             }
         }
     }
 
     private static String listNos(List<Integer> nos) {
         return nos.stream().sorted().map(String::valueOf).reduce((x, y) -> x + "," + y).orElse("");
+    }
+
+    private static String playerName(GameState state, int playerId) {
+        return state.players().stream().filter(player -> player.id() == playerId)
+                .map(player -> player.label()).findFirst().orElse("");
     }
 
     private static Map<Integer, GameState.Intel> intelFor(GameState state, int playerId) {

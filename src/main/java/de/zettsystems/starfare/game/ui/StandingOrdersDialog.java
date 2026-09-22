@@ -29,7 +29,7 @@ final class StandingOrdersDialog {
                 .setAutoWidth(true).setFlexGrow(1);
         grid.addColumn(StandingOrderView::toSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_TO))
                 .setAutoWidth(true).setFlexGrow(1);
-        grid.addColumn(StandingOrderView::productionPerTurn).setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_PRODUCTION))
+        grid.addColumn(StandingOrderView::ships).setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_SHIPS))
                 .setAutoWidth(true).setFlexGrow(0);
         grid.addComponentColumn(so -> {
             var del = new Button(I18n.t(UiTexts.MAP_ACTION_DELETE_STANDING), _ -> {

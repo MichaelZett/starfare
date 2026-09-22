@@ -248,15 +248,25 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
     private static BattleReplayDialog.BattleSides battleSides(TurnEvent event) {
         return switch (event) {
-            case TurnEvent.BattleWon battle -> new BattleReplayDialog.BattleSides(I18n.t(UiTexts.BATTLE_REPLAY_YOU),
-                    battle.wasNeutral() ? I18n.t(UiTexts.BATTLE_REPLAY_NEUTRAL) : I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT));
-            case TurnEvent.BattleLost _ -> new BattleReplayDialog.BattleSides(I18n.t(UiTexts.BATTLE_REPLAY_YOU),
-                    I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT));
-            case TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> new BattleReplayDialog.BattleSides(
-                    I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT), I18n.t(UiTexts.BATTLE_REPLAY_YOU));
+            case TurnEvent.BattleWon battle -> new BattleReplayDialog.BattleSides(youName(battle.attackerName()),
+                    battle.wasNeutral() ? I18n.t(UiTexts.BATTLE_REPLAY_NEUTRAL) : opponentName(battle.defenderName()));
+            case TurnEvent.BattleLost battle -> new BattleReplayDialog.BattleSides(youName(battle.attackerName()),
+                    opponentName(battle.defenderName()));
+            case TurnEvent.SystemLost lost -> new BattleReplayDialog.BattleSides(opponentName(lost.attackerName()),
+                    youName(lost.defenderName()));
+            case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponentName(held.attackerName()),
+                    youName(held.defenderName()));
             case TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
                     new BattleReplayDialog.BattleSides("", "");
         };
+    }
+
+    private static String youName(String name) {
+        return name.isBlank() ? I18n.t(UiTexts.BATTLE_REPLAY_YOU) : I18n.t(UiTexts.BATTLE_REPLAY_YOU) + " · " + name;
+    }
+
+    private static String opponentName(String name) {
+        return name.isBlank() ? I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT) : name;
     }
 
     private boolean hasPendingBattles() {
