@@ -4,6 +4,10 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String MAP_COLUMN_ARRIVAL_TURN = "map.column.arrivalTurn";
+    public static final String MAP_PRODUCTION_INCOMING = "map.production.incoming";
+    public static final String MAP_PRODUCTION_OUTGOING = "map.production.outgoing";
+    public static final String MAP_PRODUCTION_FLOW = "map.production.flow";
     public static final String MAP_SIDEBAR_CONTACTS = "map.sidebar.contacts";
     public static final String MAP_SIDEBAR_DETAILS = "map.sidebar.details";
     public static final String MAP_SIDEBAR_FLEETS = "map.sidebar.fleets";
@@ -25,6 +29,7 @@ public final class UiTexts {
     public static final String MAP_SIDEBAR_ESTIMATED_SHIPS = "map.sidebar.estimatedShips";
     public static final String MAP_SIDEBAR_COUNTED_SHIPS = "map.sidebar.countedShips";
     public static final String MAP_SIDEBAR_LAST_CONTACT = "map.sidebar.lastContact";
+    public static final String MAP_SIDEBAR_INTELLIGENCE = "map.sidebar.intelligence";
     public static final String MAP_SIDEBAR_LAST_SEEN_TURN = "map.sidebar.lastSeenTurn";
     public static final String MAP_SIDEBAR_OWNED_SINCE = "map.sidebar.ownedSince";
     public static final String MAP_SIDEBAR_PREVIOUS_OWNER = "map.sidebar.previousOwner";
@@ -104,6 +109,8 @@ public final class UiTexts {
     public static final String LOBBY_GALAXY_LAYOUT_EVEN = "lobby.galaxyLayout.even";
     public static final String LOBBY_WIZARD_SECTION_ROUNDS = "lobby.wizard.section.rounds";
     public static final String LOBBY_WIZARD_SECTION_ROUNDS_HINT = "lobby.wizard.section.rounds.hint";
+    public static final String LOBBY_WIZARD_SECTION_COMBAT = "lobby.wizard.section.combat";
+    public static final String LOBBY_WIZARD_SECTION_COMBAT_HINT = "lobby.wizard.section.combat.hint";
     public static final String LOBBY_FIELD_ROUND_LIMIT = "lobby.field.roundLimit";
     public static final String LOBBY_FIELD_STRAGGLER_LIMIT = "lobby.field.stragglerLimit";
     public static final String LOBBY_FIELD_ATTACK_ORDER = "lobby.field.attackOrder";
@@ -125,6 +132,7 @@ public final class UiTexts {
     public static final String LOBBY_FIELD_OBSERVERS_ALLOWED = "lobby.field.observersAllowed";
     public static final String LOBBY_FIELD_REENTRY_ALLOWED = "lobby.field.reentryAllowed";
     public static final String LOBBY_FIELD_BATTLE_PRESENTATION = "lobby.field.battlePresentation";
+    public static final String LOBBY_FIELD_COMBAT_RANDOMNESS = "lobby.field.combatRandomness";
 
     // Map — header / submit / game-over
     public static final String MAP_HEADER_TITLE = "map.header.title";
@@ -192,6 +200,7 @@ public final class UiTexts {
     public static final String MAP_SHOW_STANDING_TOGGLE = "map.showStanding.toggle";
     public static final String MAP_ORDER_TYPE_STANDING = "map.orderType.standing";
     public static final String MAP_HINT_PICK_SOURCE = "map.hint.pickSource";
+    public static final String MAP_HINT_INSPECT_SYSTEM = "map.hint.inspectSystem";
     public static final String MAP_HINT_PICK_TARGET = "map.hint.pickTarget";
     public static final String MAP_HINT_FLEET_LANE = "map.hint.fleetLane";
     public static final String MAP_PLANNED_LANE_TOOLTIP = "map.plannedLane.tooltip";
@@ -245,8 +254,13 @@ public final class UiTexts {
     public static final String BATTLE_REPLAY_TITLE = "battleReplay.title";
     public static final String BATTLE_REPLAY_ATTACKERS = "battleReplay.attackers";
     public static final String BATTLE_REPLAY_DEFENDERS = "battleReplay.defenders";
+    public static final String BATTLE_REPLAY_YOU = "battleReplay.you";
+    public static final String BATTLE_REPLAY_OPPONENT = "battleReplay.opponent";
+    public static final String BATTLE_REPLAY_NEUTRAL = "battleReplay.neutral";
+    public static final String BATTLE_REPLAY_STRENGTH = "battleReplay.strength";
     public static final String BATTLE_REPLAY_RESULT = "battleReplay.result";
     public static final String BATTLE_REPLAY_SOUND = "battleReplay.sound";
+    public static final String BATTLE_REPLAY_SOUND_TEST = "battleReplay.soundTest";
     public static final String BATTLE_REPLAY_CLOSE = "battleReplay.close";
     public static final String BATTLE_REPLAY_ACKNOWLEDGE = "battleReplay.acknowledge";
     public static final String BATTLE_PRESENTATION_TOGGLE = "battlePresentation.toggle";

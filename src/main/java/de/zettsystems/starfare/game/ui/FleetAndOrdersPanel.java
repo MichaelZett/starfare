@@ -60,6 +60,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private @Nullable Integer selectedFleetId;
     private final EnumSet<EventCategory> enabledEventCategories = EnumSet.allOf(EventCategory.class);
     private final IntConsumer onReportSystemSelected;
+    private final IntConsumer onResolvedBattleSelected;
     private final BiConsumer<Integer, Integer> onGarrisonReserveChanged;
     private final Consumer<StandingOrderView> onEditStandingOrder;
     private final Consumer<StandingOrderView> onDeleteStandingOrder;
@@ -72,15 +73,17 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                         Runnable onBattleAcknowledged,
                         IntConsumer onFleetRowSelected,
                         IntConsumer onReportSystemSelected,
+                        IntConsumer onResolvedBattleSelected,
                         BiConsumer<Integer, Integer> onGarrisonReserveChanged) {
         this.onReportSystemSelected = onReportSystemSelected;
+        this.onResolvedBattleSelected = onResolvedBattleSelected;
         this.onGarrisonReserveChanged = onGarrisonReserveChanged;
         this.onEditStandingOrder = onEditStandingOrder;
         this.onDeleteStandingOrder = onDeleteStandingOrder;
         this.onBattleAcknowledged = onBattleAcknowledged;
         setPadding(false);
         setSpacing(true);
-        setWidth("25%");
+        setWidthFull();
         setHeightFull();
         addClassName("map-right");
 
@@ -112,7 +115,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 boolean spectator) {
         this.gameId = gameId;
         currentView = view;
-        selectedSystem = system;
+        selectedSystem = system == null ? null : view.systems().stream()
+                .filter(candidate -> candidate.id() == system.id()).findFirst().orElse(null);
         selectedFleetId = fleetId;
         readOnly = view.gameOver() || spectator;
         TurnReport report = view.report();
@@ -164,6 +168,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         contactsPage.removeAll();
         contactsPage.add(header(UiTexts.MAP_SIDEBAR_CONTACTS));
         List<VisibleSystem> contacts = view.systems().stream()
+                .filter(system -> !isBattlePending(system.id()))
                 .filter(system -> !system.fullyVisible() && system.ownerId() != null)
                 .sorted((left, right) -> Integer.compare(lastSeen(right), lastSeen(left)))
                 .toList();
@@ -181,7 +186,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())),
                 detail(I18n.t(system.approximate() ? UiTexts.MAP_SIDEBAR_ESTIMATED_SHIPS
                                 : UiTexts.MAP_SIDEBAR_COUNTED_SHIPS), shipValue(system)),
-                detail(I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())),
+                detail(I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), productionValue(system)),
                 detail(I18n.t(UiTexts.MAP_SIDEBAR_LAST_CONTACT), contactAge(system)));
         return card;
     }
@@ -197,6 +202,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private static String shipValue(VisibleSystem system) {
         String ships = value(system.garrison());
         return system.approximate() && system.garrison() != null ? "~" + ships : ships;
+    }
+
+    private static String productionValue(VisibleSystem system) {
+        String production = value(system.productionPerTurn());
+        return system.approximate() && system.productionPerTurn() != null ? "~" + production : production;
     }
 
     private static String contactAge(VisibleSystem system) {
@@ -216,9 +226,27 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS));
         if (selectedSystem != null) {
             VisibleSystem system = selectedSystem;
-            detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_SYSTEM), system.name()),
-                    detail(I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
+            if (isBattlePending(system.id())) {
+                detailsPage.add(new Paragraph(I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, system.name())));
+                return;
+            }
+            detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_SYSTEM), system.name()));
+            if (!system.fullyVisible()) {
+                detailsPage.add(intelligenceHeader(),
+                        detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())),
+                        detail(I18n.t(system.approximate() ? UiTexts.MAP_SIDEBAR_ESTIMATED_SHIPS
+                                        : UiTexts.MAP_SIDEBAR_COUNTED_SHIPS), shipValue(system)),
+                        detail(I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), productionValue(system)),
+                        detail(I18n.t(UiTexts.MAP_SIDEBAR_LAST_CONTACT), contactAge(system)));
+                return;
+            }
+            detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
                     detail(I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())));
+            if (system.routedProduction() != null) {
+                ProductionFlow flow = ProductionFlow.at(system.id(), view.standingOrders());
+                detailsPage.add(detail(I18n.t(UiTexts.MAP_PRODUCTION_INCOMING), flow.incoming()),
+                        detail(I18n.t(UiTexts.MAP_PRODUCTION_OUTGOING), flow.outgoing()));
+            }
             renderGarrisonReserve(system);
             renderOwnershipHistory(view, system);
             return;
@@ -237,7 +265,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET_LAUNCHED), selectedFleet.launchTurn()),
                     detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET_TRAVELLING),
                             Math.max(0, view.turn() - selectedFleet.launchTurn())),
-                    detail(I18n.t(UiTexts.MAP_COLUMN_ETA), fleet.eta()));
+                    detail(I18n.t(UiTexts.MAP_COLUMN_ETA), fleet.eta()),
+                    detail(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN), view.turn() + fleet.eta()));
             return;
         }
         detailsPage.add(new Paragraph(I18n.t(UiTexts.MAP_SIDEBAR_DETAILS_EMPTY)));
@@ -345,6 +374,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private @Nullable PlayerViewState currentView;
 
     private boolean isEventEnabled(TurnEvent event) {
+        PlayerViewState view = currentView;
+        TurnReport report = view == null ? null : view.report();
+        if ((event instanceof TurnEvent.Victory || event instanceof TurnEvent.Defeat)
+                && gameId != null && report != null
+                && !BattleAcknowledgements.pending(gameId, report).isEmpty()) {
+            return false;
+        }
         return categoryOf(event).map(enabledEventCategories::contains).orElse(true);
     }
 
@@ -366,10 +402,21 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
         card.add(new Span(eventIcon(event)), new Span(eventText(event)));
         BattleReplay replay = BattleReplay.from(event).orElse(null);
-        if (battlePresentationEnabled && replay != null) {
+        event.battleSystemId().ifPresent(systemId -> {
+            card.addClassName("event-map-linked");
+            if (Objects.equals(selectedReportSystemId, systemId)) {
+                card.addClassName("event-map-selected");
+            }
+            if (replay == null) {
+                card.addClickListener(_ -> onReportSystemSelected.accept(systemId));
+            } else if (!isBattlePending(systemId)) {
+                card.addClickListener(_ -> onResolvedBattleSelected.accept(systemId));
+            }
+        });
+        if (battlePresentationEnabled && replay != null && event.battleSystemId().isPresent()
+                && isBattlePending(event.battleSystemId().getAsInt())) {
             card.addClassName("event-battle-interactive");
-            BattleReplayDialog.primeAudio(card);
-            card.addClickListener(_ -> BattleReplayDialog.open(replay, () -> acknowledgeBattle(event)));
+            card.addClickListener(_ -> BattleReplayDialog.open(replay, battleSides(event), () -> acknowledgeBattle(event)));
             return card;
         }
         if (event.battleSystemId().isPresent()) {
@@ -380,15 +427,20 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 return card;
             }
         }
-        event.battleSystemId().ifPresent(systemId -> {
-            card.addClassName("event-map-linked");
-            if (Objects.equals(selectedReportSystemId, systemId)) {
-                card.addClassName("event-map-selected");
-            }
-            card.getElement().setProperty("title", I18n.t(UiTexts.ROUND_EVENT_OPEN_MAP));
-            card.addClickListener(_ -> onReportSystemSelected.accept(systemId));
-        });
         return card;
+    }
+
+    private static BattleReplayDialog.BattleSides battleSides(TurnEvent event) {
+        return switch (event) {
+            case TurnEvent.BattleWon battle -> new BattleReplayDialog.BattleSides(I18n.t(UiTexts.BATTLE_REPLAY_YOU),
+                    battle.wasNeutral() ? I18n.t(UiTexts.BATTLE_REPLAY_NEUTRAL) : I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT));
+            case TurnEvent.BattleLost _ -> new BattleReplayDialog.BattleSides(I18n.t(UiTexts.BATTLE_REPLAY_YOU),
+                    I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT));
+            case TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> new BattleReplayDialog.BattleSides(
+                    I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT), I18n.t(UiTexts.BATTLE_REPLAY_YOU));
+            case TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
+                    new BattleReplayDialog.BattleSides("", "");
+        };
     }
 
     private boolean isBattlePending(int systemId) {
@@ -417,7 +469,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
     }
 
-    private static String eventIcon(TurnEvent event) {
+    private String eventIcon(TurnEvent event) {
+        if (event.battleSystemId().isPresent() && isBattlePending(event.battleSystemId().getAsInt())) {
+            return "⚔";
+        }
         return switch (event) {
             case TurnEvent.Production _ -> "⬆";
             case TurnEvent.Reinforcement _ -> "→";
@@ -480,6 +535,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         fleetGrid.addColumn(FleetView::toName).setHeader(I18n.t(UiTexts.MAP_COLUMN_TO)).setAutoWidth(true);
         fleetGrid.addColumn(FleetView::ships).setHeader(I18n.t(UiTexts.MAP_COLUMN_SHIPS)).setAutoWidth(true).setFlexGrow(0);
         fleetGrid.addColumn(FleetView::eta).setHeader(I18n.t(UiTexts.MAP_COLUMN_ETA)).setAutoWidth(true).setFlexGrow(0);
+        fleetGrid.addColumn(fleet -> currentView == null ? "—" : String.valueOf(currentView.turn() + fleet.eta()))
+                .setHeader(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN)).setAutoWidth(true).setFlexGrow(0);
         fleetGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT);
         fleetGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         fleetGrid.setHeight("min(58vh, 680px)");
@@ -495,6 +552,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         ordersGrid.addColumn(PlannedOrder::fromSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_FROM)).setAutoWidth(true);
         ordersGrid.addColumn(PlannedOrder::toSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_TO)).setAutoWidth(true);
         ordersGrid.addColumn(order -> value(order.ships())).setHeader(I18n.t(UiTexts.MAP_COLUMN_ORDER_SHIPS)).setAutoWidth(true);
+        ordersGrid.addColumn(order -> value(order.arrivalTurn()))
+                .setHeader(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN)).setAutoWidth(true).setFlexGrow(0);
         ordersGrid.addComponentColumn(order -> {
             Button cancel = new Button(I18n.t(UiTexts.MAP_ACTION_CANCEL_ORDER), _ -> onCancelOrder.accept(order));
             cancel.setVisible(!readOnly);
@@ -578,6 +637,12 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private static H2 header(String key) {
         H2 title = new H2(I18n.t(key));
         title.getStyle().set(CssProperties.MARGIN, "0");
+        return title;
+    }
+
+    private static H2 intelligenceHeader() {
+        H2 title = new H2(I18n.t(UiTexts.MAP_SIDEBAR_INTELLIGENCE));
+        title.addClassName("map-sidebar-intelligence-title");
         return title;
     }
 

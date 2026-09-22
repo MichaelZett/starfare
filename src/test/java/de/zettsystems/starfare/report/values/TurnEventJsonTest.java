@@ -79,6 +79,19 @@ class TurnEventJsonTest {
     }
 
     @Test
+    void legacyBattleEventUsesOriginalForMissingRolledStrengths() {
+        String legacyJson = """
+                {"type":"battleWon","attackerId":1,"systemId":5,"systemName":"Sirius",
+                 "attacking":9,"defending":6,"remaining":3,"wasNeutral":false}
+                """;
+
+        TurnEvent.BattleWon event = (TurnEvent.BattleWon) mapper.readValue(legacyJson, TurnEvent.class);
+
+        assertThat(event.attackerStrength()).isEqualTo(9);
+        assertThat(event.defenderStrength()).isEqualTo(6);
+    }
+
+    @Test
     void everyEventTypeReportsItsSystems() {
         List<TurnEvent> battles = List.of(
                 new TurnEvent.BattleWon(1, 8, "Vega", 12, 5, 7, false),

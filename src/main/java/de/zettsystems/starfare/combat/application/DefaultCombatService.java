@@ -41,18 +41,20 @@ public class DefaultCombatService implements CombatService {
         int defendersBefore = target.garrison();
         boolean neutral = oldOwner == null;
 
-        var res = CombatResolver.resolve(ships, defendersBefore);
+        var res = CombatResolver.resolve(ships, defendersBefore, state.combatRandomnessPercent());
         if (res.attackerWon()) {
             state.updateSystem(target.id(), current -> current.captureBy(attackerId, res.attackersLeft()));
 
             reportService.appendEvent(state, attackerId,
                     new TurnEvent.BattleWon(attackerId, toSystemId, target.name(),
-                            ships, defendersBefore, res.attackersLeft(), neutral));
+                            ships, defendersBefore, res.attackersLeft(), neutral,
+                            res.attackerStrength(), res.defenderStrength()));
 
             if (oldOwner != null && !Objects.equals(oldOwner, attackerId)) {
                 reportService.appendEvent(state, oldOwner,
                         new TurnEvent.SystemLost(oldOwner, attackerId, toSystemId, target.name(),
-                                ships, defendersBefore, res.attackersLeft()));
+                                ships, defendersBefore, res.attackersLeft(),
+                                res.attackerStrength(), res.defenderStrength()));
                 intelFor(state, oldOwner).put(toSystemId, new GameState.Intel(attackerId, state.turn(), res.attackersLeft()));
             }
             intelFor(state, attackerId).put(toSystemId, new GameState.Intel(attackerId, state.turn(), res.attackersLeft()));
@@ -61,11 +63,13 @@ public class DefaultCombatService implements CombatService {
             intelFor(state, attackerId).put(toSystemId, new GameState.Intel(oldOwner, state.turn(), res.defendersLeft()));
             reportService.appendEvent(state, attackerId,
                     new TurnEvent.BattleLost(attackerId, toSystemId, target.name(),
-                            ships, defendersBefore, res.defendersLeft()));
+                            ships, defendersBefore, res.defendersLeft(),
+                            res.attackerStrength(), res.defenderStrength()));
             if (oldOwner != null) {
                 reportService.appendEvent(state, oldOwner,
                         new TurnEvent.DefenseHeld(oldOwner, toSystemId, target.name(),
-                                ships, defendersBefore, res.defendersLeft()));
+                                ships, defendersBefore, res.defendersLeft(),
+                                res.attackerStrength(), res.defenderStrength()));
             }
         }
     }

@@ -34,6 +34,26 @@ class CombatResolverTest {
         assertThat(r.defendersLeft()).isZero();
     }
 
+    @Test
+    void zeroRandomnessUsesExactStartingStrengths() {
+        CombatResolver.Result result = CombatResolver.resolve(100, 100, 0, 0.0, 0.999);
+
+        assertThat(result.attackerStrength()).isEqualTo(100);
+        assertThat(result.defenderStrength()).isEqualTo(100);
+        assertThat(result.attackerWon()).isFalse();
+    }
+
+    @Test
+    void maximumRandomnessCanFlipEqualForces() {
+        CombatResolver.Result attackerWins = CombatResolver.resolve(100, 100, 30, 0.999, 0.0);
+        CombatResolver.Result defenderWins = CombatResolver.resolve(100, 100, 30, 0.0, 0.999);
+
+        assertThat(attackerWins.attackerStrength()).isEqualTo(130);
+        assertThat(attackerWins.defenderStrength()).isEqualTo(70);
+        assertThat(attackerWins.attackerWon()).isTrue();
+        assertThat(defenderWins.attackerWon()).isFalse();
+    }
+
     @RepeatedTest(20)
     void overwhelmingAttackerAlwaysWinsWithMostShipsIntact() {
         // randomness range [0.9, 1.1) cannot flip a 100-vs-1 fight

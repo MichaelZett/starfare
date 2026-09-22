@@ -4,6 +4,7 @@ import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -20,6 +21,7 @@ import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.BattleReplay;
 import de.zettsystems.starfare.report.values.TurnEvent;
+import de.zettsystems.starfare.report.values.TurnReport;
 import de.zettsystems.starfare.style.CssProperties;
 import jakarta.annotation.security.PermitAll;
 import org.jspecify.annotations.Nullable;
@@ -35,6 +37,7 @@ import java.util.Optional;
  */
 @Route("round/:gameId")
 @CssImport("./styles/starfare.css")
+@JsModule("./battle-replay.js")
 @PermitAll
 public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private static final String FILTER_SESSION_KEY = "starfare.roundFilter";
@@ -50,6 +53,8 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private @Nullable GameId gameId;
     private List<TurnEvent> lastEvents = List.of();
     private boolean battlePresentationEnabled;
+    private @Nullable TurnReport currentReport;
+    private boolean finished;
 
     @Autowired
     public RoundView(GameService game) {
@@ -172,12 +177,14 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         PlayerViewState view = game.viewForAccount(gameId, UserContext.currentPlayerId().orElse("")).orElse(null);
         if (view == null) { getUI().ifPresent(ui -> ui.navigate(LobbyView.class)); return; }
         reportHeader.setText(I18n.t(UiTexts.ROUND_REPORT_TITLE, view.turn() - 1));
-        if (view.gameOver()) {
+        finished = view.gameOver();
+        if (finished) {
             gameOverHeader.setText(I18n.t(UiTexts.ROUND_GAME_OVER, winnerName(view)));
             gameOverHeader.setVisible(true);
         }
 
         var report = view.report();
+        currentReport = report;
         lastEvents = report != null ? report.events() : List.of();
         battlePresentationEnabled = BattlePresentationPreference.enabled(gameId, view.turn() - 1,
                 view.battlePresentationEnabled());
@@ -187,6 +194,8 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
     private void renderTimeline() {
         timeline.removeAll();
+        boolean pending = hasPendingBattles();
+        gameOverHeader.setVisible(finished && !pending);
         GameId current = gameId;
         if (current != null && game.viewForAccount(current, UserContext.currentPlayerId().orElse("")).isEmpty()) {
             lastEvents = List.of();
@@ -199,6 +208,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         }
         EnumSet<EventCategory> enabled = enabledCategories();
         List<TurnEvent> filtered = lastEvents.stream()
+                .filter(ev -> !pending || !(ev instanceof TurnEvent.Victory || ev instanceof TurnEvent.Defeat))
                 .filter(ev -> categoryOf(ev).map(enabled::contains).orElse(true))
                 .toList();
         if (filtered.isEmpty()) {
@@ -215,26 +225,55 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         card.addClassName("event-card");
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
 
-        String icon = iconFor(event);
-        String cssClass = cssFor(event);
-        String text = textFor(event, battlePresentationEnabled);
+        boolean pending = isPending(event);
+        String icon = pending ? "⚔" : iconFor(event);
+        String cssClass = pending ? "event-battle-pending" : cssFor(event);
+        String text = textFor(event, pending);
 
         card.addClassName(cssClass);
         var iconSpan = new Span(icon);
         iconSpan.addClassName("event-icon");
         var textSpan = new Span(text);
         card.add(iconSpan, textSpan);
-        if (battlePresentationEnabled) {
-            BattleReplay.from(event)
-                    .ifPresent(replay -> addBattleReplay(card, replay));
+        BattleReplay replay = BattleReplay.from(event).orElse(null);
+        if (battlePresentationEnabled && replay != null) {
+            card.addClassName("event-battle-interactive");
+            card.addClickListener(_ -> BattleReplayDialog.open(replay, battleSides(event), () -> acknowledge(event)));
+        } else if (pending) {
+            card.addClassName("event-battle-interactive");
+            card.addClickListener(_ -> acknowledge(event));
         }
         return card;
     }
 
-    private static void addBattleReplay(Div card, BattleReplay replay) {
-        card.addClassName("event-battle-interactive");
-        BattleReplayDialog.primeAudio(card);
-        card.addClickListener(_ -> BattleReplayDialog.open(replay));
+    private static BattleReplayDialog.BattleSides battleSides(TurnEvent event) {
+        return switch (event) {
+            case TurnEvent.BattleWon battle -> new BattleReplayDialog.BattleSides(I18n.t(UiTexts.BATTLE_REPLAY_YOU),
+                    battle.wasNeutral() ? I18n.t(UiTexts.BATTLE_REPLAY_NEUTRAL) : I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT));
+            case TurnEvent.BattleLost _ -> new BattleReplayDialog.BattleSides(I18n.t(UiTexts.BATTLE_REPLAY_YOU),
+                    I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT));
+            case TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> new BattleReplayDialog.BattleSides(
+                    I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT), I18n.t(UiTexts.BATTLE_REPLAY_YOU));
+            case TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
+                    new BattleReplayDialog.BattleSides("", "");
+        };
+    }
+
+    private boolean hasPendingBattles() {
+        return gameId != null && currentReport != null
+                && !BattleAcknowledgements.pending(gameId, currentReport).isEmpty();
+    }
+
+    private boolean isPending(TurnEvent event) {
+        return gameId != null && currentReport != null && event.battleSystemId().isPresent()
+                && BattleAcknowledgements.pending(gameId, currentReport).contains(event.battleSystemId().getAsInt());
+    }
+
+    private void acknowledge(TurnEvent event) {
+        if (gameId != null && currentReport != null) {
+            BattleAcknowledgements.acknowledge(gameId, currentReport, event);
+            renderTimeline();
+        }
     }
 
     private static String iconFor(TurnEvent e) {
@@ -276,8 +315,12 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, b.systemName())
                     : I18n.t(UiTexts.ROUND_EVENT_BATTLE_LOST,
                     b.systemName(), b.attacking(), b.defending(), b.defendersLeft());
-            case TurnEvent.SystemLost l -> I18n.t(UiTexts.ROUND_EVENT_SYSTEM_LOST, l.systemName());
-            case TurnEvent.DefenseHeld d -> I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
+            case TurnEvent.SystemLost l -> presentationEnabled
+                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, l.systemName())
+                    : I18n.t(UiTexts.ROUND_EVENT_SYSTEM_LOST, l.systemName());
+            case TurnEvent.DefenseHeld d -> presentationEnabled
+                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, d.systemName())
+                    : I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
                             d.systemName(), d.attacking(), d.defendersLeft());
             case TurnEvent.Victory _ -> I18n.t(UiTexts.ROUND_EVENT_VICTORY,
                     GameConfig.VICTORY_SYSTEM_PERCENT);

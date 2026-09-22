@@ -272,17 +272,27 @@ class PlayerViewBuilderTest {
     }
 
     @Test
-    void finishedGameRevealsTheWholeMap() {
+    void finishedGameKeepsFogUntilExplicitReview() {
+        PlayerViewState before = builder.forPlayer(state, 1);
         state.endGame(1);
 
         PlayerViewState view = builder.forPlayer(state, 1);
 
-        assertThat(view.systems()).allSatisfy(s -> {
-            assertThat(s.fullyVisible()).isTrue();
-            assertThat(s.approximate()).isFalse();
-        });
-        assertThat(visible(view, 2).garrison()).as("Gegnergarnison exakt").isEqualTo(7);
-        assertThat(visible(view, 2).productionPerTurn()).isEqualTo(1);
-        assertThat(visible(view, 3).colorHex()).as("neutral bleibt farblos").isNull();
+        assertThat(view.systems()).isEqualTo(before.systems());
+        assertThat(visible(view, 2).garrison()).isNull();
+        assertThat(builder.forReview(state, 1, false).systems()).allMatch(VisibleSystem::fullyVisible);
+    }
+
+    @Test
+    void ordersShowActualArrivalRoundAndWaitAddsOneRound() {
+        int fleetId = state.addFleet(1, 1, 2, 3);
+        Fleet fleet = state.fleets().getFirst();
+        state.pendingOrders().put(1, List.of(new FleetOrder.Send(1, 1, 2, 2),
+                new FleetOrder.Wait(1, fleetId), new FleetOrder.Disband(1, fleetId)));
+        List<PlannedOrder> orders = builder.forPlayer(state, 1).plannedOrders();
+        assertThat(orders.get(0).arrivalTurn()).isEqualTo(fleet.arrivalTurn());
+        assertThat(orders.get(1).arrivalTurn()).isEqualTo(fleet.arrivalTurn() + 1);
+        assertThat(orders.get(1).toSystem()).isEqualTo("S2");
+        assertThat(orders.get(2).arrivalTurn()).isNull();
     }
 }

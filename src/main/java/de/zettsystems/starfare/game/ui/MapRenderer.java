@@ -40,7 +40,8 @@ final class MapRenderer {
                   Set<Integer> pendingBattleSystemIds,
                   Set<Integer> badgesShowingFleetNo,
                   List<VisibleSystem> systems,
-                  Consumer<VisibleSystem> onToggleSelect,
+                  Consumer<VisibleSystem> onInspectSystem,
+                  Consumer<VisibleSystem> onSelectSource,
                   BiConsumer<VisibleSystem, VisibleSystem> onOpenSend,
                   BiConsumer<VisibleSystem, VisibleSystem> onOpenRelocation,
                   IntConsumer onBadgeToggleLabel,
@@ -150,7 +151,7 @@ final class MapRenderer {
                 : UiMapper.systemTooltip(display, in.view().turn()));
         dot.getStyle().set(CssProperties.LEFT, sys.x() + "px");
         dot.getStyle().set(CssProperties.TOP, sys.y() + "px");
-        int size = SystemDisplaySize.pixelsFor(sys);
+        int size = SystemDisplaySize.pixelsFor(display);
         dot.getStyle().set(CssProperties.WIDTH, size + "px");
         dot.getStyle().set(CssProperties.HEIGHT, size + "px");
 
@@ -162,8 +163,10 @@ final class MapRenderer {
             dot.add(buildReportMarker(sys, in));
         }
 
-        if (!in.observer() && !pendingBattle) {
+        if (!pendingBattle) {
             attachSystemInteraction(dot, sys, in);
+        }
+        if (!in.observer() && !pendingBattle) {
             attachRelocationDragAndDrop(dot, sys, in);
         }
         return dot;
@@ -263,30 +266,24 @@ final class MapRenderer {
             dot.addClassName("sys-selected");
         }
 
-        if (sys.fullyVisible()) {
-            dot.addClassName("sys-clickable");
-            dot.getElement().setProperty(HtmlAttributes.TITLE,
-                    UiMapper.systemTooltip(sys, in.view().turn()) + " — "
-                            + I18n.t(selected == null || isSelected
-                            ? UiTexts.MAP_HINT_PICK_SOURCE
-                            : UiTexts.MAP_HINT_PICK_TARGET));
-            dot.addClickListener(_ -> {
-                VisibleSystem from = in.selectedFrom();
-                if (from == null) {
-                    in.onToggleSelect().accept(sys);
-                } else if (from.id() == sys.id()) {
-                    in.onToggleSelect().accept(null);
-                } else {
-                    in.onOpenSend().accept(from, sys);
-                }
-            });
-        } else if (selected != null) {
-            dot.addClassName("sys-target");
-            dot.getElement().setProperty(HtmlAttributes.TITLE,
-                    UiMapper.systemTooltip(sys, in.view().turn()) + " — "
-                            + I18n.t(UiTexts.MAP_HINT_PICK_TARGET));
-            final VisibleSystem from = selected;
-            dot.addClickListener(_ -> in.onOpenSend().accept(from, sys));
+        dot.addClassName(selected == null ? "sys-clickable" : "sys-target");
+        dot.getElement().setProperty(HtmlAttributes.TITLE,
+                UiMapper.systemTooltip(sys, in.view().turn()) + " — "
+                        + I18n.t(selected == null ? UiTexts.MAP_HINT_INSPECT_SYSTEM
+                        : UiTexts.MAP_HINT_PICK_TARGET));
+        dot.addClickListener(_ -> {
+            VisibleSystem from = in.selectedFrom();
+            if (from == null) {
+                in.onInspectSystem().accept(sys);
+            } else if (from.id() == sys.id()) {
+                in.onSelectSource().accept(sys);
+            } else {
+                in.onOpenSend().accept(from, sys);
+            }
+        });
+        if (!in.observer() && in.playerId() >= 0 && sys.fullyVisible()) {
+            ContextMenu menu = new ContextMenu(dot);
+            menu.addItem(I18n.t(UiTexts.MAP_SEND_FLEET), _ -> in.onSelectSource().accept(sys));
         }
     }
 

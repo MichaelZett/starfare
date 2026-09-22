@@ -8,6 +8,28 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Die Schlachtwiedergabe kennzeichnet beide Seiten klar als „Du“, Gegner oder
+  neutrales System. Berichts-, Flotten- und Befehlsansichten sind größer,
+  kontrastreicher und stärker mit Symbolen gestaltet.
+- Der Neue-Spiel-Wizard legt den Kampfzufall für die gesamte Partie zwischen
+  0 und 30 % fest (Vorgabe ±10 %). Vor jedem Gefecht würfeln Angreifer und
+  Verteidiger ihre Kampfstärke unabhängig; die Schlachtwiedergabe zeigt beide
+  gewürfelten Werte.
+- Sieg, Niederlage und offene Karte erscheinen erst nach der Bestätigung aller
+  eigenen Schlachten. Auch Neuladen umgeht die Auswertung nicht mehr; die
+  Reichssummen und Systemdetails verraten vorher keine Schlachtergebnisse.
+- Die Trennlinie zwischen Karte und Seitenleiste ist verschiebbar; das Layout
+  wurde auch bei 1024 Pixeln Breite im Browser geprüft.
+- Kampfzeilen zentrieren und markieren das zugehörige System auch beim Öffnen
+  der Schlachtwiedergabe.
+- Flotten und vorgemerkte Befehle zeigen eine eigene Ankunftsrunden-Spalte;
+  ein vorgemerkter Wartebefehl verschiebt die angezeigte Ankunft um eine Runde.
+- Systemdetails und Sendeflotten-Dialog zeigen eingehende und ausgehende
+  Produktionsverlegungen als Mengen pro Runde.
+- Kampfgeräusche werden direkt beim Browserklick freigeschaltet, sind deutlicher
+  hörbar und reagieren sofort auf den Tonschalter. Die Schlachtwiedergabe zeigt
+  unregelmäßige Verlustschritte mit unveränderten Endzahlen.
+
 - Identity-Baustein 0.9.1 (eigene Mail-Zustellung und Kopfbereich über den
   Formularen als optionale Erweiterungspunkte; für Starfare ohne Änderung).
 - Die Lobby-Tabelle passt auf Desktop-Breite: Spielname und Spielerliste

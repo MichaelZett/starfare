@@ -373,6 +373,8 @@ html, body, #outlet {
 }
 
 .map-content {
+    box-sizing: border-box;
+    min-height: 0;
     padding: 0 var(--sf-page-pad) 24px var(--sf-page-pad);
     background: transparent;
 }
@@ -385,12 +387,20 @@ html, body, #outlet {
 }
 
 .map-right {
+    box-sizing: border-box;
+    min-width: 240px;
+    overflow: auto;
     background: var(--sf-surface);
     border-radius: 16px;
     padding: 16px;
     border: 1px solid var(--sf-border);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
+
+.map-left { min-width: 180px; }
+.map-content::part(splitter) { min-width: 12px; background: var(--sf-border); }
+.map-content::part(handle) { background: #ffc14f; }
+.send-fleet-production { margin: 8px 0; color: var(--sf-text); }
 
 /* ── Lobby ───────────────────────────────────────────────────── */
 .lobby-root {
@@ -1579,4 +1589,91 @@ html, body, #outlet {
     gap: 6px;
     margin-left: auto;
     color: var(--sf-text-muted);
+}
+.combat-randomness-field {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.combat-randomness-slider {
+    inline-size: 100%;
+}
+
+.battle-strength {
+    color: var(--sf-text-muted);
+    font-size: 0.85rem;
+}
+
+/* Report and map-side panels use game cards instead of a dense spreadsheet look. */
+.map-right vaadin-grid {
+    border: 1px solid var(--sf-border);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--sf-surface);
+    font-size: 0.96rem;
+}
+
+.map-right vaadin-grid::part(header-cell) {
+    background: var(--sf-surface-2);
+    color: var(--sf-text-muted);
+    font-size: 0.72rem;
+    font-weight: 750;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.map-right vaadin-grid::part(row):hover {
+    background: color-mix(in srgb, var(--sf-accent) 16%, transparent);
+}
+
+.map-right .map-sidebar-detail {
+    min-height: 2.25rem;
+    padding: 0.45rem 0.65rem;
+    align-items: center;
+    border: 1px solid var(--sf-border);
+    border-radius: 10px;
+    background: var(--sf-surface-2);
+    font-size: 0.98rem;
+}
+
+.map-right .map-sidebar-detail span:last-child {
+    color: var(--sf-accent);
+    font-size: 1.05rem;
+    font-weight: 750;
+}
+
+.map-sidebar-intelligence-title {
+    margin: 0.4rem 0 0;
+    color: var(--sf-accent);
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.event-card {
+    min-height: 3.5rem;
+    padding: 0.85rem 1rem;
+    font-size: 1rem;
+}
+
+.event-icon {
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    flex: 0 0 2.2rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, currentColor 18%, transparent);
+    font-size: 1.35rem;
+}
+
+.battle-identity {
+    padding: 0.2rem 0.55rem;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    background: rgba(3, 8, 21, 0.55);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }

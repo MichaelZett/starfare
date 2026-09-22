@@ -111,6 +111,20 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void combatRandomnessSurvivesJsonRoundTripAndLegacySnapshotsUseDefault() {
+        GameState state = sampleState();
+        state.configureLobby(true, true, true, 30);
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+
+        assertThat(GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class))
+                .combatRandomnessPercent()).isEqualTo(30);
+
+        json.remove("combatRandomnessPercent");
+        assertThat(GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class))
+                .combatRandomnessPercent()).isEqualTo(GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT);
+    }
+
+    @Test
     void systemJsonWithoutGarrisonReserveStillLoads() {
         ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(sampleState()));
         ((ObjectNode) json.get("systems").get(0)).remove("garrisonReserve");

@@ -57,7 +57,7 @@ public final class UiMapper {
                         nameOf.apply(f.fromSystemId()),
                         nameOf.apply(f.toSystemId()),
                         f.ships(),
-                        f.arrivalTurn() - turn,
+                        f.arrivalTurn() - turn + (view.waitingFleetIds().contains(f.globalId()) ? 1 : 0),
                         f.globalId(),
                         f.fromSystemId(),
                         f.toSystemId(),

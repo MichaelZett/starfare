@@ -55,6 +55,7 @@ public class GameState {
     private boolean observersAllowed;
     private boolean reentryAllowed;
     private boolean battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
+    private int combatRandomnessPercent = GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT;
     private Instant turnStartedAt = Instant.now();
     private RoundRules roundRules = RoundRules.defaults();
     /** Seit wann nur noch ein Mensch fehlt; {@code null}, solange die Nachzügler-Uhr nicht läuft. */
@@ -176,6 +177,10 @@ public class GameState {
         return battlePresentationEnabled;
     }
 
+    public int combatRandomnessPercent() {
+        return combatRandomnessPercent;
+    }
+
     public Instant turnStartedAt() {
         return turnStartedAt;
     }
@@ -247,9 +252,18 @@ public class GameState {
 
     /** Applies lobby policies and the default presentation mode for each new round report. */
     public void configureLobby(boolean observersAllowed, boolean reentryAllowed, boolean battlePresentationEnabled) {
+        configureLobby(observersAllowed, reentryAllowed, battlePresentationEnabled,
+                GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT);
+    }
+
+    /** Applies lobby policies, report presentation and the fixed combat randomness for this game. */
+    public void configureLobby(boolean observersAllowed, boolean reentryAllowed, boolean battlePresentationEnabled,
+                                int combatRandomnessPercent) {
         this.observersAllowed = observersAllowed;
         this.reentryAllowed = reentryAllowed;
         this.battlePresentationEnabled = battlePresentationEnabled;
+        this.combatRandomnessPercent = Math.clamp(combatRandomnessPercent,
+                GameConfig.MIN_COMBAT_RANDOMNESS_PERCENT, GameConfig.MAX_COMBAT_RANDOMNESS_PERCENT);
     }
 
     /**
@@ -289,6 +303,7 @@ public class GameState {
         this.observersAllowed = false;
         this.reentryAllowed = false;
         this.battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
+        this.combatRandomnessPercent = GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT;
         this.roundRules = RoundRules.defaults();
         this.stragglerSince = null;
         this.missedRounds.clear();
@@ -321,6 +336,7 @@ public class GameState {
         this.observersAllowed = false;
         this.reentryAllowed = false;
         this.battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
+        this.combatRandomnessPercent = GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT;
         this.roundRules = RoundRules.defaults();
         this.stragglerSince = null;
         this.missedRounds.clear();
@@ -479,7 +495,8 @@ public class GameState {
                 new HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
-                s.battlePresentationEnabled, s.roundRules, s.stragglerSince, new HashMap<>(s.missedRounds));
+                s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
+                new HashMap<>(s.missedRounds));
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -532,6 +549,10 @@ public class GameState {
         Boolean presentationEnabled = s.battlePresentationEnabled();
         c.battlePresentationEnabled = presentationEnabled != null ? presentationEnabled
                 : GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
+        Integer randomness = s.combatRandomnessPercent();
+        c.combatRandomnessPercent = randomness != null
+                ? Math.clamp(randomness, GameConfig.MIN_COMBAT_RANDOMNESS_PERCENT, GameConfig.MAX_COMBAT_RANDOMNESS_PERCENT)
+                : GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT;
         // Aeltere Snapshots kennen das Feld nicht; dann laeuft die Zug-Uhr ab Wiederherstellung.
         Instant startedAt = s.turnStartedAt();
         c.turnStartedAt = startedAt != null ? startedAt : Instant.now();
@@ -580,6 +601,7 @@ public class GameState {
         c.observersAllowed = s.observersAllowed();
         c.reentryAllowed = s.reentryAllowed();
         c.battlePresentationEnabled = s.battlePresentationEnabled();
+        c.combatRandomnessPercent = s.combatRandomnessPercent;
         c.roundRules = s.roundRules();
         c.missedRounds.putAll(s.missedRounds());
 
