@@ -13,6 +13,8 @@ import de.zettsystems.starfare.social.application.InvitationService;
 import de.zettsystems.starfare.social.application.PresenceTracker;
 import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -48,7 +50,9 @@ public class LobbySteps {
     public void createPrivateGame() {
         browser.clickButtonWithText("Neues Spiel");
         browser.awaitText("Neue Partien sind privat.");
-        browser.awaitCss("#join-after-create").click();
+        WebElement joinAfterCreate = browser.awaitCss("#join-after-create");
+        ((JavascriptExecutor) browser.driver()).executeScript(
+                "arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", joinAfterCreate);
         browser.clickButtonWithText("Spiel anlegen");
         browser.awaitText("Privat");
         id = games.listGames().getLast();

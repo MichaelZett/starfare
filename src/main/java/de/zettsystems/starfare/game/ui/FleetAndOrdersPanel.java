@@ -435,7 +435,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (battlePresentationEnabled && replay != null && event.battleSystemId().isPresent()
                 && isBattlePending(event.battleSystemId().getAsInt())) {
             card.addClassName("event-battle-interactive");
-            card.addClickListener(_ -> BattleReplayDialog.open(replay, battleSides(event), () -> acknowledgeBattle(event)));
+            card.addClickListener(_ -> {
+                onReportSystemSelected.accept(event.battleSystemId().getAsInt());
+                BattleReplayDialog.open(replay, battleSides(event), () -> acknowledgeBattle(event));
+            });
             return card;
         }
         if (event.battleSystemId().isPresent()) {
