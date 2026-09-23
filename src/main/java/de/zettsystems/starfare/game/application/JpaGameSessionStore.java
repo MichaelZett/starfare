@@ -71,7 +71,10 @@ public class JpaGameSessionStore implements GameSessionStore {
             GameState state = GameState.fromSnapshot(snapshot);
             String idValue = Objects.requireNonNull(entity.getId(), "Persisted game session must have an id");
             GameId id = GameId.of(idValue);
-            cache.putIfAbsent(id, new GameSession(id, entity.getName(), entity.getHostPlayerId(), entity.getCreatedAt(), state));
+            if (cache.putIfAbsent(id, new GameSession(id, entity.getName(), entity.getHostPlayerId(), entity.getCreatedAt(), state)) == null) {
+                // Ohne Zugriffszeit wäre die Partie für unloadInactiveSingleHumanGames nie untätig.
+                lastAccess.put(id, Instant.now());
+            }
             readableIds.add(id);
             return true;
         } catch (RuntimeException e) {
@@ -116,8 +119,8 @@ public class JpaGameSessionStore implements GameSessionStore {
 
     @Override
     public List<GameId> listIds() {
-        return repository.findAllByOrderByCreatedAtAsc().stream()
-                .map(entity -> GameId.of(Objects.requireNonNull(entity.getId())))
+        return repository.findAllIdsOrderByCreatedAt().stream()
+                .map(GameId::of)
                 .filter(readableIds::contains).toList();
     }
 
@@ -147,21 +150,30 @@ public class JpaGameSessionStore implements GameSessionStore {
     @Override
     public int unloadInactiveSingleHumanGames(Duration inactivity) {
         Instant cutoff = Instant.now().minus(inactivity);
+        // readState nie unter cacheMonitor: save() läuft unter dem Schreib-Lock der
+        // Partie und wartet auf cacheMonitor — umgekehrt verklemmten sich beide.
+        List<Map.Entry<GameId, GameSession>> candidates = cache.entrySet().stream()
+                .filter(entry -> isIdle(entry.getKey(), cutoff))
+                .filter(entry -> entry.getValue().readState(state -> state.active() && state.started()
+                        && !state.gameOver() && state.originalHumanPlayerIds().size() == 1))
+                .map(Map.Entry::copyOf)
+                .toList();
         int unloaded = 0;
         synchronized (cacheMonitor) {
-        for (var entry : cache.entrySet()) {
-            GameId id = entry.getKey();
-            GameSession session = entry.getValue();
-            Instant accessed = lastAccess.get(id);
-            boolean idle = accessed != null && accessed.isBefore(cutoff);
-            boolean singleHuman = session.readState(state -> state.active() && state.started() && !state.gameOver()
-                    && state.originalHumanPlayerIds().size() == 1);
-            if (idle && singleHuman && cache.remove(id, session)) {
-                lastAccess.remove(id);
-                unloaded++;
+            for (var candidate : candidates) {
+                GameId id = candidate.getKey();
+                // Zwischenzeitlich gespeichert oder berührt: nicht mehr untätig.
+                if (isIdle(id, cutoff) && cache.remove(id, candidate.getValue())) {
+                    lastAccess.remove(id);
+                    unloaded++;
+                }
             }
         }
-        }
         return unloaded;
+    }
+
+    private boolean isIdle(GameId id, Instant cutoff) {
+        Instant accessed = lastAccess.get(id);
+        return accessed != null && accessed.isBefore(cutoff);
     }
 }

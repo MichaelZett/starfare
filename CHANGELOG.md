@@ -173,6 +173,15 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   `ui` ↛ `domain`.
 
 ### Fixed
+- Einladungen und Freundschaftsanfragen legen ihre Knöpfe in eine eigene
+  Zeile; die Lobby scrollte mit offener Einladung seitwärts.
+- Das Entladen untätiger Einzelspieler-Partien verklemmt sich nicht mehr mit
+  einem gleichzeitigen Speichern; wieder geladene Partien werden erneut
+  entladen. Die Lobby liest nur noch die Partie-IDs statt aller Snapshots.
+- Befehle auf reinen Archivpartien werden abgelehnt statt mit „Unknown game“
+  zu scheitern.
+- Zwei gleiche Schlachten einer Runde lassen sich beide bestätigen.
+- Die Statistik lädt die KI-Gegner aller Partien in einer Abfrage.
 - Beendete Partien öffnen aus dem Archiv wieder lesend: Sitzinhaber landeten
   im Wartezustand vor dem Ergebnisdialog, mit sichtbarem „Nächste Runde" und
   ohne Nachbetrachtung. Der Wartezustand gilt nur noch für eine Ansicht, die

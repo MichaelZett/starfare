@@ -1369,6 +1369,21 @@ html, body, #outlet {
     border-color: color-mix(in srgb, var(--sf-accent) 55%, var(--sf-border));
 }
 
+.friend-inbox-row, .invitations-row {
+    grid-template-columns: auto minmax(0, 1fr);
+}
+
+.friend-inbox-from, .invitations-row-label {
+    overflow-wrap: anywhere;
+}
+
+.social-row-actions {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
 .social-row-icon {
     display: grid;
     place-items: center;
@@ -1462,7 +1477,6 @@ html, body, #outlet {
 
 .friend-inbox-row {
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
     align-items: center;
     gap: 6px;
 }
@@ -1692,7 +1706,6 @@ html, body, #outlet {
 
 .invitations-row {
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
     align-items: center;
     gap: 6px;
 }

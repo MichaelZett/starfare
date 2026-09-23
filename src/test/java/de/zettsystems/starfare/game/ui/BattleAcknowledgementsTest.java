@@ -47,4 +47,17 @@ class BattleAcknowledgementsTest {
 
         assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).containsExactly(10);
     }
+
+    @Test
+    void identicalBattlesInOneRoundCanBothBeAcknowledged() {
+        GameId gameId = GameId.of("game-1");
+        TurnEvent battle = new TurnEvent.BattleLost(2, 10, "Vega", 9, 7, 2);
+        TurnReport report = new TurnReport(4, List.of(), List.of(battle, battle));
+
+        Set<String> acknowledgements = BattleAcknowledgements.acknowledge(gameId, report, battle, Set.of());
+        assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).containsExactly(10);
+
+        acknowledgements = BattleAcknowledgements.acknowledge(gameId, report, battle, acknowledgements);
+        assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).isEmpty();
+    }
 }

@@ -133,6 +133,13 @@ public class DefaultGameService implements GameService {
                         .orElse(false));
     }
 
+    /** Guard für Befehle: Reine Archivpartien liegen nicht in der Registry, writeState würfe. */
+    private boolean isRunningGame(GameId gameId) {
+        return registry.find(gameId)
+                .map(s -> s.readState(state -> state.active() && state.started()))
+                .orElse(false);
+    }
+
     @Override
     public boolean joinGame(GameId gameId, int playerId) {
         boolean joined = registry.joinHumanPlayer(gameId, playerId);
@@ -368,7 +375,7 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean sendFleet(GameId gameId, int playerId, int fromId, int toId, int ships) {
-        if (!hasStartedGame(gameId)) {
+        if (!isRunningGame(gameId)) {
             return false;
         }
         return registry.writeState(gameId, state -> !state.gameOver() && fleetService.queueSend(state, playerId, fromId, toId, ships));
@@ -376,7 +383,7 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean setGarrisonReserve(GameId gameId, int playerId, int systemId, int reserve) {
-        if (!hasStartedGame(gameId) || reserve < 0) {
+        if (!isRunningGame(gameId) || reserve < 0) {
             return false;
         }
         return registry.writeState(gameId, state -> {
@@ -391,7 +398,7 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean addStandingOrder(GameId gameId, int playerId, int fromId, int toId, int ships) {
-        if (!hasStartedGame(gameId)) {
+        if (!isRunningGame(gameId)) {
             return false;
         }
         return registry.writeState(gameId,
@@ -662,7 +669,7 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean setFleetWait(GameId gameId, int playerId, int fleetId) {
-        if (!hasStartedGame(gameId)) {
+        if (!isRunningGame(gameId)) {
             return false;
         }
         return registry.writeState(gameId, state -> !state.gameOver() && fleetService.queueWait(state, playerId, fleetId));
@@ -683,7 +690,7 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean disbandFleet(GameId gameId, int playerId, int fleetId) {
-        if (!hasStartedGame(gameId)) {
+        if (!isRunningGame(gameId)) {
             return false;
         }
         return registry.writeState(gameId, state -> !state.gameOver() && fleetService.queueDisband(state, playerId, fleetId));
