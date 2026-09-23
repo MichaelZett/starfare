@@ -40,11 +40,31 @@ final class BattleAcknowledgements {
 
     static Set<String> acknowledge(GameId gameId, TurnReport report, TurnEvent event, Set<String> acknowledged) {
         Set<String> updated = new HashSet<>(acknowledged);
-        int eventIndex = report.events().indexOf(event);
+        int eventIndex = firstPendingIndexOf(gameId, report, event, acknowledged);
         if (eventIndex >= 0) {
             updated.add(key(gameId, report.turn(), eventIndex));
         }
         return Set.copyOf(updated);
+    }
+
+    /** Ob gerade diese Schlacht noch offen ist — nicht bloß eine andere am selben System. */
+    static boolean isPending(GameId gameId, TurnReport report, TurnEvent event) {
+        return event.battleSystemId().isPresent() && firstPendingIndexOf(gameId, report, event, acknowledged()) >= 0;
+    }
+
+    /**
+     * Gleiche Events (etwa zwei identische Angriffe einer Runde) sind nicht
+     * unterscheidbar; quittiert wird jeweils das erste noch offene. Mit indexOf
+     * bliebe das zweite für immer offen.
+     */
+    private static int firstPendingIndexOf(GameId gameId, TurnReport report, TurnEvent event, Set<String> acknowledged) {
+        for (int eventIndex = 0; eventIndex < report.events().size(); eventIndex++) {
+            if (report.events().get(eventIndex).equals(event)
+                    && !acknowledged.contains(key(gameId, report.turn(), eventIndex))) {
+                return eventIndex;
+            }
+        }
+        return -1;
     }
 
     @SuppressWarnings("unchecked") // rationale: the key is private and only stores a Set<String>.
