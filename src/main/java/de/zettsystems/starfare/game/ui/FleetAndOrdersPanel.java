@@ -70,9 +70,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final Consumer<StandingOrderView> onEditStandingOrder;
     private final Consumer<StandingOrderView> onDeleteStandingOrder;
     private final Runnable onBattleAcknowledged;
+    private final BattleAcknowledgements acknowledgements;
     private @Nullable Integer selectedReportSystemId;
 
-    FleetAndOrdersPanel(Consumer<PlannedOrder> onCancelOrder,
+    FleetAndOrdersPanel(BattleAcknowledgements acknowledgements,
+                        Consumer<PlannedOrder> onCancelOrder,
                         Consumer<StandingOrderView> onEditStandingOrder,
                         Consumer<StandingOrderView> onDeleteStandingOrder,
                         Runnable onBattleAcknowledged,
@@ -88,6 +90,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         this.onEditStandingOrder = onEditStandingOrder;
         this.onDeleteStandingOrder = onDeleteStandingOrder;
         this.onBattleAcknowledged = onBattleAcknowledged;
+        this.acknowledgements = acknowledgements;
         setPadding(false);
         setSpacing(true);
         setWidthFull();
@@ -477,7 +480,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         TurnReport report = view == null ? null : view.report();
         if ((event instanceof TurnEvent.Victory || event instanceof TurnEvent.Defeat)
                 && gameId != null && report != null
-                && !BattleAcknowledgements.pending(gameId, report).isEmpty()) {
+                && !acknowledgements.pending(gameId, report).isEmpty()) {
             return false;
         }
         return categoryOf(event).map(enabledEventCategories::contains).orElse(true);
@@ -558,7 +561,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private boolean isBattlePending(int systemId) {
         GameId current = gameId;
         TurnReport report = currentView == null ? null : currentView.report();
-        return current != null && report != null && BattleAcknowledgements.pending(current, report).contains(systemId);
+        return current != null && report != null && acknowledgements.pending(current, report).contains(systemId);
     }
 
     private void acknowledgeBattle(TurnEvent event) {
@@ -566,7 +569,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         TurnReport report = currentView == null ? null : currentView.report();
         event.battleSystemId().ifPresent(systemId -> {
             if (current != null && report != null) {
-                BattleAcknowledgements.acknowledge(current, report, event);
+                acknowledgements.acknowledge(current, report, event);
                 onBattleAcknowledged.run();
                 showCaptureSummary(event);
             }

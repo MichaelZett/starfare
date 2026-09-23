@@ -54,6 +54,34 @@ class CombatResolverTest {
         assertThat(defenderWins.attackerWon()).isFalse();
     }
 
+    @Test
+    void smallEqualFleetsAreDecidedByTheUnroundedRoll() {
+        CombatResolver.Result attackerWins = CombatResolver.resolve(3, 3, 10, 0.9, 0.1);
+        CombatResolver.Result defenderWins = CombatResolver.resolve(3, 3, 10, 0.1, 0.9);
+
+        // 3,24 gegen 2,76: angezeigt wird beides als 3, entschieden hat der Wurf.
+        assertThat(attackerWins.attackerStrength()).isEqualTo(3);
+        assertThat(attackerWins.defenderStrength()).isEqualTo(3);
+        assertThat(attackerWins.attackerWon()).isTrue();
+        assertThat(defenderWins.attackerWon()).isFalse();
+    }
+
+    @Test
+    void equalSmallFleetsWinRoughlyHalfTheTime() {
+        int attackerWins = 0;
+        int fights = 0;
+        for (int a = 0; a < 100; a++) {
+            for (int d = 0; d < 100; d++) {
+                fights++;
+                if (CombatResolver.resolve(3, 3, 10, (a + 0.5) / 100, (d + 0.25) / 100).attackerWon()) {
+                    attackerWins++;
+                }
+            }
+        }
+
+        assertThat((double) attackerWins / fights).isBetween(0.45, 0.55);
+    }
+
     @RepeatedTest(20)
     void overwhelmingAttackerAlwaysWinsWithMostShipsIntact() {
         // randomness range [0.9, 1.1) cannot flip a 100-vs-1 fight
