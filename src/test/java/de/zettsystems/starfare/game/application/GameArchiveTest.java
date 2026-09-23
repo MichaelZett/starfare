@@ -77,6 +77,21 @@ class GameArchiveTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void commandsOnArchiveOnlyGameAreRejectedInsteadOfThrowing() {
+        var id = games.newGame(GameSetup.defaults(), "host", "Archived");
+        games.joinGame(id, "host");
+        games.startGame(id);
+        registry.writeState(id, state -> { state.endGame(1); return null; });
+        sessions.delete(id);
+
+        assertThat(games.sendFleet(id, 1, 1, 2, 1)).isFalse();
+        assertThat(games.setGarrisonReserve(id, 1, 1, 0)).isFalse();
+        assertThat(games.addStandingOrder(id, 1, 1, 2, 1)).isFalse();
+        assertThat(games.setFleetWait(id, 1, 1)).isFalse();
+        assertThat(games.disbandFleet(id, 1, 1)).isFalse();
+    }
+
+    @Test
     void outcomeStatisticsSumOnlyOwnEventsOfFinishedGame() {
         var id = games.newGame(GameSetup.defaults(), "host", "Outcome");
         games.joinGame(id, "host");
