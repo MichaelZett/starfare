@@ -6,6 +6,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
@@ -15,6 +16,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -106,8 +108,9 @@ final class CreateGameWizardDialog {
         empireName.setValue(EmpireNameGenerator.forHuman(hostName));
         empireName.setRequiredIndicatorVisible(true);
 
-        FormLayout setupGrid = grid(3, "13em", systems, humans, ai, startGarrison,
-                galaxyLayout, combatRandomnessField, observersAllowed, reentryAllowed, battlePresentation, empireName, joinAfterCreate);
+        FormLayout setupGrid = grid(3, "13em", systems, humans, ai, galaxyLayout, empireName, joinAfterCreate);
+        FormLayout settingsGrid = grid(3, "13em", startGarrison, combatRandomnessField,
+                observersAllowed, reentryAllowed, battlePresentation);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
 
         ComboBox<Duration> roundLimit = durationCombo(I18n.t(UiTexts.LOBBY_FIELD_ROUND_LIMIT),
@@ -151,20 +154,24 @@ final class CreateGameWizardDialog {
         privateHint.setText(I18n.t(UiTexts.GAME_PRIVATE_HINT));
 
         Div sideSections = new Div(
+                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETTINGS),
+                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETTINGS_HINT), settingsGrid),
                 wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL),
                         I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid), timerSection, combatSection);
         sideSections.addClassName("wizard-overview-side");
-        Div overview = new Div(
-                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP),
-                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP_HINT), setupGrid),
-                sideSections);
-        overview.addClassName("wizard-overview");
+        Div advancedContent = new Div(sideSections,
+                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START),
+                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START_HINT), startProductionFields));
+        advancedContent.addClassName("wizard-advanced-content");
+        Details advanced = new Details(I18n.t(UiTexts.LOBBY_WIZARD_ADVANCED), advancedContent);
+        advanced.addClassName("wizard-advanced");
+        Div overview = wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP),
+                I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP_HINT), setupGrid);
         VerticalLayout body = new VerticalLayout(
                 privateHint,
                 intro,
                 overview,
-                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START),
-                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START_HINT), startProductionFields));
+                advanced);
         body.addClassName("wizard-body");
         body.setPadding(false);
         body.setSpacing(true);
@@ -184,12 +191,14 @@ final class CreateGameWizardDialog {
             GameSetup setup = buildSetup(formInputs);
             String accountId = UserContext.currentPlayerId().orElse(null);
             GameId gameId = game.newGame(setup, accountId, GameNameGenerator.random());
-            if (accountId != null) {
-                joinNewGame(game, gameId, accountId, hostName, empireName.getValue(),
-                        Boolean.TRUE.equals(joinAfterCreate.getValue()));
-            }
+            boolean joined = accountId != null && joinNewGame(game, gameId, accountId, hostName, empireName.getValue(),
+                    Boolean.TRUE.equals(joinAfterCreate.getValue()));
+            boolean started = joined && setup.humanPlayers() == 1 && setup.aiPlayers() > 0 && game.startGame(gameId);
             onCreated.run();
             dialog.close();
+            if (started) {
+                dialog.getUI().ifPresent(ui -> ui.navigate(MainView.class, new RouteParameters("gameId", gameId.value())));
+            }
         });
         create.addThemeVariants(ButtonVariant.PRIMARY);
         Button cancel = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CANCEL), _ -> dialog.close());
@@ -387,11 +396,16 @@ final class CreateGameWizardDialog {
         return value == null ? fallback : value;
     }
 
-    private static void joinNewGame(GameService game, GameId gameId, String hostPlayerId, String hostName,
-                                    String empireName, boolean joinAfterCreate) {
-        if (joinAfterCreate && game.joinGame(gameId, hostPlayerId, hostName, empireName).isEmpty()) {
-            Notification.show(I18n.t(UiTexts.LOBBY_JOIN_FAILED));
+    private static boolean joinNewGame(GameService game, GameId gameId, String hostPlayerId, String hostName,
+                                       String empireName, boolean joinAfterCreate) {
+        if (!joinAfterCreate) {
+            return false;
         }
+        if (game.joinGame(gameId, hostPlayerId, hostName, empireName).isEmpty()) {
+            Notification.show(I18n.t(UiTexts.LOBBY_JOIN_FAILED));
+            return false;
+        }
+        return true;
     }
 
     private static List<ColorOption> colorOptions() {

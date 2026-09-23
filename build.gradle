@@ -184,6 +184,10 @@ test {
     finalizedBy jacocoTestReport
 }
 
+bootRun {
+    jvmArgs '-Dspring.profiles.active=local'
+}
+
 tasks.matching { it.name == 'compileE2eTestJava' }.configureEach {
     options.errorprone.enabled = false
 }

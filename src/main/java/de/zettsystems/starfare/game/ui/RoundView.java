@@ -4,6 +4,7 @@ import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -28,6 +29,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.EnumSet;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,16 +90,19 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
     private void buildFilterBar() {
         filterBar.removeAll();
-        Span label = new Span(I18n.t(UiTexts.ROUND_FILTER_LABEL));
+        Span label = new Span(I18n.t(UiTexts.ROUND_FILTER_SUMMARY, enabledCategories().size(), EventCategory.values().length));
         label.addClassName("report-filter-label");
-        filterBar.add(label);
+        VerticalLayout options = new VerticalLayout();
+        options.setPadding(false);
+        options.setSpacing(false);
+        options.addClassName("report-filter-options");
         EnumSet<EventCategory> enabled = enabledCategories();
-        addFilterCheckbox(enabled, EventCategory.PRODUCTION, UiTexts.ROUND_FILTER_PRODUCTION);
-        addFilterCheckbox(enabled, EventCategory.REINFORCEMENT, UiTexts.ROUND_FILTER_REINFORCEMENT);
-        addFilterCheckbox(enabled, EventCategory.BATTLE_WON, UiTexts.ROUND_FILTER_BATTLE_WON);
-        addFilterCheckbox(enabled, EventCategory.BATTLE_LOST, UiTexts.ROUND_FILTER_BATTLE_LOST);
-        addFilterCheckbox(enabled, EventCategory.SYSTEM_LOST, UiTexts.ROUND_FILTER_SYSTEM_LOST);
-        addFilterCheckbox(enabled, EventCategory.DEFENSE_HELD, UiTexts.ROUND_FILTER_DEFENSE_HELD);
+        addFilterCheckbox(options, enabled, EventCategory.PRODUCTION, UiTexts.ROUND_FILTER_PRODUCTION);
+        addFilterCheckbox(options, enabled, EventCategory.REINFORCEMENT, UiTexts.ROUND_FILTER_REINFORCEMENT);
+        addFilterCheckbox(options, enabled, EventCategory.BATTLE_WON, UiTexts.ROUND_FILTER_BATTLE_WON);
+        addFilterCheckbox(options, enabled, EventCategory.BATTLE_LOST, UiTexts.ROUND_FILTER_BATTLE_LOST);
+        addFilterCheckbox(options, enabled, EventCategory.SYSTEM_LOST, UiTexts.ROUND_FILTER_SYSTEM_LOST);
+        addFilterCheckbox(options, enabled, EventCategory.DEFENSE_HELD, UiTexts.ROUND_FILTER_DEFENSE_HELD);
         Checkbox presentation = new Checkbox(I18n.t(UiTexts.BATTLE_PRESENTATION_TOGGLE), battlePresentationEnabled);
         presentation.addValueChangeListener(event -> {
             GameId current = gameId;
@@ -107,10 +112,13 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                 renderTimeline();
             }
         });
-        filterBar.add(presentation);
+        options.add(presentation);
+        Details details = new Details(label, options);
+        details.addClassName("report-filter-details");
+        filterBar.add(details);
     }
 
-    private void addFilterCheckbox(EnumSet<EventCategory> enabled, EventCategory cat, String textKey) {
+    private void addFilterCheckbox(VerticalLayout options, EnumSet<EventCategory> enabled, EventCategory cat, String textKey) {
         Checkbox cb = new Checkbox(I18n.t(textKey), enabled.contains(cat));
         cb.addClassName("report-filter-item");
         cb.addValueChangeListener(e -> {
@@ -123,7 +131,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             VaadinSession.getCurrent().setAttribute(FILTER_SESSION_KEY, current);
             renderTimeline();
         });
-        filterBar.add(cb);
+        options.add(cb);
     }
 
     @SuppressWarnings("unchecked")
@@ -210,6 +218,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         List<TurnEvent> filtered = lastEvents.stream()
                 .filter(ev -> !pending || !(ev instanceof TurnEvent.Victory || ev instanceof TurnEvent.Defeat))
                 .filter(ev -> categoryOf(ev).map(enabled::contains).orElse(true))
+                .sorted(Comparator.comparingInt(this::eventPriority))
                 .toList();
         if (filtered.isEmpty()) {
             timeline.add(new Paragraph(I18n.t(UiTexts.ROUND_NO_EVENTS_FILTERED)));
@@ -218,6 +227,18 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         for (int i = 0; i < filtered.size(); i++) {
             timeline.add(buildCard(filtered.get(i), i));
         }
+    }
+
+    private int eventPriority(TurnEvent event) {
+        if (isPending(event)) {
+            return 0;
+        }
+        return switch (event) {
+            case TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
+            case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
+            case TurnEvent.Reinforcement _ -> 3;
+            case TurnEvent.Production _ -> 4;
+        };
     }
 
     private Div buildCard(TurnEvent event, int index) {

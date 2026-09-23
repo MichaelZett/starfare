@@ -21,6 +21,7 @@ import de.zettsystems.starfare.style.CssProperties;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 
 final class SendFleetDialog {
 
@@ -31,7 +32,7 @@ final class SendFleetDialog {
                                VisibleSystem from, VisibleSystem to, Runnable onClose) {
     }
 
-    private record DialogControls(Input slider, IntegerField shipsInput,
+    private record DialogControls(Input slider, IntegerField shipsInput, Span consequence,
                                   Button halfBtn, Button doubleBtn, Button allBtn, Button exceptProductionBtn,
                                   Checkbox standingCheckbox, Button sendBtn) {
     }
@@ -70,7 +71,8 @@ final class SendFleetDialog {
 
         Input slider = buildSlider(params);
         IntegerField shipsInput = buildShipsInput(params);
-        wireTwoWaySync(slider, shipsInput, params.sliderMax(), params.initial());
+        Span consequence = new Span();
+        consequence.addClassName("send-fleet-consequence");
 
         Button halfBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_HALF,
                 _ -> shipsInput.setValue(clamp(Math.max(1, params.maxShips() / 2), 1, params.sliderMax())));
@@ -82,21 +84,24 @@ final class SendFleetDialog {
                 _ -> selectExceptProduction(shipsInput, params, productionOf(ctx.from())));
 
         Checkbox standingCheckbox = new Checkbox(I18n.t(UiTexts.MAP_STANDING_ORDER_CHECKBOX));
+        int routingHeadroom = ctx.game().routingHeadroom(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id());
+        wireTwoWaySync(slider, shipsInput, params.sliderMax(), params.initial(), consequence, ctx,
+                () -> Boolean.TRUE.equals(standingCheckbox.getValue()), routingHeadroom);
         Button sendBtn = buildSendButton(ctx, shipsInput, standingCheckbox, dialog);
         Button cancelBtn = new Button(I18n.t(UiTexts.MAP_DIALOG_CANCEL), _ -> {
             dialog.close();
             ctx.onClose().run();
         });
 
-        DialogControls controls = new DialogControls(slider, shipsInput, halfBtn, doubleBtn, allBtn, exceptProductionBtn,
+        DialogControls controls = new DialogControls(slider, shipsInput, consequence, halfBtn, doubleBtn, allBtn, exceptProductionBtn,
                 standingCheckbox, sendBtn);
-        wireStandingToggle(controls, params,
-                ctx.game().routingHeadroom(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id()));
+        wireStandingToggle(controls, params, routingHeadroom, ctx);
         setInitialEnablement(controls, params.canSend());
         exceptProductionBtn.setEnabled(params.canSend() && params.maxShips() > productionOf(ctx.from()));
         if (relocation || !params.canSend()) {
             standingCheckbox.setValue(true);
         }
+        updateConsequence(consequence, ctx, params.initial(), Boolean.TRUE.equals(standingCheckbox.getValue()), routingHeadroom);
 
         layoutDialog(dialog, buildHeaderLabels(ctx, params), controls, cancelBtn);
         dialog.open();
@@ -151,23 +156,32 @@ final class SendFleetDialog {
         return shipsInput;
     }
 
-    private static void wireTwoWaySync(Input slider, IntegerField shipsInput, int sliderMax, int initial) {
+    private static void wireTwoWaySync(Input slider, IntegerField shipsInput, int sliderMax, int initial,
+                                       Span consequence, SendContext context, BooleanSupplier standingSupplier,
+                                       int routingHeadroom) {
         int[] current = {initial};
-        slider.addValueChangeListener(e -> onSliderChange(e.getValue(), current, sliderMax, shipsInput));
-        shipsInput.addValueChangeListener(e -> onShipsInputChange(e.getValue(), current, sliderMax, slider, shipsInput));
+        slider.addValueChangeListener(e -> onSliderChange(e.getValue(), current, sliderMax, shipsInput,
+                consequence, context, standingSupplier, routingHeadroom));
+        shipsInput.addValueChangeListener(e -> onShipsInputChange(e.getValue(), current, sliderMax, slider, shipsInput,
+                consequence, context, standingSupplier, routingHeadroom));
     }
 
-    private static void onSliderChange(String raw, int[] current, int sliderMax, IntegerField shipsInput) {
+    private static void onSliderChange(String raw, int[] current, int sliderMax, IntegerField shipsInput,
+                                       Span consequence, SendContext context, BooleanSupplier standingSupplier,
+                                       int routingHeadroom) {
         tryParseInt(raw).ifPresent(parsed -> {
             int v = clamp(parsed, 1, sliderMax);
             if (v != current[0]) {
                 current[0] = v;
                 shipsInput.setValue(v);
             }
+            updateConsequence(consequence, context, v, standingSupplier.getAsBoolean(), routingHeadroom);
         });
     }
 
-    private static void onShipsInputChange(Integer v, int[] current, int sliderMax, Input slider, IntegerField shipsInput) {
+    private static void onShipsInputChange(Integer v, int[] current, int sliderMax, Input slider, IntegerField shipsInput,
+                                           Span consequence, SendContext context, BooleanSupplier standingSupplier,
+                                           int routingHeadroom) {
         if (v == null) {
             return;
         }
@@ -179,6 +193,7 @@ final class SendFleetDialog {
         if (!v.equals(clamped)) {
             shipsInput.setValue(clamped);
         }
+        updateConsequence(consequence, context, clamped, standingSupplier.getAsBoolean(), routingHeadroom);
     }
 
     private static Optional<Integer> tryParseInt(String s) {
@@ -246,7 +261,7 @@ final class SendFleetDialog {
         ctx.onClose().run();
     }
 
-    private static void wireStandingToggle(DialogControls c, DialogParams params, int routingHeadroom) {
+    private static void wireStandingToggle(DialogControls c, DialogParams params, int routingHeadroom, SendContext context) {
         c.standingCheckbox().addValueChangeListener(e -> {
             boolean standing = Boolean.TRUE.equals(e.getValue());
             // Eine Verlegung hat eine feste Groesse, das Zahlenfeld bleibt also nutzbar.
@@ -265,7 +280,31 @@ final class SendFleetDialog {
             c.allBtn().setEnabled(enabled);
             c.exceptProductionBtn().setEnabled(enabled);
             c.sendBtn().setEnabled(enabled);
+            updateConsequence(c.consequence(), context, currentOr(c.shipsInput(), 1), standing, routingHeadroom);
         });
+    }
+
+    private static void updateConsequence(Span consequence, SendContext context, int ships, boolean standing,
+                                          int routingHeadroom) {
+        int travelTurns = context.game().travelTurns(context.gameId(), context.from().id(), context.to().id());
+        if (standing) {
+            consequence.setText(I18n.t(UiTexts.MAP_SEND_RELOCATION_PREVIEW, ships, travelTurns,
+                    Math.max(0, routingHeadroom - ships)));
+            return;
+        }
+        int remaining = Math.max(0, availableShips(context.from()) - ships);
+        consequence.setText(I18n.t(UiTexts.MAP_SEND_FLEET_PREVIEW, ships, travelTurns, remaining,
+                reserveOf(context.from())));
+    }
+
+    private static int availableShips(VisibleSystem system) {
+        Integer available = system.availableShips();
+        return available == null ? 0 : available;
+    }
+
+    private static int reserveOf(VisibleSystem system) {
+        Integer reserve = system.garrisonReserve();
+        return reserve == null ? 0 : reserve;
     }
 
     private static void setInitialEnablement(DialogControls c, boolean canSend) {
@@ -289,7 +328,7 @@ final class SendFleetDialog {
         quickRow.setPadding(false);
         quickRow.setSpacing(true);
 
-        var body = new VerticalLayout(labels.route(), labels.duration(), labels.available(), labels.production(),
+        var body = new VerticalLayout(labels.route(), labels.duration(), labels.available(), labels.production(), c.consequence(),
                 sliderRow, c.shipsInput(), quickRow, c.standingCheckbox());
         body.setPadding(false);
         body.setSpacing(false);

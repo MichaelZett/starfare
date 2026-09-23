@@ -3,6 +3,8 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.game.domain.GameResultEntity;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.CompletedGameOutcome;
+import de.zettsystems.starfare.game.values.CompletedGameStatistics;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.OpponentStatistics;
 import de.zettsystems.starfare.game.values.PlayerStatistics;
@@ -42,6 +44,13 @@ class DefaultGameStatisticsServiceTest {
         assertThat(statistics.opponents()).containsExactly(
                 new OpponentStatistics("alice", 2, 2, 0),
                 new OpponentStatistics("bob", 2, 1, 1));
+        assertThat(statistics.completedGames()).containsExactly(
+                new CompletedGameStatistics("Game one", Instant.parse("2026-09-15T00:00:00Z"), CompletedGameOutcome.WIN,
+                        List.of("alice")),
+                new CompletedGameStatistics("Game two", Instant.parse("2026-09-15T00:00:00Z"), CompletedGameOutcome.LOSS,
+                        List.of("bob")),
+                new CompletedGameStatistics("Game three", Instant.parse("2026-09-15T00:00:00Z"), CompletedGameOutcome.WIN,
+                        List.of("alice", "bob")));
     }
 
     @Test

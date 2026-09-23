@@ -118,11 +118,12 @@ public class SmokeSteps {
     public void createDefaultGameAndJoin() {
         browser.clickButtonWithText("Neues Spiel");
         browser.clickButtonWithText("Spiel anlegen");
-        browser.awaitText("Verwalten");
+        browser.awaitUrl(url -> url.contains("/map/"), "Die KI-Partie wurde nicht automatisch gestartet.");
     }
 
     @Dann("zeigt der Verwalten-Dialog den Spieler {string}")
     public void manageDialogShowsPlayer(String displayName) {
+        browser.openDetailsWithText("Weitere Aktionen");
         browser.clickButtonWithText("Verwalten");
         browser.awaitTextIn(".manage-row-label", displayName);
         browser.clickButtonWithText("Schließen");
