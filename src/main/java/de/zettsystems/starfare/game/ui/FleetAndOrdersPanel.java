@@ -34,7 +34,7 @@ import java.util.function.IntConsumer;
 /** Switchable right-hand map sidebar that keeps the map context visible. */
 final class FleetAndOrdersPanel extends VerticalLayout {
 
-    private enum Section { CONTACTS, DETAILS, FLEETS, ORDERS, RELOCATIONS, REPORT }
+    private enum Section { CONTACTS, DETAILS, FLEETS, ORDERS, RELOCATIONS, LOGISTICS, REPORT }
 
     private enum EventCategory { PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD }
 
@@ -46,9 +46,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final VerticalLayout fleetsPage = page();
     private final VerticalLayout ordersPage = page();
     private final VerticalLayout relocationsPage = page();
+    private final VerticalLayout logisticsPage = page();
     private final VerticalLayout reportPage = page();
     private final List<VerticalLayout> pages = List.of(contactsPage, detailsPage, fleetsPage, ordersPage,
-            relocationsPage, reportPage);
+            relocationsPage, logisticsPage, reportPage);
     private final Tabs tabs;
     private final List<Tab> sectionTabs;
     private final Tab reportTab;
@@ -99,6 +100,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 tab(UiTexts.MAP_SIDEBAR_FLEETS),
                 tab(UiTexts.MAP_SIDEBAR_ORDERS),
                 tab(UiTexts.MAP_SIDEBAR_RELOCATIONS),
+                tab(UiTexts.MAP_SIDEBAR_LOGISTICS),
                 tab(UiTexts.MAP_SIDEBAR_REPORT));
         reportTab = sectionTabs.getLast();
         tabs = new Tabs();
@@ -144,6 +146,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
         renderContacts(view);
         renderDetails(view);
+        renderLogistics(view);
         renderReport(view);
         syncFleetSelection();
     }
@@ -178,6 +181,81 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     void showRelocations() {
         select(Section.RELOCATIONS);
+    }
+
+    void showLogistics() {
+        select(Section.LOGISTICS);
+    }
+
+    private void renderLogistics(PlayerViewState view) {
+        logisticsPage.removeAll();
+        logisticsPage.add(header(UiTexts.MAP_SIDEBAR_LOGISTICS),
+                new Paragraph(I18n.t(UiTexts.MAP_LOGISTICS_INTRO)));
+        List<VisibleSystem> ownSystems = view.systems().stream()
+                .filter(VisibleSystem::fullyVisible)
+                .filter(system -> system.routedProduction() != null)
+                .sorted((left, right) -> Integer.compare(logisticsPriority(right, view), logisticsPriority(left, view)))
+                .toList();
+        if (ownSystems.isEmpty()) {
+            logisticsPage.add(new Paragraph(I18n.t(UiTexts.MAP_LOGISTICS_EMPTY)));
+            return;
+        }
+        ownSystems.forEach(system -> logisticsPage.add(logisticsSystemCard(system, view.standingOrders())));
+        if (!view.standingOrders().isEmpty()) {
+            Div routes = new Div();
+            routes.addClassName("logistics-routes");
+            view.standingOrders().forEach(order -> routes.add(logisticsRouteCard(order)));
+            logisticsPage.add(header(UiTexts.MAP_LOGISTICS_ROUTES), routes);
+        }
+    }
+
+    private static int logisticsPriority(VisibleSystem system, PlayerViewState view) {
+        ProductionFlow flow = ProductionFlow.at(system.id(), view.standingOrders());
+        return Math.abs(flow.incoming() - flow.outgoing());
+    }
+
+    private static Div logisticsSystemCard(VisibleSystem system, List<StandingOrderView> orders) {
+        ProductionFlow flow = ProductionFlow.at(system.id(), orders);
+        int production = valueOrZero(system.productionPerTurn());
+        int netFlow = flow.incoming() - flow.outgoing();
+        int plannedBalance = production + netFlow;
+        Div card = new Div();
+        card.addClassName("logistics-system-card");
+        Span name = new Span(system.name());
+        name.addClassName("logistics-system-name");
+        Span direction = new Span(netFlow > 0 ? "↓ " + I18n.t(UiTexts.MAP_LOGISTICS_SINK)
+                : netFlow < 0 ? "↑ " + I18n.t(UiTexts.MAP_LOGISTICS_SOURCE)
+                : "◆ " + I18n.t(UiTexts.MAP_LOGISTICS_BALANCED));
+        direction.addClassName("logistics-system-direction");
+        Div metrics = new Div(logisticsMetric("⚙", "P", production), logisticsMetric("↓", "I", flow.incoming()),
+                logisticsMetric("↑", "O", flow.outgoing()), logisticsMetric("Σ", "P+I−O", plannedBalance));
+        metrics.addClassName("logistics-metrics");
+        Span reserve = new Span(I18n.t(UiTexts.MAP_LOGISTICS_RESERVE_AVAILABLE,
+                valueOrZero(system.garrisonReserve()), valueOrZero(system.availableShips())));
+        reserve.addClassName("logistics-system-reserve");
+        card.add(name, direction, metrics, reserve);
+        return card;
+    }
+
+    private Div logisticsRouteCard(StandingOrderView order) {
+        Div card = new Div();
+        card.addClassName("logistics-route-card");
+        card.add(new Span(order.fromSystem() + " → " + order.toSystem()),
+                new Span("◆ " + order.ships() + " / " + I18n.t(UiTexts.MAP_LOGISTICS_PER_TURN)));
+        card.addClickListener(_ -> onStandingOrderSelected.accept(order.id()));
+        card.getElement().setAttribute("role", "button");
+        card.getElement().setAttribute("tabindex", "0");
+        return card;
+    }
+
+    private static Span logisticsMetric(String icon, String label, int value) {
+        Span metric = new Span(icon + " " + label + " " + value);
+        metric.addClassName("logistics-metric");
+        return metric;
+    }
+
+    private static int valueOrZero(@Nullable Integer value) {
+        return value == null ? 0 : value;
     }
 
     private void renderContacts(PlayerViewState view) {
@@ -256,13 +334,15 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                         detail(I18n.t(UiTexts.MAP_SIDEBAR_LAST_CONTACT), contactAge(system)));
                 return;
             }
-            Div metrics = new Div(
-                    systemMetric("🛡", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
-                    systemMetric("⚙", I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())));
+            H2 systemHeading = new H2(system.name());
+            systemHeading.addClassName("system-details-heading");
+            detailsPage.add(systemHeading, detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())));
+            Div metrics = new Div(systemMetric("🛡", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())));
             if (system.routedProduction() != null) {
                 ProductionFlow flow = ProductionFlow.at(system.id(), view.standingOrders());
-                metrics.add(systemMetric("↓", I18n.t(UiTexts.MAP_PRODUCTION_INCOMING), flow.incoming()),
-                        systemMetric("↑", I18n.t(UiTexts.MAP_PRODUCTION_OUTGOING), flow.outgoing()));
+                metrics.add(systemFlow(system, flow));
+            } else {
+                metrics.add(systemMetric("⚙", I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())));
             }
             metrics.addClassName("system-metrics");
             detailsPage.add(metrics);
@@ -709,6 +789,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         fleetsPage.setVisible(section == Section.FLEETS);
         ordersPage.setVisible(section == Section.ORDERS);
         relocationsPage.setVisible(section == Section.RELOCATIONS);
+        logisticsPage.setVisible(section == Section.LOGISTICS);
         reportPage.setVisible(section == Section.REPORT);
     }
 
@@ -724,6 +805,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case FLEETS -> sectionTabs.get(2);
             case ORDERS -> sectionTabs.get(3);
             case RELOCATIONS -> sectionTabs.get(4);
+            case LOGISTICS -> sectionTabs.get(5);
             case REPORT -> reportTab;
         };
     }
@@ -777,6 +859,26 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         metric.addClassName("system-metric");
         metric.getElement().setAttribute("aria-label", label + ": " + value);
         return metric;
+    }
+
+    private static Div systemFlow(VisibleSystem system, ProductionFlow flow) {
+        int production = valueOrZero(system.productionPerTurn());
+        Div flowCard = new Div();
+        flowCard.addClassName("system-flow");
+        flowCard.add(flowStep("↓", I18n.t(UiTexts.MAP_PRODUCTION_INCOMING), flow.incoming()),
+                flowStep("⚙", I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), production),
+                flowStep("↑", I18n.t(UiTexts.MAP_PRODUCTION_OUTGOING), flow.outgoing()));
+        flowCard.getElement().setAttribute("aria-label", I18n.t(UiTexts.MAP_PRODUCTION_FLOW,
+                production, flow.incoming(), flow.outgoing()));
+        return flowCard;
+    }
+
+    private static Span flowStep(String icon, String label, int value) {
+        Span step = new Span(icon + " " + value);
+        step.addClassName("system-flow-step");
+        step.getElement().setAttribute("title", label);
+        step.getElement().setAttribute("aria-label", label + ": " + value);
+        return step;
     }
 
     private static String value(@Nullable Integer value) { return value == null ? "—" : String.valueOf(value); }
