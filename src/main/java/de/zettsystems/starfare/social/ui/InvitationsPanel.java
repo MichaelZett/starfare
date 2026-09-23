@@ -111,7 +111,11 @@ public class InvitationsPanel extends VerticalLayout {
         decline.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
         Span icon = new Span("✉");
         icon.addClassName("social-row-icon");
-        row.add(icon, label, accept, decline);
+        // Eigene Zeile für die Knöpfe: Neben Icon und Text passen sie in die
+        // 260px-Seitenleiste nicht, die Lobby scrollte sonst seitwärts.
+        Div actions = new Div(accept, decline);
+        actions.addClassName("social-row-actions");
+        row.add(icon, label, actions);
         return row;
     }
 
