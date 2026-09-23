@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.game.ui;
 
-import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.report.values.TurnReport;
 import org.junit.jupiter.api.Test;
@@ -14,17 +13,16 @@ class BattleAcknowledgementsTest {
 
     @Test
     void acknowledgementOnlyClearsTheChosenBattleInTheCurrentRound() {
-        GameId gameId = GameId.of("game-1");
         TurnReport report = new TurnReport(4, List.of(), List.of(
                 new TurnEvent.BattleWon(1, 10, "Vega", 12, 8, 4, false),
                 new TurnEvent.BattleLost(1, 11, "Sirius", 9, 11, 3)));
 
-        Set<String> acknowledgements = Set.of();
-        assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).containsExactlyInAnyOrder(10, 11);
+        assertThat(BattleAcknowledgements.pending(report, Set.of())).containsExactlyInAnyOrder(10, 11);
 
-        acknowledgements = BattleAcknowledgements.acknowledge(gameId, report, report.events().getFirst(), acknowledgements);
+        int first = BattleAcknowledgements.firstPendingIndexOf(report, report.events().getFirst(), Set.of());
 
-        assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).containsExactly(11);
+        assertThat(first).isZero();
+        assertThat(BattleAcknowledgements.pending(report, Set.of(first))).containsExactly(11);
     }
 
     @Test
@@ -32,32 +30,30 @@ class BattleAcknowledgementsTest {
         TurnReport report = new TurnReport(4, List.of(), List.of(
                 new TurnEvent.Production(1, 10, "Vega", 2)));
 
-        assertThat(BattleAcknowledgements.pending(GameId.of("game-1"), report, Set.of())).isEmpty();
+        assertThat(BattleAcknowledgements.pending(report, Set.of())).isEmpty();
     }
 
     @Test
     void acknowledgementDoesNotClearAnotherBattleAtTheSameSystem() {
-        GameId gameId = GameId.of("game-1");
         TurnReport report = new TurnReport(4, List.of(), List.of(
                 new TurnEvent.BattleWon(1, 10, "Vega", 12, 8, 4, false),
                 new TurnEvent.BattleLost(2, 10, "Vega", 9, 7, 2)));
 
-        Set<String> acknowledgements = BattleAcknowledgements.acknowledge(gameId, report,
-                report.events().getFirst(), Set.of());
-
-        assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).containsExactly(10);
+        assertThat(BattleAcknowledgements.pending(report, Set.of(0))).containsExactly(10);
     }
 
     @Test
     void identicalBattlesInOneRoundCanBothBeAcknowledged() {
-        GameId gameId = GameId.of("game-1");
         TurnEvent battle = new TurnEvent.BattleLost(2, 10, "Vega", 9, 7, 2);
         TurnReport report = new TurnReport(4, List.of(), List.of(battle, battle));
 
-        Set<String> acknowledgements = BattleAcknowledgements.acknowledge(gameId, report, battle, Set.of());
-        assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).containsExactly(10);
+        int first = BattleAcknowledgements.firstPendingIndexOf(report, battle, Set.of());
+        int second = BattleAcknowledgements.firstPendingIndexOf(report, battle, Set.of(first));
 
-        acknowledgements = BattleAcknowledgements.acknowledge(gameId, report, battle, acknowledgements);
-        assertThat(BattleAcknowledgements.pending(gameId, report, acknowledgements)).isEmpty();
+        assertThat(first).isZero();
+        assertThat(second).isEqualTo(1);
+        assertThat(BattleAcknowledgements.pending(report, Set.of(first))).containsExactly(10);
+        assertThat(BattleAcknowledgements.pending(report, Set.of(first, second))).isEmpty();
+        assertThat(BattleAcknowledgements.firstPendingIndexOf(report, battle, Set.of(first, second))).isNegative();
     }
 }
