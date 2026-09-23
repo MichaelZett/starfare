@@ -14,6 +14,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.server.VaadinSession;
 import de.zettsystems.starfare.auth.ui.UserContext;
+import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.GameId;
@@ -57,10 +58,12 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private boolean battlePresentationEnabled;
     private @Nullable TurnReport currentReport;
     private boolean finished;
+    private final BattleAcknowledgements acknowledgements;
 
     @Autowired
-    public RoundView(GameService game) {
+    public RoundView(GameService game, BattleAcknowledgementService battleAcknowledgements) {
         this.game = game;
+        this.acknowledgements = new BattleAcknowledgements(battleAcknowledgements);
         addClassName("round-root");
         setSizeFull();
 
@@ -192,6 +195,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         }
 
         var report = view.report();
+        acknowledgements.reload();
         currentReport = report;
         lastEvents = report != null ? report.events() : List.of();
         battlePresentationEnabled = BattlePresentationPreference.enabled(gameId, view.turn() - 1,
@@ -292,17 +296,17 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
     private boolean hasPendingBattles() {
         return gameId != null && currentReport != null
-                && !BattleAcknowledgements.pending(gameId, currentReport).isEmpty();
+                && !acknowledgements.pending(gameId, currentReport).isEmpty();
     }
 
     private boolean isPending(TurnEvent event) {
         return gameId != null && currentReport != null
-                && BattleAcknowledgements.isPending(gameId, currentReport, event);
+                && acknowledgements.isPending(gameId, currentReport, event);
     }
 
     private void acknowledge(TurnEvent event) {
         if (gameId != null && currentReport != null) {
-            BattleAcknowledgements.acknowledge(gameId, currentReport, event);
+            acknowledgements.acknowledge(gameId, currentReport, event);
             renderTimeline();
         }
     }
