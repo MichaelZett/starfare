@@ -13,6 +13,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import de.zettsystems.starfare.auth.ui.UserContext;
+import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.*;
@@ -68,11 +69,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private boolean outcomeAcknowledged;
     private boolean outcomeDialogOpen;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
+    private final BattleAcknowledgements acknowledgements;
 
     @Autowired
-    public MainView(GameService service, Broadcaster broadcaster) {
+    public MainView(GameService service, Broadcaster broadcaster, BattleAcknowledgementService battleAcknowledgements) {
         this.game = service;
         this.broadcaster = broadcaster;
+        this.acknowledgements = new BattleAcknowledgements(battleAcknowledgements);
         setWidthFull();
         setHeightFull();
         setSpacing(false);
@@ -80,7 +83,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         setDefaultHorizontalComponentAlignment(Alignment.STRETCH);
         addClassName("map-root");
 
-        fleetsPanel = new FleetAndOrdersPanel(this::cancelOrder, this::editStandingOrder, this::deleteStandingOrder,
+        fleetsPanel = new FleetAndOrdersPanel(acknowledgements, this::cancelOrder, this::editStandingOrder, this::deleteStandingOrder,
                 this::refresh,
                 this::onFleetRowSelected, this::onStandingOrderSelected, this::onReportSystemSelected,
                 this::onResolvedBattleSelected,
@@ -348,6 +351,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void refresh() {
+        acknowledgements.reload();
         PlayerViewState view = viewForCurrentMode();
         if (view == null) {
             navigateToLobby();
@@ -374,7 +378,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             witnessedRunningGame = true;
         }
         TurnReport report = view.report();
-        boolean hasPendingBattles = report != null && !BattleAcknowledgements.pending(gameId, report).isEmpty();
+        boolean hasPendingBattles = report != null && !acknowledgements.pending(gameId, report).isEmpty();
         if (hasPendingBattles) {
             witnessedRunningGame = true;
         }
@@ -432,7 +436,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         TurnReport report = view.report();
-        if (report != null && !BattleAcknowledgements.pending(gameId, report).isEmpty()) {
+        if (report != null && !acknowledgements.pending(gameId, report).isEmpty()) {
             return;
         }
         String account = UserContext.currentPlayerId().orElse("");
@@ -505,7 +509,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private Set<Integer> pendingBattleSystemIds(PlayerViewState view) {
         TurnReport report = view.report();
-        return report == null ? Set.of() : BattleAcknowledgements.pending(gameId, report);
+        return report == null ? Set.of() : acknowledgements.pending(gameId, report);
     }
 
     private void onReportSystemSelected(int systemId) {

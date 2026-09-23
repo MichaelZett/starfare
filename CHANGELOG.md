@@ -173,6 +173,10 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   `ui` ↛ `domain`.
 
 ### Fixed
+- Schlacht-Bestätigungen werden je Konto gespeichert (`battle_acknowledgements`)
+  statt nur in der Browsersitzung. Eine beendete Partie öffnet in einer neuen
+  Sitzung oder auf einem anderen Gerät wieder direkt die Nachbetrachtung, statt
+  erneut durch Schlachten und Ergebnisdialog zu führen.
 - Der Kampfzufall entscheidet auch kleine Gefechte: Verglichen werden die
   ungerundeten Kampfstärken, gerundet wird nur für die Wiedergabe. Bisher
   endete etwa 3 gegen 3 bei ±10 % stets zugunsten des Verteidigers.

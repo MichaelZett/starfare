@@ -41,13 +41,16 @@ public class DefaultGameService implements GameService {
     private final PlayerViewBuilder playerViewBuilder;
     private final GameStatisticsService statistics;
     private final GameArchiveStore archives;
+    private final BattleAcknowledgementService battleAcknowledgements;
     private final GameTimingProperties timing;
 
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
                               PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
-                              GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing) {
+                              GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
+                              BattleAcknowledgementService battleAcknowledgements) {
         this.registry = registry;
+        this.battleAcknowledgements = battleAcknowledgements;
         this.access = access;
         this.turnEngine = turnEngine;
         this.fleetService = fleetService;
@@ -93,6 +96,7 @@ public class DefaultGameService implements GameService {
     @Override
     public void abortGame(GameId gameId) {
         registry.abortGame(gameId);
+        battleAcknowledgements.forgetGame(gameId);
         broadcaster.publish(new GameEvent.GameAborted(gameId));
     }
 
