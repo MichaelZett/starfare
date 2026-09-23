@@ -46,7 +46,7 @@ public class InvitationsPanel extends VerticalLayout {
         addClassName("invitations-panel");
         setPadding(false);
         setSpacing(false);
-        H3 title = new H3(I18n.t(UiTexts.INVITATIONS_TITLE));
+        H3 title = new H3("✉ " + I18n.t(UiTexts.INVITATIONS_TITLE));
         title.addClassName("invitations-title");
         empty.addClassName("invitations-empty");
         list.addClassName("invitations-list");
@@ -109,7 +109,9 @@ public class InvitationsPanel extends VerticalLayout {
         Button decline = new Button(I18n.t(UiTexts.INVITATIONS_DECLINE),
                 _ -> invitations.declineInvite(invite.gameId(), viewer));
         decline.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
-        row.add(label, accept, decline);
+        Span icon = new Span("✉");
+        icon.addClassName("social-row-icon");
+        row.add(icon, label, accept, decline);
         return row;
     }
 

@@ -57,7 +57,7 @@ public class OnlineUsersPanel extends VerticalLayout {
         addClassName("presence-panel");
         setPadding(false);
         setSpacing(false);
-        H3 title = new H3(I18n.t(UiTexts.PRESENCE_TITLE));
+        H3 title = new H3("◉ " + I18n.t(UiTexts.PRESENCE_TITLE));
         title.addClassName("presence-title");
         empty.addClassName("presence-empty");
         list.addClassName("presence-list");
@@ -106,6 +106,7 @@ public class OnlineUsersPanel extends VerticalLayout {
         dot.addClassName("presence-dot");
         Span name = new Span(players.displayName(playerId));
         name.addClassName("presence-name");
+        name.getElement().setAttribute("aria-label", I18n.t(UiTexts.PRESENCE_TITLE) + ": " + players.displayName(playerId));
         row.add(dot, name);
 
         if (viewer != null && !viewer.equals(playerId)) {

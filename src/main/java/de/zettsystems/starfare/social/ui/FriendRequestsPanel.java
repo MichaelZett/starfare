@@ -42,7 +42,7 @@ public class FriendRequestsPanel extends VerticalLayout {
         addClassName("friend-inbox");
         setPadding(false);
         setSpacing(false);
-        H3 title = new H3(I18n.t(UiTexts.FRIEND_INBOX_TITLE));
+        H3 title = new H3("✦ " + I18n.t(UiTexts.FRIEND_INBOX_TITLE));
         title.addClassName("friend-inbox-title");
         empty.addClassName("friend-inbox-empty");
         list.addClassName("friend-inbox-list");
@@ -102,7 +102,9 @@ public class FriendRequestsPanel extends VerticalLayout {
             }
         });
         decline.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
-        row.add(from, accept, decline);
+        Span icon = new Span("✦");
+        icon.addClassName("social-row-icon");
+        row.add(icon, from, accept, decline);
         return row;
     }
 }

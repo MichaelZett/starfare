@@ -1051,6 +1051,38 @@ html, body, #outlet {
 .statistics-balance-track { height: .55rem; overflow: hidden; border-radius: 999px; background: var(--sf-contrast-10); }
 .statistics-balance-win { height: 100%; border-radius: inherit; background: #4caf70; }
 
+.logistics-system-card, .logistics-route-card {
+    display: grid;
+    gap: .45rem;
+    padding: .75rem;
+    border: 1px solid var(--sf-border);
+    border-radius: .7rem;
+    background: var(--sf-surface-2);
+}
+
+.logistics-system-name { font-weight: 800; font-size: 1.05rem; }
+.logistics-system-direction { color: var(--sf-accent); font-size: .88rem; }
+.logistics-metrics { display: flex; flex-wrap: wrap; gap: .35rem; }
+.logistics-metric { padding: .2rem .42rem; border-radius: 999px; background: var(--sf-contrast-10); font-size: .85rem; }
+.logistics-system-reserve { color: var(--sf-text-muted); font-size: .82rem; }
+.logistics-routes { display: grid; gap: .45rem; }
+.logistics-route-card { cursor: pointer; grid-template-columns: 1fr auto; }
+.logistics-route-card:hover { border-color: var(--sf-accent); }
+
+.system-details-heading { margin: 0; font-size: 1.25rem; }
+.system-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .35rem;
+    min-height: 3.25rem;
+    padding: .55rem .7rem;
+    border: 1px solid var(--sf-border);
+    border-radius: .75rem;
+    background: color-mix(in srgb, var(--sf-surface) 86%, var(--sf-accent));
+}
+.system-flow-step { padding: .3rem .42rem; border-radius: 999px; background: var(--sf-contrast-10); font-weight: 750; }
+
 @media (max-width: 700px) {
     .archive-game-card { grid-template-columns: 1fr; gap: .55rem; }
 }
@@ -1320,6 +1352,33 @@ html, body, #outlet {
     box-sizing: border-box;
 }
 
+.presence-panel, .friend-inbox, .invitations-panel, .chat-drawer {
+    border-radius: 12px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.22);
+}
+
+.presence-row, .friend-inbox-row, .invitations-row, .chat-list-row {
+    min-height: 2.6rem;
+    padding: .38rem .48rem;
+    border: 1px solid transparent;
+    border-radius: .55rem;
+    background: color-mix(in srgb, var(--sf-surface-2) 82%, transparent);
+}
+
+.presence-row:hover, .friend-inbox-row:hover, .invitations-row:hover, .chat-list-row:hover {
+    border-color: color-mix(in srgb, var(--sf-accent) 55%, var(--sf-border));
+}
+
+.social-row-icon {
+    display: grid;
+    place-items: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--sf-accent) 22%, transparent);
+    color: var(--sf-accent);
+}
+
 .presence-title {
     margin: 0 0 8px;
     font-size: 0.9rem;
@@ -1403,7 +1462,7 @@ html, body, #outlet {
 
 .friend-inbox-row {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: auto 1fr auto auto;
     align-items: center;
     gap: 6px;
 }
@@ -1633,7 +1692,7 @@ html, body, #outlet {
 
 .invitations-row {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: auto 1fr auto auto;
     align-items: center;
     gap: 6px;
 }

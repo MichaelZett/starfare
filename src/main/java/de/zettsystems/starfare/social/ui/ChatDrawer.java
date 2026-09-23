@@ -64,7 +64,7 @@ public class ChatDrawer extends VerticalLayout {
         setPadding(false);
         setSpacing(false);
 
-        H4 title = new H4(I18n.t(UiTexts.CHAT_TITLE));
+        H4 title = new H4("◌ " + I18n.t(UiTexts.CHAT_TITLE));
         title.addClassName("chat-title");
 
         conversationList.addClassName("chat-list");

@@ -13,6 +13,15 @@ public final class UiTexts {
     public static final String MAP_SIDEBAR_FLEETS = "map.sidebar.fleets";
     public static final String MAP_SIDEBAR_ORDERS = "map.sidebar.orders";
     public static final String MAP_SIDEBAR_RELOCATIONS = "map.sidebar.relocations";
+    public static final String MAP_SIDEBAR_LOGISTICS = "map.sidebar.logistics";
+    public static final String MAP_LOGISTICS_INTRO = "map.logistics.intro";
+    public static final String MAP_LOGISTICS_EMPTY = "map.logistics.empty";
+    public static final String MAP_LOGISTICS_ROUTES = "map.logistics.routes";
+    public static final String MAP_LOGISTICS_SOURCE = "map.logistics.source";
+    public static final String MAP_LOGISTICS_SINK = "map.logistics.sink";
+    public static final String MAP_LOGISTICS_BALANCED = "map.logistics.balanced";
+    public static final String MAP_LOGISTICS_RESERVE_AVAILABLE = "map.logistics.reserveAvailable";
+    public static final String MAP_LOGISTICS_PER_TURN = "map.logistics.perTurn";
     public static final String MAP_SIDEBAR_REPORT = "map.sidebar.report";
     public static final String MAP_SIDEBAR_OPEN_REPORT = "map.sidebar.openReport";
     public static final String MAP_SIDEBAR_REPORT_HINT = "map.sidebar.reportHint";
