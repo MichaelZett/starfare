@@ -42,6 +42,7 @@ class GameSessionRepositoryTest extends AbstractRepositoryTest {
         List<GameSessionEntity> ordered = repository.findAllByOrderByCreatedAtAsc();
 
         assertThat(ordered.stream().map(GameSessionEntity::getId).toList()).containsExactlyElementsOf(List.of("game-a", "game-b", "game-c"));
+        assertThat(repository.findAllIdsOrderByCreatedAt()).containsExactly("game-a", "game-b", "game-c");
     }
 
     @Test

@@ -296,8 +296,8 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private boolean isPending(TurnEvent event) {
-        return gameId != null && currentReport != null && event.battleSystemId().isPresent()
-                && BattleAcknowledgements.pending(gameId, currentReport).contains(event.battleSystemId().getAsInt());
+        return gameId != null && currentReport != null
+                && BattleAcknowledgements.isPending(gameId, currentReport, event);
     }
 
     private void acknowledge(TurnEvent event) {
