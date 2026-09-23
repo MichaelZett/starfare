@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Span;
@@ -16,10 +17,14 @@ final class ReviewControls extends HorizontalLayout {
     private final Checkbox fog = new Checkbox(I18n.t(UiTexts.REVIEW_FOG));
     private final Input timeline = new Input();
     private final Span timelineLabel = new Span();
+    private final Button previous = new Button(I18n.t(UiTexts.REPLAY_TIMELINE_PREVIOUS));
+    private final Button next = new Button(I18n.t(UiTexts.REPLAY_TIMELINE_NEXT));
+    private final Runnable onChange;
     private boolean initialized;
     private int latestReplayTurn = -1;
 
     ReviewControls(Runnable onChange) {
+        this.onChange = onChange;
         setVisible(false);
         setWidthFull();
         addClassName("review-controls");
@@ -34,7 +39,9 @@ final class ReviewControls extends HorizontalLayout {
         timeline.setId("review-timeline");
         timeline.getElement().setAttribute("min", "1");
         timeline.getElement().setAttribute("step", "1");
-        add(perspective, fog, timelineLabel, timeline);
+        previous.addClickListener(_ -> moveTimeline(-1));
+        next.addClickListener(_ -> moveTimeline(1));
+        add(perspective, fog, previous, timelineLabel, timeline, next);
         perspective.addValueChangeListener(event -> {
             if (event.isFromClient()) {
                 if (event.getValue() == null) {
@@ -62,6 +69,8 @@ final class ReviewControls extends HorizontalLayout {
         latestReplayTurn = -1;
         timeline.setVisible(false);
         timelineLabel.setVisible(false);
+        previous.setVisible(false);
+        next.setVisible(false);
         setVisible(false);
     }
 
@@ -96,6 +105,8 @@ final class ReviewControls extends HorizontalLayout {
         boolean available = !turns.isEmpty();
         timeline.setVisible(available);
         timelineLabel.setVisible(available);
+        previous.setVisible(available);
+        next.setVisible(available);
         fog.setVisible(!available);
         if (!available) {
             return;
@@ -110,6 +121,19 @@ final class ReviewControls extends HorizontalLayout {
         }
         fog.setVisible(replayTurn() < 0);
         updateTimelineLabel();
+    }
+
+    private void moveTimeline(int delta) {
+        try {
+            int minimum = Integer.parseInt(timeline.getElement().getAttribute("min"));
+            int maximum = Integer.parseInt(timeline.getElement().getAttribute("max"));
+            int current = timeline.getValue().isBlank() ? maximum : Integer.parseInt(timeline.getValue());
+            timeline.setValue(String.valueOf(Math.clamp(current + delta, minimum, maximum)));
+        } catch (NumberFormatException _) {
+            return;
+        }
+        updateTimelineLabel();
+        onChange.run();
     }
 
     private void updateTimelineLabel() {

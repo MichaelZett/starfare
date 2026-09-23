@@ -8,6 +8,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -169,25 +170,65 @@ public class LobbyView extends VerticalLayout {
     private void configureGrid() {
         grid.addClassName("lobby-grid");
         grid.setWidthFull();
-        // Spiel und Spieler bekommen feste Mindestbreiten statt Auto-Breite: lange
-        // Reichsnamen würden sonst die Aktionsspalte aus dem Bild schieben. Was nicht
-        // passt, endet mit "…" und steht vollständig im Tooltip.
-        grid.addComponentColumn(this::nameWithHost)
-                .setHeader(I18n.t(UiTexts.LOBBY_COLUMN_GAME))
-                .setTooltipGenerator(LobbyGameRow::name)
-                .setWidth("12em").setFlexGrow(2);
-        grid.addColumn(row -> I18n.t(UiTexts.LOBBY_TURN_LABEL, row.turn()))
-                .setHeader(I18n.t(UiTexts.LOBBY_COLUMN_TURN)).setAutoWidth(true).setFlexGrow(0);
-        grid.addColumn(LobbyGameRow::players)
-                .setHeader(I18n.t(UiTexts.LOBBY_COLUMN_PLAYERS))
-                .setTooltipGenerator(LobbyGameRow::players)
-                .setWidth("12em").setFlexGrow(3);
-        grid.addComponentColumn(this::statusBadge)
-                .setHeader(I18n.t(UiTexts.LOBBY_COLUMN_STATUS)).setAutoWidth(true).setFlexGrow(0);
-        grid.addComponentColumn(this::actionButtons)
-                .setHeader(I18n.t(UiTexts.LOBBY_COLUMN_ACTIONS)).setAutoWidth(true).setFlexGrow(0);
+        grid.addComponentColumn(this::gameCard).setHeader("").setFlexGrow(1);
         grid.setAllRowsVisible(true);
         grid.setSelectionMode(Grid.SelectionMode.NONE);
+    }
+
+    private Component gameCard(LobbyGameRow row) {
+        Div card = new Div();
+        card.addClassName("lobby-game-card");
+        Div heading = new Div();
+        heading.addClassName("lobby-game-card-heading");
+        heading.add(nameWithHost(row), statusBadge(row));
+        Span turn = new Span(I18n.t(UiTexts.LOBBY_TURN_LABEL, row.turn()));
+        turn.addClassName("lobby-game-card-turn");
+        Span participants = new Span(row.players());
+        participants.addClassName("lobby-game-card-participants");
+        Div overview = new Div(turn, participants);
+        overview.addClassName("lobby-game-card-overview");
+        Button primary = primaryAction(row);
+        primary.addClassName("lobby-game-card-primary");
+        card.add(heading, overview, primary, secondaryActions(row));
+        return card;
+    }
+
+    private Button primaryAction(LobbyGameRow row) {
+        if (row.started() && row.joinedByCurrentUser()) {
+            return buildPlayButton(row);
+        }
+        if (row.canJoin()) {
+            return buildJoinButton(row);
+        }
+        if (!row.started() && row.canStart()) {
+            return buildStartButton(row);
+        }
+        if (row.observersAllowed() && !row.joinedByCurrentUser()) {
+            return buildObserveButton(row);
+        }
+        Button unavailable = new Button(I18n.t(statusKey(row)));
+        unavailable.setEnabled(false);
+        return unavailable;
+    }
+
+    private Details secondaryActions(LobbyGameRow row) {
+        VerticalLayout actions = new VerticalLayout();
+        actions.setPadding(false);
+        actions.setSpacing(true);
+        Button manage = buildManageButton(row);
+        if (manage.isVisible()) {
+            actions.add(manage);
+        }
+        Button abort = buildAbortButton(row);
+        if (abort.isEnabled()) {
+            actions.add(abort);
+        }
+        if (actions.getComponentCount() == 0) {
+            return new Details();
+        }
+        Details details = new Details(I18n.t(UiTexts.LOBBY_CARD_MORE_ACTIONS), actions);
+        details.addClassName("lobby-game-card-more");
+        return details;
     }
 
     private void buildEmptyState() {
@@ -297,20 +338,6 @@ public class LobbyView extends VerticalLayout {
             return "lobby-status-live";
         }
         return "lobby-status-idle";
-    }
-
-    private Component actionButtons(LobbyGameRow row) {
-        VerticalLayout actions = new VerticalLayout(
-                buildJoinButton(row),
-                buildStartButton(row),
-                buildPlayButton(row),
-                buildObserveButton(row),
-                buildManageButton(row),
-                buildAbortButton(row));
-        actions.setPadding(false);
-        actions.setSpacing(true);
-        actions.addClassName("lobby-actions");
-        return actions;
     }
 
     private Button buildPlayButton(LobbyGameRow row) {

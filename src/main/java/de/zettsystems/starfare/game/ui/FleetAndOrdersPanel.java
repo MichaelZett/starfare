@@ -623,13 +623,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         Span arrival = new Span(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": "
                 + (arrivalTurn < 0 ? "—" : arrivalTurn) + " · " + I18n.t(UiTexts.MAP_COLUMN_ETA) + ": " + fleet.eta());
         arrival.addClassName("fleet-travel-arrival");
-        card.add(top, route, arrival);
+        card.add(top, route, travelProgress(fleet), arrival);
         return card;
     }
 
     private static Div orderCard(PlannedOrder order) {
         Div card = new Div();
-        card.addClassName("fleet-travel-card");
+        card.addClassNames("fleet-travel-card", "fleet-travel-card-planned");
         Div top = new Div();
         top.addClassName("fleet-travel-card-top");
         top.add(new Span("◌ " + I18n.t(order.type())), fleetNumber(value(order.ships())));
@@ -639,6 +639,22 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         arrival.addClassName("fleet-travel-arrival");
         card.add(top, route, arrival);
         return card;
+    }
+
+    private Div travelProgress(FleetView fleet) {
+        int elapsed = currentView == null ? 0 : Math.max(0, currentView.turn()
+                - currentView.ownFleets().stream().filter(candidate -> candidate.globalId() == fleet.fleetId())
+                .map(Fleet::launchTurn).findFirst().orElse(currentView.turn()));
+        int total = elapsed + fleet.eta();
+        int percent = total == 0 ? 100 : Math.round(100f * elapsed / total);
+        Div track = new Div();
+        track.addClassName("fleet-travel-progress");
+        Div fill = new Div();
+        fill.addClassName("fleet-travel-progress-fill");
+        fill.getStyle().set(CssProperties.WIDTH, percent + "%");
+        track.add(fill);
+        track.getElement().setAttribute("aria-label", I18n.t(UiTexts.MAP_FLEET_TRAVEL_PROGRESS, elapsed, total));
+        return track;
     }
 
     private static Span fleetNumber(int ships) {

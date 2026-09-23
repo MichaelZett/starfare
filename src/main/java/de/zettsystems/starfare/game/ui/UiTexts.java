@@ -165,6 +165,8 @@ public final class UiTexts {
     public static final String MAP_INVALID_COMMAND = "map.invalidCommand";
     public static final String MAP_DIALOG_CANCEL = "map.dialog.cancel";
     public static final String MAP_ADD_STANDING_ORDER_FAILED = "map.addStandingOrder.failed";
+    public static final String MAP_SEND_FLEET_PREVIEW = "map.send.fleetPreview";
+    public static final String MAP_SEND_RELOCATION_PREVIEW = "map.send.relocationPreview";
 
     // Map — fleets grid
     public static final String MAP_OWN_FLEETS = "map.ownFleets";
@@ -173,6 +175,15 @@ public final class UiTexts {
     public static final String MAP_COLUMN_TO = "map.column.to";
     public static final String MAP_COLUMN_SHIPS = "map.column.ships";
     public static final String MAP_COLUMN_ETA = "map.column.eta";
+    public static final String MAP_FLEET_TRAVEL_PROGRESS = "map.fleet.travelProgress";
+    public static final String ROUND_FILTER_SUMMARY = "round.filter.summary";
+    public static final String LOBBY_CARD_MORE_ACTIONS = "lobby.card.moreActions";
+    public static final String LOBBY_WIZARD_ADVANCED = "lobby.wizard.advanced";
+    public static final String LOBBY_WIZARD_SECTION_SETTINGS = "lobby.wizard.section.settings";
+    public static final String LOBBY_WIZARD_SECTION_SETTINGS_HINT = "lobby.wizard.section.settings.hint";
+    public static final String STATISTICS_BALANCE = "statistics.balance";
+    public static final String REPLAY_TIMELINE_PREVIOUS = "replay.timeline.previous";
+    public static final String REPLAY_TIMELINE_NEXT = "replay.timeline.next";
     public static final String MAP_ACTION_WAIT = "map.action.wait";
     public static final String MAP_ACTION_WAITING = "map.action.waiting";
     public static final String MAP_ACTION_DISBAND = "map.action.disband";
@@ -371,4 +382,12 @@ public final class UiTexts {
     public static final String STATISTICS_WINS = "statistics.wins";
     public static final String STATISTICS_LOSSES = "statistics.losses";
     public static final String STATISTICS_EMPTY = "statistics.empty";
+    public static final String STATISTICS_HISTORY = "statistics.history";
+    public static final String STATISTICS_GAME = "statistics.game";
+    public static final String STATISTICS_RESULT = "statistics.result";
+    public static final String STATISTICS_FINISHED = "statistics.finished";
+    public static final String STATISTICS_NO_OPPONENTS = "statistics.noOpponents";
+    public static final String STATISTICS_WIN = "statistics.win";
+    public static final String STATISTICS_LOSS = "statistics.loss";
+    public static final String STATISTICS_DRAW = "statistics.draw";
 }

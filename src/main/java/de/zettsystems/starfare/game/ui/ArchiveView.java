@@ -7,6 +7,7 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -52,17 +53,25 @@ public class ArchiveView extends VerticalLayout {
         add(new H1(I18n.t(UiTexts.ARCHIVE_TITLE)), new HorizontalLayout(search, own,
                 new Button(I18n.t(UiTexts.MAP_ACTION_LOBBY),
                         _ -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)))));
-        grid.addColumn(GameSummary::name).setHeader(I18n.t(UiTexts.LOBBY_COLUMN_GAME));
-        grid.addColumn(s -> I18n.t(s.visibility() == GameVisibility.PRIVATE
-                ? UiTexts.GAME_PRIVATE : UiTexts.GAME_PUBLIC));
-        grid.addColumn(this::participants).setHeader(I18n.t(UiTexts.LOBBY_COLUMN_PLAYERS));
-        grid.addColumn(this::winner).setHeader(I18n.t(UiTexts.ARCHIVE_WINNER));
-        grid.addColumn(GameSummary::turn).setHeader(I18n.t(UiTexts.LOBBY_COLUMN_TURN));
-        grid.addColumn(this::finishedAt).setHeader(I18n.t(UiTexts.ARCHIVE_FINISHED));
-        grid.addComponentColumn(this::viewButton);
+        grid.addComponentColumn(this::archiveCard).setHeader("").setFlexGrow(1);
         grid.setWidthFull();
-        grid.getColumns().forEach(column -> column.setAutoWidth(true));
         add(grid, empty);
+    }
+
+    private Div archiveCard(GameSummary summary) {
+        Div card = new Div();
+        card.addClassName("archive-game-card");
+        Span name = new Span(summary.name());
+        name.addClassName("archive-game-card-name");
+        Span winner = new Span(I18n.t(UiTexts.ARCHIVE_WINNER) + ": " + winner(summary));
+        Span meta = new Span(I18n.t(UiTexts.LOBBY_TURN_LABEL, summary.turn()) + " · " + finishedAt(summary));
+        meta.addClassName("archive-game-card-meta");
+        Span participants = new Span(participants(summary));
+        participants.addClassName("archive-game-card-participants");
+        Div details = new Div(winner, meta, participants);
+        details.addClassName("archive-game-card-details");
+        card.add(name, details, viewButton(summary));
+        return card;
     }
 
     private Button viewButton(GameSummary summary) {

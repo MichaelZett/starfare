@@ -31,17 +31,28 @@ public class GameResultEntity extends AbstractBaseEntity<String> {
     @Column(name = "player_id", nullable = false, length = 30)
     private Set<String> participants = new LinkedHashSet<>();
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "game_result_ai_opponents", joinColumns = @JoinColumn(name = "game_id"))
+    @Column(name = "ai_name", nullable = false, length = 100)
+    private Set<String> aiOpponentNames = new LinkedHashSet<>();
+
     @SuppressWarnings("NullAway.Init")
     protected GameResultEntity() {
     }
 
     public GameResultEntity(String gameId, String gameName, @Nullable String winnerPlayerId,
                             Instant finishedAt, Set<String> participants) {
+        this(gameId, gameName, winnerPlayerId, finishedAt, participants, Set.of());
+    }
+
+    public GameResultEntity(String gameId, String gameName, @Nullable String winnerPlayerId,
+                            Instant finishedAt, Set<String> participants, Set<String> aiOpponentNames) {
         this.gameId = gameId;
         this.gameName = gameName;
         this.winnerPlayerId = winnerPlayerId;
         this.finishedAt = finishedAt;
         this.participants.addAll(participants);
+        this.aiOpponentNames.addAll(aiOpponentNames);
     }
 
     @Override
@@ -53,7 +64,19 @@ public class GameResultEntity extends AbstractBaseEntity<String> {
         return winnerPlayerId;
     }
 
+    public String getGameName() {
+        return gameName;
+    }
+
+    public Instant getFinishedAt() {
+        return finishedAt;
+    }
+
     public Set<String> getParticipants() {
         return Set.copyOf(participants);
+    }
+
+    public Set<String> getAiOpponentNames() {
+        return Set.copyOf(aiOpponentNames);
     }
 }

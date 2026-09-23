@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8110
   compression:
     enabled: true
     mime-types: application/json
@@ -46,7 +46,7 @@ zs:
     from-name: Starfare
     # Spieler waehlen einen oeffentlichen Namen; Vor-/Nachname werden nicht erhoben.
     name-mode: DISPLAY_NAME
-    base-url: http://localhost:8080
+    base-url: http://localhost:8110
 
 starfare:
   game:

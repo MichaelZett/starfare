@@ -75,6 +75,7 @@ public class LobbySteps {
 
     @Wenn("ich die Partie im Verwalten-Dialog veröffentliche")
     public void publishGame() {
+        browser.openDetailsWithText("Weitere Aktionen");
         browser.clickButtonWithText("Verwalten");
         browser.awaitCss("vaadin-checkbox").click();
         browser.clickButtonWithText("Schließen");

@@ -96,6 +96,17 @@ public class Browser {
         ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", tab);
     }
 
+    /** Öffnet einen sichtbaren aufklappbaren Bereich anhand seiner Zusammenfassung. */
+    public void openDetailsWithText(String label) {
+        WebElement details = new WebDriverWait(driver(), LOAD)
+                .withMessage("Kein Bereich „" + label + "“ auf der Seite.")
+                .until(_ -> driver().findElements(By.tagName("vaadin-details")).stream()
+                        .filter(WebElement::isDisplayed)
+                        .filter(candidate -> label.equals(candidate.getText().strip()))
+                        .findFirst().orElse(null));
+        ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", details);
+    }
+
     public void awaitSelectedTabWithText(String label) {
         new WebDriverWait(driver(), LOAD).withMessage("Reiter „" + label + "“ wurde nicht ausgewählt.")
                 .until(_ -> driver().findElements(By.tagName("vaadin-tab")).stream()
