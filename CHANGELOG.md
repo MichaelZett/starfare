@@ -173,6 +173,9 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   `ui` ↛ `domain`.
 
 ### Fixed
+- Der Kampfzufall entscheidet auch kleine Gefechte: Verglichen werden die
+  ungerundeten Kampfstärken, gerundet wird nur für die Wiedergabe. Bisher
+  endete etwa 3 gegen 3 bei ±10 % stets zugunsten des Verteidigers.
 - Einladungen und Freundschaftsanfragen legen ihre Knöpfe in eine eigene
   Zeile; die Lobby scrollte mit offener Einladung seitwärts.
 - Das Entladen untätiger Einzelspieler-Partien verklemmt sich nicht mehr mit

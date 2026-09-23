@@ -30,10 +30,12 @@ public final class CombatResolver {
 
         int variation = Math.clamp(randomnessPercent, GameConfig.MIN_COMBAT_RANDOMNESS_PERCENT,
                 GameConfig.MAX_COMBAT_RANDOMNESS_PERCENT);
-        int attackerStrength = rolledStrength(attacking, variation, attackerRoll);
-        int defenderStrength = rolledStrength(defending, variation, defenderRoll);
-        double aEff = attackerStrength;
-        double dEff = defenderStrength;
+        // Verglichen wird ungerundet: Gerundet gäbe es bei kleinen Flotten keinen Zufall
+        // mehr (3 gegen 3 bei ±10 % ergäbe stets 3:3, also immer den Verteidiger).
+        double aEff = rolledStrength(attacking, variation, attackerRoll);
+        double dEff = rolledStrength(defending, variation, defenderRoll);
+        int attackerStrength = displayed(aEff);
+        int defenderStrength = displayed(dEff);
 
         if (aEff > dEff) {
             // Anteil der Angriffs-"Stärke", die überlebt
@@ -47,10 +49,15 @@ public final class CombatResolver {
         }
     }
 
-    private static int rolledStrength(int ships, int variationPercent, double roll) {
+    private static double rolledStrength(int ships, int variationPercent, double roll) {
         double boundedRoll = Math.clamp(roll, 0.0, Math.nextDown(1.0));
         double factor = 1.0 - variationPercent / 100.0 + boundedRoll * (2.0 * variationPercent / 100.0);
-        return Math.max(1, (int) Math.round(ships * factor));
+        return ships * factor;
+    }
+
+    /** Ganzzahlig für die Schlachtwiedergabe; entscheidet nichts. */
+    private static int displayed(double strength) {
+        return Math.max(1, (int) Math.round(strength));
     }
 
     public record Result(int attackersLeft, int defendersLeft, boolean attackerWon,
