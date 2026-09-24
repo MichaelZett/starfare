@@ -19,10 +19,8 @@ class BattleAcknowledgementsTest {
 
         assertThat(BattleAcknowledgements.pending(report, Set.of())).containsExactlyInAnyOrder(10, 11);
 
-        int first = BattleAcknowledgements.firstPendingIndexOf(report, report.events().getFirst(), Set.of());
-
-        assertThat(first).isZero();
-        assertThat(BattleAcknowledgements.pending(report, Set.of(first))).containsExactly(11);
+        assertThat(BattleAcknowledgements.isPending(report, 0, Set.of())).isTrue();
+        assertThat(BattleAcknowledgements.pending(report, Set.of(0))).containsExactly(11);
     }
 
     @Test
@@ -31,6 +29,7 @@ class BattleAcknowledgementsTest {
                 new TurnEvent.Production(1, 10, "Vega", 2)));
 
         assertThat(BattleAcknowledgements.pending(report, Set.of())).isEmpty();
+        assertThat(BattleAcknowledgements.isPending(report, 0, Set.of())).isFalse();
     }
 
     @Test
@@ -40,6 +39,8 @@ class BattleAcknowledgementsTest {
                 new TurnEvent.BattleLost(2, 10, "Vega", 9, 7, 2)));
 
         assertThat(BattleAcknowledgements.pending(report, Set.of(0))).containsExactly(10);
+        assertThat(BattleAcknowledgements.isPending(report, 0, Set.of(0))).isFalse();
+        assertThat(BattleAcknowledgements.isPending(report, 1, Set.of(0))).isTrue();
     }
 
     @Test
@@ -47,13 +48,9 @@ class BattleAcknowledgementsTest {
         TurnEvent battle = new TurnEvent.BattleLost(2, 10, "Vega", 9, 7, 2);
         TurnReport report = new TurnReport(4, List.of(), List.of(battle, battle));
 
-        int first = BattleAcknowledgements.firstPendingIndexOf(report, battle, Set.of());
-        int second = BattleAcknowledgements.firstPendingIndexOf(report, battle, Set.of(first));
-
-        assertThat(first).isZero();
-        assertThat(second).isEqualTo(1);
-        assertThat(BattleAcknowledgements.pending(report, Set.of(first))).containsExactly(10);
-        assertThat(BattleAcknowledgements.pending(report, Set.of(first, second))).isEmpty();
-        assertThat(BattleAcknowledgements.firstPendingIndexOf(report, battle, Set.of(first, second))).isNegative();
+        assertThat(BattleAcknowledgements.isPending(report, 0, Set.of(1))).isTrue();
+        assertThat(BattleAcknowledgements.isPending(report, 1, Set.of(1))).isFalse();
+        assertThat(BattleAcknowledgements.pending(report, Set.of(1))).containsExactly(10);
+        assertThat(BattleAcknowledgements.pending(report, Set.of(0, 1))).isEmpty();
     }
 }

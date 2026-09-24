@@ -8,6 +8,17 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Schlachtbestätigungen bleiben auch bei identischen Ereignissen, Sortierung
+  und Filtern eindeutig; bereits ausgewertete Kämpfe in der Karten-Seitenleiste
+  werden nicht wegen einer anderen offenen Schlacht desselben Systems erneut offen.
+- Berichte speichern gewürfelte Kampfstärken ungerundet. Die Wiedergabe zeigt
+  genügend Nachkommastellen, um den entscheidenden Unterschied zu erkennen;
+  ältere Berichte bleiben lesbar.
+- Die Statistik lädt Teilnehmer und KI-Gegner getrennt in zwei Abfragen,
+  ohne zusätzliche Abfrage je Partie und ohne kartesisches Produkt.
+- Der Kartenkopf bleibt auch bei 1024 Pixeln und nach der Schlachtauswertung
+  innerhalb der Seitenbreite.
+
 - Die Schlachtwiedergabe kennzeichnet beide Seiten klar als „Du“, Gegner oder
   neutrales System. Berichts-, Flotten- und Befehlsansichten sind größer,
   kontrastreicher und stärker mit Symbolen gestaltet.

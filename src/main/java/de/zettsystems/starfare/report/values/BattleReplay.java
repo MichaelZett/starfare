@@ -4,7 +4,7 @@ import java.util.Optional;
 
 /** Combat-only presentation data. Ownership changes are deliberately kept outside the replay. */
 public record BattleReplay(String systemName, int attacking, int defending, int attackingRemaining,
-                           int defendingRemaining, int attackerStrength, int defenderStrength) {
+                           int defendingRemaining, double attackerStrength, double defenderStrength) {
 
     public BattleReplay(String systemName, int attacking, int defending, int attackingRemaining,
                         int defendingRemaining) {

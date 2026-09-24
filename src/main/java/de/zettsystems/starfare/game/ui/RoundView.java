@@ -219,9 +219,9 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         EnumSet<EventCategory> enabled = enabledCategories();
-        List<TurnEvent> filtered = lastEvents.stream()
-                .filter(ev -> !pending || !(ev instanceof TurnEvent.Victory || ev instanceof TurnEvent.Defeat))
-                .filter(ev -> categoryOf(ev).map(enabled::contains).orElse(true))
+        List<Integer> filtered = java.util.stream.IntStream.range(0, lastEvents.size()).boxed()
+                .filter(i -> !pending || !(lastEvents.get(i) instanceof TurnEvent.Victory || lastEvents.get(i) instanceof TurnEvent.Defeat))
+                .filter(i -> categoryOf(lastEvents.get(i)).map(enabled::contains).orElse(true))
                 .sorted(Comparator.comparingInt(this::eventPriority))
                 .toList();
         if (filtered.isEmpty()) {
@@ -233,8 +233,9 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         }
     }
 
-    private int eventPriority(TurnEvent event) {
-        if (isPending(event)) {
+    private int eventPriority(int eventIndex) {
+        TurnEvent event = lastEvents.get(eventIndex);
+        if (isPending(eventIndex)) {
             return 0;
         }
         return switch (event) {
@@ -245,12 +246,14 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         };
     }
 
-    private Div buildCard(TurnEvent event, int index) {
+    private Div buildCard(int eventIndex, int index) {
+        TurnEvent event = lastEvents.get(eventIndex);
+        Runnable acknowledge = battleAcknowledgement(eventIndex);
         Div card = new Div();
         card.addClassName("event-card");
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
 
-        boolean pending = isPending(event);
+        boolean pending = isPending(eventIndex);
         String icon = pending ? "⚔" : iconFor(event);
         String cssClass = pending ? "event-battle-pending" : cssFor(event);
         String text = textFor(event, pending);
@@ -263,10 +266,10 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         BattleReplay replay = BattleReplay.from(event).orElse(null);
         if (battlePresentationEnabled && replay != null) {
             card.addClassName("event-battle-interactive");
-            card.addClickListener(_ -> BattleReplayDialog.open(replay, battleSides(event), () -> acknowledge(event)));
+            card.addClickListener(_ -> BattleReplayDialog.open(replay, battleSides(event), acknowledge));
         } else if (pending) {
             card.addClassName("event-battle-interactive");
-            card.addClickListener(_ -> acknowledge(event));
+            card.addClickListener(_ -> acknowledge.run());
         }
         return card;
     }
@@ -299,16 +302,20 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                 && !acknowledgements.pending(gameId, currentReport).isEmpty();
     }
 
-    private boolean isPending(TurnEvent event) {
+    private boolean isPending(int eventIndex) {
         return gameId != null && currentReport != null
-                && acknowledgements.isPending(gameId, currentReport, event);
+                && acknowledgements.isPending(gameId, currentReport, eventIndex);
     }
 
-    private void acknowledge(TurnEvent event) {
-        if (gameId != null && currentReport != null) {
-            acknowledgements.acknowledge(gameId, currentReport, event);
-            renderTimeline();
-        }
+    private Runnable battleAcknowledgement(int eventIndex) {
+        GameId current = gameId;
+        TurnReport report = currentReport;
+        return () -> {
+            if (current != null && report != null) {
+                acknowledgements.acknowledge(current, report, eventIndex);
+                renderTimeline();
+            }
+        };
     }
 
     private static String iconFor(TurnEvent e) {

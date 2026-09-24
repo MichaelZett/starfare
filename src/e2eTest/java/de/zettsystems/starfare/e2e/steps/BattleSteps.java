@@ -60,9 +60,11 @@ public class BattleSteps {
         registry.writeState(id, state -> {
             var first = state.systems().get(1);
             var second = state.systems().get(2);
+            state.updateSystem(first.id(), system -> system.captureBy(seat, 20));
+            state.updateSystem(second.id(), system -> system.captureBy(seat, 60));
             state.reports().put(seat, new TurnReport(state.turn(), List.of(), List.of(
-                    new TurnEvent.BattleWon(seat, first.id(), first.name(), 60, 40, 20, true),
-                    new TurnEvent.BattleWon(seat, second.id(), second.name(), 90, 30, 60, true),
+                    new TurnEvent.BattleWon(seat, first.id(), first.name(), 60, 40, 20, true, 64.8, 36.8),
+                    new TurnEvent.BattleWon(seat, second.id(), second.name(), 90, 30, 60, true, 97.2, 27.6),
                     new TurnEvent.Victory(seat))));
             state.endGame(seat);
             state.nextTurn();
@@ -108,6 +110,8 @@ public class BattleSteps {
         for (int battle = 0; battle < 2; battle++) {
             browser.awaitCss(PENDING).click();
             browser.awaitCss(".battle-replay");
+            String expectedStrength = battle == 0 ? "64,8" : "97,2";
+            assertThat(browser.textsOf(".battle-strength")).anyMatch(text -> text.contains(expectedStrength));
             browser.awaitCss(".sys-report-event-active");
             new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                     "running".equals(js().executeScript("return window.starfareBattleAudio.context?.state")));
@@ -119,6 +123,10 @@ public class BattleSteps {
             assertThat(browser.textsOf("[data-battle-attacking]")).contains(battle == 0 ? "20" : "60");
             assertThat(browser.textsOf("[data-battle-defending]")).contains("0");
             browser.clickButtonWithText("Ergebnis übernehmen");
+            browser.awaitCss(".capture-summary-dialog vaadin-button").click();
+            new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(
+                    org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated(
+                            By.cssSelector(".capture-summary-dialog[opened]")));
             if (battle == 0) {
                 new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                         .until(_ -> browser.all(PENDING).size() == 1);
