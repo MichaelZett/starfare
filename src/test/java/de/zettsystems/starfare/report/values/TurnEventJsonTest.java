@@ -12,6 +12,31 @@ class TurnEventJsonTest {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test
+    void allBattleEventsPreserveFractionalStrengths() {
+        List<TurnEvent> events = List.of(
+                new TurnEvent.BattleWon(1, 5, "Vega", 3, 3, 0, false, 3.24, 2.76),
+                new TurnEvent.BattleLost(1, 5, "Vega", 3, 3, 0, 2.76, 3.24),
+                new TurnEvent.SystemLost(2, 1, 5, "Vega", 3, 3, 0, 3.24, 2.76),
+                new TurnEvent.DefenseHeld(2, 5, "Vega", 3, 3, 0, 2.76, 3.24));
+        assertThat(events).allSatisfy(event -> {
+            TurnEvent restored = mapper.readValue(mapper.writeValueAsString(event), TurnEvent.class);
+            assertThat(restored).isEqualTo(event);
+            assertThat(BattleReplay.from(restored)).isEqualTo(BattleReplay.from(event));
+        });
+    }
+
+    @Test
+    void integerStrengthsFromExistingSnapshotsRemainReadable() {
+        String json = """
+                {"type":"battleWon","attackerId":1,"systemId":5,"systemName":"Vega",
+                 "attacking":3,"defending":3,"remaining":0,"wasNeutral":false,
+                 "attackerStrength":3,"defenderStrength":3}
+                """;
+        assertThat(mapper.readValue(json, TurnEvent.class))
+                .isEqualTo(new TurnEvent.BattleWon(1, 5, "Vega", 3, 3, 0, false, 3, 3));
+    }
+
+    @Test
     void reinforcementWithoutTotalGarrisonDeserializesAsZero() {
         String legacyJson = """
                 {

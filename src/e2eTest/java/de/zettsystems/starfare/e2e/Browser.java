@@ -169,8 +169,14 @@ public class Browser {
         JavascriptExecutor js = (JavascriptExecutor) driver();
         long scrollWidth = ((Number) js.executeScript("return document.documentElement.scrollWidth")).longValue();
         long clientWidth = ((Number) js.executeScript("return document.documentElement.clientWidth")).longValue();
+        Object overflowing = scrollWidth > clientWidth ? js.executeScript("""
+                return [...document.querySelectorAll('body *')]
+                    .filter(element => element.getBoundingClientRect().right > document.documentElement.clientWidth)
+                    .slice(0, 12).map(element => element.tagName + '.' + element.className
+                        + ': ' + element.getBoundingClientRect().right).join('; ');
+                """) : "";
         assertThat(scrollWidth)
-                .withFailMessage("Seite %s scrollt seitwärts (%d > %d px)", driver().getCurrentUrl(), scrollWidth, clientWidth)
+                .withFailMessage("Seite %s scrollt seitwärts (%d > %d px): %s", driver().getCurrentUrl(), scrollWidth, clientWidth, overflowing)
                 .isLessThanOrEqualTo(clientWidth + 1);
     }
 

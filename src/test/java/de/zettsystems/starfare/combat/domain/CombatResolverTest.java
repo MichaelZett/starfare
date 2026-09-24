@@ -48,7 +48,7 @@ class CombatResolverTest {
         CombatResolver.Result attackerWins = CombatResolver.resolve(100, 100, 30, 0.999, 0.0);
         CombatResolver.Result defenderWins = CombatResolver.resolve(100, 100, 30, 0.0, 0.999);
 
-        assertThat(attackerWins.attackerStrength()).isEqualTo(130);
+        assertThat(attackerWins.attackerStrength()).isCloseTo(129.94, org.assertj.core.data.Offset.offset(0.000001));
         assertThat(attackerWins.defenderStrength()).isEqualTo(70);
         assertThat(attackerWins.attackerWon()).isTrue();
         assertThat(defenderWins.attackerWon()).isFalse();
@@ -59,9 +59,9 @@ class CombatResolverTest {
         CombatResolver.Result attackerWins = CombatResolver.resolve(3, 3, 10, 0.9, 0.1);
         CombatResolver.Result defenderWins = CombatResolver.resolve(3, 3, 10, 0.1, 0.9);
 
-        // 3,24 gegen 2,76: angezeigt wird beides als 3, entschieden hat der Wurf.
-        assertThat(attackerWins.attackerStrength()).isEqualTo(3);
-        assertThat(attackerWins.defenderStrength()).isEqualTo(3);
+        // Preserve the deciding strengths for reports and playback.
+        assertThat(attackerWins.attackerStrength()).isCloseTo(3.24, org.assertj.core.data.Offset.offset(0.000001));
+        assertThat(attackerWins.defenderStrength()).isCloseTo(2.76, org.assertj.core.data.Offset.offset(0.000001));
         assertThat(attackerWins.attackerWon()).isTrue();
         assertThat(defenderWins.attackerWon()).isFalse();
     }

@@ -34,10 +34,10 @@ final class BattleReplayDialog {
         Div visual = new Div();
         visual.addClassName("battle-replay");
         visual.add(side("battle-attacker", UiTexts.BATTLE_REPLAY_ATTACKERS, replay.attacking(), replay.defending(),
-                        replay.attackerStrength(), sides.attacker()),
+                        replay.attackerStrength(), replay.defenderStrength(), sides.attacker()),
                 new Span("✦"),
                 side("battle-defender", UiTexts.BATTLE_REPLAY_DEFENDERS, replay.defending(), replay.attacking(),
-                        replay.defenderStrength(), sides.defender()));
+                        replay.defenderStrength(), replay.attackerStrength(), sides.defender()));
         visual.getChildren().skip(1).findFirst().ifPresent(center -> center.addClassName("battle-replay-flash"));
 
         Div result = new Div();
@@ -76,7 +76,7 @@ final class BattleReplayDialog {
                 replay.defendingRemaining(), soundEnabled);
     }
 
-    private static Div side(String sideClass, String labelKey, int ships, int opponentShips, int strength,
+    private static Div side(String sideClass, String labelKey, int ships, int opponentShips, double strength, double opposingStrength,
                             String identity) {
         Div side = new Div();
         side.addClassNames("battle-side", sideClass);
@@ -90,7 +90,9 @@ final class BattleReplayDialog {
         number.addClassName("battle-number");
         number.getElement().setAttribute(sideClass.endsWith("attacker") ? "data-battle-attacking" : "data-battle-defending", "");
         side.add(number);
-        Span rolledStrength = new Span(I18n.t(UiTexts.BATTLE_REPLAY_STRENGTH, strength));
+        Span rolledStrength = new Span(I18n.t(UiTexts.BATTLE_REPLAY_STRENGTH,
+                CombatStrengthFormat.format(strength, opposingStrength,
+                        com.vaadin.flow.component.UI.getCurrentOrThrow().getLocale())));
         rolledStrength.addClassName("battle-strength");
         side.add(rolledStrength);
         Div markers = new Div();

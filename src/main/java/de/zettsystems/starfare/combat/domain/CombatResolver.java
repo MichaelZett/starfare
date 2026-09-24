@@ -34,8 +34,8 @@ public final class CombatResolver {
         // mehr (3 gegen 3 bei ±10 % ergäbe stets 3:3, also immer den Verteidiger).
         double aEff = rolledStrength(attacking, variation, attackerRoll);
         double dEff = rolledStrength(defending, variation, defenderRoll);
-        int attackerStrength = displayed(aEff);
-        int defenderStrength = displayed(dEff);
+        double attackerStrength = aEff;
+        double defenderStrength = dEff;
 
         if (aEff > dEff) {
             // Anteil der Angriffs-"Stärke", die überlebt
@@ -55,11 +55,6 @@ public final class CombatResolver {
         return ships * factor;
     }
 
-    /** Ganzzahlig für die Schlachtwiedergabe; entscheidet nichts. */
-    private static int displayed(double strength) {
-        return Math.max(1, (int) Math.round(strength));
-    }
-
     public record Result(int attackersLeft, int defendersLeft, boolean attackerWon,
-                         int attackerStrength, int defenderStrength) {}
+                         double attackerStrength, double defenderStrength) {}
 }

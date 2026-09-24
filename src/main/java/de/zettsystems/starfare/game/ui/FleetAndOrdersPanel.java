@@ -442,7 +442,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         reportPage.add(filters);
         TurnReport report = view.report();
         List<TurnEvent> events = report != null ? report.events() : List.of();
-        List<TurnEvent> filtered = events.stream().filter(this::isEventEnabled).toList();
+        List<Integer> filtered = java.util.stream.IntStream.range(0, events.size()).boxed()
+                .filter(eventIndex -> isEventEnabled(events.get(eventIndex))).toList();
         if (events.isEmpty()) {
             reportPage.add(new Paragraph(I18n.t(UiTexts.ROUND_NO_EVENTS)));
             return;
@@ -452,7 +453,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return;
         }
         for (int index = 0; index < filtered.size(); index++) {
-            reportPage.add(eventCard(filtered.get(index), index));
+            reportPage.add(eventCard(events.get(filtered.get(index)), filtered.get(index), index));
         }
     }
 
@@ -498,11 +499,12 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         });
     }
 
-    private Div eventCard(TurnEvent event, int index) {
+    private Div eventCard(TurnEvent event, int eventIndex, int index) {
+        Runnable acknowledge = battleAcknowledgement(event, eventIndex);
         Div card = new Div();
-        card.addClassNames("event-card", eventCss(event));
+        card.addClassNames("event-card", eventCss(event, eventIndex));
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
-        card.add(new Span(eventIcon(event)), new Span(eventText(event)));
+        card.add(new Span(eventIcon(event, eventIndex)), new Span(eventText(event, eventIndex)));
         BattleReplay replay = BattleReplay.from(event).orElse(null);
         event.battleSystemId().ifPresent(systemId -> {
             card.addClassName("event-map-linked");
@@ -511,26 +513,23 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             }
             if (replay == null) {
                 card.addClickListener(_ -> onReportSystemSelected.accept(systemId));
-            } else if (!isBattlePending(systemId)) {
+            } else if (!isEventPending(eventIndex)) {
                 card.addClickListener(_ -> onResolvedBattleSelected.accept(systemId));
             }
         });
         if (battlePresentationEnabled && replay != null && event.battleSystemId().isPresent()
-                && isBattlePending(event.battleSystemId().getAsInt())) {
+                && isEventPending(eventIndex)) {
             card.addClassName("event-battle-interactive");
             card.addClickListener(_ -> {
                 onReportSystemSelected.accept(event.battleSystemId().getAsInt());
-                BattleReplayDialog.open(replay, battleSides(event), () -> acknowledgeBattle(event));
+                BattleReplayDialog.open(replay, battleSides(event), acknowledge);
             });
             return card;
         }
-        if (event.battleSystemId().isPresent()) {
-            int systemId = event.battleSystemId().getAsInt();
-            if (isBattlePending(systemId)) {
-                card.addClassName("event-battle-interactive");
-                card.addClickListener(_ -> acknowledgeBattle(event));
-                return card;
-            }
+        if (event.battleSystemId().isPresent() && isEventPending(eventIndex)) {
+            card.addClassName("event-battle-interactive");
+            card.addClickListener(_ -> acknowledge.run());
+            return card;
         }
         return card;
     }
@@ -564,16 +563,22 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return current != null && report != null && acknowledgements.pending(current, report).contains(systemId);
     }
 
-    private void acknowledgeBattle(TurnEvent event) {
+    private boolean isEventPending(int eventIndex) {
         GameId current = gameId;
         TurnReport report = currentView == null ? null : currentView.report();
-        event.battleSystemId().ifPresent(systemId -> {
+        return current != null && report != null && acknowledgements.isPending(current, report, eventIndex);
+    }
+    private Runnable battleAcknowledgement(TurnEvent event, int eventIndex) {
+        GameId current = gameId;
+        TurnReport report = currentView == null ? null : currentView.report();
+        // Capture the report shown by the card, not whichever round is current on dialog close.
+        return () -> {
             if (current != null && report != null) {
-                acknowledgements.acknowledge(current, report, event);
+                acknowledgements.acknowledge(current, report, eventIndex);
                 onBattleAcknowledged.run();
                 showCaptureSummary(event);
             }
-        });
+        };
     }
 
     private void showCaptureSummary(TurnEvent event) {
@@ -591,6 +596,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(I18n.t(UiTexts.MAP_CAPTURE_SUMMARY_TITLE, system.name()));
+        dialog.addClassName("capture-summary-dialog");
         Div metrics = new Div(
                 systemMetric("🛡", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
                 systemMetric("⚙", I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())));
@@ -611,8 +617,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
     }
 
-    private String eventIcon(TurnEvent event) {
-        if (event.battleSystemId().isPresent() && isBattlePending(event.battleSystemId().getAsInt())) {
+    private String eventIcon(TurnEvent event, int eventIndex) {
+        if (event.battleSystemId().isPresent() && isEventPending(eventIndex)) {
             return "⚔";
         }
         return switch (event) {
@@ -627,8 +633,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         };
     }
 
-    private String eventCss(TurnEvent event) {
-        if (event.battleSystemId().isPresent() && isBattlePending(event.battleSystemId().getAsInt())) {
+    private String eventCss(TurnEvent event, int eventIndex) {
+        if (event.battleSystemId().isPresent() && isEventPending(eventIndex)) {
             return "event-battle-pending";
         }
         return switch (event) {
@@ -643,25 +649,25 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         };
     }
 
-    private String eventText(TurnEvent event) {
+    private String eventText(TurnEvent event, int eventIndex) {
         return switch (event) {
             case TurnEvent.Production production -> I18n.t(UiTexts.ROUND_EVENT_PRODUCTION,
                     production.systemName(), production.amount());
             case TurnEvent.Reinforcement reinforcement -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
                     reinforcement.systemName(), reinforcement.ships(), reinforcement.totalGarrison(), reinforcement.fleetLabel());
-            case TurnEvent.BattleWon battle -> isBattlePending(battle.systemId())
+            case TurnEvent.BattleWon battle -> isEventPending(eventIndex)
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName())
                     : I18n.t(battle.wasNeutral() ? UiTexts.ROUND_EVENT_BATTLE_WON_NEUTRAL
                     : UiTexts.ROUND_EVENT_BATTLE_WON_ENEMY, battle.systemName(), battle.attacking(),
                     battle.defending(), battle.remaining());
-            case TurnEvent.BattleLost battle -> isBattlePending(battle.systemId())
+            case TurnEvent.BattleLost battle -> isEventPending(eventIndex)
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName())
                     : I18n.t(UiTexts.ROUND_EVENT_BATTLE_LOST, battle.systemName(), battle.attacking(),
                     battle.defending(), battle.defendersLeft());
-            case TurnEvent.SystemLost lost -> isBattlePending(lost.systemId())
+            case TurnEvent.SystemLost lost -> isEventPending(eventIndex)
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, lost.systemName())
                     : I18n.t(UiTexts.ROUND_EVENT_SYSTEM_LOST, lost.systemName());
-            case TurnEvent.DefenseHeld held -> isBattlePending(held.systemId())
+            case TurnEvent.DefenseHeld held -> isEventPending(eventIndex)
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, held.systemName())
                     : I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
                     held.systemName(), held.attacking(), held.defendersLeft());

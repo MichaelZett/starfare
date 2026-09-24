@@ -64,6 +64,9 @@ class DefaultGameStatisticsService implements GameStatisticsService {
         int wins = 0;
         int losses = 0;
         var games = results.findForParticipant(account);
+        if (!games.isEmpty()) {
+            results.findWithAiOpponentsByGameIdIn(games.stream().map(GameResultEntity::getId).toList());
+        }
         for (GameResultEntity game : games) {
             boolean won = account.equals(game.getWinnerPlayerId());
             if (won) {

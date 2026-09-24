@@ -3,7 +3,6 @@ package de.zettsystems.starfare.game.ui;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.values.GameId;
-import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.report.values.TurnReport;
 
 import java.util.HashMap;
@@ -39,15 +38,13 @@ final class BattleAcknowledgements {
     }
 
     /** Ob gerade diese Schlacht noch offen ist — nicht bloß eine andere am selben System. */
-    boolean isPending(GameId gameId, TurnReport report, TurnEvent event) {
-        return event.battleSystemId().isPresent()
-                && firstPendingIndexOf(report, event, acknowledged(gameId, report.turn())) >= 0;
+    boolean isPending(GameId gameId, TurnReport report, int eventIndex) {
+        return isPending(report, eventIndex, acknowledged(gameId, report.turn()));
     }
 
-    void acknowledge(GameId gameId, TurnReport report, TurnEvent event) {
+    void acknowledge(GameId gameId, TurnReport report, int eventIndex) {
         Set<Integer> acknowledged = acknowledged(gameId, report.turn());
-        int eventIndex = firstPendingIndexOf(report, event, acknowledged);
-        if (eventIndex < 0) {
+        if (!isPending(report, eventIndex, acknowledged)) {
             return;
         }
         UserContext.currentPlayerId()
@@ -68,18 +65,11 @@ final class BattleAcknowledgements {
         return Set.copyOf(pending);
     }
 
-    /**
-     * Gleiche Events (etwa zwei identische Angriffe einer Runde) sind nicht
-     * unterscheidbar; bestätigt wird jeweils das erste noch offene. Mit indexOf
-     * bliebe das zweite für immer offen.
-     */
-    static int firstPendingIndexOf(TurnReport report, TurnEvent event, Set<Integer> acknowledgedIndices) {
-        for (int eventIndex = 0; eventIndex < report.events().size(); eventIndex++) {
-            if (report.events().get(eventIndex).equals(event) && !acknowledgedIndices.contains(eventIndex)) {
-                return eventIndex;
-            }
-        }
-        return -1;
+    /** Original indices remain stable when cards are filtered or sorted. */
+    static boolean isPending(TurnReport report, int eventIndex, Set<Integer> acknowledgedIndices) {
+        return eventIndex >= 0 && eventIndex < report.events().size()
+                && report.events().get(eventIndex).battleSystemId().isPresent()
+                && !acknowledgedIndices.contains(eventIndex);
     }
 
     private Set<Integer> acknowledged(GameId gameId, int turn) {
