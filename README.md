@@ -1,5 +1,9 @@
 # Starfare
 
+[![Build](https://github.com/MichaelZett/starfare/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/MichaelZett/starfare/actions/workflows/build.yml?query=branch%3Amain)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=MichaelZett_starfare&metric=alert_status)](https://sonarcloud.io/project/overview?id=MichaelZett_starfare)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=MichaelZett_starfare&metric=coverage)](https://sonarcloud.io/component_measures?id=MichaelZett_starfare&metric=coverage)
+
 A turn-based 4X browser game: conquer star systems, dispatch fleets, win
 by dominating the galaxy (in memory of a game I believe called "Sector Forces" on the C-64)
 
@@ -85,7 +89,8 @@ mode. A configurable garrison reserve stays at the source system.*
 Completed games are retained as compact results for the personal statistics
 page (`/statistics`), including wins, losses, draws and the record against each
 opponent. The page shows the result balance and opponent records as cards while
-retaining the recent game history.
+retaining the recent game history. Statistics resolve opponent names in one
+batch for both the opponent cards and game history.
 For newly completed games, the archive map also provides a timeline for replaying
 each resolved round.
 
