@@ -45,7 +45,7 @@ public class StatisticsView extends VerticalLayout {
         summaryCards.addClassName("statistics-summary-cards");
         completedGames.addColumn(CompletedGameStatistics::gameName).setHeader(I18n.t(UiTexts.STATISTICS_GAME));
         completedGames.addColumn(row -> outcomeText(row.outcome())).setHeader(I18n.t(UiTexts.STATISTICS_RESULT));
-        completedGames.addColumn(row -> finishedAtText(row)).setHeader(I18n.t(UiTexts.STATISTICS_FINISHED));
+        completedGames.addColumn(this::finishedAtText).setHeader(I18n.t(UiTexts.STATISTICS_FINISHED));
         completedGames.addColumn(row -> opponentsText(row, players)).setHeader(I18n.t(UiTexts.STATISTICS_OPPONENT));
         completedGames.setWidthFull();
         completedGames.getColumns().forEach(column -> column.setAutoWidth(true));

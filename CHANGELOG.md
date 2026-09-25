@@ -8,6 +8,16 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Identity-Baustein auf Version 1.0.0 aus Maven Central umgestellt; der
+  GitHub-Packages-Zugang ist für Build und E2E nicht mehr erforderlich.
+- Nachbetrachtungs-Zeitleiste verwendet für den Endmarker und seine Bewegung
+  64-Bit-Arithmetik, damit die Addition am maximalen Rundenzähler nicht überläuft.
+- Der Systeminspektor zeigt Garnison, Produktion sowie – sofern für das eigene
+  System verfügbar – Reserve und versendbare Schiffe als gemeinsame Kennzahlen.
+- Der Sendedialog zeigt die absolute Ankunftsrunde und eine grafische
+  Mengen-/Kapazitätsanzeige. Flotten und Produktionsverlegungen haben passende
+  Bestätigungstexte; nach einem Rundenwechsel muss der Dialog neu geöffnet werden.
+
 - Schlachtbestätigungen bleiben auch bei identischen Ereignissen, Sortierung
   und Filtern eindeutig; bereits ausgewertete Kämpfe in der Karten-Seitenleiste
   werden nicht wegen einer anderen offenen Schlacht desselben Systems erneut offen.

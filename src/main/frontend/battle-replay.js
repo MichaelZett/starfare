@@ -89,7 +89,10 @@ window.starfarePlayBattle = (root, attacking, defending, attackingRemaining, def
     const intervals = Array.from({length: beats}, () => 0.4 + Math.random());
     const total = intervals.reduce((sum, interval) => sum + interval, 0);
     let elapsed = 0;
-    const moments = intervals.map(interval => (elapsed += interval) / total * duration);
+    const moments = intervals.map(interval => {
+        elapsed += interval;
+        return elapsed / total * duration;
+    });
     const started = performance.now();
     let beat = 0;
     const animate = now => {

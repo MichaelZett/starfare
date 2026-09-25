@@ -176,6 +176,8 @@ public final class UiTexts {
     public static final String MAP_ADD_STANDING_ORDER_FAILED = "map.addStandingOrder.failed";
     public static final String MAP_SEND_FLEET_PREVIEW = "map.send.fleetPreview";
     public static final String MAP_SEND_RELOCATION_PREVIEW = "map.send.relocationPreview";
+    public static final String MAP_SAVE_STANDING_ORDER = "map.send.saveStandingOrder";
+    public static final String MAP_SEND_ROUND_CHANGED = "map.send.roundChanged";
 
     // Map — fleets grid
     public static final String MAP_OWN_FLEETS = "map.ownFleets";

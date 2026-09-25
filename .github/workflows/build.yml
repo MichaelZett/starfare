@@ -60,11 +60,6 @@ jobs:
 
       - name: Build and test
         run: ./gradlew --no-daemon build
-        env:
-          # Liest de.zettsystems:identity-* aus GitHub Packages (Repo zs-identity).
-          # GH_PACKAGES_TOKEN: PAT mit read:packages.
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
       # Nur bei Fehlschlag: Im Erfolgsfall stehen die Ergebnisse ohnehin als
       # Check-Annotation und Coverage-Kommentar da; das Artefakt lag sonst
@@ -129,9 +124,6 @@ jobs:
 
       - name: Smoke test
         run: ./gradlew --no-daemon e2eTest
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
       - name: Publish smoke results
         if: always()

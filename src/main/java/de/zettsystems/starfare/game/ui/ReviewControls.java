@@ -94,8 +94,8 @@ final class ReviewControls extends HorizontalLayout {
 
     int replayTurn() {
         try {
-            int selected = Integer.parseInt(timeline.getValue());
-            return selected <= latestReplayTurn ? selected : -1;
+            long selected = Long.parseLong(timeline.getValue());
+            return selected <= latestReplayTurn ? (int) selected : -1;
         } catch (NumberFormatException _) {
             return -1;
         }
@@ -115,9 +115,10 @@ final class ReviewControls extends HorizontalLayout {
         int last = turns.getLast();
         latestReplayTurn = last;
         timeline.getElement().setAttribute("min", String.valueOf(first));
-        timeline.getElement().setAttribute("max", String.valueOf(last + 1));
+        long endMarker = last + 1L;
+        timeline.getElement().setAttribute("max", String.valueOf(endMarker));
         if (timeline.getValue().isBlank()) {
-            timeline.setValue(String.valueOf(last + 1));
+            timeline.setValue(String.valueOf(endMarker));
         }
         fog.setVisible(replayTurn() < 0);
         updateTimelineLabel();
@@ -125,9 +126,9 @@ final class ReviewControls extends HorizontalLayout {
 
     private void moveTimeline(int delta) {
         try {
-            int minimum = Integer.parseInt(timeline.getElement().getAttribute("min"));
-            int maximum = Integer.parseInt(timeline.getElement().getAttribute("max"));
-            int current = timeline.getValue().isBlank() ? maximum : Integer.parseInt(timeline.getValue());
+            long minimum = Long.parseLong(timeline.getElement().getAttribute("min"));
+            long maximum = Long.parseLong(timeline.getElement().getAttribute("max"));
+            long current = timeline.getValue().isBlank() ? maximum : Long.parseLong(timeline.getValue());
             timeline.setValue(String.valueOf(Math.clamp(current + delta, minimum, maximum)));
         } catch (NumberFormatException _) {
             return;

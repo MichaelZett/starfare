@@ -30,20 +30,6 @@ java {
 
 repositories {
     mavenCentral()
-    // Identity-Baustein (de.zettsystems:identity-*) aus dem Repo zs-identity.
-    // Zugang: gpr.user/gpr.key in ~/.gradle/gradle.properties (PAT mit
-    // read:packages) oder GITHUB_ACTOR/GITHUB_TOKEN in der CI.
-    maven {
-        name = 'GitHubPackages'
-        url = uri('https://maven.pkg.github.com/MichaelZett/zs-identity')
-        credentials {
-            username = providers.gradleProperty('gpr.user').orElse(providers.environmentVariable('GITHUB_ACTOR')).getOrElse('')
-            password = providers.gradleProperty('gpr.key').orElse(providers.environmentVariable('GITHUB_TOKEN')).getOrElse('')
-        }
-        content {
-            includeGroup 'de.zettsystems'
-        }
-    }
     // Lokale Iteration am Baustein: dort ./gradlew publishToMavenLocal.
     mavenLocal {
         content {
@@ -369,7 +355,7 @@ sonar {
                 '**/package-info.java',
         ].join(',')
 
-        property 'sonar.issue.ignore.multicriteria', 'serial1,serial2,serial3,domainEquals'
+        property 'sonar.issue.ignore.multicriteria', 'serial1,serial2,serial3,domainEquals,entityProxyEquals,localDemoPassword,battleAudioRandom,battleTimelineRandom'
         property 'sonar.issue.ignore.multicriteria.serial1.ruleKey', 'java:S1948'
         property 'sonar.issue.ignore.multicriteria.serial1.resourceKey', '**/*.java'
         property 'sonar.issue.ignore.multicriteria.serial2.ruleKey', 'java:S2057'
@@ -379,6 +365,17 @@ sonar {
         // JPA entities deliberately inherit equals/hashCode from AbstractBaseEntity.
         property 'sonar.issue.ignore.multicriteria.domainEquals.ruleKey', 'java:S2160'
         property 'sonar.issue.ignore.multicriteria.domainEquals.resourceKey', '**/domain/**'
+        // These findings were reviewed against the runtime behavior: application entities have no
+        // lazy associations/proxy lookups; the demo credential is created only in the local profile;
+        // battle-replay randomness controls presentation timing and audio pitch only.
+        property 'sonar.issue.ignore.multicriteria.entityProxyEquals.ruleKey', 'java:S8947'
+        property 'sonar.issue.ignore.multicriteria.entityProxyEquals.resourceKey', '**/persistence/AbstractBaseEntity.java'
+        property 'sonar.issue.ignore.multicriteria.localDemoPassword.ruleKey', 'java:S2068'
+        property 'sonar.issue.ignore.multicriteria.localDemoPassword.resourceKey', '**/auth/config/LocalDemoAccountConfiguration.java'
+        property 'sonar.issue.ignore.multicriteria.battleAudioRandom.ruleKey', 'javascript:S2245'
+        property 'sonar.issue.ignore.multicriteria.battleAudioRandom.resourceKey', 'src/main/frontend/battle-replay.js'
+        property 'sonar.issue.ignore.multicriteria.battleTimelineRandom.ruleKey', 'javascript:S2245'
+        property 'sonar.issue.ignore.multicriteria.battleTimelineRandom.resourceKey', 'src/main/frontend/battle-replay.js'
     }
 }
 tasks.named('sonar').configure { dependsOn jacocoTestReport, tasks.named('compileE2eTestJava') }

@@ -340,15 +340,24 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             H2 systemHeading = new H2(system.name());
             systemHeading.addClassName("system-details-heading");
             detailsPage.add(systemHeading, detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())));
-            Div metrics = new Div(systemMetric("🛡", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())));
+            Div metrics = new Div(
+                    systemMetric("🛡", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
+                    systemMetric("⚙", I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION),
+                            value(system.productionPerTurn())));
+            if (system.garrisonReserve() != null) {
+                metrics.add(systemMetric("⛨", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE),
+                        system.garrisonReserve()));
+            }
+            if (system.availableShips() != null) {
+                metrics.add(systemMetric("➤", I18n.t(UiTexts.MAP_SIDEBAR_SHIPS), system.availableShips()));
+            }
             if (system.routedProduction() != null) {
                 ProductionFlow flow = ProductionFlow.at(system.id(), view.standingOrders());
-                metrics.add(systemFlow(system, flow));
+                detailsPage.add(metrics, systemFlow(system, flow));
             } else {
-                metrics.add(systemMetric("⚙", I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())));
+                detailsPage.add(metrics);
             }
             metrics.addClassName("system-metrics");
-            detailsPage.add(metrics);
             renderGarrisonReserve(system);
             renderOwnershipHistory(view, system);
             return;
