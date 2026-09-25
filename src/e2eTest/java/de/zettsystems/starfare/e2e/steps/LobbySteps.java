@@ -19,6 +19,7 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,9 +54,14 @@ public class LobbySteps {
         WebElement joinAfterCreate = browser.awaitCss("#join-after-create");
         ((JavascriptExecutor) browser.driver()).executeScript(
                 "arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", joinAfterCreate);
+        browser.clickButtonWithText("Zusammenfassung prüfen");
+        List<GameId> before = games.listGames();
         browser.clickButtonWithText("Spiel anlegen");
+        // Nicht auf den Text „Privat“ warten: Den zeigt schon die Zusammenfassung,
+        // und getLast() fände dann die Partie aus einem früheren Szenario.
+        id = new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> games.listGames().stream()
+                .filter(game -> !before.contains(game)).findFirst().orElse(null));
         browser.awaitText("Privat");
-        id = games.listGames().getLast();
         name = games.gameNameOf(id);
         host = games.hostPlayerIdOf(id).orElseThrow();
         assertThat(games.summaryOf(id).visibility()).isEqualTo(GameVisibility.PRIVATE);

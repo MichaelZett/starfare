@@ -140,7 +140,7 @@ public class BattleSteps {
     public void outcomeThenReview() {
         browser.awaitText("Sieg:");
         assertThat(browser.all(".review-controls")).noneMatch(WebElement::isDisplayed);
-        browser.clickButtonWithText("Zum Endstand");
+        browser.clickButtonWithText("Nachbetrachtung öffnen");
         browser.awaitCss(".review-controls");
         assertThat(browser.all("#map .sys-fog")).isEmpty();
     }

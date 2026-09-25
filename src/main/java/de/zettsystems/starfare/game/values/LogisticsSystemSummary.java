@@ -37,8 +37,9 @@ public record LogisticsSystemSummary(
                                                                     List<StandingOrderView> orders) {
         Map<Integer, Integer> remainingBySource = new HashMap<>();
         for (VisibleSystem system : systems) {
-            if (system.fullyVisible() && system.availableShips() != null) {
-                remainingBySource.put(system.id(), system.availableShips() + valueOrZero(system.productionPerTurn()));
+            Integer available = system.availableShips();
+            if (system.fullyVisible() && available != null) {
+                remainingBySource.put(system.id(), available + valueOrZero(system.productionPerTurn()));
             }
         }
         Map<Integer, Integer> deliveredByTarget = new HashMap<>();

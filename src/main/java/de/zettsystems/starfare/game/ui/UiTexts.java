@@ -361,7 +361,6 @@ public final class UiTexts {
     public static final String GAME_OUTCOME_BUILT = "gameOutcome.built";
     public static final String GAME_OUTCOME_DESTROYED = "gameOutcome.destroyed";
     public static final String GAME_OUTCOME_LOST = "gameOutcome.lost";
-    public static final String GAME_OUTCOME_CONTINUE = "gameOutcome.continue";
 
     // Language switcher
     public static final String LANG_LABEL = "lang.label";
