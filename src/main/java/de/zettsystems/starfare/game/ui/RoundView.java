@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.details.Details;
@@ -119,10 +120,17 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         Details details = new Details(label, options);
         details.addClassName("report-filter-details");
         filterBar.add(details);
+        int openBattles = pendingBattleIndices().size();
+        if (openBattles > 0) {
+            Button nextBattle = new Button(I18n.t(UiTexts.ROUND_NEXT_OPEN_BATTLE), _ -> openNextPendingBattle());
+            nextBattle.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
+            nextBattle.setTooltipText(I18n.t(UiTexts.ROUND_OPEN_BATTLES, openBattles));
+            filterBar.add(nextBattle);
+        }
     }
 
     private void addFilterCheckbox(VerticalLayout options, EnumSet<EventCategory> enabled, EventCategory cat, String textKey) {
-        Checkbox cb = new Checkbox(I18n.t(textKey), enabled.contains(cat));
+        Checkbox cb = new Checkbox(I18n.t(textKey) + " (" + categoryCount(cat) + ")", enabled.contains(cat));
         cb.addClassName("report-filter-item");
         cb.addValueChangeListener(e -> {
             EnumSet<EventCategory> current = enabledCategories();
@@ -156,6 +164,10 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             case TurnEvent.DefenseHeld _ -> EventCategory.DEFENSE_HELD;
             case TurnEvent.Victory _, TurnEvent.Defeat _ -> null;
         });
+    }
+
+    private int categoryCount(EventCategory category) {
+        return (int) lastEvents.stream().filter(event -> categoryOf(event).filter(category::equals).isPresent()).count();
     }
 
     @Override
@@ -316,6 +328,25 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                 renderTimeline();
             }
         };
+    }
+
+    private List<Integer> pendingBattleIndices() {
+        return java.util.stream.IntStream.range(0, lastEvents.size()).boxed().filter(this::isPending).toList();
+    }
+
+    private void openNextPendingBattle() {
+        List<Integer> pending = pendingBattleIndices();
+        if (pending.isEmpty()) {
+            return;
+        }
+        int eventIndex = pending.getFirst();
+        TurnEvent event = lastEvents.get(eventIndex);
+        BattleReplay replay = BattleReplay.from(event).orElse(null);
+        if (battlePresentationEnabled && replay != null) {
+            BattleReplayDialog.open(replay, battleSides(event), battleAcknowledgement(eventIndex));
+        } else {
+            battleAcknowledgement(eventIndex).run();
+        }
     }
 
     private static String iconFor(TurnEvent e) {

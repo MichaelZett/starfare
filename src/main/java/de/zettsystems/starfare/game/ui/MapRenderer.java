@@ -39,6 +39,7 @@ final class MapRenderer {
                   Set<Integer> reportedSystemIds,
                   @Nullable Integer highlightedReportSystemId,
                   Set<Integer> pendingBattleSystemIds,
+                  boolean logisticsMode,
                   Set<Integer> badgesShowingFleetNo,
                   List<VisibleSystem> systems,
                   Consumer<VisibleSystem> onInspectSystem,
@@ -53,6 +54,7 @@ final class MapRenderer {
 
     static void render(Div map, Inputs in) {
         map.removeAll();
+        map.setClassName(in.logisticsMode() ? "map-logistics-mode" : "");
         for (VisibleSystem sys : in.systems()) {
             map.add(buildSystemDot(sys, in));
         }
@@ -117,6 +119,9 @@ final class MapRenderer {
         boolean highlighted = Objects.equals(order.id(), in.highlightedStandingOrderId());
         Div lane = buildLaneDiv(geometry, "#bc8cff", tooltip, highlighted);
         lane.addClassName("fleet-lane-standing");
+        if (in.logisticsMode()) {
+            lane.addClassName("fleet-lane-logistics");
+        }
         map.add(lane);
 
         Div badge = new Div();

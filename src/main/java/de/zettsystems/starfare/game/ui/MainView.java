@@ -63,11 +63,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private @Nullable Integer highlightedFleetId;
     private @Nullable Integer highlightedStandingOrderId;
     private @Nullable Integer highlightedReportSystemId;
+    private @Nullable ReplayEventMarker pendingReplayEvent;
     private @Nullable Integer displayedTurn;
     /** Remember the pending outcome even when the view was reloaded during the final battles. */
     private boolean witnessedRunningGame;
     private boolean outcomeAcknowledged;
     private boolean outcomeDialogOpen;
+    private boolean logisticsMode;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
     private final BattleAcknowledgements acknowledgements;
 
@@ -89,7 +91,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::onResolvedBattleSelected,
                 this::setGarrisonReserve);
         mapCanvas = new MapCanvas(gameId == null ? "none" : gameId.value(), this::onMapBackgroundClick);
-        header = new MapHeaderBar(this::onNextRound, this::doLeave,
+        header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::doLeave,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)));
 
         gameOverBanner.setVisible(false);
@@ -101,6 +103,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             highlightedFleetId = null;
             highlightedReportSystemId = null;
             badgesShowingFleetNo.clear();
+            refresh();
+        }, marker -> {
+            pendingReplayEvent = marker;
+            highlightedReportSystemId = marker.systemId();
+            fleetsPanel.showDetails();
             refresh();
         });
         spectatorControls = new SpectatorControls(() -> {
@@ -166,6 +173,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             highlightedStandingOrderId = null;
             refresh();
         }
+    }
+
+    private void toggleLogisticsMode() {
+        logisticsMode = !logisticsMode;
+        if (logisticsMode) {
+            fleetsPanel.showLogistics();
+        }
+        refresh();
     }
 
     private void onFleetRowSelected(int fleetId) {
@@ -361,6 +376,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         displayedTurn = view.turn();
         boolean observer = isObserver() || reviewing;
         int playerId = observer ? -1 : currentSeat();
+        selectPendingReplayEvent(view);
         configureHeader(view, observer);
         renderMapAndSidebar(view, playerId, observer);
         if (advancedTurn) {
@@ -394,8 +410,17 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             }
             return view;
         }
-        List<Integer> replayTurns = game.replayTurns(gameId, UserContext.currentPlayerId().orElse(""));
-        reviewControls.show(view.players(), currentSeat(), replayTurns);
+        String account = UserContext.currentPlayerId().orElse("");
+        List<Integer> replayTurns = game.replayTurns(gameId, account);
+        int selectedPerspective = reviewControls.perspective();
+        if (selectedPerspective < 0) {
+            selectedPerspective = view.players().stream().filter(player -> player.id() == currentSeat())
+                    .map(Player::id).findFirst().or(() -> view.players().stream().findFirst().map(Player::id))
+                    .orElse(-1);
+        }
+        List<ReplayEventMarker> eventMarkers = selectedPerspective < 0 ? List.of()
+                : game.replayEventMarkers(gameId, account, selectedPerspective);
+        reviewControls.show(view.players(), currentSeat(), replayTurns, eventMarkers);
         int replayTurn = reviewControls.replayTurn();
         if (replayTurn >= 0) {
             return game.replayFor(gameId, UserContext.currentPlayerId().orElse(""),
@@ -403,6 +428,18 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
         return game.reviewFor(gameId, UserContext.currentPlayerId().orElse(""),
                 reviewControls.perspective(), reviewControls.fogOfWar()).orElse(null);
+    }
+
+    private void selectPendingReplayEvent(PlayerViewState view) {
+        ReplayEventMarker marker = pendingReplayEvent;
+        if (marker == null || reviewControls.replayTurn() != marker.turn()) { return; }
+        view.systems().stream().filter(system -> system.id() == marker.systemId()).findFirst().ifPresent(system -> {
+            selectedSystem = system;
+            selectedFrom = null;
+            highlightedReportSystemId = marker.systemId();
+            mapCanvas.centerOn(system.x(), system.y());
+        });
+        pendingReplayEvent = null;
     }
 
     private void configureHeader(PlayerViewState view, boolean observer) {
@@ -417,6 +454,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         roundStatus.update(reviewing ? RoundStatus.NONE : view.roundStatus());
         header.setGameName(game.gameNameOf(gameId));
         header.setNextEnabled(!view.gameOver());
+        header.setLogisticsActive(logisticsMode);
         gameOverBanner.setVisible(view.gameOver() && reviewing);
         if (view.gameOver() && reviewing) {
             gameOverBanner.setText(I18n.t(UiTexts.MAP_GAME_OVER, winnerName(view)));
@@ -447,10 +485,18 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         outcomeDialogOpen = true;
-        GameOutcomeDialog.open(Objects.equals(view.winnerId(), currentSeat()), winnerName(view), statistics, () -> {
+        String winnerColor = view.players().stream()
+                .filter(player -> Objects.equals(view.winnerId(), player.id()))
+                .map(Player::colorHex).findFirst().orElse("");
+        GameOutcomeDialog.open(Objects.equals(view.winnerId(), currentSeat()), winnerName(view), winnerColor,
+                statistics, () -> {
             outcomeDialogOpen = false;
             outcomeAcknowledged = true;
             refresh();
+        }, () -> {
+            outcomeDialogOpen = false;
+            outcomeAcknowledged = true;
+            getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
         });
     }
 
@@ -466,7 +512,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         mapCanvas.render(new MapRenderer.Inputs(
                 game, gameId, view, playerId, observer, selectedFrom,
                 highlightedFleetId, highlightedStandingOrderId, reportedSystemIds(view), highlightedReportSystemId,
-                pendingBattleSystemIds(view),
+                pendingBattleSystemIds(view), logisticsMode,
                 badgesShowingFleetNo, systems,
                 this::inspectSystem,
                 this::selectSource,

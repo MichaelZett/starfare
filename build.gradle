@@ -326,6 +326,13 @@ jacocoTestCoverageVerification {
 
 check.dependsOn jacocoTestCoverageVerification
 
+// SONAR_ORGANIZATION (set in CI) switches to SonarQube Cloud; without it the
+// analysis goes to the local instance. Cloud derives the project key from owner
+// and repository; the local instance has its own short key.
+def sonarOrganization = findProperty('sonar.organization') ?: System.getenv('SONAR_ORGANIZATION')
+def sonarHostDefault = sonarOrganization ? 'https://sonarcloud.io' : 'http://localhost:9000'
+def sonarKeyDefault = sonarOrganization ? 'MichaelZett_starfare' : 'starfare'
+
 sonar {
     properties {
         // Sonar Gradle plugin does not auto-read gradle.properties; pipe through explicitly.
@@ -333,9 +340,13 @@ sonar {
         if (sonarTokenValue) {
             property 'sonar.token', sonarTokenValue
         }
-        property 'sonar.projectKey', 'starfare'
+        property 'sonar.projectKey', findProperty('sonar.projectKey') ?: sonarKeyDefault
         property 'sonar.projectName', 'Starfare'
-        property 'sonar.host.url', System.getenv('SONAR_HOST_URL') ?: 'http://localhost:9000'
+        property 'sonar.host.url',
+                findProperty('sonar.host.url') ?: System.getenv('SONAR_HOST_URL') ?: sonarHostDefault
+        if (sonarOrganization) {
+            property 'sonar.organization', sonarOrganization
+        }
         // Include authored frontend files and the custom browser-test source set.
         property 'sonar.sources', 'src/main'
         property 'sonar.tests', 'src/test,src/e2eTest'

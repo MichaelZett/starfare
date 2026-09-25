@@ -8,6 +8,9 @@
 #
 # SNAPSHOT-Pushes bauen und testen nur. Nach einem Release steht main wieder
 # auf -SNAPSHOT; vor dem Weiterarbeiten einmal `git pull`.
+#
+# SonarQube Cloud: Secret SONAR_TOKEN plus Variable SONAR_ORGANIZATION. Ohne
+# Token bleibt der Schritt still (Fork-PRs sehen keine Secrets).
 name: Build
 
 on:
@@ -35,6 +38,9 @@ jobs:
       is_snapshot: ${{ steps.app_version.outputs.is_snapshot }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Sonar braucht die Historie, sonst gilt jede Zeile als neu.
+          fetch-depth: 0
 
       - name: Read app version
         id: app_version
@@ -60,6 +66,16 @@ jobs:
 
       - name: Build and test
         run: ./gradlew --no-daemon build
+
+      # Nutzt, was der Build erzeugt hat (Klassen, Testergebnisse, JaCoCo-XML).
+      # compileE2eTestJava, weil sonar.java.test.binaries auch das
+      # e2e-Source-Set nennt und `build` es nicht kompiliert.
+      - name: Analyse with SonarQube Cloud
+        if: env.SONAR_TOKEN != ''
+        run: ./gradlew --no-daemon compileE2eTestJava sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
 
       # Nur bei Fehlschlag: Im Erfolgsfall stehen die Ergebnisse ohnehin als
       # Check-Annotation und Coverage-Kommentar da; das Artefakt lag sonst
@@ -87,7 +103,7 @@ jobs:
 
       - name: Publish test results
         if: always()
-        uses: mikepenz/action-junit-report@v6
+        uses: mikepenz/action-junit-report@a9170d5795813c01ab4901ffb045b52bab4ab09d  # v6.5.0
         with:
           report_paths: 'build/test-results/test/*.xml'
           detailed_summary: true
@@ -95,7 +111,7 @@ jobs:
 
       - name: JaCoCo coverage report
         if: github.event_name == 'pull_request' && hashFiles('build/reports/jacoco/test/jacocoTestReport.xml') != ''
-        uses: madrapps/jacoco-report@v1.8.0
+        uses: madrapps/jacoco-report@e51ce1f46f7f8b5331593f935e59cbaf44b84920  # v1.8.0
         with:
           paths: build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -127,7 +143,7 @@ jobs:
 
       - name: Publish smoke results
         if: always()
-        uses: mikepenz/action-junit-report@v6
+        uses: mikepenz/action-junit-report@a9170d5795813c01ab4901ffb045b52bab4ab09d  # v6.5.0
         with:
           report_paths: 'build/test-results/e2eTest/*.xml'
           check_name: Smoke Test Report
@@ -147,7 +163,7 @@ jobs:
             build/test-results/e2eTest/
             build/reports/tests/e2eTest/
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 3
 
   # GitHub-Release mit Tag v<version>; Release-Body = CHANGELOG-Abschnitt.
   # Ein per [skip e2e] übersprungener Smoke blockiert das Release nicht.
@@ -195,7 +211,7 @@ jobs:
           } > release-body.md
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64  # v3.0.3
         with:
           # Fine-grained PAT (Repo-Secret RELEASE_TOKEN, Contents: read/write),
           # falls "Workflow permissions" dem GITHUB_TOKEN das Release verwehrt.

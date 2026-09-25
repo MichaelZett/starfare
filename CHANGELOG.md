@@ -8,6 +8,33 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Der Ergebnisdialog kennzeichnet das persönliche Ergebnis und den Sieger in
+  dessen Fraktionsfarbe. Nach der letzten Schlacht führt die Hauptaktion in die
+  Nachbetrachtung; die zweite Aktion öffnet die Lobby. Das Archiv ergänzt einen
+  Filter für eigene Siege, Niederlagen und Partien ohne Sieger.
+
+- Die Nachbetrachtung zeigt Schlacht- und Eroberungsmarken je Perspektive.
+  Ein Klick springt zur gespeicherten Runde und wählt das betroffene System;
+  lückenhafte Rundenzahlen werden übersprungen. Historische Stände sind als
+  vollständig aufgedeckt gekennzeichnet, am Endstand gelten Perspektive und Nebel.
+
+- Die Statistik weist Siege, Niederlagen und Unentschieden mit Zahlen und
+  Bilanzbalken aus. Gegnerbilanzen und Partienhistorie erscheinen als Karten;
+  Onlinezustände haben eine Textangabe.
+
+- Der Spielassistent fragt einen Partienamen ab und prüft vor dem Anlegen eine
+  Zusammenfassung der normalisierten Regeln, Startwerte und Farben. Eine
+  schematische Galaxieansicht zeigt die gewählte Verteilung; Einstellungen lassen
+  sich vor der endgültigen Bestätigung weiter anpassen.
+
+- Lobby-Partiekarten zeigen freie Plätze und Teilnehmerfarben. Ihre Hauptaktion
+  richtet sich nach dem eigenen Zugang; Verwaltung und Abbruch liegen gesammelt
+  unter weiteren Aktionen. Der Beitrittsdialog nennt Partie und verfügbare Sitze.
+
+- Der Logistikmodus hebt Verlegungsrouten auf der Karte hervor. Er zeigt je System
+  geplanten Zufluss und Ausgang getrennt von der nächsten möglichen Lieferung,
+  markiert Lieferengpässe und bietet passende Filter sowie unmittelbares Anpassen.
+
 - Identity-Baustein auf Version 1.0.0 aus Maven Central umgestellt; der
   GitHub-Packages-Zugang ist für Build und E2E nicht mehr erforderlich.
 - Nachbetrachtungs-Zeitleiste verwendet für den Endmarker und seine Bewegung
@@ -17,6 +44,12 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 - Der Sendedialog zeigt die absolute Ankunftsrunde und eine grafische
   Mengen-/Kapazitätsanzeige. Flotten und Produktionsverlegungen haben passende
   Bestätigungstexte; nach einem Rundenwechsel muss der Dialog neu geöffnet werden.
+- Flotten, Befehle und Produktionsverlegungen erscheinen als Routen-Karten.
+  Flotten und Befehle sind nach Ankunftsrunde gruppiert und alle Listen lassen
+  sich nach Quelle oder Ziel filtern.
+- Rundenansicht und Karten-Seitenleiste ordnen Ereignisse gleich: offene
+  Schlachten zuerst, danach Kämpfe, Verstärkungen und Produktion. Aufklappbare
+  Filter zeigen Anzahlen; „Nächste offene Schlacht“ bleibt auch bei Filtern erreichbar.
 
 - Schlachtbestätigungen bleiben auch bei identischen Ereignissen, Sortierung
   und Filtern eindeutig; bereits ausgewertete Kämpfe in der Karten-Seitenleiste
