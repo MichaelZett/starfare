@@ -117,6 +117,8 @@ public class SmokeSteps {
     @Wenn("ich ein Standardspiel anlege und beitrete")
     public void createDefaultGameAndJoin() {
         browser.clickButtonWithText("Neues Spiel");
+        // Der Assistent zeigt vor dem Anlegen eine Zusammenfassung.
+        browser.clickButtonWithText("Zusammenfassung prüfen");
         browser.clickButtonWithText("Spiel anlegen");
         browser.awaitUrl(url -> url.contains("/map/"), "Die KI-Partie wurde nicht automatisch gestartet.");
     }
