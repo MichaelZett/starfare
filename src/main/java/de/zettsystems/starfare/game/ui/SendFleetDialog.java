@@ -7,6 +7,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Input;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -29,50 +30,71 @@ final class SendFleetDialog {
     }
 
     private record SendContext(GameService game, GameId gameId, int pid,
-                               VisibleSystem from, VisibleSystem to, Runnable onClose) {
+                               VisibleSystem from, VisibleSystem to, int openedTurn, Runnable onClose) {
     }
 
-    private record DialogControls(Input slider, IntegerField shipsInput, Span consequence,
+    private record DialogControls(Input slider, IntegerField shipsInput, Span consequence, Div capacityFill,
                                   Button halfBtn, Button doubleBtn, Button allBtn, Button exceptProductionBtn,
                                   Checkbox standingCheckbox, Button sendBtn) {
     }
 
-    private record DialogParams(int maxShips, boolean canSend, int sliderMax, int initial) {
-        static DialogParams from(VisibleSystem source, @Nullable Integer initialShips) {
+    private record ConsequenceControls(Span consequence, Div capacityFill, SendContext context,
+                                       BooleanSupplier standingSupplier, int routingHeadroom) {
+    }
+
+    private static final class AmountState {
+        private int current;
+        private final int sliderMax;
+        private final ConsequenceControls consequenceControls;
+
+        private AmountState(int current, int sliderMax, ConsequenceControls consequenceControls) {
+            this.current = current;
+            this.sliderMax = sliderMax;
+            this.consequenceControls = consequenceControls;
+        }
+    }
+
+    private record DialogParams(int maxShips, boolean canSend, int sliderMax, int initial, int openedTurn) {
+        static DialogParams from(VisibleSystem source, @Nullable Integer initialShips, int openedTurn) {
             Integer available = source.availableShips();
             int maxShips = Math.max(0, available != null ? available : 0);
             int initial = initialShips == null ? 1 : Math.max(1, initialShips);
             int sliderMax = Math.max(1, Math.max(maxShips, initial));
-            return new DialogParams(maxShips, maxShips >= 1, sliderMax, initial);
+            return new DialogParams(maxShips, maxShips >= 1, sliderMax, initial, openedTurn);
         }
     }
 
-    private record HeaderLabels(Span route, Span duration, Span available, Span production) {
+    private record HeaderLabels(Span route, Span duration, Span arrival, Span available, Span production) {
     }
 
     static void open(GameService game, GameId gameId, int pid,
                      VisibleSystem from, VisibleSystem to, Runnable onClose) {
-        open(new SendContext(game, gameId, pid, from, to, onClose), false, null);
+        open(new SendContext(game, gameId, pid, from, to, game.viewFor(gameId, pid).turn(), onClose), false, null);
     }
 
     static void openRelocation(GameService game, GameId gameId, int pid,
                                VisibleSystem from, VisibleSystem to, Runnable onClose) {
-        open(new SendContext(game, gameId, pid, from, to, onClose), true, null);
+        open(new SendContext(game, gameId, pid, from, to, game.viewFor(gameId, pid).turn(), onClose), true, null);
     }
 
     static void editRelocation(GameService game, GameId gameId, int pid, VisibleSystem from, VisibleSystem to,
                                int ships, Runnable onClose) {
-        open(new SendContext(game, gameId, pid, from, to, onClose), true, ships);
+        open(new SendContext(game, gameId, pid, from, to, game.viewFor(gameId, pid).turn(), onClose), true, ships);
     }
 
     private static void open(SendContext ctx, boolean relocation, @Nullable Integer initialShips) {
-        DialogParams params = DialogParams.from(ctx.from(), initialShips);
+        DialogParams params = DialogParams.from(ctx.from(), initialShips, ctx.openedTurn());
         Dialog dialog = buildDialog();
 
         Input slider = buildSlider(params);
         IntegerField shipsInput = buildShipsInput(params);
         Span consequence = new Span();
         consequence.addClassName("send-fleet-consequence");
+        Div capacityTrack = new Div();
+        capacityTrack.addClassName("send-fleet-capacity-track");
+        Div capacityFill = new Div();
+        capacityFill.addClassName("send-fleet-capacity-fill");
+        capacityTrack.add(capacityFill);
 
         Button halfBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_HALF,
                 _ -> shipsInput.setValue(clamp(Math.max(1, params.maxShips() / 2), 1, params.sliderMax())));
@@ -85,15 +107,17 @@ final class SendFleetDialog {
 
         Checkbox standingCheckbox = new Checkbox(I18n.t(UiTexts.MAP_STANDING_ORDER_CHECKBOX));
         int routingHeadroom = ctx.game().routingHeadroom(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id());
-        wireTwoWaySync(slider, shipsInput, params.sliderMax(), params.initial(), consequence, ctx,
+        ConsequenceControls consequenceControls = new ConsequenceControls(consequence, capacityFill, ctx,
                 () -> Boolean.TRUE.equals(standingCheckbox.getValue()), routingHeadroom);
+        wireTwoWaySync(slider, shipsInput, params.sliderMax(), params.initial(), consequenceControls);
         Button sendBtn = buildSendButton(ctx, shipsInput, standingCheckbox, dialog);
         Button cancelBtn = new Button(I18n.t(UiTexts.MAP_DIALOG_CANCEL), _ -> {
             dialog.close();
             ctx.onClose().run();
         });
 
-        DialogControls controls = new DialogControls(slider, shipsInput, consequence, halfBtn, doubleBtn, allBtn, exceptProductionBtn,
+        DialogControls controls = new DialogControls(slider, shipsInput, consequence, capacityFill,
+                halfBtn, doubleBtn, allBtn, exceptProductionBtn,
                 standingCheckbox, sendBtn);
         wireStandingToggle(controls, params, routingHeadroom, ctx);
         setInitialEnablement(controls, params.canSend());
@@ -101,9 +125,12 @@ final class SendFleetDialog {
         if (relocation || !params.canSend()) {
             standingCheckbox.setValue(true);
         }
-        updateConsequence(consequence, ctx, params.initial(), Boolean.TRUE.equals(standingCheckbox.getValue()), routingHeadroom);
+        updateConsequence(consequence, capacityFill, ctx, params.initial(),
+                Boolean.TRUE.equals(standingCheckbox.getValue()), routingHeadroom);
+        sendBtn.setText(I18n.t(Boolean.TRUE.equals(standingCheckbox.getValue())
+                ? UiTexts.MAP_SAVE_STANDING_ORDER : UiTexts.MAP_SEND_FLEET));
 
-        layoutDialog(dialog, buildHeaderLabels(ctx, params), controls, cancelBtn);
+        layoutDialog(dialog, buildHeaderLabels(ctx, params), controls, capacityTrack, cancelBtn);
         dialog.open();
     }
 
@@ -123,6 +150,9 @@ final class SendFleetDialog {
         String durationKey = travelTurns == 1 ? UiTexts.MAP_DURATION_SINGULAR : UiTexts.MAP_DURATION_PLURAL;
         var durationLabel = new Span(I18n.t(durationKey, travelTurns));
         durationLabel.addClassName("send-fleet-duration");
+        int arrivalTurn = params.openedTurn() + travelTurns;
+        var arrivalLabel = new Span(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": " + arrivalTurn);
+        arrivalLabel.addClassName("send-fleet-arrival");
 
         var availableLabel = new Span(I18n.t(UiTexts.MAP_AVAILABLE, params.maxShips()));
         availableLabel.addClassName("send-fleet-available");
@@ -131,7 +161,7 @@ final class SendFleetDialog {
         Span production = new Span(I18n.t(UiTexts.MAP_PRODUCTION_FLOW, productionOf(ctx.from()),
                 flow.incoming(), flow.outgoing()));
         production.addClassName("send-fleet-production");
-        return new HeaderLabels(routeLabel, durationLabel, availableLabel, production);
+        return new HeaderLabels(routeLabel, durationLabel, arrivalLabel, availableLabel, production);
     }
 
     private static Input buildSlider(DialogParams params) {
@@ -157,43 +187,40 @@ final class SendFleetDialog {
     }
 
     private static void wireTwoWaySync(Input slider, IntegerField shipsInput, int sliderMax, int initial,
-                                       Span consequence, SendContext context, BooleanSupplier standingSupplier,
-                                       int routingHeadroom) {
-        int[] current = {initial};
-        slider.addValueChangeListener(e -> onSliderChange(e.getValue(), current, sliderMax, shipsInput,
-                consequence, context, standingSupplier, routingHeadroom));
-        shipsInput.addValueChangeListener(e -> onShipsInputChange(e.getValue(), current, sliderMax, slider, shipsInput,
-                consequence, context, standingSupplier, routingHeadroom));
+                                       ConsequenceControls consequenceControls) {
+        AmountState amountState = new AmountState(initial, sliderMax, consequenceControls);
+        slider.addValueChangeListener(e -> onSliderChange(e.getValue(), shipsInput, amountState));
+        shipsInput.addValueChangeListener(e -> onShipsInputChange(e.getValue(), slider, shipsInput, amountState));
     }
 
-    private static void onSliderChange(String raw, int[] current, int sliderMax, IntegerField shipsInput,
-                                       Span consequence, SendContext context, BooleanSupplier standingSupplier,
-                                       int routingHeadroom) {
+    private static void onSliderChange(String raw, IntegerField shipsInput, AmountState state) {
         tryParseInt(raw).ifPresent(parsed -> {
-            int v = clamp(parsed, 1, sliderMax);
-            if (v != current[0]) {
-                current[0] = v;
+            int v = clamp(parsed, 1, state.sliderMax);
+            if (v != state.current) {
+                state.current = v;
                 shipsInput.setValue(v);
             }
-            updateConsequence(consequence, context, v, standingSupplier.getAsBoolean(), routingHeadroom);
+            ConsequenceControls controls = state.consequenceControls;
+            updateConsequence(controls.consequence(), controls.capacityFill(), controls.context(), v,
+                    controls.standingSupplier().getAsBoolean(), controls.routingHeadroom());
         });
     }
 
-    private static void onShipsInputChange(Integer v, int[] current, int sliderMax, Input slider, IntegerField shipsInput,
-                                           Span consequence, SendContext context, BooleanSupplier standingSupplier,
-                                           int routingHeadroom) {
+    private static void onShipsInputChange(Integer v, Input slider, IntegerField shipsInput, AmountState state) {
         if (v == null) {
             return;
         }
-        int clamped = clamp(v, 1, sliderMax);
-        if (clamped != current[0]) {
-            current[0] = clamped;
+        int clamped = clamp(v, 1, state.sliderMax);
+        if (clamped != state.current) {
+            state.current = clamped;
             slider.setValue(String.valueOf(clamped));
         }
         if (!v.equals(clamped)) {
             shipsInput.setValue(clamped);
         }
-        updateConsequence(consequence, context, clamped, standingSupplier.getAsBoolean(), routingHeadroom);
+        ConsequenceControls controls = state.consequenceControls;
+        updateConsequence(controls.consequence(), controls.capacityFill(), controls.context(), clamped,
+                controls.standingSupplier().getAsBoolean(), controls.routingHeadroom());
     }
 
     private static Optional<Integer> tryParseInt(String s) {
@@ -237,6 +264,10 @@ final class SendFleetDialog {
 
     private static void onSendClicked(SendContext ctx, IntegerField shipsInput,
                                       Checkbox standingCheckbox, Dialog dialog) {
+        if (ctx.game().viewFor(ctx.gameId(), ctx.pid()).turn() != ctx.openedTurn()) {
+            Notification.show(I18n.t(UiTexts.MAP_SEND_ROUND_CHANGED));
+            return;
+        }
         boolean accepted;
         if (Boolean.TRUE.equals(standingCheckbox.getValue())) {
             int routed = shipsInput.getValue() == null ? 0 : shipsInput.getValue();
@@ -280,21 +311,34 @@ final class SendFleetDialog {
             c.allBtn().setEnabled(enabled);
             c.exceptProductionBtn().setEnabled(enabled);
             c.sendBtn().setEnabled(enabled);
-            updateConsequence(c.consequence(), context, currentOr(c.shipsInput(), 1), standing, routingHeadroom);
+            c.sendBtn().setText(I18n.t(standing
+                    ? UiTexts.MAP_SAVE_STANDING_ORDER : UiTexts.MAP_SEND_FLEET));
+            updateConsequence(c.consequence(), c.capacityFill(), context,
+                    currentOr(c.shipsInput(), 1), standing, routingHeadroom);
         });
     }
 
-    private static void updateConsequence(Span consequence, SendContext context, int ships, boolean standing,
+    private static void updateConsequence(Span consequence, Div capacityFill, SendContext context,
+                                          int ships, boolean standing,
                                           int routingHeadroom) {
         int travelTurns = context.game().travelTurns(context.gameId(), context.from().id(), context.to().id());
         if (standing) {
             consequence.setText(I18n.t(UiTexts.MAP_SEND_RELOCATION_PREVIEW, ships, travelTurns,
                     Math.max(0, routingHeadroom - ships)));
+            updateCapacityFill(capacityFill, ships, routingHeadroom);
             return;
         }
         int remaining = Math.max(0, availableShips(context.from()) - ships);
         consequence.setText(I18n.t(UiTexts.MAP_SEND_FLEET_PREVIEW, ships, travelTurns, remaining,
                 reserveOf(context.from())));
+        updateCapacityFill(capacityFill, ships, availableShips(context.from()));
+    }
+
+    private static void updateCapacityFill(Div fill, int amount, int capacity) {
+        int percent = capacity <= 0 ? 0 : (int) Math.round(100.0 * amount / capacity);
+        fill.getStyle().set(CssProperties.WIDTH, Math.clamp(percent, 0, 100) + "%");
+        fill.getParent().ifPresent(parent -> parent.getElement().setAttribute("aria-valuenow",
+                String.valueOf(Math.clamp(percent, 0, 100))));
     }
 
     private static int availableShips(VisibleSystem system) {
@@ -316,7 +360,8 @@ final class SendFleetDialog {
         c.sendBtn().setEnabled(canSend);
     }
 
-    private static void layoutDialog(Dialog dialog, HeaderLabels labels, DialogControls c, Button cancelBtn) {
+    private static void layoutDialog(Dialog dialog, HeaderLabels labels, DialogControls c,
+                                    Div capacityTrack, Button cancelBtn) {
         var sliderRow = new HorizontalLayout(c.slider());
         sliderRow.setWidthFull();
         sliderRow.setPadding(false);
@@ -328,7 +373,11 @@ final class SendFleetDialog {
         quickRow.setPadding(false);
         quickRow.setSpacing(true);
 
-        var body = new VerticalLayout(labels.route(), labels.duration(), labels.available(), labels.production(), c.consequence(),
+        capacityTrack.getElement().setAttribute("role", "progressbar");
+        capacityTrack.getElement().setAttribute("aria-valuemin", "0");
+        capacityTrack.getElement().setAttribute("aria-valuemax", "100");
+        var body = new VerticalLayout(labels.route(), labels.duration(), labels.arrival(), labels.available(),
+                labels.production(), c.consequence(), capacityTrack,
                 sliderRow, c.shipsInput(), quickRow, c.standingCheckbox());
         body.setPadding(false);
         body.setSpacing(false);

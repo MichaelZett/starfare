@@ -3,6 +3,7 @@ package de.zettsystems.starfare.combat.application;
 import de.zettsystems.starfare.combat.domain.CombatResolver;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.report.application.ReportService;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -82,7 +83,7 @@ public class DefaultCombatService implements CombatService {
 
     private static String playerName(GameState state, int playerId) {
         return state.players().stream().filter(player -> player.id() == playerId)
-                .map(player -> player.label()).findFirst().orElse("");
+                .map(Player::label).findFirst().orElse("");
     }
 
     private static Map<Integer, GameState.Intel> intelFor(GameState state, int playerId) {

@@ -12,6 +12,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -78,22 +79,31 @@ class JpaGameSessionStoreUnloadTest extends AbstractIntegrationTest {
         JpaGameSessionStore isolated = new JpaGameSessionStore(repository, archives, objectMapper);
         GameSession session = isolated.load(id).orElseThrow();
         ExecutorService threads = Executors.newFixedThreadPool(2);
+        CountDownLatch unloadStarted = new CountDownLatch(1);
         try {
             // Hält den Schreib-Lock, lässt währenddessen entladen und speichert danach.
             CompletableFuture<Integer> unload = CompletableFuture.supplyAsync(() -> session.writeStateAndThen(_ -> {
                 CompletableFuture<Integer> started = CompletableFuture.supplyAsync(
-                        () -> isolated.unloadInactiveSingleHumanGames(ANY_ACCESS_IS_IDLE), threads);
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+                        () -> {
+                            unloadStarted.countDown();
+                            return isolated.unloadInactiveSingleHumanGames(ANY_ACCESS_IS_IDLE);
+                        }, threads);
+                assertThat(awaitUnloadStarted(unloadStarted)).isTrue();
                 return started;
             }, isolated::save), threads).thenCompose(started -> started);
 
             assertThat(unload.orTimeout(15, TimeUnit.SECONDS).join()).isBetween(0, 1);
         } finally {
             threads.shutdownNow();
+        }
+    }
+
+    private static boolean awaitUnloadStarted(CountDownLatch started) {
+        try {
+            return started.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException _) {
+            Thread.currentThread().interrupt();
+            return false;
         }
     }
 }

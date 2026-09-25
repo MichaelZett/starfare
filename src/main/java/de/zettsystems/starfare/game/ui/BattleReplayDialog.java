@@ -48,9 +48,8 @@ final class BattleReplayDialog {
 
         boolean soundEnabled = soundEnabled();
         Checkbox sound = new Checkbox(I18n.t(UiTexts.BATTLE_REPLAY_SOUND), soundEnabled);
-        sound.addValueChangeListener(event -> {
-            VaadinSession.getCurrent().setAttribute(SOUND_SESSION_KEY, event.getValue());
-        });
+        sound.addValueChangeListener(event -> VaadinSession.getCurrent()
+                .setAttribute(SOUND_SESSION_KEY, event.getValue()));
         sound.getElement().executeJs("""
                 this.addEventListener('change', () => {
                     const audio = window.starfareBattleAudio;

@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(properties = "spring.jpa.properties.hibernate.session_factory.statement_inspector="
         + "de.zettsystems.starfare.game.application.GameStatisticsFetchingTest$SqlCapture")
 @Transactional
-public class GameStatisticsFetchingTest extends AbstractIntegrationTest {
+class GameStatisticsFetchingTest extends AbstractIntegrationTest {
     @Autowired private GameResultRepository repository;
     @Autowired private GameStatisticsService statistics;
     @Autowired private EntityManager entityManager;

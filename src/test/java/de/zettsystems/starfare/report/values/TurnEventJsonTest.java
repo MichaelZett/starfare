@@ -18,10 +18,10 @@ class TurnEventJsonTest {
                 new TurnEvent.BattleLost(1, 5, "Vega", 3, 3, 0, 2.76, 3.24),
                 new TurnEvent.SystemLost(2, 1, 5, "Vega", 3, 3, 0, 3.24, 2.76),
                 new TurnEvent.DefenseHeld(2, 5, "Vega", 3, 3, 0, 2.76, 3.24));
-        assertThat(events).allSatisfy(event -> {
+        assertThat(events).isNotEmpty().allSatisfy(event -> {
             TurnEvent restored = mapper.readValue(mapper.writeValueAsString(event), TurnEvent.class);
-            assertThat(restored).isEqualTo(event);
-            assertThat(BattleReplay.from(restored)).isEqualTo(BattleReplay.from(event));
+            assertThat(restored).matches(candidate -> candidate.equals(event)
+                    && BattleReplay.from(candidate).equals(BattleReplay.from(event)));
         });
     }
 
