@@ -771,6 +771,48 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public List<ReplayEventMarker> replayEventMarkers(GameId id, String account, int perspective) {
+        Optional<List<ReplayEventMarker>> live = registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            if (!access.canReview(state, session.hostPlayerId(), account)
+                    || state.players().stream().noneMatch(player -> player.id() == perspective)) {
+                return Optional.empty();
+            }
+            return Optional.of(replayEventMarkers(state.replayFrames(), perspective));
+        }));
+        return live.or(() -> archives.load(id)
+                .filter(game -> access.canReview(game.state(), game.hostPlayerId(), account)
+                        && game.state().players().stream().anyMatch(player -> player.id() == perspective))
+                .map(game -> replayEventMarkers(game.state().replayFrames(), perspective)))
+                .orElseGet(List::of);
+    }
+
+    private List<ReplayEventMarker> replayEventMarkers(Map<Integer, ReplayFrame> frames, int perspective) {
+        return frames.values().stream().sorted(java.util.Comparator.comparingInt(ReplayFrame::turn))
+                .flatMap(frame -> {
+                    var report = frame.reports().get(perspective);
+                    if (report == null) { return Stream.empty(); }
+                    return java.util.stream.IntStream.range(0, report.events().size()).mapToObj(index -> {
+                        TurnEvent event = report.events().get(index);
+                        return event.battleSystemId().isPresent()
+                                ? new ReplayEventMarker(frame.turn(), event.battleSystemId().getAsInt(),
+                                        battleSystemName(event), index,
+                                        event instanceof TurnEvent.BattleWon || event instanceof TurnEvent.SystemLost)
+                                : null;
+                    }).filter(Objects::nonNull);
+                }).toList();
+    }
+
+    private String battleSystemName(TurnEvent event) {
+        return switch (event) {
+            case TurnEvent.BattleWon battle -> battle.systemName();
+            case TurnEvent.BattleLost battle -> battle.systemName();
+            case TurnEvent.SystemLost conquest -> conquest.systemName();
+            case TurnEvent.DefenseHeld battle -> battle.systemName();
+            case TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ -> "";
+        };
+    }
+
+    @Override
     public Optional<PlayerViewState> replayFor(GameId id, String account, int perspective, int turn) {
         Optional<PlayerViewState> live = registry.find(id).flatMap(session -> registry.readState(id, state -> {
             if (!access.canReview(state, session.hostPlayerId(), account)

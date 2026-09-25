@@ -83,7 +83,9 @@ all except production), travel-time preview, optional "as production transfer"
 mode. A configurable garrison reserve stays at the source system.*
 
 Completed games are retained as compact results for the personal statistics
-page (`/statistics`), including wins, losses and the record against each opponent.
+page (`/statistics`), including wins, losses, draws and the record against each
+opponent. The page shows the result balance and opponent records as cards while
+retaining the recent game history.
 For newly completed games, the archive map also provides a timeline for replaying
 each resolved round.
 

@@ -104,15 +104,19 @@ public class OnlineUsersPanel extends VerticalLayout {
         row.addClassName("presence-row");
         Span dot = new Span();
         dot.addClassName("presence-dot");
+        dot.getElement().setAttribute("aria-hidden", "true");
         Span name = new Span(players.displayName(playerId));
         name.addClassName("presence-name");
-        name.getElement().setAttribute("aria-label", I18n.t(UiTexts.PRESENCE_TITLE) + ": " + players.displayName(playerId));
-        row.add(dot, name);
+        Span online = new Span(I18n.t(UiTexts.PRESENCE_STATUS_ONLINE));
+        online.addClassName("presence-status-badge");
+        online.addClassName("presence-status-online");
+        row.add(dot, name, online);
 
         if (viewer != null && !viewer.equals(playerId)) {
             Optional<Friendship> status = friendships.statusBetween(viewer, playerId);
             status.ifPresent(f -> row.add(statusBadge(f)));
             Button actions = new Button("\u22EF");
+            actions.setAriaLabel(I18n.t(UiTexts.PRESENCE_ACTIONS_LABEL, players.displayName(playerId)));
             actions.addThemeVariants(ButtonVariant.TERTIARY, ButtonVariant.SMALL);
             actions.addClassName("presence-actions");
             ContextMenu menu = new ContextMenu(actions);

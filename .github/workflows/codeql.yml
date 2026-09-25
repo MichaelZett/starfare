@@ -1,0 +1,47 @@
+# CodeQL sucht Sicherheitsprobleme, die Compiler und die übliche statische
+# Analyse nicht sehen. Für öffentliche Repos kostenlos.
+name: CodeQL
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Montags 05:00: Die Abfragen werden besser, Code ohne Befund im letzten
+    # Monat kann heute einen haben, ohne dass ihn jemand angefasst hat.
+    - cron: '0 5 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: java-kotlin
+          build-mode: manual
+
+      # Manuell statt autobuild: CodeQL braucht nur die kompilierten Klassen,
+      # keine Tests und kein Frontend-Bundle. Ohne Build-Cache, weil CodeQL
+      # javac beobachtet; Klassen aus dem Cache bekäme es gar nicht zu sehen.
+      - name: Compile
+        run: ./gradlew --no-daemon --no-build-cache compileJava compileTestJava compileE2eTestJava
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4

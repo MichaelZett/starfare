@@ -185,7 +185,9 @@ public class LobbyView extends VerticalLayout {
         turn.addClassName("lobby-game-card-turn");
         Span participants = new Span(row.players());
         participants.addClassName("lobby-game-card-participants");
-        Div overview = new Div(turn, participants);
+        Span seats = new Span(I18n.t(UiTexts.LOBBY_CARD_OPEN_SEATS, row.openHumanSeats()));
+        seats.addClassName("lobby-game-card-seats");
+        Div overview = new Div(turn, participants, seats, participantColors(row));
         overview.addClassName("lobby-game-card-overview");
         Button primary = primaryAction(row);
         primary.addClassName("lobby-game-card-primary");
@@ -197,11 +199,11 @@ public class LobbyView extends VerticalLayout {
         if (row.started() && row.joinedByCurrentUser()) {
             return buildPlayButton(row);
         }
-        if (row.canJoin()) {
-            return buildJoinButton(row);
-        }
         if (!row.started() && row.canStart()) {
             return buildStartButton(row);
+        }
+        if (row.canJoin()) {
+            return buildJoinButton(row);
         }
         if (row.observersAllowed() && !row.joinedByCurrentUser()) {
             return buildObserveButton(row);
@@ -313,6 +315,18 @@ public class LobbyView extends VerticalLayout {
         return container;
     }
 
+    private static Div participantColors(LobbyGameRow row) {
+        Div colors = new Div();
+        colors.addClassName("lobby-game-card-colors");
+        row.summary().players().forEach(player -> {
+            Span color = new Span(player.label());
+            color.addClassName("lobby-game-card-color");
+            color.getStyle().set("--seat-color", player.colorHex());
+            colors.add(color);
+        });
+        return colors;
+    }
+
     private Span statusBadge(LobbyGameRow row) {
         Span badge = new Span(I18n.t(statusKey(row)));
         badge.addClassName("lobby-status");
@@ -354,7 +368,7 @@ public class LobbyView extends VerticalLayout {
                 Notification.show(I18n.t(UiTexts.LOBBY_JOIN_FAILED));
                 return;
             }
-            JoinGameDialog.open(game, row.gameId(), playerId, players.displayName(playerId), this::refresh);
+            JoinGameDialog.open(game, row.summary(), playerId, players.displayName(playerId), this::refresh);
         });
         join.addThemeVariants(ButtonVariant.SMALL);
         join.setEnabled(row.canJoin());
@@ -438,7 +452,7 @@ public class LobbyView extends VerticalLayout {
                 new RouteParameters("gameId", gameId.value())));
     }
 
-    private record LobbyGameRow(GameId gameId, String name, String players, int turn, boolean finished,
+    private record LobbyGameRow(GameSummary summary, GameId gameId, String name, String players, int turn, boolean finished,
                                 boolean started, boolean canStart, boolean joinedByCurrentUser,
                                 boolean knownToCurrentUser, boolean hasOpenHumanSeat,
                                 boolean observersAllowed, boolean reentryAllowed,
@@ -456,13 +470,20 @@ public class LobbyView extends VerticalLayout {
             String host = summary.hostPlayerId();
             boolean hasHost = host != null && !host.isBlank();
             boolean hostedByCurrent = hasHost && host != null && host.equals(playerId);
-            return new LobbyGameRow(summary.gameId(), displayName, players, summary.turn(), summary.gameOver(),
+            return new LobbyGameRow(summary, summary.gameId(), displayName, players, summary.turn(), summary.gameOver(),
                     summary.started(), canStart, joinedByCurrent, known, summary.hasOpenHumanSeat(),
                     summary.observersAllowed() && (summary.visibility() == GameVisibility.PUBLIC
                             || hostedByCurrent || known), summary.reentryAllowed(), hostedByCurrent, hasHost,
                     summary.canJoin(playerId == null ? "" : playerId),
                     summary.visibility() == GameVisibility.PRIVATE
                             ? UiTexts.GAME_PRIVATE : UiTexts.GAME_PUBLIC);
+        }
+
+        int openHumanSeats() {
+            return (int) summary.players().stream().filter(player -> !player.ai())
+                    .filter(player -> !summary.joinedHumanSeats().contains(player.id()))
+                    .filter(player -> !summary.invitedSeats().containsValue(player.id()))
+                    .count();
         }
 
         private static String playerLabel(Player player) {

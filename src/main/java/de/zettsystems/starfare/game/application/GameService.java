@@ -16,6 +16,7 @@ public interface GameService {
 
     Optional<PlayerViewState> reviewFor(GameId id, String account, int perspective, boolean fogOfWar);
     List<Integer> replayTurns(GameId id, String account);
+    List<ReplayEventMarker> replayEventMarkers(GameId id, String account, int perspective);
     Optional<PlayerViewState> replayFor(GameId id, String account, int perspective, int turn);
     Optional<PlayerViewState> viewForAccount(GameId id, String account);
 

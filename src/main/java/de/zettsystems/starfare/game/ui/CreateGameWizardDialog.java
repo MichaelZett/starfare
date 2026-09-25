@@ -30,6 +30,7 @@ import de.zettsystems.starfare.style.CssProperties;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Multi-section dialog for creating a new game: system/player counts, neutral-system
@@ -53,6 +54,9 @@ final class CreateGameWizardDialog {
                 GameConfig.MIN_HUMAN_PLAYERS, GameConfig.MAX_HUMAN_PLAYERS, GameConfig.DEFAULT_HUMAN_PLAYERS);
         IntegerField ai = intField(I18n.t(UiTexts.LOBBY_FIELD_AI),
                 GameConfig.MIN_AI_PLAYERS, GameConfig.MAX_AI_PLAYERS, GameConfig.DEFAULT_AI_PLAYERS);
+        TextField gameName = new TextField(I18n.t(UiTexts.LOBBY_FIELD_GAME_NAME));
+        gameName.setValue(GameNameGenerator.random());
+        gameName.setMaxLength(80);
 
         IntegerField neutralMinProduction = new IntegerField(I18n.t(UiTexts.LOBBY_FIELD_NEUTRAL_MIN_PRODUCTION));
         neutralMinProduction.setMin(GameConfig.MIN_PRODUCTION);
@@ -108,7 +112,8 @@ final class CreateGameWizardDialog {
         empireName.setValue(EmpireNameGenerator.forHuman(hostName));
         empireName.setRequiredIndicatorVisible(true);
 
-        FormLayout setupGrid = grid(3, "13em", systems, humans, ai, galaxyLayout, empireName, joinAfterCreate);
+        FormLayout setupGrid = grid(3, "13em", gameName, systems, humans, ai, galaxyLayout, empireName,
+                joinAfterCreate);
         FormLayout settingsGrid = grid(3, "13em", startGarrison, combatRandomnessField,
                 observersAllowed, reentryAllowed, battlePresentation);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
@@ -176,35 +181,102 @@ final class CreateGameWizardDialog {
         body.setPadding(false);
         body.setSpacing(true);
         body.setWidthFull();
-        dialog.add(body);
+        Div confirmation = new Div();
+        confirmation.addClassName("wizard-confirmation");
+        confirmation.setVisible(false);
+        AtomicReference<GameSetup> confirmedSetup = new AtomicReference<>();
+        AtomicReference<Button> createButton = new AtomicReference<>();
+        AtomicReference<Button> backButton = new AtomicReference<>();
+        Button back = new Button(I18n.t(UiTexts.LOBBY_WIZARD_BACK), _ -> {
+            confirmation.removeAll();
+            confirmation.setVisible(false);
+            body.setVisible(true);
+            Button backAction = backButton.get();
+            if (backAction != null) {
+                backAction.setVisible(false);
+            }
+            confirmedSetup.set(null);
+            Button button = createButton.get();
+            if (button != null) {
+                button.setText(I18n.t(UiTexts.LOBBY_WIZARD_REVIEW));
+                button.setEnabled(true);
+            }
+        });
+        backButton.set(back);
+        back.setVisible(false);
+        dialog.getFooter().add(back);
 
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
                 observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout,
                 combatRandomness, roundLimit, stragglerLimit, attackOrder);
-        Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CREATE), _ -> {
-            if (empireName.getValue().trim().isEmpty()) {
-                empireName.setInvalid(true);
-                empireName.setErrorMessage(I18n.t(UiTexts.LOBBY_EMPIRE_NAME_REQUIRED));
-                return;
-            }
-            GameSetup setup = buildSetup(formInputs);
-            String accountId = UserContext.currentPlayerId().orElse(null);
-            GameId gameId = game.newGame(setup, accountId, GameNameGenerator.random());
-            boolean joined = accountId != null && joinNewGame(game, gameId, accountId, hostName, empireName.getValue(),
-                    Boolean.TRUE.equals(joinAfterCreate.getValue()));
-            boolean started = joined && setup.humanPlayers() == 1 && setup.aiPlayers() > 0 && game.startGame(gameId);
-            onCreated.run();
-            dialog.close();
-            if (started) {
-                dialog.getUI().ifPresent(ui -> ui.navigate(MainView.class, new RouteParameters("gameId", gameId.value())));
-            }
-        });
+        Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_REVIEW));
+        createButton.set(create);
+        WizardActionContext actionContext = new WizardActionContext(game, onCreated, hostName, gameName, empireName,
+                joinAfterCreate, formInputs, seatColorInputs, confirmedSetup, confirmation, body, back, create, dialog);
+        create.addClickListener(_ -> handleCreate(actionContext));
         create.addThemeVariants(ButtonVariant.PRIMARY);
         Button cancel = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CANCEL), _ -> dialog.close());
         dialog.getFooter().add(cancel, create);
+        dialog.add(body, confirmation);
         dialog.open();
     }
+
+    private static void handleCreate(WizardActionContext context) {
+        GameSetup setup = context.confirmedSetup().get();
+        if (setup == null) {
+            showConfirmation(context);
+            return;
+        }
+        if (context.empireName().getValue().trim().isEmpty()) {
+            context.empireName().setInvalid(true);
+            context.empireName().setErrorMessage(I18n.t(UiTexts.LOBBY_EMPIRE_NAME_REQUIRED));
+            return;
+        }
+        if (context.create().isEnabled()) {
+            createGame(context, setup);
+        }
+    }
+
+    private static void showConfirmation(WizardActionContext context) {
+        if (context.gameName().getValue().trim().isEmpty()) {
+            context.gameName().setInvalid(true);
+            context.gameName().setErrorMessage(I18n.t(UiTexts.LOBBY_GAME_NAME_REQUIRED));
+            return;
+        }
+        GameSetup setup = buildSetup(context.formInputs());
+        applyNormalizedColors(context.seatColorInputs(), setup);
+        context.confirmedSetup().set(setup);
+        context.confirmation().removeAll();
+        context.confirmation().add(buildConfirmation(setup, context.gameName().getValue().trim()));
+        context.body().setVisible(false);
+        context.confirmation().setVisible(true);
+        context.back().setVisible(true);
+        context.create().setText(I18n.t(UiTexts.LOBBY_WIZARD_CREATE));
+    }
+
+    private static void createGame(WizardActionContext context, GameSetup setup) {
+        context.create().setEnabled(false);
+        String accountId = UserContext.currentPlayerId().orElse(null);
+        GameId gameId = context.game().newGame(setup, accountId, context.gameName().getValue().trim());
+        boolean joined = accountId != null && joinNewGame(context.game(), gameId, accountId,
+                context.hostName(), context.empireName().getValue(),
+                Boolean.TRUE.equals(context.joinAfterCreate().getValue()));
+        boolean started = joined && setup.humanPlayers() == 1 && setup.aiPlayers() > 0
+                && context.game().startGame(gameId);
+        context.onCreated().run();
+        context.dialog().close();
+        if (started) {
+            context.dialog().getUI().ifPresent(ui -> ui.navigate(MainView.class,
+                    new RouteParameters("gameId", gameId.value())));
+        }
+    }
+
+    private record WizardActionContext(GameService game, Runnable onCreated, String hostName,
+                                       TextField gameName, TextField empireName, Checkbox joinAfterCreate,
+                                       FormInputs formInputs, List<ComboBox<ColorOption>> seatColorInputs,
+                                       AtomicReference<GameSetup> confirmedSetup, Div confirmation,
+                                       VerticalLayout body, Button back, Button create, Dialog dialog) {}
 
     private static void rebuildStartProduction(FormLayout fields, List<IntegerField> inputs, List<ComboBox<ColorOption>> colors,
                                                IntegerField humans, IntegerField ai) {
@@ -278,6 +350,90 @@ final class CreateGameWizardDialog {
                 sliderValue(in.combatRandomness(), GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT),
                 new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), in.attackOrder().getValue())
         ).normalized();
+    }
+
+    private static void applyNormalizedColors(List<ComboBox<ColorOption>> inputs, GameSetup setup) {
+        for (int index = 0; index < inputs.size() && index < setup.seatColorHexes().size(); index++) {
+            String normalizedHex = setup.seatColorHexes().get(index);
+            inputs.get(index).setValue(colorOptions().stream()
+                    .filter(option -> option.hex().equals(normalizedHex))
+                    .findFirst().orElse(colorOptions().getFirst()));
+        }
+    }
+
+    private static Div buildConfirmation(GameSetup setup, String gameName) {
+        Div content = new Div();
+        content.addClassName("wizard-confirmation-content");
+        Div summary = new Div();
+        summary.addClassName("wizard-summary-grid");
+        summary.add(summaryLine(UiTexts.LOBBY_SUMMARY_NAME, gameName),
+                summaryLine(UiTexts.LOBBY_SUMMARY_VISIBILITY, I18n.t(UiTexts.GAME_PRIVATE)),
+                summaryLine(UiTexts.LOBBY_SUMMARY_SYSTEMS, setup.systemCount()),
+                summaryLine(UiTexts.LOBBY_SUMMARY_PLAYERS, setup.humanPlayers(), setup.aiPlayers()),
+                summaryLine(UiTexts.LOBBY_SUMMARY_GALAXY, I18n.t(setup.galaxyLayout() == GalaxyLayout.EVEN
+                        ? UiTexts.LOBBY_GALAXY_LAYOUT_EVEN : UiTexts.LOBBY_GALAXY_LAYOUT_RANDOM)),
+                summaryLine(UiTexts.LOBBY_SUMMARY_GARRISON, setup.startGarrison()),
+                summaryLine(UiTexts.LOBBY_SUMMARY_NEUTRAL_PRODUCTION,
+                        setup.neutralMinProduction(), setup.neutralMaxProduction()),
+                summaryLine(UiTexts.LOBBY_SUMMARY_ROUNDS, DurationLabels.label(setup.roundRules().roundLimit()),
+                        DurationLabels.label(setup.roundRules().stragglerLimit())),
+                summaryLine(UiTexts.LOBBY_SUMMARY_COMBAT, setup.combatRandomnessPercent(),
+                        I18n.t(setup.battlePresentationEnabled() ? UiTexts.LOBBY_SUMMARY_ENABLED
+                                : UiTexts.LOBBY_SUMMARY_DISABLED)),
+                summaryLine(UiTexts.LOBBY_SUMMARY_RULES, I18n.t(setup.roundRules().attackOrder() == AttackOrder.RANDOM
+                        ? UiTexts.LOBBY_ATTACK_ORDER_RANDOM : UiTexts.LOBBY_ATTACK_ORDER_STRONGEST_FIRST)),
+                summaryLine(UiTexts.LOBBY_SUMMARY_ACCESS,
+                        I18n.t(setup.observersAllowed() ? UiTexts.LOBBY_SUMMARY_OBSERVERS_ALLOWED
+                                : UiTexts.LOBBY_SUMMARY_OBSERVERS_BLOCKED),
+                        I18n.t(setup.reentryAllowed() ? UiTexts.LOBBY_SUMMARY_REENTRY_ALLOWED
+                                : UiTexts.LOBBY_SUMMARY_REENTRY_BLOCKED)));
+        for (int index = 0; index < setup.totalPlayers(); index++) {
+            summary.add(summaryLine(UiTexts.LOBBY_SUMMARY_START_PRODUCTION,
+                    index < setup.humanPlayers() ? I18n.t(UiTexts.LOBBY_SUMMARY_HUMAN, index + 1)
+                            : I18n.t(UiTexts.LOBBY_SUMMARY_AI, index - setup.humanPlayers() + 1),
+                    setup.startProductionForSeat(index)));
+        }
+        Div colors = new Div();
+        colors.addClassName("wizard-summary-colors");
+        for (int index = 0; index < setup.totalPlayers(); index++) {
+            Span seat = new Span(I18n.t(index < setup.humanPlayers()
+                    ? UiTexts.LOBBY_FIELD_START_PRODUCTION_HUMAN : UiTexts.LOBBY_FIELD_START_PRODUCTION_AI,
+                    index < setup.humanPlayers() ? index + 1 : index - setup.humanPlayers() + 1));
+            seat.addClassName("wizard-summary-color");
+            seat.getStyle().set("--seat-color", setup.colorForSeat(index));
+            colors.add(seat);
+        }
+        content.add(summary, colors, galaxyPreview(setup.galaxyLayout()));
+        return content;
+    }
+
+    private static Span summaryLine(String key, Object... values) {
+        Span line = new Span(I18n.t(key, values));
+        line.addClassName("wizard-summary-line");
+        return line;
+    }
+
+    private static Div galaxyPreview(GalaxyLayout layout) {
+        Div preview = new Div();
+        preview.addClassName("wizard-galaxy-preview");
+        preview.addClassName(layout == GalaxyLayout.EVEN ? "wizard-galaxy-even" : "wizard-galaxy-random");
+        preview.add(new Span(I18n.t(UiTexts.LOBBY_SUMMARY_SCHEMATIC)));
+        Div stars = new Div();
+        stars.addClassName("wizard-galaxy-stars");
+        double[][] evenPositions = {{12, 18}, {34, 16}, {57, 19}, {82, 14}, {22, 43}, {48, 42},
+                {73, 44}, {12, 72}, {38, 68}, {62, 74}, {86, 69}, {50, 88}};
+        double[][] randomPositions = {{8, 20}, {31, 12}, {67, 25}, {85, 11}, {17, 47}, {48, 36},
+                {77, 53}, {29, 76}, {58, 66}, {91, 81}, {6, 88}, {48, 91}};
+        double[][] positions = layout == GalaxyLayout.EVEN ? evenPositions : randomPositions;
+        for (double[] position : positions) {
+            Span star = new Span("✦");
+            star.addClassName("wizard-galaxy-star");
+            star.getStyle().set(CssProperties.LEFT, position[0] + "%");
+            star.getStyle().set(CssProperties.TOP, position[1] + "%");
+            stars.add(star);
+        }
+        preview.add(stars);
+        return preview;
     }
 
     private static String labelFor(ProductionDistribution value) {
@@ -410,16 +566,16 @@ final class CreateGameWizardDialog {
 
     private static List<ColorOption> colorOptions() {
         return List.of(
-                new ColorOption("Kobaltblau", "#0072B2"),
-                new ColorOption("Bernstein", "#E69F00"),
-                new ColorOption("Smaragd", "#009E73"),
-                new ColorOption("Zinnober", "#D55E00"),
-                new ColorOption("Magenta", "#CC79A7"),
-                new ColorOption("Himmelblau", "#56B4E9"),
-                new ColorOption("Gold", "#F0E442"),
-                new ColorOption("Karminrot", "#C0392B"),
-                new ColorOption("Türkis", "#00A6A6"),
-                new ColorOption("Violett", "#7A4EAB")
+                new ColorOption(I18n.t(UiTexts.LOBBY_COLOR_COBALT), "#0072B2"),
+                new ColorOption(I18n.t(UiTexts.LOBBY_COLOR_AMBER), "#E69F00"),
+                new ColorOption(I18n.t(UiTexts.LOBBY_COLOR_EMERALD), "#009E73"),
+                new ColorOption(I18n.t(UiTexts.LOBBY_COLOR_VERMILION), "#D55E00"),
+                new ColorOption(I18n.t(UiTexts.LOBBY_COLOR_MAGENTA), "#CC79A7"),
+                new ColorOption(I18n.t(UiTexts.LOBBY_COLOR_SKY), "#56B4E9"),
+                new ColorOption(I18n.t(UiTexts.LOBBY_COLOR_GOLD), "#F0E442"),
+                new ColorOption(I18n.t(UiTexts.LOBBY_COLOR_CRIMSON), "#C0392B"),
+                new ColorOption(I18n.t(UiTexts.LOBBY_COLOR_TURQUOISE), "#00A6A6"),
+                new ColorOption(I18n.t(UiTexts.LOBBY_COLOR_VIOLET), "#7A4EAB")
         );
     }
 

@@ -4,8 +4,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
@@ -15,6 +14,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.TextField;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.BattleReplay;
@@ -25,6 +25,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -38,9 +39,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private enum EventCategory { PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD }
 
-    private final Grid<FleetView> fleetGrid = new Grid<>(FleetView.class, false);
-    private final Grid<PlannedOrder> ordersGrid = new Grid<>(PlannedOrder.class, false);
-    private final Grid<StandingOrderView> relocationsGrid = new Grid<>(StandingOrderView.class, false);
+    private enum LogisticsFilter { NET_INFLOW, FREE_CAPACITY, DELIVERY_BOTTLENECK, NO_OUTGOING_ROUTE }
+
     private final VerticalLayout contactsPage = page();
     private final VerticalLayout detailsPage = page();
     private final VerticalLayout fleetsPage = page();
@@ -54,8 +54,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final List<Tab> sectionTabs;
     private final Tab reportTab;
 
-    private boolean syncingSelection;
-    private boolean syncingStandingSelection;
     private boolean readOnly;
     private boolean battlePresentationEnabled;
     private @Nullable GameId gameId;
@@ -63,6 +61,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private @Nullable Integer selectedFleetId;
     private @Nullable Integer selectedStandingOrderId;
     private final EnumSet<EventCategory> enabledEventCategories = EnumSet.allOf(EventCategory.class);
+    private final EnumSet<LogisticsFilter> enabledLogisticsFilters = EnumSet.noneOf(LogisticsFilter.class);
     private final IntConsumer onReportSystemSelected;
     private final IntConsumer onResolvedBattleSelected;
     private final IntConsumer onStandingOrderSelected;
@@ -72,6 +71,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final Runnable onBattleAcknowledged;
     private final BattleAcknowledgements acknowledgements;
     private @Nullable Integer selectedReportSystemId;
+    private final IntConsumer onFleetRowSelected;
+    private final Consumer<PlannedOrder> onCancelOrder;
+    private String routeFilter = "";
 
     FleetAndOrdersPanel(BattleAcknowledgements acknowledgements,
                         Consumer<PlannedOrder> onCancelOrder,
@@ -84,6 +86,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                         IntConsumer onResolvedBattleSelected,
                         BiConsumer<Integer, Integer> onGarrisonReserveChanged) {
         this.onReportSystemSelected = onReportSystemSelected;
+        this.onFleetRowSelected = onFleetRowSelected;
+        this.onCancelOrder = onCancelOrder;
         this.onResolvedBattleSelected = onResolvedBattleSelected;
         this.onStandingOrderSelected = onStandingOrderSelected;
         this.onGarrisonReserveChanged = onGarrisonReserveChanged;
@@ -112,12 +116,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         tabs.addClassName("map-sidebar-tabs");
         tabs.addSelectedChangeListener(event -> showSection(sectionOf(event.getSelectedTab())));
 
-        configureFleetGrid(onFleetRowSelected);
-        configureOrdersGrid(onCancelOrder);
-        configureRelocationsGrid();
-        fleetsPage.add(header(UiTexts.MAP_OWN_FLEETS), fleetGrid);
-        ordersPage.add(header(UiTexts.MAP_PLANNED_ORDERS), ordersGrid);
-        relocationsPage.add(header(UiTexts.MAP_STANDING_ORDERS_HEADER), relocationsGrid);
         add(tabs, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, reportPage);
         showSection(Section.CONTACTS);
     }
@@ -136,22 +134,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         int reportTurn = report != null ? report.turn() : view.turn() - 1;
         battlePresentationEnabled = BattlePresentationPreference.enabled(gameId, reportTurn,
                 view.battlePresentationEnabled());
-        fleetGrid.setItems(UiMapper.toFleetViews(view));
-        ordersGrid.setItems(view.plannedOrders());
-        syncingStandingSelection = true;
-        try {
-            relocationsGrid.setItems(view.standingOrders());
-            relocationsGrid.getGenericDataView().getItems()
-                    .filter(order -> Objects.equals(order.id(), selectedStandingOrderId))
-                    .findFirst().ifPresentOrElse(relocationsGrid::select, relocationsGrid::deselectAll);
-        } finally {
-            syncingStandingSelection = false;
-        }
+        renderTravelCards(view);
         renderContacts(view);
         renderDetails(view);
         renderLogistics(view);
         renderReport(view);
-        syncFleetSelection();
     }
 
     void setViewsVisible(boolean visible) {
@@ -194,16 +181,22 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         logisticsPage.removeAll();
         logisticsPage.add(header(UiTexts.MAP_SIDEBAR_LOGISTICS),
                 new Paragraph(I18n.t(UiTexts.MAP_LOGISTICS_INTRO)));
+        Map<Integer, LogisticsSystemSummary> summaries = LogisticsSystemSummary.forSystems(view.systems(),
+                view.standingOrders());
+        addLogisticsFilters();
         List<VisibleSystem> ownSystems = view.systems().stream()
                 .filter(VisibleSystem::fullyVisible)
-                .filter(system -> system.routedProduction() != null)
-                .sorted((left, right) -> Integer.compare(logisticsPriority(right, view), logisticsPriority(left, view)))
+                .filter(system -> summaries.containsKey(system.id()))
+                .filter(system -> matchesLogisticsFilters(logisticsSummary(summaries, system.id())))
+                .sorted((left, right) -> Integer.compare(logisticsPriority(right, summaries),
+                        logisticsPriority(left, summaries)))
                 .toList();
         if (ownSystems.isEmpty()) {
             logisticsPage.add(new Paragraph(I18n.t(UiTexts.MAP_LOGISTICS_EMPTY)));
             return;
         }
-        ownSystems.forEach(system -> logisticsPage.add(logisticsSystemCard(system, view.standingOrders())));
+        ownSystems.forEach(system -> logisticsPage.add(logisticsSystemCard(system,
+                logisticsSummary(summaries, system.id()))));
         if (!view.standingOrders().isEmpty()) {
             Div routes = new Div();
             routes.addClassName("logistics-routes");
@@ -212,39 +205,85 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
     }
 
-    private static int logisticsPriority(VisibleSystem system, PlayerViewState view) {
-        ProductionFlow flow = ProductionFlow.at(system.id(), view.standingOrders());
-        return Math.abs(flow.incoming() - flow.outgoing());
+    private void addLogisticsFilters() {
+        VerticalLayout filters = new VerticalLayout();
+        filters.setPadding(false);
+        filters.setSpacing(false);
+        addLogisticsFilter(filters, LogisticsFilter.NET_INFLOW, UiTexts.MAP_LOGISTICS_FILTER_NET_INFLOW);
+        addLogisticsFilter(filters, LogisticsFilter.FREE_CAPACITY, UiTexts.MAP_LOGISTICS_FILTER_FREE_CAPACITY);
+        addLogisticsFilter(filters, LogisticsFilter.DELIVERY_BOTTLENECK, UiTexts.MAP_LOGISTICS_FILTER_BOTTLENECK);
+        addLogisticsFilter(filters, LogisticsFilter.NO_OUTGOING_ROUTE, UiTexts.MAP_LOGISTICS_FILTER_NO_OUTGOING);
+        Details details = new Details(I18n.t(UiTexts.MAP_LOGISTICS_FILTERS), filters);
+        logisticsPage.add(details);
     }
 
-    private static Div logisticsSystemCard(VisibleSystem system, List<StandingOrderView> orders) {
-        ProductionFlow flow = ProductionFlow.at(system.id(), orders);
-        int production = valueOrZero(system.productionPerTurn());
-        int netFlow = flow.incoming() - flow.outgoing();
-        int plannedBalance = production + netFlow;
+    private void addLogisticsFilter(VerticalLayout filters, LogisticsFilter filter, String key) {
+        Checkbox checkbox = new Checkbox(I18n.t(key), enabledLogisticsFilters.contains(filter));
+        checkbox.addValueChangeListener(event -> {
+            if (event.getValue()) {
+                enabledLogisticsFilters.add(filter);
+            } else {
+                enabledLogisticsFilters.remove(filter);
+            }
+            PlayerViewState view = currentView;
+            if (view != null) {
+                renderLogistics(view);
+            }
+        });
+        filters.add(checkbox);
+    }
+
+    private boolean matchesLogisticsFilters(LogisticsSystemSummary summary) {
+        return (!enabledLogisticsFilters.contains(LogisticsFilter.NET_INFLOW) || summary.netFlow() > 0)
+                && (!enabledLogisticsFilters.contains(LogisticsFilter.FREE_CAPACITY)
+                || summary.freePlanningCapacity() > 0)
+                && (!enabledLogisticsFilters.contains(LogisticsFilter.DELIVERY_BOTTLENECK)
+                || summary.deliveryBottleneck())
+                && (!enabledLogisticsFilters.contains(LogisticsFilter.NO_OUTGOING_ROUTE)
+                || summary.plannedOutgoing() == 0);
+    }
+
+    private static int logisticsPriority(VisibleSystem system, Map<Integer, LogisticsSystemSummary> summaries) {
+        LogisticsSystemSummary summary = logisticsSummary(summaries, system.id());
+        return (summary.deliveryBottleneck() ? 10_000 : 0) + Math.abs(summary.netFlow());
+    }
+
+    private static LogisticsSystemSummary logisticsSummary(Map<Integer, LogisticsSystemSummary> summaries, int systemId) {
+        return Objects.requireNonNull(summaries.get(systemId));
+    }
+
+    private static Div logisticsSystemCard(VisibleSystem system, LogisticsSystemSummary summary) {
         Div card = new Div();
         card.addClassName("logistics-system-card");
         Span name = new Span(system.name());
         name.addClassName("logistics-system-name");
-        Span direction = new Span(netFlow > 0 ? "↓ " + I18n.t(UiTexts.MAP_LOGISTICS_SINK)
-                : netFlow < 0 ? "↑ " + I18n.t(UiTexts.MAP_LOGISTICS_SOURCE)
+        Span direction = new Span(summary.netFlow() > 0 ? "↓ " + I18n.t(UiTexts.MAP_LOGISTICS_SINK)
+                : summary.netFlow() < 0 ? "↑ " + I18n.t(UiTexts.MAP_LOGISTICS_SOURCE)
                 : "◆ " + I18n.t(UiTexts.MAP_LOGISTICS_BALANCED));
         direction.addClassName("logistics-system-direction");
-        Div metrics = new Div(logisticsMetric("⚙", "P", production), logisticsMetric("↓", "I", flow.incoming()),
-                logisticsMetric("↑", "O", flow.outgoing()), logisticsMetric("Σ", "P+I−O", plannedBalance));
+        Div metrics = new Div(logisticsMetric("⚙", "P", summary.production()),
+                logisticsMetric("↓", "I", summary.plannedIncoming()),
+                logisticsMetric("↑", "O", summary.plannedOutgoing()),
+                logisticsMetric("Σ", "P+I−O", summary.plannedAccumulation()));
         metrics.addClassName("logistics-metrics");
         Span reserve = new Span(I18n.t(UiTexts.MAP_LOGISTICS_RESERVE_AVAILABLE,
-                valueOrZero(system.garrisonReserve()), valueOrZero(system.availableShips())));
+                summary.reserve(), summary.availableShips()));
         reserve.addClassName("logistics-system-reserve");
-        card.add(name, direction, metrics, reserve);
+        Span delivery = new Span(I18n.t(summary.deliveryBottleneck()
+                ? UiTexts.MAP_LOGISTICS_DELIVERY_BOTTLENECK : UiTexts.MAP_LOGISTICS_NEXT_DELIVERY,
+                summary.nextDelivery()));
+        delivery.addClassName(summary.deliveryBottleneck() ? "logistics-delivery-bottleneck" : "logistics-delivery");
+        card.add(name, direction, metrics, reserve, delivery);
         return card;
     }
 
     private Div logisticsRouteCard(StandingOrderView order) {
         Div card = new Div();
         card.addClassName("logistics-route-card");
+        Button edit = new Button(I18n.t(UiTexts.MAP_ACTION_EDIT_STANDING), _ -> onEditStandingOrder.accept(order));
+        edit.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
         card.add(new Span(order.fromSystem() + " → " + order.toSystem()),
-                new Span("◆ " + order.ships() + " / " + I18n.t(UiTexts.MAP_LOGISTICS_PER_TURN)));
+                new Span("◆ " + order.ships() + " / " + I18n.t(UiTexts.MAP_LOGISTICS_PER_TURN)), edit);
         card.addClickListener(_ -> onStandingOrderSelected.accept(order.id()));
         card.getElement().setAttribute("role", "button");
         card.getElement().setAttribute("tabindex", "0");
@@ -429,13 +468,18 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         reportPage.add(header(UiTexts.MAP_SIDEBAR_REPORT));
         Div filters = new Div();
         filters.addClassName("report-filter-bar");
-        filters.add(new Span(I18n.t(UiTexts.ROUND_FILTER_LABEL)));
-        addReportFilter(filters, EventCategory.PRODUCTION, UiTexts.ROUND_FILTER_PRODUCTION);
-        addReportFilter(filters, EventCategory.REINFORCEMENT, UiTexts.ROUND_FILTER_REINFORCEMENT);
-        addReportFilter(filters, EventCategory.BATTLE_WON, UiTexts.ROUND_FILTER_BATTLE_WON);
-        addReportFilter(filters, EventCategory.BATTLE_LOST, UiTexts.ROUND_FILTER_BATTLE_LOST);
-        addReportFilter(filters, EventCategory.SYSTEM_LOST, UiTexts.ROUND_FILTER_SYSTEM_LOST);
-        addReportFilter(filters, EventCategory.DEFENSE_HELD, UiTexts.ROUND_FILTER_DEFENSE_HELD);
+        TurnReport report = view.report();
+        List<TurnEvent> events = report != null ? report.events() : List.of();
+        VerticalLayout filterOptions = new VerticalLayout();
+        filterOptions.setPadding(false);
+        filterOptions.setSpacing(false);
+        filterOptions.addClassName("report-filter-options");
+        addReportFilter(filterOptions, events, EventCategory.PRODUCTION, UiTexts.ROUND_FILTER_PRODUCTION);
+        addReportFilter(filterOptions, events, EventCategory.REINFORCEMENT, UiTexts.ROUND_FILTER_REINFORCEMENT);
+        addReportFilter(filterOptions, events, EventCategory.BATTLE_WON, UiTexts.ROUND_FILTER_BATTLE_WON);
+        addReportFilter(filterOptions, events, EventCategory.BATTLE_LOST, UiTexts.ROUND_FILTER_BATTLE_LOST);
+        addReportFilter(filterOptions, events, EventCategory.SYSTEM_LOST, UiTexts.ROUND_FILTER_SYSTEM_LOST);
+        addReportFilter(filterOptions, events, EventCategory.DEFENSE_HELD, UiTexts.ROUND_FILTER_DEFENSE_HELD);
         Checkbox presentation = new Checkbox(I18n.t(UiTexts.BATTLE_PRESENTATION_TOGGLE), battlePresentationEnabled);
         presentation.addValueChangeListener(event -> {
             GameId current = gameId;
@@ -447,12 +491,23 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 renderReport(view);
             }
         });
-        filters.add(presentation);
+        filterOptions.add(presentation);
+        Details filterDetails = new Details(new Span(I18n.t(UiTexts.ROUND_FILTER_SUMMARY,
+                enabledEventCategories.size(), EventCategory.values().length)), filterOptions);
+        filterDetails.addClassName("report-filter-details");
+        filters.add(filterDetails);
+        List<Integer> pendingBattles = pendingBattleIndices(events);
+        if (!pendingBattles.isEmpty()) {
+            Button nextBattle = new Button(I18n.t(UiTexts.ROUND_NEXT_OPEN_BATTLE),
+                    _ -> openNextPendingBattle(events, pendingBattles.getFirst()));
+            nextBattle.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
+            nextBattle.setTooltipText(I18n.t(UiTexts.ROUND_OPEN_BATTLES, pendingBattles.size()));
+            filters.add(nextBattle);
+        }
         reportPage.add(filters);
-        TurnReport report = view.report();
-        List<TurnEvent> events = report != null ? report.events() : List.of();
         List<Integer> filtered = java.util.stream.IntStream.range(0, events.size()).boxed()
-                .filter(eventIndex -> isEventEnabled(events.get(eventIndex))).toList();
+                .filter(eventIndex -> isEventEnabled(events.get(eventIndex)))
+                .sorted(java.util.Comparator.comparingInt(this::eventPriority)).toList();
         if (events.isEmpty()) {
             reportPage.add(new Paragraph(I18n.t(UiTexts.ROUND_NO_EVENTS)));
             return;
@@ -466,8 +521,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
     }
 
-    private void addReportFilter(Div filters, EventCategory category, String key) {
-        Checkbox filter = new Checkbox(I18n.t(key), enabledEventCategories.contains(category));
+    private void addReportFilter(VerticalLayout filters, List<TurnEvent> events,
+                                 EventCategory category, String key) {
+        long count = events.stream().filter(event -> categoryOf(event).filter(category::equals).isPresent()).count();
+        Checkbox filter = new Checkbox(I18n.t(key) + " (" + count + ")", enabledEventCategories.contains(category));
         filter.addClassName("report-filter-item");
         filter.addValueChangeListener(event -> {
             if (Boolean.TRUE.equals(event.getValue())) {
@@ -481,6 +538,38 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             }
         });
         filters.add(filter);
+    }
+
+    private int eventPriority(int eventIndex) {
+        PlayerViewState view = currentView;
+        TurnReport report = view == null ? null : view.report();
+        List<TurnEvent> events = report == null ? List.of() : report.events();
+        TurnEvent event = events.get(eventIndex);
+        if (isEventPending(eventIndex)) {
+            return 0;
+        }
+        return switch (event) {
+            case TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
+            case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
+            case TurnEvent.Reinforcement _ -> 3;
+            case TurnEvent.Production _ -> 4;
+        };
+    }
+
+    private List<Integer> pendingBattleIndices(List<TurnEvent> events) {
+        return java.util.stream.IntStream.range(0, events.size()).boxed().filter(this::isEventPending).toList();
+    }
+
+    private void openNextPendingBattle(List<TurnEvent> events, int eventIndex) {
+        TurnEvent event = events.get(eventIndex);
+        BattleReplay replay = BattleReplay.from(event).orElse(null);
+        event.battleSystemId().ifPresent(onReportSystemSelected);
+        Runnable acknowledge = battleAcknowledgement(event, eventIndex);
+        if (battlePresentationEnabled && replay != null) {
+            BattleReplayDialog.open(replay, battleSides(event), acknowledge);
+        } else {
+            acknowledge.run();
+        }
     }
 
     private @Nullable PlayerViewState currentView;
@@ -685,28 +774,94 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         };
     }
 
-    private void configureFleetGrid(IntConsumer onFleetRowSelected) {
-        fleetGrid.addComponentColumn(this::fleetCard).setHeader("").setFlexGrow(1);
-        fleetGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COMPACT);
-        fleetGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
-        fleetGrid.setHeight("min(58vh, 680px)");
-        fleetGrid.addSelectionListener(event -> {
-            if (!syncingSelection) {
-                onFleetRowSelected.accept(event.getFirstSelectedItem().map(FleetView::fleetId).orElse(-1));
-            }
-        });
+    private void renderTravelCards(PlayerViewState view) {
+        fleetsPage.removeAll();
+        ordersPage.removeAll();
+        relocationsPage.removeAll();
+        TextField filter = routeFilter();
+        fleetsPage.add(header(UiTexts.MAP_OWN_FLEETS), filter);
+        ordersPage.add(header(UiTexts.MAP_PLANNED_ORDERS), routeFilter());
+        relocationsPage.add(header(UiTexts.MAP_STANDING_ORDERS_HEADER), routeFilter());
+
+        List<FleetView> fleets = UiMapper.toFleetViews(view).stream()
+                .filter(fleet -> matchesRoute(fleet.fromName(), fleet.toName()))
+                .sorted(java.util.Comparator.comparingInt((FleetView fleet) -> view.turn() + fleet.eta())
+                        .thenComparingInt(FleetView::fleetId))
+                .toList();
+        addArrivalGroups(fleetsPage, fleets, fleet -> view.turn() + fleet.eta(), this::fleetCard);
+
+        List<PlannedOrder> orders = view.plannedOrders().stream()
+                .filter(order -> matchesRoute(order.fromSystem(), order.toSystem()))
+                .sorted(java.util.Comparator.comparingInt(this::orderArrival).thenComparingInt(PlannedOrder::index))
+                .toList();
+        addArrivalGroups(ordersPage, orders, this::orderArrival, this::orderCard);
+
+        List<StandingOrderView> relocations = view.standingOrders().stream()
+                .filter(order -> matchesRoute(order.fromSystem(), order.toSystem()))
+                .sorted(java.util.Comparator.comparing(StandingOrderView::fromSystem)
+                        .thenComparing(StandingOrderView::toSystem).thenComparingInt(StandingOrderView::id))
+                .toList();
+        if (relocations.isEmpty()) {
+            relocationsPage.add(emptyTravelState());
+        } else {
+            relocations.forEach(order -> relocationsPage.add(relocationCard(order)));
+        }
     }
 
-    private void configureOrdersGrid(Consumer<PlannedOrder> onCancelOrder) {
-        ordersGrid.addComponentColumn(order -> {
-            Div card = orderCard(order);
-            Button cancel = new Button(I18n.t(UiTexts.MAP_ACTION_CANCEL_ORDER), _ -> onCancelOrder.accept(order));
-            cancel.setVisible(!readOnly);
-            cancel.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.SMALL, ButtonVariant.TERTIARY);
-            card.add(cancel);
-            return card;
-        }).setHeader("").setFlexGrow(1);
-        ordersGrid.setAllRowsVisible(true);
+    private TextField routeFilter() {
+        TextField filter = new TextField(I18n.t(UiTexts.MAP_TRAVEL_FILTER));
+        filter.setPlaceholder(I18n.t(UiTexts.MAP_TRAVEL_FILTER_PLACEHOLDER));
+        filter.setValue(routeFilter);
+        filter.setClearButtonVisible(true);
+        filter.addValueChangeListener(event -> {
+            routeFilter = event.getValue();
+            PlayerViewState view = currentView;
+            if (view != null) {
+                renderTravelCards(view);
+            }
+        });
+        return filter;
+    }
+
+    private boolean matchesRoute(String from, String to) {
+        String filter = routeFilter.strip();
+        return filter.isEmpty() || (from + " " + to).toLowerCase(java.util.Locale.ROOT)
+                .contains(filter.toLowerCase(java.util.Locale.ROOT));
+    }
+
+    private <T> void addArrivalGroups(VerticalLayout page, List<T> items,
+                                      java.util.function.ToIntFunction<T> arrival,
+                                      java.util.function.Function<T, Div> card) {
+        if (items.isEmpty()) {
+            page.add(emptyTravelState());
+            return;
+        }
+        int previousArrival = Integer.MIN_VALUE;
+        for (T item : items) {
+            int itemArrival = arrival.applyAsInt(item);
+            if (itemArrival != previousArrival) {
+                page.add(arrivalGroup(itemArrival));
+                previousArrival = itemArrival;
+            }
+            page.add(card.apply(item));
+        }
+    }
+
+    private static Span arrivalGroup(int arrivalTurn) {
+        Span group = new Span(I18n.t(UiTexts.MAP_TRAVEL_ARRIVAL_GROUP, arrivalTurn));
+        group.addClassName("fleet-travel-group");
+        return group;
+    }
+
+    private static Paragraph emptyTravelState() {
+        Paragraph empty = new Paragraph(I18n.t(UiTexts.MAP_TRAVEL_EMPTY));
+        empty.addClassName("fleet-travel-empty");
+        return empty;
+    }
+
+    private int orderArrival(PlannedOrder order) {
+        Integer arrival = order.arrivalTurn();
+        return arrival != null ? arrival : Integer.MAX_VALUE;
     }
 
     private Div fleetCard(FleetView fleet) {
@@ -722,10 +877,16 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 + (arrivalTurn < 0 ? "—" : arrivalTurn) + " · " + I18n.t(UiTexts.MAP_COLUMN_ETA) + ": " + fleet.eta());
         arrival.addClassName("fleet-travel-arrival");
         card.add(top, route, travelProgress(fleet), arrival);
+        card.addClickListener(_ -> onFleetRowSelected.accept(fleet.fleetId()));
+        card.getElement().setAttribute("role", "button");
+        card.getElement().setAttribute("tabindex", "0");
+        if (Integer.valueOf(fleet.fleetId()).equals(selectedFleetId)) {
+            card.addClassName("fleet-travel-card-selected");
+        }
         return card;
     }
 
-    private static Div orderCard(PlannedOrder order) {
+    private Div orderCard(PlannedOrder order) {
         Div card = new Div();
         card.addClassNames("fleet-travel-card", "fleet-travel-card-planned");
         Div top = new Div();
@@ -736,6 +897,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         Span arrival = new Span(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": " + value(order.arrivalTurn()));
         arrival.addClassName("fleet-travel-arrival");
         card.add(top, route, arrival);
+        if (!readOnly) {
+            Button cancel = new Button(I18n.t(UiTexts.MAP_ACTION_CANCEL_ORDER), _ -> onCancelOrder.accept(order));
+            cancel.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+            card.add(cancel);
+        }
         return card;
     }
 
@@ -765,40 +931,26 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return number;
     }
 
-    private void configureRelocationsGrid() {
-        relocationsGrid.addColumn(StandingOrderView::fromSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_FROM)).setAutoWidth(true);
-        relocationsGrid.addColumn(StandingOrderView::toSystem).setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_TO)).setAutoWidth(true);
-        relocationsGrid.addColumn(StandingOrderView::ships)
-                .setHeader(I18n.t(UiTexts.MAP_COLUMN_STANDING_SHIPS)).setAutoWidth(true);
-        relocationsGrid.addComponentColumn(order -> {
+    private Div relocationCard(StandingOrderView order) {
+        Div card = new Div();
+        card.addClassNames("fleet-travel-card", "fleet-travel-card-relocation");
+        card.add(new Span("⇢ " + I18n.t(UiTexts.MAP_ORDER_TYPE_STANDING)),
+                new Span(order.fromSystem() + " → " + order.toSystem()),
+                fleetNumber(order.ships() + " / " + I18n.t(UiTexts.MAP_LOGISTICS_PER_TURN)));
+        if (!readOnly) {
             Button edit = new Button(I18n.t(UiTexts.MAP_ACTION_EDIT_STANDING), _ -> onEditStandingOrder.accept(order));
-            edit.setVisible(!readOnly);
             edit.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
-            return edit;
-        }).setHeader("").setAutoWidth(true).setFlexGrow(0);
-        relocationsGrid.addComponentColumn(order -> {
             Button delete = new Button(I18n.t(UiTexts.MAP_ACTION_DELETE_STANDING), _ -> onDeleteStandingOrder.accept(order));
-            delete.setVisible(!readOnly);
             delete.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY, ButtonVariant.ERROR);
-            return delete;
-        }).setHeader("").setAutoWidth(true).setFlexGrow(0);
-        relocationsGrid.setAllRowsVisible(true);
-        relocationsGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
-        relocationsGrid.addSelectionListener(event -> {
-            if (!syncingStandingSelection) {
-                onStandingOrderSelected.accept(event.getFirstSelectedItem().map(StandingOrderView::id).orElse(-1));
-            }
-        });
-    }
-
-    private void syncFleetSelection() {
-        syncingSelection = true;
-        try {
-            fleetGrid.getGenericDataView().getItems().filter(row -> Objects.equals(row.fleetId(), selectedFleetId))
-                    .findFirst().ifPresentOrElse(fleetGrid::select, fleetGrid::deselectAll);
-        } finally {
-            syncingSelection = false;
+            card.add(new HorizontalLayout(edit, delete));
         }
+        card.addClickListener(_ -> onStandingOrderSelected.accept(order.id()));
+        card.getElement().setAttribute("role", "button");
+        card.getElement().setAttribute("tabindex", "0");
+        if (Integer.valueOf(order.id()).equals(selectedStandingOrderId)) {
+            card.addClassName("fleet-travel-card-selected");
+        }
+        return card;
     }
 
     private void showSection(Section section) {

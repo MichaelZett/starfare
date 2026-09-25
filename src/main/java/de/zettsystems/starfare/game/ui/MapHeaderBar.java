@@ -21,9 +21,10 @@ final class MapHeaderBar extends HorizontalLayout {
     private final Span roundLabel = new Span();
     private final EmpireStatsBar empireStats = new EmpireStatsBar();
     private final Button next;
+    private final Button logistics;
     private final MenuItem leaveItem;
 
-    MapHeaderBar(Runnable onNext, Runnable onLeave, Runnable onLobby) {
+    MapHeaderBar(Runnable onNext, Runnable onToggleLogistics, Runnable onLeave, Runnable onLobby) {
         H1 title = new H1(I18n.t(UiTexts.MAP_HEADER_TITLE));
         title.addClassName("app-header-title");
         gameNameLabel.addClassName("app-header-game");
@@ -32,6 +33,8 @@ final class MapHeaderBar extends HorizontalLayout {
 
         next = new Button(I18n.t(UiTexts.MAP_NEXT_ROUND), _ -> onNext.run());
         next.addThemeVariants(ButtonVariant.PRIMARY);
+        logistics = new Button(I18n.t(UiTexts.MAP_LOGISTICS_MODE), _ -> onToggleLogistics.run());
+        logistics.addThemeVariants(ButtonVariant.TERTIARY);
 
         MenuBar headerMenu = new MenuBar();
         headerMenu.addClassName("app-header-menu");
@@ -45,7 +48,7 @@ final class MapHeaderBar extends HorizontalLayout {
         headerLeft.setSpacing(true);
         headerLeft.addClassName("app-header-left");
 
-        var headerRight = new HorizontalLayout(new LanguageSwitcher(), next, headerMenu);
+        var headerRight = new HorizontalLayout(new LanguageSwitcher(), logistics, next, headerMenu);
         headerRight.setAlignItems(Alignment.CENTER);
         headerRight.setSpacing(true);
         headerRight.addClassName("app-header-right");
@@ -77,6 +80,14 @@ final class MapHeaderBar extends HorizontalLayout {
 
     void setNextVisible(boolean visible) {
         next.setVisible(visible);
+    }
+
+    void setLogisticsActive(boolean active) {
+        if (active) {
+            logistics.addThemeVariants(ButtonVariant.PRIMARY);
+        } else {
+            logistics.removeThemeVariants(ButtonVariant.PRIMARY);
+        }
     }
 
     void setEmpireStatsVisible(boolean visible) {
