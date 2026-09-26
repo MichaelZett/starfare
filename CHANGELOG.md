@@ -35,8 +35,12 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   geplanten Zufluss und Ausgang getrennt von der nächsten möglichen Lieferung,
   markiert Lieferengpässe und bietet passende Filter sowie unmittelbares Anpassen.
 
-- Identity-Baustein auf Version 1.0.0 aus Maven Central umgestellt; der
+- Identity-Baustein auf Version 1.2.0 aus Maven Central umgestellt; der
   GitHub-Packages-Zugang ist für Build und E2E nicht mehr erforderlich.
+  Damit greift der Schutz gegen Passwortraten: Nach drei falschen Passwörtern
+  in Folge ist das Konto vorübergehend gesperrt, jeder weitere Versuch wartet
+  länger; „Passwort vergessen“ hebt die Sperre auf. Die Anmeldung über externe
+  Anbieter (OAuth2/OIDC) bringt der Baustein mit, sie bleibt abgeschaltet.
 - Nachbetrachtungs-Zeitleiste verwendet für den Endmarker und seine Bewegung
   64-Bit-Arithmetik, damit die Addition am maximalen Rundenzähler nicht überläuft.
 - Der Systeminspektor zeigt Garnison, Produktion sowie – sofern für das eigene
