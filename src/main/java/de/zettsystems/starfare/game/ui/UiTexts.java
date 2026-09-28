@@ -151,6 +151,7 @@ public final class UiTexts {
     public static final String LOBBY_FIELD_COMBAT_RANDOMNESS = "lobby.field.combatRandomness";
     public static final String LOBBY_FIELD_COMBAT_RANDOMNESS_VALUE = "lobby.field.combatRandomness.value";
     public static final String LOBBY_FIELD_COMBAT_RANDOMNESS_HINT = "lobby.field.combatRandomness.hint";
+    public static final String LOBBY_FIELD_VICTORY_PERCENT = "lobby.field.victoryPercent";
 
     // Map — header / submit / game-over
     public static final String MAP_HEADER_TITLE = "map.header.title";
@@ -168,6 +169,9 @@ public final class UiTexts {
 
     // Map — send-fleet dialog
     public static final String MAP_SEND_FLEET = "map.sendFleet";
+    public static final String MAP_ADD_RELOCATION = "map.addRelocation";
+    public static final String MAP_TARGET_SELECTION_HINT = "map.targetSelection.hint";
+    public static final String MAP_TARGET_SELECTION_CANCEL = "map.targetSelection.cancel";
     public static final String MAP_SHIPS_LABEL = "map.ships";
     public static final String MAP_DURATION_SINGULAR = "map.duration.singular";
     public static final String MAP_DURATION_PLURAL = "map.duration.plural";
@@ -351,11 +355,14 @@ public final class UiTexts {
     public static final String BATTLE_REPLAY_RESULT = "battleReplay.result";
     public static final String BATTLE_REPLAY_SOUND = "battleReplay.sound";
     public static final String BATTLE_REPLAY_SOUND_TEST = "battleReplay.soundTest";
+    public static final String BATTLE_REPLAY_SPEED = "battleReplay.speed";
+    public static final String BATTLE_REPLAY_OFF = "battleReplay.off";
     public static final String BATTLE_REPLAY_CLOSE = "battleReplay.close";
     public static final String BATTLE_REPLAY_ACKNOWLEDGE = "battleReplay.acknowledge";
     public static final String BATTLE_PRESENTATION_TOGGLE = "battlePresentation.toggle";
     public static final String GAME_OUTCOME_VICTORY = "gameOutcome.victory";
     public static final String GAME_OUTCOME_DEFEAT = "gameOutcome.defeat";
+    public static final String GAME_OUTCOME_CONTINUE = "gameOutcome.continue";
     public static final String GAME_OUTCOME_ROUNDS = "gameOutcome.rounds";
     public static final String GAME_OUTCOME_SYSTEMS = "gameOutcome.systems";
     public static final String GAME_OUTCOME_BUILT = "gameOutcome.built";

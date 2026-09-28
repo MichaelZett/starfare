@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.ui;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
@@ -66,6 +67,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final IntConsumer onResolvedBattleSelected;
     private final IntConsumer onStandingOrderSelected;
     private final BiConsumer<Integer, Integer> onGarrisonReserveChanged;
+    private final Consumer<VisibleSystem> onFleetTargetSelection;
+    private final Consumer<VisibleSystem> onRelocationTargetSelection;
+    private final Runnable onTargetSelectionCancelled;
     private final Consumer<StandingOrderView> onEditStandingOrder;
     private final Consumer<StandingOrderView> onDeleteStandingOrder;
     private final Runnable onBattleAcknowledged;
@@ -84,13 +88,19 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                         IntConsumer onStandingOrderSelected,
                         IntConsumer onReportSystemSelected,
                         IntConsumer onResolvedBattleSelected,
-                        BiConsumer<Integer, Integer> onGarrisonReserveChanged) {
+                        BiConsumer<Integer, Integer> onGarrisonReserveChanged,
+                        Consumer<VisibleSystem> onFleetTargetSelection,
+                        Consumer<VisibleSystem> onRelocationTargetSelection,
+                        Runnable onTargetSelectionCancelled) {
         this.onReportSystemSelected = onReportSystemSelected;
         this.onFleetRowSelected = onFleetRowSelected;
         this.onCancelOrder = onCancelOrder;
         this.onResolvedBattleSelected = onResolvedBattleSelected;
         this.onStandingOrderSelected = onStandingOrderSelected;
         this.onGarrisonReserveChanged = onGarrisonReserveChanged;
+        this.onFleetTargetSelection = onFleetTargetSelection;
+        this.onRelocationTargetSelection = onRelocationTargetSelection;
+        this.onTargetSelectionCancelled = onTargetSelectionCancelled;
         this.onEditStandingOrder = onEditStandingOrder;
         this.onDeleteStandingOrder = onDeleteStandingOrder;
         this.onBattleAcknowledged = onBattleAcknowledged;
@@ -122,7 +132,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     void update(GameId gameId, PlayerViewState view, @Nullable VisibleSystem system, @Nullable Integer fleetId,
                 @Nullable Integer standingOrderId,
-                boolean spectator) {
+                boolean spectator, boolean targetSelectionActive) {
         this.gameId = gameId;
         currentView = view;
         selectedSystem = system == null ? null : view.systems().stream()
@@ -136,7 +146,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 view.battlePresentationEnabled());
         renderTravelCards(view);
         renderContacts(view);
-        renderDetails(view);
+        renderDetails(view, targetSelectionActive);
         renderLogistics(view);
         renderReport(view);
     }
@@ -357,7 +367,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return turn != null ? turn : Integer.MIN_VALUE;
     }
 
-    private void renderDetails(PlayerViewState view) {
+    private void renderDetails(PlayerViewState view, boolean targetSelectionActive) {
         detailsPage.removeAll();
         detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS));
         if (selectedSystem != null) {
@@ -397,6 +407,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 detailsPage.add(metrics);
             }
             metrics.addClassName("system-metrics");
+            renderSystemActions(system, targetSelectionActive);
             renderGarrisonReserve(system);
             renderOwnershipHistory(view, system);
             return;
@@ -420,6 +431,27 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return;
         }
         detailsPage.add(new Paragraph(I18n.t(UiTexts.MAP_SIDEBAR_DETAILS_EMPTY)));
+    }
+
+    private void renderSystemActions(VisibleSystem system, boolean targetSelectionActive) {
+        if (readOnly || system.availableShips() == null) {
+            return;
+        }
+        if (targetSelectionActive) {
+            Button cancel = new Button(I18n.t(UiTexts.MAP_TARGET_SELECTION_CANCEL), _ -> onTargetSelectionCancelled.run());
+            cancel.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+            detailsPage.add(new Paragraph(I18n.t(UiTexts.MAP_TARGET_SELECTION_HINT)), cancel);
+            return;
+        }
+        HorizontalLayout actions = new HorizontalLayout();
+        actions.addClassName("system-details-actions");
+        Button sendFleet = new Button(I18n.t(UiTexts.MAP_SEND_FLEET), _ -> onFleetTargetSelection.accept(system));
+        sendFleet.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.PRIMARY);
+        Button relocate = new Button(I18n.t(UiTexts.MAP_ADD_RELOCATION),
+                _ -> onRelocationTargetSelection.accept(system));
+        relocate.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+        actions.add(sendFleet, relocate);
+        detailsPage.add(actions);
     }
 
     private void renderGarrisonReserve(VisibleSystem system) {
@@ -480,14 +512,21 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         addReportFilter(filterOptions, events, EventCategory.BATTLE_LOST, UiTexts.ROUND_FILTER_BATTLE_LOST);
         addReportFilter(filterOptions, events, EventCategory.SYSTEM_LOST, UiTexts.ROUND_FILTER_SYSTEM_LOST);
         addReportFilter(filterOptions, events, EventCategory.DEFENSE_HELD, UiTexts.ROUND_FILTER_DEFENSE_HELD);
-        Checkbox presentation = new Checkbox(I18n.t(UiTexts.BATTLE_PRESENTATION_TOGGLE), battlePresentationEnabled);
+        ComboBox<Double> presentation = new ComboBox<>(I18n.t(UiTexts.BATTLE_REPLAY_SPEED));
+        presentation.setItems(0.5, 1.0, 1.5, 2.0, 0.0);
+        presentation.setItemLabelGenerator(value -> value == 0
+                ? I18n.t(UiTexts.BATTLE_REPLAY_OFF) : value + "×");
+        GameId presentationGame = gameId;
+        presentation.setValue(presentationGame == null ? (view.battlePresentationEnabled() ? 1.0 : 0.0)
+                : BattlePresentationPreference.speed(presentationGame,
+                        report != null ? report.turn() : view.turn() - 1, view.battlePresentationEnabled()));
         presentation.addValueChangeListener(event -> {
             GameId current = gameId;
             TurnReport currentReport = view.report();
             if (current != null) {
                 int reportTurn = currentReport != null ? currentReport.turn() : view.turn() - 1;
-                battlePresentationEnabled = event.getValue();
-                BattlePresentationPreference.set(current, reportTurn, battlePresentationEnabled);
+                battlePresentationEnabled = event.getValue() > 0;
+                BattlePresentationPreference.setSpeed(current, reportTurn, event.getValue());
                 renderReport(view);
             }
         });

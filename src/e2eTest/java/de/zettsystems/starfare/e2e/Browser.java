@@ -69,6 +69,11 @@ public class Browser {
                 .until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(css)));
     }
 
+    public void clickCss(String css) {
+        WebElement element = awaitCss(css);
+        ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", element);
+    }
+
     public List<WebElement> all(String css) {
         return driver().findElements(By.cssSelector(css));
     }

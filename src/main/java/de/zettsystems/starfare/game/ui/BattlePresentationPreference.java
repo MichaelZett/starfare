@@ -11,12 +11,24 @@ final class BattlePresentationPreference {
     }
 
     static boolean enabled(GameId gameId, int reportTurn, boolean defaultValue) {
+        return speed(gameId, reportTurn, defaultValue) > 0;
+    }
+
+    static double speed(GameId gameId, int reportTurn, boolean defaultValue) {
         Object value = VaadinSession.getCurrent().getAttribute(key(gameId, reportTurn));
-        return value instanceof Boolean enabled ? enabled : defaultValue;
+        if (value instanceof Double speed) {
+            return speed;
+        }
+        return value instanceof Boolean enabled ? (enabled ? 1.0 : 0.0) : (defaultValue ? 1.0 : 0.0);
     }
 
     static void set(GameId gameId, int reportTurn, boolean enabled) {
         VaadinSession.getCurrent().setAttribute(key(gameId, reportTurn), enabled);
+    }
+
+    static void setSpeed(GameId gameId, int reportTurn, double speed) {
+        VaadinSession.getCurrent().setAttribute(key(gameId, reportTurn), speed);
+        BattleReplayDialog.setSpeed(speed);
     }
 
     private static String key(GameId gameId, int reportTurn) {

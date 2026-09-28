@@ -22,8 +22,18 @@ public record GameSetup(
         GalaxyLayout galaxyLayout,
         boolean battlePresentationEnabled,
         int combatRandomnessPercent,
-        RoundRules roundRules
+        RoundRules roundRules,
+        int victorySystemPercent
 ) {
+    public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
+                     int neutralMinProduction, int neutralMaxProduction, int startGarrison,
+                     boolean observersAllowed, boolean reentryAllowed, List<String> seatColorHexes,
+                     ProductionDistribution productionDistribution, GalaxyLayout galaxyLayout,
+                     boolean battlePresentationEnabled, int combatRandomnessPercent, RoundRules roundRules) {
+        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction, neutralMaxProduction,
+                startGarrison, observersAllowed, reentryAllowed, seatColorHexes, productionDistribution, galaxyLayout,
+                battlePresentationEnabled, combatRandomnessPercent, roundRules, GameConfig.VICTORY_SYSTEM_PERCENT);
+    }
     public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
                      int neutralMinProduction, int neutralMaxProduction, int startGarrison,
                      boolean observersAllowed, boolean reentryAllowed, List<String> seatColorHexes,
@@ -75,7 +85,8 @@ public record GameSetup(
                 GameConfig.DEFAULT_GALAXY_LAYOUT,
                 GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED,
                 GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT,
-                RoundRules.defaults()
+                RoundRules.defaults(),
+                GameConfig.VICTORY_SYSTEM_PERCENT
         );
     }
 
@@ -106,7 +117,9 @@ public record GameSetup(
                 battlePresentationEnabled,
                 clamp(combatRandomnessPercent, GameConfig.MIN_COMBAT_RANDOMNESS_PERCENT,
                         GameConfig.MAX_COMBAT_RANDOMNESS_PERCENT),
-                roundRules == null ? RoundRules.defaults() : roundRules);
+                roundRules == null ? RoundRules.defaults() : roundRules,
+                clamp(victorySystemPercent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT,
+                        GameConfig.MAX_VICTORY_SYSTEM_PERCENT));
     }
 
     public int totalPlayers() {

@@ -43,6 +43,8 @@ import java.util.stream.Collectors;
 @JsModule("./battle-replay.js")
 @PermitAll
 public class MainView extends VerticalLayout implements BeforeEnterObserver {
+
+    private enum TargetSelection { NONE, FLEET, RELOCATION }
     private static final String GAME_ID_PARAMETER = "gameId";
     private final GameService game;
     private final Broadcaster broadcaster;
@@ -60,6 +62,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private boolean reviewing;
     private @Nullable VisibleSystem selectedSystem;
     private @Nullable VisibleSystem selectedFrom;
+    private TargetSelection targetSelection = TargetSelection.NONE;
     private @Nullable Integer highlightedFleetId;
     private @Nullable Integer highlightedStandingOrderId;
     private @Nullable Integer highlightedReportSystemId;
@@ -89,7 +92,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::refresh,
                 this::onFleetRowSelected, this::onStandingOrderSelected, this::onReportSystemSelected,
                 this::onResolvedBattleSelected,
-                this::setGarrisonReserve);
+                this::setGarrisonReserve,
+                this::selectFleetTarget,
+                this::selectRelocationTarget,
+                this::cancelTargetSelectionAndRefresh);
         mapCanvas = new MapCanvas(gameId == null ? "none" : gameId.value(), this::onMapBackgroundClick);
         header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::doLeave,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)));
@@ -99,7 +105,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
         reviewControls = new ReviewControls(() -> {
             selectedSystem = null;
-            selectedFrom = null;
+            cancelTargetSelection();
             highlightedFleetId = null;
             highlightedReportSystemId = null;
             badgesShowingFleetNo.clear();
@@ -112,7 +118,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         });
         spectatorControls = new SpectatorControls(() -> {
             selectedSystem = null;
-            selectedFrom = null;
+            cancelTargetSelection();
             highlightedFleetId = null;
             highlightedReportSystemId = null;
             badgesShowingFleetNo.clear();
@@ -168,7 +174,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private void onMapBackgroundClick() {
         if (selectedFrom != null || highlightedFleetId != null || highlightedStandingOrderId != null) {
-            selectedFrom = null;
+            cancelTargetSelection();
             highlightedFleetId = null;
             highlightedStandingOrderId = null;
             refresh();
@@ -192,7 +198,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         highlightedFleetId = next;
-        selectedFrom = null;
+        cancelTargetSelection();
         if (next != null) {
             fleetsPanel.showDetails();
         }
@@ -435,7 +441,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (marker == null || reviewControls.replayTurn() != marker.turn()) { return; }
         view.systems().stream().filter(system -> system.id() == marker.systemId()).findFirst().ifPresent(system -> {
             selectedSystem = system;
-            selectedFrom = null;
+            cancelTargetSelection();
             highlightedReportSystemId = marker.systemId();
             mapCanvas.centerOn(system.x(), system.y());
         });
@@ -490,6 +496,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 .map(Player::colorHex).findFirst().orElse("");
         GameOutcomeDialog.open(Objects.equals(view.winnerId(), currentSeat()), winnerName(view), winnerColor,
                 statistics, () -> {
+            if (game.continueAfterVictory(gameId, UserContext.currentPlayerId().orElse(""))) {
+                outcomeDialogOpen = false;
+                outcomeAcknowledged = true;
+                refresh();
+            }
+        }, () -> {
             outcomeDialogOpen = false;
             outcomeAcknowledged = true;
             refresh();
@@ -510,7 +522,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         List<VisibleSystem> systems = view.systems().stream()
                 .sorted(Comparator.comparingInt(VisibleSystem::id)).toList();
         mapCanvas.render(new MapRenderer.Inputs(
-                game, gameId, view, playerId, observer, selectedFrom,
+                game, gameId, view, playerId, observer, selectedFrom, targetSelection == TargetSelection.RELOCATION,
                 highlightedFleetId, highlightedStandingOrderId, reportedSystemIds(view), highlightedReportSystemId,
                 pendingBattleSystemIds(view), logisticsMode,
                 badgesShowingFleetNo, systems,
@@ -522,12 +534,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::onFleetHighlight,
                 this::onReportMarkerSelected,
                 this::refresh));
-        fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer);
+        fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
+                targetSelection != TargetSelection.NONE);
     }
 
     private void inspectSystem(VisibleSystem system) {
         selectedSystem = system;
-        selectedFrom = null;
+        cancelTargetSelection();
         highlightedFleetId = null;
         fleetsPanel.showDetails();
         refresh();
@@ -535,9 +548,37 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private void selectSource(VisibleSystem system) {
         selectedFrom = selectedFrom != null && selectedFrom.id() == system.id() ? null : system;
+        targetSelection = selectedFrom == null ? TargetSelection.NONE : TargetSelection.FLEET;
         selectedSystem = system;
         highlightedFleetId = null;
         fleetsPanel.showDetails();
+        refresh();
+    }
+
+    private void selectFleetTarget(VisibleSystem system) {
+        selectTarget(system, TargetSelection.FLEET);
+    }
+
+    private void selectRelocationTarget(VisibleSystem system) {
+        selectTarget(system, TargetSelection.RELOCATION);
+    }
+
+    private void selectTarget(VisibleSystem system, TargetSelection selection) {
+        selectedSystem = system;
+        selectedFrom = system;
+        targetSelection = selection;
+        highlightedFleetId = null;
+        fleetsPanel.showDetails();
+        refresh();
+    }
+
+    private void cancelTargetSelection() {
+        selectedFrom = null;
+        targetSelection = TargetSelection.NONE;
+    }
+
+    private void cancelTargetSelectionAndRefresh() {
+        cancelTargetSelection();
         refresh();
     }
 
@@ -599,7 +640,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         SendFleetDialog.open(game, gameId, pid, from, to, () -> {
-            selectedFrom = null;
+            cancelTargetSelection();
             selectedSystem = to;
             refresh();
             fleetsPanel.showOrders();
@@ -615,7 +656,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         SendFleetDialog.openRelocation(game, gameId, pid, from, to, () -> {
-            selectedFrom = null;
+            cancelTargetSelection();
             selectedSystem = to;
             refresh();
             fleetsPanel.showRelocations();

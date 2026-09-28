@@ -4,6 +4,7 @@ import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.dependency.JsModule;
@@ -107,12 +108,18 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         addFilterCheckbox(options, enabled, EventCategory.BATTLE_LOST, UiTexts.ROUND_FILTER_BATTLE_LOST);
         addFilterCheckbox(options, enabled, EventCategory.SYSTEM_LOST, UiTexts.ROUND_FILTER_SYSTEM_LOST);
         addFilterCheckbox(options, enabled, EventCategory.DEFENSE_HELD, UiTexts.ROUND_FILTER_DEFENSE_HELD);
-        Checkbox presentation = new Checkbox(I18n.t(UiTexts.BATTLE_PRESENTATION_TOGGLE), battlePresentationEnabled);
+        ComboBox<Double> presentation = new ComboBox<>(I18n.t(UiTexts.BATTLE_REPLAY_SPEED));
+        presentation.setItems(0.5, 1.0, 1.5, 2.0, 0.0);
+        presentation.setItemLabelGenerator(value -> value == 0
+                ? I18n.t(UiTexts.BATTLE_REPLAY_OFF) : value + "×");
+        GameId presentationGame = gameId;
+        presentation.setValue(presentationGame == null ? (battlePresentationEnabled ? 1.0 : 0.0)
+                : BattlePresentationPreference.speed(presentationGame, reportTurn(), battlePresentationEnabled));
         presentation.addValueChangeListener(event -> {
             GameId current = gameId;
             if (current != null) {
-                battlePresentationEnabled = event.getValue();
-                BattlePresentationPreference.set(current, reportTurn(), battlePresentationEnabled);
+                battlePresentationEnabled = event.getValue() > 0;
+                BattlePresentationPreference.setSpeed(current, reportTurn(), event.getValue());
                 renderTimeline();
             }
         });

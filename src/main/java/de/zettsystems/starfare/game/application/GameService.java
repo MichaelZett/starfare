@@ -22,6 +22,9 @@ public interface GameService {
 
     Optional<GameOutcomeStatistics> outcomeStatisticsFor(GameId id, String account);
 
+    /** Lets the recorded winner continue the running match towards full conquest. */
+    boolean continueAfterVictory(GameId gameId, String account);
+
 
     GameId newGame(GameSetup setup, @Nullable String hostPlayerId, String name);
 

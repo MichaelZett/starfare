@@ -56,6 +56,7 @@ public class GameState {
     private boolean reentryAllowed;
     private boolean battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
     private int combatRandomnessPercent = GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT;
+    private int victorySystemPercent = GameConfig.VICTORY_SYSTEM_PERCENT;
     private Instant turnStartedAt = Instant.now();
     private RoundRules roundRules = RoundRules.defaults();
     /** Seit wann nur noch ein Mensch fehlt; {@code null}, solange die Nachzügler-Uhr nicht läuft. */
@@ -181,6 +182,13 @@ public class GameState {
         return combatRandomnessPercent;
     }
 
+    public int victorySystemPercent() { return victorySystemPercent; }
+
+    public void configureVictorySystemPercent(int percent) {
+        victorySystemPercent = Math.clamp(percent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT,
+                GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
+    }
+
     public Instant turnStartedAt() {
         return turnStartedAt;
     }
@@ -304,6 +312,7 @@ public class GameState {
         this.reentryAllowed = false;
         this.battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
         this.combatRandomnessPercent = GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT;
+        this.victorySystemPercent = GameConfig.VICTORY_SYSTEM_PERCENT;
         this.roundRules = RoundRules.defaults();
         this.stragglerSince = null;
         this.missedRounds.clear();
@@ -337,6 +346,7 @@ public class GameState {
         this.reentryAllowed = false;
         this.battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
         this.combatRandomnessPercent = GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT;
+        this.victorySystemPercent = GameConfig.VICTORY_SYSTEM_PERCENT;
         this.roundRules = RoundRules.defaults();
         this.stragglerSince = null;
         this.missedRounds.clear();
@@ -496,7 +506,7 @@ public class GameState {
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
-                new HashMap<>(s.missedRounds));
+                new HashMap<>(s.missedRounds), s.victorySystemPercent);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -553,6 +563,10 @@ public class GameState {
         c.combatRandomnessPercent = randomness != null
                 ? Math.clamp(randomness, GameConfig.MIN_COMBAT_RANDOMNESS_PERCENT, GameConfig.MAX_COMBAT_RANDOMNESS_PERCENT)
                 : GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT;
+        Integer victoryPercent = s.victorySystemPercent();
+        c.victorySystemPercent = victoryPercent != null
+                ? Math.clamp(victoryPercent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT, GameConfig.MAX_VICTORY_SYSTEM_PERCENT)
+                : GameConfig.VICTORY_SYSTEM_PERCENT;
         // Aeltere Snapshots kennen das Feld nicht; dann laeuft die Zug-Uhr ab Wiederherstellung.
         Instant startedAt = s.turnStartedAt();
         c.turnStartedAt = startedAt != null ? startedAt : Instant.now();
@@ -602,6 +616,7 @@ public class GameState {
         c.reentryAllowed = s.reentryAllowed();
         c.battlePresentationEnabled = s.battlePresentationEnabled();
         c.combatRandomnessPercent = s.combatRandomnessPercent;
+        c.victorySystemPercent = s.victorySystemPercent;
         c.roundRules = s.roundRules();
         c.missedRounds.putAll(s.missedRounds());
 
