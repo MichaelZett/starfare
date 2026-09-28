@@ -859,6 +859,23 @@ public class DefaultGameService implements GameService {
         }));
     }
 
+    @Override
+    public boolean continueAfterVictory(GameId gameId, String account) {
+        if (account == null || account.isBlank() || registry.find(gameId).isEmpty()) {
+            return false;
+        }
+        return registry.writeState(gameId, state -> {
+            Integer winner = state.winnerId();
+            Integer actor = state.seatByUser().get(account);
+            if (!state.gameOver() || !Objects.equals(winner, actor)) {
+                return false;
+            }
+            state.configureVictorySystemPercent(GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
+            state.clearGameOver();
+            return true;
+        });
+    }
+
     private static final class GameOutcomeStatisticsCalculator {
         private GameOutcomeStatisticsCalculator() {}
 

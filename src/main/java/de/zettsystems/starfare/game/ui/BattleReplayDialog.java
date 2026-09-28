@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
@@ -12,6 +13,7 @@ import de.zettsystems.starfare.report.values.BattleReplay;
 /** Client-side combat playback with an optional synthesized sound effect. */
 final class BattleReplayDialog {
     private static final String SOUND_SESSION_KEY = "starfare.battleSound";
+    private static final String SPEED_SESSION_KEY = "starfare.battleSpeed";
     private static final int MAX_SHIP_MARKERS = 8;
 
     private BattleReplayDialog() {
@@ -67,12 +69,17 @@ final class BattleReplayDialog {
             dialog.close();
             onAcknowledge.run();
         });
-        dialog.getFooter().add(sound, soundTest, acknowledge);
+        ComboBox<Double> speed = new ComboBox<>(I18n.t(UiTexts.BATTLE_REPLAY_SPEED));
+        speed.setItems(0.5, 1.0, 1.5, 2.0);
+        speed.setItemLabelGenerator(value -> value + "×");
+        speed.setValue(speed());
+        speed.addValueChangeListener(event -> VaadinSession.getCurrent().setAttribute(SPEED_SESSION_KEY, event.getValue()));
+        dialog.getFooter().add(sound, soundTest, speed, acknowledge);
         dialog.add(visual);
         dialog.open();
-        visual.getElement().executeJs("window.starfarePlayBattle(this, $0, $1, $2, $3, $4)",
+        visual.getElement().executeJs("window.starfarePlayBattle(this, $0, $1, $2, $3, $4, $5)",
                 replay.attacking(), replay.defending(), replay.attackingRemaining(),
-                replay.defendingRemaining(), soundEnabled);
+                replay.defendingRemaining(), soundEnabled, speed());
     }
 
     private static Div side(String sideClass, String labelKey, int ships, int opponentShips, double strength, double opposingStrength,
@@ -112,6 +119,15 @@ final class BattleReplayDialog {
     private static boolean soundEnabled() {
         Object setting = VaadinSession.getCurrent().getAttribute(SOUND_SESSION_KEY);
         return !(setting instanceof Boolean enabled) || enabled;
+    }
+
+    private static double speed() {
+        Object setting = VaadinSession.getCurrent().getAttribute(SPEED_SESSION_KEY);
+        return setting instanceof Double value && value > 0 ? value : 1.0;
+    }
+
+    static void setSpeed(double speed) {
+        VaadinSession.getCurrent().setAttribute(SPEED_SESSION_KEY, speed);
     }
 
     record BattleSides(String attacker, String defender) {

@@ -90,6 +90,10 @@ final class CreateGameWizardDialog {
         reentryAllowed.setValue(GameConfig.DEFAULT_REENTRY_ALLOWED);
         Checkbox battlePresentation = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_BATTLE_PRESENTATION));
         battlePresentation.setValue(GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED);
+        IntegerField victoryPercent = new IntegerField(I18n.t(UiTexts.LOBBY_FIELD_VICTORY_PERCENT));
+        victoryPercent.setMin(GameConfig.MIN_VICTORY_SYSTEM_PERCENT);
+        victoryPercent.setMax(GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
+        victoryPercent.setValue(GameConfig.VICTORY_SYSTEM_PERCENT);
         Input combatRandomness = combatRandomnessSlider();
         Span combatRandomnessValue = new Span();
         combatRandomnessValue.addClassName("combat-randomness-value");
@@ -115,7 +119,7 @@ final class CreateGameWizardDialog {
         FormLayout setupGrid = grid(3, "13em", gameName, systems, humans, ai, galaxyLayout, empireName,
                 joinAfterCreate);
         FormLayout settingsGrid = grid(3, "13em", startGarrison, combatRandomnessField,
-                observersAllowed, reentryAllowed, battlePresentation);
+                observersAllowed, reentryAllowed, battlePresentation, victoryPercent);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
 
         ComboBox<Duration> roundLimit = durationCombo(I18n.t(UiTexts.LOBBY_FIELD_ROUND_LIMIT),
@@ -209,7 +213,7 @@ final class CreateGameWizardDialog {
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
                 observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout,
-                combatRandomness, roundLimit, stragglerLimit, attackOrder);
+                combatRandomness, roundLimit, stragglerLimit, attackOrder, victoryPercent);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_REVIEW));
         createButton.set(create);
         WizardActionContext actionContext = new WizardActionContext(game, onCreated, hostName, gameName, empireName,
@@ -323,7 +327,7 @@ final class CreateGameWizardDialog {
                               ComboBox<GalaxyLayout> galaxyLayout,
                               Input combatRandomness,
                               ComboBox<Duration> roundLimit, ComboBox<Duration> stragglerLimit,
-                              ComboBox<AttackOrder> attackOrder) {
+                              ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent) {
     }
 
     private static GameSetup buildSetup(FormInputs in) {
@@ -348,7 +352,8 @@ final class CreateGameWizardDialog {
                 in.galaxyLayout().getValue(),
                 in.battlePresentation().getValue(),
                 sliderValue(in.combatRandomness(), GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT),
-                new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), in.attackOrder().getValue())
+                new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), in.attackOrder().getValue()),
+                valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)
         ).normalized();
     }
 

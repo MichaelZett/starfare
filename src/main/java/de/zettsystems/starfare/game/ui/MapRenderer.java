@@ -34,6 +34,7 @@ final class MapRenderer {
                   PlayerViewState view,
                   int playerId, boolean observer,
                   @Nullable VisibleSystem selectedFrom,
+                  boolean relocationTargetSelection,
                   @Nullable Integer highlightedFleetId,
                   @Nullable Integer highlightedStandingOrderId,
                   Set<Integer> reportedSystemIds,
@@ -141,6 +142,9 @@ final class MapRenderer {
         VisibleSystem display = pendingBattle ? concealedBattleSystem(sys) : sys;
         Div dot = new Div();
         dot.addClassName(display.fullyVisible() ? "sys-own" : "sys-fog");
+        if (display.availableShips() != null) {
+            dot.addClassName("sys-action-source");
+        }
         if (display.ownerId() == null) {
             dot.addClassName("sys-neutral");
         }
@@ -288,7 +292,11 @@ final class MapRenderer {
             } else if (from.id() == sys.id()) {
                 in.onSelectSource().accept(sys);
             } else {
-                in.onOpenSend().accept(from, sys);
+                if (in.relocationTargetSelection()) {
+                    in.onOpenRelocation().accept(from, sys);
+                } else {
+                    in.onOpenSend().accept(from, sys);
+                }
             }
         });
         if (!in.observer() && in.playerId() >= 0 && sys.fullyVisible()) {

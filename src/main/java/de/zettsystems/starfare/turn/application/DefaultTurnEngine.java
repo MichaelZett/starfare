@@ -174,7 +174,7 @@ public class DefaultTurnEngine implements TurnEngine {
                 .collect(Collectors.groupingBy(StarSystem::ownerId, Collectors.counting()));
         counts.forEach((pid, c) -> {
             // Ganzzahlig statt ueber Prozent-Division, damit nichts weggerundet wird.
-            if (c * 100 >= (long) total * GameConfig.VICTORY_SYSTEM_PERCENT) {
+            if (c * 100 >= (long) total * state.victorySystemPercent()) {
                 state.endGame(pid);
                 reportService.appendEvent(state, pid, new TurnEvent.Victory(pid));
                 String winnerName = state.players().stream().filter(player -> player.id() == pid)

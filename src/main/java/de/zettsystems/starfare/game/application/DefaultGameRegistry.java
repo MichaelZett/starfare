@@ -236,6 +236,7 @@ public class DefaultGameRegistry implements GameRegistry {
         state.resetForNewGame();
         state.configureLobby(setup.observersAllowed(), setup.reentryAllowed(), setup.battlePresentationEnabled(),
                 setup.combatRandomnessPercent());
+        state.configureVictorySystemPercent(setup.victorySystemPercent());
         state.configureRoundRules(setup.roundRules());
         state.players().clear();
         state.systems().clear();

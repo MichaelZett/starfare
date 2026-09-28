@@ -144,6 +144,22 @@ public class SmokeSteps {
                 .containsExactly(String.valueOf(systems), String.valueOf(production), String.valueOf(ships));
     }
 
+    @Dann("kann ich im Systeminspektor eine Flotte oder Verlegung vorbereiten und abbrechen")
+    public void systemInspectorStartsAndCancelsBothTargetSelections() {
+        browser.clickCss(".sys-action-source");
+        browser.awaitCss(".system-metric[aria-label^='Garnison']");
+        browser.awaitCss(".system-metric[aria-label^='Produktion']");
+        browser.awaitCss(".system-metric[aria-label*='reserve']");
+        browser.clickButtonWithText("Verlegung anlegen");
+        browser.awaitText("Ziel auf der Karte auswählen");
+        browser.clickButtonWithText("Zielwahl abbrechen");
+        browser.clickButtonWithText("Flotte senden");
+        browser.awaitText("Ziel auf der Karte auswählen");
+        browser.clickCss(".sys-target:not(.sys-selected)");
+        browser.awaitText("Reisedauer");
+        browser.clickButtonWithText("Abbrechen");
+    }
+
     @Wenn("ich die nächste Runde auslöse")
     public void advanceRound() {
         browser.clickButtonWithText("Nächste Runde");

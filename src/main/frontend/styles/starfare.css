@@ -2054,6 +2054,11 @@ html, body, #outlet {
     font-weight: 800;
 }
 
+.system-details-actions {
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
 .send-fleet-arrival {
     color: var(--sf-accent);
     font-weight: 700;

@@ -17,7 +17,7 @@ final class GameOutcomeDialog {
     private GameOutcomeDialog() {}
 
     static void open(boolean victory, String winnerName, String winnerColor,
-                     GameOutcomeStatistics statistics, Runnable onReview, Runnable onLobby) {
+                     GameOutcomeStatistics statistics, Runnable onContinue, Runnable onReview, Runnable onLobby) {
         Dialog dialog = new Dialog();
         dialog.setCloseOnEsc(false);
         dialog.setCloseOnOutsideClick(false);
@@ -48,13 +48,18 @@ final class GameOutcomeDialog {
         });
         review.addClassName("game-outcome-review");
         review.addThemeVariants(ButtonVariant.PRIMARY);
+        Button continueGame = new Button(I18n.t(UiTexts.GAME_OUTCOME_CONTINUE), _ -> {
+            dialog.close();
+            onContinue.run();
+        });
+        continueGame.setVisible(victory);
         Button lobby = new Button(I18n.t(UiTexts.GAME_OUTCOME_LOBBY), _ -> {
             dialog.close();
             onLobby.run();
         });
         lobby.addClassName("game-outcome-lobby");
         dialog.add(content);
-        dialog.getFooter().add(lobby, review);
+        dialog.getFooter().add(lobby, continueGame, review);
         dialog.open();
     }
 

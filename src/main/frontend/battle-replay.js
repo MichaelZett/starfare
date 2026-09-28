@@ -53,14 +53,14 @@ export function lossSequence(initial, remaining, beats, random = Math.random) {
     });
 }
 
-window.starfarePlayBattle = (root, attacking, defending, attackingRemaining, defendingRemaining, sound) => {
+window.starfarePlayBattle = (root, attacking, defending, attackingRemaining, defendingRemaining, sound, speed = 1) => {
     audio.enabled = sound;
     const attackNumber = root.querySelector('[data-battle-attacking]');
     const defenseNumber = root.querySelector('[data-battle-defending]');
     const result = root.querySelector('[data-battle-result]');
     const attackShips = [...root.querySelectorAll('[data-battle-attacker-ship]')];
     const defenseShips = [...root.querySelectorAll('[data-battle-defender-ship]')];
-    const duration = Math.min(6200, Math.max(2200, Math.max(attacking, defending) * 24));
+    const duration = Math.min(6200, Math.max(2200, Math.max(attacking, defending) * 24)) / speed;
     const beats = Math.max(6, Math.round(duration / 360));
     const attacks = lossSequence(attacking, attackingRemaining, beats);
     const defenses = lossSequence(defending, defendingRemaining, beats);

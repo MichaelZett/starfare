@@ -39,6 +39,8 @@ public final class GameConfig {
 
     /** Anteil aller Systeme (neutrale eingeschlossen), ab dem eine Partie gewonnen ist. */
     public static final int VICTORY_SYSTEM_PERCENT = 70;
+    public static final int MIN_VICTORY_SYSTEM_PERCENT = 10;
+    public static final int MAX_VICTORY_SYSTEM_PERCENT = 100;
     /** Verpasste Rundenfristen in Folge, nach denen die KI einen menschlichen Sitz übernimmt. */
     public static final int MAX_MISSED_ROUNDS = 3;
     /**

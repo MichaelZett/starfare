@@ -12,5 +12,6 @@ Funktionalität: Smoke — vom Konto bis zur ersten Runde
     Dann sehe ich in der Lobby den Online-Spieler "Alice Tester"
     Wenn ich ein Standardspiel anlege und beitrete
     Dann zeigen die Empire-Stats 1 System, Produktion 4 und 8 Schiffe
+    Dann kann ich im Systeminspektor eine Flotte oder Verlegung vorbereiten und abbrechen
     Wenn ich die nächste Runde auslöse
     Dann sehe ich den Rundenbericht für Runde 1
