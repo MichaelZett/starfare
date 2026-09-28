@@ -6,6 +6,7 @@ import de.zettsystems.starfare.game.values.GameListScope;
 import de.zettsystems.starfare.game.values.GameOutcomeStatistics;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameSummary;
+import de.zettsystems.starfare.game.values.ReplayEventMarker;
 import de.zettsystems.starfare.game.values.ReplayFrame;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.report.values.TurnReport;
@@ -118,6 +119,41 @@ class GameArchiveTest extends AbstractIntegrationTest {
         assertThat(games.outcomeStatisticsFor(id, "stranger")).isEmpty();
         assertThat(games.outcomeStatisticsFor(id, "host"))
                 .contains(new GameOutcomeStatistics(0, ownSystems, 5, 16, 16));
+    }
+
+    @Test
+    void replayEventMarkersExposeOnlyCombatEventsInTurnOrderForAnAuthorizedPerspective() {
+        var id = games.newGame(GameSetup.defaults(), "host", "Replay markers");
+        games.joinGame(id, "host");
+        games.startGame(id);
+        int seat = games.seatFor(id, "host").orElseThrow();
+        TurnReport firstReport = new TurnReport(4, List.of(), List.of(
+                new TurnEvent.Production(seat, 1, "Ignored", 3),
+                new TurnEvent.BattleWon(seat, 11, "Alpha", 8, 5, 3, false),
+                new TurnEvent.BattleLost(seat, 12, "Beta", 7, 9, 2)));
+        TurnReport secondReport = new TurnReport(9, List.of(), List.of(
+                new TurnEvent.SystemLost(seat, 2, 13, "Gamma", 5, 6, 1),
+                new TurnEvent.DefenseHeld(seat, 14, "Delta", 4, 7, 5),
+                new TurnEvent.Victory(seat)));
+        registry.writeState(id, state -> {
+            state.replayFrames().put(9, new ReplayFrame(9, state.systems(), state.fleets(), Map.of(seat, secondReport)));
+            state.replayFrames().put(4, new ReplayFrame(4, state.systems(), state.fleets(), Map.of(seat, firstReport)));
+            state.endGame(seat);
+            return null;
+        });
+
+        List<ReplayEventMarker> expected = List.of(
+                new ReplayEventMarker(4, 11, "Alpha", 1, true),
+                new ReplayEventMarker(4, 12, "Beta", 2, false),
+                new ReplayEventMarker(9, 13, "Gamma", 0, true),
+                new ReplayEventMarker(9, 14, "Delta", 1, false));
+        assertThat(games.replayEventMarkers(id, "host", seat)).containsExactlyElementsOf(expected);
+        assertThat(games.replayEventMarkers(id, "stranger", seat)).isEmpty();
+        assertThat(games.replayEventMarkers(id, "host", 999)).isEmpty();
+
+        sessions.delete(id);
+
+        assertThat(games.replayEventMarkers(id, "host", seat)).containsExactlyElementsOf(expected);
     }
 
     @Test
