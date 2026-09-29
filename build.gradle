@@ -364,6 +364,8 @@ sonar {
                 '**/*Entity.java',
                 '**/*Repository.java',
                 '**/package-info.java',
+                // battle-replay.test.mjs covers this browser module. Its Node test runner does not emit LCOV.
+                'src/main/frontend/battle-replay.js',
         ].join(',')
 
         property 'sonar.issue.ignore.multicriteria', 'serial1,serial2,serial3,domainEquals,entityProxyEquals,localDemoPassword,battleAudioRandom,battleTimelineRandom'

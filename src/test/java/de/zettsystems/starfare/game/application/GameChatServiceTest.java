@@ -37,4 +37,29 @@ class GameChatServiceTest extends AbstractIntegrationTest {
         assertThat(chat.messagesFor(id, "bob")).extracting(GameChatMessage::text).containsExactly("hello team");
         assertThat(chat.messagesFor(id, "eve")).isEmpty();
     }
+
+    @Test
+    void rejectsBlankMessagesAndTruncatesLongMessages() {
+        GameId id = runningGame();
+
+        assertThat(chat.send(id, "alice", "   ")).isFalse();
+        assertThat(chat.send(id, "alice", "x".repeat(GameChatMessage.MAX_LENGTH + 1))).isTrue();
+
+        assertThat(chat.messagesFor(id, "alice")).extracting(GameChatMessage::text)
+                .containsExactly("x".repeat(GameChatMessage.MAX_LENGTH));
+    }
+
+    private GameId runningGame() {
+        GameId id = registry.createGame(GameSetup.defaults(), "alice", "chat");
+        registry.writeState(id, state -> {
+            state.resetForNewGame();
+            state.players().add(new Player(1, "P1", false, "#111111"));
+            state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 10, 2, false));
+            state.seatByUser().put("alice", 1);
+            state.joinedHumanPlayerIds().add(1);
+            state.start();
+            return null;
+        });
+        return id;
+    }
 }
