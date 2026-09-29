@@ -32,7 +32,7 @@
     </Match>
 
     <Match>
-        <Class name="~de\.zettsystems\.starfare\.(game|social|auth)\.ui\..*"/>
+        <Class name="~de\.zettsystems\.starfare\.(game|social|auth|legal)\.ui\..*"/>
         <Bug pattern="SE_BAD_FIELD,SE_NO_SERIALVERSIONID,SE_BAD_FIELD_STORE,SE_TRANSIENT_FIELD_NOT_RESTORED"/>
     </Match>
 
