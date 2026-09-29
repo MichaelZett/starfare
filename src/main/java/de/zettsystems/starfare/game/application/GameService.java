@@ -25,6 +25,12 @@ public interface GameService {
     /** Lets the recorded winner continue the running match towards full conquest. */
     boolean continueAfterVictory(GameId gameId, String account);
 
+    /** Current host-controlled round rules, visible only to a game participant. */
+    Optional<RoundRules> roundRulesFor(GameId gameId, String account);
+
+    /** Changes the two running round deadlines; only the current host may do so. */
+    boolean updateRoundRules(GameId gameId, String actor, RoundRules rules);
+
 
     GameId newGame(GameSetup setup, @Nullable String hostPlayerId, String name);
 

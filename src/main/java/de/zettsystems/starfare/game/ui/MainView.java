@@ -13,9 +13,11 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import de.zettsystems.starfare.auth.ui.UserContext;
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
+import de.zettsystems.starfare.game.application.GameChatService;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.TurnEvent;
@@ -47,6 +49,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private enum TargetSelection { NONE, FLEET, RELOCATION }
     private static final String GAME_ID_PARAMETER = "gameId";
     private final GameService game;
+    private final GameChatService gameChat;
+    private final PlayerDirectory players;
     private final Broadcaster broadcaster;
     private @Nullable Subscription broadcasterSubscription;
     private final MapCanvas mapCanvas;
@@ -77,8 +81,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private final BattleAcknowledgements acknowledgements;
 
     @Autowired
-    public MainView(GameService service, Broadcaster broadcaster, BattleAcknowledgementService battleAcknowledgements) {
+    public MainView(GameService service, Broadcaster broadcaster, BattleAcknowledgementService battleAcknowledgements,
+                    GameChatService gameChat, PlayerDirectory players) {
         this.game = service;
+        this.gameChat = gameChat;
+        this.players = players;
         this.broadcaster = broadcaster;
         this.acknowledgements = new BattleAcknowledgements(battleAcknowledgements);
         setWidthFull();
@@ -98,7 +105,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::cancelTargetSelectionAndRefresh);
         mapCanvas = new MapCanvas(gameId == null ? "none" : gameId.value(), this::onMapBackgroundClick);
         header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::doLeave,
-                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)));
+                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules);
 
         gameOverBanner.setVisible(false);
         gameOverBanner.getStyle().set(CssProperties.FONT_WEIGHT, "600");
@@ -454,6 +461,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         fleetsPanel.setReportAvailable(currentSeat() >= 0);
         header.setNextVisible(!reviewing && (!observer || game.isAiOnly(gameId)));
         header.setLeaveVisible(!reviewing);
+        header.setRoundRulesVisible(!reviewing && UserContext.currentPlayerId()
+                .flatMap(account -> game.hostPlayerIdOf(gameId).filter(account::equals)).isPresent());
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer && pendingBattleSystemIds(view).isEmpty());
         header.setRound(view.turn());
@@ -468,6 +477,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (!observer) {
             header.updateEmpireStats(view);
         }
+    }
+
+    private void openGameChat() {
+        new GameChatDialog(gameChat, players, gameId).open();
+    }
+
+    private void openRoundRules() {
+        RoundRulesDialog.open(game, gameId, this::refresh);
     }
 
     /**

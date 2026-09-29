@@ -116,7 +116,7 @@ instance up automatically and supplies its connection details. The local databas
 port is bound to loopback. Without Docker Compose, set `SPRING_DATASOURCE_URL`,
 `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` explicitly; the
 application has no fallback credentials. Then open
-[http://localhost:8080](http://localhost:8080).
+[http://localhost:8110](http://localhost:8110).
 
 For local development with Vaadin hot reload:
 
@@ -124,9 +124,9 @@ For local development with Vaadin hot reload:
 ./gradlew bootRun -Pvaadin.productionMode=false
 ```
 
-The Sonar analysis includes application sources, authored frontend files and
-both test source sets. Generated frontend files are excluded. Run all checks
-with `./gradlew build e2eTest sonar` against the configured SonarQube server.
+The SonarCloud analysis includes application sources, authored frontend files and
+both test source sets. Generated frontend files are excluded. Set `SONAR_TOKEN`
+locally and run `./gradlew sonar`; CI uses the repository secret of the same name.
 
 ## Sign in
 
@@ -167,6 +167,12 @@ The landing route `/` is the lobby. From there:
 - **Open map** — for running games you are playing or observing.
 - **Abort** — close the game entirely (only meaningful while nobody is
   actively playing).
+
+## Privacy
+
+The public `/privacy` page explains the processed data and retention. Signed-in
+players can permanently delete their account at `/account/delete`. Direct and
+party-chat messages are removed after 365 days.
 
 ## Map view (`/map/:gameId`)
 

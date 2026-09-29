@@ -5,10 +5,13 @@ import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.game.values.RoundRules;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.Duration;
 
 class GameServiceHostTest extends AbstractIntegrationTest {
 
@@ -112,5 +115,18 @@ class GameServiceHostTest extends AbstractIntegrationTest {
         assertThat(game.leaveGame(id, 1)).isTrue();
 
         assertThat(game.hostPlayerIdOf(id)).isEmpty();
+    }
+
+    @Test
+    void hostCanChangeRunningRoundDeadlinesButOtherPlayersCannot() {
+        GameId id = createGameWithHost("alice");
+        seedTwoHumanSeats(id, "alice", "bob");
+        RoundRules changed = new RoundRules(Duration.ofMinutes(15), Duration.ofMinutes(2), RoundRules.DEFAULT_ATTACK_ORDER);
+
+        assertThat(game.updateRoundRules(id, "bob", changed)).isFalse();
+        assertThat(game.updateRoundRules(id, "alice", changed)).isTrue();
+
+        assertThat(game.roundRulesFor(id, "alice")).contains(changed);
+        assertThat(game.roundRulesFor(id, "outsider")).isEmpty();
     }
 }

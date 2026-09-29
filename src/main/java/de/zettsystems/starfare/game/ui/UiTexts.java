@@ -164,6 +164,8 @@ public final class UiTexts {
     public static final String MAP_ACTION_LOBBY = "map.action.lobby";
     public static final String MAP_ACTION_LEAVE = "map.action.leave";
     public static final String MAP_ACTION_LEAVE_OBSERVE = "map.action.leaveObserve";
+    public static final String MAP_ACTION_CHAT = "map.action.chat";
+    public static final String MAP_ACTION_ROUND_RULES = "map.action.roundRules";
     public static final String MAP_LEAVE_FAILED = "map.leaveFailed";
     public static final String MAP_LEFT = "map.left";
 
@@ -363,6 +365,10 @@ public final class UiTexts {
     public static final String GAME_OUTCOME_VICTORY = "gameOutcome.victory";
     public static final String GAME_OUTCOME_DEFEAT = "gameOutcome.defeat";
     public static final String GAME_OUTCOME_CONTINUE = "gameOutcome.continue";
+    public static final String GAME_CHAT_TITLE = "gameChat.title";
+    public static final String GAME_CHAT_HINT = "gameChat.hint";
+    public static final String ROUND_RULES_TITLE = "roundRules.title";
+    public static final String ROUND_RULES_SAVE = "roundRules.save";
     public static final String GAME_OUTCOME_ROUNDS = "gameOutcome.rounds";
     public static final String GAME_OUTCOME_SYSTEMS = "gameOutcome.systems";
     public static final String GAME_OUTCOME_BUILT = "gameOutcome.built";

@@ -3,6 +3,8 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.game.values.GameId;
 import org.jspecify.annotations.Nullable;
 
+import java.time.Instant;
+
 /**
  * Domain-level notifications published through {@link Broadcaster} so subscribed UIs
  * can refresh when someone else mutates a game.
@@ -35,4 +37,8 @@ public sealed interface GameEvent {
 
     record HostChanged(GameId gameId, @Nullable String newHostPlayerId) implements GameEvent {
     }
+
+    record RoundRulesChanged(GameId gameId) implements GameEvent {}
+
+    record ChatMessage(GameId gameId, String senderPlayerId, String text, Instant sentAt) implements GameEvent {}
 }

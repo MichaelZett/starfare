@@ -2140,3 +2140,28 @@ html, body, #outlet {
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
+
+.game-chat-messages {
+    max-height: min(48vh, 28rem);
+    overflow: auto;
+    padding: 0.75rem;
+    border: 1px solid var(--sf-border);
+    border-radius: 10px;
+    background: var(--sf-surface-2);
+}
+
+.game-chat-messages > div {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--sf-border) 60%, transparent);
+}
+
+.game-chat-messages > div:last-child {
+    border-bottom: 0;
+}
+
+.game-chat-messages span:first-child {
+    color: var(--sf-text-muted);
+    font-size: 0.8rem;
+}
