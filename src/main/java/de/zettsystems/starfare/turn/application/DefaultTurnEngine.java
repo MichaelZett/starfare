@@ -7,7 +7,6 @@ import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.AttackOrder;
 import de.zettsystems.starfare.game.values.Fleet;
-import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.report.application.ReportService;
 import de.zettsystems.starfare.report.values.TurnEvent;
