@@ -9,8 +9,8 @@
 # SNAPSHOT-Pushes bauen und testen nur. Nach einem Release steht main wieder
 # auf -SNAPSHOT; vor dem Weiterarbeiten einmal `git pull`.
 #
-# SonarCloud: Secret SONAR_TOKEN. Ohne Token bleibt der Schritt still
-# (Fork-PRs sehen keine Secrets).
+# SonarQube Cloud: Secret SONAR_TOKEN plus Variable SONAR_ORGANIZATION. Ohne
+# Token bleibt der Schritt still (Fork-PRs sehen keine Secrets).
 name: Build
 
 on:
@@ -75,6 +75,7 @@ jobs:
         run: ./gradlew --no-daemon compileE2eTestJava sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
 
       # Nur bei Fehlschlag: Im Erfolgsfall stehen die Ergebnisse ohnehin als
       # Check-Annotation und Coverage-Kommentar da; das Artefakt lag sonst
