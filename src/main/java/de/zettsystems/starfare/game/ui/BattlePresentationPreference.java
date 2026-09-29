@@ -19,8 +19,8 @@ final class BattlePresentationPreference {
         if (value instanceof Double speed) {
             return speed;
         }
-        if (value instanceof Boolean enabled) {
-            return enabled ? 1.0 : 0.0;
+        if (value instanceof Boolean) {
+            return Boolean.TRUE.equals(value) ? 1.0 : 0.0;
         }
         return defaultValue ? 1.0 : 0.0;
     }
