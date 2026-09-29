@@ -129,4 +129,38 @@ class GameServiceHostTest extends AbstractIntegrationTest {
         assertThat(game.roundRulesFor(id, "alice")).contains(changed);
         assertThat(game.roundRulesFor(id, "outsider")).isEmpty();
     }
+
+    @Test
+    void refusesInvalidOrFinishedRoundRuleChanges() {
+        GameId id = createGameWithHost("alice");
+        seedTwoHumanSeats(id, "alice", "bob");
+        RoundRules rules = RoundRules.defaults();
+
+        assertThat(game.roundRulesFor(id, "")).isEmpty();
+        assertThat(game.updateRoundRules(id, "", rules)).isFalse();
+        assertThat(game.updateRoundRules(id, "alice", null)).isFalse();
+        registry.writeState(id, state -> {
+            state.endGame(1);
+            return null;
+        });
+
+        assertThat(game.updateRoundRules(id, "alice", rules)).isFalse();
+    }
+
+    @Test
+    void winnerCanContinueTowardsFullConquest() {
+        GameId id = createGameWithHost("alice");
+        seedTwoHumanSeats(id, "alice", "bob");
+        registry.writeState(id, state -> {
+            state.endGame(1);
+            return null;
+        });
+
+        assertThat(game.continueAfterVictory(id, "bob")).isFalse();
+        assertThat(game.continueAfterVictory(id, "alice")).isTrue();
+        boolean gameOver = registry.readState(id, state -> state.gameOver());
+        int victorySystemPercent = registry.readState(id, state -> state.victorySystemPercent());
+        assertThat(gameOver).isFalse();
+        assertThat(victorySystemPercent).isEqualTo(100);
+    }
 }
