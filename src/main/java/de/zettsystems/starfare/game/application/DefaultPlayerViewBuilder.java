@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 class DefaultPlayerViewBuilder implements PlayerViewBuilder {
@@ -226,18 +227,12 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
      * berechnet: die Reichweitenpruefung je Systempaar war quadratisch in der Systemzahl.
      */
     private static Set<Integer> sensorCoverage(GameState state, int playerId) {
-        Set<Integer> sources = new HashSet<>();
-        for (StarSystem s : state.systems()) {
-            Integer ownerId = s.ownerId();
-            if (ownerId != null && ownerId == playerId) {
-                sources.add(s.id());
-            }
-        }
-        for (Fleet fleet : state.fleets()) {
-            if (fleet.ownerId() == playerId) {
-                sources.add(fleet.toSystemId());
-            }
-        }
+        Set<Integer> sources = Stream.concat(
+                        state.systems().stream().filter(system -> Objects.equals(system.ownerId(), playerId))
+                                .map(StarSystem::id),
+                        state.fleets().stream().filter(fleet -> fleet.ownerId() == playerId)
+                                .map(Fleet::toSystemId))
+                .collect(Collectors.toSet());
         return state.systemsWithinRounds(sources, SENSOR_RANGE_ROUNDS);
     }
 

@@ -353,7 +353,7 @@ sonar {
         property 'sonar.java.test.binaries', files(sourceSets.test.output.classesDirs, sourceSets.e2eTest.output.classesDirs)
         property 'sonar.java.test.libraries', sourceSets.e2eTest.runtimeClasspath.files
         property 'sonar.coverage.jacoco.xmlReportPaths', 'build/reports/jacoco/test/jacocoTestReport.xml'
-        property 'sonar.exclusions', 'src/main/frontend/generated/**,build/generated/**'
+        property 'sonar.exclusions', 'src/main/frontend/generated/**,build/generated/**,src/main/resources/db/migration/**'
         // Mirrors jacocoExclusions so Sonar's coverage % matches the Jacoco bundle %.
         // Coverage-only — these classes still get analyzed for bugs/smells.
         property 'sonar.coverage.exclusions', [

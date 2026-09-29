@@ -19,7 +19,10 @@ final class BattlePresentationPreference {
         if (value instanceof Double speed) {
             return speed;
         }
-        return value instanceof Boolean enabled ? (enabled ? 1.0 : 0.0) : (defaultValue ? 1.0 : 0.0);
+        if (value instanceof Boolean enabled) {
+            return enabled ? 1.0 : 0.0;
+        }
+        return defaultValue ? 1.0 : 0.0;
     }
 
     static void set(GameId gameId, int reportTurn, boolean enabled) {

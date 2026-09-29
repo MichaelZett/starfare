@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameChatMessage;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
@@ -33,7 +34,7 @@ class GameChatServiceTest extends AbstractIntegrationTest {
 
         assertThat(chat.send(id, "alice", "  hello team  ")).isTrue();
         assertThat(chat.send(id, "eve", "sneak in")).isFalse();
-        assertThat(chat.messagesFor(id, "bob")).extracting(message -> message.text()).containsExactly("hello team");
+        assertThat(chat.messagesFor(id, "bob")).extracting(GameChatMessage::text).containsExactly("hello team");
         assertThat(chat.messagesFor(id, "eve")).isEmpty();
     }
 }
