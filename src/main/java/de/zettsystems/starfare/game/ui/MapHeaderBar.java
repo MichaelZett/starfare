@@ -23,8 +23,10 @@ final class MapHeaderBar extends HorizontalLayout {
     private final Button next;
     private final Button logistics;
     private final MenuItem leaveItem;
+    private final MenuItem roundRulesItem;
 
-    MapHeaderBar(Runnable onNext, Runnable onToggleLogistics, Runnable onLeave, Runnable onLobby) {
+    MapHeaderBar(Runnable onNext, Runnable onToggleLogistics, Runnable onLeave, Runnable onLobby,
+                 Runnable onChat, Runnable onEditRoundRules) {
         H1 title = new H1(I18n.t(UiTexts.MAP_HEADER_TITLE));
         title.addClassName("app-header-title");
         gameNameLabel.addClassName("app-header-game");
@@ -40,6 +42,9 @@ final class MapHeaderBar extends HorizontalLayout {
         headerMenu.addClassName("app-header-menu");
         MenuItem menuRoot = headerMenu.addItem(VaadinIcon.MENU.create());
         menuRoot.getElement().setAttribute("aria-label", "Menü");
+        menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_CHAT), _ -> onChat.run());
+        roundRulesItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_ROUND_RULES),
+                _ -> onEditRoundRules.run());
         leaveItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LEAVE), _ -> onLeave.run());
         menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LOBBY), _ -> onLobby.run());
 
@@ -69,6 +74,10 @@ final class MapHeaderBar extends HorizontalLayout {
     }
 
     void setLeaveVisible(boolean visible) { leaveItem.setVisible(visible); }
+
+    void setRoundRulesVisible(boolean visible) {
+        roundRulesItem.setVisible(visible);
+    }
 
     void setLeaveText(String text) {
         leaveItem.setText(text);

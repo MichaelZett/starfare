@@ -876,6 +876,34 @@ public class DefaultGameService implements GameService {
         });
     }
 
+    @Override
+    public Optional<RoundRules> roundRulesFor(GameId gameId, String account) {
+        if (account == null || account.isBlank()) {
+            return Optional.empty();
+        }
+        return registry.find(gameId).flatMap(session -> registry.readState(gameId, state ->
+                state.active() && state.started() && !state.gameOver() && state.seatByUser().containsKey(account)
+                        ? Optional.of(state.roundRules()) : Optional.empty()));
+    }
+
+    @Override
+    public boolean updateRoundRules(GameId gameId, String actor, RoundRules rules) {
+        if (actor == null || actor.isBlank() || rules == null) {
+            return false;
+        }
+        boolean changed = registry.find(gameId).map(session -> registry.writeState(gameId, state -> {
+            if (!state.active() || !state.started() || state.gameOver() || !actor.equals(session.hostPlayerId())) {
+                return false;
+            }
+            state.configureRoundRules(rules);
+            return true;
+        })).orElse(false);
+        if (changed) {
+            broadcaster.publish(new GameEvent.RoundRulesChanged(gameId));
+        }
+        return changed;
+    }
+
     private static final class GameOutcomeStatisticsCalculator {
         private GameOutcomeStatisticsCalculator() {}
 

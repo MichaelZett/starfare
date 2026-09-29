@@ -19,7 +19,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         return http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/register", "/register/**", "/password/**")
+                        .requestMatchers("/login", "/register", "/register/**", "/password/**", "/privacy", "/account/delete")
                         .permitAll()
                         .requestMatchers("/favicon.ico", "/icons/**", "/images/**", "/styles.css",
                                 "/manifest.webmanifest", "/sw.js", "/offline.html", "/robots.txt")
