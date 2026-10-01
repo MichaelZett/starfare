@@ -124,7 +124,7 @@ public class LobbySteps {
         browser.clickButtonWithText("Ansehen");
         browser.awaitUrl(url -> url.contains("/map/"), "Archive map did not open");
         browser.awaitText(name);
-        assertThat(browser.pageText()).doesNotContain("Nächste Runde", "Verlegungen verwalten");
+        assertThat(browser.pageText()).doesNotContain("Nächste Runde", "Runde abgeben", "Verlegungen verwalten");
     }
     @Dann("kann ich Perspektive und Kriegsnebel der Nachbetrachtung wechseln")
     public void switchReviewPerspective() {
@@ -150,7 +150,7 @@ public class LobbySteps {
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                 .until(_ -> browser.all(".sys-fog").isEmpty());
         assertThat(browser.all(".sys-fog")).isEmpty();
-        assertThat(browser.pageText()).doesNotContain("Nächste Runde", "Verlegungen verwalten");
+        assertThat(browser.pageText()).doesNotContain("Nächste Runde", "Runde abgeben", "Verlegungen verwalten");
     }
 
     @Dann("kann ich die Inhalte der Karten-Seitenleiste wählen")

@@ -236,9 +236,11 @@ travel time. Columns: No, From, To, Ships, ETA.
 
 ### End the round
 
-Bottom left:
+In the header:
 
-- **Next round** — submits your turn. Once all humans have submitted,
+- **Submit turn** — submits your turn. The button then reads **Submitted**
+  and is disabled; the round bar names the players still to submit. This notice
+  survives reload and disappears when the next round starts. Once all humans have submitted,
   the turn pipeline runs (AI orders → all orders → production → wait
   orders → arrivals/combat → victory check → next round).
   A bar below the header shows every human with a check mark once they
@@ -308,14 +310,18 @@ been checked.
 ## Tests
 
 `./gradlew test` runs the unit and integration tests (PostgreSQL via
-Testcontainers). `./gradlew e2eTest` runs the Cucumber/Selenium smoke test
-against the real application in headless Chrome — register, confirm the
-e-mail, log in, create and start a game, play one round. It is not part of
+Testcontainers). `./gradlew e2eTest` runs Cucumber/Selenium journeys
+against the real application in headless Chrome: registration and one round,
+lobby access, round submission, battle playback, logistics and amount selection,
+fleet details and separate map viewports. Two browser sessions verify live chat,
+draft preservation and continuation through a second game end. It is not part of
 `build`; CI runs it as a separate job (`[skip e2e]` in the commit message
 skips it). Failures leave page text and a screenshot in `build/e2e-failures/`.
 
 ```bash
 ./gradlew test
+./gradlew e2eTest
+node --test src/test/frontend/battle-replay.test.mjs
 ```
 
 Integration tests start a single PostgreSQL container via

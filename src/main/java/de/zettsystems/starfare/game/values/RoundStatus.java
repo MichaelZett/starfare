@@ -18,6 +18,14 @@ public record RoundStatus(List<Seat> seats, @Nullable Instant deadline, @Nullabl
         seats = List.copyOf(seats);
     }
 
+    public boolean hasSubmitted(int playerId) {
+        return seats.stream().anyMatch(seat -> seat.playerId() == playerId && seat.submitted());
+    }
+
+    public List<String> pendingPlayerLabels() {
+        return seats.stream().filter(seat -> !seat.submitted()).map(Seat::label).toList();
+    }
+
     public record Seat(int playerId, String label, String colorHex, boolean submitted) {
     }
 }

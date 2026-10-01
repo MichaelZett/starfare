@@ -23,6 +23,8 @@ public class RoundSteps {
     private final GameService games;
     private final UserAccountService accounts;
     private GameId id;
+    private String guestAccountEmail;
+    private Browser guestSession;
 
     public RoundSteps(Browser browser, GameService games, UserAccountService accounts) {
         this.browser = browser;
@@ -36,6 +38,7 @@ public class RoundSteps {
 
     @Wenn("eine laufende Partie für {string} und {string} mit Standardfristen bereitsteht")
     public void runningGameForTwo(String hostEmail, String guestEmail) {
+        guestAccountEmail = guestEmail;
         GameSetup d = GameSetup.defaults();
         GameSetup setup = new GameSetup(d.systemCount(), 2, 1, List.of(4, 4, 4), d.neutralMinProduction(),
                 d.neutralMaxProduction(), d.startGarrison(), d.observersAllowed(), d.reentryAllowed(),
@@ -56,12 +59,57 @@ public class RoundSteps {
         if (id != null) {
             games.abortGame(id);
         }
+        if (guestSession != null) {
+            guestSession.closeSession();
+        }
     }
 
     @Wenn("ich die Partie öffne")
     public void openGame() {
         browser.open("/map/" + id.value());
         browser.awaitCss(".round-status");
+        if (guestSession == null) {
+            guestSession = browser.newSession();
+            guestSession.logIn(guestAccountEmail);
+            guestSession.open("/map/" + id.value());
+            guestSession.awaitCss(".round-status");
+        }
+    }
+
+    @Dann("kann ich meine Runde abgeben")
+    public void submissionIsAvailable() {
+        assertSubmissionAvailable(browser);
+    }
+
+    @Dann("ist meine Runde abgegeben und wartet auf {string}")
+    public void submittedAndWaiting(String player) {
+        assertWaiting(browser, player);
+        assertWaiting(guestSession, player);
+        browser.driver().navigate().refresh();
+        assertWaiting(browser, player);
+    }
+
+    @Dann("sehen beide Sitzungen die nächste Runde mit freigegebener Abgabe")
+    public void nextRoundIsAvailableInBothSessions() {
+        for (Browser session : List.of(browser, guestSession)) {
+            session.awaitTextIn(".app-header-round", "Runde 2");
+            assertSubmissionAvailable(session);
+            assertThat(session.all(".round-status-waiting")).isEmpty();
+            assertThat(session.all(".round-status-seat.submitted")).isEmpty();
+        }
+    }
+
+    private static void assertSubmissionAvailable(Browser session) {
+        session.awaitTextIn(".round-submit", "Runde abgeben");
+        new WebDriverWait(session.driver(), Duration.ofSeconds(10))
+                .until(_ -> session.awaitCss(".round-submit").getDomAttribute("disabled") == null);
+        assertThat(session.awaitCss(".round-submit").getDomAttribute("disabled")).isNull();
+    }
+
+    private static void assertWaiting(Browser session, String player) {
+        session.awaitTextIn(".round-status-waiting", "Abgegeben – warte auf " + player);
+        assertThat(session.awaitCss(".round-submit").getText()).isEqualTo("Abgegeben");
+        assertThat(session.awaitCss(".round-submit").getDomAttribute("disabled")).isNotNull();
     }
 
     @Dann("zeigt die Rundenleiste {int} Spieler, davon {int} mit Haken")

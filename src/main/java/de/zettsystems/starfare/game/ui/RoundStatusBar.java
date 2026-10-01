@@ -30,11 +30,18 @@ final class RoundStatusBar extends HorizontalLayout {
         setVisible(false);
     }
 
-    void update(RoundStatus status) {
+    void update(RoundStatus status, int playerId) {
         removeAll();
         setVisible(status.seats().size() >= 2);
         if (!isVisible()) {
             return;
+        }
+        if (status.hasSubmitted(playerId) && !status.pendingPlayerLabels().isEmpty()) {
+            Span waiting = new Span(I18n.t(UiTexts.MAP_SUBMIT_WAITING,
+                    String.join(", ", status.pendingPlayerLabels())));
+            waiting.addClassName("round-status-waiting");
+            waiting.getElement().setAttribute(HtmlAttributes.ARIA_LIVE, "polite");
+            add(waiting);
         }
         Instant deadline = status.deadline();
         for (RoundStatus.Seat seat : status.seats()) {

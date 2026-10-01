@@ -45,11 +45,17 @@ class DefaultGameStatisticsService implements GameStatisticsService {
             String winner = state.seatByUser().entrySet().stream()
                     .filter(entry -> Objects.equals(entry.getValue(), state.winnerId()))
                     .map(Map.Entry::getKey).findFirst().orElse(null);
-            return new FinishedGame(session.name(), winner, state.finishedAt(), accounts, aiOpponentNames);
+            boolean aiVictory = winner == null && state.players().stream()
+                    .anyMatch(player -> player.ai() && Objects.equals(player.id(), state.winnerId()));
+            return new FinishedGame(session.name(), winner, aiVictory, state.finishedAt(), accounts, aiOpponentNames);
         });
         if (game != null && !game.participants().isEmpty()) {
-            results.save(new GameResultEntity(gameId.value(), game.name(), game.winner(),
-                    game.finishedAt() != null ? game.finishedAt() : Instant.now(), game.participants(), game.aiOpponentNames()));
+            var result = new GameResultEntity(gameId.value(), game.name(), game.winner(),
+                    game.finishedAt() != null ? game.finishedAt() : Instant.now(), game.participants(), game.aiOpponentNames());
+            if (game.aiVictory()) {
+                result.recordAiVictory();
+            }
+            results.save(result);
         }
     }
 
@@ -71,7 +77,7 @@ class DefaultGameStatisticsService implements GameStatisticsService {
             boolean won = account.equals(game.getWinnerPlayerId());
             if (won) {
                 wins++;
-            } else if (game.getWinnerPlayerId() != null) {
+            } else if (game.hasWinner()) {
                 losses++;
             }
             completedGames.add(new CompletedGameStatistics(
@@ -82,7 +88,7 @@ class DefaultGameStatisticsService implements GameStatisticsService {
                     game.getAiOpponentNames().stream().sorted().toList()));
             for (String opponent : game.getParticipants()) {
                 if (!opponent.equals(account)) {
-                    opponents.computeIfAbsent(opponent, _ -> new Totals()).add(won, !won && game.getWinnerPlayerId() != null);
+                    opponents.computeIfAbsent(opponent, _ -> new Totals()).add(won, !won && game.hasWinner());
                 }
             }
         }
@@ -99,10 +105,10 @@ class DefaultGameStatisticsService implements GameStatisticsService {
         if (won) {
             return CompletedGameOutcome.WIN;
         }
-        return game.getWinnerPlayerId() == null ? CompletedGameOutcome.DRAW : CompletedGameOutcome.LOSS;
+        return game.hasWinner() ? CompletedGameOutcome.LOSS : CompletedGameOutcome.DRAW;
     }
 
-    private record FinishedGame(String name, @Nullable String winner, @Nullable Instant finishedAt,
+    private record FinishedGame(String name, @Nullable String winner, boolean aiVictory, @Nullable Instant finishedAt,
                                 LinkedHashSet<String> participants, LinkedHashSet<String> aiOpponentNames) {
     }
 

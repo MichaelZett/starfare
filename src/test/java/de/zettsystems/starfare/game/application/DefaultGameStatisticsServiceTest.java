@@ -62,6 +62,26 @@ class DefaultGameStatisticsServiceTest {
     }
 
     @Test
+    void aiVictoryCountsAsLossWhileGameWithoutWinnerRemainsDraw() {
+        GameResultRepository results = mock(GameResultRepository.class);
+        var aiWin = new GameResultEntity("ai-win", "AI win", null, Instant.now(), Set.of("me", "alice"));
+        aiWin.recordAiVictory();
+        var draw = new GameResultEntity("draw", "Draw", null, Instant.now(), Set.of("me", "alice"));
+        when(results.findForParticipant("me")).thenReturn(List.of(aiWin, draw));
+
+        var statistics = new DefaultGameStatisticsService(mock(GameRegistry.class), results).statisticsFor("me");
+
+        assertThat(statistics.games()).isEqualTo(2);
+        assertThat(statistics.wins()).isZero();
+        assertThat(statistics.losses()).isOne();
+        assertThat(statistics.opponents()).containsExactly(new OpponentStatistics("alice", 2, 0, 1));
+        assertThat(statistics.completedGames()).extracting(CompletedGameStatistics::outcome)
+                .containsExactlyInAnyOrder(CompletedGameOutcome.LOSS, CompletedGameOutcome.DRAW);
+        assertThat(aiWin.getWinnerPlayerId()).isNull();
+        assertThat(draw.hasWinner()).isFalse();
+    }
+
+    @Test
     void recordsFinishedGameOnceWithAccountsAndWinner() {
         GameRegistry registry = mock(GameRegistry.class);
         GameResultRepository results = mock(GameResultRepository.class);

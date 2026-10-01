@@ -23,6 +23,9 @@ public class GameResultEntity extends AbstractBaseEntity<String> {
     @Column(name = "winner_player_id", length = 30)
     private @Nullable String winnerPlayerId;
 
+    @Column(name = "ai_victory", nullable = false)
+    private boolean aiVictory;
+
     @Column(name = "finished_at", nullable = false)
     private Instant finishedAt;
 
@@ -62,6 +65,14 @@ public class GameResultEntity extends AbstractBaseEntity<String> {
 
     public @Nullable String getWinnerPlayerId() {
         return winnerPlayerId;
+    }
+
+    public void recordAiVictory() {
+        aiVictory = true;
+    }
+
+    public boolean hasWinner() {
+        return winnerPlayerId != null || aiVictory;
     }
 
     public String getGameName() {

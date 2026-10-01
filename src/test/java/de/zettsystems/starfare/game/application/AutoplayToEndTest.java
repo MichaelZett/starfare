@@ -3,11 +3,13 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.CompletedGameOutcome;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,6 +20,48 @@ class AutoplayToEndTest extends AbstractIntegrationTest {
 
     @Autowired
     private AutoplayRunner autoplay;
+
+    @Autowired private GameSessionRepository sessions;
+    @Autowired private GameArchiveStore archives;
+    @Autowired private GameStatisticsService statistics;
+    @Autowired private ObjectMapper mapper;
+
+    @Test
+    void autoplayPersistsCompletionArchiveAndFormerHumanResultAcrossReload() {
+        GameId id = setupAiDominantGame();
+        String formerHuman = "former-" + id.value().substring(0, 16);
+        registry.writeState(id, state -> {
+            state.seatByUser().put(formerHuman, 2);
+            state.originalHumanPlayerIds().add(2);
+            return null;
+        });
+
+        autoplay.autoplayToEnd(id);
+
+        var restartedStore = new JpaGameSessionStore(sessions, archives, mapper);
+        restartedStore.loadFromDatabase();
+        var restored = restartedStore.load(id).orElseThrow();
+        assertThat(restored.readState(GameState::gameOver).booleanValue()).isTrue();
+        assertThat(restored.readState(GameState::winnerId).intValue()).isOne();
+        assertThat(restored.readState(GameState::turn).intValue()).isEqualTo(2);
+        assertThat(archives.load(id)).isPresent().get().satisfies(archive -> {
+            assertThat(archive.state().gameOver()).isTrue();
+            assertThat(archive.state().turn()).isEqualTo(2);
+        });
+        var persistedStatistics = statistics.statisticsFor(formerHuman);
+        assertThat(persistedStatistics.games()).isOne();
+        assertThat(persistedStatistics.losses()).isOne();
+        assertThat(persistedStatistics.completedGames()).singleElement()
+                .satisfies(result -> assertThat(result.outcome()).isEqualTo(CompletedGameOutcome.LOSS));
+
+        registry.writeState(id, state -> {
+            state.resumeForFullConquest(java.time.Instant.now());
+            state.endGame(2);
+            return null;
+        });
+        statistics.recordFinishedGame(id);
+        assertThat(statistics.statisticsFor(formerHuman)).isEqualTo(persistedStatistics);
+    }
 
     private GameId setupAiDominantGame() {
         GameId id = registry.createGame(GameSetup.defaults());

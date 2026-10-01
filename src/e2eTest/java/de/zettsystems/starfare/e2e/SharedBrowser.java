@@ -29,19 +29,23 @@ final class SharedBrowser {
 
     static synchronized WebDriver driver() {
         if (driver == null) {
-            WebDriverManager.chromedriver().setup();
-            ChromeOptions options = new ChromeOptions();
-            if (Boolean.parseBoolean(System.getProperty("e2e.headless", "true"))) {
-                options.addArguments("--headless=new");
-            }
-            String language = System.getProperty("e2e.lang", "de-DE");
-            options.addArguments("--window-size=" + WIDTH + "," + HEIGHT,
-                    "--lang=" + language, "--accept-lang=" + language);
-            options.setExperimentalOption("prefs", Map.of("intl.accept_languages", language));
-            driver = new ChromeDriver(options);
+            driver = createDriver();
             WebDriver started = driver;
             Runtime.getRuntime().addShutdownHook(new Thread(started::quit));
         }
         return driver;
+    }
+
+    static WebDriver createDriver() {
+        WebDriverManager.chromedriver().setup();
+        ChromeOptions options = new ChromeOptions();
+        if (Boolean.parseBoolean(System.getProperty("e2e.headless", "true"))) {
+            options.addArguments("--headless=new");
+        }
+        String language = System.getProperty("e2e.lang", "de-DE");
+        options.addArguments("--window-size=" + WIDTH + "," + HEIGHT,
+                "--lang=" + language, "--accept-lang=" + language);
+        options.setExperimentalOption("prefs", Map.of("intl.accept_languages", language));
+        return new ChromeDriver(options);
     }
 }

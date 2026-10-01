@@ -12,6 +12,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Duration;
 import java.util.List;
@@ -33,13 +34,30 @@ public class Browser {
     public static final String PASSWORD = "ein-langes-testpasswort";
 
     private final Environment environment;
+    private final @Nullable WebDriver ownedDriver;
 
+    @Autowired
     Browser(Environment environment) {
+        this(environment, null);
+    }
+
+    private Browser(Environment environment, @Nullable WebDriver ownedDriver) {
         this.environment = environment;
+        this.ownedDriver = ownedDriver;
     }
 
     public WebDriver driver() {
-        return SharedBrowser.driver();
+        return ownedDriver != null ? ownedDriver : SharedBrowser.driver();
+    }
+
+    public Browser newSession() {
+        return new Browser(environment, SharedBrowser.createDriver());
+    }
+
+    public void closeSession() {
+        if (ownedDriver != null) {
+            ownedDriver.quit();
+        }
     }
 
     public String baseUrl() {
@@ -70,8 +88,11 @@ public class Browser {
     }
 
     public void clickCss(String css) {
-        WebElement element = awaitCss(css);
-        ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", element);
+        new WebDriverWait(driver(), LOAD).ignoring(StaleElementReferenceException.class).until(_ -> {
+            WebElement element = awaitCss(css);
+            ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", element);
+            return true;
+        });
     }
 
     public List<WebElement> all(String css) {

@@ -17,6 +17,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TurnEngineVictoryTest {
 
+    @Test
+    void configuredVictoryThresholdIsStoredInTheResolvedReport() {
+        GameState state = fourSystemsWith(2);
+        state.configureVictorySystemPercent(50);
+
+        newEngine().advanceTurn(state);
+
+        assertThat(state.reports().get(1).events()).contains(new TurnEvent.Victory(1, 50));
+        assertThat(state.reports().get(1).lines()).anyMatch(line -> line.contains("50%"));
+        state.resumeForFullConquest(java.time.Instant.now());
+        assertThat(state.reports().get(1).events()).contains(new TurnEvent.Victory(1, 50));
+    }
+
     /** @param ownedByP1 wie viele der vier Systeme P1 gehoeren; der Rest geht an P2. */
     private static GameState fourSystemsWith(int ownedByP1) {
         GameState state = new GameState();

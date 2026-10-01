@@ -9,11 +9,11 @@ import static io.cucumber.junit.platform.engine.Constants.GLUE_PROPERTY_NAME;
 import static io.cucumber.junit.platform.engine.Constants.PLUGIN_PROPERTY_NAME;
 
 /**
- * Startet die Cucumber-Suite aus {@code src/e2eTest/resources/features/}.
+ * Runs the browser journeys from {@code src/e2eTest/resources/features/}.
  *
- * <p>Bewusst nur ein Happy-Path-Smoke: Konto anlegen, bestätigen, anmelden,
- * Spiel anlegen, starten, eine Runde spielen. Die Spiellogik selbst bleibt in
- * den Unit-/Integrationstests unter {@code src/test}.
+ * <p>Exercises account registration, lobby access, rounds, battle playback,
+ * map interactions and multiplayer chat and continuation. Core game logic is
+ * covered by unit and integration tests under {@code src/test}.
  */
 @Suite
 @IncludeEngines("cucumber")
