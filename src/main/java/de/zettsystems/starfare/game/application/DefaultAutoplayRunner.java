@@ -19,11 +19,14 @@ public class DefaultAutoplayRunner implements AutoplayRunner {
     private final GameRegistry registry;
     private final TurnEngine turnEngine;
     private final Broadcaster broadcaster;
+    private final GameStatisticsService statistics;
 
-    public DefaultAutoplayRunner(GameRegistry registry, TurnEngine turnEngine, Broadcaster broadcaster) {
+    public DefaultAutoplayRunner(GameRegistry registry, TurnEngine turnEngine, Broadcaster broadcaster,
+                                 GameStatisticsService statistics) {
         this.registry = registry;
         this.turnEngine = turnEngine;
         this.broadcaster = broadcaster;
+        this.statistics = statistics;
     }
 
     @Async
@@ -32,8 +35,11 @@ public class DefaultAutoplayRunner implements AutoplayRunner {
         for (int i = 0; i < MAX_TURNS; i++) {
             List<GameEvent> events = new ArrayList<>();
             boolean stop = registry.find(gameId)
-                    .map(session -> session.writeState(state -> tickOnce(gameId, state, events)))
+                    .map(_ -> registry.writeState(gameId, state -> tickOnce(gameId, state, events)))
                     .orElse(true);
+            if (events.stream().anyMatch(GameEvent.GameFinished.class::isInstance)) {
+                statistics.recordFinishedGame(gameId);
+            }
             for (GameEvent event : events) {
                 broadcaster.publish(event);
             }

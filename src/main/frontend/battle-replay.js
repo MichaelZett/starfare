@@ -55,6 +55,7 @@ export function lossSequence(initial, remaining, beats, random = Math.random) {
 
 window.starfarePlayBattle = (root, attacking, defending, attackingRemaining, defendingRemaining, sound, speed = 1) => {
     audio.enabled = sound;
+    const attackerWon = root.getAttribute('data-battle-attacker-won') === 'true';
     const attackNumber = root.querySelector('[data-battle-attacking]');
     const defenseNumber = root.querySelector('[data-battle-defending]');
     const result = root.querySelector('[data-battle-result]');
@@ -78,7 +79,7 @@ window.starfarePlayBattle = (root, attacking, defending, attackingRemaining, def
         show(attackingRemaining, defendingRemaining);
         result.classList.add('battle-replay-result-visible');
         root.classList.add('battle-replay-result-known');
-        root.classList.toggle('battle-replay-attacker-won', attackingRemaining > defendingRemaining);
+        root.classList.toggle('battle-replay-attacker-won', attackerWon);
     };
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         finish();

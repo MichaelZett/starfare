@@ -11,9 +11,13 @@ import com.vaadin.flow.component.textfield.TextArea;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.GameChatService;
+import de.zettsystems.starfare.game.application.Broadcaster;
+import de.zettsystems.starfare.game.application.GameEvent;
 import de.zettsystems.starfare.game.values.GameChatMessage;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.Subscription;
 import de.zettsystems.starfare.i18n.I18n;
+import org.jspecify.annotations.Nullable;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -24,14 +28,17 @@ final class GameChatDialog {
     private final GameChatService chat;
     private final PlayerDirectory players;
     private final GameId gameId;
+    private final Broadcaster broadcaster;
+    private @Nullable Subscription subscription;
     private final Dialog dialog = new Dialog();
     private final Div messages = new Div();
     private final TextArea input = new TextArea();
 
-    GameChatDialog(GameChatService chat, PlayerDirectory players, GameId gameId) {
+    GameChatDialog(GameChatService chat, PlayerDirectory players, GameId gameId, Broadcaster broadcaster) {
         this.chat = chat;
         this.players = players;
         this.gameId = gameId;
+        this.broadcaster = broadcaster;
         dialog.setHeaderTitle(I18n.t(UiTexts.GAME_CHAT_TITLE));
         dialog.setWidth("min(42rem, 94vw)");
         messages.addClassName("game-chat-messages");
@@ -45,12 +52,53 @@ final class GameChatDialog {
         footer.setFlexGrow(1, input);
         dialog.add(new H2(I18n.t(UiTexts.GAME_CHAT_HINT)), messages, footer);
         dialog.getFooter().add(new Button(I18n.t(UiTexts.MANAGE_CLOSE), _ -> dialog.close()));
+        dialog.addAttachListener(_ -> subscribe());
+        dialog.addDetachListener(_ -> unsubscribe());
+        dialog.addOpenedChangeListener(event -> {
+            if (event.isOpened()) {
+                subscribe();
+            } else {
+                unsubscribe();
+            }
+        });
     }
 
     void open() {
         reload();
         dialog.open();
         input.focus();
+    }
+
+    void close() {
+        dialog.close();
+        unsubscribe();
+    }
+
+    @SuppressWarnings("FutureReturnValueIgnored") // rationale: Vaadin queues updates on the owning UI.
+    private void subscribe() {
+        if (subscription != null || !dialog.isOpened()) {
+            return;
+        }
+        dialog.getUI().ifPresent(ui -> {
+            subscription = broadcaster.subscribe(gameId, event -> {
+                if (event instanceof GameEvent.ChatMessage) {
+                    ui.access(() -> {
+                        if (dialog.isOpened()) {
+                            reload();
+                        }
+                    });
+                }
+            });
+            reload();
+        });
+    }
+
+    private void unsubscribe() {
+        Subscription current = subscription;
+        subscription = null;
+        if (current != null) {
+            current.remove();
+        }
     }
 
     private void reload() {

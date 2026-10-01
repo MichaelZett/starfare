@@ -6,6 +6,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -18,6 +19,7 @@ import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.application.GameChatService;
+import de.zettsystems.starfare.game.application.GameEvent;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.TurnEvent;
@@ -76,6 +78,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private boolean witnessedRunningGame;
     private boolean outcomeAcknowledged;
     private boolean outcomeDialogOpen;
+    private @Nullable Dialog outcomeDialog;
+    private @Nullable GameChatDialog chatDialog;
     private boolean logisticsMode;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
     private final BattleAcknowledgements acknowledgements;
@@ -103,7 +107,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::selectFleetTarget,
                 this::selectRelocationTarget,
                 this::cancelTargetSelectionAndRefresh);
-        mapCanvas = new MapCanvas(gameId == null ? "none" : gameId.value(), this::onMapBackgroundClick);
+        mapCanvas = new MapCanvas(this::onMapBackgroundClick);
         header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::doLeave,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules);
 
@@ -198,11 +202,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private void onFleetRowSelected(int fleetId) {
         Integer next = fleetId < 0 ? null : fleetId;
-        if (Objects.equals(highlightedFleetId, next)) {
-            if (next != null) {
-                fleetsPanel.showDetails();
-            }
-            return;
+        if (next != null) {
+            selectedSystem = null;
         }
         highlightedFleetId = next;
         cancelTargetSelection();
@@ -220,6 +221,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private void onFleetHighlight(int fleetId) {
         highlightedFleetId = highlightedFleetId != null && highlightedFleetId == fleetId ? null : fleetId;
+        if (highlightedFleetId != null) {
+            selectedSystem = null;
+            cancelTargetSelection();
+            fleetsPanel.showDetails();
+        }
     }
 
     private void onStandingOrderSelected(int standingOrderId) {
@@ -297,10 +303,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         this.gameId = candidate;
+        mapCanvas.useGame(candidate);
+        closeGameChat();
         displayedTurn = null;
         witnessedRunningGame = false;
-        outcomeAcknowledged = false;
-        outcomeDialogOpen = false;
+        resetOutcomePresentation();
         reviewControls.reset();
         spectatorControls.reset();
     }
@@ -322,7 +329,17 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         UI ui = attachEvent.getUI();
-        broadcasterSubscription = broadcaster.subscribe(gameId, _ -> ui.access(this::refresh));
+        broadcasterSubscription = broadcaster.subscribe(gameId, event -> ui.access(() -> {
+            if (event instanceof GameEvent.ChatMessage) {
+                return;
+            }
+            if (event instanceof GameEvent.GameContinued) {
+                witnessedRunningGame = true;
+                resetOutcomePresentation();
+                reviewControls.reset();
+            }
+            refresh();
+        }));
         refresh();
         mapCanvas.installDragToPan();
         restoreViewport();
@@ -346,6 +363,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     @Override
     protected void onDetach(DetachEvent detachEvent) {
+        closeGameChat();
+        resetOutcomePresentation();
         if (broadcasterSubscription != null) {
             broadcasterSubscription.remove();
             broadcasterSubscription = null;
@@ -405,6 +424,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
         if (!view.gameOver()) {
             witnessedRunningGame = true;
+            resetOutcomePresentation();
         }
         TurnReport report = view.report();
         boolean hasPendingBattles = report != null && !acknowledgements.pending(gameId, report).isEmpty();
@@ -480,7 +500,20 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void openGameChat() {
-        new GameChatDialog(gameChat, players, gameId).open();
+        GameChatDialog current = chatDialog;
+        if (current == null) {
+            current = new GameChatDialog(gameChat, players, gameId, broadcaster);
+            chatDialog = current;
+        }
+        current.open();
+    }
+
+    private void closeGameChat() {
+        GameChatDialog current = chatDialog;
+        chatDialog = null;
+        if (current != null) {
+            current.close();
+        }
     }
 
     private void openRoundRules() {
@@ -511,22 +544,32 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         String winnerColor = view.players().stream()
                 .filter(player -> Objects.equals(view.winnerId(), player.id()))
                 .map(Player::colorHex).findFirst().orElse("");
-        GameOutcomeDialog.open(Objects.equals(view.winnerId(), currentSeat()), winnerName(view), winnerColor,
+        outcomeDialog = GameOutcomeDialog.open(Objects.equals(view.winnerId(), currentSeat()), winnerName(view), winnerColor,
                 statistics, () -> {
-            if (game.continueAfterVictory(gameId, UserContext.currentPlayerId().orElse(""))) {
-                outcomeDialogOpen = false;
-                outcomeAcknowledged = true;
-                refresh();
-            }
+            game.continueAfterVictory(gameId, UserContext.currentPlayerId().orElse(""));
+            resetOutcomePresentation();
+            refresh();
         }, () -> {
             outcomeDialogOpen = false;
+            outcomeDialog = null;
             outcomeAcknowledged = true;
             refresh();
         }, () -> {
             outcomeDialogOpen = false;
+            outcomeDialog = null;
             outcomeAcknowledged = true;
             getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
         });
+    }
+
+    private void resetOutcomePresentation() {
+        outcomeAcknowledged = false;
+        outcomeDialogOpen = false;
+        Dialog dialog = outcomeDialog;
+        outcomeDialog = null;
+        if (dialog != null) {
+            dialog.close();
+        }
     }
 
     private void renderMapAndSidebar(PlayerViewState view, int playerId, boolean observer) {

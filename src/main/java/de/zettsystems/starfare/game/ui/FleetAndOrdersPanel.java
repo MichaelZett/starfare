@@ -126,7 +126,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         tabs.addClassName("map-sidebar-tabs");
         tabs.addSelectedChangeListener(event -> showSection(sectionOf(event.getSelectedTab())));
 
-        add(tabs, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, reportPage);
+        add(tabs, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, logisticsPage, reportPage);
         showSection(Section.CONTACTS);
     }
 
@@ -808,7 +808,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, held.systemName())
                     : I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
                     held.systemName(), held.attacking(), held.defendersLeft());
-            case TurnEvent.Victory _ -> I18n.t(UiTexts.ROUND_EVENT_VICTORY, GameConfig.VICTORY_SYSTEM_PERCENT);
+            case TurnEvent.Victory victory -> I18n.t(UiTexts.ROUND_EVENT_VICTORY, victory.systemPercent());
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
         };
     }

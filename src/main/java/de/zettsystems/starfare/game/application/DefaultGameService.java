@@ -864,16 +864,19 @@ public class DefaultGameService implements GameService {
         if (account == null || account.isBlank() || registry.find(gameId).isEmpty()) {
             return false;
         }
-        return registry.writeState(gameId, state -> {
+        boolean continued = registry.writeState(gameId, state -> {
             Integer winner = state.winnerId();
             Integer actor = state.seatByUser().get(account);
-            if (!state.gameOver() || !Objects.equals(winner, actor)) {
+            if (!state.gameOver() || winner == null || !winner.equals(actor)) {
                 return false;
             }
-            state.configureVictorySystemPercent(GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
-            state.clearGameOver();
+            state.resumeForFullConquest(Instant.now());
             return true;
         });
+        if (continued) {
+            broadcaster.publish(new GameEvent.GameContinued(gameId));
+        }
+        return continued;
     }
 
     @Override

@@ -44,7 +44,7 @@ final class SendFleetDialog {
 
     private static final class AmountState {
         private int current;
-        private final int sliderMax;
+        private int sliderMax;
         private final ConsequenceControls consequenceControls;
 
         private AmountState(int current, int sliderMax, ConsequenceControls consequenceControls) {
@@ -96,20 +96,20 @@ final class SendFleetDialog {
         capacityFill.addClassName("send-fleet-capacity-fill");
         capacityTrack.add(capacityFill);
 
-        Button halfBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_HALF,
-                _ -> shipsInput.setValue(clamp(Math.max(1, params.maxShips() / 2), 1, params.sliderMax())));
-        Button doubleBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_DOUBLE,
-                _ -> shipsInput.setValue(clamp(currentOr(shipsInput, 1) * 2, 1, params.sliderMax())));
-        Button allBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_ALL,
-                _ -> shipsInput.setValue(params.sliderMax()));
-        Button exceptProductionBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_EXCEPT_PRODUCTION,
-                _ -> selectExceptProduction(shipsInput, params, productionOf(ctx.from())));
-
         Checkbox standingCheckbox = new Checkbox(I18n.t(UiTexts.MAP_STANDING_ORDER_CHECKBOX));
         int routingHeadroom = ctx.game().routingHeadroom(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id());
         ConsequenceControls consequenceControls = new ConsequenceControls(consequence, capacityFill, ctx,
                 () -> Boolean.TRUE.equals(standingCheckbox.getValue()), routingHeadroom);
-        wireTwoWaySync(slider, shipsInput, params.sliderMax(), params.initial(), consequenceControls);
+        AmountState amountState = new AmountState(params.initial(), params.sliderMax(), consequenceControls);
+        wireTwoWaySync(slider, shipsInput, amountState);
+        Button halfBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_HALF,
+                _ -> shipsInput.setValue(Math.max(1, amountState.sliderMax / 2)));
+        Button doubleBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_DOUBLE,
+                _ -> shipsInput.setValue((int) Math.min(amountState.sliderMax, currentOr(shipsInput, 1) * 2L)));
+        Button allBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_ALL,
+                _ -> shipsInput.setValue(amountState.sliderMax));
+        Button exceptProductionBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_EXCEPT_PRODUCTION,
+                _ -> selectExceptProduction(shipsInput, amountState, productionOf(ctx.from())));
         Button sendBtn = buildSendButton(ctx, shipsInput, standingCheckbox, dialog);
         Button cancelBtn = new Button(I18n.t(UiTexts.MAP_DIALOG_CANCEL), _ -> {
             dialog.close();
@@ -119,16 +119,9 @@ final class SendFleetDialog {
         DialogControls controls = new DialogControls(slider, shipsInput, consequence, capacityFill,
                 halfBtn, doubleBtn, allBtn, exceptProductionBtn,
                 standingCheckbox, sendBtn);
-        wireStandingToggle(controls, params, routingHeadroom, ctx);
-        setInitialEnablement(controls, params.canSend());
-        exceptProductionBtn.setEnabled(params.canSend() && params.maxShips() > productionOf(ctx.from()));
-        if (relocation || !params.canSend()) {
-            standingCheckbox.setValue(true);
-        }
-        updateConsequence(consequence, capacityFill, ctx, params.initial(),
-                Boolean.TRUE.equals(standingCheckbox.getValue()), routingHeadroom);
-        sendBtn.setText(I18n.t(Boolean.TRUE.equals(standingCheckbox.getValue())
-                ? UiTexts.MAP_SAVE_STANDING_ORDER : UiTexts.MAP_SEND_FLEET));
+        standingCheckbox.setValue(relocation || !params.canSend());
+        wireStandingToggle(controls, params, amountState);
+        applyAmountMode(controls, params, amountState);
 
         layoutDialog(dialog, buildHeaderLabels(ctx, params), controls, capacityTrack, cancelBtn);
         dialog.open();
@@ -186,9 +179,7 @@ final class SendFleetDialog {
         return shipsInput;
     }
 
-    private static void wireTwoWaySync(Input slider, IntegerField shipsInput, int sliderMax, int initial,
-                                       ConsequenceControls consequenceControls) {
-        AmountState amountState = new AmountState(initial, sliderMax, consequenceControls);
+    private static void wireTwoWaySync(Input slider, IntegerField shipsInput, AmountState amountState) {
         slider.addValueChangeListener(e -> onSliderChange(e.getValue(), shipsInput, amountState));
         shipsInput.addValueChangeListener(e -> onShipsInputChange(e.getValue(), slider, shipsInput, amountState));
     }
@@ -242,10 +233,10 @@ final class SendFleetDialog {
         return production != null ? production : 0;
     }
 
-    private static void selectExceptProduction(IntegerField shipsInput, DialogParams params, int production) {
-        int ships = params.maxShips() - production;
+    private static void selectExceptProduction(IntegerField shipsInput, AmountState state, int production) {
+        int ships = state.sliderMax - production;
         if (ships > 0) {
-            shipsInput.setValue(clamp(ships, 1, params.sliderMax()));
+            shipsInput.setValue(clamp(ships, 1, state.sliderMax));
         }
     }
 
@@ -292,30 +283,25 @@ final class SendFleetDialog {
         ctx.onClose().run();
     }
 
-    private static void wireStandingToggle(DialogControls c, DialogParams params, int routingHeadroom, SendContext context) {
-        c.standingCheckbox().addValueChangeListener(e -> {
-            boolean standing = Boolean.TRUE.equals(e.getValue());
-            // Eine Verlegung hat eine feste Groesse, das Zahlenfeld bleibt also nutzbar.
-            // Die Obergrenze ist dann aber die freie Produktion, nicht die Garnison.
-            int max = standing ? routingHeadroom : params.sliderMax();
-            boolean enabled = max >= 1;
-            c.slider().getElement().setAttribute("max", String.valueOf(Math.max(1, max)));
-            c.shipsInput().setMax(Math.max(1, max));
-            if (enabled && currentOr(c.shipsInput(), 1) > max) {
-                c.shipsInput().setValue(max);
-            }
-            c.shipsInput().setEnabled(enabled);
-            c.slider().setEnabled(enabled);
-            c.halfBtn().setEnabled(enabled);
-            c.doubleBtn().setEnabled(enabled);
-            c.allBtn().setEnabled(enabled);
-            c.exceptProductionBtn().setEnabled(enabled);
-            c.sendBtn().setEnabled(enabled);
-            c.sendBtn().setText(I18n.t(standing
-                    ? UiTexts.MAP_SAVE_STANDING_ORDER : UiTexts.MAP_SEND_FLEET));
-            updateConsequence(c.consequence(), c.capacityFill(), context,
-                    currentOr(c.shipsInput(), 1), standing, routingHeadroom);
-        });
+    private static void wireStandingToggle(DialogControls c, DialogParams params, AmountState state) {
+        c.standingCheckbox().addValueChangeListener(_ -> applyAmountMode(c, params, state));
+    }
+
+    private static void applyAmountMode(DialogControls c, DialogParams params, AmountState state) {
+        boolean standing = Boolean.TRUE.equals(c.standingCheckbox().getValue());
+        ConsequenceControls consequence = state.consequenceControls;
+        int max = standing ? consequence.routingHeadroom() : params.maxShips();
+        state.sliderMax = Math.max(1, max);
+        c.slider().getElement().setAttribute("max", String.valueOf(state.sliderMax));
+        c.shipsInput().setMax(state.sliderMax);
+        int amount = clamp(currentOr(c.shipsInput(), 1), 1, state.sliderMax);
+        c.shipsInput().setValue(amount);
+        c.slider().setValue(String.valueOf(amount));
+        setAmountEnablement(c, max >= 1);
+        c.exceptProductionBtn().setEnabled(max > productionOf(consequence.context().from()));
+        c.sendBtn().setText(I18n.t(standing ? UiTexts.MAP_SAVE_STANDING_ORDER : UiTexts.MAP_SEND_FLEET));
+        updateConsequence(c.consequence(), c.capacityFill(), consequence.context(), amount,
+                standing, consequence.routingHeadroom());
     }
 
     private static void updateConsequence(Span consequence, Div capacityFill, SendContext context,
@@ -351,7 +337,8 @@ final class SendFleetDialog {
         return reserve == null ? 0 : reserve;
     }
 
-    private static void setInitialEnablement(DialogControls c, boolean canSend) {
+    private static void setAmountEnablement(DialogControls c, boolean canSend) {
+        c.slider().setEnabled(canSend);
         c.shipsInput().setEnabled(canSend);
         c.halfBtn().setEnabled(canSend);
         c.doubleBtn().setEnabled(canSend);

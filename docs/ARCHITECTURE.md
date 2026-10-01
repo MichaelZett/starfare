@@ -81,12 +81,24 @@ Fixed sequence, fully inside one `writeState`:
    `CombatService`, each against the garrison left by the previous one. The
    order is a game rule (`RoundRules.attackOrder`): random (default) or
    strongest first.
-6. Victory check (>= 70% of all systems, neutrals included;
-   `GameConfig.VICTORY_SYSTEM_PERCENT`); it sends `Victory` to the winner and
+6. Victory check (>= the configured system share, neutrals included;
+   default `GameConfig.VICTORY_SYSTEM_PERCENT`, 70%); it sends `Victory` to the winner and
    `Defeat(winnerId, winnerName)` to every other participant.
 7. `state.nextTurn()`.
 
 If `state.gameOver()` is true, `advanceTurn` is a no-op.
+
+`TurnEvent.Victory` stores the threshold at resolution time. Reports therefore
+retain the correct threshold even after continuation or during archive replay;
+JSON without this field defaults to the historical 70% rule.
+`BattleReplay.Outcome` carries survivor counts and the explicit attacker result
+from the event type. Playback colours use that result, including victories with
+zero survivors on both sides, rather than comparing rounded ship counts.
+
+`DefaultAutoplayRunner` resolves unattended AI games through
+`GameRegistry.writeState`, so each turn is persisted under the session lock
+and completion also creates the archive. It records the first result through
+`GameStatisticsService` before publishing the final turn and completion events.
 
 ## Round limits
 
@@ -131,6 +143,14 @@ reject edits after game end. At the first game end, `GameStatisticsService` writ
 the compact result plus human participants to `game_results`; this data remains
 after `game_sessions` is later pruned.
 
+Only the recorded winner may resume a completed game. `resumeForFullConquest`
+raises the victory threshold to 100%, clears the outcome and submissions, and
+restarts the round and straggler clocks without advancing the turn.
+`GameContinued` refreshes every subscribed view and clears its outcome
+acknowledgement and any open outcome dialog. A subsequent game end therefore
+waits for its own pending battles before opening the result or review again.
+The initial statistical result remains unchanged when play continues.
+
 `JpaGameSessionStore` also writes a complete idempotent copy to `game_archives`.
 The optional `GameArchiveCleanupRunner` removes only operative `game_sessions`
 older than `starfare.game.archive-cleanup.retention` (90 days by default), and
@@ -148,7 +168,7 @@ and fog remain selectable.
 ### Map sidebar
 
 `FleetAndOrdersPanel` is a view-local, switchable sidebar for Contacts, Details,
-Fleets, Orders, Relocations and Report. Contacts derive their last hostile
+Fleets, Orders, Relocations, Logistics and Report. Contacts derive their last hostile
 intelligence from fog-filtered `VisibleSystem` values; Report renders the player's
 turn events beside the map. It receives only `PlayerViewState` and
 the view-local map selection from `MainView`; selecting a system or fleet never
@@ -168,6 +188,22 @@ the existing fleet dialog in relocation mode. It delegates the amount limit and
 same-route replacement to `GameService.routingHeadroom` and `addStandingOrder`.
 The Relocations table uses that same dialog for edits and offers direct deletion
 per row.
+
+The fleet dialog updates its shared amount model, numeric input, slider,
+shortcuts and preview when switching between direct fleets and relocations.
+Direct fleets use available ships; relocations use `routingHeadroom` even when
+production exceeds the current garrison. Routing capacity reads never create
+standing-order collections; only an accepted write initializes them.
+
+Fleet selection clears the previous system selection and opens fleet details.
+`MapCanvas.useGame` binds the viewport storage key to the resolved route ID
+before installing browser handlers. Delayed storage writes are discarded if
+the canvas has since switched to another game.
+
+The game chat subscribes to `ChatMessage` while its dialog is open and attached,
+and removes its subscription on close or detach. Leaving the map closes the
+dialog as well. Chat events refresh only the messages, preserving the draft
+and the map sidebar's current inputs.
 
 `reviewFor(id, account, perspective, fogOfWar)` checks completed-game access and
 participant existence inside the read lock. `PlayerViewBuilder.forReview` reuses

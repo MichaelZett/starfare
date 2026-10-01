@@ -8,6 +8,27 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Logistik-Reiter ist sichtbar. Flottenauswahl zeigt zuverlässig Flottendetails;
+  Zoom und Kartenposition werden je Partie gespeichert.
+- Verlegungsmengen und Schnellknöpfe verwenden die freie Produktionskapazität,
+  auch wenn sie größer als die aktuelle Garnison ist. Ein Moduswechsel gleicht
+  Zahlenfeld, Schieberegler und Vorschau miteinander ab.
+- Der geöffnete Partie-Chat zeigt fremde Nachrichten unmittelbar. Chat-Nachrichten
+  bauen die Karten-Seitenleiste nicht mehr neu auf.
+- Siegberichte zeigen die tatsächlich geltende Siegschwelle, einschließlich
+  100 Prozent nach Fortsetzung. Ältere Berichte bleiben mit der damaligen
+  70-Prozent-Vorgabe lesbar.
+- Die Schlachtwiedergabe übernimmt den tatsächlichen Kampfsieger aus dem Bericht;
+  die Ergebnisfarbe stimmt auch bei 0:0 Restschiffen.
+- Abfragen der freien Verlegungskapazität verändern den Spielstand nicht mehr
+  unter dem Leselock.
+
+- Automatisches KI-Weiterspielen speichert jede Runde einschließlich Endstand
+  und Archiv. Das erste Ergebnis wird auch auf diesem Weg in der Statistik erfasst.
+- Weiterspielen nach einem Sieg beginnt mit einer neuen Rundenfrist und
+  benachrichtigt alle Partieansichten. Alte Ergebnisdialoge werden geschlossen;
+  beim nächsten Spielende müssen offene Schlachten wieder zuerst ausgewertet werden.
+
 - Öffentliches Impressum und Datenschutz ergänzen den Kontolöschweg. Das
   Hetzner-Profil liest Basis-URL sowie Betreiber-, Anschrift- und Kontaktdaten
   ausschließlich aus Deployment-Variablen; ohne diese Werte kann die öffentliche
