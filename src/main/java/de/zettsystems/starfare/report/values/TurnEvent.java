@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import de.zettsystems.starfare.game.values.GameConfig;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
@@ -216,7 +217,18 @@ public sealed interface TurnEvent {
         }
     }
 
-    record Victory(int winnerId) implements TurnEvent {}
+    record Victory(int winnerId, int systemPercent) implements TurnEvent {
+        public Victory(int winnerId) {
+            this(winnerId, GameConfig.VICTORY_SYSTEM_PERCENT);
+        }
+
+        /** Historical reports without a threshold retain the original 70 percent rule. */
+        @JsonCreator
+        public static Victory of(@JsonProperty("winnerId") int winnerId,
+                                 @JsonProperty("systemPercent") @Nullable Integer systemPercent) {
+            return new Victory(winnerId, systemPercent != null ? systemPercent : GameConfig.VICTORY_SYSTEM_PERCENT);
+        }
+    }
 
     /** End-of-game notice sent to every player other than the winner. */
     record Defeat(int winnerId, String winnerName) implements TurnEvent {}

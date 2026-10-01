@@ -293,6 +293,16 @@ public class GameState {
         this.winnerId = null;
     }
 
+    /** Starts a fresh round deadline when the winner resumes play towards full conquest. */
+    public void resumeForFullConquest(Instant now) {
+        configureVictorySystemPercent(GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
+        clearGameOver();
+        turnStartedAt = now;
+        stragglerSince = null;
+        submittedThisTurn.clear();
+        updateStragglerClock(now);
+    }
+
     public void resetForNewGame() {
         makePrivate();
         this.turn = 1;

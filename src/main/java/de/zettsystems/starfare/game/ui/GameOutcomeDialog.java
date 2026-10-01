@@ -16,7 +16,7 @@ final class GameOutcomeDialog {
 
     private GameOutcomeDialog() {}
 
-    static void open(boolean victory, String winnerName, String winnerColor,
+    static Dialog open(boolean victory, String winnerName, String winnerColor,
                      GameOutcomeStatistics statistics, Runnable onContinue, Runnable onReview, Runnable onLobby) {
         Dialog dialog = new Dialog();
         dialog.setCloseOnEsc(false);
@@ -61,6 +61,7 @@ final class GameOutcomeDialog {
         dialog.add(content);
         dialog.getFooter().add(lobby, continueGame, review);
         dialog.open();
+        return dialog;
     }
 
     private static Div metric(String icon, String key, int value) {

@@ -116,13 +116,13 @@ public class DefaultFleetService implements FleetService {
         if (state.getSystem(toId) == null) {
             return -1;
         }
-        List<StandingOrder> list = standingFor(state, playerId);
-        StandingOrder replaced = list.stream()
+        StandingOrder replaced = standingFor(state, playerId).stream()
                 .filter(o -> o.fromSystemId() == fromId && o.toSystemId() == toId)
                 .findFirst().orElse(null);
         if (ships > routingHeadroom(state, playerId, fromId, toId)) {
             return -1;
         }
+        List<StandingOrder> list = state.standingOrders().computeIfAbsent(playerId, _ -> new ArrayList<>());
         if (replaced != null) {
             list.set(list.indexOf(replaced), new StandingOrder(replaced.id(), playerId, fromId, toId, ships));
             return replaced.id();
@@ -225,7 +225,7 @@ public class DefaultFleetService implements FleetService {
     }
 
     private static List<StandingOrder> standingFor(GameState state, int playerId) {
-        return state.standingOrders().computeIfAbsent(playerId, _ -> new ArrayList<>());
+        return state.standingOrders().getOrDefault(playerId, List.of());
     }
 
     private static int committedShipsFrom(GameState state, int playerId, int fromId) {

@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.html.Div;
+import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.style.CssProperties;
 
 import static de.zettsystems.starfare.game.values.GameConfig.MAX_X;
@@ -14,10 +15,9 @@ import static de.zettsystems.starfare.game.values.GameConfig.MAX_Y;
 final class MapCanvas extends Div {
 
     private final Div map = new Div();
-    private final String viewportKey;
+    private String viewportKey = "";
 
-    MapCanvas(String gameId, Runnable onBackgroundClick) {
-        this.viewportKey = "starfare.viewport." + gameId;
+    MapCanvas(Runnable onBackgroundClick) {
         setId("scroll");
         setWidthFull();
         setHeight("min(80vh, 1100px)");
@@ -30,6 +30,11 @@ final class MapCanvas extends Div {
         map.getElement().addEventListener("click", _ -> onBackgroundClick.run())
                 .setFilter("event.target === event.currentTarget");
         add(map);
+    }
+
+    void useGame(GameId gameId) {
+        viewportKey = "starfare.viewport." + gameId.value();
+        getElement().executeJs("this.__starfareViewportKey = $0;", viewportKey);
     }
 
     void render(MapRenderer.Inputs inputs) {
@@ -56,6 +61,7 @@ final class MapCanvas extends Div {
                         + "  requestAnimationFrame(() => { el.scrollLeft = saved.left; el.scrollTop = saved.top; });"
                         + "  return;"
                         + "}"
+                        + "if (map) map.style.zoom = '1';"
                         + "el.scrollTo({left: $1 - el.clientWidth / 2, top: $2 - el.clientHeight / 2});",
                 viewportKey, homeX, homeY);
     }
@@ -72,6 +78,7 @@ final class MapCanvas extends Div {
     void installDragToPan() {
         getElement().executeJs(
                 "const el = this;"
+                        + "el.__starfareViewportKey = $0;"
                         + "if (el.__starfarePan) return;"
                         + "el.__starfarePan = true;"
                         + "el.style.cursor = 'grab';"
@@ -126,9 +133,11 @@ final class MapCanvas extends Div {
                         "let pending = 0;"
                         + "function store() {"
                         + "  clearTimeout(pending);"
+                        + "  const key = el.__starfareViewportKey;"
                         + "  pending = setTimeout(() => {"
+                        + "    if (key !== el.__starfareViewportKey) return;"
                         + "    try {"
-                        + "      sessionStorage.setItem($0, JSON.stringify({"
+                        + "      sessionStorage.setItem(key, JSON.stringify({"
                         + "        zoom: parseFloat((map && map.style.zoom) || '1'),"
                         + "        left: el.scrollLeft, top: el.scrollTop}));"
                         + "    } catch (e) { /* privater Modus o. ae. — dann eben ohne */ }"

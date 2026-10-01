@@ -35,6 +35,8 @@ public sealed interface GameEvent {
 
     record GameStarted(GameId gameId) implements GameEvent {}
 
+    record GameContinued(GameId gameId) implements GameEvent {}
+
     record HostChanged(GameId gameId, @Nullable String newHostPlayerId) implements GameEvent {
     }
 

@@ -175,7 +175,7 @@ public class DefaultTurnEngine implements TurnEngine {
             // Ganzzahlig statt ueber Prozent-Division, damit nichts weggerundet wird.
             if (c * 100 >= (long) total * state.victorySystemPercent()) {
                 state.endGame(pid);
-                reportService.appendEvent(state, pid, new TurnEvent.Victory(pid));
+                reportService.appendEvent(state, pid, new TurnEvent.Victory(pid, state.victorySystemPercent()));
                 String winnerName = state.players().stream().filter(player -> player.id() == pid)
                         .findFirst().orElseThrow().label();
                 state.players().stream().filter(player -> player.id() != pid)

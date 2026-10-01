@@ -9,6 +9,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.server.VaadinSession;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.BattleReplay;
+import de.zettsystems.starfare.style.HtmlAttributes;
 
 /** Client-side combat playback with an optional synthesized sound effect. */
 final class BattleReplayDialog {
@@ -35,6 +36,7 @@ final class BattleReplayDialog {
 
         Div visual = new Div();
         visual.addClassName("battle-replay");
+        visual.getElement().setAttribute(HtmlAttributes.BATTLE_ATTACKER_WON, String.valueOf(replay.attackerWon()));
         visual.add(side("battle-attacker", UiTexts.BATTLE_REPLAY_ATTACKERS, replay.attacking(), replay.defending(),
                         replay.attackerStrength(), replay.defenderStrength(), sides.attacker()),
                 new Span("✦"),
