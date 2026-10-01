@@ -170,9 +170,10 @@ The landing route `/` is the lobby. From there:
 
 ## Privacy
 
-The public `/privacy` page explains the processed data and retention. Signed-in
-players can permanently delete their account at `/account/delete`. Direct and
-party-chat messages are removed after 365 days.
+The public `/privacy` page explains the processed data and retention; `/imprint`
+contains the responsible provider and its contact details. Signed-in players can
+permanently delete their account at `/account/delete`. Direct and party-chat
+messages are removed after 365 days.
 
 ## Map view (`/map/:gameId`)
 
@@ -283,8 +284,9 @@ ends.
 
 ## Release
 
-`appVersion` in `gradle.properties` drives releases. While it ends in
-`-SNAPSHOT`, pushes to `main` only build and test. To release:
+`appVersion` in `gradle.properties` drives releases. It currently is
+`1.0.0-SNAPSHOT`; while a version ends in `-SNAPSHOT`, pushes to `main` only
+build and test. To release:
 
 1. Remove the `-SNAPSHOT` suffix.
 2. Rename `## Unreleased` in `CHANGELOG.md` to `## <appVersion> - <date>`.
@@ -292,6 +294,16 @@ ends.
    GitHub Release with the changelog section and `starfare.jar`, then bumps
    `appVersion` to the next patch `-SNAPSHOT` (`[skip ci]`) — run `git pull`
    before continuing. There is no deployment step.
+
+### zs-hetzner preparation
+
+The `hetzner` Spring profile disables local Docker Compose and enables forwarded
+headers for the reverse proxy. Before public operation, provide these Coolify
+environment variables: `STARFARE_BASE_URL`, `STARFARE_LEGAL_OPERATOR_NAME`,
+`STARFARE_LEGAL_POSTAL_ADDRESS`, and `STARFARE_LEGAL_CONTACT_EMAIL`. The
+deployment also needs PostgreSQL connection settings and the Brevo mail profile.
+Deploy only after the unused services have been removed and the host capacity has
+been checked.
 
 ## Tests
 

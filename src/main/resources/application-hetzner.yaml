@@ -1,0 +1,18 @@
+# Values are supplied as Coolify environment variables before the public deployment.
+server:
+  forward-headers-strategy: framework
+
+spring:
+  docker:
+    compose:
+      enabled: false
+
+zs:
+  identity:
+    base-url: ${STARFARE_BASE_URL}
+
+starfare:
+  legal:
+    operator-name: ${STARFARE_LEGAL_OPERATOR_NAME}
+    postal-address: ${STARFARE_LEGAL_POSTAL_ADDRESS}
+    contact-email: ${STARFARE_LEGAL_CONTACT_EMAIL}

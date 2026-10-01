@@ -8,6 +8,13 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Öffentliches Impressum und Datenschutz ergänzen den Kontolöschweg. Das
+  Hetzner-Profil liest Basis-URL sowie Betreiber-, Anschrift- und Kontaktdaten
+  ausschließlich aus Deployment-Variablen; ohne diese Werte kann die öffentliche
+  Instanz nicht starten.
+- Die CI analysiert mit SonarCloud. Zwei verbleibende Methodenreferenz-Befunde
+  im Host-Test sind bereinigt.
+
 - Der Ergebnisdialog kennzeichnet das persönliche Ergebnis und den Sieger in
   dessen Fraktionsfarbe. Nach der letzten Schlacht führt die Hauptaktion in die
   Nachbetrachtung; die zweite Aktion öffnet die Lobby. Das Archiv ergänzt einen

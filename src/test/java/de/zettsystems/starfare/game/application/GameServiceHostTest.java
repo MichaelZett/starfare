@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.AbstractIntegrationTest;
+import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
@@ -158,8 +159,8 @@ class GameServiceHostTest extends AbstractIntegrationTest {
 
         assertThat(game.continueAfterVictory(id, "bob")).isFalse();
         assertThat(game.continueAfterVictory(id, "alice")).isTrue();
-        boolean gameOver = registry.readState(id, state -> state.gameOver());
-        int victorySystemPercent = registry.readState(id, state -> state.victorySystemPercent());
+        boolean gameOver = registry.readState(id, GameState::gameOver);
+        int victorySystemPercent = registry.readState(id, GameState::victorySystemPercent);
         assertThat(gameOver).isFalse();
         assertThat(victorySystemPercent).isEqualTo(100);
     }

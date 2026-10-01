@@ -49,6 +49,10 @@ zs:
     base-url: http://localhost:8110
 
 starfare:
+  legal:
+    operator-name: ${STARFARE_LEGAL_OPERATOR_NAME:}
+    postal-address: ${STARFARE_LEGAL_POSTAL_ADDRESS:}
+    contact-email: ${STARFARE_LEGAL_CONTACT_EMAIL:}
   game:
     archive-cleanup:
       enabled: false
