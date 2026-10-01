@@ -15,6 +15,8 @@ This repository is a personal showcase of a modern Java backend stack
 (Java 25, Spring Boot 4, Vaadin 25, Spring Modulith, Flyway,
 Testcontainers) wrapped around a small but complete game.
 
+**Spielanleitung auf Deutsch:** [Anleitung](docs/ANLEITUNG.md).
+
 ## Lobby and archive
 
 New games are private. Use **Manage** to invite players or publish the game
@@ -25,7 +27,8 @@ once the game starts.
 Finished games move from the lobby to **Archive**. Search by game or player name,
 filter your games and open a completed map without issuing further orders.
 When the final round contains a battle, the normal round report remains open first.
-Play every battle from that report; only then does the victory or defeat dialog appear,
+Resolve every battle from that report, individually or together in **Instant** mode;
+only then does the victory or defeat dialog appear,
 with personal totals for built, destroyed and lost ships.
 In the completed map, select any participant (including AI) and enable **Fog of war**
 to see their final perspective. Disable fog to reveal all systems and fleets.
@@ -64,7 +67,7 @@ players still join themselves. Games created before original settings were saved
 cannot be used as templates. New games remain private until explicitly published.
 
 The right-hand sidebar keeps the map visible and switches between Contacts,
-Details, Fleets, Orders, Relocations and Report. Contacts retain the last
+Details, Fleets, Orders, Relocations, Logistics and Report. Contacts retain the last
 known hostile systems with an estimate or a counted garrison. Select a system or fleet on
 the map to inspect it in Details: systems show their known ownership history,
 fleets their owner, launch turn, travel time and ETA. The report entry contains
@@ -93,6 +96,9 @@ All game commands remain available only in a running game.
 Architecture details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Screenshots
+
+These images show earlier interface versions. Current controls and behavior are
+described in the sections below and in the [German guide](docs/ANLEITUNG.md).
 
 ![Galaxy map with a travelling fleet](docs/screenshots/Karte.png)
 
@@ -146,7 +152,7 @@ application has no fallback credentials. Then open
 For local development with Vaadin hot reload:
 
 ```bash
-./gradlew bootRun -Pvaadin.productionMode=false
+./gradlew bootRun -Pvaadin.productionMode=false --args=--vaadin.productionMode=false
 ```
 
 The SonarCloud analysis includes application sources, authored frontend files and
@@ -181,9 +187,12 @@ The landing route `/` is the lobby. From there:
     - A colour per seat (duplicates fall back to a free palette entry)
     - Neutral and starting production: 1–20 per turn; home-system ships: 1–50
     - Allow observers? Allow rejoining?
-    - Battle presentation on by default; it can be changed again for every round
+    - Victory threshold: 10–100% of all systems, default 70%
+    - Combat strength variation: 0–30%, default ±10%, fixed for the game
+    - Round and straggler deadlines, and attack order for multiple attackers
+    - Battle presentation on by default; each account's saved speed choice overrides it
 - **Search / filter** — narrow the list by game or player name, and by
-  status: all, mine, open, running or finished games.
+  status: all, mine, open or running games. Finished games are in **Archive**.
 - **Join** — take an open slot. One slot per game; first come, first
   served.
 - **Observe** — read-only spectator mode (when allowed by the game).
@@ -235,11 +244,14 @@ arrival round and remaining turns.
 1. Click your source system.
 2. Click the target system.
 3. Set the ship count via slider or input field. Quick buttons:
-   **Half**, **Double**, **All** (max garrison).
+   **Half**, **Double**, **All** (available ships after reserves and queued sends),
+   and **All except production**.
 4. **Send fleet**.
 
-The order lands in **Planned orders** in the right-hand sidebar. Until the turn ends you
-can take it back via **Cancel**.
+The order lands in **Orders** in the right-hand sidebar. Before submitting your
+turn, use **Edit order** to change its amount or target, or **Cancel** to remove it.
+**Undo last order change** restores your queue before the most recent command
+change, including a whole batch. It is a single undo step, not an undo history.
 
 Ticking **as production transfer** turns the order into a standing one: the
 given number of ships is shipped every turn. A system may route at most its
@@ -249,10 +261,11 @@ is not routed stays behind as garrison. The **Relocations** tab also offers
 **Edit** and **Delete** on every route; editing opens the same capacity-aware
 dialog.
 
-### Own fleets (table)
+### Own fleets
 
-Already in transit. Select a row to see its owner, launch round and elapsed
-travel time. Columns: No, From, To, Ships, ETA.
+The **Fleets** tab shows route cards for ships already in transit and a combined
+arrival preview with queued sends. Select a card to see fleet details. Route
+search filters the cards; the summary groups arrivals by destination and round.
 
 - **Wait** — the fleet rests one round at its current position
   (ETA +1).
@@ -276,6 +289,8 @@ In the header:
   wizard, from 30 seconds up to several days. Whoever misses the deadline
   moves with the orders given so far; after three missed rounds in a row
   the AI takes over the seat.
+  The host can adjust deadlines during play through **Round deadlines** in the
+  map menu. A game with only one human has no automatic round deadline.
 - **Leave game** — your seat becomes AI. If rejoining is allowed, you
   can come back later.
 - **Back to lobby** — exit the map view; the game keeps running.
@@ -285,21 +300,32 @@ events (production, combat, conquests). A battle card first only names its
 location. Click it for a separate battle playback: both fleet strengths count
 down over a sun-and-planet background, with scaled ship markers and optional
 sound. The browser activates audio on the first click on a battle card. Use
-**Battle presentation for this round** in the report to switch between this
-playback and direct results; new rounds begin with the setting chosen in the
-game wizard. The result appears only after consciously applying the playback;
+the report's **Speed** selector to choose **0.5×, 1×, 1.5×, 2×, Instant**.
+**Instant** skips animation and also offers **Resolve all open battles**, including
+battles hidden by report filters. Speed and sound are saved per account for later
+rounds and sign-ins; the wizard default applies until you make a personal choice.
+The playback dialog also lets you change animation speed and test or switch sound.
+The result appears only after acknowledging the battle;
 until then the map shows a large battle marker and conceals the affected
 system's owner and values. Continue via **Back to map**.
+Battle acknowledgements are saved per account, game, round and event; reloading
+or signing in on another device does not reset them. Display speed does not
+change combat outcomes or round deadlines.
 Both fleets begin in neutral yellow and turn green or red only with the final
 result. A pending map marker keeps neutral systems grey and known player-system
 colours faded, without revealing combat details.
 
 ## Victory condition
 
-Whoever controls at least 70% of the star systems wins — neutral systems
-count towards the total, so a galaxy that is still largely unclaimed
-cannot be won. The game ends and a _"Game over. Winner: …"_ message is
-shown. The threshold is `GameConfig.VICTORY_SYSTEM_PERCENT`.
+The wizard sets the required share of all systems (10–100%, default 70%).
+Neutral systems count towards the total. Once a player reaches the configured
+share, the game ends; after pending battles are acknowledged, the result dialog
+shows the winner and personal ship totals.
+
+The winner can choose **Continue until every system is conquered** to resume toward 100%.
+This restarts the round deadlines and clears submissions without advancing the
+round. Other participants are informed automatically. The first result remains
+in personal statistics; continued play does not replace it with a second result.
 
 ## Observer mode
 
@@ -340,8 +366,11 @@ against the real application in headless Chrome: registration and one round,
 lobby access, round submission, battle playback, logistics and amount selection,
 fleet details and separate map viewports. Two browser sessions verify live chat,
 draft preservation and continuation through a second game end. It is not part of
-`build`; CI runs it as a separate job (`[skip e2e]` in the commit message
-skips it). Failures leave page text and a screenshot in `build/e2e-failures/`.
+`build`; additional journeys cover bulk reserves and fleet dispatch, editing and
+undo, saved filters after a new sign-in, rematches, keyboard interaction and
+preserved inputs during external updates. CI runs it as a separate job
+(`[skip e2e]` in the commit message skips it). Failures leave page text in the
+test output and a screenshot in `build/e2e-failures/`.
 
 ```bash
 ./gradlew test

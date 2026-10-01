@@ -17,7 +17,7 @@ this document covers the structural decisions.
 
 Base package: `de.zettsystems.starfare.<domain>.<technical>`.
 
-- `game` — Core. `application` (`GameService`, `GameStateRepository`,
+- `game` — Core. `application` (`GameService`,
   `PlayerViewBuilder`, `GameRegistry`, `AutoplayRunner`, `Broadcaster`),
   `domain` (`GameState`), `values` (records for setup/views:
   `StarSystem`, `Fleet`, `PlayerViewState`, `VisibleSystem`, `FleetView`,
@@ -41,7 +41,9 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
 - `i18n` — `StarfareI18NProvider` (Vaadin `I18NProvider`),
   `I18n.t(...)` facade, `LocaleServiceInitListener` (restores the UI
   locale from the session).
-- `social` — Presence, friendship, direct messages, invitations.
+- `social` — Presence, friendship, direct and game messages, invitations and
+  persistent personal display settings.
+- `legal` — Imprint, privacy information and account deletion views.
 - `style` — `CssProperties`, `HtmlAttributes` (central constants for
   Vaadin styling and attributes).
 
@@ -195,8 +197,8 @@ Standing orders render as purple dashed map edges with their fixed per-turn
 amount. Drag-and-drop starts only at an owned, fully visible system and opens
 the existing fleet dialog in relocation mode. It delegates the amount limit and
 same-route replacement to `GameService.routingHeadroom` and `addStandingOrder`.
-The Relocations table uses that same dialog for edits and offers direct deletion
-per row.
+The Relocations cards use that same dialog for edits and offer direct deletion
+per route.
 
 The fleet dialog updates its shared amount model, numeric input, slider,
 shortcuts and preview when switching between direct fleets and relocations.
@@ -225,9 +227,13 @@ For a running spectator, `observerViewFor(id, account, perspective, fogOfWar)`
 uses the same perspective builder after checking the observer registration and
 the access policy. `SpectatorControls` keep the selection in the current view;
 they never create a seat or expose commands. `BattleReplay` is a combat-only
-report value used by the UI dialog: it transports initial and remaining fleets,
-but deliberately carries no ownership transition. `BattleAcknowledgements`
-stores a per-browser-session acknowledgement for the report's battle systems.
+report value used by the UI dialog: it transports initial and remaining fleets
+and rolled combat strengths, but deliberately carries no ownership transition.
+`BattleAcknowledgements` loads durable acknowledgements through
+`BattleAcknowledgementService`, keyed by account, game, round and original event
+index. Its view-local cache is reloaded when the view rebuilds; filtering and
+sorting never change event identity. Instant mode can acknowledge every pending
+battle in the round, including filtered-out events, before one view refresh.
 Until acknowledgement, report text remains neutral and the map uses a battle
 marker that hides the affected system's result; this presentation state never
 changes the persisted game state.
@@ -247,9 +253,12 @@ restore obsolete host permissions.
   8–120 systems, 0–8 human and 0–7 AI participants (at most 10 combined),
   production 1–20 and starting garrison 1–50. The system count is raised to
   the participant count when necessary.
-  The setup also persists the default for battle presentation. Each player can
-  override it for the currently shown round in their Vaadin session; the next
-  round starts from the game's stored default.
+  The setup also persists the default for battle presentation. An explicit
+  personal speed choice overrides it across rounds and sessions via
+  `user_display_settings`; until then the game default applies.
+  Combat randomness (0–30%, default ±10%) and the victory threshold (10–100%,
+  default 70%) are game rules. Only the winner's full-conquest continuation
+  changes the victory threshold after the start, to 100%.
   `GameRegistry.createGame(GameSetup, hostPlayerId, name)` is the main
   entry point (the short overload builds a default, unnamed game).
 - `GameState.ownershipHistory` records each system ownership change and is
