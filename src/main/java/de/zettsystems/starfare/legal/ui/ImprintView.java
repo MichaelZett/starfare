@@ -17,7 +17,7 @@ import jakarta.annotation.security.PermitAll;
 public class ImprintView extends VerticalLayout {
     public ImprintView(LegalContact contact) {
         setMaxWidth("58rem");
-        add(new H1(I18n.t(UiTexts.LEGAL_IMPRINT_TITLE)), provider(contact), contact(contact));
+        add(new de.zettsystems.starfare.game.ui.AccountNavigation(), new H1(I18n.t(UiTexts.LEGAL_IMPRINT_TITLE)), provider(contact), contact(contact), new LegalFooter());
     }
 
     private static VerticalLayout provider(LegalContact contact) {

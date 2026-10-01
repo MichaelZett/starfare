@@ -78,6 +78,14 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final IntConsumer onFleetRowSelected;
     private final Consumer<PlannedOrder> onCancelOrder;
     private String routeFilter = "";
+    private final VerticalLayout fleetCards = page();
+    private final VerticalLayout orderCards = page();
+    private final VerticalLayout relocationCards = page();
+    private final List<TextField> routeFilters = new java.util.ArrayList<>();
+    private @Nullable Object lastDetails;
+    private @Nullable Object lastTravel;
+    private @Nullable Object lastLogistics;
+    private @Nullable Object lastReport;
 
     FleetAndOrdersPanel(BattleAcknowledgements acknowledgements,
                         Consumer<PlannedOrder> onCancelOrder,
@@ -128,6 +136,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
         add(tabs, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, logisticsPage, reportPage);
         showSection(Section.CONTACTS);
+        fleetsPage.add(header(UiTexts.MAP_OWN_FLEETS), routeFilter(), fleetCards);
+        ordersPage.add(header(UiTexts.MAP_PLANNED_ORDERS), routeFilter(), orderCards);
+        relocationsPage.add(header(UiTexts.MAP_STANDING_ORDERS_HEADER), routeFilter(), relocationCards);
     }
 
     void update(GameId gameId, PlayerViewState view, @Nullable VisibleSystem system, @Nullable Integer fleetId,
@@ -144,11 +155,19 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         int reportTurn = report != null ? report.turn() : view.turn() - 1;
         battlePresentationEnabled = BattlePresentationPreference.enabled(gameId, reportTurn,
                 view.battlePresentationEnabled());
-        renderTravelCards(view);
+        Object travel = java.util.Arrays.asList(view.turn(), view.ownFleets(), view.plannedOrders(),
+                view.standingOrders(), view.waitingFleetIds(), readOnly, fleetId, standingOrderId);
+        if (!travel.equals(lastTravel)) { renderTravelCards(view); lastTravel = travel; }
         renderContacts(view);
-        renderDetails(view, targetSelectionActive);
-        renderLogistics(view);
-        renderReport(view);
+        Object details = java.util.Arrays.asList(selectedSystem, fleetId, view.ownFleets(),
+                view.waitingFleetIds(), view.standingOrders(), view.turn(), readOnly, targetSelectionActive,
+                selectedSystem != null && isBattlePending(selectedSystem.id()));
+        if (!details.equals(lastDetails)) { renderDetails(view, targetSelectionActive); lastDetails = details; }
+        Object logistics = List.of(view.systems(), view.standingOrders(), readOnly);
+        if (!logistics.equals(lastLogistics)) { renderLogistics(view); lastLogistics = logistics; }
+        Object reportState = java.util.Arrays.asList(report, battlePresentationEnabled,
+                report == null ? List.of() : pendingBattleIndices(report.events()));
+        if (!reportState.equals(lastReport)) { renderReport(view); lastReport = reportState; }
     }
 
     void setViewsVisible(boolean visible) {
@@ -295,8 +314,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         card.add(new Span(order.fromSystem() + " → " + order.toSystem()),
                 new Span("◆ " + order.ships() + " / " + I18n.t(UiTexts.MAP_LOGISTICS_PER_TURN)), edit);
         card.addClickListener(_ -> onStandingOrderSelected.accept(order.id()));
-        card.getElement().setAttribute("role", "button");
-        card.getElement().setAttribute("tabindex", "0");
+        KeyboardActions.enable(card);
         return card;
     }
 
@@ -643,6 +661,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
         card.add(new Span(eventIcon(event, eventIndex)), new Span(eventText(event, eventIndex)));
         BattleReplay replay = BattleReplay.from(event).orElse(null);
+        if (event.battleSystemId().isPresent()) { KeyboardActions.enable(card); }
         event.battleSystemId().ifPresent(systemId -> {
             card.addClassName("event-map-linked");
             if (Objects.equals(selectedReportSystemId, systemId)) {
@@ -814,26 +833,22 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     private void renderTravelCards(PlayerViewState view) {
-        fleetsPage.removeAll();
-        ordersPage.removeAll();
-        relocationsPage.removeAll();
-        TextField filter = routeFilter();
-        fleetsPage.add(header(UiTexts.MAP_OWN_FLEETS), filter);
-        ordersPage.add(header(UiTexts.MAP_PLANNED_ORDERS), routeFilter());
-        relocationsPage.add(header(UiTexts.MAP_STANDING_ORDERS_HEADER), routeFilter());
+        fleetCards.removeAll();
+        orderCards.removeAll();
+        relocationCards.removeAll();
 
         List<FleetView> fleets = UiMapper.toFleetViews(view).stream()
                 .filter(fleet -> matchesRoute(fleet.fromName(), fleet.toName()))
                 .sorted(java.util.Comparator.comparingInt((FleetView fleet) -> view.turn() + fleet.eta())
                         .thenComparingInt(FleetView::fleetId))
                 .toList();
-        addArrivalGroups(fleetsPage, fleets, fleet -> view.turn() + fleet.eta(), this::fleetCard);
+        addArrivalGroups(fleetCards, fleets, fleet -> view.turn() + fleet.eta(), this::fleetCard);
 
         List<PlannedOrder> orders = view.plannedOrders().stream()
                 .filter(order -> matchesRoute(order.fromSystem(), order.toSystem()))
                 .sorted(java.util.Comparator.comparingInt(this::orderArrival).thenComparingInt(PlannedOrder::index))
                 .toList();
-        addArrivalGroups(ordersPage, orders, this::orderArrival, this::orderCard);
+        addArrivalGroups(orderCards, orders, this::orderArrival, this::orderCard);
 
         List<StandingOrderView> relocations = view.standingOrders().stream()
                 .filter(order -> matchesRoute(order.fromSystem(), order.toSystem()))
@@ -841,9 +856,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                         .thenComparing(StandingOrderView::toSystem).thenComparingInt(StandingOrderView::id))
                 .toList();
         if (relocations.isEmpty()) {
-            relocationsPage.add(emptyTravelState());
+            relocationCards.add(emptyTravelState());
         } else {
-            relocations.forEach(order -> relocationsPage.add(relocationCard(order)));
+            relocations.forEach(order -> relocationCards.add(relocationCard(order)));
         }
     }
 
@@ -852,8 +867,12 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         filter.setPlaceholder(I18n.t(UiTexts.MAP_TRAVEL_FILTER_PLACEHOLDER));
         filter.setValue(routeFilter);
         filter.setClearButtonVisible(true);
+        filter.setValueChangeMode(com.vaadin.flow.data.value.ValueChangeMode.EAGER);
+        routeFilters.add(filter);
         filter.addValueChangeListener(event -> {
+            if (!event.isFromClient()) { return; }
             routeFilter = event.getValue();
+            routeFilters.stream().filter(other -> other != filter).forEach(other -> other.setValue(routeFilter));
             PlayerViewState view = currentView;
             if (view != null) {
                 renderTravelCards(view);
@@ -917,8 +936,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         arrival.addClassName("fleet-travel-arrival");
         card.add(top, route, travelProgress(fleet), arrival);
         card.addClickListener(_ -> onFleetRowSelected.accept(fleet.fleetId()));
-        card.getElement().setAttribute("role", "button");
-        card.getElement().setAttribute("tabindex", "0");
+        KeyboardActions.enable(card);
         if (Integer.valueOf(fleet.fleetId()).equals(selectedFleetId)) {
             card.addClassName("fleet-travel-card-selected");
         }
@@ -984,8 +1002,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             card.add(new HorizontalLayout(edit, delete));
         }
         card.addClickListener(_ -> onStandingOrderSelected.accept(order.id()));
-        card.getElement().setAttribute("role", "button");
-        card.getElement().setAttribute("tabindex", "0");
+        KeyboardActions.enable(card);
         if (Integer.valueOf(order.id()).equals(selectedStandingOrderId)) {
             card.addClassName("fleet-travel-card-selected");
         }

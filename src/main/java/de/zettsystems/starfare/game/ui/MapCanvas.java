@@ -16,6 +16,7 @@ final class MapCanvas extends Div {
 
     private final Div map = new Div();
     private String viewportKey = "";
+    private java.util.List<de.zettsystems.starfare.game.values.VisibleSystem> ownSystems = java.util.List.of();
 
     MapCanvas(Runnable onBackgroundClick) {
         setId("scroll");
@@ -38,7 +39,48 @@ final class MapCanvas extends Div {
     }
 
     void render(MapRenderer.Inputs inputs) {
+        ownSystems = inputs.systems().stream()
+                .filter(system -> java.util.Objects.equals(system.ownerId(), inputs.playerId())).toList();
         MapRenderer.render(map, inputs);
+    }
+
+    void zoom(double factor) {
+        getElement().executeJs("""
+                const map = this.querySelector('#map');
+                const old = Number(map.style.zoom || 1);
+                const zoom = Math.max(0.1, Math.min(2.5, old * $0));
+                const x = (this.scrollLeft + this.clientWidth / 2) / old;
+                const y = (this.scrollTop + this.clientHeight / 2) / old;
+                map.style.zoom = zoom;
+                this.scrollLeft = x * zoom - this.clientWidth / 2;
+                this.scrollTop = y * zoom - this.clientHeight / 2;
+                this.dispatchEvent(new Event('scroll'));
+                """, factor);
+    }
+
+    void resetViewport() {
+        getElement().executeJs("this.querySelector('#map').style.zoom = '1';");
+        if (ownSystems.isEmpty()) {
+            centerOn(MAX_X / 2.0, MAX_Y / 2.0);
+        } else {
+            centerOn(ownSystems.getFirst().x(), ownSystems.getFirst().y());
+        }
+    }
+
+    void fit(boolean ownOnly) {
+        var systems = ownOnly ? ownSystems : java.util.List.<de.zettsystems.starfare.game.values.VisibleSystem>of();
+        double minX = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::x).min().orElse(0);
+        double minY = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::y).min().orElse(0);
+        double maxX = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::x).max().orElse(MAX_X);
+        double maxY = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::y).max().orElse(MAX_Y);
+        getElement().executeJs("""
+                const zoom = Math.max(0.1, Math.min(2.5,
+                    Math.min(this.clientWidth / ($2 - $0 + 180), this.clientHeight / ($3 - $1 + 180))));
+                this.querySelector('#map').style.zoom = zoom;
+                this.scrollLeft = ($0 + $2) / 2 * zoom - this.clientWidth / 2;
+                this.scrollTop = ($1 + $3) / 2 * zoom - this.clientHeight / 2;
+                this.dispatchEvent(new Event('scroll'));
+                """, minX, minY, maxX, maxY);
     }
 
     /**

@@ -20,16 +20,12 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
-import com.vaadin.flow.router.RouterLink;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
-import de.zettsystems.starfare.legal.ui.AccountDeletionView;
-import de.zettsystems.starfare.legal.ui.ImprintView;
-import de.zettsystems.starfare.legal.ui.PrivacyView;
 import de.zettsystems.starfare.social.application.*;
 import de.zettsystems.starfare.social.ui.*;
 import jakarta.annotation.security.PermitAll;
@@ -109,11 +105,7 @@ public class LobbyView extends VerticalLayout {
         Button newGameTopButton = new Button(I18n.t(UiTexts.LOBBY_NEW_GAME), _ -> openCreateGameWizard());
         newGameTopButton.addThemeVariants(ButtonVariant.PRIMARY);
         VisibilityMenu visibilityMenu = new VisibilityMenu(preferencesService, onlineUsersPanel::refresh);
-        toolbarAction.add(new LanguageSwitcher(), visibilityMenu, new RouterLink(I18n.t(UiTexts.LEGAL_PRIVACY), PrivacyView.class),
-                new RouterLink(I18n.t(UiTexts.LEGAL_IMPRINT), ImprintView.class),
-                new RouterLink(I18n.t(UiTexts.LEGAL_DELETE_ACCOUNT), AccountDeletionView.class), new Button(I18n.t(UiTexts.ARCHIVE_TITLE),
-                _ -> getUI().ifPresent(ui -> ui.navigate(ArchiveView.class))), new Button(I18n.t(UiTexts.STATISTICS_TITLE),
-                _ -> getUI().ifPresent(ui -> ui.navigate(StatisticsView.class))), newGameTopButton);
+        toolbarAction.add(new LanguageSwitcher(), visibilityMenu, new AccountNavigation(), newGameTopButton);
 
         toolbar.add(toolbarText, toolbarAction);
 
@@ -151,7 +143,7 @@ public class LobbyView extends VerticalLayout {
         body.setFlexGrow(0, sidebar);
         body.add(card, sidebar);
 
-        add(toolbar, body);
+        add(toolbar, body, new de.zettsystems.starfare.legal.ui.LegalFooter());
     }
 
     @Override
