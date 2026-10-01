@@ -78,6 +78,29 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final IntConsumer onFleetRowSelected;
     private final Consumer<PlannedOrder> onCancelOrder;
     private String routeFilter = "";
+    private Consumer<PlannedOrder> onEditOrder = _ -> { };
+
+    void onEditOrder(Consumer<PlannedOrder> action) { onEditOrder = action; }
+
+    private void restoreFilters() {
+        routeFilter = DisplayPreferences.get(de.zettsystems.starfare.social.values.DisplaySetting.ROUTE_FILTER, "");
+        String events = DisplayPreferences.get(de.zettsystems.starfare.social.values.DisplaySetting.EVENT_FILTERS, "*");
+        if (!events.equals("*")) {
+            enabledEventCategories.removeIf(category -> !List.of(events.split(",")).contains(category.name()));
+        }
+        String logistics = DisplayPreferences.get(de.zettsystems.starfare.social.values.DisplaySetting.LOGISTICS_FILTERS, "");
+        for (LogisticsFilter filter : LogisticsFilter.values()) {
+            if (List.of(logistics.split(",")).contains(filter.name())) { enabledLogisticsFilters.add(filter); }
+        }
+    }
+
+    private void saveFilters() {
+        DisplayPreferences.choose(de.zettsystems.starfare.social.values.DisplaySetting.ROUTE_FILTER, routeFilter);
+        DisplayPreferences.choose(de.zettsystems.starfare.social.values.DisplaySetting.EVENT_FILTERS,
+                enabledEventCategories.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(",")));
+        DisplayPreferences.choose(de.zettsystems.starfare.social.values.DisplaySetting.LOGISTICS_FILTERS,
+                enabledLogisticsFilters.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(",")));
+    }
     private final VerticalLayout fleetCards = page();
     private final VerticalLayout orderCards = page();
     private final VerticalLayout relocationCards = page();
@@ -113,6 +136,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         this.onDeleteStandingOrder = onDeleteStandingOrder;
         this.onBattleAcknowledged = onBattleAcknowledged;
         this.acknowledgements = acknowledgements;
+        restoreFilters();
         setPadding(false);
         setSpacing(true);
         setWidthFull();
@@ -254,6 +278,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             } else {
                 enabledLogisticsFilters.remove(filter);
             }
+            saveFilters();
             PlayerViewState view = currentView;
             if (view != null) {
                 renderLogistics(view);
@@ -539,6 +564,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 : BattlePresentationPreference.speed(presentationGame,
                         report != null ? report.turn() : view.turn() - 1, view.battlePresentationEnabled()));
         presentation.addValueChangeListener(event -> {
+            if (event.getValue() == null) { return; }
             GameId current = gameId;
             TurnReport currentReport = view.report();
             if (current != null) {
@@ -560,6 +586,14 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             nextBattle.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
             nextBattle.setTooltipText(I18n.t(UiTexts.ROUND_OPEN_BATTLES, pendingBattles.size()));
             filters.add(nextBattle);
+            if (!battlePresentationEnabled && report != null && presentationGame != null) {
+                Button all = new Button(I18n.t(UiTexts.PLAN_ACK_ALL), _ -> {
+                    pendingBattles.forEach(index -> acknowledgements.acknowledge(presentationGame, report, index));
+                    onBattleAcknowledged.run();
+                });
+                all.setDisableOnClick(true);
+                filters.add(all);
+            }
         }
         reportPage.add(filters);
         List<Integer> filtered = java.util.stream.IntStream.range(0, events.size()).boxed()
@@ -589,6 +623,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             } else {
                 enabledEventCategories.remove(category);
             }
+            saveFilters();
             PlayerViewState view = currentView;
             if (view != null) {
                 renderReport(view);
@@ -836,6 +871,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         fleetCards.removeAll();
         orderCards.removeAll();
         relocationCards.removeAll();
+        fleetCards.add(header(UiTexts.PLAN_ARRIVALS));
+        ArrivalPreview.from(view).forEach(arrival -> fleetCards.add(new Paragraph(I18n.t(UiTexts.PLAN_ARRIVAL,
+                arrival.systemName(), arrival.turn(), arrival.ships()))));
 
         List<FleetView> fleets = UiMapper.toFleetViews(view).stream()
                 .filter(fleet -> matchesRoute(fleet.fromName(), fleet.toName()))
@@ -865,6 +903,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private TextField routeFilter() {
         TextField filter = new TextField(I18n.t(UiTexts.MAP_TRAVEL_FILTER));
         filter.setPlaceholder(I18n.t(UiTexts.MAP_TRAVEL_FILTER_PLACEHOLDER));
+        filter.setMaxLength(512);
         filter.setValue(routeFilter);
         filter.setClearButtonVisible(true);
         filter.setValueChangeMode(com.vaadin.flow.data.value.ValueChangeMode.EAGER);
@@ -872,7 +911,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         filter.addValueChangeListener(event -> {
             if (!event.isFromClient()) { return; }
             routeFilter = event.getValue();
-            routeFilters.stream().filter(other -> other != filter).forEach(other -> other.setValue(routeFilter));
+            routeFilters.stream().filter(other -> !other.equals(filter)).forEach(other -> other.setValue(routeFilter));
+            saveFilters();
             PlayerViewState view = currentView;
             if (view != null) {
                 renderTravelCards(view);
@@ -958,6 +998,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             Button cancel = new Button(I18n.t(UiTexts.MAP_ACTION_CANCEL_ORDER), _ -> onCancelOrder.accept(order));
             cancel.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.SMALL, ButtonVariant.TERTIARY);
             card.add(cancel);
+            if (order.isSend()) {
+                card.add(new Button(I18n.t(UiTexts.PLAN_EDIT), _ -> onEditOrder.accept(order)));
+            }
         }
         return card;
     }

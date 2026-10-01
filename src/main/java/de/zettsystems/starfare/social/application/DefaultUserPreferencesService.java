@@ -11,6 +11,25 @@ import java.time.Instant;
 
 @Service
 public class DefaultUserPreferencesService implements UserPreferencesService {
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Map<de.zettsystems.starfare.social.values.DisplaySetting, String> displaySettings(String playerId) {
+        String name = PlayerIds.normalize(playerId);
+        return name == null ? java.util.Map.of() : repository.findById(name)
+                .map(UserPreferencesEntity::displaySettings).orElseGet(java.util.Map::of);
+    }
+
+    @Override
+    @Transactional
+    public void chooseDisplaySetting(String playerId, de.zettsystems.starfare.social.values.DisplaySetting key, String value) {
+        String name = PlayerIds.normalize(playerId);
+        if (name == null || value.length() > 512) { return; }
+        Instant now = Instant.now();
+        UserPreferencesEntity entity = repository.findById(name)
+                .orElseGet(() -> new UserPreferencesEntity(name, Visibility.ALL, now));
+        entity.chooseDisplaySetting(key, value, now);
+        repository.save(entity);
+    }
 
     private final UserPreferencesRepository repository;
     private final SocialBroadcaster broadcaster;

@@ -8,6 +8,26 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Desktop-Bedienung: Eingaben und Fokus bleiben bei unveränderten Aktualisierungen
+  erhalten. Sichtbare Kartenknöpfe bieten Zoom, Zurücksetzen, Galaxie und eigenes
+  Reich; eine Legende erklärt die Darstellung. Kartenpunkte und Aktionskacheln
+  lassen sich mit Enter und Leertaste bedienen. Kontonavigation und rechtliche
+  Fußzeile sind vereinheitlicht, die rechtlichen Ansichten deutsch und englisch.
+- Flotten und vorgemerkte Sendebefehle haben eine gemeinsame Ankunftsvorschau
+  je Ziel und Runde; Wartebefehle verschieben die Ankunft ohne Doppelzählung.
+  Sendebefehle können bearbeitet und der letzte Befehlschritt derselben Runde
+  zurückgenommen werden, auch nach Neuladen oder Neustart.
+- Flottenversand und Garnisonsreserven können für mehrere eigene Systeme
+  gemeinsam geplant werden. Ungültige oder veraltete Sammelaktionen werden
+  vollständig abgelehnt. Reserven können eine feste Zahl oder eine Produktionsrunde sein.
+- Bei Schlachtgeschwindigkeit „Sofort“ können alle offenen Schlachten zusammen
+  bestätigt werden. Geschwindigkeit, Ton, Berichts- und Logistikfilter,
+  Routensuche und Seitenleistenbreite werden je Konto dauerhaft gespeichert.
+- Neue Partien speichern ihre Ausgangseinstellungen und lassen sich aus Lobby
+  und Archiv als Vorlage oder Revanche mit frischer Karte anlegen. Eine Revanche
+  reserviert die bisherigen menschlichen Plätze; die Teilnehmer treten selbst bei.
+  Alte Partien ohne gespeicherte Ausgangseinstellungen zeigen einen Hinweis.
+
 - Die Rundenabgabe heißt ausdrücklich „Runde abgeben“. Nach der Abgabe ist der
   Knopf gesperrt; die Rundenleiste nennt die noch fehlenden Spieler. Der Stand
   bleibt nach Neuladen erhalten und wird beim Rundenwechsel zurückgesetzt.

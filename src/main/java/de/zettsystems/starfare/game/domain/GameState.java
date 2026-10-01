@@ -50,6 +50,27 @@ public class GameState {
     /** Player id → reserved seat id. Persisted as part of the game session snapshot. */
     private final Map<String, Integer> invitedSeats = new HashMap<>();
     private final Map<Integer, List<FleetOrder>> pendingOrders = new HashMap<>();
+    private final Map<Integer, List<FleetOrder>> previousOrders = new HashMap<>();
+    private @Nullable GameSetup originalSetup;
+
+    public Optional<GameSetup> originalSetup() { return Optional.ofNullable(originalSetup); }
+
+    public void rememberSetup(GameSetup setup) { originalSetup = setup; }
+
+    /** One reversible command change per player, valid only within the current round. */
+    public void rememberOrders(int player) {
+        previousOrders.put(player, List.copyOf(pendingOrders.getOrDefault(player, List.of())));
+    }
+
+    public boolean undoOrders(int player) {
+        List<FleetOrder> previous = previousOrders.get(player);
+        if (previous == null || !de.zettsystems.starfare.fleet.domain.OrderPlanning.valid(this, player, previous)) {
+            return false;
+        }
+        pendingOrders.put(player, new ArrayList<>(previous));
+        previousOrders.remove(player);
+        return true;
+    }
     private final Map<Integer, List<StandingOrder>> standingOrders = new HashMap<>();
     private final Map<Integer, Integer> nextStandingOrderId = new HashMap<>();
     private boolean observersAllowed;
@@ -316,6 +337,8 @@ public class GameState {
         this.seatByUser.clear();
         this.invitedSeats.clear();
         this.pendingOrders.clear();
+        this.previousOrders.clear();
+        this.originalSetup = null;
         this.standingOrders.clear();
         this.nextStandingOrderId.clear();
         this.observersAllowed = false;
@@ -349,6 +372,8 @@ public class GameState {
         this.seatByUser.clear();
         this.invitedSeats.clear();
         this.pendingOrders.clear();
+        this.previousOrders.clear();
+        this.originalSetup = null;
         this.standingOrders.clear();
         this.nextStandingOrderId.clear();
         this.replayFrames.clear();
@@ -476,6 +501,7 @@ public class GameState {
     }
 
     public void nextTurn() {
+        previousOrders.clear();
         this.turn++;
         this.turnStartedAt = Instant.now();
         this.stragglerSince = null;
@@ -516,7 +542,7 @@ public class GameState {
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
-                new HashMap<>(s.missedRounds), s.victorySystemPercent);
+                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders));
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -556,6 +582,9 @@ public class GameState {
         if (invited != null) {
             c.invitedSeats.putAll(invited);
         }
+        c.originalSetup = s.originalSetup();
+        var previous = s.previousOrders();
+        if (previous != null) { previous.forEach((pid, orders) -> c.previousOrders.put(pid, List.copyOf(orders))); }
         s.pendingOrders().forEach((pid, orders) -> c.pendingOrders.put(pid, new ArrayList<>(orders)));
         Map<Integer, List<StandingOrder>> standing = s.standingOrders();
         if (standing != null) {
@@ -644,6 +673,8 @@ public class GameState {
             c.nextTurn();
         }
 
+        c.originalSetup = s.originalSetup;
+        c.previousOrders.putAll(s.previousOrders);
         return c;
     }
 

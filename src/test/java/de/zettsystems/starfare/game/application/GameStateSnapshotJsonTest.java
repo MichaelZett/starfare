@@ -22,6 +22,20 @@ import static org.assertj.core.api.Assertions.assertThat;
  * neu hinzukommt, fehlt in allen bereits gespeicherten {@code state_json}-Spalten.
  */
 class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
+    @Test
+    void originalSetupSurvivesJsonAndOldSnapshotsRemainReadable() {
+        GameState state = sampleState();
+        state.rememberSetup(GameSetup.defaults());
+        state.rememberOrders(1);
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+        GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+        assertThat(restored.originalSetup()).hasValue(GameSetup.defaults());
+        assertThat(restored.undoOrders(1)).isTrue();
+        json.remove(List.of("originalSetup", "previousOrders"));
+        GameState old = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+        assertThat(old.originalSetup()).isEmpty();
+        assertThat(old.undoOrders(1)).isFalse();
+    }
 
     @Autowired
     private ObjectMapper objectMapper;

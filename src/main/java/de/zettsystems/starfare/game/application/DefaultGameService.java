@@ -30,6 +30,35 @@ import java.util.stream.Stream;
         justification = "Spring-injected collaborators are kept by reference for the bean's lifetime by design.")
 public class DefaultGameService implements GameService {
 
+    private static boolean canPlan(GameState state, int player, int expectedTurn) {
+        return state.active() && state.started() && !state.gameOver() && state.turn() == expectedTurn
+                && state.joinedHumanPlayerIds().contains(player) && !state.submittedThisTurn().contains(player);
+    }
+
+    @Override
+    public boolean editOrder(GameId id, int player, int turn, PlannedOrder expected, int target, int ships) {
+        return registry.writeState(id, state -> canPlan(state, player, turn)
+                && de.zettsystems.starfare.fleet.domain.OrderPlanning.edit(state, player, expected, target, ships));
+    }
+
+    @Override
+    public boolean undoOrders(GameId id, int player, int turn) {
+        return registry.writeState(id, state -> canPlan(state, player, turn) && state.undoOrders(player));
+    }
+
+    @Override
+    public boolean dispatchFleets(GameId id, int player, int turn, int target,
+                                 List<de.zettsystems.starfare.fleet.values.FleetDispatch> dispatches) {
+        return registry.writeState(id, state -> canPlan(state, player, turn)
+                && de.zettsystems.starfare.fleet.domain.OrderPlanning.dispatch(state, player, target, dispatches));
+    }
+
+    @Override
+    public boolean setReserves(GameId id, int player, int turn, List<Integer> systems, int reserve, boolean production) {
+        return registry.writeState(id, state -> canPlan(state, player, turn)
+                && de.zettsystems.starfare.fleet.domain.OrderPlanning.reserves(state, player, systems, reserve, production));
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(DefaultGameService.class);
     private final GameRegistry registry;
     private final GameAccessPolicy access;
@@ -687,6 +716,7 @@ public class DefaultGameService implements GameService {
             if (orders == null || orderIndex < 0 || orderIndex >= orders.size()) {
                 return false;
             }
+            state.rememberOrders(playerId);
             orders.remove(orderIndex);
             return true;
         });

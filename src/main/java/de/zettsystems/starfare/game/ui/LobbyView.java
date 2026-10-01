@@ -49,6 +49,7 @@ public class LobbyView extends VerticalLayout {
                     .thenComparing(LobbyGameRow::name);
 
     private final GameService game;
+    private final de.zettsystems.starfare.game.application.GameTemplateService templates;
     private final Broadcaster broadcaster;
     private final InvitationService invitationService;
     private final PresenceTracker presence;
@@ -71,8 +72,10 @@ public class LobbyView extends VerticalLayout {
     public LobbyView(GameService game, Broadcaster broadcaster, PresenceTracker presence,
                      SocialBroadcaster socialBroadcaster, VisibilityFilter visibilityFilter,
                      FriendshipService friendshipService, UserPreferencesService preferencesService, PlayerDirectory players,
-                     MessageService messageService, InvitationService invitationService) {
+                     MessageService messageService, InvitationService invitationService,
+                     de.zettsystems.starfare.game.application.GameTemplateService templates) {
         this.game = game;
+        this.templates = templates;
         this.broadcaster = broadcaster;
         this.invitationService = invitationService;
         this.presence = presence;
@@ -190,6 +193,9 @@ public class LobbyView extends VerticalLayout {
         Button primary = primaryAction(row);
         primary.addClassName("lobby-game-card-primary");
         card.add(heading, overview, primary, secondaryActions(row));
+        if (row.summary().belongsTo(UserContext.currentPlayerId().orElse(""))) {
+            card.add(GameTemplateDialog.button(templates, row.gameId(), row.name(), this::refresh));
+        }
         return card;
     }
 

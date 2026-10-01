@@ -234,6 +234,7 @@ public class DefaultGameRegistry implements GameRegistry {
 
     private void initializeState(GameState state, GameSetup setup) {
         state.resetForNewGame();
+        state.rememberSetup(setup);
         state.configureLobby(setup.observersAllowed(), setup.reentryAllowed(), setup.battlePresentationEnabled(),
                 setup.combatRandomnessPercent());
         state.configureVictorySystemPercent(setup.victorySystemPercent());
