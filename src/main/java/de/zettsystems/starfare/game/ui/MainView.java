@@ -62,6 +62,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private final RoundStatusBar roundStatus = new RoundStatusBar();
     private final Div gameOverBanner = new Div();
     private final FleetAndOrdersPanel fleetsPanel;
+    private final Div planningActions = new Div();
 
     @SuppressWarnings("NullAway.Init")
     private GameId gameId;
@@ -86,7 +87,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     @Autowired
     public MainView(GameService service, Broadcaster broadcaster, BattleAcknowledgementService battleAcknowledgements,
-                    GameChatService gameChat, PlayerDirectory players) {
+                    GameChatService gameChat, PlayerDirectory players,
+                    de.zettsystems.starfare.social.application.UserPreferencesService preferences) {
+        DisplayPreferences.load(preferences);
         this.game = service;
         this.gameChat = gameChat;
         this.players = players;
@@ -108,6 +111,15 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::selectRelocationTarget,
                 this::cancelTargetSelectionAndRefresh);
         mapCanvas = new MapCanvas(this::onMapBackgroundClick);
+        fleetsPanel.onEditOrder(order -> planningDialogs().edit(order));
+        planningActions.addClassName("map-controls");
+        planningActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_UNDO), _ -> {
+            if (!game.undoOrders(gameId, currentSeat(), Objects.requireNonNull(displayedTurn))) {
+                Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
+            }
+            refresh();
+        }), new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_DISPATCH), _ -> planningDialogs().dispatch()),
+                new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_RESERVES), _ -> planningDialogs().reserves()));
         header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::doLeave,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules);
 
@@ -135,7 +147,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             badgesShowingFleetNo.clear();
             refresh();
         });
-        add(header, roundStatus, spectatorControls, reviewControls, buildContent());
+        add(header, roundStatus, planningActions, spectatorControls, reviewControls, buildContent());
+    }
+
+    private PlanningDialogs planningDialogs() {
+        return new PlanningDialogs(game, gameId, currentSeat(), game.viewFor(gameId, currentSeat()), () -> {
+            refresh();
+            fleetsPanel.showOrders();
+        });
     }
 
     private SplitLayout buildContent() {
@@ -151,7 +170,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         var content = new SplitLayout(left, fleetsPanel);
         content.setWidthFull();
         content.setHeightFull();
-        content.setSplitterPosition(70);
+        content.setSplitterPosition(Math.clamp(DisplayPreferences.number(de.zettsystems.starfare.social.values.DisplaySetting.SIDEBAR, 70), 20, 85));
+        content.addSplitterDragEndListener(_ -> DisplayPreferences.choose(
+                de.zettsystems.starfare.social.values.DisplaySetting.SIDEBAR, String.valueOf(content.getSplitterPosition())));
         content.addClassName("map-content");
         return content;
     }
@@ -403,6 +424,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         displayedTurn = view.turn();
         boolean observer = isObserver() || reviewing;
         int playerId = observer ? -1 : currentSeat();
+        planningActions.setVisible(!observer && !view.gameOver() && !view.roundStatus().hasSubmitted(playerId));
         selectPendingReplayEvent(view);
         configureHeader(view, observer, playerId);
         renderMapAndSidebar(view, playerId, observer);

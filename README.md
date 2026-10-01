@@ -38,6 +38,31 @@ is disabled by default and retains archive replay and statistics.
 
 ## Map sidebar
 
+Map controls provide zoom, reset, whole-galaxy and own-empire views plus a legend.
+Focusable map objects and action cards accept Enter and Space. Background updates
+preserve unchanged input controls and focus. **My account** groups statistics,
+archive and account actions; imprint and privacy share a footer.
+
+The Fleets tab aggregates your fleets and queued sends by destination and arrival
+turn, including waits. Use **Edit order** to change a queued send's destination or
+amount. **Undo last order change** reverses your most recent queue change in the
+same round, including after a reload or server restart. It cannot override a newer
+garrison reserve or undo a resolved turn.
+
+**Send fleets together** previews arrivals from multiple selected sources before
+queuing the batch. **Set reserves together** retains a fixed amount or one round
+of production, capped at the current garrison. Both actions validate the entire
+selection and reject stale turns or unavailable ships without partial changes.
+
+With battle speed **Instant**, **Resolve all open battles** acknowledges the complete
+round. Speed, sound, report/logistics filters, route search and sidebar width are
+saved per account and restored on later sign-ins.
+
+Use **Use as template / rematch** on your lobby or archive games to reuse the
+original settings with a new map. Rematches reserve the previous human seats;
+players still join themselves. Games created before original settings were saved
+cannot be used as templates. New games remain private until explicitly published.
+
 The right-hand sidebar keeps the map visible and switches between Contacts,
 Details, Fleets, Orders, Relocations and Report. Contacts retain the last
 known hostile systems with an estimate or a counted garrison. Select a system or fleet on

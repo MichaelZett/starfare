@@ -49,7 +49,9 @@ public record GameStateSnapshot(
         @Nullable RoundRules roundRules,
         @Nullable Instant stragglerSince,
         @Nullable Map<Integer, Integer> missedRounds,
-        @Nullable Integer victorySystemPercent
+        @Nullable Integer victorySystemPercent,
+        @Nullable GameSetup originalSetup,
+        @Nullable Map<Integer, List<FleetOrder>> previousOrders
 ) {
     public GameStateSnapshot(int turn, int nextGlobalFleetId, Map<Integer, Integer> nextLocalFleetNo,
                              List<Player> players, List<StarSystem> systems, List<Fleet> fleets,
@@ -70,6 +72,6 @@ public record GameStateSnapshot(
                 submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds,
                 observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId,
                 observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory,
-                replayFrames, null, null, null, null, null, null);
+                replayFrames, null, null, null, null, null, null, null, null);
     }
 }

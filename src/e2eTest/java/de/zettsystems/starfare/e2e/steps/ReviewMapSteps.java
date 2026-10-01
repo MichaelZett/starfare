@@ -25,6 +25,102 @@ public class ReviewMapSteps {
     private final de.zettsystems.starfare.game.application.Broadcaster broadcaster;
     private ReviewGameFixture.Game first;
     private ReviewGameFixture.Game second;
+    private de.zettsystems.starfare.game.values.GameId copiedGame;
+
+    @Dann("kann ich Reserven und Flotten gesammelt planen und Befehle bearbeiten")
+    public void bulkPlanning() {
+        browser.clickButtonWithText("Reserven gesammelt setzen");
+        selectSources();
+        WebElement amount = browser.awaitCss(".planning-dialog vaadin-integer-field input");
+        amount.sendKeys(Keys.chord(Keys.CONTROL, "a"), "1", Keys.TAB);
+        browser.clickButtonWithText("Speichern");
+        awaitPlanningClosed();
+        assertThat(games.viewFor(first.id(), first.hostSeat()).systems().stream()
+                .filter(s -> s.id() == 1 || s.id() == 2)).allMatch(s -> Integer.valueOf(1).equals(s.garrisonReserve()));
+        browser.clickButtonWithText("Flotten gesammelt senden");
+        selectSources();
+        selectTarget("Gamma");
+        browser.awaitTextIn(".planning-dialog", "Schiffe");
+        browser.all(".planning-dialog vaadin-button").stream().filter(button -> button.getText().equals("Flotten gesammelt senden"))
+                .findFirst().orElseThrow().click();
+        awaitPlanningClosed();
+        browser.awaitSelectedTabWithText("Befehle");
+        assertThat(games.viewFor(first.id(), first.hostSeat()).plannedOrders()).hasSize(2);
+        browser.all(".fleet-travel-card-planned").stream().filter(card -> card.getText().contains("Alpha → Gamma"))
+                .findFirst().orElseThrow().findElements(org.openqa.selenium.By.tagName("vaadin-button")).stream()
+                .filter(button -> button.getText().equals("Befehl bearbeiten")).findFirst().orElseThrow().click();
+        selectTarget("Beta");
+        amount = browser.awaitCss(".planning-dialog vaadin-integer-field input");
+        amount.sendKeys(Keys.chord(Keys.CONTROL, "a"), "2", Keys.TAB);
+        browser.clickButtonWithText("Speichern");
+        awaitPlanningClosed();
+        browser.awaitTextIn(".fleet-travel-card-planned", "Beta");
+        assertThat(games.viewFor(first.id(), first.hostSeat()).plannedOrders().getFirst().ships()).isEqualTo(2);
+        browser.clickButtonWithText("Letzten Befehlschritt zurücknehmen");
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                Integer.valueOf(4).equals(games.viewFor(first.id(), first.hostSeat()).plannedOrders().getFirst().ships()));
+        browser.awaitTextIn(".fleet-travel-card-planned", "Gamma");
+        assertThat(games.viewFor(first.id(), first.hostSeat()).plannedOrders().getFirst().ships()).isEqualTo(4);
+        browser.clickTabWithText("Flotten");
+        browser.awaitTextIn(".map-right", "Gemeinsame Ankünfte");
+    }
+
+    @Dann("bleibt mein Routenfilter nach einer neuen Anmeldung erhalten und kann ich eine Revanche anlegen")
+    public void persistentFilterAndTemplate() {
+        WebElement filter = visibleRouteFilter();
+        filter.sendKeys("Gamma", Keys.TAB);
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                browser.all(".fleet-travel-card").stream().noneMatch(WebElement::isDisplayed));
+        browser.resetSession();
+        browser.logIn("comfort@example.test");
+        open(first);
+        browser.clickTabWithText("Flotten");
+        assertThat(visibleRouteFilter().getDomProperty("value")).isEqualTo("Gamma");
+        var before = registry.listIds();
+        browser.open("/");
+        browser.clickButtonWithText("Als Vorlage / Revanche");
+        browser.awaitCss("vaadin-dialog[opened] vaadin-checkbox").click();
+        browser.all("vaadin-dialog[opened] vaadin-button").stream().filter(button -> button.getText().equals("Neues Spiel"))
+                .findFirst().orElseThrow().click();
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> registry.listIds().size() > before.size());
+        copiedGame = registry.listIds().stream().filter(id -> !before.contains(id)).findFirst().orElseThrow();
+        assertThat(registry.readState(copiedGame, state -> state.invitedSeats().size()).intValue()).isEqualTo(1);
+        assertThat(registry.readState(copiedGame, state -> state.started()).booleanValue()).isFalse();
+    }
+
+    private WebElement visibleRouteFilter() {
+        return new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                browser.all(".map-right vaadin-text-field input").stream().filter(WebElement::isDisplayed)
+                        .findFirst().orElse(null));
+    }
+
+    private void selectSources() {
+        WebElement input = browser.awaitCss(".planning-dialog vaadin-multi-select-combo-box input");
+        input.sendKeys("Alpha");
+        selectComboItem("vaadin-multi-select-combo-box-item", "Alpha");
+        input.sendKeys(Keys.chord(Keys.CONTROL, "a"), "Beta");
+        selectComboItem("vaadin-multi-select-combo-box-item", "Beta");
+        input.sendKeys(Keys.TAB);
+    }
+
+    private void selectTarget(String name) {
+        WebElement target = browser.awaitCss(".planning-dialog vaadin-combo-box input");
+        target.sendKeys(Keys.chord(Keys.CONTROL, "a"), name);
+        selectComboItem("vaadin-combo-box-item", name);
+        target.sendKeys(Keys.TAB);
+    }
+
+    private void selectComboItem(String selector, String name) {
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .until(_ -> browser.all(selector).stream().filter(WebElement::isDisplayed)
+                        .filter(item -> item.getText().strip().equals(name)).findFirst().orElse(null)).click();
+    }
+
+    private void awaitPlanningClosed() {
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                browser.all(".planning-dialog[opened]").isEmpty());
+    }
 
     public ReviewMapSteps(Browser browser, ReviewGameFixture fixture, GameRegistry registry, GameService games,
                           de.zettsystems.starfare.game.application.Broadcaster broadcaster) {
@@ -123,16 +219,19 @@ public class ReviewMapSteps {
                 Double.parseDouble(String.valueOf(js().executeScript("return document.querySelector('#map').style.zoom"))) > 1);
         assertThat(reserve.getDomProperty("value")).isEqualTo("3");
         browser.clickTabWithText("Flotten");
-        WebElement filter = browser.all(".map-right vaadin-text-field input").stream()
-                .filter(WebElement::isDisplayed).findFirst().orElseThrow();
+        WebElement filter = visibleRouteFilter();
         filter.sendKeys("Alpha");
         broadcaster.publish(new de.zettsystems.starfare.game.application.GameEvent.PlayerSubmitted(first.id(), 99));
         assertThat(filter.getDomProperty("value")).isEqualTo("Alpha");
-        browser.awaitCss(".fleet-travel-card").sendKeys(Keys.SPACE);
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ -> {
+                    browser.awaitCss(".fleet-travel-card").sendKeys(Keys.SPACE);
+                    return true;
+                });
         browser.awaitSelectedTabWithText("Details");
         browser.awaitTextIn(".map-right", "Unterwegs seit Runde");
         browser.clickButtonWithText("Ganze Galaxie");
-        assertThat(browser.all(".map-controls")).hasSize(1);
+        assertThat(browser.all(".map-left .map-controls")).hasSize(1);
     }
 
     private void storeViewport(ReviewGameFixture.Game game, double zoom, int left) {
@@ -196,6 +295,7 @@ public class ReviewMapSteps {
 
     @After
     public void cleanupGames() {
+        if (copiedGame != null) { games.abortGame(copiedGame); }
         if (first != null) { games.abortGame(first.id()); }
         if (second != null) { games.abortGame(second.id()); }
     }

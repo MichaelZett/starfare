@@ -215,6 +215,7 @@ final class MapRenderer {
         Div marker = new Div();
         marker.addClassName("sys-report-marker");
         marker.setText("!");
+        KeyboardActions.enable(marker);
         marker.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.MAP_REPORT_MARKER_HINT));
         marker.getElement().addEventListener("click", _ -> in.onReportSystemSelected().accept(sys.id()))
                 .addEventData("event.stopPropagation()");

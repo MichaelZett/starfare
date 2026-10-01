@@ -15,7 +15,7 @@ public class DefaultFleetService implements FleetService {
     @Override
     public boolean queueSend(GameState state, int playerId, int fromId, int toId, int ships) {
         StarSystem from = state.getSystem(fromId);
-        if (!Objects.equals(from.ownerId(), playerId)) {
+        if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)) {
             return false;
         }
         if (ships <= 0) {
@@ -25,6 +25,7 @@ public class DefaultFleetService implements FleetService {
         if (from.availableShips() - committed < ships) {
             return false;
         }
+        state.rememberOrders(playerId);
         pendingFor(state, playerId).add(new FleetOrder.Send(playerId, fromId, toId, ships));
         return true;
     }
@@ -41,6 +42,7 @@ public class DefaultFleetService implements FleetService {
         boolean already = orders.stream()
                 .anyMatch(o -> o instanceof FleetOrder.Wait w && w.fleetId() == fleetId);
         if (!already) {
+            state.rememberOrders(playerId);
             orders.add(new FleetOrder.Wait(playerId, fleetId));
         }
         return true;
@@ -58,6 +60,7 @@ public class DefaultFleetService implements FleetService {
         boolean already = orders.stream()
                 .anyMatch(o -> o instanceof FleetOrder.Disband d && d.fleetId() == fleetId);
         if (!already) {
+            state.rememberOrders(playerId);
             orders.add(new FleetOrder.Disband(playerId, fleetId));
         }
         return true;
@@ -66,7 +69,7 @@ public class DefaultFleetService implements FleetService {
     @Override
     public boolean sendFleet(GameState state, int playerId, int fromId, int toId, int ships) {
         StarSystem from = state.getSystem(fromId);
-        if (!Objects.equals(from.ownerId(), playerId)) {
+        if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)) {
             return false;
         }
         if (ships <= 0 || from.availableShips() < ships) {

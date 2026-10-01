@@ -14,7 +14,6 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
-import com.vaadin.flow.server.VaadinSession;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.application.GameService;
@@ -44,7 +43,6 @@ import java.util.Optional;
 @JsModule("./battle-replay.js")
 @PermitAll
 public class RoundView extends VerticalLayout implements BeforeEnterObserver {
-    private static final String FILTER_SESSION_KEY = "starfare.roundFilter";
 
     enum EventCategory {PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD}
 
@@ -62,7 +60,9 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private final BattleAcknowledgements acknowledgements;
 
     @Autowired
-    public RoundView(GameService game, BattleAcknowledgementService battleAcknowledgements) {
+    public RoundView(GameService game, BattleAcknowledgementService battleAcknowledgements,
+                     de.zettsystems.starfare.social.application.UserPreferencesService preferences) {
+        DisplayPreferences.load(preferences);
         this.game = game;
         this.acknowledgements = new BattleAcknowledgements(battleAcknowledgements);
         addClassName("round-root");
@@ -115,10 +115,12 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         presentation.setValue(presentationGame == null ? (battlePresentationEnabled ? 1.0 : 0.0)
                 : BattlePresentationPreference.speed(presentationGame, reportTurn(), battlePresentationEnabled));
         presentation.addValueChangeListener(event -> {
+            if (event.getValue() == null) { return; }
             GameId current = gameId;
             if (current != null) {
                 battlePresentationEnabled = event.getValue() > 0;
                 BattlePresentationPreference.setSpeed(current, reportTurn(), event.getValue());
+                buildFilterBar();
                 renderTimeline();
             }
         });
@@ -132,6 +134,17 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             nextBattle.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
             nextBattle.setTooltipText(I18n.t(UiTexts.ROUND_OPEN_BATTLES, openBattles));
             filterBar.add(nextBattle);
+            if (!battlePresentationEnabled) {
+                filterBar.add(new Button(I18n.t(UiTexts.PLAN_ACK_ALL), _ -> {
+                    GameId current = gameId;
+                    TurnReport report = currentReport;
+                    if (current != null && report != null) {
+                        pendingBattleIndices().forEach(index -> acknowledgements.acknowledge(current, report, index));
+                        buildFilterBar();
+                        renderTimeline();
+                    }
+                }));
+            }
         }
     }
 
@@ -145,19 +158,18 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             } else {
                 current.remove(cat);
             }
-            VaadinSession.getCurrent().setAttribute(FILTER_SESSION_KEY, current);
+            DisplayPreferences.choose(de.zettsystems.starfare.social.values.DisplaySetting.EVENT_FILTERS,
+                    current.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(",")));
             renderTimeline();
         });
         options.add(cb);
     }
 
-    @SuppressWarnings("unchecked")
     private EnumSet<EventCategory> enabledCategories() {
-        Object raw = VaadinSession.getCurrent().getAttribute(FILTER_SESSION_KEY);
-        if (raw instanceof EnumSet<?> set) {
-            return EnumSet.copyOf((EnumSet<EventCategory>) set);
-        }
-        return EnumSet.allOf(EventCategory.class);
+        String saved = DisplayPreferences.get(de.zettsystems.starfare.social.values.DisplaySetting.EVENT_FILTERS, "*");
+        EnumSet<EventCategory> enabled = EnumSet.allOf(EventCategory.class);
+        if (!saved.equals("*")) { enabled.removeIf(category -> !List.of(saved.split(",")).contains(category.name())); }
+        return enabled;
     }
 
     private static Optional<EventCategory> categoryOf(TurnEvent e) {
@@ -283,9 +295,11 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         card.add(iconSpan, textSpan);
         BattleReplay replay = BattleReplay.from(event).orElse(null);
         if (battlePresentationEnabled && replay != null) {
+            KeyboardActions.enable(card);
             card.addClassName("event-battle-interactive");
             card.addClickListener(_ -> BattleReplayDialog.open(replay, battleSides(event), acknowledge));
         } else if (pending) {
+            KeyboardActions.enable(card);
             card.addClassName("event-battle-interactive");
             card.addClickListener(_ -> acknowledge.run());
         }

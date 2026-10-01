@@ -119,7 +119,9 @@ public class LobbySteps {
         browser.open("/");
         browser.awaitCss(".lobby-root");
         assertThat(browser.pageText()).doesNotContain(name);
-        browser.clickButtonWithText("Archiv");
+        browser.clickCss("vaadin-menu-bar-button");
+        browser.all("vaadin-menu-bar-item").stream().filter(item -> item.getText().strip().equals("Archiv"))
+                .findFirst().orElseThrow().click();
         browser.awaitText(name);
         browser.clickButtonWithText("Ansehen");
         browser.awaitUrl(url -> url.contains("/map/"), "Archive map did not open");

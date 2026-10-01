@@ -385,3 +385,32 @@ enforces this.
 - No Vaadin UI tests; the core logic stays independent of the UI.
 - Architecture check: `ModulithTest` verifies module boundaries on
   every `./gradlew test`.
+
+## Command planning and personal display choices
+
+`OrderPlanning` validates a complete replacement of one player's pending orders
+under `GameRegistry.writeState`. Edits compare the displayed command with the
+current index and use a turn token. Batch dispatch rejects duplicate sources,
+foreign systems, missing destinations and overcommitted garrisons before any
+mutation. Batch reserves similarly check all selected systems and pending sends.
+`GameState.previousOrders` stores one undo step per player, is part of the optional
+snapshot fields, and is cleared by `nextTurn`. Undo revalidates current reserves.
+`ArrivalPreview` combines fleets and queued sends by destination and arrival turn;
+wait commands affect the existing fleet rather than adding a second arrival.
+
+`GameState.originalSetup` retains the normalized starting setup. The optional
+snapshot field is absent in older saves; those games cannot supply an exact
+template. `GameTemplateService` restricts copying to hosts and participants,
+generates a fresh private game, and optionally reserves the previous human seats.
+Reservations do not join participants or start the game. Archived source games
+use the same access check.
+
+`user_display_settings` (Flyway V2_8) belongs to the existing `user_preferences`
+aggregate. Its enum keys store speed, sound, event/logistics filters, route search
+and sidebar position. `DisplayPreferences` loads an account-bound session cache;
+each explicit changed choice is saved transactionally. Reopening a map refreshes
+the cache. These values never modify game setup or game state.
+
+Map and sidebar rendering skip unchanged content. Route filters are stable Vaadin
+components while their result containers are replaced independently. Custom click
+targets use `KeyboardActions` with Enter/Space activation and visible focus styles.

@@ -168,6 +168,15 @@ public class BattleSteps {
                 const context = window.starfareBattleAudio.context;
                 const analyser = context.createAnalyser();
                 window.battleTestAnalyser = analyser;
+                window.battleTestHeardAudio = false;
+                const deadline = performance.now() + 6000;
+                function sample() {
+                    const data = new Float32Array(analyser.fftSize);
+                    analyser.getFloatTimeDomainData(data);
+                    if (data.some(value => Math.abs(value) > 0.001)) window.battleTestHeardAudio = true;
+                    if (performance.now() < deadline && !window.battleTestHeardAudio) requestAnimationFrame(sample);
+                }
+                requestAnimationFrame(sample);
                 const createGain = context.createGain.bind(context);
                 context.createGain = () => {
                     const gain = createGain();
@@ -175,11 +184,12 @@ public class BattleSteps {
                     return gain;
                 };
                 """);
+        browser.clickButtonWithText("Ton testen");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(5)).until(_ -> Boolean.TRUE.equals(
                 js().executeScript("""
                         const data = new Float32Array(window.battleTestAnalyser.fftSize);
                         window.battleTestAnalyser.getFloatTimeDomainData(data);
-                        return data.some(value => Math.abs(value) > 0.001);
+                        return window.battleTestHeardAudio;
                         """)));
         WebElement sound = browser.awaitCss(".battle-replay-dialog vaadin-checkbox");
         sound.click();

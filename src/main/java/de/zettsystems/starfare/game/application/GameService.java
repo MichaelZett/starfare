@@ -9,6 +9,11 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface GameService {
+    boolean editOrder(GameId gameId, int playerId, int expectedTurn, PlannedOrder expected, int target, int ships);
+    boolean undoOrders(GameId gameId, int playerId, int expectedTurn);
+    boolean dispatchFleets(GameId gameId, int playerId, int expectedTurn, int target,
+                          List<de.zettsystems.starfare.fleet.values.FleetDispatch> dispatches);
+    boolean setReserves(GameId gameId, int playerId, int expectedTurn, List<Integer> systems, int reserve, boolean production);
     List<GameSummary> visibleGamesFor(String account, GameListScope scope);
     Optional<GameSummary> summaryFor(GameId id, String account);
     boolean changeVisibility(GameId id, String actor, GameVisibility visibility);

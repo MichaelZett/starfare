@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 @CssImport("./styles/starfare.css")
 public class ArchiveView extends VerticalLayout {
     private final GameService games;
+    private final de.zettsystems.starfare.game.application.GameTemplateService templates;
     private final Broadcaster broadcaster;
     private final Grid<GameSummary> grid = new Grid<>(GameSummary.class, false);
     private final TextField search = new TextField();
@@ -45,8 +46,10 @@ public class ArchiveView extends VerticalLayout {
     private final Span empty = new Span(I18n.t(UiTexts.ARCHIVE_EMPTY));
     private @Nullable Subscription subscription;
 
-    public ArchiveView(GameService games, Broadcaster broadcaster) {
+    public ArchiveView(GameService games, Broadcaster broadcaster,
+                       de.zettsystems.starfare.game.application.GameTemplateService templates) {
         this.games = games;
+        this.templates = templates;
         this.broadcaster = broadcaster;
         setSizeFull();
         add(new AccountNavigation(), new de.zettsystems.starfare.legal.ui.LegalFooter());
@@ -88,6 +91,9 @@ public class ArchiveView extends VerticalLayout {
         Div details = new Div(personalResult, winner, meta, participants);
         details.addClassName("archive-game-card-details");
         card.add(name, details, viewButton(summary));
+        if (summary.belongsTo(UserContext.currentPlayerId().orElse(""))) {
+            card.add(GameTemplateDialog.button(templates, summary.gameId(), summary.name(), this::refresh));
+        }
         return card;
     }
 

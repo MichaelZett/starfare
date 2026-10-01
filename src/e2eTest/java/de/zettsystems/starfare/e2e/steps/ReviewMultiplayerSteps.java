@@ -14,6 +14,7 @@ import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
@@ -137,7 +138,13 @@ public class ReviewMultiplayerSteps {
         browser.awaitCss(OUTCOME);
         browser.awaitTextIn(".event-victory", "100");
         assertPending(guest);
-        acknowledgeBattle(guest, false);
+        guest.openDetailsWithText("Filter: 6 von 6 Ereignisarten");
+        var speed = guest.awaitCss(".report-filter-options vaadin-combo-box input");
+        speed.sendKeys(Keys.chord(Keys.CONTROL, "a"), "Sofort");
+        new WebDriverWait(guest.driver(), Duration.ofSeconds(10)).until(_ ->
+                guest.all("vaadin-combo-box-item").stream().filter(WebElement::isDisplayed)
+                        .filter(item -> item.getText().strip().equals("Sofort")).findFirst().orElse(null)).click();
+        guest.clickButtonWithText("Alle offenen Schlachten auswerten");
         guest.awaitCss(OUTCOME);
         assertThat(guest.textsOf(".game-outcome-personal-result")).contains("Dein Ergebnis: Niederlage");
     }

@@ -1,6 +1,14 @@
 # language: de
 Funktionalität: Regressionen aus dem Release-Review
 
+  Szenario: Sammelbefehle, gespeicherte Darstellungswahl und Revanche
+    Wenn ich mich als "Comfort" mit der E-Mail-Adresse "comfort@example.test" registriere
+    Und ich den Bestätigungslink für "comfort@example.test" öffne
+    Und ich mich mit "comfort@example.test" anmelde
+    Und zwei deterministische Karten für "comfort@example.test" bereitstehen
+    Dann kann ich Reserven und Flotten gesammelt planen und Befehle bearbeiten
+    Und bleibt mein Routenfilter nach einer neuen Anmeldung erhalten und kann ich eine Revanche anlegen
+
   Szenario: Logistik, Mengenwahl, Flottendetails und Kartenpositionen funktionieren zusammen
     Wenn ich mich als "Review Map" mit der E-Mail-Adresse "review-map@example.test" registriere
     Und ich den Bestätigungslink für "review-map@example.test" öffne

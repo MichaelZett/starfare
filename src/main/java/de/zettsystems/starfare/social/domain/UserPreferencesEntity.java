@@ -20,6 +20,21 @@ public class UserPreferencesEntity extends AbstractBaseEntity<String> {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+    @ElementCollection
+    @CollectionTable(name = "user_display_settings", joinColumns = @JoinColumn(name = "player_id"))
+    @MapKeyColumn(name = "setting_key", length = 40)
+    @MapKeyEnumerated(EnumType.STRING)
+    @Column(name = "setting_value", nullable = false, length = 512)
+    private java.util.Map<de.zettsystems.starfare.social.values.DisplaySetting, String> displaySettings = new java.util.HashMap<>();
+
+    public java.util.Map<de.zettsystems.starfare.social.values.DisplaySetting, String> displaySettings() {
+        return java.util.Map.copyOf(displaySettings);
+    }
+
+    public void chooseDisplaySetting(de.zettsystems.starfare.social.values.DisplaySetting key, String value, Instant now) {
+        displaySettings.put(key, value);
+        updatedAt = now;
+    }
 
     @SuppressWarnings("NullAway.Init")
     protected UserPreferencesEntity() {

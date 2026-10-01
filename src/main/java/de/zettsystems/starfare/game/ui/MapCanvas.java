@@ -16,6 +16,7 @@ final class MapCanvas extends Div {
 
     private final Div map = new Div();
     private String viewportKey = "";
+    private Object lastRender = "";
     private java.util.List<de.zettsystems.starfare.game.values.VisibleSystem> ownSystems = java.util.List.of();
 
     MapCanvas(Runnable onBackgroundClick) {
@@ -34,6 +35,7 @@ final class MapCanvas extends Div {
     }
 
     void useGame(GameId gameId) {
+        lastRender = "";
         viewportKey = "starfare.viewport." + gameId.value();
         getElement().executeJs("this.__starfareViewportKey = $0;", viewportKey);
     }
@@ -41,6 +43,14 @@ final class MapCanvas extends Div {
     void render(MapRenderer.Inputs inputs) {
         ownSystems = inputs.systems().stream()
                 .filter(system -> java.util.Objects.equals(system.ownerId(), inputs.playerId())).toList();
+        Object rendering = java.util.Arrays.asList(inputs.systems(), inputs.view().ownFleets(),
+                inputs.view().plannedOrders(), inputs.view().standingOrders(), inputs.view().waitingFleetIds(),
+                inputs.view().turn(), inputs.playerId(), inputs.observer(), inputs.selectedFrom(),
+                inputs.relocationTargetSelection(), inputs.highlightedFleetId(), inputs.highlightedStandingOrderId(),
+                inputs.reportedSystemIds(), inputs.highlightedReportSystemId(), inputs.pendingBattleSystemIds(),
+                inputs.logisticsMode(), java.util.Set.copyOf(inputs.badgesShowingFleetNo()));
+        if (rendering.equals(lastRender)) { return; }
+        lastRender = rendering;
         MapRenderer.render(map, inputs);
     }
 

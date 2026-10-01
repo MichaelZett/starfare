@@ -519,4 +519,23 @@ public final class UiTexts {
     public static final String ACCOUNT_DELETE_EFFECT = "account.deleteEffect";
     public static final String ACCOUNT_DELETE_WARNING = "account.deleteWarning";
     public static final String ACCOUNT_DELETE_CANCEL = "account.deleteCancel";
+    public static final String PLAN_EDIT = "plan.edit";
+    public static final String PLAN_SAVE = "plan.save";
+    public static final String PLAN_ARRIVALS = "plan.arrivals";
+    public static final String PLAN_ARRIVAL = "plan.arrival";
+    public static final String PLAN_DISPATCH = "plan.dispatch";
+    public static final String PLAN_RESERVES = "plan.reserves";
+    public static final String PLAN_UNDO = "plan.undo";
+    public static final String PLAN_TARGET = "plan.target";
+    public static final String PLAN_SOURCES = "plan.sources";
+    public static final String PLAN_ALL_AVAILABLE = "plan.allAvailable";
+    public static final String PLAN_KEEP_PRODUCTION = "plan.keepProduction";
+    public static final String PLAN_RESERVE_HINT = "plan.reserveHint";
+    public static final String PLAN_REJECTED = "plan.rejected";
+    public static final String PLAN_ACK_ALL = "plan.ackAll";
+    public static final String PLAN_TEMPLATE = "plan.template";
+    public static final String PLAN_REMATCH = "plan.rematch";
+    public static final String PLAN_TEMPLATE_HINT = "plan.templateHint";
+    public static final String PLAN_TEMPLATE_MISSING = "plan.templateMissing";
+    public static final String PLAN_GAME_NAME = "plan.gameName";
 }
