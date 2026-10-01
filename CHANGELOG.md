@@ -8,6 +8,10 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Deutsche Spielanleitung ergänzt und mit der README verlinkt. Nutzer- und
+  Architekturdokumentation zu Siegbedingungen, Fortsetzung, Schlachtauswertung,
+  Sammelaktionen und gespeicherten Einstellungen auf den aktuellen Stand gebracht.
+
 - Desktop-Bedienung: Eingaben und Fokus bleiben bei unveränderten Aktualisierungen
   erhalten. Sichtbare Kartenknöpfe bieten Zoom, Zurücksetzen, Galaxie und eigenes
   Reich; eine Legende erklärt die Darstellung. Kartenpunkte und Aktionskacheln
