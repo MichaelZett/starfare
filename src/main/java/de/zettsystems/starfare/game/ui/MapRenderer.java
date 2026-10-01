@@ -285,6 +285,7 @@ final class MapRenderer {
                 UiMapper.systemTooltip(sys, in.view().turn()) + " — "
                         + I18n.t(selected == null ? UiTexts.MAP_HINT_INSPECT_SYSTEM
                         : UiTexts.MAP_HINT_PICK_TARGET));
+        KeyboardActions.enable(dot);
         dot.addClickListener(_ -> {
             VisibleSystem from = in.selectedFrom();
             if (from == null) {
@@ -414,6 +415,7 @@ final class MapRenderer {
         final int fleetId = f.globalId();
         // Left-click highlights (mirrors the lane behaviour); right-click toggles the
         // ship-count vs fleet-number label and suppresses the browser context menu.
+        KeyboardActions.enable(badge);
         badge.addClickListener(_ -> {
             in.onFleetHighlight().accept(fleetId);
             in.onRefresh().run();
@@ -440,6 +442,7 @@ final class MapRenderer {
                 .set("top", (ay - 6) + "px")
                 .set("width", len + "px")
                 .set("transform", "rotate(" + angle + "deg)");
+        KeyboardActions.enable(hitArea);
         hitArea.addClickListener(_ -> {
             in.onFleetHighlight().accept(fleetId);
             in.onRefresh().run();

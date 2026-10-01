@@ -46,6 +46,7 @@ public class StatisticsView extends VerticalLayout {
         this.statistics = statistics;
         this.players = players;
         setSizeFull();
+        add(new AccountNavigation(), new de.zettsystems.starfare.legal.ui.LegalFooter());
         addClassName("statistics-view");
         summaryCards.addClassName("statistics-summary-cards");
         opponentCards.addClassName("statistics-opponent-cards");

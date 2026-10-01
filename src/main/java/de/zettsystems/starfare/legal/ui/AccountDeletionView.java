@@ -9,6 +9,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import de.zettsystems.identity.application.UserAccountService;
 import de.zettsystems.starfare.auth.ui.UserContext;
+import de.zettsystems.starfare.game.ui.UiTexts;
+import de.zettsystems.starfare.i18n.I18n;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -21,18 +23,19 @@ public class AccountDeletionView extends VerticalLayout {
     public AccountDeletionView(UserAccountService accounts) {
         this.accounts = accounts;
         setMaxWidth("42rem");
-        Button delete = new Button("Konto endgültig löschen", _ -> confirmDeletion());
+        add(new de.zettsystems.starfare.game.ui.AccountNavigation(), new LegalFooter());
+        Button delete = new Button(I18n.t(UiTexts.ACCOUNT_DELETE_ACTION), _ -> confirmDeletion());
         delete.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
-        add(new H1("Konto löschen"), new Paragraph("Dieser Vorgang löscht dein Konto und die Anmeldedaten dauerhaft. "
-                + "Er kann nicht rückgängig gemacht werden."), delete);
+        add(new H1(I18n.t(UiTexts.LEGAL_DELETE_ACCOUNT)), new Paragraph(I18n.t(UiTexts.ACCOUNT_DELETE_WARNING)), delete);
     }
 
     private void confirmDeletion() {
         ConfirmDialog dialog = new ConfirmDialog();
-        dialog.setHeader("Konto wirklich löschen?");
-        dialog.setText("Der Zugang zu Starfare wird sofort entfernt.");
+        dialog.setHeader(I18n.t(UiTexts.ACCOUNT_DELETE_CONFIRM));
+        dialog.setText(I18n.t(UiTexts.ACCOUNT_DELETE_EFFECT));
         dialog.setCancelable(true);
-        dialog.setConfirmText("Endgültig löschen");
+        dialog.setCancelText(I18n.t(UiTexts.ACCOUNT_DELETE_CANCEL));
+        dialog.setConfirmText(I18n.t(UiTexts.ACCOUNT_DELETE_ACTION));
         dialog.setConfirmButtonTheme("error primary");
         dialog.addConfirmListener(_ -> UserContext.currentUserId().ifPresent(id -> {
             accounts.deleteAccount(id);

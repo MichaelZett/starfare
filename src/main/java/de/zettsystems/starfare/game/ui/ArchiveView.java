@@ -49,6 +49,7 @@ public class ArchiveView extends VerticalLayout {
         this.games = games;
         this.broadcaster = broadcaster;
         setSizeFull();
+        add(new AccountNavigation(), new de.zettsystems.starfare.legal.ui.LegalFooter());
         search.setPlaceholder(I18n.t(UiTexts.LOBBY_SEARCH));
         search.setClearButtonVisible(true);
         search.addValueChangeListener(_ -> refresh());

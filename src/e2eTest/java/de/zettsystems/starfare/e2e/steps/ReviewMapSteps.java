@@ -22,14 +22,17 @@ public class ReviewMapSteps {
     private final ReviewGameFixture fixture;
     private final GameRegistry registry;
     private final GameService games;
+    private final de.zettsystems.starfare.game.application.Broadcaster broadcaster;
     private ReviewGameFixture.Game first;
     private ReviewGameFixture.Game second;
 
-    public ReviewMapSteps(Browser browser, ReviewGameFixture fixture, GameRegistry registry, GameService games) {
+    public ReviewMapSteps(Browser browser, ReviewGameFixture fixture, GameRegistry registry, GameService games,
+                          de.zettsystems.starfare.game.application.Broadcaster broadcaster) {
         this.browser = browser;
         this.fixture = fixture;
         this.registry = registry;
         this.games = games;
+        this.broadcaster = broadcaster;
     }
 
     @Wenn("zwei deterministische Karten für {string} bereitstehen")
@@ -104,6 +107,32 @@ public class ReviewMapSteps {
         assertViewport(1.4, 1100);
         open(second);
         assertViewport(0.8, 600);
+    }
+
+    @Dann("bleiben Eingaben bei Aktualisierungen erhalten und ist die Karte per Tastatur bedienbar")
+    public void stableInputsAndKeyboard() {
+        open(first);
+        WebElement system = browser.awaitCss("#map .sys-own");
+        system.sendKeys(Keys.ENTER);
+        browser.awaitCss(".system-metric");
+        WebElement reserve = browser.awaitCss(".map-right vaadin-integer-field input");
+        reserve.sendKeys(Keys.chord(Keys.CONTROL, "a"), "3");
+        broadcaster.publish(new de.zettsystems.starfare.game.application.GameEvent.PlayerSubmitted(first.id(), 99));
+        browser.clickButtonWithText("Vergrößern");
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                Double.parseDouble(String.valueOf(js().executeScript("return document.querySelector('#map').style.zoom"))) > 1);
+        assertThat(reserve.getDomProperty("value")).isEqualTo("3");
+        browser.clickTabWithText("Flotten");
+        WebElement filter = browser.all(".map-right vaadin-text-field input").stream()
+                .filter(WebElement::isDisplayed).findFirst().orElseThrow();
+        filter.sendKeys("Alpha");
+        broadcaster.publish(new de.zettsystems.starfare.game.application.GameEvent.PlayerSubmitted(first.id(), 99));
+        assertThat(filter.getDomProperty("value")).isEqualTo("Alpha");
+        browser.awaitCss(".fleet-travel-card").sendKeys(Keys.SPACE);
+        browser.awaitSelectedTabWithText("Details");
+        browser.awaitTextIn(".map-right", "Unterwegs seit Runde");
+        browser.clickButtonWithText("Ganze Galaxie");
+        assertThat(browser.all(".map-controls")).hasSize(1);
     }
 
     private void storeViewport(ReviewGameFixture.Game game, double zoom, int left) {

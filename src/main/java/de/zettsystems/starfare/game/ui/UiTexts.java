@@ -501,4 +501,22 @@ public final class UiTexts {
     public static final String STATISTICS_WIN = "statistics.win";
     public static final String STATISTICS_LOSS = "statistics.loss";
     public static final String STATISTICS_DRAW = "statistics.draw";
+    public static final String MAP_ZOOM_IN = "map.zoomIn";
+    public static final String MAP_ZOOM_OUT = "map.zoomOut";
+    public static final String MAP_RESET = "map.reset";
+    public static final String MAP_FIT_GALAXY = "map.fitGalaxy";
+    public static final String MAP_FIT_EMPIRE = "map.fitEmpire";
+    public static final String MAP_LEGEND = "map.legend";
+    public static final String MAP_LEGEND_TEXT = "map.legendText";
+    public static final String ACCOUNT_NAVIGATION = "account.navigation";
+    public static final String PRIVACY_DATA = "privacy.data";
+    public static final String PRIVACY_PURPOSE_TITLE = "privacy.purposeTitle";
+    public static final String PRIVACY_PURPOSE = "privacy.purpose";
+    public static final String PRIVACY_RIGHTS_TITLE = "privacy.rightsTitle";
+    public static final String PRIVACY_RIGHTS = "privacy.rights";
+    public static final String ACCOUNT_DELETE_ACTION = "account.deleteAction";
+    public static final String ACCOUNT_DELETE_CONFIRM = "account.deleteConfirm";
+    public static final String ACCOUNT_DELETE_EFFECT = "account.deleteEffect";
+    public static final String ACCOUNT_DELETE_WARNING = "account.deleteWarning";
+    public static final String ACCOUNT_DELETE_CANCEL = "account.deleteCancel";
 }

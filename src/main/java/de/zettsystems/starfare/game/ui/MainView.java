@@ -145,7 +145,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         left.setWidthFull();
         left.setHeightFull();
         left.addClassName("map-left");
-        left.add(gameOverBanner, mapCanvas);
+        left.add(gameOverBanner, new MapControls(mapCanvas), mapCanvas);
         left.setFlexGrow(1, mapCanvas);
 
         var content = new SplitLayout(left, fleetsPanel);

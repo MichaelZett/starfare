@@ -2172,3 +2172,6 @@ html, body, #outlet {
     color: var(--sf-text-muted);
     font-size: 0.8rem;
 }
+
+.map-controls, .legal-footer { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .5rem; }
+[role=button]:focus-visible { outline: 3px solid #58a6ff; outline-offset: 3px; }

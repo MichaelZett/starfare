@@ -10,6 +10,7 @@ Funktionalität: Regressionen aus dem Release-Review
     Und zeigt die Logistik die gespeicherte Verlegung
     Und zeigt eine Flottenauswahl nach einer Systemauswahl die Flottendetails
     Und bleiben Zoom und Kartenposition für beide Partien getrennt
+    Und bleiben Eingaben bei Aktualisierungen erhalten und ist die Karte per Tastatur bedienbar
 
   Szenario: Fremde Chat-Nachrichten erscheinen live und ein Entwurf bleibt erhalten
     Wenn ich mich als "Review Chat Host" mit der E-Mail-Adresse "review-chat-host@example.test" registriere
