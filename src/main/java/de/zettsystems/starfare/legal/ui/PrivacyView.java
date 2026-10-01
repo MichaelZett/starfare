@@ -5,6 +5,9 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouterLink;
+import de.zettsystems.starfare.game.ui.UiTexts;
+import de.zettsystems.starfare.i18n.I18n;
 import jakarta.annotation.security.PermitAll;
 
 /** Concise, public explanation of the data processed by the game. */
@@ -24,6 +27,9 @@ public class PrivacyView extends VerticalLayout {
                 new H2("Deine Rechte"),
                 new Paragraph("Du kannst dein Konto einschließlich der beim Anmeldedienst gespeicherten Kontodaten "
                         + "selbst löschen. Bereits abgeschlossene Partien bleiben als Spielhistorie erhalten; der "
-                        + "personenbezogene Anzeigename wird dort nicht weiter mit einem Konto verknüpft."));
+                        + "personenbezogene Anzeigename wird dort nicht weiter mit einem Konto verknüpft."),
+                new H2(I18n.t(UiTexts.LEGAL_IMPRINT_CONTACT)),
+                new Paragraph(I18n.t(UiTexts.LEGAL_PRIVACY_CONTACT)),
+                new RouterLink(I18n.t(UiTexts.LEGAL_IMPRINT), ImprintView.class));
     }
 }

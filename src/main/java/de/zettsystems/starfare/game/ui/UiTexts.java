@@ -449,6 +449,14 @@ public final class UiTexts {
     public static final String CHAT_SEND_NOT_VISIBLE = "chat.send.notVisible";
     public static final String CHAT_SEND_REJECTED = "chat.send.rejected";
     public static final String CHAT_UNREAD_BADGE = "chat.unread.badge";
+    public static final String LEGAL_PRIVACY = "legal.privacy";
+    public static final String LEGAL_IMPRINT = "legal.imprint";
+    public static final String LEGAL_DELETE_ACCOUNT = "legal.deleteAccount";
+    public static final String LEGAL_IMPRINT_TITLE = "legal.imprint.title";
+    public static final String LEGAL_IMPRINT_PROVIDER = "legal.imprint.provider";
+    public static final String LEGAL_IMPRINT_CONTACT = "legal.imprint.contact";
+    public static final String LEGAL_IMPRINT_ADDRESS_MISSING = "legal.imprint.addressMissing";
+    public static final String LEGAL_PRIVACY_CONTACT = "legal.privacy.contact";
 
     private UiTexts() {}
     public static final String GAME_PRIVATE = "game.visibility.private";

@@ -28,6 +28,7 @@ import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.legal.ui.AccountDeletionView;
+import de.zettsystems.starfare.legal.ui.ImprintView;
 import de.zettsystems.starfare.legal.ui.PrivacyView;
 import de.zettsystems.starfare.social.application.*;
 import de.zettsystems.starfare.social.ui.*;
@@ -108,8 +109,9 @@ public class LobbyView extends VerticalLayout {
         Button newGameTopButton = new Button(I18n.t(UiTexts.LOBBY_NEW_GAME), _ -> openCreateGameWizard());
         newGameTopButton.addThemeVariants(ButtonVariant.PRIMARY);
         VisibilityMenu visibilityMenu = new VisibilityMenu(preferencesService, onlineUsersPanel::refresh);
-        toolbarAction.add(new LanguageSwitcher(), visibilityMenu, new RouterLink("Datenschutz", PrivacyView.class),
-                new RouterLink("Konto löschen", AccountDeletionView.class), new Button(I18n.t(UiTexts.ARCHIVE_TITLE),
+        toolbarAction.add(new LanguageSwitcher(), visibilityMenu, new RouterLink(I18n.t(UiTexts.LEGAL_PRIVACY), PrivacyView.class),
+                new RouterLink(I18n.t(UiTexts.LEGAL_IMPRINT), ImprintView.class),
+                new RouterLink(I18n.t(UiTexts.LEGAL_DELETE_ACCOUNT), AccountDeletionView.class), new Button(I18n.t(UiTexts.ARCHIVE_TITLE),
                 _ -> getUI().ifPresent(ui -> ui.navigate(ArchiveView.class))), new Button(I18n.t(UiTexts.STATISTICS_TITLE),
                 _ -> getUI().ifPresent(ui -> ui.navigate(StatisticsView.class))), newGameTopButton);
 
