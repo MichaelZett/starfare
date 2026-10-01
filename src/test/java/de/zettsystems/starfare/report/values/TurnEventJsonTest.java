@@ -12,6 +12,14 @@ class TurnEventJsonTest {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test
+    void victoryThresholdRoundTripsAndLegacyJsonUsesHistoricalDefault() {
+        TurnEvent.Victory configured = new TurnEvent.Victory(1, 100);
+        assertThat(mapper.readValue(mapper.writeValueAsString(configured), TurnEvent.class)).isEqualTo(configured);
+        assertThat(mapper.readValue("{\"type\":\"victory\",\"winnerId\":1}", TurnEvent.class))
+                .isEqualTo(new TurnEvent.Victory(1, 70));
+    }
+
+    @Test
     void allBattleEventsPreserveFractionalStrengths() {
         List<TurnEvent> events = List.of(
                 new TurnEvent.BattleWon(1, 5, "Vega", 3, 3, 0, false, 3.24, 2.76),

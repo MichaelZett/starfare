@@ -9,6 +9,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import de.zettsystems.starfare.game.values.PlayerViewState;
+import de.zettsystems.starfare.game.values.RoundStatus;
 import de.zettsystems.starfare.i18n.I18n;
 
 /**
@@ -33,7 +34,9 @@ final class MapHeaderBar extends HorizontalLayout {
         roundLabel.addClassName("app-header-round");
         roundLabel.setText(I18n.t(UiTexts.MAP_ROUND_LABEL, 1));
 
-        next = new Button(I18n.t(UiTexts.MAP_NEXT_ROUND), _ -> onNext.run());
+        next = new Button(I18n.t(UiTexts.MAP_SUBMIT_TURN), _ -> onNext.run());
+        next.addClassName("round-submit");
+        next.setDisableOnClick(true);
         next.addThemeVariants(ButtonVariant.PRIMARY);
         logistics = new Button(I18n.t(UiTexts.MAP_LOGISTICS_MODE), _ -> onToggleLogistics.run());
         logistics.addThemeVariants(ButtonVariant.TERTIARY);
@@ -83,8 +86,16 @@ final class MapHeaderBar extends HorizontalLayout {
         leaveItem.setText(text);
     }
 
-    void setNextEnabled(boolean enabled) {
-        next.setEnabled(enabled);
+    void updateTurnAction(RoundStatus status, int playerId, boolean observer, boolean gameOver) {
+        boolean submitted = status.hasSubmitted(playerId);
+        String key = UiTexts.MAP_SUBMIT_TURN;
+        if (observer) {
+            key = UiTexts.MAP_NEXT_ROUND;
+        } else if (submitted) {
+            key = UiTexts.MAP_TURN_SUBMITTED;
+        }
+        next.setText(I18n.t(key));
+        next.setEnabled(!gameOver && !submitted);
     }
 
     void setNextVisible(boolean visible) {

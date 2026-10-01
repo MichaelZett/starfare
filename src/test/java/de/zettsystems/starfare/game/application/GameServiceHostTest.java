@@ -13,11 +13,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 class GameServiceHostTest extends AbstractIntegrationTest {
 
     @Autowired
     private GameService game;
+
+    @Autowired
+    private Broadcaster broadcaster;
 
     private GameId createGameWithHost(String host) {
         return game.newGame(GameSetup.defaults(), host, "Test");
@@ -163,5 +169,38 @@ class GameServiceHostTest extends AbstractIntegrationTest {
         int victorySystemPercent = registry.readState(id, GameState::victorySystemPercent);
         assertThat(gameOver).isFalse();
         assertThat(victorySystemPercent).isEqualTo(100);
+    }
+
+    @Test
+    void continuationBroadcastsOnlyForTheWinnerAndPersistsFreshDeadline() {
+        GameId id = createGameWithHost("alice");
+        seedTwoHumanSeats(id, "alice", "bob");
+        registry.writeState(id, state -> { state.endGame(1); return null; });
+        List<GameEvent> events = new ArrayList<>();
+        var subscription = broadcaster.subscribe(id, events::add);
+        Instant before = Instant.now();
+        try {
+            assertThat(game.continueAfterVictory(id, "bob")).isFalse();
+            assertThat(events).isEmpty();
+            assertThat(game.continueAfterVictory(id, "alice")).isTrue();
+            assertThat(events).containsExactly(new GameEvent.GameContinued(id));
+            Instant started = registry.readState(id, GameState::turnStartedAt);
+            assertThat(started).isBetween(before, Instant.now());
+            Instant deadline = registry.readState(id, GameState::roundDeadline);
+            assertThat(deadline).isEqualTo(started.plus(RoundRules.defaults().roundLimit()));
+        } finally {
+            subscription.remove();
+        }
+    }
+
+    @Test
+    void abortWithoutWinnerCannotBeContinuedByUnseatedAccount() {
+        GameId id = createGameWithHost("alice");
+        seedTwoHumanSeats(id, "alice", "bob");
+        registry.writeState(id, state -> { state.endGame(null); return null; });
+
+        assertThat(game.continueAfterVictory(id, "outsider")).isFalse();
+        assertThat(game.continueAfterVictory(id, "alice")).isFalse();
+        assertThat(registry.readState(id, GameState::gameOver).booleanValue()).isTrue();
     }
 }

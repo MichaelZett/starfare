@@ -162,7 +162,7 @@ public class SmokeSteps {
 
     @Wenn("ich die nächste Runde auslöse")
     public void advanceRound() {
-        browser.clickButtonWithText("Nächste Runde");
+        browser.clickButtonWithText("Runde abgeben");
     }
 
     @Dann("sehe ich den Rundenbericht für Runde {int}")

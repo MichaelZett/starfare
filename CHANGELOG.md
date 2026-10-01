@@ -8,6 +8,19 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Die Rundenabgabe heißt ausdrücklich „Runde abgeben“. Nach der Abgabe ist der
+  Knopf gesperrt; die Rundenleiste nennt die noch fehlenden Spieler. Der Stand
+  bleibt nach Neuladen erhalten und wird beim Rundenwechsel zurückgesetzt.
+- Beim Herunterfahren beenden die Benachrichtigungsdienste ihre Zustellung vor
+  dem Schließen der Datenbank. Präsenzabmeldungen aktualisieren dann keine
+  Lobby- oder Onlineansichten mehr.
+
+- KI-Siege zählen in der persönlichen Statistik als Niederlage. Das gespeicherte
+  erste Ergebnis bleibt auch nach Fortsetzung und erneutem Spielende erhalten.
+- Neue Regressionstests sichern KI-Persistenz, Rundenfristen, Siegberichte und
+  lesende Kapazitätsabfragen. Browserabläufe prüfen Logistik, Mengenwahl,
+  Flottenauswahl, Kartenpositionen sowie Chat und Fortsetzung mit zwei Sitzungen.
+
 - Logistik-Reiter ist sichtbar. Flottenauswahl zeigt zuverlässig Flottendetails;
   Zoom und Kartenposition werden je Partie gespeichert.
 - Verlegungsmengen und Schnellknöpfe verwenden die freie Produktionskapazität,

@@ -12,11 +12,16 @@ Funktionalität: Rundenstatus
     Und ich die Partie öffne
     Dann zeigt die Rundenleiste 2 Spieler, davon 0 mit Haken
     Und läuft die Uhr bis zum Rundenende
+    Und kann ich meine Runde abgeben
     Wenn ich die nächste Runde auslöse
     Dann zeigt die Rundenleiste 2 Spieler, davon 1 mit Haken
     Und läuft die Nachzügler-Uhr bei "Host-Reich"
+    Und ist meine Runde abgegeben und wartet auf "Host-Reich"
     Wenn ich die Browsersitzung wechsle
     Und ich mich mit "rounds-host@example.test" anmelde
     Und ich die Partie öffne
     Dann zeigt die Rundenleiste 2 Spieler, davon 1 mit Haken
     Und läuft die Nachzügler-Uhr bei "Host-Reich"
+    Und kann ich meine Runde abgeben
+    Wenn ich die nächste Runde auslöse
+    Dann sehen beide Sitzungen die nächste Runde mit freigegebener Abgabe

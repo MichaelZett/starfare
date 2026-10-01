@@ -1954,6 +1954,13 @@ html, body, #outlet {
     max-width: 18em;
 }
 
+.round-status-waiting {
+    flex-basis: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--sf-text);
+}
+
 .round-status-seat.submitted {
     color: var(--sf-text);
 }

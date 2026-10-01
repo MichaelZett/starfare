@@ -16,6 +16,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GameStateTest {
 
     @Test
+    void fullConquestResumesWithFreshDeadlineAndNoOldSubmissions() {
+        GameState state = new GameState();
+        state.start();
+        state.joinedHumanPlayerIds().addAll(Set.of(1, 2));
+        state.submittedThisTurn().add(1);
+        state.updateStragglerClock(state.turnStartedAt());
+        state.endGame(1);
+        int turn = state.turn();
+        Instant resumedAt = state.turnStartedAt().plusSeconds(3600);
+
+        state.resumeForFullConquest(resumedAt);
+
+        assertThat(state.gameOver()).isFalse();
+        assertThat(state.winnerId()).isNull();
+        assertThat(state.finishedAt()).isNull();
+        assertThat(state.victorySystemPercent()).isEqualTo(100);
+        assertThat(state.turn()).isEqualTo(turn);
+        assertThat(state.turnStartedAt()).isEqualTo(resumedAt);
+        assertThat(state.stragglerSince()).isNull();
+        assertThat(state.submittedThisTurn()).isEmpty();
+        assertThat(state.roundDeadline()).isEqualTo(resumedAt.plus(state.roundRules().roundLimit()));
+    }
+
+    @Test
     void updateSystemReplacesEntry() {
         GameState state = new GameState();
         state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 2, false));

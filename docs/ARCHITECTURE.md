@@ -107,6 +107,11 @@ A round ends once every human has submitted, or at the round deadline
 round, the straggler limit from the moment only one human is still missing;
 whichever comes first. Both are chosen per game in the wizard (defaults 5 min
 and 1 min). Games with fewer than two humans have no deadline.
+The header uses **Submit turn** for human players and disables the action after
+submission. `RoundStatus.hasSubmitted` and `pendingPlayerLabels` drive the
+persistent **Submitted — waiting for …** notice below the header. Both derive
+from the current server state, including after reload or a pushed round change.
+AI-only spectators retain **Next turn** as an advance action.
 `RoundDeadlineRunner` checks every `starfare.game.round-check-interval` (5 s).
 At the deadline, late players move with the orders they had queued; after
 `GameConfig.MAX_MISSED_ROUNDS` (3) missed deadlines in a row the AI takes the
@@ -142,6 +147,10 @@ and does not register spectators or save state. Map actions and service commands
 reject edits after game end. At the first game end, `GameStatisticsService` writes
 the compact result plus human participants to `game_results`; this data remains
 after `game_sessions` is later pruned.
+`game_results.ai_victory` distinguishes an AI winner without an account from
+a game without a winner. Such victories count as losses for human participants.
+Older results default to false because a missing account alone cannot establish
+whether the original game ended with an AI victory or no winner.
 
 Only the recorded winner may resume a completed game. `resumeForFullConquest`
 raises the victory threshold to 100%, clears the outcome and submissions, and
@@ -314,6 +323,10 @@ per player id (multiple tabs count). `SocialBroadcaster` is the global
 fan-out for `SocialEvent`s (`PresenceChanged`, `FriendRequestReceived`,
 `FriendshipUpdated`, `VisibilityUpdated`, `DirectMessage`,
 `InviteReceived/Withdrawn/Accepted/Declined`).
+Both `DefaultSocialBroadcaster` and `DefaultBroadcaster` stop delivery and
+release their listeners on `ContextClosedEvent`, before bean destruction.
+UI detachment can still update presence counts during shutdown, but its events
+no longer enqueue view refreshes against a closed database.
 
 ### Owner mechanics and invites
 

@@ -157,6 +157,8 @@ public final class UiTexts {
     public static final String MAP_HEADER_TITLE = "map.header.title";
     public static final String MAP_ROUND_LABEL = "map.roundLabel";
     public static final String MAP_NEXT_ROUND = "map.nextRound";
+    public static final String MAP_SUBMIT_TURN = "map.submitTurn";
+    public static final String MAP_TURN_SUBMITTED = "map.turnSubmitted";
     public static final String MAP_LOGISTICS_MODE = "map.logistics.mode";
     public static final String MAP_SUBMIT_WAITING = "map.submit.waiting";
     public static final String MAP_SUBMIT_FAILED = "map.submit.failed";

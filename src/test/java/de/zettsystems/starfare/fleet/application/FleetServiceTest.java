@@ -12,6 +12,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class FleetServiceTest {
 
+    @Test
+    void capacityReadsDoNotCreateStandingOrderEntries() {
+        assertThat(service.routingCapacity(state, 1, 1)).isEqualTo(2);
+        assertThat(service.routingHeadroom(state, 1, 1, 2)).isEqualTo(2);
+        assertThat(service.routedFrom(state, 1, 1)).isZero();
+        assertThat(service.routingHeadroom(state, 99, 1, 2)).isZero();
+        assertThat(state.standingOrders()).isEmpty();
+    }
+
+    @Test
+    void rejectedRelocationDoesNotCreateEntriesAndProductionMayExceedGarrison() {
+        state.systems().clear();
+        state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 20, false));
+        state.systems().add(new StarSystem(2, "S2", 100, 0, 1, 3, 2, false));
+
+        assertThat(service.addStandingOrder(state, 1, 1, 2, 21)).isEqualTo(-1);
+        assertThat(state.standingOrders()).isEmpty();
+        assertThat(service.addStandingOrder(state, 1, 1, 2, 20)).isPositive();
+        assertThat(state.standingOrders().get(1)).singleElement().satisfies(order ->
+                assertThat(order.ships()).isEqualTo(20));
+    }
+
     private FleetService service;
     private GameState state;
 

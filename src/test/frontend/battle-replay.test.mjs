@@ -25,3 +25,33 @@ test('survivors, no losses and empty armies retain the exact combat result', () 
         assert.ok(sequence.every(value => value >= remaining && value <= initial));
     }
 });
+
+for (const attackerWon of [true, false]) {
+    test(`zero-survivor result uses the explicit winner flag (${attackerWon})`, () => {
+        const classes = new Set();
+        const classList = {
+            add(value) { classes.add(value); },
+            toggle(value, enabled) { if (enabled) classes.add(value); else classes.delete(value); }
+        };
+        const attackNumber = {textContent: ''};
+        const defenseNumber = {textContent: ''};
+        const root = {
+            classList,
+            getAttribute() { return String(attackerWon); },
+            querySelector(selector) {
+                if (selector === '[data-battle-attacking]') return attackNumber;
+                if (selector === '[data-battle-defending]') return defenseNumber;
+                return {classList};
+            },
+            querySelectorAll() { return []; }
+        };
+        window.matchMedia = () => ({matches: true});
+
+        window.starfarePlayBattle(root, 1, 1, 0, 0, false);
+
+        assert.equal(classes.has('battle-replay-attacker-won'), attackerWon);
+        assert.ok(classes.has('battle-replay-result-known'));
+        assert.equal(attackNumber.textContent, '0');
+        assert.equal(defenseNumber.textContent, '0');
+    });
+}

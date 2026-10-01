@@ -4,6 +4,7 @@ import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.Subscription;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 class BroadcasterTest {
+
+    @Test
+    void contextCloseStopsGlobalAndGameDeliveryIncludingLateSubscriptions() {
+        var context = new AnnotationConfigApplicationContext(DefaultBroadcaster.class);
+        var publisher = context.getBean(Broadcaster.class);
+        GameId id = GameId.newId();
+        List<GameEvent> received = new ArrayList<>();
+        publisher.subscribe(id, received::add);
+        publisher.subscribeAll(received::add);
+        publisher.publish(new GameEvent.GameCreated(id));
+        context.close();
+
+        publisher.subscribe(id, received::add);
+        publisher.subscribeAll(received::add);
+        publisher.publish(new GameEvent.GameFinished(id, 1));
+
+        assertThat(received).containsExactly(new GameEvent.GameCreated(id), new GameEvent.GameCreated(id));
+    }
 
     private Broadcaster broadcaster;
 

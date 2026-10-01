@@ -175,11 +175,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             Notification.show(I18n.t(UiTexts.MAP_SUBMIT_FAILED));
             return;
         }
-        if (game.isWaitingForOtherPlayers(gameId, pid)) {
-            Notification.show(I18n.t(UiTexts.MAP_SUBMIT_WAITING));
-            refresh();
-            return;
-        }
         refresh();
     }
 
@@ -409,7 +404,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         boolean observer = isObserver() || reviewing;
         int playerId = observer ? -1 : currentSeat();
         selectPendingReplayEvent(view);
-        configureHeader(view, observer);
+        configureHeader(view, observer, playerId);
         renderMapAndSidebar(view, playerId, observer);
         if (advancedTurn) {
             fleetsPanel.showReport();
@@ -475,7 +470,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         pendingReplayEvent = null;
     }
 
-    private void configureHeader(PlayerViewState view, boolean observer) {
+    private void configureHeader(PlayerViewState view, boolean observer, int playerId) {
         reviewControls.setVisible(reviewing);
         fleetsPanel.setViewsVisible(!observer || reviewing);
         fleetsPanel.setReportAvailable(currentSeat() >= 0);
@@ -486,9 +481,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer && pendingBattleSystemIds(view).isEmpty());
         header.setRound(view.turn());
-        roundStatus.update(reviewing ? RoundStatus.NONE : view.roundStatus());
+        RoundStatus status = reviewing ? RoundStatus.NONE : view.roundStatus();
+        roundStatus.update(status, playerId);
         header.setGameName(game.gameNameOf(gameId));
-        header.setNextEnabled(!view.gameOver());
+        header.updateTurnAction(status, playerId, observer, view.gameOver());
         header.setLogisticsActive(logisticsMode);
         gameOverBanner.setVisible(view.gameOver() && reviewing);
         if (view.gameOver() && reviewing) {
