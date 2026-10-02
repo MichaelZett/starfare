@@ -9,13 +9,21 @@ class RulesetCatalogTest {
     private final RulesetCatalog catalog = RulesetCatalog.builtIn();
 
     @Test
-    void sectorForcesIsReleasedWhileSpacewardRemainsUnderDevelopment() {
+    void sectorForcesAndSpacewardAreReleased() {
         assertThat(catalog.definitions()).hasSize(2);
+        assertThat(catalog.definitions().getFirst().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
         assertThatCode(() -> catalog.requireCreatable(RulesetRef.SECTOR_FORCES)).doesNotThrowAnyException();
-        assertThat(catalog.find(RulesetRef.SPACEWARD.variant()).orElseThrow().creationEnabled()).isFalse();
-        assertThatCode(() -> catalog.requireSupported(RulesetRef.SPACEWARD)).doesNotThrowAnyException();
-        assertThatThrownBy(() -> catalog.requireCreatable(RulesetRef.SPACEWARD))
+        assertThat(catalog.find(RulesetRef.SPACEWARD.variant()).orElseThrow().creationEnabled()).isTrue();
+        assertThatCode(() -> catalog.requireCreatable(RulesetRef.SPACEWARD)).doesNotThrowAnyException();
+        assertThatThrownBy(() -> catalog.requireCreatable(new RulesetRef("spaceward", "2.0.0")))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void onlySpacewardReplacesTheAttackOrderWithCoalitionBattles() {
+        assertThat(RulesetRef.SPACEWARD.resolvesCoalitionBattles()).isTrue();
+        assertThat(RulesetRef.SECTOR_FORCES.resolvesCoalitionBattles()).isFalse();
+        assertThat(new RulesetRef("spaceward", "2.0.0").resolvesCoalitionBattles()).isFalse();
     }
 
     @Test
