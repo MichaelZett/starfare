@@ -20,6 +20,13 @@ class RulesetCatalogTest {
     }
 
     @Test
+    void onlySpacewardReplacesTheAttackOrderWithCoalitionBattles() {
+        assertThat(RulesetRef.SPACEWARD.resolvesCoalitionBattles()).isTrue();
+        assertThat(RulesetRef.SECTOR_FORCES.resolvesCoalitionBattles()).isFalse();
+        assertThat(new RulesetRef("spaceward", "2.0.0").resolvesCoalitionBattles()).isFalse();
+    }
+
+    @Test
     void unknownVersionsAndVariantsNeverFallBackToClassic() {
         assertThatThrownBy(() -> catalog.requireCreatable(new RulesetRef("classic", "2.0.0")))
                 .isInstanceOf(IllegalArgumentException.class);

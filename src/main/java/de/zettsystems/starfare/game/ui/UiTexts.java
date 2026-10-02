@@ -313,6 +313,7 @@ public final class UiTexts {
     public static final String LOBBY_SUMMARY_ROUNDS = "lobby.summary.rounds";
     public static final String LOBBY_SUMMARY_COMBAT = "lobby.summary.combat";
     public static final String LOBBY_SUMMARY_RULES = "lobby.summary.rules";
+    public static final String LOBBY_SUMMARY_COALITION_COMBAT = "lobby.summary.coalitionCombat";
     public static final String LOBBY_SUMMARY_ACCESS = "lobby.summary.access";
     public static final String LOBBY_SUMMARY_START_PRODUCTION = "lobby.summary.startProduction";
     public static final String LOBBY_SUMMARY_ENABLED = "lobby.summary.enabled";

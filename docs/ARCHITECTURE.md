@@ -678,7 +678,9 @@ all browser acceptance tests.
 ## Spaceward release (M7)
 
 `RulesetCatalog.builtIn()` enables creation for `spaceward / 1.0.0`; SectorForces
-stays first and therefore preselected in the wizard. No stored data changes:
+stays first and therefore preselected in the wizard. `RulesetRef.resolvesCoalitionBattles`
+hides the SectorForces attack-order section for Spaceward; such setups store the
+default order, and the summary names simultaneous coalition combat. No stored data changes:
 existing games keep their reference, and templates and rematches of Spaceward
 games are now creatable as well. `DefaultGameRegistry.createGame` initializes
 industry and the calibrated range directly after galaxy generation, so lobby
