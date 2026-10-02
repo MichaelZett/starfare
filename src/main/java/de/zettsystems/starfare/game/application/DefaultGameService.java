@@ -1,5 +1,10 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.starfare.diplomacy.application.DefaultDiplomacyService;
+import de.zettsystems.starfare.diplomacy.application.DiplomacyService;
+import de.zettsystems.starfare.diplomacy.values.DiplomacyView;
+import de.zettsystems.starfare.diplomacy.values.DiplomacyOrder;
+import de.zettsystems.starfare.diplomacy.values.DiplomacyState;
 import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.economy.application.EconomyService;
 import de.zettsystems.starfare.fleet.application.FleetService;
@@ -49,6 +54,29 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public Optional<DiplomacyView> diplomacyFor(GameId id, String account) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            Integer seat = state.seatByUser().get(account);
+            if (!Routes.limited(state) || !state.started() || seat == null || !state.joinedHumanPlayerIds().contains(seat)
+                    || !access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
+            return Optional.of(new DiplomacyView(state.turn(), seat,
+                    canPlan(state, seat, state.turn()), state.players(), new DiplomacyState(
+                            state.diplomacy().nextId(), state.diplomacy().groups(), state.diplomacy().proposals().stream()
+                            .filter(proposal -> proposal.voters().contains(seat)).toList())));
+        }));
+    }
+    @Override
+    public boolean diplomacyOrder(GameId id, String account, int turn, DiplomacyOrder order) {
+        if (!isRunningGame(id)) { return false; }
+        boolean accepted = registry.writeState(id, state -> {
+            Integer seat = state.seatByUser().get(account);
+            return seat != null && canPlan(state, seat, turn)
+                    && diplomacy.act(state, seat, order);
+        });
+        if (accepted) { broadcaster.publish(new GameEvent.DiplomacyChanged(id)); }
+        return accepted;
+    }
+    @Override
     public RulesetCatalog rulesets() { return registry.rulesets(); }
 
     @Override
@@ -77,6 +105,7 @@ public class DefaultGameService implements GameService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultGameService.class);
     private final EconomyService economy;
+    private final DiplomacyService diplomacy;
     private final GameRegistry registry;
     private final GameAccessPolicy access;
     private final TurnEngine turnEngine;
@@ -99,12 +128,22 @@ public class DefaultGameService implements GameService {
                 playerViewBuilder, access, statistics, archives, timing, battleAcknowledgements, new DefaultEconomyService());
     }
 
-    @Autowired
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
                               PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
                               GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
                               BattleAcknowledgementService battleAcknowledgements, EconomyService economy) {
+        this(registry, turnEngine, fleetService, reportService, autoplayRunner, broadcaster, playerViewBuilder,
+                access, statistics, archives, timing, battleAcknowledgements, economy, new DefaultDiplomacyService());
+    }
+    @Autowired
+    public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
+                              ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
+                              PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
+                              GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
+                              BattleAcknowledgementService battleAcknowledgements, EconomyService economy,
+                              DiplomacyService diplomacy) {
+        this.diplomacy = diplomacy;
         this.economy = economy;
         this.registry = registry;
         this.battleAcknowledgements = battleAcknowledgements;

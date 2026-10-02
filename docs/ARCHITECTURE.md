@@ -27,7 +27,7 @@ simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md
 application release. SectorForces uses `classic / 1.0.0`; the display name does
 not change its stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
-Spaceward (`spaceward / 1.0.0`) has internal industrial-economy and navigation implementations
+Spaceward (`spaceward / 1.0.0`) has internal economy, navigation and diplomacy implementations
 but remains unavailable for new games until its combined acceptance. Orion has
 no implementation or selectable entry.
 
@@ -65,7 +65,7 @@ galaxy's geometric graph. Expansion still requires capturing stations; travel
 speed and sensor coverage keep their existing independent rules. Calibration
 checks exercise both layouts, 8/24/60/120 systems and twenty seeds each.
 
-`Routes.plan` selects the shortest elapsed-time route using owned intermediate
+`Routes.plan` selects the shortest elapsed-time route using owned or allied intermediate
 systems, adding one full round per stop. Foreign final destinations are allowed.
 Fleet acceptance, atomic order editing/undo, production transfers, AI and view
 previews use the same planner. Lost routes pause existing transfers without
@@ -91,6 +91,40 @@ rejected. Arrival summaries count only final destinations, include waits and
 exclude blocked fleets. UI cards explain route and phase, use unknown arrival
 for blocked travel, and map lines follow actual legs. No rule-dependent state
 leaks through foreign-system industry views.
+
+## Spaceward diplomacy (M5)
+
+The diplomacy module owns immutable treaty state, unanimous proposals and
+application services. GameState keeps DiplomacyState independently of military
+intelligence. Each empire belongs to at most one AllianceGroup; a lone remaining
+member becomes contractless. Founding requires both partners, admission requires
+all current members plus the applicant, and notice changes require all members.
+Overlapping votes are rejected. Roster changes discard stale electorates.
+
+Notice periods are 0–50 whole rounds. A departure takes effect at current turn
+plus max(1, notice), processed at the resolution boundary before arrivals.
+Already announced dates are never changed by a later agreement. Account-facing
+commands run under the game write lock and verify the actual human seat, expected
+turn and submission state. Views expose group contracts and only proposals in
+which the account votes; they add no military intelligence. Read paths never
+write. AI answers pending requests unless it has already announced departure,
+and refrains from targeting allies. It does not initiate treaties.
+
+Navigation permits allied intermediate stations. Allied final arrivals use the
+PARTNER journey phase and retain independent fleet ownership; they cannot capture
+the partner system or disband into its garrison. Combined defence and combat
+remain M6 work. A departing member's stationed and already inbound partner
+contingents become non-combat returns. They automatically choose the shortest
+currently permitted route to an owned system, or remain BLOCKED until one exists.
+The first return leg may leave an inaccessible origin; subsequent stations obey
+normal ownership/treaty/range checks. Return fleets cannot wait or disband and
+never attack at an arrival, even if their destination is lost in flight.
+
+Snapshots add nullable diplomacy and returningHome fields. Missing fields mean
+no contracts and ordinary M4 travel. Copying, persistence and archives retain
+consent, deadlines and return phases. Invalid memberships, electorate data,
+unknown participants and cross-variant treaty state are rejected. SectorForces
+has no diplomacy actions. Spaceward remains unavailable until M6/M7 acceptance.
 
 ## Spaceward industrial economy (M3)
 
@@ -197,6 +231,7 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
   `FleetOrder`).
 - `economy` — Spaceward capacity, allocation and progress (`Industry`),
   production (`EconomyService`) and the immutable inspector (`IndustryView`, `IndustryPanel`).
+- `diplomacy` — alliance groups, unanimous consent and round-based departures.
 - `ai` — Classic and Spaceward AI decisions (`AiService`, `SpacewardPlanning`).
 - `report` — Round reports (`TurnReport`, `TurnEvent`).
 - `auth` — Starfare adapter around the reusable identity building block

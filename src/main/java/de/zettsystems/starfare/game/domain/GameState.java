@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.domain;
 
+import de.zettsystems.starfare.diplomacy.values.DiplomacyState;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.values.*;
@@ -22,6 +23,23 @@ import org.jspecify.annotations.Nullable;
                 + "are exposed on purpose so application services can mutate them; concurrency is "
                 + "serialized via GameSession's read/write lock (see CLAUDE.md \"State/repository contract\").")
 public class GameState {
+    private DiplomacyState diplomacy = DiplomacyState.EMPTY;
+    public DiplomacyState diplomacy() { return diplomacy; }
+    public boolean allied(int left, @Nullable Integer right) { return Routes.limited(this) && right != null && diplomacy.allied(left, right); }
+    public void agreeTreaties(DiplomacyState agreed) {
+        if (!Routes.limited(this)) { throw new IllegalStateException("Diplomacy belongs only to Spaceward"); }
+        diplomacy = agreed;
+    }
+    private void validateDiplomacy() {
+        if (!Routes.limited(this) && !diplomacy.equals(DiplomacyState.EMPTY)) {
+            throw new IllegalArgumentException("Diplomacy belongs only to Spaceward");
+        }
+        var participants = players.stream().map(Player::id).collect(java.util.stream.Collectors.toSet());
+        if (diplomacy.groups().stream().anyMatch(group -> !participants.containsAll(group.members()))
+                || diplomacy.proposals().stream().anyMatch(proposal -> !participants.containsAll(proposal.voters()))) {
+            throw new IllegalArgumentException("Treaty references an unknown empire");
+        }
+    }
     private @Nullable NavigationSettings navigation;
     public Optional<NavigationSettings> navigationSettings() { return Optional.ofNullable(navigation); }
     public void configureNavigation(NavigationSettings settings) {
@@ -446,6 +464,7 @@ public class GameState {
         this.systems.clear();
         this.industries.clear();
         navigation = null;
+        diplomacy = DiplomacyState.EMPTY;
         this.fleets.clear();
         this.reports.clear();
         this.intel.clear();
@@ -635,6 +654,7 @@ public class GameState {
     public static GameStateSnapshot toSnapshot(GameState s) {
         s.validateIndustry();
         s.validateNavigation();
+        s.validateDiplomacy();
         Map<Integer, Map<Integer, Intel>> intelCopy = new HashMap<>();
         s.intel.forEach((pid, inner) -> intelCopy.put(pid, new HashMap<>(inner)));
         Map<Integer, List<FleetOrder>> ordersCopy = new HashMap<>();
@@ -655,7 +675,7 @@ public class GameState {
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
-                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation);
+                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -700,6 +720,9 @@ public class GameState {
         var industry = s.industries();
         if (industry != null) { c.industries.putAll(industry); }
         c.validateIndustry();
+        var treaties = s.diplomacy();
+        c.diplomacy = treaties == null ? DiplomacyState.EMPTY : treaties;
+        c.validateDiplomacy();
         c.navigation = s.navigation();
         if (c.navigation == null && c.fleets.stream().anyMatch(fleet -> fleet.journey() != null)) {
             throw new IllegalArgumentException("Navigation settings missing for stored itineraries");
@@ -803,6 +826,7 @@ public class GameState {
         c.ruleset = s.ruleset;
         c.industries.putAll(s.industries);
         c.navigation = s.navigation;
+        c.diplomacy = s.diplomacy;
         c.originalSetup = s.originalSetup;
         c.previousOrders.putAll(s.previousOrders);
         return c;

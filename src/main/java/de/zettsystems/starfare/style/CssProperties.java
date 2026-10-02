@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.style;
 
 public final class CssProperties {
+    public static final String MAX_WIDTH = "max-width";
 
     public static final String ANIMATION_DELAY = "animationDelay";
     public static final String BACKGROUND = "background";

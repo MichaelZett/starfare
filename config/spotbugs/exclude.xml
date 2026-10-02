@@ -31,8 +31,10 @@
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
     </Match>
 
+    <!-- Vaadin UI instances keep Spring services and immutable game identifiers;
+         cross-node Java session serialization is not used. Includes diplomacy UI. -->
     <Match>
-        <Class name="~de\.zettsystems\.starfare\.(game|social|auth|legal)\.ui\..*"/>
+        <Class name="~de\.zettsystems\.starfare\.(game|social|auth|legal|diplomacy)\.ui\..*"/>
         <Bug pattern="SE_BAD_FIELD,SE_NO_SERIALVERSIONID,SE_BAD_FIELD_STORE,SE_TRANSIENT_FIELD_NOT_RESTORED"/>
     </Match>
 

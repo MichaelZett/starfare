@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.values;
 
+import de.zettsystems.starfare.navigation.values.RoutePreview;
 import de.zettsystems.starfare.navigation.values.FlightJourney;
 import org.jspecify.annotations.Nullable;
 
@@ -36,6 +37,25 @@ public record Fleet(
     public Fleet continueFlight(int from, int to, int departure, int arrival, int finalArrival) {
         FlightJourney route = java.util.Objects.requireNonNull(journey);
         return new Fleet(globalId, ownerId, localNo, from, to, ships, departure, arrival, route.depart(finalArrival));
+    }
+    public boolean evacuating() { return journey != null && journey.evacuating(); }
+    public Fleet prepareReturn(RoutePreview route, int turn, int firstArrival) {
+        return new Fleet(globalId, ownerId, localNo, route.systems().getFirst(), route.systems().get(1), ships,
+                turn, firstArrival, new FlightJourney(route.systems(), 1, FlightJourney.Phase.FLYING, 0, turn + route.rounds(), true));
+    }
+    public Fleet beginEvacuation() {
+        var route = java.util.Objects.requireNonNull(journey);
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn,
+                new FlightJourney(route.stations(), route.legIndex(), route.phase(), route.readyTurn(), route.finalArrivalTurn(), true));
+    }
+    public Fleet dockAtPartner() {
+        var route = journey == null ? new FlightJourney(java.util.List.of(fromSystemId, toSystemId), 1, FlightJourney.Phase.FLYING, 0, arrivalTurn) : journey;
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, route.land(arrivalTurn));
+    }
+    public Fleet requireReturn() {
+        var route = java.util.Objects.requireNonNull(journey);
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn,
+                new FlightJourney(route.stations(), route.legIndex(), FlightJourney.Phase.BLOCKED, Math.max(1, route.readyTurn()), route.finalArrivalTurn(), true));
     }
     /**
      * Slips the fleet by one turn (used by the "wait this turn" order).

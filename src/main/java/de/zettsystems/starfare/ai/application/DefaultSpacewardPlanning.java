@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.ai.application;
 
+import de.zettsystems.starfare.diplomacy.application.DefaultDiplomacyService;
+import de.zettsystems.starfare.diplomacy.application.DiplomacyService;
 import de.zettsystems.starfare.economy.application.EconomyService;
 import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.game.application.PlayerViewBuilder;
@@ -17,12 +19,19 @@ import org.springframework.stereotype.Service;
 public class DefaultSpacewardPlanning implements SpacewardPlanning {
     private final EconomyService economy;
     private final PlayerViewBuilder views;
+    private final DiplomacyService diplomacy;
     public DefaultSpacewardPlanning(EconomyService economy, PlayerViewBuilder views) {
+        this(economy, views, new DefaultDiplomacyService());
+    }
+    @org.springframework.beans.factory.annotation.Autowired
+    public DefaultSpacewardPlanning(EconomyService economy, PlayerViewBuilder views, DiplomacyService diplomacy) {
+        this.diplomacy = diplomacy;
         this.economy = economy;
         this.views = views;
     }
     @Override
     public void plan(GameState state, FleetService fleets) {
+        diplomacy.answerAiProposals(state);
         state.players().stream().filter(Player::ai).forEach(player -> planPlayer(state, fleets, player));
     }
     private void planPlayer(GameState state, FleetService fleets, Player player) {
@@ -32,7 +41,7 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
             var industry = system.industry();
             if (industry == null) { continue; }
             boolean threatened = view.systems().stream().anyMatch(contact -> contact.ownerId() != null
-                    && !Objects.equals(contact.ownerId(), player.id())
+                    && !Objects.equals(contact.ownerId(), player.id()) && !state.allied(player.id(), contact.ownerId())
                     && state.travelRounds(system.id(), contact.id()) <= 2);
             int allocation = threatened || industry.atMaximum() ? 0 : industry.capacity() / 3;
             economy.allocateExpansion(state, player.id(), system.id(), allocation);
@@ -50,7 +59,7 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
         var system = state.getSystem(base.id());
         int available = Math.max(0, system.availableShips() - Math.max(1, system.productionPerTurn()));
         if (available == 0) { return; }
-        view.systems().stream().filter(s -> !Objects.equals(s.ownerId(), player.id()))
+        view.systems().stream().filter(s -> !Objects.equals(s.ownerId(), player.id()) && !state.allied(player.id(), s.ownerId()))
                 .filter(target -> Routes.plan(state, player.id(), base.id(), target.id()).isPresent())
                 .min(Comparator.comparingDouble(s -> state.distance(base.id(), s.id())))
                 .ifPresent(target -> fleets.queueSend(state, player.id(), base.id(), target.id(), Math.max(1, available / 2)));

@@ -35,7 +35,7 @@ public class DefaultFleetService implements FleetService {
         Fleet f = state.fleets().stream()
                 .filter(x -> x.globalId() == fleetId && x.ownerId() == playerId)
                 .findFirst().orElse(null);
-        if (f == null) {
+        if (f == null || f.evacuating()) {
             return false;
         }
         List<FleetOrder> orders = pendingFor(state, playerId);
@@ -53,7 +53,7 @@ public class DefaultFleetService implements FleetService {
         Fleet f = state.fleets().stream()
                 .filter(x -> x.globalId() == fleetId && x.ownerId() == playerId && canDisband(state, x))
                 .findFirst().orElse(null);
-        if (f == null) {
+        if (f == null || f.evacuating()) {
             return false;
         }
         List<FleetOrder> orders = pendingFor(state, playerId);
@@ -85,7 +85,7 @@ public class DefaultFleetService implements FleetService {
         var f = state.fleets().stream()
                 .filter(x -> x.globalId() == fleetId && x.ownerId() == playerId)
                 .findFirst().orElse(null);
-        if (f == null) {
+        if (f == null || f.evacuating()) {
             return false;
         }
         state.waitThisTurn().add(fleetId);
@@ -227,7 +227,7 @@ public class DefaultFleetService implements FleetService {
     private static boolean canDisband(GameState state, Fleet fleet) {
         int location = fleet.inFlight() ? fleet.fromSystemId() : fleet.toSystemId();
         return (!fleet.inFlight() || fleet.launchTurn() == state.turn())
-                && Routes.stationAllowed(state, fleet.ownerId(), location);
+                && !fleet.evacuating() && Objects.equals(state.getSystem(location).ownerId(), fleet.ownerId());
     }
 
     private static List<FleetOrder> pendingFor(GameState state, int playerId) {

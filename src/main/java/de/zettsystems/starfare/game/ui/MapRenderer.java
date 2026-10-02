@@ -490,7 +490,7 @@ final class MapRenderer {
             }
             in.onRefresh().run();
         });
-        waitItem.setEnabled(!waitPending);
+        waitItem.setEnabled(!waitPending && !f.evacuating());
         var disbandItem = cm.addItem(I18n.t(UiTexts.MAP_ACTION_DISBAND), _ -> {
             boolean ok = in.game().disbandFleet(in.gameId(), pid, fleetId);
             if (!ok) {
@@ -498,7 +498,7 @@ final class MapRenderer {
             }
             in.onRefresh().run();
         });
-        disbandItem.setEnabled(launchedThisTurn);
+        disbandItem.setEnabled(launchedThisTurn && !f.evacuating() && findSystem(in, f.inFlight() ? f.fromSystemId() : f.toSystemId()).map(system -> Objects.equals(system.ownerId(), f.ownerId())).orElse(false));
     }
 
     private static String fleetTooltip(Fleet f, int currentTurn) {

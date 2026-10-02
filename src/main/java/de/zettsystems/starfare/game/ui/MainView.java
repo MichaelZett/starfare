@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.AttachEvent;
+import de.zettsystems.starfare.diplomacy.ui.DiplomacyDialog;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
@@ -28,7 +29,6 @@ import de.zettsystems.starfare.style.CssProperties;
 import jakarta.annotation.security.PermitAll;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -63,6 +63,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private final Div gameOverBanner = new Div();
     private final FleetAndOrdersPanel fleetsPanel;
     private final Div planningActions = new Div();
+    private final Div treatyActions = new Div();
+    private final Div actionBar = new Div();
+    private @Nullable DiplomacyDialog diplomacyDialog;
 
     @SuppressWarnings("NullAway.Init")
     private GameId gameId;
@@ -113,7 +116,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         mapCanvas = new MapCanvas(this::onMapBackgroundClick);
         fleetsPanel.onEditOrder(order -> planningDialogs().edit(order));
         fleetsPanel.onProductionAllocation(this::allocateExpansion);
-        planningActions.addClassName("map-controls");
+        planningActions.addClassName("planning-actions");
         planningActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_UNDO), _ -> {
             if (!game.undoOrders(gameId, currentSeat(), Objects.requireNonNull(displayedTurn))) {
                 Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
@@ -121,6 +124,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             refresh();
         }), new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_DISPATCH), _ -> planningDialogs().dispatch()),
                 new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_RESERVES), _ -> planningDialogs().reserves()));
+        actionBar.addClassName("map-controls");
+        actionBar.add(treatyActions, planningActions);
+        treatyActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.DIP_TITLE), _ -> {
+            var dialog = new DiplomacyDialog(game, gameId, UserContext.currentPlayerId().orElse(""));
+            diplomacyDialog = dialog; dialog.refresh(); dialog.open();
+        }));
         header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::doLeave,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules);
 
@@ -148,7 +157,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             badgesShowingFleetNo.clear();
             refresh();
         });
-        add(header, roundStatus, planningActions, spectatorControls, reviewControls, buildContent());
+        add(header, roundStatus, actionBar, spectatorControls, reviewControls, buildContent());
     }
 
     private PlanningDialogs planningDialogs() {
@@ -330,6 +339,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         this.gameId = candidate;
         mapCanvas.useGame(candidate);
         closeGameChat();
+        if (diplomacyDialog != null) { diplomacyDialog.close(); diplomacyDialog = null; }
         displayedTurn = null;
         witnessedRunningGame = false;
         resetOutcomePresentation();
@@ -433,7 +443,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         displayedTurn = view.turn();
         boolean observer = isObserver() || reviewing;
         int playerId = observer ? -1 : currentSeat();
+        treatyActions.setVisible(!observer && game.diplomacyFor(gameId, UserContext.currentPlayerId().orElse("")).isPresent());
+        var treaties = diplomacyDialog;
+        if (treaties != null && treaties.isOpened()) { treaties.refresh(); }
         planningActions.setVisible(!observer && !view.gameOver() && !view.roundStatus().hasSubmitted(playerId));
+        actionBar.setVisible(treatyActions.isVisible() || planningActions.isVisible());
         selectPendingReplayEvent(view);
         configureHeader(view, observer, playerId);
         renderMapAndSidebar(view, playerId, observer);

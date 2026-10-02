@@ -4,6 +4,29 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String DIP_TITLE = "diplomacy.title";
+    public static final String DIP_CLOSE = "diplomacy.close";
+    public static final String DIP_RULES = "diplomacy.rules";
+    public static final String DIP_LOCKED = "diplomacy.locked";
+    public static final String DIP_GROUP = "diplomacy.group";
+    public static final String DIP_DEPARTURE = "diplomacy.departure";
+    public static final String DIP_LEAVE = "diplomacy.leave";
+    public static final String DIP_CHANGE = "diplomacy.change";
+    public static final String DIP_JOIN = "diplomacy.join";
+    public static final String DIP_FOUND_PROPOSAL = "diplomacy.proposal.found";
+    public static final String DIP_JOIN_PROPOSAL = "diplomacy.proposal.join";
+    public static final String DIP_NOTICE_PROPOSAL = "diplomacy.proposal.notice";
+    public static final String DIP_PENDING = "diplomacy.pending";
+    public static final String DIP_APPROVE = "diplomacy.approve";
+    public static final String DIP_REJECT = "diplomacy.reject";
+    public static final String DIP_PARTNER = "diplomacy.partner";
+    public static final String DIP_FOUND = "diplomacy.found";
+    public static final String DIP_NOTICE = "diplomacy.notice";
+    public static final String DIP_REJECTED = "diplomacy.rejected";
+    public static final String NAV_RETURN = "navigation.return";
+    public static final String NAV_RETURN_BLOCKED = "navigation.return.blocked";
+    public static final String NAV_ALLIED_STATION = "navigation.allied.station";
+
     public static final String ECONOMY_TITLE = "economy.title";
     public static final String ECONOMY_CAPACITY = "economy.capacity";
     public static final String ECONOMY_ALLOCATION = "economy.allocation";

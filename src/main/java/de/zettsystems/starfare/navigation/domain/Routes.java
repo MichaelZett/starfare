@@ -12,7 +12,7 @@ public final class Routes {
     public static boolean limited(GameState state) { return RulesetRef.SPACEWARD.equals(state.ruleset()); }
     public static boolean stationAllowed(GameState state, int owner, int system) {
         StarSystem station = state.systems().stream().filter(candidate -> candidate.id() == system).findFirst().orElse(null);
-        return station != null && Objects.equals(station.ownerId(), owner);
+        return station != null && (Objects.equals(station.ownerId(), owner) || state.allied(owner, station.ownerId()));
     }
     public static boolean withinRange(GameState state, int from, int to) {
         if (state.systems().stream().noneMatch(system -> system.id() == from) || state.systems().stream().noneMatch(system -> system.id() == to)) { return false; }
@@ -24,6 +24,12 @@ public final class Routes {
         return new Search(state, owner, from, to).find();
     }
 
+    /** Only automatic evacuation may start at a station without current treaty access. */
+    public static Optional<RoutePreview> returnHome(GameState state, int owner, int from) {
+        return state.systems().stream().filter(system -> Objects.equals(system.ownerId(), owner) && system.id() != from)
+                .map(system -> withinRange(state, from, system.id()) ? Optional.of(preview(state, List.of(from, system.id()))) : new Search(state, owner, from, system.id()).find())
+                .flatMap(Optional::stream).min(Comparator.comparingInt(RoutePreview::rounds).thenComparing(route -> route.systems().getLast()));
+    }
     private static final class Search {
         private final GameState state;
         private final int owner;
