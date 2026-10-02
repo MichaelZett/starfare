@@ -44,7 +44,7 @@ final class SharedBrowser {
         }
         String language = System.getProperty("e2e.lang", "de-DE");
         options.addArguments("--window-size=" + WIDTH + "," + HEIGHT,
-                "--lang=" + language, "--accept-lang=" + language);
+                "--lang=" + language, "--accept-lang=" + language, "--mute-audio");
         options.setExperimentalOption("prefs", Map.of("intl.accept_languages", language));
         return new ChromeDriver(options);
     }

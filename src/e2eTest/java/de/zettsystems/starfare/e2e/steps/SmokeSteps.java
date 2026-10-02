@@ -160,6 +160,63 @@ public class SmokeSteps {
         browser.clickButtonWithText("Abbrechen");
     }
 
+    @Dann("zeigt die Systemsicht stabile Himmelskörper und bleibt auf Desktopbreiten bedienbar")
+    public void detailedSystemIsStableAndAccessible() throws IOException {
+        browser.clickCss(".sys-action-source");
+        browser.awaitCss(".system-orrery");
+        Files.createDirectories(Path.of("build", "system-view"));
+        Files.write(Path.of("build", "system-view", "classic-overview.png"),
+                ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
+        assertThat(browser.all(".system-star")).hasSizeBetween(1, 2);
+        assertThat(browser.all(".system-world")).hasSizeBetween(2, 7);
+        List<String> original = browser.all(".system-body-target").stream()
+                .map(element -> element.getAttribute("aria-label")).toList();
+        browser.awaitCss(".system-world").sendKeys(org.openqa.selenium.Keys.ENTER);
+        browser.awaitTextIn(".system-body-description", "Umlaufbahn");
+        assertThat(browser.all("vaadin-dialog[opened]")).isEmpty();
+        assertThat(browser.all(".system-shipyard")).hasSize(1);
+        var originalSize = browser.driver().manage().window().getSize();
+        try {
+            for (int width : List.of(1366, 1024)) {
+                browser.driver().manage().window().setSize(new org.openqa.selenium.Dimension(width, 768));
+                browser.assertNoSidewaysScrolling();
+                WebElement diagram = browser.awaitCss(".system-orrery");
+                assertThat(diagram.getSize().getWidth()).isGreaterThan(180);
+                Files.createDirectories(Path.of("build", "system-view"));
+                Files.write(Path.of("build", "system-view", "classic-" + width + ".png"),
+                        ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
+            }
+            browser.driver().navigate().refresh();
+            browser.clickCss(".sys-action-source");
+            browser.awaitCss(".system-orrery");
+            assertThat(browser.all(".system-body-target").stream()
+                    .map(element -> element.getAttribute("aria-label")).toList()).isEqualTo(original);
+            assertThat(browser.textsOf(".app-header-stat-value")).containsExactly("1", "4", "8");
+            verifyEnglishSystemView();
+        } finally {
+            browser.driver().manage().window().setSize(originalSize);
+        }
+    }
+
+    private void verifyEnglishSystemView() throws IOException {
+        changeLanguage("Englisch", "Shipyard");
+        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Schematic illustration");
+        Files.write(Path.of("build", "system-view", "classic-english.png"),
+                ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
+        changeLanguage("German", "Werft");
+        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Schematische Illustration");
+    }
+
+    private void changeLanguage(String label, String shipyard) {
+        WebElement input = browser.awaitCss("vaadin-combo-box input");
+        input.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"), label);
+        browser.awaitTextIn("vaadin-combo-box-item", label);
+        browser.clickCss("vaadin-combo-box-item");
+        browser.awaitText(shipyard.equals("Werft") ? "Runde abgeben" : "Submit turn");
+        browser.clickCss(".sys-action-source");
+        browser.awaitTextIn(".system-shipyard", shipyard);
+    }
+
     @Wenn("ich die nächste Runde auslöse")
     public void advanceRound() {
         browser.clickButtonWithText("Runde abgeben");

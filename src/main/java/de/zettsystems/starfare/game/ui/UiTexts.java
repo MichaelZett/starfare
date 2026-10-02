@@ -4,6 +4,35 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String SYSTEM_SCHEMATIC = "system.schematic";
+    public static final String SYSTEM_CATALOG = "system.catalog";
+    public static final String SYSTEM_ORBIT = "system.orbit";
+    public static final String SYSTEM_MOONS = "system.moons";
+    public static final String SYSTEM_STAR_NAME = "system.starName";
+    public static final String SYSTEM_SHIPYARD = "system.shipyard";
+    public static final String SYSTEM_SHIPYARD_HINT = "system.shipyardHint";
+    public static final String SYSTEM_STAR_RED = "system.star.red";
+    public static final String SYSTEM_STAR_RED_DESCRIPTION = "system.star.red.description";
+    public static final String SYSTEM_STAR_ORANGE = "system.star.orange";
+    public static final String SYSTEM_STAR_ORANGE_DESCRIPTION = "system.star.orange.description";
+    public static final String SYSTEM_STAR_YELLOW = "system.star.yellow";
+    public static final String SYSTEM_STAR_YELLOW_DESCRIPTION = "system.star.yellow.description";
+    public static final String SYSTEM_STAR_YELLOW_WHITE = "system.star.yellow_white";
+    public static final String SYSTEM_STAR_YELLOW_WHITE_DESCRIPTION = "system.star.yellow_white.description";
+    public static final String SYSTEM_STAR_WHITE = "system.star.white";
+    public static final String SYSTEM_STAR_WHITE_DESCRIPTION = "system.star.white.description";
+    public static final String SYSTEM_BODY_ROCKY = "system.body.rocky";
+    public static final String SYSTEM_BODY_ROCKY_DESCRIPTION = "system.body.rocky.description";
+    public static final String SYSTEM_BODY_SUPER_EARTH = "system.body.super_earth";
+    public static final String SYSTEM_BODY_SUPER_EARTH_DESCRIPTION = "system.body.super_earth.description";
+    public static final String SYSTEM_BODY_GAS_GIANT = "system.body.gas_giant";
+    public static final String SYSTEM_BODY_GAS_GIANT_DESCRIPTION = "system.body.gas_giant.description";
+    public static final String SYSTEM_BODY_ICE_GIANT = "system.body.ice_giant";
+    public static final String SYSTEM_BODY_ICE_GIANT_DESCRIPTION = "system.body.ice_giant.description";
+    public static final String SYSTEM_BODY_DWARF = "system.body.dwarf";
+    public static final String SYSTEM_BODY_DWARF_DESCRIPTION = "system.body.dwarf.description";
+    public static final String SYSTEM_BODY_ASTEROIDS = "system.body.asteroids";
+    public static final String SYSTEM_BODY_ASTEROIDS_DESCRIPTION = "system.body.asteroids.description";
     public static final String MAP_COLUMN_ARRIVAL_TURN = "map.column.arrivalTurn";
     public static final String MAP_PRODUCTION_INCOMING = "map.production.incoming";
     public static final String MAP_PRODUCTION_OUTGOING = "map.production.outgoing";

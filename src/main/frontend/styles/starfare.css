@@ -2175,3 +2175,91 @@ html, body, #outlet {
 
 .map-controls, .legal-footer { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .5rem; }
 [role=button]:focus-visible { outline: 3px solid #58a6ff; outline-offset: 3px; }
+.detailed-system { width: 100%; min-width: 0; }
+.system-orrery {
+    position: relative;
+    isolation: isolate;
+    width: 100%;
+    aspect-ratio: 1.85;
+    min-height: 165px;
+    max-height: 260px;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid #31445f;
+    background:
+        radial-gradient(circle at 17% 23%, #a8bbd5 0 0.7px, transparent 1.3px),
+        radial-gradient(circle at 82% 77%, #8b9ab1 0 0.7px, transparent 1.3px),
+        radial-gradient(circle at 72% 19%, #637b9e 0 0.7px, transparent 1.3px),
+        radial-gradient(ellipse at 50% 50%, #202638 0%, #101a2b 45%, #060d19 100%);
+    background-size: 91px 83px, 131px 107px, 167px 127px, auto;
+}
+.system-orbit {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid #7592b030;
+    border-radius: 50%;
+    pointer-events: none;
+}
+.system-asteroid-belt { border: 4px dotted #b5a18d65; }
+vaadin-button.system-body-target {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    overflow: visible;
+    z-index: 2;
+    transition: outline-color 120ms;
+    box-shadow: inset -9px -4px 12px #000b, 0 0 10px #ffffff12;
+}
+vaadin-button.system-body-target::part(label) { overflow: visible; }
+.system-body-target span:not(.system-moon) {
+    position: absolute;
+    top: 100%; left: 50%;
+    transform: translateX(-50%);
+    font: 600 10px/1.6 monospace;
+    color: #cad6e6;
+    text-shadow: 0 1px 3px #000;
+}
+vaadin-button.system-body-target[aria-pressed="true"],
+vaadin-button.system-body-target:focus-visible {
+    outline: 2px solid #d7ecff;
+    outline-offset: 5px;
+}
+vaadin-button.system-star {
+    width: 27px; height: 27px;
+    background: radial-gradient(circle at 38% 35%, #fff5d0, #ffcb68 45%, #de8327);
+    box-shadow: 0 0 12px #fcb956aa, 0 0 38px #fcb95655;
+    z-index: 4;
+}
+vaadin-button.system-star-red { width: 19px; height: 19px; background: radial-gradient(circle at 38% 35%, #ffc393, #ef7943 60%, #a93724); box-shadow: 0 0 14px #ee753c99, 0 0 28px #ee753c33; }
+vaadin-button.system-star-orange { width: 23px; height: 23px; background: radial-gradient(circle at 38% 35%, #ffe4a9, #ffad51 60%, #e67025); }
+vaadin-button.system-star-yellow_white { width: 30px; height: 30px; background: radial-gradient(circle at 38% 35%, #fff, #fff5d5 60%, #e3d1ab); box-shadow: 0 0 16px #fff1c4aa, 0 0 32px #fff1c444; }
+vaadin-button.system-star-white { width: 33px; height: 33px; background: radial-gradient(circle at 38% 35%, #fff, #e4efff 60%, #acbedf); box-shadow: 0 0 16px #d6e6ffaa, 0 0 36px #d6e6ff44; }
+vaadin-button.system-world-rocky { width: 21px; height: 21px; background: radial-gradient(circle at 30% 32%, #ddbe91 0 13%, transparent 14%), radial-gradient(circle at 58% 62%, #85584c 0 23%, transparent 24%), #b1886a; }
+vaadin-button.system-world-super_earth { width: 26px; height: 26px; background: radial-gradient(ellipse at 35% 40%, #a2b6aa 0 18%, transparent 20%), radial-gradient(ellipse at 61% 67%, #acafa1 0 22%, transparent 24%), #4d869a; }
+vaadin-button.system-world-gas_giant { width: 35px; height: 35px; background: repeating-linear-gradient(170deg, #cda97d 0 5px, #926647 6px 8px, #decba2 9px 11px); }
+vaadin-button.system-world-ice_giant { width: 30px; height: 30px; background: repeating-linear-gradient(165deg, #86bcc8 0 7px, #5995b2 8px 10px, #b1dae0 11px 13px); }
+vaadin-button.system-world-dwarf { width: 14px; height: 14px; background: radial-gradient(circle at 32% 34%, #dfd5c6, #9c9288 55%, #514945); }
+vaadin-button.system-world-asteroids { width: 19px; height: 19px; border-radius: 25%; background: radial-gradient(circle at 20% 30%, #baa58e 0 2px, transparent 3px), radial-gradient(circle at 70% 65%, #dac5b0 0 3px, transparent 4px), radial-gradient(circle at 70% 18%, #867a69 0 2px, transparent 3px); box-shadow: none; }
+vaadin-button.system-world.system-surface-1 { filter: hue-rotate(-18deg); }
+vaadin-button.system-world.system-surface-2 { filter: hue-rotate(18deg); }
+vaadin-button.system-world.system-surface-3 { filter: saturate(0.6); }
+.system-world-ringed::after { content: ""; position: absolute; width: 165%; height: 48%; left: -33%; top: 24%; border: 3px solid #e3d4b980; border-radius: 50%; transform: rotate(-25deg); pointer-events: none; }
+.system-moon { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #d0d8de; box-shadow: 0 0 3px #e0edff66; }
+.system-moon-0 { left: 115%; top: 15%; }
+.system-moon-1 { left: 100%; top: 85%; }
+.system-moon-2 { left: -30%; top: 60%; }
+.system-shipyard { position: absolute; top: 8px; right: 9px; font-size: 11px; color: #b8d9f3; border: 1px solid #5a77966b; border-radius: 5px; padding: 2px 5px; background: #16283ecc; }
+.system-schematic-caption { display: block; font-size: 0.7rem; color: var(--sf-muted, #95a5bb); margin: 0.3rem 0 0.4rem; }
+.system-body-description { padding: 0.45rem 0.65rem; border-left: 2px solid #7898b0; background: #718ca00c; font-size: 0.8rem; }
+.system-body-description > span:first-child { font-weight: 650; }
+.system-body-description p { margin: 0.2rem 0; line-height: 1.45; }
+.system-body-description > span:last-child:not(:first-child) { font-size: 0.72rem; color: var(--sf-muted, #95a5bb); }
+.detailed-system vaadin-details { margin: 0.25rem 0 0; font-size: 0.8rem; }
+.system-body-catalog { display: flex; flex-wrap: wrap; gap: 0.2rem; }
+.system-catalog-button { max-width: 100%; }
