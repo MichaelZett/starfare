@@ -23,7 +23,9 @@ Classic-Regeln mit Regelversion **1.0.0** und ist vorausgewählt; die folgenden
 Spielregeln beschreiben diese Variante. **Spaceward** (Regelversion **1.0.0**)
 ist nach Spaceward Ho! gestaltet und ergänzt Industrieausbau, begrenzte Reichweite,
 Bündnisse und gemeinsame Schlachten. Die Abschnitte zu Spaceward weiter unten
-beschreiben, worin es von SectorForces abweicht.
+beschreiben, worin es von SectorForces abweicht. Weil dort alle feindlichen Seiten
+gleichzeitig kämpfen, blendet der Dialog bei Spaceward die Einstellung
+**Reihenfolge mehrerer Angreifer** aus.
 
 Variante und Regelversion bleiben für die Partie fest. Die Anwendungsversion
 ist davon unabhängig. Alte Partien werden als SectorForces angezeigt und behalten

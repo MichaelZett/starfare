@@ -9,7 +9,8 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 ## Unreleased
 
 - Spaceward freigegeben (M7): Die Variante ist im Dialog „Neues Spiel“ mit
-  Regelversion 1.0.0 wählbar; SectorForces bleibt vorausgewählt. Wirtschaft,
+  Regelversion 1.0.0 wählbar; SectorForces bleibt vorausgewählt. Die
+  Angriffsreihenfolge entfällt dort, da alle Seiten gleichzeitig kämpfen. Wirtschaft,
   Navigation, Bündnisse und gemeinsame Schlachten stehen damit in neuen Partien,
   Vorlagen und Revanchen bereit. Bestehende Partien behalten ihre Regeln.
 - Stabilerer Browser-Abnahmetest für Bündnis-Gefechte: Nach dem Neuladen wartet
