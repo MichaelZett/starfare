@@ -23,8 +23,31 @@ public record GameSetup(
         boolean battlePresentationEnabled,
         int combatRandomnessPercent,
         RoundRules roundRules,
-        int victorySystemPercent
+        int victorySystemPercent,
+        RulesetRef ruleset
 ) {
+    public GameSetup(int systemCount,
+            int humanPlayers,
+            int aiPlayers,
+            List<Integer> startProductionPerPlayer,
+            int neutralMinProduction,
+            int neutralMaxProduction,
+            int startGarrison,
+            boolean observersAllowed,
+            boolean reentryAllowed,
+            List<String> seatColorHexes,
+            ProductionDistribution productionDistribution,
+            GalaxyLayout galaxyLayout,
+            boolean battlePresentationEnabled,
+            int combatRandomnessPercent,
+            RoundRules roundRules,
+            int victorySystemPercent) {
+        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction,
+                neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes,
+                productionDistribution, galaxyLayout, battlePresentationEnabled, combatRandomnessPercent,
+                roundRules, victorySystemPercent, RulesetRef.SECTOR_FORCES);
+    }
+
     public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
                      int neutralMinProduction, int neutralMaxProduction, int startGarrison,
                      boolean observersAllowed, boolean reentryAllowed, List<String> seatColorHexes,
@@ -90,6 +113,17 @@ public record GameSetup(
         );
     }
 
+    public GameSetup {
+        if (ruleset == null) { ruleset = RulesetRef.SECTOR_FORCES; }
+    }
+
+    public GameSetup selectRuleset(RulesetRef selected) {
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
+                neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
+                seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
+                combatRandomnessPercent, roundRules, victorySystemPercent, selected);
+    }
+
     public GameSetup normalized() {
         int humanLowerBound = observersAllowed ? 0 : GameConfig.MIN_HUMAN_PLAYERS;
         int humans = clamp(humanPlayers, humanLowerBound, GameConfig.MAX_HUMAN_PLAYERS);
@@ -119,7 +153,7 @@ public record GameSetup(
                         GameConfig.MAX_COMBAT_RANDOMNESS_PERCENT),
                 roundRules == null ? RoundRules.defaults() : roundRules,
                 clamp(victorySystemPercent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT,
-                        GameConfig.MAX_VICTORY_SYSTEM_PERCENT));
+                        GameConfig.MAX_VICTORY_SYSTEM_PERCENT), ruleset);
     }
 
     public int totalPlayers() {

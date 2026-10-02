@@ -310,7 +310,8 @@ public class LobbyView extends VerticalLayout {
         container.addClassName("lobby-game-name");
         Span name = new Span(row.name());
         name.addClassName("lobby-game-name-text");
-        container.add(name, new Span(I18n.t(row.visibilityKey())));
+        container.add(name, new Span(RulesetLabels.label(game.rulesets(), row.summary().ruleset())),
+                new Span(I18n.t(row.visibilityKey())));
         if (row.isHostedByCurrentUser()) {
             Span badge = new Span(I18n.t(UiTexts.LOBBY_HOST_BADGE));
             badge.addClassName("lobby-host-badge");

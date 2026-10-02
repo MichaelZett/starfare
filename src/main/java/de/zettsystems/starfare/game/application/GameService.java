@@ -9,6 +9,10 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface GameService {
+    default de.zettsystems.starfare.game.values.RulesetCatalog rulesets() {
+        return de.zettsystems.starfare.game.values.RulesetCatalog.builtIn();
+    }
+
     boolean editOrder(GameId gameId, int playerId, int expectedTurn, PlannedOrder expected, int target, int ships);
     boolean undoOrders(GameId gameId, int playerId, int expectedTurn);
     boolean dispatchFleets(GameId gameId, int playerId, int expectedTurn, int target,

@@ -36,6 +36,9 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public RulesetCatalog rulesets() { return registry.rulesets(); }
+
+    @Override
     public boolean editOrder(GameId id, int player, int turn, PlannedOrder expected, int target, int ships) {
         return registry.writeState(id, state -> canPlan(state, player, turn)
                 && de.zettsystems.starfare.fleet.domain.OrderPlanning.edit(state, player, expected, target, ships));
@@ -398,7 +401,7 @@ public class DefaultGameService implements GameService {
                 state.observersAllowed(), state.reentryAllowed(),
                 List.copyOf(state.players()), Set.copyOf(state.joinedHumanPlayerIds()),
                 Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats()),
-                state.visibility(), new GameOutcome(state.winnerId(), state.finishedAt()));
+                state.visibility(), new GameOutcome(state.winnerId(), state.finishedAt()), state.ruleset());
     }
 
     @Override

@@ -15,6 +15,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
+import de.zettsystems.starfare.game.ui.RulesetLabels;
 import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSummary;
@@ -39,6 +40,7 @@ import java.util.Set;
  */
 public class ManageGameDialog extends Dialog {
 
+    private final Span ruleset = new Span();
     private final Checkbox publicGame = new Checkbox();
     private final GameService games;
     private final InvitationService invitations;
@@ -105,7 +107,7 @@ public class ManageGameDialog extends Dialog {
                 refresh();
             }
         });
-        add(publicGame, body);
+        add(ruleset, publicGame, body);
 
         Button close = new Button(I18n.t(UiTexts.MANAGE_CLOSE), _ -> close());
         getFooter().add(close);
@@ -136,6 +138,7 @@ public class ManageGameDialog extends Dialog {
     private void refresh() {
         GameSummary summary = games.summaryFor(gameId, host).orElse(null);
         if (summary == null || !host.equals(summary.hostPlayerId()) || summary.gameOver()) { close(); return; }
+        ruleset.setText(RulesetLabels.label(games.rulesets(), summary.ruleset()));
         publicGame.setValue(summary.visibility() == GameVisibility.PUBLIC);
         publicGame.setEnabled(!summary.started());
         renderHumans(summary);

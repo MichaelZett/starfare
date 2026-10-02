@@ -7,6 +7,7 @@ import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.AttackOrder;
 import de.zettsystems.starfare.game.values.Fleet;
+import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.report.application.ReportService;
 import de.zettsystems.starfare.report.values.TurnEvent;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Spring-injected collaborators are kept by reference for the bean's lifetime by design.")
-public class DefaultTurnEngine implements TurnEngine {
+public class DefaultTurnEngine implements RulesetRoundImplementation {
     private final CombatService combatService;
     private final AiService aiService;
     private final ReportService reportService;
@@ -39,7 +40,15 @@ public class DefaultTurnEngine implements TurnEngine {
     }
 
     @Override
+    public RulesetRef ruleset() {
+        return RulesetRef.SECTOR_FORCES;
+    }
+
+    @Override
     public void advanceTurn(GameState state) {
+        if (!RulesetRef.SECTOR_FORCES.equals(state.ruleset())) {
+            throw new IllegalArgumentException("SectorForces cannot resolve " + state.ruleset());
+        }
         if (state.gameOver()) {
             return;
         }

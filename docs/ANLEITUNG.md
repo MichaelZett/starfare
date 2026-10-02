@@ -1,6 +1,6 @@
 # Starfare – Spielanleitung
 
-Stand: 1.0.0-SNAPSHOT, 1. Oktober 2026. Die Anleitung beschreibt die
+Stand: 1.0.0-SNAPSHOT, 2. Oktober 2026. Die Anleitung beschreibt die
 Desktop-Oberfläche. Technische Einrichtung und Start der Anwendung stehen in
 der [README](../README.md).
 
@@ -17,6 +17,16 @@ der [README](../README.md).
    ausgewertet. Sieh dir anschließend den **Bericht** an und bestätige offene Schlachten.
 
 ## Partie erstellen und beitreten
+
+Wähle zuerst die **Spielvariante**. **SectorForces** enthält die bisherigen
+Classic-Regeln mit Regelversion **1.0.0**; die folgenden Spielregeln beschreiben
+diese Variante. **Spaceward** ist nach Spaceward Ho! geplant und wird als noch
+nicht spielbar angezeigt. Seine Auswahl ist gesperrt.
+
+Variante und Regelversion bleiben für die Partie fest. Die Anwendungsversion
+ist davon unabhängig. Alte Partien werden als SectorForces angezeigt und behalten
+ihre bisherigen Regeln. Lobby, Beitritt, Verwaltung und Archiv zeigen die
+Regelreferenz; Vorlagen und Revanchen übernehmen sie.
 
 Im Assistenten wählst du unter anderem:
 
@@ -195,6 +205,8 @@ Kriegsnebel; bei **Endstand** gelten wieder Perspektive und Nebelschalter. Älte
 Partien ohne gespeicherte Runden bieten nur den Endstand. Private Archive bleiben
 auf Berechtigte beschränkt; öffentliche erlauben fremde Zuschauer nur bei aktivierter
 Zuschaueroption. Die **Statistik** zeigt deine Ergebnisse und Gegnerbilanzen.
+Mit dem Filter **Spielvariante** beschränkst du Summen, Gegnerbilanzen und
+Partienliste auf eine Variante. Ein leerer Filter zeigt alle Varianten.
 
 ## Vorlagen und Revanche
 

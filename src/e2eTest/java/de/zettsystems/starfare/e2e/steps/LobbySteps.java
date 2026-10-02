@@ -16,9 +16,14 @@ import io.cucumber.java.de.Wenn;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,9 +53,10 @@ public class LobbySteps {
     }
 
     @Wenn("ich eine private Lobby-Partie ohne Beitritt anlege")
-    public void createPrivateGame() {
+    public void createPrivateGame() throws IOException {
         browser.clickButtonWithText("Neues Spiel");
         browser.awaitText("Neue Partien sind privat.");
+        verifyRulesetSelection();
         WebElement joinAfterCreate = browser.awaitCss("#join-after-create");
         ((JavascriptExecutor) browser.driver()).executeScript(
                 "arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", joinAfterCreate);
@@ -65,6 +71,46 @@ public class LobbySteps {
         name = games.gameNameOf(id);
         host = games.hostPlayerIdOf(id).orElseThrow();
         assertThat(games.summaryOf(id).visibility()).isEqualTo(GameVisibility.PRIVATE);
+        assertThat(games.summaryOf(id).ruleset()).isEqualTo(de.zettsystems.starfare.game.values.RulesetRef.SECTOR_FORCES);
+        browser.awaitText("SectorForces · Regeln 1.0.0");
+    }
+
+    private void verifyRulesetSelection() throws IOException {
+        browser.awaitText("SectorForces");
+        browser.awaitText("Spaceward");
+        browser.awaitText("noch nicht spielbar");
+        List<WebElement> variantChoices = browser.all("#ruleset-selection vaadin-radio-button");
+        assertThat(variantChoices).hasSize(2);
+        assertThat(variantChoices.getFirst().getDomAttribute("checked")).isNotNull();
+        assertThat(variantChoices.get(1).getDomAttribute("disabled")).isNotNull();
+        var originalSize = browser.driver().manage().window().getSize();
+        try {
+            captureWizard("wizard");
+            browser.driver().manage().window().setSize(new org.openqa.selenium.Dimension(1024, 768));
+            captureWizard("wizard-1024");
+        } finally {
+            browser.driver().manage().window().setSize(originalSize);
+        }
+    }
+
+    private void captureWizard(String name) throws IOException {
+        Number overflow = (Number) ((JavascriptExecutor) browser.driver()).executeScript("""
+                const dialog = document.querySelector('vaadin-dialog[opened]');
+                const contents = [];
+                function inspect(root) {
+                    for (const element of root.querySelectorAll('*')) {
+                        if (element.part.contains('content') && element.clientWidth > 0) contents.push(element);
+                        if (element.shadowRoot) inspect(element.shadowRoot);
+                    }
+                }
+                inspect(dialog);
+                if (dialog.shadowRoot) inspect(dialog.shadowRoot);
+                return contents.length ? Math.max(...contents.map(e => e.scrollWidth - e.clientWidth)) : -1;
+                """);
+        assertThat(overflow.intValue()).as("Wizard must fit without horizontal scrolling").isBetween(0, 1);
+        Path screenshot = Path.of("build", "rulesets", name + ".png");
+        Files.createDirectories(screenshot.getParent());
+        Files.write(screenshot, ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
     }
 
     @Wenn("ich die Browsersitzung wechsle")

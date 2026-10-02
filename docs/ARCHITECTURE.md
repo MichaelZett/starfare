@@ -21,6 +21,37 @@ simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md
   `ReentrantReadWriteLock`).
 - Module boundaries verified by Spring Modulith (`ModulithTest`).
 
+## Game variants and immutable rule references
+
+`RulesetRef` stores a stable variant ID and rule version independently of the
+application release. SectorForces uses `classic / 1.0.0`; the display name does
+not change its stored identity. `RulesetCatalog` holds localized name and
+description keys, supported versions and availability for new-game creation.
+Spaceward (`spaceward / 1.0.0`) is a planned entry with no supported implementation
+and cannot be created. Orion has no implementation or selectable entry.
+
+`RulesetConfiguration` supplies the shared catalog. `GameSetup`, `GameState`,
+`GameStateSnapshot`, `GameSummary`, templates and compact result history retain
+the reference. Missing legacy snapshot/setup references default to SectorForces;
+explicit incomplete identities, unsupported versions and conflicting setup/state
+references do not fall back. Session and archive stores leave rejected rows
+untouched while continuing to load other games. Writes validate support before
+mutating the registry state or saving a new game. Creation availability does not
+disable an already supported stored version.
+
+`RulesetTurnEngine` is the primary `TurnEngine` used by `GameService` and autoplay.
+It dispatches by the full reference to registered `RulesetRoundImplementation`
+beans. `DefaultTurnEngine` implements SectorForces 1.0.0 and keeps the frozen
+Classic pipeline. Every supported reference needs an explicit registered round
+implementation; incomplete registrations fail during application startup.
+The isolated third-variant tests verify extensibility without shipping another
+game. Later variants may add their own commands, state and views as required.
+
+Flyway V2_9 adds variant and version columns to `game_results` with legacy
+SectorForces defaults. Statistics filter by variant before aggregating outcomes
+and opponents; participant and AI collections still use separate fetches.
+Rule references remain in the compact result after detailed sessions are removed.
+
 ## Classic compatibility contract
 
 The Classic reference baseline is commit `c5df8d1` (2026-10-02), before ruleset

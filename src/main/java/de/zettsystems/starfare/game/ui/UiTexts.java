@@ -4,6 +4,16 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String RULESET_CHOOSE = "ruleset.choose";
+    public static final String RULESET_LABEL = "ruleset.label";
+    public static final String RULESET_VERSION = "ruleset.version";
+    public static final String RULESET_PLANNED = "ruleset.planned";
+    public static final String RULESET_FILTER = "ruleset.filter";
+    public static final String RULESET_ALL = "ruleset.all";
+    public static final String RULESET_SECTOR_FORCES_NAME = de.zettsystems.starfare.game.values.RulesetDefinition.SECTOR_FORCES_NAME;
+    public static final String RULESET_SECTOR_FORCES_DESCRIPTION = de.zettsystems.starfare.game.values.RulesetDefinition.SECTOR_FORCES_DESCRIPTION;
+    public static final String RULESET_SPACEWARD_NAME = de.zettsystems.starfare.game.values.RulesetDefinition.SPACEWARD_NAME;
+    public static final String RULESET_SPACEWARD_DESCRIPTION = de.zettsystems.starfare.game.values.RulesetDefinition.SPACEWARD_DESCRIPTION;
     public static final String SYSTEM_SCHEMATIC = "system.schematic";
     public static final String SYSTEM_CATALOG = "system.catalog";
     public static final String SYSTEM_ORBIT = "system.orbit";

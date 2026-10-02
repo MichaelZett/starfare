@@ -19,6 +19,9 @@ import java.util.function.UnaryOperator;
                 + "serialized via GameSession's read/write lock (see CLAUDE.md \"State/repository contract\").")
 public class GameState {
     private int turn = 1;
+    private RulesetRef ruleset = RulesetRef.SECTOR_FORCES;
+
+    public RulesetRef ruleset() { return ruleset; }
     private final List<Player> players = new ArrayList<>();
     private final List<StarSystem> systems = new ArrayList<>();
     private final List<Fleet> fleets = new ArrayList<>();
@@ -55,7 +58,13 @@ public class GameState {
 
     public Optional<GameSetup> originalSetup() { return Optional.ofNullable(originalSetup); }
 
-    public void rememberSetup(GameSetup setup) { originalSetup = setup; }
+    public void rememberSetup(GameSetup setup) {
+        if (started || originalSetup != null) {
+            throw new IllegalStateException("Game rules are fixed at creation");
+        }
+        originalSetup = setup;
+        ruleset = setup.ruleset();
+    }
 
     /** One reversible command change per player, valid only within the current round. */
     public void rememberOrders(int player) {
@@ -339,6 +348,7 @@ public class GameState {
         this.pendingOrders.clear();
         this.previousOrders.clear();
         this.originalSetup = null;
+        this.ruleset = RulesetRef.SECTOR_FORCES;
         this.standingOrders.clear();
         this.nextStandingOrderId.clear();
         this.observersAllowed = false;
@@ -542,7 +552,7 @@ public class GameState {
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
-                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders));
+                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -582,7 +592,12 @@ public class GameState {
         if (invited != null) {
             c.invitedSeats.putAll(invited);
         }
+        RulesetRef storedRuleset = s.ruleset();
+        c.ruleset = storedRuleset == null ? RulesetRef.SECTOR_FORCES : storedRuleset;
         c.originalSetup = s.originalSetup();
+        if (c.originalSetup != null && !c.originalSetup.ruleset().equals(c.ruleset)) {
+            throw new IllegalArgumentException("Snapshot and original setup disagree on game rules");
+        }
         var previous = s.previousOrders();
         if (previous != null) { previous.forEach((pid, orders) -> c.previousOrders.put(pid, List.copyOf(orders))); }
         s.pendingOrders().forEach((pid, orders) -> c.pendingOrders.put(pid, new ArrayList<>(orders)));
@@ -673,6 +688,7 @@ public class GameState {
             c.nextTurn();
         }
 
+        c.ruleset = s.ruleset;
         c.originalSetup = s.originalSetup;
         c.previousOrders.putAll(s.previousOrders);
         return c;

@@ -88,7 +88,8 @@ public class ArchiveView extends VerticalLayout {
         meta.addClassName("archive-game-card-meta");
         Span participants = new Span(participants(summary));
         participants.addClassName("archive-game-card-participants");
-        Div details = new Div(personalResult, winner, meta, participants);
+        Div details = new Div(new Span(RulesetLabels.label(games.rulesets(), summary.ruleset())),
+                personalResult, winner, meta, participants);
         details.addClassName("archive-game-card-details");
         card.add(name, details, viewButton(summary));
         if (summary.belongsTo(UserContext.currentPlayerId().orElse(""))) {
