@@ -10,7 +10,12 @@ import org.jspecify.annotations.Nullable;
 public record PlannedOrder(int index, String type,
                            @Nullable Integer fromSystemId, @Nullable Integer toSystemId,
                            String fromSystem, String toSystem, @Nullable Integer ships,
-                           boolean standing, @Nullable Integer standingOrderId, @Nullable Integer arrivalTurn) {
+                           boolean standing, @Nullable Integer standingOrderId, @Nullable Integer arrivalTurn, @Nullable Integer beneficiaryId) {
+    public PlannedOrder(int index, String type, @Nullable Integer fromSystemId, @Nullable Integer toSystemId,
+                        String fromSystem, String toSystem, @Nullable Integer ships, boolean standing,
+                        @Nullable Integer standingOrderId, @Nullable Integer arrivalTurn) {
+        this(index, type, fromSystemId, toSystemId, fromSystem, toSystem, ships, standing, standingOrderId, arrivalTurn, null);
+    }
     public boolean isSend() { return "map.orderType.send".equals(type); }
 
     public PlannedOrder(int index, String type, @Nullable Integer fromSystemId, @Nullable Integer toSystemId,

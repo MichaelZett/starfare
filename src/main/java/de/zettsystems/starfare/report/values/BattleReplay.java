@@ -4,7 +4,12 @@ import java.util.Optional;
 
 /** Combat-only presentation data. Ownership changes are deliberately kept outside the replay. */
 public record BattleReplay(String systemName, int attacking, int defending, Outcome outcome,
-                           double attackerStrength, double defenderStrength) {
+                           double attackerStrength, double defenderStrength, java.util.List<CoalitionSide> coalitions) {
+    public BattleReplay { coalitions = java.util.List.copyOf(coalitions); }
+    public BattleReplay(String systemName, int attacking, int defending, Outcome outcome,
+                        double attackerStrength, double defenderStrength) {
+        this(systemName, attacking, defending, outcome, attackerStrength, defenderStrength, java.util.List.of());
+    }
 
     public record Outcome(int attackingRemaining, int defendingRemaining, boolean attackerWon) {}
 
@@ -35,6 +40,8 @@ public record BattleReplay(String systemName, int attacking, int defending, Outc
 
     public static Optional<BattleReplay> from(TurnEvent event) {
         return switch (event) {
+            case TurnEvent.CoalitionBattle battle -> Optional.of(new BattleReplay(battle.systemName(), 0, 0,
+                    new Outcome(0, 0, false), 0, 0, battle.sides()));
             case TurnEvent.BattleWon battle -> Optional.of(new BattleReplay(battle.systemName(), battle.attacking(),
                     battle.defending(), new Outcome(battle.remaining(), 0, true),
                     battle.attackerStrength(), battle.defenderStrength()));

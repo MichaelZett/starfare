@@ -487,6 +487,18 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public boolean sendFleet(GameId id, int player, int turn, int from, int to, int ships, int beneficiary) {
+        if (!isRunningGame(id)) { return false; }
+        return registry.writeState(id, state -> canPlan(state, player, turn)
+                && fleetService.queueSend(state, player, from, to, ships, beneficiary));
+    }
+    @Override
+    public List<Player> conquestCandidates(GameId id, int player) {
+        return registry.readState(id, state -> state.players().stream()
+                .filter(candidate -> candidate.id() == player || state.allied(player, candidate.id())).toList());
+    }
+
+    @Override
     public boolean setGarrisonReserve(GameId gameId, int playerId, int systemId, int reserve) {
         if (!isRunningGame(gameId) || reserve < 0) {
             return false;
@@ -897,7 +909,8 @@ public class DefaultGameService implements GameService {
                         return event.battleSystemId().isPresent()
                                 ? new ReplayEventMarker(frame.turn(), event.battleSystemId().getAsInt(),
                                         battleSystemName(event), index,
-                                        event instanceof TurnEvent.BattleWon || event instanceof TurnEvent.SystemLost)
+                                        event instanceof TurnEvent.BattleWon || event instanceof TurnEvent.SystemLost
+                                                || (event instanceof TurnEvent.CoalitionBattle battle && !Objects.equals(battle.owner(), battle.previousOwner())))
                                 : null;
                     }).filter(Objects::nonNull);
                 }).toList();
@@ -905,6 +918,7 @@ public class DefaultGameService implements GameService {
 
     private String battleSystemName(TurnEvent event) {
         return switch (event) {
+            case TurnEvent.CoalitionBattle battle -> battle.systemName();
             case TurnEvent.BattleWon battle -> battle.systemName();
             case TurnEvent.BattleLost battle -> battle.systemName();
             case TurnEvent.SystemLost conquest -> conquest.systemName();
@@ -1057,6 +1071,10 @@ public class DefaultGameService implements GameService {
                             destroyed += held.attacking();
                             lost += held.defending() - held.defendersLeft();
                         }
+                    }
+                    case TurnEvent.CoalitionBattle battle -> {
+                        lost += battle.lostBy(playerId);
+                        destroyed += battle.destroyedBy(playerId);
                     }
                     case TurnEvent.Reinforcement _,
                             TurnEvent.Victory _,

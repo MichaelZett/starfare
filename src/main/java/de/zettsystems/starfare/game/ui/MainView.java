@@ -161,10 +161,15 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private PlanningDialogs planningDialogs() {
-        return new PlanningDialogs(game, gameId, currentSeat(), game.viewFor(gameId, currentSeat()), () -> {
+        return new PlanningDialogs(game, gameId, currentSeat(), concealedPlanningView(), () -> {
             refresh();
             fleetsPanel.showOrders();
         });
+    }
+
+    private PlayerViewState concealedPlanningView() {
+        PlayerViewState view = game.viewFor(gameId, currentSeat());
+        return CoalitionConcealment.hide(view, pendingBattleSystemIds(view));
     }
 
     private SplitLayout buildContent() {
@@ -481,7 +486,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 return game.observerViewFor(gameId, UserContext.currentPlayerId().orElse(""),
                         spectatorControls.perspective(), spectatorControls.fogOfWar()).orElse(null);
             }
-            return view;
+            return CoalitionConcealment.hide(view, pendingBattleSystemIds(view));
         }
         String account = UserContext.currentPlayerId().orElse("");
         List<Integer> replayTurns = game.replayTurns(gameId, account);

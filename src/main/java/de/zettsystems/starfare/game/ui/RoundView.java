@@ -44,7 +44,7 @@ import java.util.Optional;
 @PermitAll
 public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
-    enum EventCategory {PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD}
+    enum EventCategory {COALITION, PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD}
 
     private final GameService game;
     private final H2 reportHeader = new H2();
@@ -94,13 +94,18 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
     private void buildFilterBar() {
         filterBar.removeAll();
-        Span label = new Span(I18n.t(UiTexts.ROUND_FILTER_SUMMARY, enabledCategories().size(), EventCategory.values().length));
+        boolean hasCoalition = lastEvents.stream().anyMatch(event -> event instanceof TurnEvent.CoalitionBattle);
+        long enabledCount = enabledCategories().stream().filter(category -> hasCoalition || category != EventCategory.COALITION).count();
+        Span label = new Span(I18n.t(UiTexts.ROUND_FILTER_SUMMARY, enabledCount, EventCategory.values().length - (hasCoalition ? 0 : 1)));
         label.addClassName("report-filter-label");
         VerticalLayout options = new VerticalLayout();
         options.setPadding(false);
         options.setSpacing(false);
         options.addClassName("report-filter-options");
         EnumSet<EventCategory> enabled = enabledCategories();
+        if (hasCoalition) {
+            addFilterCheckbox(options, enabled, EventCategory.COALITION, UiTexts.COALITION_FILTER);
+        }
         addFilterCheckbox(options, enabled, EventCategory.PRODUCTION, UiTexts.ROUND_FILTER_PRODUCTION);
         addFilterCheckbox(options, enabled, EventCategory.REINFORCEMENT, UiTexts.ROUND_FILTER_REINFORCEMENT);
         addFilterCheckbox(options, enabled, EventCategory.BATTLE_WON, UiTexts.ROUND_FILTER_BATTLE_WON);
@@ -174,6 +179,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
     private static Optional<EventCategory> categoryOf(TurnEvent e) {
         return Optional.ofNullable(switch (e) {
+            case TurnEvent.CoalitionBattle _ -> EventCategory.COALITION;
             case TurnEvent.Production _ -> EventCategory.PRODUCTION;
             case TurnEvent.Reinforcement _ -> EventCategory.REINFORCEMENT;
             case TurnEvent.BattleWon _ -> EventCategory.BATTLE_WON;
@@ -269,7 +275,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             return 0;
         }
         return switch (event) {
-            case TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
+            case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
             case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
             case TurnEvent.Reinforcement _ -> 3;
             case TurnEvent.Production _ -> 4;
@@ -316,7 +322,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                     youName(lost.defenderName()));
             case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponentName(held.attackerName()),
                     youName(held.defenderName()));
-            case TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
+            case TurnEvent.CoalitionBattle _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
                     new BattleReplayDialog.BattleSides("", "");
         };
     }
@@ -373,7 +379,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         return switch (e) {
             case TurnEvent.Production _ -> "⬆";
             case TurnEvent.Reinforcement _ -> "→";
-            case TurnEvent.BattleWon _ -> "⚔";
+            case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _ -> "⚔";
             case TurnEvent.BattleLost _ -> "✕";
             case TurnEvent.SystemLost _ -> "☠";
             case TurnEvent.DefenseHeld _ -> "🛡";
@@ -386,6 +392,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         return switch (e) {
             case TurnEvent.Production _ -> "event-production";
             case TurnEvent.Reinforcement _ -> "event-reinforcement";
+            case TurnEvent.CoalitionBattle _ -> "event-coalition-battle";
             case TurnEvent.BattleWon _ -> "event-battle-won";
             case TurnEvent.BattleLost _ -> "event-battle-lost";
             case TurnEvent.SystemLost _ -> "event-system-lost";
@@ -397,6 +404,8 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
     private String textFor(TurnEvent e, boolean presentationEnabled) {
         return switch (e) {
+            case TurnEvent.CoalitionBattle battle -> presentationEnabled
+                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName()) : CoalitionPresentation.report(battle);
             case TurnEvent.Production p -> I18n.t(UiTexts.ROUND_EVENT_PRODUCTION, p.systemName(), p.amount());
             case TurnEvent.Reinforcement r -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
                     r.systemName(), r.ships(), r.totalGarrison(), r.fleetLabel());

@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.fleet.application;
 
+import de.zettsystems.starfare.fleet.domain.ConquestOrders;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.Fleet;
@@ -8,12 +9,19 @@ import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.navigation.domain.Routes;
 import java.util.*;
 import org.springframework.stereotype.Service;
+import org.jspecify.annotations.Nullable;
 
 @Service
 public class DefaultFleetService implements FleetService {
 
     @Override
     public boolean queueSend(GameState state, int playerId, int fromId, int toId, int ships) {
+        return queueSend(state, playerId, fromId, toId, ships, null);
+    }
+    @Override
+    public boolean queueSend(GameState state, int playerId, int fromId, int toId, int ships,
+                             @Nullable Integer beneficiary) {
+        if (!ConquestOrders.allowed(state, playerId, beneficiary)) { return false; }
         StarSystem from = state.getSystem(fromId);
         if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)) {
             return false;
@@ -26,7 +34,7 @@ public class DefaultFleetService implements FleetService {
             return false;
         }
         state.rememberOrders(playerId);
-        pendingFor(state, playerId).add(new FleetOrder.Send(playerId, fromId, toId, ships));
+        pendingFor(state, playerId).add(new FleetOrder.Send(playerId, fromId, toId, ships, beneficiary));
         return true;
     }
 
@@ -68,6 +76,13 @@ public class DefaultFleetService implements FleetService {
 
     @Override
     public boolean sendFleet(GameState state, int playerId, int fromId, int toId, int ships) {
+        return sendFleet(state, playerId, fromId, toId, ships, null);
+    }
+    @Override
+    public boolean sendFleet(GameState state, int playerId, int fromId, int toId, int ships,
+                             @Nullable Integer beneficiary) {
+        // A treaty can expire after planning. Preserve the launch, but fall back to the fleet's owner.
+        Integer claim = ConquestOrders.allowed(state, playerId, beneficiary) ? beneficiary : null;
         StarSystem from = state.getSystem(fromId);
         if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)) {
             return false;
@@ -76,7 +91,11 @@ public class DefaultFleetService implements FleetService {
             return false;
         }
         state.updateSystem(fromId, current -> current.launchFleet(ships));
-        state.addFleet(playerId, fromId, toId, ships);
+        int fleetId = state.addFleet(playerId, fromId, toId, ships);
+        if (claim != null) {
+            Fleet launched = state.fleets().stream().filter(fleet -> fleet.globalId() == fleetId).findFirst().orElseThrow();
+            state.replaceFleet(launched.designateConquest(claim));
+        }
         return true;
     }
 

@@ -2320,3 +2320,12 @@ vaadin-button.system-world.system-surface-3 { filter: saturate(0.6); }
 .diplomacy-card { border: 1px solid var(--app-border-color, #48526b); border-radius: .5rem; padding: 1rem; margin-top: 1rem; }
 
 .planning-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+.coalition-replay { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: start; padding: 1.5rem 1rem 4rem; max-height: 62vh; overflow: auto; }
+.coalition-side { color: #ffd86a; align-items: flex-start; padding: 1rem; border: 1px solid currentColor; border-radius: .6rem; background: rgba(3,8,21,.75); font-size: .85rem; }
+.coalition-side .battle-number { font-size: clamp(2rem, 4vw, 4rem); margin-block: .6rem; }
+.coalition-side.coalition-survived { color: #56d990; }
+.coalition-side.coalition-defeated { color: #ff7373; }
+.event-coalition-battle { border-left-color: #d7b75e; }
+
+.conquest-hint { font-size: .85rem; line-height: 1.4; margin-block: .5rem; }

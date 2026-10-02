@@ -26,8 +26,10 @@ shown as planned and cannot be selected yet. Its first internal milestone adds
 production allocation between ships and industrial expansion, plus limited flight range,
 automatically planned routes through owned or allied systems and refuelling stops.
 Internal diplomacy adds unanimous alliance groups, agreed notice periods and
-automatic non-combat returns after departure; combined allied combat follows separately. Public availability
-waits for the combined acceptance of its economy, navigation and alliance rules.
+automatic non-combat returns after departure. Coalition combat now resolves all hostile
+sides simultaneously, including stationed support. Ships retain their empire; a conquest
+beneficiary is selected before launch. Public availability waits for the combined
+acceptance of its economy, navigation, alliance and combat rules.
 A possible future variant inspired by Master of Orion II is a separate project direction, not an available game.
 
 Every game keeps its variant and rule version independently of the application

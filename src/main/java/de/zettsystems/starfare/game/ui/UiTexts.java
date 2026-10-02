@@ -625,4 +625,14 @@ public final class UiTexts {
     public static final String PLAN_TEMPLATE_HINT = "plan.templateHint";
     public static final String PLAN_TEMPLATE_MISSING = "plan.templateMissing";
     public static final String PLAN_GAME_NAME = "plan.gameName";
+    public static final String COALITION_FILTER = "coalition.filter";
+    public static final String COALITION_MEMBER_START = "coalition.member.start";
+    public static final String COALITION_MEMBER_END = "coalition.member.end";
+    public static final String COALITION_RESOLVED = "coalition.resolved";
+    public static final String COALITION_SIDE_RESULT = "coalition.side.result";
+    public static final String COALITION_REPORT = "coalition.report";
+    public static final String CONQUEST_BENEFICIARY = "conquest.beneficiary";
+    public static final String CONQUEST_HINT = "conquest.hint";
+    public static final String CONQUEST_ORDER = "conquest.order";
+    public static final String CONQUEST_SELF = "conquest.self";
 }

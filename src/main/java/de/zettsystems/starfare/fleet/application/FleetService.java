@@ -3,10 +3,20 @@ package de.zettsystems.starfare.fleet.application;
 import de.zettsystems.starfare.game.domain.GameState;
 
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 public interface FleetService {
 
     boolean queueSend(GameState state, int playerId, int fromId, int toId, int ships);
+
+    default boolean queueSend(GameState state, int playerId, int fromId, int toId, int ships,
+                              @Nullable Integer beneficiary) {
+        return queueSend(state, playerId, fromId, toId, ships);
+    }
+    default boolean sendFleet(GameState state, int playerId, int fromId, int toId, int ships,
+                              @Nullable Integer beneficiary) {
+        return sendFleet(state, playerId, fromId, toId, ships);
+    }
 
     boolean queueWait(GameState state, int playerId, int fleetId);
 

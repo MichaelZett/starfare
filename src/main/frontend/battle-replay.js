@@ -108,3 +108,40 @@ window.starfarePlayBattle = (root, attacking, defending, attackingRemaining, def
     };
     requestAnimationFrame(animate);
 };
+
+// Every coalition animates concurrently; only stored member losses determine the final numbers.
+window.starfarePlayCoalition = (root, sides, sound, speed = 1) => {
+    audio.enabled = sound;
+    const beats = 12;
+    const panels = sides.map(side => {
+        const panel = root.querySelector(`[data-coalition-side="${side.id}"]`);
+        const initial = side.members.reduce((sum, member) => sum + member.ships, 0);
+        const remaining = side.members.reduce((sum, member) => sum + member.remaining, 0);
+        return {panel, remaining, counts: lossSequence(initial, remaining, beats)};
+    });
+    const finish = () => {
+        panels.forEach(({panel, remaining}) => {
+            panel.querySelector('[data-coalition-count]').textContent = String(remaining);
+            panel.classList.add(remaining > 0 ? 'coalition-survived' : 'coalition-defeated');
+            panel.querySelectorAll('[data-coalition-member]').forEach(member => {
+                member.textContent = member.getAttribute('data-coalition-final');
+            });
+        });
+        root.querySelector('[data-battle-result]').classList.add('battle-replay-result-visible');
+    };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { finish(); return; }
+    const duration = 4200 / speed;
+    const start = performance.now();
+    let beat = 0;
+    const animate = now => {
+        if (!root.isConnected || !root.closest('vaadin-dialog')?.opened) return;
+        if (now - start >= (beat + 1) * duration / beats) {
+            panels.forEach(({panel, counts}) => { panel.querySelector('[data-coalition-count]').textContent = String(counts[beat]); });
+            audio.impact();
+            beat++;
+        }
+        if (beat < beats) requestAnimationFrame(animate);
+        else finish();
+    };
+    requestAnimationFrame(animate);
+};

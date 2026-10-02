@@ -16,7 +16,11 @@ public sealed interface FleetOrder {
 
     int ownerId();
 
-    record Send(int ownerId, int fromSystemId, int toSystemId, int ships) implements FleetOrder {}
+    record Send(int ownerId, int fromSystemId, int toSystemId, int ships,
+                @org.jspecify.annotations.Nullable Integer beneficiaryId) implements FleetOrder {
+        public Send(int ownerId, int fromSystemId, int toSystemId, int ships) { this(ownerId, fromSystemId, toSystemId, ships, null); }
+        public int conquestOwner() { return beneficiaryId == null ? ownerId : beneficiaryId; }
+    }
 
     record Wait(int ownerId, int fleetId) implements FleetOrder {}
 

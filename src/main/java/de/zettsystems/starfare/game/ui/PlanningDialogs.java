@@ -55,6 +55,11 @@ final class PlanningDialogs {
                     && games.editOrder(id, player, view.turn(), order, destination.id(), ships));
         });
         dialog.add(target, amount, preview);
+        Integer beneficiary = order.beneficiaryId();
+        if (beneficiary != null) {
+            dialog.add(new Paragraph(I18n.t(UiTexts.CONQUEST_ORDER, view.players().stream()
+                    .filter(candidate -> candidate.id() == beneficiary).map(Player::label).findFirst().orElse("?"))));
+        }
         footer(dialog, save);
     }
 
@@ -79,6 +84,9 @@ final class PlanningDialogs {
         all.addValueChangeListener(_ -> { amount.setEnabled(!all.getValue()); update.run(); });
         update.run();
         dialog.add(sources, target, all, amount, preview);
+        if (view.systems().stream().anyMatch(system -> system.industry() != null)) {
+            dialog.add(new Paragraph(I18n.t(UiTexts.CONQUEST_SELF)));
+        }
         footer(dialog, save);
     }
 
