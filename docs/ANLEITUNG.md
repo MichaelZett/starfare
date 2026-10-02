@@ -208,6 +208,21 @@ Zuschaueroption. Die **Statistik** zeigt deine Ergebnisse und Gegnerbilanzen.
 Mit dem Filter **Spielvariante** beschränkst du Summen, Gegnerbilanzen und
 Partienliste auf eine Variante. Ein leerer Filter zeigt alle Varianten.
 
+## Geplante Spaceward-Wirtschaft
+
+Spaceward bleibt bis zur gemeinsamen Abnahme gesperrt. Die erste interne Fassung
+verteilt die Kapazität eines Systems zwischen Schiffbau und Industrieausbau.
+Der Ausbau sammelt Punkte; eine zusätzliche Kapazitätseinheit kostet das Doppelte
+der aktuellen Kapazität. Das Maximum ist 50. Neue Kapazität wirkt ab der folgenden
+Runde. Fortschritt bleibt bei Umschaltung und Eroberung erhalten; ein Eroberer
+beginnt mit vollem Schiffbau und ohne Garnisonsreserve.
+
+Die rechte Systemsicht zeigt Industriegebäude, Verteilung, Fortschritt und die
+voraussichtliche nächste Lieferung. Bestehende Verlegungen bleiben erhalten;
+reicht der Schiffbau nicht, können sie auf Garnison oberhalb der Reserve zugreifen.
+Engpässe werden angezeigt. Rohstoffe, Forschung und Schiffstypen folgen später.
+SectorForces verwendet weiterhin seine bisherigen Regeln.
+
 ## Vorlagen und Revanche
 
 Öffne bei einer eigenen Partie in Lobby oder Archiv **Als Vorlage / Revanche**.

@@ -8,6 +8,13 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Interne Spaceward-Wirtschaft (M3): Produktion zwischen Schiffbau und Ausbau
+  verteilen; Ausbaukosten 2 × aktuelle Kapazität, Maximum 50. Teilfortschritt
+  und Kapazität bleiben bei Eroberung erhalten. Industriegebäude, Verteilung,
+  Fortschritt und Lieferengpässe in der Systemsicht; Speicherung und historische
+  Rundenstände ergänzt. SectorForces behält seine Regeln. Spaceward bleibt
+  bis zur gemeinsamen Abnahme für neue Partien gesperrt.
+
 - Spielvarianten und feste Regelversionen: SectorForces bezeichnet die bisherigen
   Classic-Regeln (1.0.0). Der erweiterbare Katalog zeigt Spaceward als noch nicht
   spielbar. Lobby, Beitritt, Verwaltung, Archiv und Statistik zeigen die Regeln;

@@ -78,6 +78,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final IntConsumer onFleetRowSelected;
     private final Consumer<PlannedOrder> onCancelOrder;
     private String routeFilter = "";
+    private Consumer<de.zettsystems.starfare.economy.values.ProductionAllocation> onProductionAllocation = _ -> { };
+    void onProductionAllocation(Consumer<de.zettsystems.starfare.economy.values.ProductionAllocation> action) { onProductionAllocation = action; }
+
     private Consumer<PlannedOrder> onEditOrder = _ -> { };
 
     void onEditOrder(Consumer<PlannedOrder> action) { onEditOrder = action; }
@@ -185,8 +188,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 view.standingOrders(), view.waitingFleetIds(), readOnly, fleetId, standingOrderId);
         if (!travel.equals(lastTravel)) { renderTravelCards(view); lastTravel = travel; }
         renderContacts(view);
+        Integer detailOwner = selectedSystem == null ? null : selectedSystem.ownerId();
+        boolean industryLocked = detailOwner != null && view.roundStatus().hasSubmitted(detailOwner);
         Object details = java.util.Arrays.asList(gameId, selectedSystem, fleetId, view.ownFleets(),
-                view.waitingFleetIds(), view.standingOrders(), view.turn(), readOnly, targetSelectionActive,
+                view.waitingFleetIds(), view.standingOrders(), view.turn(), industryLocked, readOnly, targetSelectionActive,
                 selectedSystem != null && isBattlePending(selectedSystem.id()));
         if (!details.equals(lastDetails)) { renderDetails(view, targetSelectionActive); lastDetails = details; }
         Object logistics = List.of(view.systems(), view.standingOrders(), readOnly);
@@ -454,6 +459,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             }
             metrics.addClassName("system-metrics");
             renderSystemActions(system, targetSelectionActive);
+            renderIndustry(view, system);
             renderGarrisonReserve(system);
             renderOwnershipHistory(view, system);
             return;
@@ -485,13 +491,15 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (currentGame == null) { return; }
         SystemComposition.forVisible(currentGame, system).ifPresent(composition -> {
             boolean shipyard = system.ownerId() != null && system.productionPerTurn() != null;
-            String identity = currentGame.value() + "/" + system.id() + "/" + shipyard;
+            String identity = currentGame.value() + "/" + system.id() + "/" + shipyard + "/" + (system.industry() != null);
             DetailedSystemPanel panel = detailedSystem;
             if (panel == null || !identity.equals(detailedSystemKey)) {
                 panel = new DetailedSystemPanel(composition, shipyard);
                 detailedSystem = panel;
                 detailedSystemKey = identity;
             }
+            var industry = system.industry();
+            if (industry != null) { panel.showIndustry(industry); }
             detailsPage.add(panel);
         });
     }
@@ -515,6 +523,20 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         relocate.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
         actions.add(sendFleet, relocate);
         detailsPage.add(actions);
+    }
+
+    private void renderIndustry(PlayerViewState view, VisibleSystem system) {
+        var industry = system.industry();
+        if (industry == null) { return; }
+        Integer owner = system.ownerId();
+        boolean editable = !readOnly && owner != null && system.availableShips() != null
+                && !view.roundStatus().hasSubmitted(owner);
+        ProductionFlow flow = ProductionFlow.at(system.id(), view.standingOrders());
+        Integer available = system.availableShips();
+        detailsPage.add(new de.zettsystems.starfare.economy.ui.IndustryPanel(industry,
+                available == null ? 0 : available, flow.outgoing(), editable,
+                points -> onProductionAllocation.accept(new de.zettsystems.starfare.economy.values.ProductionAllocation(
+                        system.id(), view.turn(), points))));
     }
 
     private void renderGarrisonReserve(VisibleSystem system) {

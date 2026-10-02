@@ -9,11 +9,12 @@ class RulesetCatalogTest {
     private final RulesetCatalog catalog = RulesetCatalog.builtIn();
 
     @Test
-    void sectorForcesIsReleasedWhileSpacewardHasNoImplementedRules() {
+    void sectorForcesIsReleasedWhileSpacewardRemainsUnderDevelopment() {
         assertThat(catalog.definitions()).hasSize(2);
         assertThatCode(() -> catalog.requireCreatable(RulesetRef.SECTOR_FORCES)).doesNotThrowAnyException();
         assertThat(catalog.find(RulesetRef.SPACEWARD.variant()).orElseThrow().creationEnabled()).isFalse();
-        assertThatThrownBy(() -> catalog.requireSupported(RulesetRef.SPACEWARD))
+        assertThatCode(() -> catalog.requireSupported(RulesetRef.SPACEWARD)).doesNotThrowAnyException();
+        assertThatThrownBy(() -> catalog.requireCreatable(RulesetRef.SPACEWARD))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

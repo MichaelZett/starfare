@@ -37,9 +37,21 @@ public record StarSystem(int id, String name, double x, double y,
                 garrisonReserve == null ? 0 : garrisonReserve);
     }
 
-    /**
-     * Adds this system's production output to its garrison.
-     */
+    /** Plans next round's ship output without changing ships already stationed here. */
+    public StarSystem planShipbuilding(int shipsPerTurn) {
+        if (shipsPerTurn < 0) { throw new IllegalArgumentException("Ship output must not be negative"); }
+        return new StarSystem(id, name, x, y, ownerId, garrison, shipsPerTurn, neutral, garrisonReserve);
+    }
+
+    /** Produces using this round's capacity; expanded output becomes available next round. */
+    public StarSystem completeShipbuilding(int produced, int routed, int nextOutput) {
+        if (produced < 0 || routed < 0 || routed > Math.max(0, garrison + produced - garrisonReserve) || nextOutput < 0) {
+            throw new IllegalArgumentException("Industrial production must preserve the garrison reserve");
+        }
+        return new StarSystem(id, name, x, y, ownerId, garrison + produced - routed, nextOutput, neutral, garrisonReserve);
+    }
+
+    /** Adds this system's production output to its garrison. */
     public StarSystem produce() {
         return new StarSystem(id, name, x, y, ownerId, garrison + productionPerTurn, productionPerTurn, neutral, garrisonReserve);
     }

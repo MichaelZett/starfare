@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface GameService {
+    default boolean allocateExpansion(GameId id, int playerId, int expectedTurn, int systemId, int points) { return false; }
+
     default de.zettsystems.starfare.game.values.RulesetCatalog rulesets() {
         return de.zettsystems.starfare.game.values.RulesetCatalog.builtIn();
     }

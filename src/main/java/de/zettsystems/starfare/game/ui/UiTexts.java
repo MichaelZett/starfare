@@ -4,6 +4,22 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String ECONOMY_TITLE = "economy.title";
+    public static final String ECONOMY_CAPACITY = "economy.capacity";
+    public static final String ECONOMY_ALLOCATION = "economy.allocation";
+    public static final String ECONOMY_DISTRIBUTION = "economy.distribution";
+    public static final String ECONOMY_PROGRESS = "economy.progress";
+    public static final String ECONOMY_ESTIMATE = "economy.estimate";
+    public static final String ECONOMY_PAUSED = "economy.paused";
+    public static final String ECONOMY_MAXIMUM = "economy.maximum";
+    public static final String ECONOMY_NEXT_ROUND = "economy.nextRound";
+    public static final String ECONOMY_DELIVERY = "economy.delivery";
+    public static final String ECONOMY_APPLY = "economy.apply";
+    public static final String ECONOMY_ALL_SHIPS = "economy.allShips";
+    public static final String ECONOMY_HALF = "economy.half";
+    public static final String ECONOMY_ALL_EXPANSION = "economy.allExpansion";
+    public static final String ECONOMY_BUILDINGS = "economy.buildings";
+
     public static final String RULESET_CHOOSE = "ruleset.choose";
     public static final String RULESET_LABEL = "ruleset.label";
     public static final String RULESET_VERSION = "ruleset.version";
