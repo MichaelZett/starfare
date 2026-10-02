@@ -16,6 +16,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import de.zettsystems.starfare.economy.application.EconomyService;
+import de.zettsystems.starfare.economy.application.DefaultEconomyService;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,15 @@ public class DefaultGameService implements GameService {
     private static boolean canPlan(GameState state, int player, int expectedTurn) {
         return state.active() && state.started() && !state.gameOver() && state.turn() == expectedTurn
                 && state.joinedHumanPlayerIds().contains(player) && !state.submittedThisTurn().contains(player);
+    }
+
+    @Override
+    public boolean allocateExpansion(GameId id, int playerId, int expectedTurn, int systemId, int points) {
+        if (!isRunningGame(id)) { return false; }
+        boolean accepted = registry.writeState(id, state -> canPlan(state, playerId, expectedTurn)
+                && economy.allocateExpansion(state, playerId, systemId, points));
+        if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
+        return accepted;
     }
 
     @Override
@@ -63,6 +75,7 @@ public class DefaultGameService implements GameService {
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultGameService.class);
+    private final EconomyService economy;
     private final GameRegistry registry;
     private final GameAccessPolicy access;
     private final TurnEngine turnEngine;
@@ -81,6 +94,17 @@ public class DefaultGameService implements GameService {
                               PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
                               GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
                               BattleAcknowledgementService battleAcknowledgements) {
+        this(registry, turnEngine, fleetService, reportService, autoplayRunner, broadcaster,
+                playerViewBuilder, access, statistics, archives, timing, battleAcknowledgements, new DefaultEconomyService());
+    }
+
+    @Autowired
+    public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
+                              ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
+                              PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
+                              GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
+                              BattleAcknowledgementService battleAcknowledgements, EconomyService economy) {
+        this.economy = economy;
         this.registry = registry;
         this.battleAcknowledgements = battleAcknowledgements;
         this.access = access;

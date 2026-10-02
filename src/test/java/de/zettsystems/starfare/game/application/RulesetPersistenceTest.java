@@ -83,7 +83,7 @@ class RulesetPersistenceTest extends AbstractIntegrationTest {
 
     @Test
     void unsupportedSavesAreRejectedBeforeDatabaseAndCacheMutation() {
-        GameState state = state(RulesetRef.SPACEWARD);
+        GameState state = state(new RulesetRef("spaceward", "9.0.0"));
         var session = new GameSession(GameId.of(INVALID), "Unsupported", "host", Instant.now(), state);
         var store = new JpaGameSessionStore(sessions, archives, mapper, catalog);
         assertThatThrownBy(() -> store.save(session)).isInstanceOf(IllegalArgumentException.class);

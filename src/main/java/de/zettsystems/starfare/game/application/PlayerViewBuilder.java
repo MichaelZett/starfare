@@ -8,7 +8,7 @@ import de.zettsystems.starfare.game.values.ReplayFrame;
  * Builds immutable {@link PlayerViewState} snapshots from a {@link GameState} for a
  * specific player (fog-of-war filtered) or for an all-seeing observer.
  */
-interface PlayerViewBuilder {
+public interface PlayerViewBuilder {
 
     PlayerViewState forPlayer(GameState state, int playerId);
 

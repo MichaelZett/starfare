@@ -18,7 +18,7 @@ class RulesetTurnEngineTest {
         TurnEngine classic = mock(TurnEngine.class);
         TurnEngine other = mock(TurnEngine.class);
         var engine = new RulesetTurnEngine(new RulesetCatalog(entries),
-                Map.of(RulesetRef.SECTOR_FORCES, classic, third, other));
+                Map.of(RulesetRef.SECTOR_FORCES, classic, RulesetRef.SPACEWARD, mock(TurnEngine.class), third, other));
         GameState state = new GameState();
         state.rememberSetup(GameSetup.defaults().selectRuleset(third));
         assertThatCode(() -> engine.advanceTurn(state)).doesNotThrowAnyException();
@@ -29,7 +29,7 @@ class RulesetTurnEngineTest {
     @Test
     void unsupportedRulesCannotInvokeAnyEngineOrMutateState() {
         TurnEngine classic = mock(TurnEngine.class);
-        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), Map.of(RulesetRef.SECTOR_FORCES, classic));
+        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), Map.of(RulesetRef.SECTOR_FORCES, classic, RulesetRef.SPACEWARD, mock(TurnEngine.class)));
         GameState state = new GameState();
         state.rememberSetup(GameSetup.defaults().selectRuleset(new RulesetRef("classic", "9.0.0")));
         var before = GameState.toSnapshot(state);
@@ -42,7 +42,9 @@ class RulesetTurnEngineTest {
     void providerRegistrationRoutesClassicAndRejectsMissingImplementations() {
         RulesetRoundImplementation provider = mock(RulesetRoundImplementation.class);
         when(provider.ruleset()).thenReturn(RulesetRef.SECTOR_FORCES);
-        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), List.of(provider));
+        RulesetRoundImplementation spaceward = mock(RulesetRoundImplementation.class);
+        when(spaceward.ruleset()).thenReturn(RulesetRef.SPACEWARD);
+        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), List.of(provider, spaceward));
         GameState state = new GameState();
         assertThatCode(() -> engine.advanceTurn(state)).doesNotThrowAnyException();
         verify(provider).advanceTurn(state);

@@ -8,6 +8,8 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import de.zettsystems.starfare.economy.domain.Industry;
+import de.zettsystems.starfare.economy.values.IndustryView;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,7 +85,8 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             String color = owner != null ? playerById(state, owner).colorHex() : null;
             return new VisibleSystem(system.id(), system.name(), system.x(), system.y(), owner,
                     system.garrison(), system.productionPerTurn(), true, color, frame.turn(), false,
-                    null, system.garrisonReserve(), system.availableShips(), ownershipHistory(state, system.id()));
+                    null, system.garrisonReserve(), system.availableShips(), ownershipHistory(state, system.id()),
+                    industryView(frame.industries(), system, system.availableShips(), 0));
         }).toList();
         List<Fleet> ownFleets = frame.fleets().stream().filter(fleet -> fleet.ownerId() == playerId).toList();
         TurnReport report = frame.reports().getOrDefault(playerId, new TurnReport(frame.turn(), List.of()));
@@ -101,7 +104,8 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             return new VisibleSystem(
                     s.id(), s.name(), s.x(), s.y(),
                     ownerId, s.garrison(), s.productionPerTurn(),
-                    true, color, turn, false, null, s.garrisonReserve(), s.availableShips(), ownershipHistory(state, s.id()));
+                    true, color, turn, false, null, s.garrisonReserve(), s.availableShips(), ownershipHistory(state, s.id()),
+                    industryView(state.industries(), s, s.availableShips(), 0));
         }).toList();
     }
 
@@ -215,7 +219,19 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 own ? routedBySystem.getOrDefault(s.id(), 0) : null,
                 own ? s.garrisonReserve() : null,
                 own ? Math.max(0, s.availableShips() - committedBySystem.getOrDefault(s.id(), 0)) : null,
-                own ? ownershipHistory(state, s.id()) : List.of());
+                own ? ownershipHistory(state, s.id()) : List.of(),
+                own ? industryView(state.industries(), s, Math.max(0, s.availableShips()
+                        - committedBySystem.getOrDefault(s.id(), 0)), routedBySystem.getOrDefault(s.id(), 0)) : null);
+    }
+
+    private static @Nullable IndustryView industryView(@Nullable Map<Integer, Industry> industries,
+                                                        StarSystem system, int available, int routed) {
+        Industry industry = industries == null ? null : industries.get(system.id());
+        if (industry == null) { return null; }
+        int shortfall = Math.max(0, system.garrisonReserve() - system.garrison());
+        int delivery = Math.min(routed, Math.max(0, available + industry.shipbuilding() - shortfall));
+        return new IndustryView(industry.capacity(), industry.expansionAllocation(), industry.expansionProgress(),
+                industry.expansionCost(), delivery, delivery < routed, shortfall);
     }
 
     private static List<SystemOwnership> ownershipHistory(GameState state, int systemId) {
@@ -274,7 +290,8 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         if (production <= 16) {
             return 16;
         }
-        return 20;
+        if (production <= 20) { return 20; }
+        return Math.ceilDiv(production, 10) * 10;
     }
 
     private static List<StandingOrderView> buildStandingOrderViews(GameState state, List<StandingOrder> orders,

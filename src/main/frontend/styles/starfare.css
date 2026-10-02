@@ -2287,3 +2287,23 @@ vaadin-button.system-world.system-surface-3 { filter: saturate(0.6); }
     background: rgba(139, 168, 205, .06);
 }
 .ruleset-card-title { font-weight: 600; }
+
+/* Spaceward industry; Classic keeps its decorative shipyard only. */
+.industry-panel { display: flex; flex-direction: column; gap: .55rem; padding: .85rem; margin: .65rem 0; border: 1px solid #426356; border-radius: 12px; background: linear-gradient(135deg, #142d2c, #142130); min-width: 0; }
+.industry-panel h3 { margin: 0; font-size: 1rem; color: #b6e2cc; }
+.industry-panel > span { font-size: .82rem; }
+.industry-allocation-bar { display: flex; height: .7rem; overflow: hidden; border-radius: .4rem; background: #0c1621; }
+.industry-shipbuilding { background: #729dc9; }
+.industry-expansion { background: #79cfa8; }
+.industry-progress-track { height: .3rem; margin-top: .35rem; background: #0c1621; border-radius: .2rem; overflow: hidden; }
+.industry-progress-fill { height: 100%; background: #79cfa8; }
+.industry-progress { font-size: .8rem; }
+.industry-quick-actions { display: flex; flex-wrap: wrap; gap: .15rem .3rem; }
+.industry-panel vaadin-integer-field { width: 100%; min-width: 0; }
+.industry-panel > vaadin-button { align-self: flex-start; }
+.industry-hint { color: #a1b4c8; line-height: 1.4; }
+.industry-bottleneck { color: #edba70; }
+.system-industry-buildings { position: absolute; right: 9px; bottom: 8px; padding: .25rem .4rem; border: 1px solid #547b6a80; border-radius: 5px; background: #102b28db; color: #acd8c4; font-size: .65rem; }
+.system-industry-skyline { display: flex; align-items: flex-end; justify-content: flex-end; gap: 3px; margin-bottom: 3px; }
+.system-industry-building { width: 14px; border: 1px solid #729e8c; border-radius: 2px 2px 0 0; background: repeating-linear-gradient(0deg, #203f39 0 4px, #74af966b 4px 6px); position: relative; }
+.system-industry-building::before { content: ''; position: absolute; width: 3px; height: 8px; background: #759a8c; right: 2px; top: -8px; }

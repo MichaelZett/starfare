@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.UnaryOperator;
+import de.zettsystems.starfare.economy.domain.Industry;
 
 /**
  * Mutable in-memory game state for a single running match.
@@ -20,8 +21,46 @@ import java.util.function.UnaryOperator;
 public class GameState {
     private int turn = 1;
     private RulesetRef ruleset = RulesetRef.SECTOR_FORCES;
+    private final Map<Integer, Industry> industries = new HashMap<>();
 
     public RulesetRef ruleset() { return ruleset; }
+    public Map<Integer, Industry> industries() { return Map.copyOf(industries); }
+
+    public void initializeIndustry() {
+        if (!RulesetRef.SPACEWARD.equals(ruleset) || !industries.isEmpty()) { return; }
+        systems.forEach(system -> industries.put(system.id(), Industry.establish(system.productionPerTurn())));
+    }
+
+    public void planIndustrialExpansion(int systemId, Industry planned) {
+        Industry current = industries.get(systemId);
+        if (current == null || planned.capacity() != current.capacity()
+                || planned.expansionProgress() != current.expansionProgress()) {
+            throw new IllegalArgumentException("Allocation must preserve industrial capacity and progress");
+        }
+        updateSystem(systemId, system -> system.planShipbuilding(planned.shipbuilding()));
+        industries.put(systemId, planned);
+    }
+
+    public void completeIndustrialProduction(int systemId, Industry expanded, int routed) {
+        Industry current = industries.get(systemId);
+        if (current == null || !expanded.equals(current.expandForOneTurn())) {
+            throw new IllegalArgumentException("Industrial growth must follow the current allocation");
+        }
+        updateSystem(systemId, system -> system.completeShipbuilding(current.shipbuilding(), routed, expanded.shipbuilding()));
+        industries.put(systemId, expanded);
+    }
+
+    private void validateIndustry() {
+        if (!RulesetRef.SPACEWARD.equals(ruleset)) {
+            if (!industries.isEmpty()) { throw new IllegalArgumentException("Industry belongs only to Spaceward"); }
+            return;
+        }
+        if (industries.size() != systems.size() || systems.stream().anyMatch(system -> {
+            Industry industry = industries.get(system.id());
+            return industry == null || industry.shipbuilding() != system.productionPerTurn()
+                    || (system.neutral() && industry.expansionAllocation() != 0);
+        })) { throw new IllegalArgumentException("System industry and ship production disagree"); }
+    }
     private final List<Player> players = new ArrayList<>();
     private final List<StarSystem> systems = new ArrayList<>();
     private final List<Fleet> fleets = new ArrayList<>();
@@ -156,6 +195,7 @@ public class GameState {
      * Marks this game as started so turns may be advanced.
      */
     public void start() {
+        initializeIndustry();
         this.started = true;
         this.turnStartedAt = Instant.now();
         this.stragglerSince = null;
@@ -361,6 +401,7 @@ public class GameState {
         this.missedRounds.clear();
         this.players.clear();
         this.systems.clear();
+        this.industries.clear();
         this.fleets.clear();
         this.reports.clear();
         this.intel.clear();
@@ -483,6 +524,13 @@ public class GameState {
             StarSystem current = systems.get(i);
             if (current.id() == id) {
                 StarSystem updated = updater.apply(current);
+                if (!Objects.equals(current.ownerId(), updated.ownerId())) {
+                    Industry industry = industries.get(id);
+                    if (industry != null) {
+                        industries.put(id, industry.captured());
+                        updated = updated.planShipbuilding(industry.capacity());
+                    }
+                }
                 systems.set(i, updated);
                 recordOwnershipChange(current, updated);
                 return;
@@ -519,7 +567,7 @@ public class GameState {
 
     /** Captures the resolved state of the current turn without keeping mutable collections. */
     public void captureReplayFrame() {
-        replayFrames.put(turn, new ReplayFrame(turn, systems, fleets, reports));
+        replayFrames.put(turn, new ReplayFrame(turn, systems, fleets, reports, industries));
     }
 
     private record Bounds(double x, double y, double width, double height) {
@@ -532,6 +580,7 @@ public class GameState {
     }
 
     public static GameStateSnapshot toSnapshot(GameState s) {
+        s.validateIndustry();
         Map<Integer, Map<Integer, Intel>> intelCopy = new HashMap<>();
         s.intel.forEach((pid, inner) -> intelCopy.put(pid, new HashMap<>(inner)));
         Map<Integer, List<FleetOrder>> ordersCopy = new HashMap<>();
@@ -552,7 +601,7 @@ public class GameState {
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
-                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset);
+                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries));
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -594,6 +643,9 @@ public class GameState {
         }
         RulesetRef storedRuleset = s.ruleset();
         c.ruleset = storedRuleset == null ? RulesetRef.SECTOR_FORCES : storedRuleset;
+        var industry = s.industries();
+        if (industry != null) { c.industries.putAll(industry); }
+        c.validateIndustry();
         c.originalSetup = s.originalSetup();
         if (c.originalSetup != null && !c.originalSetup.ruleset().equals(c.ruleset)) {
             throw new IllegalArgumentException("Snapshot and original setup disagree on game rules");
@@ -689,6 +741,7 @@ public class GameState {
         }
 
         c.ruleset = s.ruleset;
+        c.industries.putAll(s.industries);
         c.originalSetup = s.originalSetup;
         c.previousOrders.putAll(s.previousOrders);
         return c;

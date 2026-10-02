@@ -17,8 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/** Decorative Classic system view; its controls never issue game commands. */
+/** Shared schematic system view; its celestial controls never issue game commands. */
 final class DetailedSystemPanel extends Div {
+    private final Div industrialBuildings = new Div();
     private final Div description = new Div();
     private final Details properties = new Details();
     private final List<Button> targets = new ArrayList<>();
@@ -42,6 +43,9 @@ final class DetailedSystemPanel extends Div {
             yard.getElement().setAttribute(HtmlAttributes.TITLE, I18n.t(UiTexts.SYSTEM_SHIPYARD_HINT));
             diagram.add(yard);
         }
+        industrialBuildings.addClassName("system-industry-buildings");
+        industrialBuildings.setVisible(false);
+        diagram.add(industrialBuildings);
         Span caption = new Span(I18n.t(UiTexts.SYSTEM_SCHEMATIC));
         caption.addClassName("system-schematic-caption");
         description.addClassName("system-body-description");
@@ -54,6 +58,23 @@ final class DetailedSystemPanel extends Div {
         add(diagram, caption, properties, list);
         selectStar(composition.stars().getFirst(), 0);
         properties.setOpened(false);
+    }
+
+    void showIndustry(de.zettsystems.starfare.economy.values.IndustryView industry) {
+        industrialBuildings.setVisible(true);
+        industrialBuildings.removeAll();
+        Div skyline = new Div(); skyline.addClassName("system-industry-skyline");
+        int count = Math.ceilDiv(industry.capacity(), 10);
+        int[] heights = {17, 24, 31};
+        for (int index = 0; index < count; index++) {
+            Div building = new Div(); building.addClassName("system-industry-building");
+            building.getStyle().set(CssProperties.HEIGHT, heights[index % heights.length] + "px");
+            skyline.add(building);
+        }
+        String label = I18n.t(UiTexts.ECONOMY_BUILDINGS, industry.capacity());
+        industrialBuildings.add(skyline, new Span(label));
+        industrialBuildings.getElement().setAttribute(HtmlAttributes.TITLE, label);
+        industrialBuildings.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, label);
     }
 
     private static void drawOrbits(Div diagram, SystemComposition composition) {

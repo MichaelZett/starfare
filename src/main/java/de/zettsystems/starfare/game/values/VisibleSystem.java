@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.values;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import de.zettsystems.starfare.economy.values.IndustryView;
 
 /**
  * Client-facing view of a star system with fog-of-war data.
@@ -14,8 +15,17 @@ public record VisibleSystem(
         @Nullable Integer ownerId, @Nullable Integer garrison, @Nullable Integer productionPerTurn,
         boolean fullyVisible, @Nullable String colorHex, @Nullable Integer lastSeenTurn, boolean approximate,
         @Nullable Integer routedProduction, @Nullable Integer garrisonReserve, @Nullable Integer availableShips,
-        List<SystemOwnership> ownershipHistory
+        List<SystemOwnership> ownershipHistory, @Nullable IndustryView industry
 ) {
+    public VisibleSystem(int id, String name, double x, double y, @Nullable Integer ownerId,
+                         @Nullable Integer garrison, @Nullable Integer productionPerTurn, boolean fullyVisible,
+                         @Nullable String colorHex, @Nullable Integer lastSeenTurn, boolean approximate,
+                         @Nullable Integer routedProduction, @Nullable Integer garrisonReserve,
+                         @Nullable Integer availableShips, List<SystemOwnership> ownershipHistory) {
+        this(id, name, x, y, ownerId, garrison, productionPerTurn, fullyVisible, colorHex, lastSeenTurn,
+                approximate, routedProduction, garrisonReserve, availableShips, ownershipHistory, null);
+    }
+
     /** Compatibility constructor for views created before garrison reserves existed. */
     public VisibleSystem(int id, String name, double x, double y, @Nullable Integer ownerId,
                          @Nullable Integer garrison, @Nullable Integer productionPerTurn, boolean fullyVisible,

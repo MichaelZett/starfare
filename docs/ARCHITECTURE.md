@@ -27,8 +27,9 @@ simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md
 application release. SectorForces uses `classic / 1.0.0`; the display name does
 not change its stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
-Spaceward (`spaceward / 1.0.0`) is a planned entry with no supported implementation
-and cannot be created. Orion has no implementation or selectable entry.
+Spaceward (`spaceward / 1.0.0`) has an internal industrial-economy implementation
+but remains unavailable for new games until its combined acceptance. Orion has
+no implementation or selectable entry.
 
 `RulesetConfiguration` supplies the shared catalog. `GameSetup`, `GameState`,
 `GameStateSnapshot`, `GameSummary`, templates and compact result history retain
@@ -42,8 +43,9 @@ disable an already supported stored version.
 `RulesetTurnEngine` is the primary `TurnEngine` used by `GameService` and autoplay.
 It dispatches by the full reference to registered `RulesetRoundImplementation`
 beans. `DefaultTurnEngine` implements SectorForces 1.0.0 and keeps the frozen
-Classic pipeline. Every supported reference needs an explicit registered round
-implementation; incomplete registrations fail during application startup.
+Classic pipeline through `RoundPipeline`. `SpacewardTurnEngine` uses the same
+order/arrival/victory sequence with its own AI planning and production. Every
+supported reference needs an explicit registered round implementation; incomplete registrations fail during application startup.
 The isolated third-variant tests verify extensibility without shipping another
 game. Later variants may add their own commands, state and views as required.
 
@@ -51,6 +53,48 @@ Flyway V2_9 adds variant and version columns to `game_results` with legacy
 SectorForces defaults. Statistics filter by variant before aggregating outcomes
 and opponents; participant and AI collections still use separate fetches.
 Rule references remain in the compact result after detailed sessions are removed.
+
+## Spaceward industrial economy (M3)
+
+Spaceward keeps immutable per-system `Industry` records in a separate
+`GameState.industries` map. Classic retains an empty map and the existing
+`StarSystem` behavior. Capacity starts at the configured system production.
+Integer points go to expansion; the remainder builds ships. The next capacity
+unit costs twice the current capacity, with a maximum of 50. Partial and surplus
+progress survive allocation changes and conquest. At the cap, the allocation
+returns to full shipbuilding. Growth changes output for the following turn only.
+
+`StarSystem.productionPerTurn` always contains actual ship output, so existing
+routing limits, delivery checks and logistics previews consume the same value.
+Standing orders retained after an allocation change may use the source garrison
+above its reserve; incoming rates never count as already delivered ships.
+Defense losses may leave a garrison below its reserve: production continues
+while transfers wait for sufficient surplus. `IndustryView.reserveShortfall`
+also accounts for that deficit in the editable allocation preview.
+`DefaultEconomyService` produces only the output available before this turn's
+growth. Capture resets allocation to full shipbuilding and reserve to zero while
+retaining industrial capacity and progress, directly in `GameState.updateSystem`.
+Neutral systems never expand automatically.
+
+`allocateExpansion` validates rules, owner, human seat, expected turn and
+submission state under the game write lock. `ProductionAllocationChanged`
+refreshes subscribed views. Economy data is optional at the snapshot boundary;
+old Classic saves and replay frames remain valid. New frames store their own
+industry map so historical views never read present-day progress. Invalid or
+inconsistent industrial snapshots are rejected during restoration.
+
+`PlayerViewBuilder` exposes an `IndustryView` only with full visibility. The
+system illustration adds industry buildings; the adjacent `IndustryPanel`
+shows allocation, progress, time to growth and next outgoing delivery. Edits
+preview shortages before they are applied. Foreign sensor views and unresolved
+battles do not reveal the industrial details. Observers and archives are read-only.
+`DefaultSpacewardPlanning` uses filtered views, allocating one third of capacity
+to expansion in safe systems and all output to ships near known enemies.
+
+This is Starfare's initial approximation. The long-term inspiration is Delta
+Tao's [Spaceward Ho! 5 manual](https://www.deltatao.com/ho/ho/): colony suitability,
+terraforming, finite metal, empire-wide budgets, ship design and technology are
+separate future decisions. They are not implemented as part of M3.
 
 ## Classic compatibility contract
 
@@ -109,11 +153,13 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
   `GameSetup`, `GameConfig`, `PlannedOrder`, `StandingOrderView`, …),
   `ui` (Vaadin views: `LobbyView`, `MainView`, `RoundView`, panels,
   dialogs, `UiMapper`, `UiTexts`).
-- `turn` — `TurnEngine` (turn pipeline).
+- `turn` — Ruleset dispatch and shared `RoundPipeline`.
 - `combat` — Combat resolution (`CombatService`, `CombatResolver`).
 - `fleet` — Fleet commands and validation (`FleetService`,
   `FleetOrder`).
-- `ai` — AI player decisions (`AiService`).
+- `economy` — Spaceward capacity, allocation and progress (`Industry`),
+  production (`EconomyService`) and the immutable inspector (`IndustryView`, `IndustryPanel`).
+- `ai` — Classic and Spaceward AI decisions (`AiService`, `SpacewardPlanning`).
 - `report` — Round reports (`TurnReport`, `TurnEvent`).
 - `auth` — Starfare adapter around the reusable identity building block
   (`de.zettsystems:identity-core` / `identity-vaadin` from the `zs-identity`
@@ -139,7 +185,7 @@ other modules. New modules need the same declaration.
 ## Dependencies
 
 - `game.ui` → `GameService` → services
-  (`turn/combat/fleet/ai/report`) → `GameState`.
+  (`turn/combat/fleet/ai/report/economy`) → `GameState`.
 - `game.application.GameRegistry` locates games. Each `GameSession` owns
   exactly one `GameState` and its lock; access goes exclusively through
   `GameRegistry.readState(gameId, fn)` / `writeState(gameId, fn)`.

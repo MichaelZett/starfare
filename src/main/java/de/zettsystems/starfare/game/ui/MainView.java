@@ -112,6 +112,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::cancelTargetSelectionAndRefresh);
         mapCanvas = new MapCanvas(this::onMapBackgroundClick);
         fleetsPanel.onEditOrder(order -> planningDialogs().edit(order));
+        fleetsPanel.onProductionAllocation(this::allocateExpansion);
         planningActions.addClassName("map-controls");
         planningActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_UNDO), _ -> {
             if (!game.undoOrders(gameId, currentSeat(), Objects.requireNonNull(displayedTurn))) {
@@ -261,6 +262,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
         if (!ok) {
             Notification.show(I18n.t(UiTexts.MAP_CANCEL_ORDER_FAILED));
+        }
+        refresh();
+    }
+
+    private void allocateExpansion(de.zettsystems.starfare.economy.values.ProductionAllocation allocation) {
+        int pid = currentSeat();
+        if (pid < 0 || !game.allocateExpansion(gameId, pid, allocation.turn(), allocation.systemId(), allocation.expansionPoints())) {
+            Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
         }
         refresh();
     }

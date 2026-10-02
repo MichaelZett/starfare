@@ -44,6 +44,7 @@ public class DefaultGameRegistry implements GameRegistry {
         GameSession session = new GameSession(id, name, hostPlayerId, Instant.now());
         session.writeState(state -> {
             initializeState(state, setup);
+            state.initializeIndustry();
             return null;
         });
         store.save(session);

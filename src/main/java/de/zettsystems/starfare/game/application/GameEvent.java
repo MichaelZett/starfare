@@ -40,6 +40,8 @@ public sealed interface GameEvent {
     record HostChanged(GameId gameId, @Nullable String newHostPlayerId) implements GameEvent {
     }
 
+    record ProductionAllocationChanged(GameId gameId) implements GameEvent {}
+
     record RoundRulesChanged(GameId gameId) implements GameEvent {}
 
     record ChatMessage(GameId gameId, String senderPlayerId, String text, Instant sentAt) implements GameEvent {}
