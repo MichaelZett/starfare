@@ -10,7 +10,7 @@ import de.zettsystems.starfare.report.values.TurnEvent;
 import org.springframework.stereotype.Service;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-/** First Spaceward round implementation; creation remains disabled until M7. */
+/** Spaceward 1.0.0 round implementation: industry, limited range, alliances and coalition combat. */
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Spring-injected collaborators are retained for the lifetime of this stateless bean.")

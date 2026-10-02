@@ -27,8 +27,8 @@ simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md
 application release. SectorForces uses `classic / 1.0.0`; the display name does
 not change its stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
-Spaceward (`spaceward / 1.0.0`) has internal economy, navigation, diplomacy and coalition combat implementations
-but remains unavailable for new games until its combined acceptance. Orion has
+Spaceward (`spaceward / 1.0.0`) combines its economy, navigation, diplomacy and coalition combat
+implementations and is enabled for new games since M7. Orion has
 no implementation or selectable entry.
 
 `RulesetConfiguration` supplies the shared catalog. `GameSetup`, `GameState`,
@@ -123,7 +123,7 @@ Snapshots add nullable diplomacy and returningHome fields. Missing fields mean
 no contracts and ordinary M4 travel. Copying, persistence and archives retain
 consent, deadlines and return phases. Invalid memberships, electorate data,
 unknown participants and cross-variant treaty state are rejected. SectorForces
-has no diplomacy actions. Spaceward remains unavailable until M6/M7 acceptance.
+has no diplomacy actions.
 
 ## Spaceward industrial economy (M3)
 
@@ -673,4 +673,15 @@ an empty immutable list. Existing durable
 acknowledgements and final-outcome gating apply to the new battle subtype.
 The independent frontend animation reads recorded results, reveals every side
 concurrently and preserves the personal sound preference. SharedBrowser mutes
-all browser acceptance tests. Spaceward creation remains disabled until M7.
+all browser acceptance tests.
+
+## Spaceward release (M7)
+
+`RulesetCatalog.builtIn()` enables creation for `spaceward / 1.0.0`; SectorForces
+stays first and therefore preselected in the wizard. No stored data changes:
+existing games keep their reference, and templates and rematches of Spaceward
+games are now creatable as well. `DefaultGameRegistry.createGame` initializes
+industry and the calibrated range directly after galaxy generation, so lobby
+views show the final Spaceward state before the start. `SpacewardReleaseIntegrationTest`
+covers creation, joining, starting, regular round resolution and a rematch through
+the public services against PostgreSQL.

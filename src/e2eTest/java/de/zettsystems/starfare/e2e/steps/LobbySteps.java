@@ -78,11 +78,12 @@ public class LobbySteps {
     private void verifyRulesetSelection() throws IOException {
         browser.awaitText("SectorForces");
         browser.awaitText("Spaceward");
-        browser.awaitText("noch nicht spielbar");
+        assertThat(browser.textsOf(".ruleset-card")).hasSize(2).allMatch(text -> text.contains("Regeln 1.0.0"));
         List<WebElement> variantChoices = browser.all("#ruleset-selection vaadin-radio-button");
         assertThat(variantChoices).hasSize(2);
         assertThat(variantChoices.getFirst().getDomAttribute("checked")).isNotNull();
-        assertThat(variantChoices.get(1).getDomAttribute("disabled")).isNotNull();
+        assertThat(variantChoices.get(1).getDomAttribute("checked")).isNull();
+        assertThat(variantChoices.get(1).getDomAttribute("disabled")).isNull();
         var originalSize = browser.driver().manage().window().getSize();
         try {
             captureWizard("wizard");
