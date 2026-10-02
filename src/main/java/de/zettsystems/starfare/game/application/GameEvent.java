@@ -2,7 +2,6 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.game.values.GameId;
 import org.jspecify.annotations.Nullable;
-
 import java.time.Instant;
 
 /**
@@ -39,6 +38,8 @@ public sealed interface GameEvent {
 
     record HostChanged(GameId gameId, @Nullable String newHostPlayerId) implements GameEvent {
     }
+
+    record DiplomacyChanged(GameId gameId) implements GameEvent {}
 
     record ProductionAllocationChanged(GameId gameId) implements GameEvent {}
 

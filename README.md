@@ -24,7 +24,9 @@ Choose a game variant before its settings in the new-game dialog. SectorForces
 is available with rules **1.0.0**. **Spaceward**, inspired by Spaceward Ho!, is
 shown as planned and cannot be selected yet. Its first internal milestone adds
 production allocation between ships and industrial expansion, plus limited flight range,
-automatically planned routes through owned systems and refuelling stops; public availability
+automatically planned routes through owned or allied systems and refuelling stops.
+Internal diplomacy adds unanimous alliance groups, agreed notice periods and
+automatic non-combat returns after departure; combined allied combat follows separately. Public availability
 waits for the combined acceptance of its economy, navigation and alliance rules.
 A possible future variant inspired by Master of Orion II is a separate project direction, not an available game.
 

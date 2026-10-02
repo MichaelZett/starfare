@@ -8,6 +8,14 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Interne Spaceward-Diplomatie (M5): gemeinsame Bündnisgruppen mit einstimmiger
+  Aufnahme und vereinbarter Kündigungsfrist. Austritte zeigen eine feste
+  Wirksamkeitsrunde; Friständerungen brauchen Zustimmung aller und ändern
+  laufende Kündigungen nicht. Verbündete Zwischenstationen erhalten getrennte
+  Flotten; Austritte führen automatisch zur geschützten Heimreise. Verträge
+  und Reisephasen überstehen Neustarts. Gemeinsamer Kampf folgt mit M6, die
+  öffentliche Freigabe mit M7. SectorForces bleibt unverändert.
+
 - Interne Spaceward-Navigation (M4): feste Reichweite je Partie, automatische
   Routen über eigene Zwischenstationen und eine volle Runde zum Auftanken.
   Reiseplan und Etappen bleiben nach Neuladen erhalten; Stationsverlust

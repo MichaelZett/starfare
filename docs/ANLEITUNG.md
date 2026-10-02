@@ -231,9 +231,9 @@ Sie wird aus der Galaxie berechnet, damit alle Systeme schrittweise erreichbar
 bleiben. Reisezeit und Sensorreichweite sind davon unabhängig.
 
 Für ein entferntes Ziel sucht der Flottenversand automatisch den schnellsten
-Weg über eigene Systeme. Der Dialog zeigt alle Zwischenstationen und die
+Weg über eigene oder verbündete Systeme. Der Dialog zeigt alle Zwischenstationen und die
 Ankunftsrunde einschließlich der Aufenthalte. Ohne erreichbaren Weg ist der
-Versand gesperrt. Fremde Systeme können angegriffen werden, dienen aber erst
+Versand gesperrt. Unverbündete Systeme können angegriffen werden, dienen aber erst
 nach ihrer Eroberung als Zwischenstationen.
 
 An jeder Zwischenstation bleibt die Flotte eine volle Runde zum Auftanken.
@@ -248,7 +248,7 @@ verloren, bleibt der Verband mit unterbrochener Weiterreise stehen. Seine
 Ankunftsrunde ist dann offen. Nach Rückeroberung wird eine neue volle
 Auftankrunde abgewartet. Produktionsverlegungen verwenden dieselben Wege und
 Reisezeiten; ohne nutzbaren Weg pausieren neue Lieferungen, der Auftrag bleibt
-erhalten. Verbündete Stationen werden mit dem späteren Bündnissystem ergänzt.
+erhalten. Verbündete Stationen verwenden dieselbe Reichweitenprüfung.
 
 Ist bereits vor dem Abflug die nächste Zwischenstation verloren, bleibt die
 Flotte an ihrer aktuellen Station, bis dieser Reiseabschnitt wieder zulässig ist.
@@ -291,3 +291,36 @@ Die Illustration verändert weder Produktion noch Kampf, Reisezeit oder Besitz.
 Bei unvollständiger Sicht und offenen Schlachten bleibt sie verborgen. Bestehende
 Partien behalten ihre Spielstände. Wissenschaftliche Grundlagen und bewusst
 vereinfachte Darstellung stehen in [System illustrations](SYSTEM-ILLUSTRATIONS.md).
+
+## Geplante Spaceward-Bündnisse
+
+Die Bündnisbedienung ist intern umgesetzt; die Variante bleibt bis zur
+gemeinsamen Abnahme gesperrt. Ein Imperium gehört höchstens einer Gruppe an.
+Alle Mitglieder sind miteinander verbündet, neutrale Systeme gehören keiner
+Gruppe an. Eine Gründung braucht beide Partner; eine Aufnahme braucht die
+Zustimmung aller bestehenden Mitglieder. Ein Imperium beantragt seinen eigenen
+Beitritt. Fremde Mitgliedschaft kann niemand erzwingen. Ablehnen oder
+Zurückziehen verwirft den offenen Vorschlag.
+
+Bei der Gründung werden 0–50 Runden Kündigungsfrist vereinbart. Friständerungen
+brauchen erneut die Zustimmung aller. Eine Kündigung zeigt sofort die
+Wirksamkeitsrunde: aktuelle Runde plus vereinbarte Frist, mindestens jedoch
+plus eins. Bis zu deren Beginn gilt das Bündnis vollständig. Bereits
+angekündigte Kündigungen behalten ihren Termin auch nach einer Friständerung.
+Bleibt nur ein Mitglied, endet die Gruppe. Die Bedienung ist nach Rundenabgabe
+gesperrt, Verträge bleiben lesbar.
+
+Verbündete Systeme können als Zwischenstationen dienen. Ankommende Unterstützung
+bleibt eine eigene Flotte und übernimmt weder Garnison noch System des Partners.
+Die zusätzliche gemeinsame Kampfauswertung folgt mit M6; sie ist Voraussetzung
+für die spätere Freigabe. Ein Vertrag verrät keine zusätzlichen militärischen
+Werte und verändert die individuelle Siegschwelle nicht.
+
+Nach wirksamem Austritt treten fremd stationierte Schiffe automatisch die
+kürzeste erlaubte Heimreise zu einem eigenen System an. Das gilt auch für
+bereits anfliegende Unterstützung: die Kündigung macht daraus keinen Angriff.
+Ohne erreichbares eigenes Ziel bleibt die Heimreise gesperrt. Diese Flotten
+greifen nicht an, unterstützen keine Verteidigung und können nicht durch
+Wartebefehle geparkt oder in einer fremden Garnison aufgelöst werden.
+Die KI stimmt Anfragen zu, sofern sie nicht bereits selbst einen Austritt
+angekündigt hat; sie gründet keine Bündnisse von sich aus.

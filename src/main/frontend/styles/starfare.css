@@ -2315,3 +2315,8 @@ vaadin-button.system-world.system-surface-3 { filter: saturate(0.6); }
   overflow-wrap: anywhere;
 }
 .send-fleet-route { overflow-wrap: anywhere; }
+
+.diplomacy-content, .diplomacy-card { display: flex; flex-direction: column; gap: .7rem; overflow-wrap: anywhere; }
+.diplomacy-card { border: 1px solid var(--app-border-color, #48526b); border-radius: .5rem; padding: 1rem; margin-top: 1rem; }
+
+.planning-actions { display: flex; flex-wrap: wrap; gap: .5rem; }

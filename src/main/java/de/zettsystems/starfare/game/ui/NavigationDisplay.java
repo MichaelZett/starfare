@@ -20,8 +20,11 @@ final class NavigationDisplay {
     static String status(Fleet fleet, PlayerViewState view) {
         var journey = fleet.journey();
         if (journey == null) { return ""; }
+        if (journey.evacuating()) { return I18n.t(journey.blocked() ? UiTexts.NAV_RETURN_BLOCKED : UiTexts.NAV_RETURN, name(view, fleet.toSystemId())); }
+        if (journey.stationed()) { return I18n.t(UiTexts.NAV_ALLIED_STATION, name(view, fleet.toSystemId())); }
         String key = switch (journey.phase()) {
             case FLYING -> UiTexts.NAV_FLYING;
+            case PARTNER -> UiTexts.NAV_ALLIED_STATION;
             case STATION -> UiTexts.NAV_STATION;
             case BLOCKED -> UiTexts.NAV_BLOCKED;
         };

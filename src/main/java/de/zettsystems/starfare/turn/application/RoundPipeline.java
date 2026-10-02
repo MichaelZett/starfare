@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.turn.application;
 
+import de.zettsystems.starfare.diplomacy.application.DefaultDiplomacyService;
+import de.zettsystems.starfare.diplomacy.application.DiplomacyService;
 import de.zettsystems.starfare.combat.application.CombatService;
 import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
@@ -31,13 +33,19 @@ public class RoundPipeline {
     private final ReportService reportService;
     private final FleetService fleetService;
     private final NavigationService navigation;
+    private final DiplomacyService diplomacy;
 
     public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService) {
         this(combatService, reportService, fleetService, new DefaultNavigationService());
     }
-    @org.springframework.beans.factory.annotation.Autowired
     public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService,
                          NavigationService navigation) {
+        this(combatService, reportService, fleetService, navigation, new DefaultDiplomacyService());
+    }
+    @org.springframework.beans.factory.annotation.Autowired
+    public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService,
+                         NavigationService navigation, DiplomacyService diplomacy) {
+        this.diplomacy = diplomacy;
         this.navigation = navigation;
         this.combatService = combatService;
         this.reportService = reportService;
@@ -51,6 +59,7 @@ public class RoundPipeline {
         navigation.departReadyFleets(state);
         produce.accept(fleetService.applyStandingOrdersForProduction(state));
         applyWaitOrders(state);
+        diplomacy.beginRound(state, state.turn() + 1);
         resolveArrivals(state);
         navigation.refreshStationAccess(state, state.turn() + 1);
         checkVictory(state);

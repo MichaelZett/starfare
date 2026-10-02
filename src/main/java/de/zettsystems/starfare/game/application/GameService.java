@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.starfare.diplomacy.values.DiplomacyView;
+import de.zettsystems.starfare.diplomacy.values.DiplomacyOrder;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.navigation.values.RoutePreview;
 import java.time.Instant;
@@ -9,6 +11,8 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public interface GameService {
+    default Optional<DiplomacyView> diplomacyFor(GameId id, String account) { return Optional.empty(); }
+    default boolean diplomacyOrder(GameId id, String account, int turn, DiplomacyOrder order) { return false; }
     default boolean allocateExpansion(GameId id, int playerId, int expectedTurn, int systemId, int points) { return false; }
 
     default de.zettsystems.starfare.game.values.RulesetCatalog rulesets() {

@@ -70,7 +70,7 @@ public final class UiMapper {
     }
     private static int etaOf(de.zettsystems.starfare.game.values.Fleet fleet, PlayerViewState view) {
         var journey = fleet.journey();
-        if (journey != null && journey.blocked()) { return -1; }
+        if (journey != null && (journey.blocked() || journey.stationed())) { return -1; }
         int arrival = journey == null ? fleet.arrivalTurn() : journey.finalArrivalTurn();
         return Math.max(0, arrival - view.turn()) + (view.waitingFleetIds().contains(fleet.globalId()) ? 1 : 0);
     }
