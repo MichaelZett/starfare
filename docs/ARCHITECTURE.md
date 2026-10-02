@@ -21,6 +21,52 @@ simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md
   `ReentrantReadWriteLock`).
 - Module boundaries verified by Spring Modulith (`ModulithTest`).
 
+## Classic compatibility contract
+
+The Classic reference baseline is commit `c5df8d1` (2026-10-02), before ruleset
+selection is introduced. `ClassicTurnContractTest` executes the real turn,
+fleet, combat and report services with human-only fixtures, zero combat
+randomness and strongest-first attack order. Fixed expected values protect
+the existing pipeline; they are not calculated with the implementation under
+test. The normal random attack order and non-zero strength rolls remain
+covered by `TurnEngineRoundRulesTest` and `CombatResolverTest`.
+
+| Reference case | Required result |
+| --- | --- |
+| Production, reserve, routing, queued send and wait | Four systems have garrisons `6/6/12/7`, `6/11/14/7`, then `6/20/16/7`; the source retains reserve 6, neutral production does not grow its garrison, delayed and routed fleets merge on arrival. |
+| Friendly arrivals and two equal attackers | Friendly fleets merge before combat. Production plus reinforcement gives 12 defenders; player 2 loses a 12:12 tie leaving zero defenders, then player 3 captures with 12 ships. Capture clears the old reserve. |
+| Victory and continuation | Three of four systems win at 70%. Further turns do nothing. Continuation requires full conquest; the next win records 100%, while the earlier replay still records 70%. |
+
+`src/test/resources/classic/legacy-running.json` and `legacy-archive.json` are
+hand-authored, synthetic old-format fixtures, not production exports. They
+omit newer settings, `originalSetup`, previous orders, reserve and empire-name
+fields. The running fixture also omits replay frames, reinforcement totals,
+standing-order quantities and intel garrisons. The archive includes historical
+owners and fleets, missing combat strengths, integer combat strengths, and a
+victory event without its threshold. These files must not be regenerated from
+the current serializer: that would silently erase the compatibility cases.
+`nextLocalFleetNo` stores the last assigned number despite its name; a stored
+value of 2 must allocate fleet F3 next.
+
+`ClassicSnapshotCompatibilityTest` reads them with the application's mapper,
+continues the running game, checks replay perspectives, writes and reads the
+current format, and reloads raw fixtures from PostgreSQL through a fresh
+`JpaGameSessionStore`. Read-only views and system illustrations must preserve
+both the state snapshot and the database JSON/version. An absent completion
+date stays absent, an absent visibility defaults to public, and missing
+original settings do not become an invented game template.
+The retained-archive case also exercises `GameService` review/replay and the
+template service after the operative session is absent. It preserves archive
+JSON and version, and cannot continue an archived game or invent a rematch.
+
+Run the focused contract with `./gradlew test --tests '*ClassicTurnContractTest'
+--tests '*ClassicSnapshotCompatibilityTest'`. Before changing Classic or
+persistence, also run `./gradlew build`,
+`node --test src/test/frontend/battle-replay.test.mjs` and `./gradlew e2eTest`.
+The browser suite is muted. Future rule implementations must retain these
+Classic outcomes; deliberate behavior changes require an explicit rule/version
+decision, not replacement of the old expected values.
+
 ## Package layout
 
 Base package: `de.zettsystems.starfare.<domain>.<technical>`.

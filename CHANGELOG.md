@@ -8,6 +8,11 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Classic-Bestandsschutz: feste Vergleichsszenarien für Produktion, Reserve,
+  Verlegungen, Befehle, Ankünfte, Mehrparteienkampf, Sieg und Fortsetzung.
+  Synthetische alte JSON-Spielstände und Archivframes sichern Speicherkompatibilität,
+  Neustart und unveränderte Daten bei lesenden Ansichten ab.
+
 - Grafische Systemsicht für Classic: auswählbare Hauptreihensterne, Doppelsonnen,
   zwei bis fünf Planeten, Monde, Zwergplaneten und Asteroidengürtel. Stabile,
   schematische Illustrationen ohne Änderung von Spielregeln oder Spielständen;
