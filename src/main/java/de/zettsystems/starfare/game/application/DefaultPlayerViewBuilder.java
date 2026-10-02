@@ -331,7 +331,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                         sysNames.getOrDefault(s.fromSystemId(), "?"),
                         sysNames.getOrDefault(s.toSystemId(), "?"),
                         s.ships(), false, null, Routes.plan(state, s.ownerId(), s.fromSystemId(), s.toSystemId())
-                                .map(route -> state.turn() + route.rounds()).orElse(null));
+                                .map(route -> state.turn() + route.rounds()).orElse(null), s.beneficiaryId());
                 case FleetOrder.Wait wait -> waitOrder(state, i, wait, sysNames);
                 case FleetOrder.Disband _ ->
                         new PlannedOrder(i, "map.orderType.disband", null, null, "-", "-", null, false, null);

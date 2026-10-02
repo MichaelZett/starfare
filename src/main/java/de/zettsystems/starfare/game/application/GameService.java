@@ -117,6 +117,13 @@ public interface GameService {
 
     boolean sendFleet(GameId gameId, int playerId, int fromId, int toId, int ships);
 
+    default boolean sendFleet(GameId gameId, int playerId, int expectedTurn, int fromId, int toId, int ships, int beneficiary) {
+        return sendFleet(gameId, playerId, fromId, toId, ships);
+    }
+    default List<Player> conquestCandidates(GameId gameId, int playerId) {
+        return viewFor(gameId, playerId).players().stream().filter(player -> player.id() == playerId).toList();
+    }
+
     /** Sets the permanent garrison that remains at an owned system. */
     boolean setGarrisonReserve(GameId gameId, int playerId, int systemId, int reserve);
 

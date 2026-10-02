@@ -55,3 +55,33 @@ for (const attackerWon of [true, false]) {
         assert.equal(defenseNumber.textContent, '0');
     });
 }
+
+test('coalition playback reveals the stored survivors and member losses together', () => {
+    const sides = [
+        {id: 1, members: [{playerId: 1, ships: 50, remaining: 20}, {playerId: 2, ships: 50, remaining: 20}]},
+        {id: 3, members: [{playerId: 3, ships: 60, remaining: 0}]},
+        {id: 0, members: [{playerId: 0, ships: 0, remaining: 0}]}
+    ];
+    const before = JSON.stringify(sides);
+    const panels = sides.map(side => {
+        const classes = new Set();
+        const number = {textContent: ''};
+        const members = side.members.map(member => ({textContent: 'initial', getAttribute: () => `${member.remaining} remaining`}));
+        return {classes, number, members, classList: {add: value => classes.add(value)},
+            querySelector: () => number, querySelectorAll: () => members};
+    });
+    const result = new Set();
+    const root = {querySelector(selector) {
+        if (selector === '[data-battle-result]') return {classList: {add: value => result.add(value)}};
+        return panels[sides.findIndex(side => selector === `[data-coalition-side="${side.id}"]`)];
+    }};
+    window.matchMedia = () => ({matches: true});
+    window.starfarePlayCoalition(root, sides, false);
+    assert.deepEqual(panels.map(panel => panel.number.textContent), ['40', '0', '0']);
+    assert.ok(panels[0].classes.has('coalition-survived'));
+    assert.ok(panels[1].classes.has('coalition-defeated'));
+    assert.equal(panels[0].members[0].textContent, '20 remaining');
+    assert.ok(result.has('battle-replay-result-visible'));
+    assert.equal(window.starfareBattleAudio.enabled, false);
+    assert.equal(JSON.stringify(sides), before);
+});

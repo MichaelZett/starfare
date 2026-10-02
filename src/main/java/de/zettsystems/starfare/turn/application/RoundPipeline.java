@@ -3,12 +3,15 @@ package de.zettsystems.starfare.turn.application;
 import de.zettsystems.starfare.diplomacy.application.DefaultDiplomacyService;
 import de.zettsystems.starfare.diplomacy.application.DiplomacyService;
 import de.zettsystems.starfare.combat.application.CombatService;
+import de.zettsystems.starfare.combat.application.CoalitionCombatService;
+import de.zettsystems.starfare.combat.application.DefaultCoalitionCombatService;
 import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.AttackOrder;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.navigation.application.DefaultNavigationService;
 import de.zettsystems.starfare.navigation.application.NavigationService;
 import de.zettsystems.starfare.report.application.ReportService;
@@ -34,6 +37,7 @@ public class RoundPipeline {
     private final FleetService fleetService;
     private final NavigationService navigation;
     private final DiplomacyService diplomacy;
+    private final CoalitionCombatService coalitions;
 
     public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService) {
         this(combatService, reportService, fleetService, new DefaultNavigationService());
@@ -42,9 +46,16 @@ public class RoundPipeline {
                          NavigationService navigation) {
         this(combatService, reportService, fleetService, navigation, new DefaultDiplomacyService());
     }
-    @org.springframework.beans.factory.annotation.Autowired
     public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService,
                          NavigationService navigation, DiplomacyService diplomacy) {
+        this(combatService, reportService, fleetService, navigation, diplomacy,
+                new DefaultCoalitionCombatService(reportService, navigation));
+    }
+    @org.springframework.beans.factory.annotation.Autowired
+    public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService,
+                         NavigationService navigation, DiplomacyService diplomacy,
+                         CoalitionCombatService coalitions) {
+        this.coalitions = coalitions;
         this.diplomacy = diplomacy;
         this.navigation = navigation;
         this.combatService = combatService;
@@ -84,6 +95,9 @@ public class RoundPipeline {
     }
 
     private void resolveArrivals(GameState state) {
+        if (state.ruleset().equals(RulesetRef.SPACEWARD)) {
+            coalitions.resolveArrivals(state); return;
+        }
         for (Fleet fleet : List.copyOf(state.fleets())) {
             if (fleet.inFlight() && fleet.arrivalTurn() == state.turn() + 1) { navigation.interceptStationArrival(state, fleet); }
         }
@@ -148,8 +162,11 @@ public class RoundPipeline {
         state.pendingOrders().forEach((_, orders) -> {
             for (FleetOrder order : orders) {
                 switch (order) {
-                    case FleetOrder.Send(int ownerId, int from, int to, int ships) ->
-                            fleetService.sendFleet(state, ownerId, from, to, ships);
+                    case FleetOrder.Send(int ownerId, int from, int to, int ships, var beneficiary) -> {
+                        if (state.ruleset().equals(RulesetRef.SPACEWARD)) {
+                            fleetService.sendFleet(state, ownerId, from, to, ships, beneficiary);
+                        } else { fleetService.sendFleet(state, ownerId, from, to, ships); }
+                    }
                     case FleetOrder.Wait(int ownerId, int fleetId) ->
                             fleetService.setFleetWait(state, ownerId, fleetId);
                     case FleetOrder.Disband(int ownerId, int fleetId) ->

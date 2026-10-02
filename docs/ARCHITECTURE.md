@@ -27,7 +27,7 @@ simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md
 application release. SectorForces uses `classic / 1.0.0`; the display name does
 not change its stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
-Spaceward (`spaceward / 1.0.0`) has internal economy, navigation and diplomacy implementations
+Spaceward (`spaceward / 1.0.0`) has internal economy, navigation, diplomacy and coalition combat implementations
 but remains unavailable for new games until its combined acceptance. Orion has
 no implementation or selectable entry.
 
@@ -112,8 +112,7 @@ and refrains from targeting allies. It does not initiate treaties.
 
 Navigation permits allied intermediate stations. Allied final arrivals use the
 PARTNER journey phase and retain independent fleet ownership; they cannot capture
-the partner system or disband into its garrison. Combined defence and combat
-remain M6 work. A departing member's stationed and already inbound partner
+the partner system or disband into its garrison. Combined defence and combat use the separate M6 coalition path. A departing member's stationed and already inbound partner
 contingents become non-combat returns. They automatically choose the shortest
 currently permitted route to an owned system, or remain BLOCKED until one exists.
 The first return leg may leave an inaccessible origin; subsequent stations obey
@@ -627,3 +626,51 @@ the cache. These values never modify game setup or game state.
 Map and sidebar rendering skip unchanged content. Route filters are stable Vaadin
 components while their result containers are replaced independently. Custom click
 targets use `KeyboardActions` with Enter/Space activation and visible focus styles.
+
+## Spaceward coalition combat (M6)
+
+RoundPipeline dispatches arrivals to CoalitionCombatService only for the fixed
+Spaceward reference. SectorForces retains CombatService/CombatResolver and its
+configured sequential attack order. The coalition service is stateless; its
+caller holds the game lock. All battles resolve synchronously before station
+access refresh, victory evaluation and replay capture.
+
+Each location collects the garrison, arriving fleets and friendly stationed
+contingents. Alliance groups form sides; unaffiliated empires and a neutral
+garrison each form a side. Protected returns and inaccessible blocked stays
+are excluded. CoalitionResolver sorts sides and members by stable IDs before
+using an injectable roll function. Each side receives one strength factor per
+battle. In each volley, source strength is divided across enemies proportional
+to their current strengths. All losses use the same volley inputs. Ship losses
+are rounded upward and clamped; surviving hostile sides repeat until at most
+one remains. ProportionalAllocation uses integer floors and largest remainders
+with ascending-ID ties, first between empires, then between garrison and fleets.
+Cumulative inflicted fire allocates actual enemy losses without duplicate kills.
+
+Successful defence retains the owner. Total annihilation retains the previous
+owner, including neutral ownership. FleetOrder.Send and Fleet add nullable
+beneficiaryId fields; missing old JSON fields mean the fleet owner. The launch
+UI validates own/allied beneficiaries under the write lock, with a turn token
+and submission guard. Editing compares and retains the stored claim; undo and
+snapshots retain it. Expired claims fall back to the ship owner. Conflicting
+claims use the largest surviving empire, then player ID; that empire's strongest
+claim wins, then beneficiary ID. Ownership never transfers allied survivors.
+
+The additive coalitionBattle event stores immutable CoalitionSide/Member facts,
+rolled strengths, actual remaining forces and allocated kills. It also stores
+ownership separately from BattleReplay's combat-only projection. Reports are
+identical for physically participating empires, including zero-strength owners.
+Historical playback therefore needs no current alliance state. Existing Classic
+event names and replay formats remain readable. Outcome totals consume only
+that player's recorded losses and kill share.
+
+CoalitionConcealment is a presentation-only immutable view projection. Pending
+coalition battles conceal ownership, industrial results and stationed survivors
+in map, logistics and fleet cards, including after reload. Recorded participating
+fleet IDs constrain concealment to actual combatants; protected blocked fleets
+at the same location remain visible. Missing IDs in older event JSON default to
+an empty immutable list. Existing durable
+acknowledgements and final-outcome gating apply to the new battle subtype.
+The independent frontend animation reads recorded results, reveals every side
+concurrently and preserves the personal sound preference. SharedBrowser mutes
+all browser acceptance tests. Spaceward creation remains disabled until M7.

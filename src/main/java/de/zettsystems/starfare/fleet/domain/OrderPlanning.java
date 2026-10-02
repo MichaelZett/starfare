@@ -21,9 +21,10 @@ public final class OrderPlanning {
         if (index < 0 || index >= current.size() || !(current.get(index) instanceof FleetOrder.Send old)
                 || !Objects.equals(expected.fromSystemId(), old.fromSystemId())
                 || !Objects.equals(expected.toSystemId(), old.toSystemId())
-                || !Objects.equals(expected.ships(), old.ships())) { return false; }
+                || !Objects.equals(expected.ships(), old.ships())
+                || !Objects.equals(expected.beneficiaryId(), old.beneficiaryId())) { return false; }
         List<FleetOrder> replacement = new ArrayList<>(current);
-        replacement.set(index, new FleetOrder.Send(player, old.fromSystemId(), target, ships));
+        replacement.set(index, new FleetOrder.Send(player, old.fromSystemId(), target, ships, old.beneficiaryId()));
         return replace(state, player, replacement);
     }
 
@@ -49,6 +50,7 @@ public final class OrderPlanning {
             if (order instanceof FleetOrder.Send send) {
                 var source = state.systems().stream().filter(system -> system.id() == send.fromSystemId()).findFirst().orElse(null);
                 if (source == null || !Objects.equals(source.ownerId(), player) || send.ownerId() != player
+                        || !ConquestOrders.allowed(state, player, send.beneficiaryId())
                         || send.ships() <= 0 || send.fromSystemId() == send.toSystemId()
                         || state.systems().stream().noneMatch(system -> system.id() == send.toSystemId())
                         || Routes.plan(state, player, send.fromSystemId(), send.toSystemId()).isEmpty()) { return false; }

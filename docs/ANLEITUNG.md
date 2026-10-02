@@ -312,8 +312,8 @@ gesperrt, Verträge bleiben lesbar.
 
 Verbündete Systeme können als Zwischenstationen dienen. Ankommende Unterstützung
 bleibt eine eigene Flotte und übernimmt weder Garnison noch System des Partners.
-Die zusätzliche gemeinsame Kampfauswertung folgt mit M6; sie ist Voraussetzung
-für die spätere Freigabe. Ein Vertrag verrät keine zusätzlichen militärischen
+Die gemeinsame Kampfauswertung ist intern umgesetzt; die gemeinsame Abnahme
+bleibt Voraussetzung für die spätere Freigabe. Ein Vertrag verrät keine zusätzlichen militärischen
 Werte und verändert die individuelle Siegschwelle nicht.
 
 Nach wirksamem Austritt treten fremd stationierte Schiffe automatisch die
@@ -324,3 +324,52 @@ greifen nicht an, unterstützen keine Verteidigung und können nicht durch
 Wartebefehle geparkt oder in einer fremden Garnison aufgelöst werden.
 Die KI stimmt Anfragen zu, sofern sie nicht bereits selbst einen Austritt
 angekündigt hat; sie gründet keine Bündnisse von sich aus.
+
+## Geplanter Spaceward-Kampf
+
+Die gemeinsame Kampfauswertung ist intern umgesetzt. Spaceward bleibt bis zur
+Variantenabnahme gesperrt; SectorForces verwendet weiter seinen bisherigen Kampf.
+
+An einem System kämpfen Besitzer, eintreffende Verbündete und dort stationierte
+Unterstützung als gemeinsame Seite. Andere Bündnisgruppen sowie vertragslose
+Imperien bilden jeweils eigene Seiten. Eine neutrale Garnison bildet eine
+weitere Seite. Alle Seiten teilen ihre Feuerkraft anteilig auf die feindlichen
+Stärken auf. Verluste eines Schlagabtauschs werden gleichzeitig berechnet.
+Falls mehrere feindliche Seiten überleben, kämpfen sie gleichzeitig weiter,
+bis höchstens eine Seite übrig bleibt. Die Zufallsvorgabe der Partie gilt einmal
+je Seite und Schlacht. Verluste werden auf ganze Schiffe aufgerundet; innerhalb
+einer Seite verteilen sich die Überlebenden anteilig auf die eingesetzten
+Imperien, dann auf Garnison und Flotten. Größte Reste erhalten die übrigen
+ganzen Schiffe; Gleichstände folgen festen Kennungen.
+
+Ohne Zufall behalten 100 Schiffe gegen 60 Gegner 40 Schiffe. Zwei verbündete
+Flotten mit jeweils 50 Schiffen behalten gegen 60 Gegner je 20. Gleich starke
+Seiten können sich vollständig vernichten. Dann bleibt der bisherige Besitzer,
+auch wenn seine Garnison leer ist. Erfolgreiche gemeinsame Verteidigung erhält
+den bisherigen Besitzer.
+
+Vor dem Flottenversand lässt sich als Eroberungsziel das eigene oder ein
+verbündetes Imperium wählen. Der Befehl zeigt die Wahl, auch nach Neuladen.
+Bearbeiten und Rückgängig erhalten sie. Bei unterschiedlichen Zielen derselben
+siegreichen Seite entscheidet das Imperium mit den meisten überlebenden
+Schiffen; Gleichstand entscheidet die kleinere Spielerkennung. Innerhalb
+jenes Imperiums gilt das mit den meisten Überlebenden vertretene Ziel, danach
+die kleinere Zielkennung. Besteht das Bündnis beim Kampf nicht mehr, fällt
+eine Benennung auf das eigene Imperium zurück. Sammelversand und regelmäßige
+Verlegungen verwenden das eigene Imperium als Ziel.
+
+Schiffe werden durch Eroberung weder verschenkt noch einer fremden Garnison
+zugeschlagen: verbündete Überlebende bleiben eigenständige Kontingente.
+Heimkehrende Schiffe und gesperrte Aufenthalte aus dem Navigationsablauf
+beginnen keine zusätzlichen Kämpfe. Ein Kampf an einer verlorenen
+Zwischenstation beendet die ursprüngliche Route dort.
+
+Die Wiedergabe zeigt alle Seiten, die einmal ausgewürfelten Stärken und
+anschließend die gespeicherten Verluste jedes Imperiums. Bis zur persönlichen
+Bestätigung bleiben Besitzer, Endwerte und überlebende Unterstützung in Karte,
+Flottenliste und Logistik verborgen. Auch Neuladen umgeht das nicht. Erst nach
+der letzten offenen Schlacht erscheint ein ausstehendes Spielergebnis.
+Persönliche Statistiken zählen verlorene Schiffe exakt und teilen Abschüsse
+anhand des verursachten Feuers auf, sodass jedes zerstörte Schiff insgesamt
+nur einmal als Abschuss gezählt wird. Kampfentscheidungen und Flucht folgen
+in einem gesonderten Ausbau.

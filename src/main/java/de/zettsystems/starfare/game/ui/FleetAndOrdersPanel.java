@@ -37,7 +37,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private enum Section { CONTACTS, DETAILS, FLEETS, ORDERS, RELOCATIONS, LOGISTICS, REPORT }
 
-    private enum EventCategory { PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD }
+    private enum EventCategory { COALITION, PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD }
 
     private enum LogisticsFilter { NET_INFLOW, FREE_CAPACITY, DELIVERY_BOTTLENECK, NO_OUTGOING_ROUTE }
 
@@ -593,6 +593,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         filterOptions.setPadding(false);
         filterOptions.setSpacing(false);
         filterOptions.addClassName("report-filter-options");
+        boolean hasCoalition = events.stream().anyMatch(event -> event instanceof TurnEvent.CoalitionBattle);
+        if (hasCoalition) {
+            addReportFilter(filterOptions, events, EventCategory.COALITION, UiTexts.COALITION_FILTER);
+        }
         addReportFilter(filterOptions, events, EventCategory.PRODUCTION, UiTexts.ROUND_FILTER_PRODUCTION);
         addReportFilter(filterOptions, events, EventCategory.REINFORCEMENT, UiTexts.ROUND_FILTER_REINFORCEMENT);
         addReportFilter(filterOptions, events, EventCategory.BATTLE_WON, UiTexts.ROUND_FILTER_BATTLE_WON);
@@ -620,7 +624,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         });
         filterOptions.add(presentation);
         Details filterDetails = new Details(new Span(I18n.t(UiTexts.ROUND_FILTER_SUMMARY,
-                enabledEventCategories.size(), EventCategory.values().length)), filterOptions);
+                enabledEventCategories.stream().filter(category -> hasCoalition || category != EventCategory.COALITION).count(),
+                EventCategory.values().length - (hasCoalition ? 0 : 1))), filterOptions);
         filterDetails.addClassName("report-filter-details");
         filters.add(filterDetails);
         List<Integer> pendingBattles = pendingBattleIndices(events);
@@ -685,7 +690,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return 0;
         }
         return switch (event) {
-            case TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
+            case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
             case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
             case TurnEvent.Reinforcement _ -> 3;
             case TurnEvent.Production _ -> 4;
@@ -723,6 +728,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private static Optional<EventCategory> categoryOf(TurnEvent event) {
         return Optional.ofNullable(switch (event) {
+            case TurnEvent.CoalitionBattle _ -> EventCategory.COALITION;
             case TurnEvent.Production _ -> EventCategory.PRODUCTION;
             case TurnEvent.Reinforcement _ -> EventCategory.REINFORCEMENT;
             case TurnEvent.BattleWon _ -> EventCategory.BATTLE_WON;
@@ -779,7 +785,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     youName(lost.defenderName()));
             case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponentName(held.attackerName()),
                     youName(held.defenderName()));
-            case TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
+            case TurnEvent.CoalitionBattle _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
                     new BattleReplayDialog.BattleSides("", "");
         };
     }
@@ -859,7 +865,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return switch (event) {
             case TurnEvent.Production _ -> "⬆";
             case TurnEvent.Reinforcement _ -> "→";
-            case TurnEvent.BattleWon _ -> "⚔";
+            case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _ -> "⚔";
             case TurnEvent.BattleLost _ -> "✕";
             case TurnEvent.SystemLost _ -> "☠";
             case TurnEvent.DefenseHeld _ -> "🛡";
@@ -875,6 +881,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return switch (event) {
             case TurnEvent.Production _ -> "event-production";
             case TurnEvent.Reinforcement _ -> "event-reinforcement";
+            case TurnEvent.CoalitionBattle _ -> "event-coalition-battle";
             case TurnEvent.BattleWon _ -> "event-battle-won";
             case TurnEvent.BattleLost _ -> "event-battle-lost";
             case TurnEvent.SystemLost _ -> "event-system-lost";
@@ -886,6 +893,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private String eventText(TurnEvent event, int eventIndex) {
         return switch (event) {
+            case TurnEvent.CoalitionBattle battle -> isEventPending(eventIndex)
+                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName()) : CoalitionPresentation.report(battle);
             case TurnEvent.Production production -> I18n.t(UiTexts.ROUND_EVENT_PRODUCTION,
                     production.systemName(), production.amount());
             case TurnEvent.Reinforcement reinforcement -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
@@ -1039,6 +1048,12 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         top.addClassName("fleet-travel-card-top");
         top.add(new Span("◌ " + I18n.t(order.type())), fleetNumber(value(order.ships())));
         Span route = new Span(order.fromSystem() + " → " + order.toSystem());
+        Integer beneficiary = order.beneficiaryId();
+        PlayerViewState view = currentView;
+        if (beneficiary != null && view != null) {
+            card.add(new Span(I18n.t(UiTexts.CONQUEST_ORDER, view.players().stream()
+                    .filter(player -> player.id() == beneficiary).map(Player::label).findFirst().orElse("?"))));
+        }
         route.addClassName("fleet-travel-route");
         Span arrival = new Span(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": " + value(order.arrivalTurn()));
         arrival.addClassName("fleet-travel-arrival");

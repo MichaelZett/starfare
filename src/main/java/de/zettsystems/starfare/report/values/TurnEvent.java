@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import de.zettsystems.starfare.game.values.GameConfig;
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.OptionalInt;
 
@@ -22,6 +23,7 @@ import java.util.OptionalInt;
         @JsonSubTypes.Type(value = TurnEvent.BattleLost.class, name = "battleLost"),
         @JsonSubTypes.Type(value = TurnEvent.SystemLost.class, name = "systemLost"),
         @JsonSubTypes.Type(value = TurnEvent.DefenseHeld.class, name = "defenseHeld"),
+        @JsonSubTypes.Type(value = TurnEvent.CoalitionBattle.class, name = "coalitionBattle"),
         @JsonSubTypes.Type(value = TurnEvent.Victory.class, name = "victory"),
         @JsonSubTypes.Type(value = TurnEvent.Defeat.class, name = "defeat")
 })
@@ -36,6 +38,7 @@ public sealed interface TurnEvent {
             case BattleLost event -> OptionalInt.of(event.systemId());
             case SystemLost event -> OptionalInt.of(event.systemId());
             case DefenseHeld event -> OptionalInt.of(event.systemId());
+            case CoalitionBattle event -> OptionalInt.of(event.systemId());
             case Victory _, Defeat _ -> OptionalInt.empty();
         };
     }
@@ -47,6 +50,7 @@ public sealed interface TurnEvent {
             case BattleLost event -> OptionalInt.of(event.systemId());
             case SystemLost event -> OptionalInt.of(event.systemId());
             case DefenseHeld event -> OptionalInt.of(event.systemId());
+            case CoalitionBattle event -> OptionalInt.of(event.systemId());
             case Production _, Reinforcement _, Victory _, Defeat _ -> OptionalInt.empty();
         };
     }
@@ -214,6 +218,33 @@ public sealed interface TurnEvent {
                     attackerStrength != null ? attackerStrength : actualAttacking,
                     defenderStrength != null ? defenderStrength : actualDefending,
                     Objects.requireNonNullElse(attackerName, ""), Objects.requireNonNullElse(defenderName, ""));
+        }
+    }
+
+    record CoalitionBattle(int systemId, String systemName, @Nullable Integer previousOwner,
+                           @Nullable Integer owner, String ownerName, List<CoalitionSide> sides,
+                           List<Integer> fleetIds) implements TurnEvent {
+        public CoalitionBattle(int systemId, String systemName, @Nullable Integer previousOwner,
+                               @Nullable Integer owner, String ownerName, List<CoalitionSide> sides) {
+            this(systemId, systemName, previousOwner, owner, ownerName, sides, List.of());
+        }
+        public CoalitionBattle { sides = List.copyOf(sides); fleetIds = List.copyOf(fleetIds); }
+        @JsonCreator
+        public static CoalitionBattle of(@JsonProperty("systemId") int systemId, @JsonProperty("systemName") String systemName,
+                                         @JsonProperty("previousOwner") @Nullable Integer previousOwner, @JsonProperty("owner") @Nullable Integer owner,
+                                         @JsonProperty("ownerName") String ownerName, @JsonProperty("sides") List<CoalitionSide> sides,
+                                         @JsonProperty("fleetIds") @Nullable List<Integer> fleetIds) {
+            return new CoalitionBattle(systemId, systemName, previousOwner, owner, ownerName, sides,
+                    fleetIds == null ? List.of() : fleetIds);
+        }
+        public boolean wonBy(int player) { return sides.stream().anyMatch(side -> side.contains(player) && side.remaining() > 0); }
+        public int lostBy(int player) {
+            return sides.stream().flatMap(side -> side.members().stream()).filter(member -> member.playerId() == player)
+                    .mapToInt(member -> member.ships() - member.remaining()).sum();
+        }
+        public int destroyedBy(int player) {
+            return sides.stream().flatMap(side -> side.members().stream()).filter(member -> member.playerId() == player)
+                    .mapToInt(CoalitionSide.Member::destroyed).sum();
         }
     }
 

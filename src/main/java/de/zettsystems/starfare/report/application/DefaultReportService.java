@@ -56,6 +56,7 @@ public class DefaultReportService implements ReportService {
             case TurnEvent.SystemLost l -> "Verloren: %s fällt.".formatted(l.systemName());
             case TurnEvent.DefenseHeld d ->
                     "Gehalten: %s. %d Verteidiger verbleiben.".formatted(d.systemName(), d.defendersLeft());
+            case TurnEvent.CoalitionBattle battle -> "Schlacht bei %s: %d Seiten.".formatted(battle.systemName(), battle.sides().size());
             case TurnEvent.Victory victory -> "Sieg: mindestens %d%% Systeme unter Kontrolle."
                     .formatted(victory.systemPercent());
             case TurnEvent.Defeat defeat -> "Niederlage: %s gewinnt die Partie.".formatted(defeat.winnerName());

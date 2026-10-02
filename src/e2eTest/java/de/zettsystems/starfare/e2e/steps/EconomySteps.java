@@ -81,6 +81,7 @@ public class EconomySteps {
     public void grow() {
         assertThat(games.submitTurn(id, 2)).isTrue();
         for (int round = 2; round <= 5; round++) { assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue(); }
+        browser.awaitText("Runde 6");
         selectAlpha(); browser.awaitTextIn(".industry-panel", "Kapazität 11 / 50");
         browser.awaitTextIn(".industry-panel", "Schiffbau: 7 · Ausbau: 4");
         browser.awaitTextIn(".industry-panel", "Ausbaufortschritt: 0 / 22");

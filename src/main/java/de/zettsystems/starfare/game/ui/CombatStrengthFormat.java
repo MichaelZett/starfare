@@ -4,10 +4,17 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.List;
 
 /** Keep the deciding difference visible without showing unnecessary decimal places. */
 final class CombatStrengthFormat {
     private CombatStrengthFormat() {
+    }
+
+    static String forCoalition(double strength, List<Double> strengths, Locale locale) {
+        double closest = strengths.stream().filter(other -> other != strength)
+                .min(java.util.Comparator.comparingDouble(other -> Math.abs(strength - other))).orElse(strength);
+        return format(strength, closest, locale);
     }
 
     static String format(double strength, double opposingStrength, Locale locale) {

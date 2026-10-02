@@ -109,7 +109,10 @@ final class SendFleetDialog {
                 _ -> shipsInput.setValue(amountState.sliderMax));
         Button exceptProductionBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_EXCEPT_PRODUCTION,
                 _ -> selectExceptProduction(shipsInput, amountState, productionOf(ctx.from())));
-        Button sendBtn = buildSendButton(ctx, shipsInput, standingCheckbox, dialog);
+        ConquestSelection conquest = new ConquestSelection(ctx.game(), ctx.gameId(), ctx.pid());
+        conquest.setVisible(ctx.from().industry() != null && !standingCheckbox.getValue());
+        standingCheckbox.addValueChangeListener(event -> conquest.setVisible(ctx.from().industry() != null && !event.getValue()));
+        Button sendBtn = buildSendButton(ctx, shipsInput, standingCheckbox, dialog, conquest);
         Button cancelBtn = new Button(I18n.t(UiTexts.MAP_DIALOG_CANCEL), _ -> {
             dialog.close();
             ctx.onClose().run();
@@ -122,7 +125,7 @@ final class SendFleetDialog {
         wireStandingToggle(controls, params, amountState);
         applyAmountMode(controls, params, amountState);
 
-        layoutDialog(dialog, buildHeaderLabels(ctx, params), controls, capacityTrack, cancelBtn);
+        layoutDialog(dialog, buildHeaderLabels(ctx, params), controls, capacityTrack, cancelBtn, conquest);
         dialog.open();
     }
 
@@ -250,15 +253,15 @@ final class SendFleetDialog {
     }
 
     private static Button buildSendButton(SendContext ctx, IntegerField shipsInput,
-                                          Checkbox standingCheckbox, Dialog dialog) {
+                                          Checkbox standingCheckbox, Dialog dialog, ConquestSelection conquest) {
         Button sendBtn = new Button(I18n.t(UiTexts.MAP_SEND_FLEET), _ ->
-                onSendClicked(ctx, shipsInput, standingCheckbox, dialog));
+                onSendClicked(ctx, shipsInput, standingCheckbox, dialog, conquest));
         sendBtn.addThemeVariants(ButtonVariant.PRIMARY);
         return sendBtn;
     }
 
     private static void onSendClicked(SendContext ctx, IntegerField shipsInput,
-                                      Checkbox standingCheckbox, Dialog dialog) {
+                                      Checkbox standingCheckbox, Dialog dialog, ConquestSelection conquest) {
         if (ctx.game().viewFor(ctx.gameId(), ctx.pid()).turn() != ctx.openedTurn()) {
             Notification.show(I18n.t(UiTexts.MAP_SEND_ROUND_CHANGED));
             return;
@@ -275,7 +278,9 @@ final class SendFleetDialog {
             if (ships == null || ships < 1) {
                 return;
             }
-            accepted = ctx.game().sendFleet(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), ships);
+            accepted = ctx.from().industry() == null
+                    ? ctx.game().sendFleet(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), ships)
+                    : ctx.game().sendFleet(ctx.gameId(), ctx.pid(), ctx.openedTurn(), ctx.from().id(), ctx.to().id(), ships, conquest.beneficiary());
             if (!accepted) {
                 Notification.show(I18n.t(UiTexts.MAP_INVALID_COMMAND));
             }
@@ -359,7 +364,7 @@ final class SendFleetDialog {
     }
 
     private static void layoutDialog(Dialog dialog, HeaderLabels labels, DialogControls c,
-                                    Div capacityTrack, Button cancelBtn) {
+                                    Div capacityTrack, Button cancelBtn, ConquestSelection conquest) {
         var sliderRow = new HorizontalLayout(c.slider());
         sliderRow.setWidthFull();
         sliderRow.setPadding(false);
@@ -376,7 +381,7 @@ final class SendFleetDialog {
         capacityTrack.getElement().setAttribute("aria-valuemax", "100");
         var body = new VerticalLayout(labels.route(), labels.duration(), labels.arrival(), labels.available(),
                 labels.production(), c.consequence(), capacityTrack,
-                sliderRow, c.shipsInput(), quickRow, c.standingCheckbox());
+                sliderRow, c.shipsInput(), quickRow, c.standingCheckbox(), conquest);
         body.setPadding(false);
         body.setSpacing(false);
         body.addClassName("send-fleet-body");

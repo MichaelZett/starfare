@@ -8,6 +8,14 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Interner Spaceward-Kampf (M6): Bündnisgruppen kämpfen gemeinsam, mehrere
+  feindliche Seiten gleichzeitig. Verluste und Abschüsse werden anteilig
+  ohne Doppelzählung verteilt. Eroberungsziele lassen sich vor dem Versand
+  benennen; verbündete Überlebende behalten ihren Eigentümer. Berichte und
+  Wiedergabe zeigen alle beteiligten Seiten. Persönliche Bestätigungen,
+  Neustart, Archiv und Statistik bleiben erhalten. SectorForces behält
+  seine Kampfregeln; Spaceward bleibt bis zur Abnahme M7 gesperrt.
+
 - Interne Spaceward-Diplomatie (M5): gemeinsame Bündnisgruppen mit einstimmiger
   Aufnahme und vereinbarter Kündigungsfrist. Austritte zeigen eine feste
   Wirksamkeitsrunde; Friständerungen brauchen Zustimmung aller und ändern

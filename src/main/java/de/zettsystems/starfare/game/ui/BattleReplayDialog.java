@@ -34,18 +34,21 @@ final class BattleReplayDialog {
         Div visual = new Div();
         visual.addClassName("battle-replay");
         visual.getElement().setAttribute(HtmlAttributes.BATTLE_ATTACKER_WON, String.valueOf(replay.attackerWon()));
-        visual.add(side("battle-attacker", UiTexts.BATTLE_REPLAY_ATTACKERS, replay.attacking(), replay.defending(),
-                        replay.attackerStrength(), replay.defenderStrength(), sides.attacker()),
-                new Span("✦"),
-                side("battle-defender", UiTexts.BATTLE_REPLAY_DEFENDERS, replay.defending(), replay.attacking(),
-                        replay.defenderStrength(), replay.attackerStrength(), sides.defender()));
-        visual.getChildren().skip(1).findFirst().ifPresent(center -> center.addClassName("battle-replay-flash"));
+        if (replay.coalitions().isEmpty()) {
+            visual.add(side("battle-attacker", UiTexts.BATTLE_REPLAY_ATTACKERS, replay.attacking(), replay.defending(),
+                            replay.attackerStrength(), replay.defenderStrength(), sides.attacker()),
+                    new Span("✦"),
+                    side("battle-defender", UiTexts.BATTLE_REPLAY_DEFENDERS, replay.defending(), replay.attacking(),
+                            replay.defenderStrength(), replay.attackerStrength(), sides.defender()));
+            visual.getChildren().skip(1).findFirst().ifPresent(center -> center.addClassName("battle-replay-flash"));
 
-        Div result = new Div();
-        result.addClassName("battle-replay-result");
-        result.getElement().setAttribute("data-battle-result", "");
-        result.setText(I18n.t(UiTexts.BATTLE_REPLAY_RESULT, replay.attackingRemaining(), replay.defendingRemaining()));
-        visual.add(result);
+            Div result = new Div();
+            result.addClassName("battle-replay-result");
+            result.getElement().setAttribute(HtmlAttributes.BATTLE_RESULT, "");
+            result.setText(I18n.t(UiTexts.BATTLE_REPLAY_RESULT, replay.attackingRemaining(), replay.defendingRemaining()));
+            visual.add(result);
+
+        } else { CoalitionPresentation.populate(visual, replay.coalitions()); }
 
         boolean soundEnabled = soundEnabled();
         Checkbox sound = new Checkbox(I18n.t(UiTexts.BATTLE_REPLAY_SOUND), soundEnabled);
@@ -76,9 +79,14 @@ final class BattleReplayDialog {
         dialog.getFooter().add(sound, soundTest, speed, acknowledge);
         dialog.add(visual);
         dialog.open();
-        visual.getElement().executeJs("window.starfarePlayBattle(this, $0, $1, $2, $3, $4, $5)",
-                replay.attacking(), replay.defending(), replay.attackingRemaining(),
-                replay.defendingRemaining(), soundEnabled, speed());
+        if (!replay.coalitions().isEmpty()) {
+            var sidesJson = new tools.jackson.databind.json.JsonMapper().writeValueAsString(replay.coalitions());
+            visual.getElement().executeJs("window.starfarePlayCoalition(this, JSON.parse($0), $1, $2)", sidesJson, soundEnabled, speed());
+        } else {
+            visual.getElement().executeJs("window.starfarePlayBattle(this, $0, $1, $2, $3, $4, $5)",
+                    replay.attacking(), replay.defending(), replay.attackingRemaining(),
+                    replay.defendingRemaining(), soundEnabled, speed());
+        }
     }
 
     private static Div side(String sideClass, String labelKey, int ships, int opponentShips, double strength, double opposingStrength,
