@@ -96,6 +96,7 @@ class DefaultGameStatisticsServiceTest {
             return reader.apply(state);
         });
         when(state.gameOver()).thenReturn(true);
+        when(state.ruleset()).thenReturn(de.zettsystems.starfare.game.values.RulesetRef.SECTOR_FORCES);
         when(state.seatByUser()).thenReturn(Map.of("alice", 1, "bob", 2));
         when(state.winnerId()).thenReturn(2);
         Instant finishedAt = Instant.parse("2026-09-16T10:00:00Z");
@@ -107,6 +108,7 @@ class DefaultGameStatisticsServiceTest {
         verify(results).save(saved.capture());
         assertThat(saved.getValue().getId()).isEqualTo(id.value());
         assertThat(saved.getValue().getWinnerPlayerId()).isEqualTo("bob");
+        assertThat(saved.getValue().getRuleset()).isEqualTo(de.zettsystems.starfare.game.values.RulesetRef.SECTOR_FORCES);
         assertThat(saved.getValue().getParticipants()).containsExactlyInAnyOrder("alice", "bob");
     }
 

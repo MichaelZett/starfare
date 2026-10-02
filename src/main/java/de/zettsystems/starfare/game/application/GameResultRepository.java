@@ -12,6 +12,11 @@ interface GameResultRepository extends JpaRepository<GameResultEntity, String> {
     @Query("select distinct result from GameResultEntity result join result.participants participant where participant = :account")
     List<GameResultEntity> findForParticipant(String account);
 
+    @EntityGraph(attributePaths = "participants")
+    @Query("select distinct result from GameResultEntity result join result.participants participant "
+            + "where participant = :account and result.rulesetVariant = :variant")
+    List<GameResultEntity> findForParticipantAndVariant(String account, String variant);
+
     // Load the second collection separately into the same persistence context.
     @EntityGraph(attributePaths = "aiOpponentNames")
     @Query("select distinct result from GameResultEntity result where result.gameId in :ids")

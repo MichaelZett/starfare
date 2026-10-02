@@ -24,7 +24,8 @@ final class JoinGameDialog {
 
         Div gameDetails = new Div();
         gameDetails.addClassName("join-game-details");
-        gameDetails.add(new Span(I18n.t(UiTexts.LOBBY_JOIN_GAME, summary.name())),
+        gameDetails.add(new Span(RulesetLabels.label(game.rulesets(), summary.ruleset())),
+                new Span(I18n.t(UiTexts.LOBBY_JOIN_GAME, summary.name())),
                 new Span(I18n.t(UiTexts.LOBBY_JOIN_SEATS, availableSeats(summary))));
 
         TextField empireName = new TextField(I18n.t(UiTexts.LOBBY_FIELD_EMPIRE_NAME));

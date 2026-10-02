@@ -25,8 +25,27 @@ public record GameSummary(
         Map<String, Integer> seatByPlayer,
         Map<String, Integer> invitedSeats,
         GameVisibility visibility,
-        GameOutcome outcome
+        GameOutcome outcome,
+        RulesetRef ruleset
 ) {
+    public GameSummary(GameId gameId,
+            String name,
+            @Nullable String hostPlayerId,
+            int turn,
+            boolean started,
+            boolean gameOver,
+            boolean observersAllowed,
+            boolean reentryAllowed,
+            List<Player> players,
+            Set<Integer> joinedHumanSeats,
+            Map<String, Integer> seatByPlayer,
+            Map<String, Integer> invitedSeats,
+            GameVisibility visibility,
+            GameOutcome outcome) {
+        this(gameId, name, hostPlayerId, turn, started, gameOver, observersAllowed, reentryAllowed, players,
+                joinedHumanSeats, seatByPlayer, invitedSeats, visibility, outcome, RulesetRef.SECTOR_FORCES);
+    }
+
 
     public boolean belongsTo(String account) {
         return account.equals(hostPlayerId) || seatByPlayer.containsKey(account);

@@ -24,8 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     @Test
     void originalSetupSurvivesJsonAndOldSnapshotsRemainReadable() {
-        GameState state = sampleState();
-        state.rememberSetup(GameSetup.defaults());
+        GameState state = sampleState(true);
         state.rememberOrders(1);
         ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
         GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
@@ -41,7 +40,12 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     private ObjectMapper objectMapper;
 
     private static GameState sampleState() {
+        return sampleState(false);
+    }
+
+    private static GameState sampleState(boolean rememberSetup) {
         GameState state = new GameState();
+        if (rememberSetup) { state.rememberSetup(GameSetup.defaults()); }
         state.players().add(new Player(1, "P1", false, "#111111"));
         state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 10, 2, false));
         state.intel().put(1, new HashMap<>());

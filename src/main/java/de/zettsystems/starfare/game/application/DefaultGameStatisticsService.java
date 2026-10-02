@@ -6,8 +6,9 @@ import de.zettsystems.starfare.game.values.CompletedGameOutcome;
 import de.zettsystems.starfare.game.values.CompletedGameStatistics;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.OpponentStatistics;
-import de.zettsystems.starfare.game.values.PlayerStatistics;
 import de.zettsystems.starfare.game.values.Player;
+import de.zettsystems.starfare.game.values.PlayerStatistics;
+import de.zettsystems.starfare.game.values.RulesetRef;
 import jakarta.transaction.Transactional;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,7 @@ class DefaultGameStatisticsService implements GameStatisticsService {
                     .map(Map.Entry::getKey).findFirst().orElse(null);
             boolean aiVictory = winner == null && state.players().stream()
                     .anyMatch(player -> player.ai() && Objects.equals(player.id(), state.winnerId()));
-            return new FinishedGame(session.name(), winner, aiVictory, state.finishedAt(), accounts, aiOpponentNames);
+            return new FinishedGame(session.name(), winner, aiVictory, state.finishedAt(), accounts, aiOpponentNames, state.ruleset());
         });
         if (game != null && !game.participants().isEmpty()) {
             var result = new GameResultEntity(gameId.value(), game.name(), game.winner(),
@@ -55,6 +56,7 @@ class DefaultGameStatisticsService implements GameStatisticsService {
             if (game.aiVictory()) {
                 result.recordAiVictory();
             }
+            result.recordRuleset(game.ruleset());
             results.save(result);
         }
     }
@@ -62,6 +64,16 @@ class DefaultGameStatisticsService implements GameStatisticsService {
     @Override
     @Transactional
     public PlayerStatistics statisticsFor(String account) {
+        return buildStatistics(account, null);
+    }
+
+    @Override
+    @Transactional
+    public PlayerStatistics statisticsFor(String account, @Nullable String variant) {
+        return buildStatistics(account, variant);
+    }
+
+    private PlayerStatistics buildStatistics(String account, @Nullable String variant) {
         if (account.isBlank()) {
             return PlayerStatistics.empty();
         }
@@ -69,7 +81,8 @@ class DefaultGameStatisticsService implements GameStatisticsService {
         var completedGames = new ArrayList<CompletedGameStatistics>();
         int wins = 0;
         int losses = 0;
-        var games = results.findForParticipant(account);
+        var games = variant == null ? results.findForParticipant(account)
+                : results.findForParticipantAndVariant(account, variant);
         if (!games.isEmpty()) {
             results.findWithAiOpponentsByGameIdIn(games.stream().map(GameResultEntity::getId).toList());
         }
@@ -85,7 +98,7 @@ class DefaultGameStatisticsService implements GameStatisticsService {
                     game.getFinishedAt(),
                     outcomeFor(game, won),
                     game.getParticipants().stream().filter(opponent -> !opponent.equals(account)).sorted().toList(),
-                    game.getAiOpponentNames().stream().sorted().toList()));
+                    game.getAiOpponentNames().stream().sorted().toList(), game.getRuleset()));
             for (String opponent : game.getParticipants()) {
                 if (!opponent.equals(account)) {
                     opponents.computeIfAbsent(opponent, _ -> new Totals()).add(won, !won && game.hasWinner());
@@ -109,7 +122,8 @@ class DefaultGameStatisticsService implements GameStatisticsService {
     }
 
     private record FinishedGame(String name, @Nullable String winner, boolean aiVictory, @Nullable Instant finishedAt,
-                                LinkedHashSet<String> participants, LinkedHashSet<String> aiOpponentNames) {
+                                LinkedHashSet<String> participants, LinkedHashSet<String> aiOpponentNames,
+                                RulesetRef ruleset) {
     }
 
     private static final class Totals {

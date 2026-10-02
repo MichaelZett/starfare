@@ -4,8 +4,9 @@
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=MichaelZett_starfare&metric=alert_status)](https://sonarcloud.io/project/overview?id=MichaelZett_starfare)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=MichaelZett_starfare&metric=coverage)](https://sonarcloud.io/component_measures?id=MichaelZett_starfare&metric=coverage)
 
-A turn-based 4X browser game: conquer star systems, dispatch fleets, win
-by dominating the galaxy (in memory of a game I believe called "Sector Forces" on the C-64)
+A shared browser application for game variants inspired by historical science
+fiction 4X games. **SectorForces** retains the existing Classic rules: conquer
+star systems, dispatch fleets and win by dominating the galaxy.
 
 Built as a Spring Boot / Vaadin web application. Multiple players —
 humans and AI — share a game; the turn is only resolved once every
@@ -16,6 +17,19 @@ This repository is a personal showcase of a modern Java backend stack
 Testcontainers) wrapped around a small but complete game.
 
 **Spielanleitung auf Deutsch:** [Anleitung](docs/ANLEITUNG.md).
+
+## Game variants and rule versions
+
+Choose a game variant before its settings in the new-game dialog. SectorForces
+is available with rules **1.0.0**. **Spaceward**, inspired by Spaceward Ho!, is
+shown as planned and cannot be selected yet. A possible future variant inspired
+by Master of Orion II is a separate project direction, not an available game.
+
+Every game keeps its variant and rule version independently of the application
+release. Existing games default to SectorForces; their Classic behavior remains
+unchanged. Lobby, joining, management, archive and statistics show the selected
+rules. Templates and rematches retain them. Personal statistics can be filtered
+by variant, including totals and opponent records.
 
 ## System inspector
 

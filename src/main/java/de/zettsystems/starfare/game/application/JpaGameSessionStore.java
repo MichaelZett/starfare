@@ -5,18 +5,20 @@ import de.zettsystems.starfare.game.domain.GameSessionEntity;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.RulesetCatalog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
@@ -28,12 +30,20 @@ public class JpaGameSessionStore implements GameSessionStore {
     private final GameSessionRepository repository;
     private final GameArchiveStore archives;
     private final ObjectMapper objectMapper;
+    private final RulesetCatalog catalog;
     private final ConcurrentHashMap<GameId, GameSession> cache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<GameId, Instant> lastAccess = new ConcurrentHashMap<>();
     private final Set<GameId> readableIds = ConcurrentHashMap.newKeySet();
     private final Object cacheMonitor = new Object();
 
     public JpaGameSessionStore(GameSessionRepository repository, GameArchiveStore archives, ObjectMapper objectMapper) {
+        this(repository, archives, objectMapper, RulesetCatalog.builtIn());
+    }
+
+    @Autowired
+    public JpaGameSessionStore(GameSessionRepository repository, GameArchiveStore archives, ObjectMapper objectMapper,
+                               RulesetCatalog catalog) {
+        this.catalog = catalog;
         this.repository = repository;
         this.archives = archives;
         this.objectMapper = objectMapper;
@@ -69,6 +79,7 @@ public class JpaGameSessionStore implements GameSessionStore {
         try {
             GameStateSnapshot snapshot = objectMapper.readValue(entity.getStateJson(), GameStateSnapshot.class);
             GameState state = GameState.fromSnapshot(snapshot);
+            catalog.requireSupported(state.ruleset());
             String idValue = Objects.requireNonNull(entity.getId(), "Persisted game session must have an id");
             GameId id = GameId.of(idValue);
             if (cache.putIfAbsent(id, new GameSession(id, entity.getName(), entity.getHostPlayerId(), entity.getCreatedAt(), state)) == null) {
@@ -86,12 +97,15 @@ public class JpaGameSessionStore implements GameSessionStore {
 
     @Override
     public void save(GameSession session) {
+        GameStateSnapshot snapshot = session.readState(state -> {
+            catalog.requireSupported(state.ruleset());
+            return GameState.toSnapshot(state);
+        });
         synchronized (cacheMonitor) {
             cache.put(session.id(), session);
             readableIds.add(session.id());
             lastAccess.put(session.id(), Instant.now());
         }
-        GameStateSnapshot snapshot = session.readState(GameState::toSnapshot);
         try {
             String json = objectMapper.writeValueAsString(snapshot);
             GameSessionEntity entity = repository.findById(session.id().value())

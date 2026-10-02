@@ -2,10 +2,11 @@ package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -18,14 +19,16 @@ import de.zettsystems.starfare.game.values.CompletedGameOutcome;
 import de.zettsystems.starfare.game.values.CompletedGameStatistics;
 import de.zettsystems.starfare.game.values.OpponentStatistics;
 import de.zettsystems.starfare.game.values.PlayerStatistics;
+import de.zettsystems.starfare.game.values.RulesetCatalog;
+import de.zettsystems.starfare.game.values.RulesetDefinition;
 import de.zettsystems.starfare.i18n.I18n;
 import jakarta.annotation.security.PermitAll;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /** Personal overview of completed games, retained independently from archived sessions. */
@@ -34,6 +37,9 @@ import java.util.stream.Stream;
 @CssImport("./styles/starfare.css")
 public class StatisticsView extends VerticalLayout {
     private final GameStatisticsService statistics;
+    private final RulesetCatalog catalog;
+    private final ComboBox<RulesetDefinition> variantFilter =
+            new ComboBox<>();
     private final Span totals = new Span();
     private final Div summaryCards = new Div();
     private final Div opponentCards = new Div();
@@ -42,7 +48,9 @@ public class StatisticsView extends VerticalLayout {
     private final Paragraph noOpponents = new Paragraph(I18n.t(UiTexts.STATISTICS_OPPONENTS_EMPTY));
     private final PlayerDirectory players;
 
-    public StatisticsView(GameStatisticsService statistics, PlayerDirectory players) {
+    public StatisticsView(GameStatisticsService statistics, PlayerDirectory players,
+                          RulesetCatalog catalog) {
+        this.catalog = catalog;
         this.statistics = statistics;
         this.players = players;
         setSizeFull();
@@ -52,7 +60,13 @@ public class StatisticsView extends VerticalLayout {
         opponentCards.addClassName("statistics-opponent-cards");
         completedGames.addClassName("statistics-history-cards");
         noOpponents.addClassName("statistics-empty");
-        add(new H1(I18n.t(UiTexts.STATISTICS_TITLE)), summaryCards, totals,
+        variantFilter.setLabel(I18n.t(UiTexts.RULESET_FILTER));
+        variantFilter.setPlaceholder(I18n.t(UiTexts.RULESET_ALL));
+        variantFilter.setClearButtonVisible(true);
+        variantFilter.setItems(catalog.definitions());
+        variantFilter.setItemLabelGenerator(entry -> I18n.t(entry.nameKey()));
+        variantFilter.addValueChangeListener(_ -> refresh());
+        add(new H1(I18n.t(UiTexts.STATISTICS_TITLE)), variantFilter, summaryCards, totals,
                 new HorizontalLayout(new Button(I18n.t(UiTexts.MAP_ACTION_LOBBY),
                         _ -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)))),
                 new H2(I18n.t(UiTexts.STATISTICS_OPPONENTS)), opponentCards, noOpponents,
@@ -65,7 +79,9 @@ public class StatisticsView extends VerticalLayout {
     }
 
     private void refresh() {
-        PlayerStatistics view = statistics.statisticsFor(UserContext.currentPlayerId().orElse(""));
+        var selected = variantFilter.getValue();
+        PlayerStatistics view = statistics.statisticsFor(UserContext.currentPlayerId().orElse(""),
+                selected == null ? null : selected.defaultRef().variant());
         int draws = Math.max(0, view.games() - view.wins() - view.losses());
         Map<String, String> displayNames = players.displayNames(Stream.concat(
                         view.opponents().stream().map(OpponentStatistics::opponentId),
@@ -170,7 +186,7 @@ public class StatisticsView extends VerticalLayout {
             Span finished = new Span(finishedAtText(game));
             Span opponents = new Span(opponentsText(game, displayNames));
             opponents.addClassName("statistics-history-opponents");
-            Div card = new Div(name, outcome, finished, opponents);
+            Div card = new Div(name, new Span(RulesetLabels.label(catalog, game.ruleset())), outcome, finished, opponents);
             card.addClassName("statistics-history-card");
             completedGames.add(card);
         }

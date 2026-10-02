@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.domain;
 
+import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.persistence.AbstractBaseEntity;
 import jakarta.persistence.*;
 import org.jspecify.annotations.Nullable;
@@ -12,6 +13,21 @@ import java.util.Set;
 @Entity
 @Table(name = "game_results")
 public class GameResultEntity extends AbstractBaseEntity<String> {
+
+    @Column(name = "ruleset_variant", nullable = false, length = 80)
+    private String rulesetVariant = RulesetRef.SECTOR_FORCES.variant();
+
+    @Column(name = "ruleset_version", nullable = false, length = 32)
+    private String rulesetVersion = RulesetRef.SECTOR_FORCES.version();
+
+    public RulesetRef getRuleset() {
+        return new RulesetRef(rulesetVariant, rulesetVersion);
+    }
+
+    public void recordRuleset(RulesetRef ref) {
+        rulesetVariant = ref.variant();
+        rulesetVersion = ref.version();
+    }
 
     @Id
     @Column(name = "game_id", nullable = false, length = 36)

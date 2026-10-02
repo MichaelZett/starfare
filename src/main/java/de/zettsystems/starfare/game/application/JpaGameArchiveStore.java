@@ -5,6 +5,9 @@ import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.RulesetCatalog;
+import de.zettsystems.starfare.game.values.RulesetRef;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -16,10 +19,21 @@ import java.util.Optional;
 
 @Repository
 class JpaGameArchiveStore implements GameArchiveStore {
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(JpaGameArchiveStore.class);
     private final GameArchiveRepository repository;
     private final ObjectMapper objectMapper;
-    JpaGameArchiveStore(GameArchiveRepository repository, ObjectMapper objectMapper) { this.repository = repository; this.objectMapper = objectMapper; }
+    private final RulesetCatalog catalog;
+    JpaGameArchiveStore(GameArchiveRepository repository, ObjectMapper objectMapper) {
+        this(repository, objectMapper, RulesetCatalog.builtIn());
+    }
+    @Autowired
+    JpaGameArchiveStore(GameArchiveRepository repository, ObjectMapper objectMapper,
+                        RulesetCatalog catalog) {
+        this.repository = repository; this.objectMapper = objectMapper; this.catalog = catalog;
+    }
     @Override public void save(GameSession session, GameStateSnapshot snapshot) {
+        RulesetRef ref = snapshot.ruleset();
+        catalog.requireSupported(ref == null ? RulesetRef.SECTOR_FORCES : ref);
         Instant finishedAt = snapshot.finishedAt();
         if (!snapshot.gameOver() || finishedAt == null) { return; }
         try {
@@ -36,8 +50,13 @@ class JpaGameArchiveStore implements GameArchiveStore {
     private Optional<GameArchiveStore.ArchivedGame> read(GameArchiveEntity entity) {
         try {
             GameStateSnapshot snapshot = objectMapper.readValue(entity.getStateJson(), GameStateSnapshot.class);
+            GameState state = GameState.fromSnapshot(snapshot);
+            catalog.requireSupported(state.ruleset());
             String entityId = Objects.requireNonNull(entity.getId(), "Persisted archive must have an id");
-            return Optional.of(new GameArchiveStore.ArchivedGame(GameId.of(entityId), entity.getName(), entity.getHostPlayerId(), entity.getFinishedAt(), GameState.fromSnapshot(snapshot)));
-        } catch (RuntimeException _) { return Optional.empty(); }
+            return Optional.of(new GameArchiveStore.ArchivedGame(GameId.of(entityId), entity.getName(), entity.getHostPlayerId(), entity.getFinishedAt(), state));
+        } catch (RuntimeException exception) {
+            LOG.error("Skipping game archive {}: snapshot or ruleset could not be restored", entity.getId(), exception);
+            return Optional.empty();
+        }
     }
 }

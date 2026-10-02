@@ -20,18 +20,30 @@ public class DefaultGameRegistry implements GameRegistry {
             "Mira", "Sagan", "Astra", "Kepler", "Selene");
     private final GameSessionStore store;
     private final GameAccessPolicy access;
+    private final RulesetCatalog catalog;
 
     public DefaultGameRegistry(GameSessionStore store, GameAccessPolicy access) {
+        this(store, access, RulesetCatalog.builtIn());
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public DefaultGameRegistry(GameSessionStore store, GameAccessPolicy access, RulesetCatalog catalog) {
         this.store = store;
         this.access = access;
+        this.catalog = catalog;
     }
 
     @Override
+    public RulesetCatalog rulesets() { return catalog; }
+
+    @Override
     public GameId createGame(GameSetup requestedSetup, @Nullable String hostPlayerId, String name) {
+        GameSetup setup = requestedSetup.normalized();
+        catalog.requireCreatable(setup.ruleset());
         GameId id = GameId.newId();
         GameSession session = new GameSession(id, name, hostPlayerId, Instant.now());
         session.writeState(state -> {
-            initializeState(state, requestedSetup.normalized());
+            initializeState(state, setup);
             return null;
         });
         store.save(session);
@@ -71,7 +83,10 @@ public class DefaultGameRegistry implements GameRegistry {
     @Override
     public <T> T writeState(GameId id, Function<GameState, T> fn) {
         GameSession session = require(id);
-        return session.writeStateAndThen(fn, store::save);
+        return session.writeStateAndThen(state -> {
+            catalog.requireSupported(state.ruleset());
+            return fn.apply(state);
+        }, store::save);
     }
 
     @Override

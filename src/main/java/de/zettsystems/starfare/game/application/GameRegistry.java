@@ -12,6 +12,10 @@ import java.time.Duration;
 import java.util.function.Function;
 
 public interface GameRegistry {
+    default de.zettsystems.starfare.game.values.RulesetCatalog rulesets() {
+        return de.zettsystems.starfare.game.values.RulesetCatalog.builtIn();
+    }
+
 
     GameId createGame(GameSetup requestedSetup, @Nullable String hostPlayerId, String name);
 

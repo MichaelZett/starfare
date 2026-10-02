@@ -48,6 +48,7 @@ final class CreateGameWizardDialog {
         dialog.setHeaderTitle(I18n.t(UiTexts.LOBBY_WIZARD_TITLE));
         dialog.setWidth("min(1380px, 96vw)");
 
+        RulesetSelector rulesets = new RulesetSelector(game.rulesets());
         IntegerField systems = intField(I18n.t(UiTexts.LOBBY_FIELD_SYSTEMS),
                 GameConfig.MIN_SYSTEM_COUNT, GameConfig.MAX_SYSTEM_COUNT, GameConfig.DEFAULT_SYSTEM_COUNT);
         IntegerField humans = intField(I18n.t(UiTexts.LOBBY_FIELD_HUMANS),
@@ -179,6 +180,7 @@ final class CreateGameWizardDialog {
         VerticalLayout body = new VerticalLayout(
                 privateHint,
                 intro,
+                rulesets,
                 overview,
                 advanced);
         body.addClassName("wizard-body");
@@ -213,7 +215,7 @@ final class CreateGameWizardDialog {
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
                 observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout,
-                combatRandomness, roundLimit, stragglerLimit, attackOrder, victoryPercent);
+                combatRandomness, roundLimit, stragglerLimit, attackOrder, victoryPercent, rulesets);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_REVIEW));
         createButton.set(create);
         WizardActionContext actionContext = new WizardActionContext(game, onCreated, hostName, gameName, empireName,
@@ -252,7 +254,7 @@ final class CreateGameWizardDialog {
         applyNormalizedColors(context.seatColorInputs(), setup);
         context.confirmedSetup().set(setup);
         context.confirmation().removeAll();
-        context.confirmation().add(buildConfirmation(setup, context.gameName().getValue().trim()));
+        context.confirmation().add(buildConfirmation(setup, context.gameName().getValue().trim(), context.game().rulesets()));
         context.body().setVisible(false);
         context.confirmation().setVisible(true);
         context.back().setVisible(true);
@@ -327,7 +329,7 @@ final class CreateGameWizardDialog {
                               ComboBox<GalaxyLayout> galaxyLayout,
                               Input combatRandomness,
                               ComboBox<Duration> roundLimit, ComboBox<Duration> stragglerLimit,
-                              ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent) {
+                              ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent, RulesetSelector rulesets) {
     }
 
     private static GameSetup buildSetup(FormInputs in) {
@@ -354,7 +356,7 @@ final class CreateGameWizardDialog {
                 sliderValue(in.combatRandomness(), GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT),
                 new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), in.attackOrder().getValue()),
                 valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)
-        ).normalized();
+        ).normalized().selectRuleset(in.rulesets().selectedRuleset());
     }
 
     private static void applyNormalizedColors(List<ComboBox<ColorOption>> inputs, GameSetup setup) {
@@ -366,12 +368,13 @@ final class CreateGameWizardDialog {
         }
     }
 
-    private static Div buildConfirmation(GameSetup setup, String gameName) {
+    private static Div buildConfirmation(GameSetup setup, String gameName, RulesetCatalog catalog) {
         Div content = new Div();
         content.addClassName("wizard-confirmation-content");
         Div summary = new Div();
         summary.addClassName("wizard-summary-grid");
-        summary.add(summaryLine(UiTexts.LOBBY_SUMMARY_NAME, gameName),
+        summary.add(new Span(RulesetLabels.label(catalog, setup.ruleset())),
+                summaryLine(UiTexts.LOBBY_SUMMARY_NAME, gameName),
                 summaryLine(UiTexts.LOBBY_SUMMARY_VISIBILITY, I18n.t(UiTexts.GAME_PRIVATE)),
                 summaryLine(UiTexts.LOBBY_SUMMARY_SYSTEMS, setup.systemCount()),
                 summaryLine(UiTexts.LOBBY_SUMMARY_PLAYERS, setup.humanPlayers(), setup.aiPlayers()),

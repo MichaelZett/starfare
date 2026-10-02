@@ -669,6 +669,7 @@ html, body, #outlet {
 }
 
 .wizard-body {
+    box-sizing: border-box;
     padding: 16px 22px 20px;
     min-width: 0;
 }
@@ -713,6 +714,7 @@ html, body, #outlet {
 }
 
 .wizard-advanced {
+    box-sizing: border-box;
     width: 100%;
     padding: .65rem .85rem;
     border: 1px solid var(--sf-border);
@@ -2263,3 +2265,25 @@ vaadin-button.system-world.system-surface-3 { filter: saturate(0.6); }
 .detailed-system vaadin-details { margin: 0.25rem 0 0; font-size: 0.8rem; }
 .system-body-catalog { display: flex; flex-wrap: wrap; gap: 0.2rem; }
 .system-catalog-button { max-width: 100%; }
+.ruleset-selection { gap: .5rem; }
+.ruleset-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+    width: 100%;
+}
+@media (max-width: 900px) {
+    .ruleset-cards { grid-template-columns: 1fr; }
+}
+.ruleset-card {
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    padding: .75rem 1rem;
+    border: 1px solid rgba(139, 168, 205, .25);
+    border-radius: .5rem;
+    background: rgba(139, 168, 205, .06);
+}
+.ruleset-card-title { font-weight: 600; }

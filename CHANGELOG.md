@@ -8,6 +8,13 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Spielvarianten und feste Regelversionen: SectorForces bezeichnet die bisherigen
+  Classic-Regeln (1.0.0). Der erweiterbare Katalog zeigt Spaceward als noch nicht
+  spielbar. Lobby, Beitritt, Verwaltung, Archiv und Statistik zeigen die Regeln;
+  Vorlagen und Revanchen übernehmen sie. Alte Spielstände und Ergebnisse behalten
+  SectorForces, unbekannte Regeln werden ohne Umschreibung abgewiesen.
+  Statistik nach Variante filterbar; Rundenauswertung über registrierte Regelversionen.
+
 - Classic-Bestandsschutz: feste Vergleichsszenarien für Produktion, Reserve,
   Verlegungen, Befehle, Ankünfte, Mehrparteienkampf, Sieg und Fortsetzung.
   Synthetische alte JSON-Spielstände und Archivframes sichern Speicherkompatibilität,
