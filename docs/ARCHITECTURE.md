@@ -3,6 +3,14 @@
 Deep dive into the architecture. The README has the user-facing overview;
 this document covers the structural decisions.
 
+The decorative system inspector uses `game.values.SystemComposition`, a pure,
+versioned generator seeded by game and system IDs. It receives only immutable
+visible values and refuses incomplete visibility. `game.ui.DetailedSystemPanel`
+renders the illustration; `FleetAndOrdersPanel` retains it across ordinary
+updates and excludes it while battle results are pending. No game-state,
+snapshot, map geometry or turn-rule changes are involved. Research and deliberate
+simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md).
+
 ## Goals
 
 - Domain-oriented packages with a thin technical sub-layer per module

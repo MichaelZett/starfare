@@ -106,6 +106,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final VerticalLayout relocationCards = page();
     private final List<TextField> routeFilters = new java.util.ArrayList<>();
     private @Nullable Object lastDetails;
+    private @Nullable DetailedSystemPanel detailedSystem;
+    private String detailedSystemKey = "";
     private @Nullable Object lastTravel;
     private @Nullable Object lastLogistics;
     private @Nullable Object lastReport;
@@ -183,7 +185,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 view.standingOrders(), view.waitingFleetIds(), readOnly, fleetId, standingOrderId);
         if (!travel.equals(lastTravel)) { renderTravelCards(view); lastTravel = travel; }
         renderContacts(view);
-        Object details = java.util.Arrays.asList(selectedSystem, fleetId, view.ownFleets(),
+        Object details = java.util.Arrays.asList(gameId, selectedSystem, fleetId, view.ownFleets(),
                 view.waitingFleetIds(), view.standingOrders(), view.turn(), readOnly, targetSelectionActive,
                 selectedSystem != null && isBattlePending(selectedSystem.id()));
         if (!details.equals(lastDetails)) { renderDetails(view, targetSelectionActive); lastDetails = details; }
@@ -412,16 +414,16 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private void renderDetails(PlayerViewState view, boolean targetSelectionActive) {
         detailsPage.removeAll();
-        detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS));
         if (selectedSystem != null) {
             VisibleSystem system = selectedSystem;
             if (isBattlePending(system.id())) {
-                detailsPage.add(new Paragraph(I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, system.name())));
+                detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS),
+                        new Paragraph(I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, system.name())));
                 return;
             }
-            detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_SYSTEM), system.name()));
             if (!system.fullyVisible()) {
-                detailsPage.add(intelligenceHeader(),
+                detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS),
+                        detail(I18n.t(UiTexts.MAP_SIDEBAR_SYSTEM), system.name()), intelligenceHeader(),
                         detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())),
                         detail(I18n.t(system.approximate() ? UiTexts.MAP_SIDEBAR_ESTIMATED_SHIPS
                                         : UiTexts.MAP_SIDEBAR_COUNTED_SHIPS), shipValue(system)),
@@ -432,6 +434,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             H2 systemHeading = new H2(system.name());
             systemHeading.addClassName("system-details-heading");
             detailsPage.add(systemHeading, detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())));
+            renderSystemIllustration(system);
             Div metrics = new Div(
                     systemMetric("🛡", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
                     systemMetric("⚙", I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION),
@@ -455,6 +458,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             renderOwnershipHistory(view, system);
             return;
         }
+        detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS));
         Fleet selectedFleet = view.ownFleets().stream()
                 .filter(fleet -> selectedFleetId != null && fleet.globalId() == selectedFleetId)
                 .findFirst().orElse(null);
@@ -474,6 +478,22 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return;
         }
         detailsPage.add(new Paragraph(I18n.t(UiTexts.MAP_SIDEBAR_DETAILS_EMPTY)));
+    }
+
+    private void renderSystemIllustration(VisibleSystem system) {
+        GameId currentGame = gameId;
+        if (currentGame == null) { return; }
+        SystemComposition.forVisible(currentGame, system).ifPresent(composition -> {
+            boolean shipyard = system.ownerId() != null && system.productionPerTurn() != null;
+            String identity = currentGame.value() + "/" + system.id() + "/" + shipyard;
+            DetailedSystemPanel panel = detailedSystem;
+            if (panel == null || !identity.equals(detailedSystemKey)) {
+                panel = new DetailedSystemPanel(composition, shipyard);
+                detailedSystem = panel;
+                detailedSystemKey = identity;
+            }
+            detailsPage.add(panel);
+        });
     }
 
     private void renderSystemActions(VisibleSystem system, boolean targetSelectionActive) {

@@ -8,6 +8,12 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Grafische Systemsicht für Classic: auswählbare Hauptreihensterne, Doppelsonnen,
+  zwei bis fünf Planeten, Monde, Zwergplaneten und Asteroidengürtel. Stabile,
+  schematische Illustrationen ohne Änderung von Spielregeln oder Spielständen;
+  Kriegsnebel und offene Schlachten bleiben geschützt. Werften stellen nur die
+  vorhandene Schiffsproduktion dar. Astronomische Quellen sind dokumentiert.
+
 - Deutsche Spielanleitung ergänzt und mit der README verlinkt. Nutzer- und
   Architekturdokumentation zu Siegbedingungen, Fortsetzung, Schlachtauswertung,
   Sammelaktionen und gespeicherten Einstellungen auf den aktuellen Stand gebracht.

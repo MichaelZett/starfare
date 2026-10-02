@@ -154,7 +154,8 @@ public class Browser {
     }
 
     public void awaitText(String snippet) {
-        new WebDriverWait(driver(), LOAD).withMessage("Erwarteter Text fehlt: " + snippet)
+        new WebDriverWait(driver(), LOAD).ignoring(StaleElementReferenceException.class)
+                .withMessage("Erwarteter Text fehlt: " + snippet)
                 .until(_ -> fullPageText().contains(snippet));
     }
 

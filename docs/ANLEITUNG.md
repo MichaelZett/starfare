@@ -219,3 +219,16 @@ Browsersitzung behalten.
 Impressum und Datenschutz sind über die gemeinsame Fußzeile erreichbar.
 Die Kontolöschung ist dauerhaft; Einzelheiten zu Daten und Aufbewahrung stehen
 in der Datenschutzansicht der Anwendung.
+
+## Grafische Systemsicht
+
+Die Systemdetails rechts zeigen ein schematisches Sternsystem. Sonnen und
+Himmelskörper lassen sich anklicken oder mit Enter und Leertaste auswählen;
+darunter erscheinen ihre Beschreibungen. „Himmelskörper erkunden“ öffnet die
+vollständige Liste. Monde sind als kleine Auswahl dargestellt. Die Werft steht
+für die vorhandene Schiffsproduktion und ist kein zusätzliches Gebäude.
+
+Die Illustration verändert weder Produktion noch Kampf, Reisezeit oder Besitz.
+Bei unvollständiger Sicht und offenen Schlachten bleibt sie verborgen. Bestehende
+Partien behalten ihre Spielstände. Wissenschaftliche Grundlagen und bewusst
+vereinfachte Darstellung stehen in [System illustrations](SYSTEM-ILLUSTRATIONS.md).

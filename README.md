@@ -17,6 +17,14 @@ Testcontainers) wrapped around a small but complete game.
 
 **Spielanleitung auf Deutsch:** [Anleitung](docs/ANLEITUNG.md).
 
+## System inspector
+
+The system inspector on the right includes a schematic stellar system with
+selectable stars, planets and moons. Its shipyard represents existing production;
+the illustration changes no game rules or saved state. It is available only when
+the system is fully revealed and its battle results are no longer pending.
+See [System illustrations](docs/SYSTEM-ILLUSTRATIONS.md) for sources and simplifications.
+
 ## Lobby and archive
 
 New games are private. Use **Manage** to invite players or publish the game
