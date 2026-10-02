@@ -1,0 +1,38 @@
+{
+  "turn": 4,
+  "nextGlobalFleetId": 8,
+  "nextLocalFleetNo": {"1": 2, "2": 0},
+  "players": [
+    {"id": 1, "name": "Fixture Alpha", "ai": false, "colorHex": "#0072B2"},
+    {"id": 2, "name": "Fixture Beta", "ai": false, "colorHex": "#E69F00"}
+  ],
+  "systems": [
+    {"id": 1, "name": "Home", "x": 0, "y": 0, "ownerId": 1, "garrison": 10, "productionPerTurn": 2, "neutral": false},
+    {"id": 2, "name": "Relay", "x": 100, "y": 0, "ownerId": 1, "garrison": 4, "productionPerTurn": 1, "neutral": false},
+    {"id": 3, "name": "Enemy", "x": 1000, "y": 0, "ownerId": 2, "garrison": 9, "productionPerTurn": 3, "neutral": false},
+    {"id": 4, "name": "Neutral", "x": 2000, "y": 0, "ownerId": null, "garrison": 7, "productionPerTurn": 5, "neutral": true}
+  ],
+  "fleets": [{"globalId": 7, "ownerId": 1, "localNo": 2, "fromSystemId": 1, "toSystemId": 2, "ships": 3, "launchTurn": 3, "arrivalTurn": 5}],
+  "reports": {"1": {"turn": 3, "lines": ["Fixture reinforcement"], "events": [
+    {"type": "reinforcement", "playerId": 1, "systemId": 2, "systemName": "Relay", "ships": 3, "fleetLabel": "F1"}
+  ]}},
+  "intel": {"1": {"3": {"ownerId": 2, "turn": 2}}, "2": {}},
+  "waitThisTurn": [],
+  "submittedThisTurn": [],
+  "gameOver": false,
+  "winnerId": null,
+  "active": true,
+  "started": true,
+  "joinedHumanPlayerIds": [1, 2],
+  "originalHumanPlayerIds": [1, 2],
+  "observers": [],
+  "seatByUser": {"fixture-alpha": 1, "fixture-beta": 2},
+  "pendingOrders": {"1": [
+    {"type": "send", "ownerId": 1, "fromSystemId": 1, "toSystemId": 2, "ships": 2},
+    {"type": "wait", "ownerId": 1, "fleetId": 7}
+  ]},
+  "standingOrders": {"1": [{"id": 1, "ownerId": 1, "fromSystemId": 1, "toSystemId": 2}]},
+  "nextStandingOrderId": {"1": 2},
+  "observersAllowed": true,
+  "reentryAllowed": true
+}
