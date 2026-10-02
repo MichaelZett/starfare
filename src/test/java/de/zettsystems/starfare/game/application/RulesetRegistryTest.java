@@ -12,12 +12,34 @@ class RulesetRegistryTest {
     @Test
     void unavailableVariantsAreRejectedBeforeAnyGameIsSaved() {
         GameSessionStore store = mock(GameSessionStore.class);
-        GameRegistry registry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
-        assertThatThrownBy(() -> registry.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD)))
+        RulesetRef unreleased = new RulesetRef("test-unreleased", "1.0.0");
+        var entries = new java.util.ArrayList<>(RulesetCatalog.builtIn().definitions());
+        entries.add(new RulesetDefinition(unreleased, "test.name", "test.description", Set.of("1.0.0"), false));
+        GameRegistry registry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(), new RulesetCatalog(entries));
+        assertThatThrownBy(() -> registry.createGame(GameSetup.defaults().selectRuleset(unreleased)))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> registry.createGame(GameSetup.defaults().selectRuleset(new RulesetRef("classic", "9"))))
                 .isInstanceOf(IllegalArgumentException.class);
         verifyNoInteractions(store);
+    }
+
+    @Test
+    void releasedSpacewardGamesStartWithIndustryAndFixedRange() {
+        GameSessionStore store = new InMemoryGameSessionStore();
+        GameRegistry registry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
+        GameId id = registry.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
+        registry.readState(id, state -> {
+            assertThat(state.ruleset()).isEqualTo(RulesetRef.SPACEWARD);
+            assertThat(state.industries()).hasSameSizeAs(state.systems());
+            assertThat(state.navigationSettings()).isPresent();
+            return null;
+        });
+        GameId classic = registry.createGame(GameSetup.defaults());
+        registry.readState(classic, state -> {
+            assertThat(state.industries()).isEmpty();
+            assertThat(state.navigationSettings()).isEmpty();
+            return null;
+        });
     }
 
     @Test
