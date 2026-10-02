@@ -6,8 +6,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -19,10 +19,9 @@ import de.zettsystems.starfare.game.values.ProductionFlow;
 import de.zettsystems.starfare.game.values.VisibleSystem;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
-import org.jspecify.annotations.Nullable;
-
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
+import org.jspecify.annotations.Nullable;
 
 final class SendFleetDialog {
 
@@ -138,13 +137,18 @@ final class SendFleetDialog {
     private static HeaderLabels buildHeaderLabels(SendContext ctx, DialogParams params) {
         var routeLabel = new Span(ctx.from().name() + " → " + ctx.to().name());
         routeLabel.addClassName("send-fleet-route");
+        var route = ctx.game().routeFor(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id());
+        if (ctx.from().industry() != null) {
+            routeLabel.setText(route.map(r -> I18n.t(UiTexts.NAV_ROUTE, r.description(), r.range(), r.systems().size() - 2))
+                    .orElseGet(() -> I18n.t(UiTexts.NAV_UNREACHABLE)));
+        }
 
-        int travelTurns = ctx.game().travelTurns(ctx.gameId(), ctx.from().id(), ctx.to().id());
+        int travelTurns = travelRounds(ctx);
         String durationKey = travelTurns == 1 ? UiTexts.MAP_DURATION_SINGULAR : UiTexts.MAP_DURATION_PLURAL;
-        var durationLabel = new Span(I18n.t(durationKey, travelTurns));
+        var durationLabel = new Span(travelTurns < 0 ? I18n.t(UiTexts.NAV_UNREACHABLE) : I18n.t(durationKey, travelTurns));
         durationLabel.addClassName("send-fleet-duration");
         int arrivalTurn = params.openedTurn() + travelTurns;
-        var arrivalLabel = new Span(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": " + arrivalTurn);
+        var arrivalLabel = new Span(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": " + (travelTurns < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : arrivalTurn));
         arrivalLabel.addClassName("send-fleet-arrival");
 
         var availableLabel = new Span(I18n.t(UiTexts.MAP_AVAILABLE, params.maxShips()));
@@ -297,7 +301,7 @@ final class SendFleetDialog {
         int amount = clamp(currentOr(c.shipsInput(), 1), 1, state.sliderMax);
         c.shipsInput().setValue(amount);
         c.slider().setValue(String.valueOf(amount));
-        setAmountEnablement(c, max >= 1);
+        setAmountEnablement(c, max >= 1 && travelRounds(consequence.context()) >= 0);
         c.exceptProductionBtn().setEnabled(max > productionOf(consequence.context().from()));
         c.sendBtn().setText(I18n.t(standing ? UiTexts.MAP_SAVE_STANDING_ORDER : UiTexts.MAP_SEND_FLEET));
         updateConsequence(c.consequence(), c.capacityFill(), consequence.context(), amount,
@@ -307,7 +311,8 @@ final class SendFleetDialog {
     private static void updateConsequence(Span consequence, Div capacityFill, SendContext context,
                                           int ships, boolean standing,
                                           int routingHeadroom) {
-        int travelTurns = context.game().travelTurns(context.gameId(), context.from().id(), context.to().id());
+        int travelTurns = travelRounds(context);
+        if (travelTurns < 0) { consequence.setText(I18n.t(UiTexts.NAV_UNREACHABLE)); return; }
         if (standing) {
             consequence.setText(I18n.t(UiTexts.MAP_SEND_RELOCATION_PREVIEW, ships, travelTurns,
                     Math.max(0, routingHeadroom - ships)));
@@ -318,6 +323,12 @@ final class SendFleetDialog {
         consequence.setText(I18n.t(UiTexts.MAP_SEND_FLEET_PREVIEW, ships, travelTurns, remaining,
                 reserveOf(context.from())));
         updateCapacityFill(capacityFill, ships, availableShips(context.from()));
+    }
+
+    private static int travelRounds(SendContext ctx) {
+        if (ctx.from().industry() == null) { return ctx.game().travelTurns(ctx.gameId(), ctx.from().id(), ctx.to().id()); }
+        return ctx.game().routeFor(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id())
+                .map(route -> route.rounds()).orElse(-1);
     }
 
     private static void updateCapacityFill(Div fill, int amount, int capacity) {

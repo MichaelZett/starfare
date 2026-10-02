@@ -2307,3 +2307,11 @@ vaadin-button.system-world.system-surface-3 { filter: saturate(0.6); }
 .system-industry-skyline { display: flex; align-items: flex-end; justify-content: flex-end; gap: 3px; margin-bottom: 3px; }
 .system-industry-building { width: 14px; border: 1px solid #729e8c; border-radius: 2px 2px 0 0; background: repeating-linear-gradient(0deg, #203f39 0 4px, #74af966b 4px 6px); position: relative; }
 .system-industry-building::before { content: ''; position: absolute; width: 3px; height: 8px; background: #759a8c; right: 2px; top: -8px; }
+
+.navigation-itinerary {
+  display: block;
+  color: #a4c9ee;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.send-fleet-route { overflow-wrap: anywhere; }

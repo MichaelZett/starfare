@@ -11,8 +11,11 @@ public record ArrivalPreview(int systemId, String systemName, int turn, long shi
         record Destination(int system, int turn) { }
         Map<Destination, Long> totals = new HashMap<>();
         for (Fleet fleet : view.ownFleets()) {
-            int arrival = fleet.arrivalTurn() + (view.waitingFleetIds().contains(fleet.globalId()) ? 1 : 0);
-            totals.merge(new Destination(fleet.toSystemId(), arrival), (long) fleet.ships(), Long::sum);
+            var journey = fleet.journey();
+            if (journey != null && journey.blocked()) { continue; }
+            int destination = journey == null ? fleet.toSystemId() : journey.destination();
+            int arrival = (journey == null ? fleet.arrivalTurn() : journey.finalArrivalTurn()) + (view.waitingFleetIds().contains(fleet.globalId()) ? 1 : 0);
+            totals.merge(new Destination(destination, arrival), (long) fleet.ships(), Long::sum);
         }
         for (PlannedOrder order : view.plannedOrders()) {
             Integer target = order.toSystemId();

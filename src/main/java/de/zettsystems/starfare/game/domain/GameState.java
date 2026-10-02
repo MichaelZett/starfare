@@ -1,15 +1,18 @@
 package de.zettsystems.starfare.game.domain;
 
+import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.values.*;
+import de.zettsystems.starfare.navigation.domain.RangeCalibration;
+import de.zettsystems.starfare.navigation.domain.Routes;
+import de.zettsystems.starfare.navigation.values.FlightJourney;
+import de.zettsystems.starfare.navigation.values.NavigationSettings;
 import de.zettsystems.starfare.report.values.TurnReport;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.jspecify.annotations.Nullable;
-
 import java.time.Instant;
 import java.util.*;
 import java.util.function.UnaryOperator;
-import de.zettsystems.starfare.economy.domain.Industry;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Mutable in-memory game state for a single running match.
@@ -19,6 +22,24 @@ import de.zettsystems.starfare.economy.domain.Industry;
                 + "are exposed on purpose so application services can mutate them; concurrency is "
                 + "serialized via GameSession's read/write lock (see CLAUDE.md \"State/repository contract\").")
 public class GameState {
+    private @Nullable NavigationSettings navigation;
+    public Optional<NavigationSettings> navigationSettings() { return Optional.ofNullable(navigation); }
+    public void configureNavigation(NavigationSettings settings) {
+        if (started || navigation != null || !RulesetRef.SPACEWARD.equals(ruleset)) { throw new IllegalStateException("Navigation is fixed at creation"); }
+        navigation = settings;
+    }
+    public void initializeNavigation() {
+        if (RulesetRef.SPACEWARD.equals(ruleset) && navigation == null) {
+            navigation = RangeCalibration.forGalaxy(systems);
+        }
+    }
+    public void replaceFleet(Fleet replacement) {
+        for (int index = 0; index < fleets.size(); index++) {
+            if (fleets.get(index).globalId() == replacement.globalId()) { fleets.set(index, replacement); return; }
+        }
+        throw new IllegalArgumentException("Unknown fleet " + replacement.globalId());
+    }
+
     private int turn = 1;
     private RulesetRef ruleset = RulesetRef.SECTOR_FORCES;
     private final Map<Integer, Industry> industries = new HashMap<>();
@@ -48,6 +69,27 @@ public class GameState {
         }
         updateSystem(systemId, system -> system.completeShipbuilding(current.shipbuilding(), routed, expanded.shipbuilding()));
         industries.put(systemId, expanded);
+    }
+
+    private void validateNavigation() {
+        if (!Routes.limited(this) && (navigation != null || fleets.stream().anyMatch(f -> f.journey() != null))) {
+            throw new IllegalArgumentException("Navigation state belongs only to Spaceward");
+        }
+        for (Fleet fleet : fleets) {
+            var journey = fleet.journey();
+            if (journey == null) { continue; }
+            if (journey.stations().stream().anyMatch(id -> systems.stream().noneMatch(system -> system.id() == id))
+                    || fleet.fromSystemId() != journey.stations().get(journey.legIndex() - 1)
+                    || fleet.toSystemId() != journey.stations().get(journey.legIndex())
+                    || fleet.ships() <= 0 || journey.finalArrivalTurn() < fleet.arrivalTurn()) {
+                throw new IllegalArgumentException("Fleet and itinerary disagree");
+            }
+            for (int leg = 1; leg < journey.stations().size(); leg++) {
+                if (!Routes.withinRange(this, journey.stations().get(leg - 1), journey.stations().get(leg))) {
+                    throw new IllegalArgumentException("Stored itinerary exceeds the fixed flight range");
+                }
+            }
+        }
     }
 
     private void validateIndustry() {
@@ -196,6 +238,7 @@ public class GameState {
      */
     public void start() {
         initializeIndustry();
+        initializeNavigation();
         this.started = true;
         this.turnStartedAt = Instant.now();
         this.stragglerSince = null;
@@ -402,6 +445,7 @@ public class GameState {
         this.players.clear();
         this.systems.clear();
         this.industries.clear();
+        navigation = null;
         this.fleets.clear();
         this.reports.clear();
         this.intel.clear();
@@ -449,8 +493,17 @@ public class GameState {
 
     public int addFleet(int ownerId, int from, int to, int ships) {
         int travelRounds = travelRounds(from, to);        // unverändert
+        FlightJourney journey = null;
+        int firstTarget = to;
+        if (Routes.limited(this)) {
+            var route = Routes.plan(this, ownerId, from, to).orElseThrow();
+            firstTarget = route.systems().get(1);
+            travelRounds = travelRounds(from, firstTarget);
+            journey = new FlightJourney(route.systems(), 1,
+                    FlightJourney.Phase.FLYING, 0, turn + route.rounds());
+        }
         int localNo = nextLocalNoFor(ownerId);
-        Fleet f = new Fleet(nextGlobalFleetId++, ownerId, localNo, from, to, ships, turn, turn + travelRounds);
+        Fleet f = new Fleet(nextGlobalFleetId++, ownerId, localNo, from, firstTarget, ships, turn, turn + travelRounds, journey);
         fleets.add(f);
         return f.globalId();
     }
@@ -581,6 +634,7 @@ public class GameState {
 
     public static GameStateSnapshot toSnapshot(GameState s) {
         s.validateIndustry();
+        s.validateNavigation();
         Map<Integer, Map<Integer, Intel>> intelCopy = new HashMap<>();
         s.intel.forEach((pid, inner) -> intelCopy.put(pid, new HashMap<>(inner)));
         Map<Integer, List<FleetOrder>> ordersCopy = new HashMap<>();
@@ -601,7 +655,7 @@ public class GameState {
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
-                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries));
+                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -646,6 +700,12 @@ public class GameState {
         var industry = s.industries();
         if (industry != null) { c.industries.putAll(industry); }
         c.validateIndustry();
+        c.navigation = s.navigation();
+        if (c.navigation == null && c.fleets.stream().anyMatch(fleet -> fleet.journey() != null)) {
+            throw new IllegalArgumentException("Navigation settings missing for stored itineraries");
+        }
+        c.initializeNavigation();
+        c.validateNavigation();
         c.originalSetup = s.originalSetup();
         if (c.originalSetup != null && !c.originalSetup.ruleset().equals(c.ruleset)) {
             throw new IllegalArgumentException("Snapshot and original setup disagree on game rules");
@@ -742,6 +802,7 @@ public class GameState {
 
         c.ruleset = s.ruleset;
         c.industries.putAll(s.industries);
+        c.navigation = s.navigation;
         c.originalSetup = s.originalSetup;
         c.previousOrders.putAll(s.previousOrders);
         return c;

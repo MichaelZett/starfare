@@ -223,6 +223,38 @@ reicht der Schiffbau nicht, können sie auf Garnison oberhalb der Reserve zugrei
 Engpässe werden angezeigt. Rohstoffe, Forschung und Schiffstypen folgen später.
 SectorForces verwendet weiterhin seine bisherigen Regeln.
 
+## Geplante Spaceward-Navigation
+
+Auch die Navigation ist derzeit intern umgesetzt und erst nach der gemeinsamen
+Abnahme verfügbar. Jede Partie erhält eine feste Reichweite je Reiseabschnitt.
+Sie wird aus der Galaxie berechnet, damit alle Systeme schrittweise erreichbar
+bleiben. Reisezeit und Sensorreichweite sind davon unabhängig.
+
+Für ein entferntes Ziel sucht der Flottenversand automatisch den schnellsten
+Weg über eigene Systeme. Der Dialog zeigt alle Zwischenstationen und die
+Ankunftsrunde einschließlich der Aufenthalte. Ohne erreichbaren Weg ist der
+Versand gesperrt. Fremde Systeme können angegriffen werden, dienen aber erst
+nach ihrer Eroberung als Zwischenstationen.
+
+An jeder Zwischenstation bleibt die Flotte eine volle Runde zum Auftanken.
+Sie bleibt ein eigener Verband und wird nicht zur Garnison. Die Flottendetails
+zeigen den Reiseplan und den frühesten Abflug. Mit **Warten** lässt sich die
+Weiterreise verschieben; **Auflösen** fügt den Verband der aktuellen eigenen
+Station hinzu. Die Aktionen stehen am Flottenmarker über das Kontextmenü bereit.
+
+Geht eine Station während des Fluges verloren, kämpft die Flotte dort nach den
+normalen Regeln; ihre Weiterreise endet. Geht sie während des Aufenthalts
+verloren, bleibt der Verband mit unterbrochener Weiterreise stehen. Seine
+Ankunftsrunde ist dann offen. Nach Rückeroberung wird eine neue volle
+Auftankrunde abgewartet. Produktionsverlegungen verwenden dieselben Wege und
+Reisezeiten; ohne nutzbaren Weg pausieren neue Lieferungen, der Auftrag bleibt
+erhalten. Verbündete Stationen werden mit dem späteren Bündnissystem ergänzt.
+
+Ist bereits vor dem Abflug die nächste Zwischenstation verloren, bleibt die
+Flotte an ihrer aktuellen Station, bis dieser Reiseabschnitt wieder zulässig ist.
+
+SectorForces verwendet weiterhin direkte Flüge ohne Reichweitengrenze.
+
 ## Vorlagen und Revanche
 
 Öffne bei einer eigenen Partie in Lobby oder Archiv **Als Vorlage / Revanche**.

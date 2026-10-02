@@ -1,15 +1,13 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.starfare.economy.domain.Industry;
+import de.zettsystems.starfare.economy.values.IndustryView;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
+import de.zettsystems.starfare.navigation.domain.Routes;
 import de.zettsystems.starfare.report.values.TurnReport;
-import org.jspecify.annotations.Nullable;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
-import de.zettsystems.starfare.economy.domain.Industry;
-import de.zettsystems.starfare.economy.values.IndustryView;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,6 +18,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
+import org.springframework.stereotype.Component;
 
 @Component
 class DefaultPlayerViewBuilder implements PlayerViewBuilder {
@@ -220,8 +220,19 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 own ? s.garrisonReserve() : null,
                 own ? Math.max(0, s.availableShips() - committedBySystem.getOrDefault(s.id(), 0)) : null,
                 own ? ownershipHistory(state, s.id()) : List.of(),
-                own ? industryView(state.industries(), s, Math.max(0, s.availableShips()
+                own ? industryView(state, s, playerId, Math.max(0, s.availableShips()
                         - committedBySystem.getOrDefault(s.id(), 0)), routedBySystem.getOrDefault(s.id(), 0)) : null);
+    }
+
+    private static @Nullable IndustryView industryView(GameState state, StarSystem system, int player, int available, int planned) {
+        int reachable = state.standingOrders().getOrDefault(player, List.of()).stream()
+                .filter(order -> order.fromSystemId() == system.id()
+                        && Routes.plan(state, player, order.fromSystemId(), order.toSystemId()).isPresent())
+                .mapToInt(StandingOrder::ships).sum();
+        IndustryView base = industryView(state.industries(), system, available, reachable);
+        if (base == null) { return null; }
+        return new IndustryView(base.capacity(), base.expansionAllocation(), base.expansionProgress(),
+                base.expansionCost(), base.nextDelivery(), base.nextDelivery() < planned, base.reserveShortfall());
     }
 
     private static @Nullable IndustryView industryView(@Nullable Map<Integer, Industry> industries,
@@ -303,7 +314,8 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             out.add(new StandingOrderView(o.id(), o.fromSystemId(), o.toSystemId(),
                     sysNames.getOrDefault(o.fromSystemId(), "?"),
                     sysNames.getOrDefault(o.toSystemId(), "?"),
-                    prod, o.ships()));
+                    prod, o.ships(), Routes.limited(state)
+                            ? Routes.plan(state, o.ownerId(), o.fromSystemId(), o.toSystemId()).orElse(null) : null, Routes.limited(state)));
         }
         return List.copyOf(out);
     }
@@ -318,7 +330,8 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                         s.fromSystemId(), s.toSystemId(),
                         sysNames.getOrDefault(s.fromSystemId(), "?"),
                         sysNames.getOrDefault(s.toSystemId(), "?"),
-                        s.ships(), false, null, state.turn() + state.travelRounds(s.fromSystemId(), s.toSystemId()));
+                        s.ships(), false, null, Routes.plan(state, s.ownerId(), s.fromSystemId(), s.toSystemId())
+                                .map(route -> state.turn() + route.rounds()).orElse(null));
                 case FleetOrder.Wait wait -> waitOrder(state, i, wait, sysNames);
                 case FleetOrder.Disband _ ->
                         new PlannedOrder(i, "map.orderType.disband", null, null, "-", "-", null, false, null);
@@ -330,12 +343,18 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
     private static PlannedOrder waitOrder(GameState state, int index, FleetOrder.Wait order,
                                            Map<Integer, String> names) {
         return state.fleets().stream().filter(fleet -> fleet.globalId() == order.fleetId())
-                .findFirst().map(fleet -> new PlannedOrder(index, "map.orderType.wait",
-                        fleet.fromSystemId(), fleet.toSystemId(), names.getOrDefault(fleet.fromSystemId(), "?"),
-                        names.getOrDefault(fleet.toSystemId(), "?"), fleet.ships(), false, null,
-                        fleet.arrivalTurn() + 1))
+                .findFirst().map(fleet -> waitingFleetOrder(index, fleet, names))
                 .orElseGet(() -> new PlannedOrder(index, "map.orderType.wait", null, null,
                         "-", "-", null, false, null));
+    }
+
+    private static PlannedOrder waitingFleetOrder(int index, Fleet fleet, Map<Integer, String> names) {
+        var journey = fleet.journey();
+        int target = journey == null ? fleet.toSystemId() : journey.destination();
+        int arrival = journey == null ? fleet.arrivalTurn() : journey.finalArrivalTurn();
+        return new PlannedOrder(index, "map.orderType.wait", fleet.fromSystemId(), target,
+                names.getOrDefault(fleet.fromSystemId(), "?"), names.getOrDefault(target, "?"),
+                fleet.ships(), false, null, journey != null && journey.blocked() ? null : arrival + 1);
     }
 
     private static Player playerById(GameState state, int id) {

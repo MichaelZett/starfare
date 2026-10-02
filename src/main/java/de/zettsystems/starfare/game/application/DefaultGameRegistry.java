@@ -1,16 +1,16 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.starfare.game.domain.GalaxyPlacement;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.jspecify.annotations.Nullable;
-import org.springframework.stereotype.Service;
-
-import java.time.Instant;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
+import org.jspecify.annotations.Nullable;
+import org.springframework.stereotype.Service;
 
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
@@ -45,6 +45,7 @@ public class DefaultGameRegistry implements GameRegistry {
         session.writeState(state -> {
             initializeState(state, setup);
             state.initializeIndustry();
+            state.initializeNavigation();
             return null;
         });
         store.save(session);
@@ -278,7 +279,7 @@ public class DefaultGameRegistry implements GameRegistry {
 
         var r = new Random(System.nanoTime());
         List<String> names = SystemNameGenerator.sample(setup.systemCount(), r);
-        List<double[]> positions = positionsFor(setup, r);
+        List<double[]> positions = GalaxyPlacement.positionsFor(setup, r);
         for (int i = 1; i <= setup.systemCount(); i++) {
             double[] pos = positions.get(i - 1);
             int prod = neutralProduction(setup, r);
@@ -323,41 +324,6 @@ public class DefaultGameRegistry implements GameRegistry {
             }
         }
         return (int) Math.round(mean);
-    }
-
-    private static List<double[]> positionsFor(GameSetup setup, Random r) {
-        int count = setup.systemCount();
-        var out = new ArrayList<double[]>(count);
-        double marginX = Math.min(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_X / 4);
-        double marginY = Math.min(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_Y / 4);
-        if (setup.galaxyLayout() == GalaxyLayout.RANDOM) {
-            for (int i = 0; i < count; i++) {
-                out.add(new double[]{
-                        marginX + r.nextDouble(GameConfig.MAX_X - 2 * marginX),
-                        marginY + r.nextDouble(GameConfig.MAX_Y - 2 * marginY)});
-            }
-            return out;
-        }
-        // Ein System je Rasterzelle, innerhalb der Zelle versetzt: verhindert die
-        // Ballungen und Leerraeume, die rein zufaellige Punkte zwangslaeufig bilden.
-        int cols = (int) Math.ceil(Math.sqrt(count * (double) GameConfig.MAX_X / GameConfig.MAX_Y));
-        int rows = (int) Math.ceil((double) count / cols);
-        double cellWidth = (GameConfig.MAX_X - 2 * marginX) / cols;
-        double cellHeight = (GameConfig.MAX_Y - 2 * marginY) / rows;
-        var cells = new ArrayList<int[]>(cols * rows);
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                cells.add(new int[]{col, row});
-            }
-        }
-        Collections.shuffle(cells, r);
-        for (int i = 0; i < count; i++) {
-            int[] cell = cells.get(i);
-            out.add(new double[]{
-                    marginX + cell[0] * cellWidth + (0.25 + r.nextDouble() * 0.5) * cellWidth,
-                    marginY + cell[1] * cellHeight + (0.25 + r.nextDouble() * 0.5) * cellHeight});
-        }
-        return out;
     }
 
     private static List<StarSystem> homeSystems(GameState state, Random r) {

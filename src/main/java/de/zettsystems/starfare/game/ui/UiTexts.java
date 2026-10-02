@@ -515,6 +515,15 @@ public final class UiTexts {
     public static final String LEGAL_IMPRINT_ADDRESS_MISSING = "legal.imprint.addressMissing";
     public static final String LEGAL_PRIVACY_CONTACT = "legal.privacy.contact";
 
+    public static final String NAV_ROUTE = "navigation.route";
+    public static final String NAV_UNREACHABLE = "navigation.unreachable";
+    public static final String NAV_UNKNOWN = "navigation.unknown";
+    public static final String NAV_FLYING = "navigation.flying";
+    public static final String NAV_STATION = "navigation.station";
+    public static final String NAV_BLOCKED = "navigation.blocked";
+    public static final String NAV_TRANSFER = "navigation.transfer";
+    public static final String NAV_PAUSED = "navigation.paused";
+
     private UiTexts() {}
     public static final String GAME_PRIVATE = "game.visibility.private";
     public static final String GAME_PUBLIC = "game.visibility.public";

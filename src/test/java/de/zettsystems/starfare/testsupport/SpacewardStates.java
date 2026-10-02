@@ -17,6 +17,7 @@ public final class SpacewardStates {
         state.systems().add(new StarSystem(4, "Neutral", 2600, 1500, null, 4, 5, true));
         state.joinedHumanPlayerIds().addAll(List.of(1, 2));
         state.originalHumanPlayerIds().addAll(List.of(1, 2));
+        state.configureNavigation(new de.zettsystems.starfare.navigation.values.NavigationSettings(5000));
         state.start();
         return state;
     }

@@ -4,6 +4,7 @@ import de.zettsystems.starfare.fleet.values.FleetDispatch;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.PlannedOrder;
+import de.zettsystems.starfare.navigation.domain.Routes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +50,8 @@ public final class OrderPlanning {
                 var source = state.systems().stream().filter(system -> system.id() == send.fromSystemId()).findFirst().orElse(null);
                 if (source == null || !Objects.equals(source.ownerId(), player) || send.ownerId() != player
                         || send.ships() <= 0 || send.fromSystemId() == send.toSystemId()
-                        || state.systems().stream().noneMatch(system -> system.id() == send.toSystemId())) { return false; }
+                        || state.systems().stream().noneMatch(system -> system.id() == send.toSystemId())
+                        || Routes.plan(state, player, send.fromSystemId(), send.toSystemId()).isEmpty()) { return false; }
                 long total = committed.merge(send.fromSystemId(), (long) send.ships(), Long::sum);
                 if (total > source.availableShips()) { return false; }
             }

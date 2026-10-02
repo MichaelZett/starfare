@@ -1,24 +1,20 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.starfare.economy.application.DefaultEconomyService;
+import de.zettsystems.starfare.economy.application.EconomyService;
 import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
+import de.zettsystems.starfare.game.config.GameTimingProperties;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
-import de.zettsystems.starfare.game.config.GameTimingProperties;
 import de.zettsystems.starfare.game.values.*;
+import de.zettsystems.starfare.navigation.domain.Routes;
+import de.zettsystems.starfare.navigation.values.RoutePreview;
 import de.zettsystems.starfare.report.application.ReportService;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.turn.application.TurnEngine;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import java.time.Instant;
-import de.zettsystems.starfare.economy.application.EconomyService;
-import de.zettsystems.starfare.economy.application.DefaultEconomyService;
-import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +23,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
@@ -429,6 +430,11 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public java.util.Optional<RoutePreview> routeFor(GameId id, int player, int from, int to) {
+        return registry.readState(id, state -> Routes.plan(state, player, from, to));
+    }
+
+    @Override
     public int travelTurns(GameId gameId, int fromId, int toId) {
         return registry.readState(gameId, state -> state.travelRounds(fromId, toId));
     }
@@ -756,7 +762,6 @@ public class DefaultGameService implements GameService {
         }
         return registry.writeState(gameId, state -> !state.gameOver() && fleetService.queueDisband(state, playerId, fleetId));
     }
-
 
     @Override
     public List<GameSummary> visibleGamesFor(String account, GameListScope scope) {

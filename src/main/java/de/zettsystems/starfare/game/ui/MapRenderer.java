@@ -10,8 +10,6 @@ import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
 import de.zettsystems.starfare.style.HtmlAttributes;
-import org.jspecify.annotations.Nullable;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,6 +17,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Renders the map content (system dots, fleet lanes, badges, right-click hit areas)
@@ -81,6 +80,17 @@ final class MapRenderer {
         if (fromId == null || toId == null) {
             return;
         }
+        boolean limited = in.view().systems().stream().anyMatch(system -> system.industry() != null);
+        if (limited) {
+            var route = in.game().routeFor(in.gameId(), in.playerId(), fromId, toId);
+            if (route.isPresent()) {
+                var path = route.orElseThrow().systems();
+                for (int i = 1; i < path.size(); i++) { renderPlannedLeg(map, order, in, path.get(i - 1), path.get(i)); }
+            }
+        } else { renderPlannedLeg(map, order, in, fromId, toId); }
+    }
+
+    private static void renderPlannedLeg(Div map, PlannedOrder order, Inputs in, int fromId, int toId) {
         VisibleSystem a = findSystem(in, fromId).orElse(null);
         VisibleSystem b = findSystem(in, toId).orElse(null);
         if (a == null || b == null) {
@@ -105,8 +115,21 @@ final class MapRenderer {
     }
 
     private static void renderStandingOrder(Div map, StandingOrderView order, Inputs in) {
-        VisibleSystem source = findSystem(in, order.fromSystemId()).orElse(null);
-        VisibleSystem target = findSystem(in, order.toSystemId()).orElse(null);
+        var route = order.route();
+        if (order.rangeLimited()) {
+            if (route != null) {
+                for (int i = 1; i < route.systems().size(); i++) {
+                    renderStandingLeg(map, order, in, route.systems().get(i - 1), route.systems().get(i));
+                }
+            }
+            return;
+        }
+        renderStandingLeg(map, order, in, order.fromSystemId(), order.toSystemId());
+    }
+
+    private static void renderStandingLeg(Div map, StandingOrderView order, Inputs in, int from, int to) {
+        VisibleSystem source = findSystem(in, from).orElse(null);
+        VisibleSystem target = findSystem(in, to).orElse(null);
         if (source == null || target == null) {
             return;
         }
@@ -321,14 +344,14 @@ final class MapRenderer {
 
         LaneGeometry geom = computeLaneGeometry(a, b, len);
         String color = resolveFleetColor(in, f.ownerId());
-        String tooltip = fleetTooltip(f, in.view().turn());
+        String tooltip = f.journey() == null ? fleetTooltip(f, in.view().turn()) : NavigationDisplay.status(f, in.view());
         Integer highlightedFleetId = in.highlightedFleetId();
         boolean highlighted = highlightedFleetId != null && highlightedFleetId == f.globalId();
 
-        map.add(buildLaneDiv(geom, color, tooltip, highlighted));
+        if (f.inFlight()) { map.add(buildLaneDiv(geom, color, tooltip, highlighted)); }
         map.add(buildFleetBadge(f, a, b, color, tooltip, in, highlighted));
 
-        if (!in.observer() && in.playerId() >= 0) {
+        if (!in.observer() && in.playerId() >= 0 && f.inFlight()) {
             map.add(buildFleetHitArea(f, a.x(), a.y(), len, geom.angle, in));
         }
     }
@@ -421,6 +444,9 @@ final class MapRenderer {
             in.onFleetHighlight().accept(fleetId);
             in.onRefresh().run();
         });
+        if (!f.inFlight() && !in.observer() && in.playerId() >= 0) {
+            attachFleetActions(badge, f, in); return badge;
+        }
         badge.getElement().addEventListener("contextmenu", _ -> {
             in.onBadgeToggleLabel().accept(fleetId);
             in.onRefresh().run();
@@ -429,10 +455,7 @@ final class MapRenderer {
     }
 
     private static Div buildFleetHitArea(Fleet f, double ax, double ay, double len, double angle, Inputs in) {
-        final int pid = in.playerId();
         final int fleetId = f.globalId();
-        boolean launchedThisTurn = f.launchTurn() == in.view().turn();
-        boolean waitPending = in.view().waitingFleetIds().contains(fleetId);
 
         Div hitArea = new Div();
         hitArea.addClassName("fleet-lane-hit");
@@ -449,7 +472,17 @@ final class MapRenderer {
             in.onRefresh().run();
         });
 
-        ContextMenu cm = new ContextMenu(hitArea);
+        attachFleetActions(hitArea, f, in);
+        return hitArea;
+    }
+
+    private static void attachFleetActions(Div target, Fleet f, Inputs in) {
+        final int pid = in.playerId();
+        final int fleetId = f.globalId();
+        boolean launchedThisTurn = f.launchTurn() == in.view().turn() || (!f.inFlight()
+                && findSystem(in, f.toSystemId()).map(system -> Objects.equals(system.ownerId(), f.ownerId())).orElse(false));
+        boolean waitPending = in.view().waitingFleetIds().contains(fleetId);
+        ContextMenu cm = new ContextMenu(target);
         var waitItem = cm.addItem(I18n.t(waitPending ? UiTexts.MAP_ACTION_WAITING : UiTexts.MAP_ACTION_WAIT), _ -> {
             boolean ok = in.game().setFleetWait(in.gameId(), pid, fleetId);
             if (!ok) {
@@ -466,7 +499,6 @@ final class MapRenderer {
             in.onRefresh().run();
         });
         disbandItem.setEnabled(launchedThisTurn);
-        return hitArea;
     }
 
     private static String fleetTooltip(Fleet f, int currentTurn) {

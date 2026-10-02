@@ -4,7 +4,6 @@ import de.zettsystems.starfare.game.values.FleetView;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.game.values.VisibleSystem;
 import de.zettsystems.starfare.i18n.I18n;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
@@ -51,19 +50,29 @@ public final class UiMapper {
                 .collect(Collectors.toMap(VisibleSystem::id, VisibleSystem::name, (a, _) -> a));
         IntFunction<String> nameOf = id -> systemNames.getOrDefault(id, "?");
         return view.ownFleets().stream()
-                .filter(f -> f.arrivalTurn() > turn)
+                .filter(f -> f.arrivalTurn() > turn || f.journey() != null)
                 .map(f -> new FleetView(
                         f.localNo(),
                         nameOf.apply(f.fromSystemId()),
-                        nameOf.apply(f.toSystemId()),
+                        nameOf.apply(destinationOf(f)),
                         f.ships(),
-                        f.arrivalTurn() - turn + (view.waitingFleetIds().contains(f.globalId()) ? 1 : 0),
+                        etaOf(f, view),
                         f.globalId(),
                         f.fromSystemId(),
-                        f.toSystemId(),
+                        destinationOf(f),
                         false
                 ))
                 .toList();
+    }
+
+    private static int destinationOf(de.zettsystems.starfare.game.values.Fleet fleet) {
+        var journey = fleet.journey(); return journey == null ? fleet.toSystemId() : journey.destination();
+    }
+    private static int etaOf(de.zettsystems.starfare.game.values.Fleet fleet, PlayerViewState view) {
+        var journey = fleet.journey();
+        if (journey != null && journey.blocked()) { return -1; }
+        int arrival = journey == null ? fleet.arrivalTurn() : journey.finalArrivalTurn();
+        return Math.max(0, arrival - view.turn()) + (view.waitingFleetIds().contains(fleet.globalId()) ? 1 : 0);
     }
 
     public static List<FleetView> standingAsFleetRows(PlayerViewState view) {
