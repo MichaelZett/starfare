@@ -1,12 +1,12 @@
 package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.game.values.*;
-import org.jspecify.annotations.Nullable;
-
+import de.zettsystems.starfare.navigation.values.RoutePreview;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public interface GameService {
     default boolean allocateExpansion(GameId id, int playerId, int expectedTurn, int systemId, int points) { return false; }
@@ -41,7 +41,6 @@ public interface GameService {
 
     /** Changes the two running round deadlines; only the current host may do so. */
     boolean updateRoundRules(GameId gameId, String actor, RoundRules rules);
-
 
     GameId newGame(GameSetup setup, @Nullable String hostPlayerId, String name);
 
@@ -110,6 +109,7 @@ public interface GameService {
     GameSummary summaryOf(GameId gameId);
 
     int travelTurns(GameId gameId, int fromId, int toId);
+    default java.util.Optional<RoutePreview> routeFor(GameId id, int player, int from, int to) { return java.util.Optional.empty(); }
 
     boolean sendFleet(GameId gameId, int playerId, int fromId, int toId, int ships);
 

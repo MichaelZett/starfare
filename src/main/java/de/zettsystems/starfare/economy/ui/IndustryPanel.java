@@ -21,6 +21,9 @@ public final class IndustryPanel extends Div {
     public static final String APPLY_ID = "industry-apply";
     private record PreviewControls(Span ships, Span expansion, Span distribution, Span delivery, Span estimate) { }
     public IndustryPanel(IndustryView industry, int available, int outgoing, boolean editable, IntConsumer apply) {
+        this(industry, available, outgoing, outgoing, editable, apply);
+    }
+    public IndustryPanel(IndustryView industry, int available, int outgoing, int reachable, boolean editable, IntConsumer apply) {
         addClassName("industry-panel");
         add(new H3(I18n.t(UiTexts.ECONOMY_TITLE)),
                 new Span(I18n.t(UiTexts.ECONOMY_CAPACITY, industry.capacity(), EconomyRules.MAX_CAPACITY)));
@@ -34,7 +37,7 @@ public final class IndustryPanel extends Div {
         Span estimate = new Span(); estimate.addClassName("industry-estimate");
         add(bar, distribution, expansionProgress(industry), estimate, delivery);
         PreviewControls controls = new PreviewControls(ships, expansion, distribution, delivery, estimate);
-        IntConsumer preview = points -> preview(industry, available, outgoing, points, controls);
+        IntConsumer preview = points -> preview(industry, available, outgoing, reachable, points, controls);
         preview.accept(industry.expansionAllocation());
         if (editable && !industry.atMaximum()) { addEditor(industry, apply, preview); }
         Span hint = new Span(I18n.t(UiTexts.ECONOMY_NEXT_ROUND));
@@ -80,7 +83,7 @@ public final class IndustryPanel extends Div {
         button.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY); return button;
     }
 
-    private static void preview(IndustryView industry, int available, int outgoing, int points,
+    private static void preview(IndustryView industry, int available, int outgoing, int reachable, int points,
                                 PreviewControls controls) {
         Span ships = controls.ships();
         Span expansion = controls.expansion();
@@ -91,7 +94,7 @@ public final class IndustryPanel extends Div {
         ships.getStyle().set(CssProperties.WIDTH, (100.0 * output / industry.capacity()) + "%");
         expansion.getStyle().set(CssProperties.WIDTH, (100.0 * points / industry.capacity()) + "%");
         distribution.setText(I18n.t(UiTexts.ECONOMY_DISTRIBUTION, output, points));
-        int delivered = Math.min(outgoing, Math.max(0, available + output - industry.reserveShortfall()));
+        int delivered = Math.min(reachable, Math.max(0, available + output - industry.reserveShortfall()));
         delivery.setText(I18n.t(UiTexts.ECONOMY_DELIVERY, delivered, outgoing));
         delivery.setClassName("industry-delivery" + (delivered < outgoing ? " industry-bottleneck" : ""));
         int turns = points == 0 || industry.atMaximum() ? 0 : Math.ceilDiv(industry.expansionCost() - industry.expansionProgress(), points);

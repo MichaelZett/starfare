@@ -8,6 +8,13 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Interne Spaceward-Navigation (M4): feste Reichweite je Partie, automatische
+  Routen über eigene Zwischenstationen und eine volle Runde zum Auftanken.
+  Reiseplan und Etappen bleiben nach Neuladen erhalten; Stationsverlust
+  unterbricht die Weiterreise. Verlegungen und KI beachten dieselbe Wegprüfung.
+  Vorschau, Flottendetails und Kartenlinien zeigen die tatsächlichen Etappen.
+  SectorForces behält unbegrenzte direkte Flüge.
+
 - Interne Spaceward-Wirtschaft (M3): Produktion zwischen Schiffbau und Ausbau
   verteilen; Ausbaukosten 2 × aktuelle Kapazität, Maximum 50. Teilfortschritt
   und Kapazität bleiben bei Eroberung erhalten. Industriegebäude, Verteilung,

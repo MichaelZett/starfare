@@ -7,9 +7,10 @@ import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.game.values.VisibleSystem;
-import org.springframework.stereotype.Service;
+import de.zettsystems.starfare.navigation.domain.Routes;
 import java.util.Comparator;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
 
 /** Uses the same filtered system information available to a human player. */
 @Service
@@ -50,6 +51,7 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
         int available = Math.max(0, system.availableShips() - Math.max(1, system.productionPerTurn()));
         if (available == 0) { return; }
         view.systems().stream().filter(s -> !Objects.equals(s.ownerId(), player.id()))
+                .filter(target -> Routes.plan(state, player.id(), base.id(), target.id()).isPresent())
                 .min(Comparator.comparingDouble(s -> state.distance(base.id(), s.id())))
                 .ifPresent(target -> fleets.queueSend(state, player.id(), base.id(), target.id(), Math.max(1, available / 2)));
     }

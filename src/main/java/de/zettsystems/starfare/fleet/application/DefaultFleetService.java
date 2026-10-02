@@ -5,9 +5,9 @@ import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.StandingOrder;
 import de.zettsystems.starfare.game.values.StarSystem;
-import org.springframework.stereotype.Service;
-
+import de.zettsystems.starfare.navigation.domain.Routes;
 import java.util.*;
+import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultFleetService implements FleetService {
@@ -18,7 +18,7 @@ public class DefaultFleetService implements FleetService {
         if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)) {
             return false;
         }
-        if (ships <= 0) {
+        if (ships <= 0 || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
             return false;
         }
         int committed = committedShipsFrom(state, playerId, fromId);
@@ -51,7 +51,7 @@ public class DefaultFleetService implements FleetService {
     @Override
     public boolean queueDisband(GameState state, int playerId, int fleetId) {
         Fleet f = state.fleets().stream()
-                .filter(x -> x.globalId() == fleetId && x.ownerId() == playerId && x.launchTurn() == state.turn())
+                .filter(x -> x.globalId() == fleetId && x.ownerId() == playerId && canDisband(state, x))
                 .findFirst().orElse(null);
         if (f == null) {
             return false;
@@ -72,7 +72,7 @@ public class DefaultFleetService implements FleetService {
         if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)) {
             return false;
         }
-        if (ships <= 0 || from.availableShips() < ships) {
+        if (ships <= 0 || from.availableShips() < ships || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
             return false;
         }
         state.updateSystem(fromId, current -> current.launchFleet(ships));
@@ -97,10 +97,10 @@ public class DefaultFleetService implements FleetService {
         var it = state.fleets().iterator();
         while (it.hasNext()) {
             Fleet f = it.next();
-            if (f.globalId() == fleetId && f.ownerId() == playerId && f.launchTurn() == state.turn()) {
+            if (f.globalId() == fleetId && f.ownerId() == playerId && canDisband(state, f)) {
                 it.remove();
                 state.waitThisTurn().remove(fleetId);
-                state.updateSystem(f.fromSystemId(), current -> current.reinforce(f.ships()));
+                state.updateSystem(f.inFlight() ? f.fromSystemId() : f.toSystemId(), current -> current.reinforce(f.ships()));
                 return true;
             }
         }
@@ -116,7 +116,7 @@ public class DefaultFleetService implements FleetService {
         if (from == null || !Objects.equals(from.ownerId(), playerId)) {
             return -1;
         }
-        if (state.getSystem(toId) == null) {
+        if (state.getSystem(toId) == null || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
             return -1;
         }
         StandingOrder replaced = standingFor(state, playerId).stream()
@@ -213,6 +213,7 @@ public class DefaultFleetService implements FleetService {
                                       Map<Integer, Integer> routed) {
         // Was das System diese Runde noch abgeben kann: Produktion plus Garnison,
         // abzueglich dessen, was fruehere Verlegungen desselben Systems schon nehmen.
+        if (Routes.plan(state, playerId, o.fromSystemId(), o.toSystemId()).isEmpty()) { return; }
         int alreadyRouted = routed.getOrDefault(o.fromSystemId(), 0);
         int available = from.garrison() + from.productionPerTurn() - from.garrisonReserve() - alreadyRouted;
         int ships = Math.clamp(o.ships(), 0, Math.max(0, available));
@@ -221,6 +222,12 @@ public class DefaultFleetService implements FleetService {
         }
         routed.merge(o.fromSystemId(), ships, Integer::sum);
         state.addFleet(playerId, o.fromSystemId(), o.toSystemId(), ships);
+    }
+
+    private static boolean canDisband(GameState state, Fleet fleet) {
+        int location = fleet.inFlight() ? fleet.fromSystemId() : fleet.toSystemId();
+        return (!fleet.inFlight() || fleet.launchTurn() == state.turn())
+                && Routes.stationAllowed(state, fleet.ownerId(), location);
     }
 
     private static List<FleetOrder> pendingFor(GameState state, int playerId) {

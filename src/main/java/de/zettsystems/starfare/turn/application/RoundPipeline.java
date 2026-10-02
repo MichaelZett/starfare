@@ -7,12 +7,11 @@ import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.AttackOrder;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.navigation.application.DefaultNavigationService;
+import de.zettsystems.starfare.navigation.application.NavigationService;
 import de.zettsystems.starfare.report.application.ReportService;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.springframework.stereotype.Component;
-import java.util.function.Consumer;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,7 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
 @Component
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
@@ -29,8 +30,15 @@ public class RoundPipeline {
     private final CombatService combatService;
     private final ReportService reportService;
     private final FleetService fleetService;
+    private final NavigationService navigation;
 
     public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService) {
+        this(combatService, reportService, fleetService, new DefaultNavigationService());
+    }
+    @org.springframework.beans.factory.annotation.Autowired
+    public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService,
+                         NavigationService navigation) {
+        this.navigation = navigation;
         this.combatService = combatService;
         this.reportService = reportService;
         this.fleetService = fleetService;
@@ -40,9 +48,11 @@ public class RoundPipeline {
         if (state.gameOver()) { return; }
         planOrders.run();
         applyOrders(state);
+        navigation.departReadyFleets(state);
         produce.accept(fleetService.applyStandingOrdersForProduction(state));
         applyWaitOrders(state);
         resolveArrivals(state);
+        navigation.refreshStationAccess(state, state.turn() + 1);
         checkVictory(state);
         state.captureReplayFrame();
         state.nextTurn();
@@ -65,8 +75,11 @@ public class RoundPipeline {
     }
 
     private void resolveArrivals(GameState state) {
+        for (Fleet fleet : List.copyOf(state.fleets())) {
+            if (fleet.inFlight() && fleet.arrivalTurn() == state.turn() + 1) { navigation.interceptStationArrival(state, fleet); }
+        }
         Map<Integer, Map<Integer, MergedArrival>> merged = groupArrivals(state);
-        state.fleets().removeIf(f -> f.arrivalTurn() == state.turn() + 1);
+        state.fleets().removeIf(f -> f.inFlight() && f.arrivalTurn() == state.turn() + 1);
         for (var e : merged.entrySet()) {
             resolveSystemArrival(state, e.getKey(), e.getValue());
         }
@@ -75,7 +88,7 @@ public class RoundPipeline {
     private static Map<Integer, Map<Integer, MergedArrival>> groupArrivals(GameState state) {
         Map<Integer, Map<Integer, MergedArrival>> merged = new HashMap<>();
         state.fleets().stream()
-                .filter(f -> f.arrivalTurn() == state.turn() + 1)
+                .filter(f -> f.inFlight() && f.arrivalTurn() == state.turn() + 1)
                 .forEach(f -> merged
                         .computeIfAbsent(f.toSystemId(), _ -> new HashMap<>())
                         .merge(f.ownerId(),

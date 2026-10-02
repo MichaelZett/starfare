@@ -27,7 +27,7 @@ simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md
 application release. SectorForces uses `classic / 1.0.0`; the display name does
 not change its stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
-Spaceward (`spaceward / 1.0.0`) has an internal industrial-economy implementation
+Spaceward (`spaceward / 1.0.0`) has internal industrial-economy and navigation implementations
 but remains unavailable for new games until its combined acceptance. Orion has
 no implementation or selectable entry.
 
@@ -53,6 +53,44 @@ Flyway V2_9 adds variant and version columns to `game_results` with legacy
 SectorForces defaults. Statistics filter by variant before aggregating outcomes
 and opponents; participant and AI collections still use separate fetches.
 Rule references remain in the compact result after detailed sessions are removed.
+
+## Spaceward navigation (M4)
+
+The `navigation` module owns pure range calibration and route planning,
+immutable `NavigationSettings`/`FlightJourney`/`RoutePreview` values, and the
+station lifecycle service. A game's range is the rounded longest edge of its
+minimum spanning tree, calculated after final galaxy placement and frozen in
+its optional snapshot field. This is the smallest whole range connecting the
+galaxy's geometric graph. Expansion still requires capturing stations; travel
+speed and sensor coverage keep their existing independent rules. Calibration
+checks exercise both layouts, 8/24/60/120 systems and twenty seeds each.
+
+`Routes.plan` selects the shortest elapsed-time route using owned intermediate
+systems, adding one full round per stop. Foreign final destinations are allowed.
+Fleet acceptance, atomic order editing/undo, production transfers, AI and view
+previews use the same planner. Lost routes pause existing transfers without
+consuming ships. Each newly launched Spaceward fleet stores its complete path,
+current leg, flying/station/blocked phase, earliest departure and final ETA.
+The existing fleet endpoints and arrival field describe its physical current leg.
+Classic fleets retain their old direct representation and constructor.
+
+`RoundPipeline` applies commands, departs ready stationed fleets, launches
+transfers and produces, applies waiting, and resolves arrivals. Owned
+intermediate arrivals remain independent fleets and refuel for one full round;
+final arrivals use ordinary reinforcement/combat. Arrival at a station already
+lost uses ordinary combat and terminates the itinerary there. Loss while docked
+blocks departure. A lost next intermediate station also blocks a new leg before departure. Post-combat access checks use the resolved round number, so
+recapture cannot bypass a full refuelling round. Docked fleets do not contribute
+to the system garrison; disbanding at an owned station explicitly merges them.
+
+Snapshots, copying, archived states and replay frames retain the journey.
+Missing navigation fields remain readable: old Classic saves have no settings;
+old internal Spaceward states derive a range once and legacy direct fleets can
+finish their existing flights. New invalid itinerary/state combinations are
+rejected. Arrival summaries count only final destinations, include waits and
+exclude blocked fleets. UI cards explain route and phase, use unknown arrival
+for blocked travel, and map lines follow actual legs. No rule-dependent state
+leaks through foreign-system industry views.
 
 ## Spaceward industrial economy (M3)
 

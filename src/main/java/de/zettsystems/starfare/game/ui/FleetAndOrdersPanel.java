@@ -4,8 +4,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.details.Details;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
@@ -22,8 +22,6 @@ import de.zettsystems.starfare.report.values.BattleReplay;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.report.values.TurnReport;
 import de.zettsystems.starfare.style.CssProperties;
-import org.jspecify.annotations.Nullable;
-
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +30,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import org.jspecify.annotations.Nullable;
 
 /** Switchable right-hand map sidebar that keeps the map context visible. */
 final class FleetAndOrdersPanel extends VerticalLayout {
@@ -479,8 +478,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET_LAUNCHED), selectedFleet.launchTurn()),
                     detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET_TRAVELLING),
                             Math.max(0, view.turn() - selectedFleet.launchTurn())),
-                    detail(I18n.t(UiTexts.MAP_COLUMN_ETA), fleet.eta()),
-                    detail(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN), view.turn() + fleet.eta()));
+                    detail(I18n.t(UiTexts.MAP_COLUMN_ETA), fleet.eta() < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : fleet.eta()),
+                    detail(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN), fleet.eta() < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : view.turn() + fleet.eta()));
+            NavigationDisplay.addJourney(detailsPage, selectedFleet, view);
             return;
         }
         detailsPage.add(new Paragraph(I18n.t(UiTexts.MAP_SIDEBAR_DETAILS_EMPTY)));
@@ -534,7 +534,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         ProductionFlow flow = ProductionFlow.at(system.id(), view.standingOrders());
         Integer available = system.availableShips();
         detailsPage.add(new de.zettsystems.starfare.economy.ui.IndustryPanel(industry,
-                available == null ? 0 : available, flow.outgoing(), editable,
+                available == null ? 0 : available, flow.outgoing(), view.standingOrders().stream()
+                        .filter(order -> order.fromSystemId() == system.id() && order.route() != null)
+                        .mapToInt(StandingOrderView::ships).sum(), editable,
                 points -> onProductionAllocation.accept(new de.zettsystems.starfare.economy.values.ProductionAllocation(
                         system.id(), view.turn(), points))));
     }
@@ -922,7 +924,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 .sorted(java.util.Comparator.comparingInt((FleetView fleet) -> view.turn() + fleet.eta())
                         .thenComparingInt(FleetView::fleetId))
                 .toList();
-        addArrivalGroups(fleetCards, fleets, fleet -> view.turn() + fleet.eta(), this::fleetCard);
+        addArrivalGroups(fleetCards, fleets, fleet -> fleet.eta() < 0 ? Integer.MAX_VALUE : view.turn() + fleet.eta(), this::fleetCard);
 
         List<PlannedOrder> orders = view.plannedOrders().stream()
                 .filter(order -> matchesRoute(order.fromSystem(), order.toSystem()))
@@ -988,7 +990,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     private static Span arrivalGroup(int arrivalTurn) {
-        Span group = new Span(I18n.t(UiTexts.MAP_TRAVEL_ARRIVAL_GROUP, arrivalTurn));
+        Span group = new Span(arrivalTurn == Integer.MAX_VALUE ? I18n.t(UiTexts.NAV_UNKNOWN) : I18n.t(UiTexts.MAP_TRAVEL_ARRIVAL_GROUP, arrivalTurn));
         group.addClassName("fleet-travel-group");
         return group;
     }
@@ -1012,11 +1014,16 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         top.add(new Span("✦ #" + fleet.localNo()), fleetNumber(fleet.ships()));
         Span route = new Span(fleet.fromName() + " → " + fleet.toName());
         route.addClassName("fleet-travel-route");
-        int arrivalTurn = currentView == null ? -1 : currentView.turn() + fleet.eta();
+        int arrivalTurn = currentView == null || fleet.eta() < 0 ? -1 : currentView.turn() + fleet.eta();
         Span arrival = new Span(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": "
-                + (arrivalTurn < 0 ? "—" : arrivalTurn) + " · " + I18n.t(UiTexts.MAP_COLUMN_ETA) + ": " + fleet.eta());
+                + (arrivalTurn < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : arrivalTurn) + " · " + I18n.t(UiTexts.MAP_COLUMN_ETA) + ": " + (fleet.eta() < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : fleet.eta()));
         arrival.addClassName("fleet-travel-arrival");
         card.add(top, route, travelProgress(fleet), arrival);
+        PlayerViewState view = currentView;
+        if (view != null) {
+            view.ownFleets().stream().filter(candidate -> candidate.globalId() == fleet.fleetId()).findFirst()
+                    .ifPresent(candidate -> NavigationDisplay.addJourney(card, candidate, view));
+        }
         card.addClickListener(_ -> onFleetRowSelected.accept(fleet.fleetId()));
         KeyboardActions.enable(card);
         if (Integer.valueOf(fleet.fleetId()).equals(selectedFleetId)) {
@@ -1052,7 +1059,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 - currentView.ownFleets().stream().filter(candidate -> candidate.globalId() == fleet.fleetId())
                 .map(Fleet::launchTurn).findFirst().orElse(currentView.turn()));
         int total = elapsed + fleet.eta();
-        int percent = total == 0 ? 100 : Math.round(100f * elapsed / total);
+        int percent = total <= 0 || fleet.eta() < 0 ? 0 : Math.round(100f * elapsed / total);
         Div track = new Div();
         track.addClassName("fleet-travel-progress");
         Div fill = new Div();
@@ -1079,6 +1086,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         card.add(new Span("⇢ " + I18n.t(UiTexts.MAP_ORDER_TYPE_STANDING)),
                 new Span(order.fromSystem() + " → " + order.toSystem()),
                 fleetNumber(order.ships() + " / " + I18n.t(UiTexts.MAP_LOGISTICS_PER_TURN)));
+        var route = order.route();
+        if (order.rangeLimited()) {
+            card.add(new Span(route == null ? I18n.t(UiTexts.NAV_PAUSED)
+                    : I18n.t(UiTexts.NAV_TRANSFER, route.description(), route.rounds())));
+        }
         if (!readOnly) {
             Button edit = new Button(I18n.t(UiTexts.MAP_ACTION_EDIT_STANDING), _ -> onEditStandingOrder.accept(order));
             edit.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
