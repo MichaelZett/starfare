@@ -26,10 +26,12 @@ class GameStatisticsFetchingTest extends AbstractIntegrationTest {
     @Autowired private EntityManager entityManager;
 
     @Test
-    void loadsPopulatedStatisticsWithTwoQueriesAndNoCollectionProduct() {
+    void loadsPopulatedStatisticsWithThreeQueriesAndNoCollectionProduct() {
         for (int i = 0; i < 4; i++) {
-            repository.save(new GameResultEntity("fetch-" + i, "Game " + i, "fetch-me", Instant.now(),
-                    Set.of("fetch-me", "fetch-other", "fetch-third"), Set.of("AI one", "AI two")));
+            var game = new GameResultEntity("fetch-" + i, "Game " + i, "fetch-me", Instant.now(),
+                    Set.of("fetch-me", "fetch-other", "fetch-third"), Set.of("AI one", "AI two"));
+            game.recordWinners(Set.of("fetch-me", "fetch-other"));
+            repository.save(game);
         }
         entityManager.flush();
         entityManager.clear();
@@ -42,10 +44,13 @@ class GameStatisticsFetchingTest extends AbstractIntegrationTest {
                 assertThat(game.aiOpponentNames()).containsExactly("AI one", "AI two");
             });
             var selects = SqlCapture.SQL.get().stream().filter(sql -> sql.startsWith("select")).toList();
-            assertThat(selects).hasSize(2).noneSatisfy(sql -> {
+            assertThat(selects).hasSize(3).noneSatisfy(sql -> {
                 assertThat(sql).contains("game_result_participants");
                 assertThat(sql).contains("game_result_ai_opponents");
             });
+            assertThat(selects).allSatisfy(sql -> assertThat(java.util.stream.Stream.of(
+                    "game_result_participants", "game_result_ai_opponents", "game_result_winners")
+                    .filter(sql::contains).count()).isLessThanOrEqualTo(1));
         } finally {
             SqlCapture.SQL.remove();
         }

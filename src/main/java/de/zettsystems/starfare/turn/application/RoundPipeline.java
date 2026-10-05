@@ -32,12 +32,14 @@ import org.springframework.stereotype.Component;
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Spring-injected collaborators are kept by reference for the bean's lifetime by design.")
 public class RoundPipeline {
+    private final VictoryEvaluation victory;
     private final CombatService combatService;
     private final ReportService reportService;
     private final FleetService fleetService;
     private final NavigationService navigation;
     private final DiplomacyService diplomacy;
     private final CoalitionCombatService coalitions;
+    private final java.util.function.Supplier<java.util.Random> attackRandom;
 
     public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService) {
         this(combatService, reportService, fleetService, new DefaultNavigationService());
@@ -55,6 +57,14 @@ public class RoundPipeline {
     public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService,
                          NavigationService navigation, DiplomacyService diplomacy,
                          CoalitionCombatService coalitions) {
+        this(combatService, reportService, fleetService, navigation, diplomacy, coalitions, ThreadLocalRandom::current);
+    }
+
+    public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService,
+                         NavigationService navigation, DiplomacyService diplomacy,
+                         CoalitionCombatService coalitions, java.util.function.Supplier<java.util.Random> attackRandom) {
+        this.victory = new VictoryEvaluation(reportService);
+        this.attackRandom = attackRandom;
         this.coalitions = coalitions;
         this.diplomacy = diplomacy;
         this.navigation = navigation;
@@ -95,7 +105,7 @@ public class RoundPipeline {
     }
 
     private void resolveArrivals(GameState state) {
-        if (state.ruleset().equals(RulesetRef.SPACEWARD)) {
+        if (state.ruleset().spaceward()) {
             coalitions.resolveArrivals(state); return;
         }
         for (Fleet fleet : List.copyOf(state.fleets())) {
@@ -131,11 +141,11 @@ public class RoundPipeline {
     }
 
     /** Orders attackers by the configured rule; each fights the remaining target garrison. */
-    private static List<Map.Entry<Integer, MergedArrival>> attackOrder(GameState state,
+    private List<Map.Entry<Integer, MergedArrival>> attackOrder(GameState state,
                                                                        Map<Integer, MergedArrival> ownerMap) {
         List<Map.Entry<Integer, MergedArrival>> attackers = new ArrayList<>(ownerMap.entrySet());
         if (state.roundRules().attackOrder() == AttackOrder.RANDOM) {
-            Collections.shuffle(attackers, ThreadLocalRandom.current());
+            Collections.shuffle(attackers, attackRandom.get());
         } else {
             attackers.sort(Comparator.comparingInt((Map.Entry<Integer, MergedArrival> e) -> e.getValue().ships)
                     .reversed()
@@ -163,7 +173,7 @@ public class RoundPipeline {
             for (FleetOrder order : orders) {
                 switch (order) {
                     case FleetOrder.Send(int ownerId, int from, int to, int ships, var beneficiary) -> {
-                        if (state.ruleset().equals(RulesetRef.SPACEWARD)) {
+                        if (state.ruleset().spaceward()) {
                             fleetService.sendFleet(state, ownerId, from, to, ships, beneficiary);
                         } else { fleetService.sendFleet(state, ownerId, from, to, ships); }
                     }
@@ -177,26 +187,7 @@ public class RoundPipeline {
         state.pendingOrders().clear();
     }
 
-    private void checkVictory(GameState state) {
-        if (state.gameOver()) {
-            return;
-        }
-        int total = state.systems().size();
-        var counts = state.systems().stream().filter(s -> s.ownerId() != null)
-                .collect(Collectors.groupingBy(StarSystem::ownerId, Collectors.counting()));
-        counts.forEach((pid, c) -> {
-            // Use integer comparison so the victory threshold is never rounded down.
-            if (c * 100 >= (long) total * state.victorySystemPercent()) {
-                state.endGame(pid);
-                reportService.appendEvent(state, pid, new TurnEvent.Victory(pid, state.victorySystemPercent()));
-                String winnerName = state.players().stream().filter(player -> player.id() == pid)
-                        .findFirst().orElseThrow().label();
-                state.players().stream().filter(player -> player.id() != pid)
-                        .forEach(player -> reportService.appendEvent(state, player.id(),
-                                new TurnEvent.Defeat(pid, winnerName)));
-            }
-        });
-    }
+    private void checkVictory(GameState state) { victory.resolve(state); }
 
     private static List<Integer> concat(List<Integer> a, List<Integer> b) {
         var out = new ArrayList<>(a);

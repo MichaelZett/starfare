@@ -29,6 +29,15 @@ public class GameResultEntity extends AbstractBaseEntity<String> {
         rulesetVersion = ref.version();
     }
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "game_result_winners", joinColumns = @JoinColumn(name = "game_id"))
+    @Column(name = "player_id", nullable = false, length = 30)
+    private Set<String> winnerPlayerIds = new LinkedHashSet<>();
+
+    public void recordWinners(Set<String> accounts) { winnerPlayerIds.addAll(accounts); }
+    public Set<String> getWinnerPlayerIds() { return Set.copyOf(winnerPlayerIds); }
+    public boolean wonBy(String account) { return account.equals(winnerPlayerId) || winnerPlayerIds.contains(account); }
+
     @Id
     @Column(name = "game_id", nullable = false, length = 36)
     private String gameId;
@@ -88,7 +97,7 @@ public class GameResultEntity extends AbstractBaseEntity<String> {
     }
 
     public boolean hasWinner() {
-        return winnerPlayerId != null || aiVictory;
+        return winnerPlayerId != null || aiVictory || !winnerPlayerIds.isEmpty();
     }
 
     public String getGameName() {

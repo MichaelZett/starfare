@@ -44,11 +44,13 @@ class DefaultGameStatisticsService implements GameStatisticsService {
             var aiOpponentNames = state.players().stream().filter(Player::ai).map(Player::label)
                     .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
             String winner = state.seatByUser().entrySet().stream()
-                    .filter(entry -> Objects.equals(entry.getValue(), state.winnerId()))
+                    .filter(entry -> state.outcome().wonBy(entry.getValue()))
                     .map(Map.Entry::getKey).findFirst().orElse(null);
-            boolean aiVictory = winner == null && state.players().stream()
-                    .anyMatch(player -> player.ai() && Objects.equals(player.id(), state.winnerId()));
-            return new FinishedGame(session.name(), winner, aiVictory, state.finishedAt(), accounts, aiOpponentNames, state.ruleset());
+            var winningAccounts = state.seatByUser().entrySet().stream().filter(entry -> state.outcome().wonBy(entry.getValue()))
+                    .map(Map.Entry::getKey).collect(java.util.stream.Collectors.toSet());
+            boolean aiVictory = state.players().stream()
+                    .anyMatch(player -> player.ai() && state.outcome().wonBy(player.id()));
+            return new FinishedGame(session.name(), state.outcome().allianceVictory() ? null : winner, aiVictory, state.finishedAt(), accounts, aiOpponentNames, state.ruleset(), winningAccounts);
         });
         if (game != null && !game.participants().isEmpty()) {
             var result = new GameResultEntity(gameId.value(), game.name(), game.winner(),
@@ -57,6 +59,7 @@ class DefaultGameStatisticsService implements GameStatisticsService {
                 result.recordAiVictory();
             }
             result.recordRuleset(game.ruleset());
+            result.recordWinners(game.winners());
             results.save(result);
         }
     }
@@ -85,9 +88,10 @@ class DefaultGameStatisticsService implements GameStatisticsService {
                 : results.findForParticipantAndVariant(account, variant);
         if (!games.isEmpty()) {
             results.findWithAiOpponentsByGameIdIn(games.stream().map(GameResultEntity::getId).toList());
+            results.findWithWinnersByGameIdIn(games.stream().map(GameResultEntity::getId).toList());
         }
         for (GameResultEntity game : games) {
-            boolean won = account.equals(game.getWinnerPlayerId());
+            boolean won = game.wonBy(account);
             if (won) {
                 wins++;
             } else if (game.hasWinner()) {
@@ -123,7 +127,7 @@ class DefaultGameStatisticsService implements GameStatisticsService {
 
     private record FinishedGame(String name, @Nullable String winner, boolean aiVictory, @Nullable Instant finishedAt,
                                 LinkedHashSet<String> participants, LinkedHashSet<String> aiOpponentNames,
-                                RulesetRef ruleset) {
+                                RulesetRef ruleset, Set<String> winners) {
     }
 
     private static final class Totals {

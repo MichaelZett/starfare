@@ -60,7 +60,7 @@ public class DefaultAutoplayRunner implements AutoplayRunner {
         state.submittedThisTurn().clear();
         events.add(new GameEvent.TurnAdvanced(gameId, state.turn()));
         if (state.gameOver()) {
-            events.add(new GameEvent.GameFinished(gameId, state.winnerId()));
+            events.add(new GameEvent.GameFinished(gameId, state.winnerId(), state.outcome().winnerIds(), state.outcome().allianceId()));
             return true;
         }
         return false;

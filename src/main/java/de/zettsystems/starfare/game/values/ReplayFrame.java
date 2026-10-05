@@ -9,7 +9,13 @@ import java.util.Map;
 
 /** Immutable map state after one resolved turn, retained for game review. */
 public record ReplayFrame(int turn, List<StarSystem> systems, List<Fleet> fleets,
+                          Map<Integer, TurnReport> reports, @Nullable Map<Integer, Industry> industries,
+        @Nullable GameOutcome outcome) {
+    public ReplayFrame(int turn, List<StarSystem> systems, List<Fleet> fleets,
                           Map<Integer, TurnReport> reports, @Nullable Map<Integer, Industry> industries) {
+        this(turn, systems, fleets, reports, industries, null);
+    }
+
     public ReplayFrame(int turn, List<StarSystem> systems, List<Fleet> fleets, Map<Integer, TurnReport> reports) {
         this(turn, systems, fleets, reports, Map.of());
     }

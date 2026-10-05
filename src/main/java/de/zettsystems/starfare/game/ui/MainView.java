@@ -590,7 +590,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         String winnerColor = view.players().stream()
                 .filter(player -> Objects.equals(view.winnerId(), player.id()))
                 .map(Player::colorHex).findFirst().orElse("");
-        outcomeDialog = GameOutcomeDialog.open(Objects.equals(view.winnerId(), currentSeat()), winnerName(view), winnerColor,
+        outcomeDialog = GameOutcomeDialog.open(view.wonBy(currentSeat()), winnerName(view), winnerColor,
                 statistics, () -> {
             game.continueAfterVictory(gameId, UserContext.currentPlayerId().orElse(""));
             resetOutcomePresentation();
@@ -770,14 +770,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private String winnerName(PlayerViewState view) {
-        Integer winnerId = view.winnerId();
-        if (winnerId == null) {
-            return "?";
-        }
-        return view.players().stream()
-                .filter(p -> p.id() == winnerId)
-                .map(Player::label)
-                .findFirst()
-                .orElse("?");
+        return OutcomeLabels.winners(view.outcome(), view.players());
     }
 }

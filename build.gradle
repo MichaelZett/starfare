@@ -170,6 +170,18 @@ test {
     finalizedBy jacocoTestReport
 }
 
+// Opt-in, headless strategy experiments. Uses test tooling only; never starts Spring or a browser.
+tasks.register('strategyBenchmark', JavaExec) {
+    group = 'verification'
+    description = 'Runs reproducible SectorForces and Spaceward strategy experiments.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'de.zettsystems.starfare.simulation.StrategyBenchmark'
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+    maxHeapSize = '768m'
+    args providers.gradleProperty('strategyArgs').orElse('').map { it.tokenize() }.get()
+}
+
 bootRun {
     jvmArgs '-Dspring.profiles.active=local'
 }

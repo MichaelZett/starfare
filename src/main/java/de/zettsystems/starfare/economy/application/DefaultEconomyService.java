@@ -16,7 +16,7 @@ import java.util.Objects;
 public class DefaultEconomyService implements EconomyService {
     @Override
     public boolean allocateExpansion(GameState state, int playerId, int systemId, int points) {
-        if (!RulesetRef.SPACEWARD.equals(state.ruleset()) || points < 0) { return false; }
+        if (!state.ruleset().spaceward() || points < 0) { return false; }
         StarSystem system = state.getSystem(systemId);
         Industry industry = state.industries().get(systemId);
         if (system == null || system.neutral() || !Objects.equals(system.ownerId(), playerId)
@@ -28,7 +28,7 @@ public class DefaultEconomyService implements EconomyService {
 
     @Override
     public List<IndustrialProduction> produce(GameState state, Map<Integer, Integer> routedShips) {
-        if (!RulesetRef.SPACEWARD.equals(state.ruleset())) {
+        if (!state.ruleset().spaceward()) {
             throw new IllegalArgumentException("Industrial production requires Spaceward rules");
         }
         List<IndustrialProduction> results = new ArrayList<>();

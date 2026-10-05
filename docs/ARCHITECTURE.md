@@ -27,7 +27,9 @@ simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md
 application release. SectorForces uses `classic / 1.0.0`; the display name does
 not change its stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
-Spaceward (`spaceward / 1.0.0`) has internal economy, navigation, diplomacy and coalition combat implementations
+Spaceward supports stored version `spaceward / 1.0.0`; new internal games use
+`spaceward / 1.1.0` with configurable diplomacy and group victory. Both versions
+share the internal economy, navigation, diplomacy and coalition combat implementations
 but remains unavailable for new games until its combined acceptance. Orion has
 no implementation or selectable entry.
 
@@ -53,6 +55,38 @@ Flyway V2_9 adds variant and version columns to `game_results` with legacy
 SectorForces defaults. Statistics filter by variant before aggregating outcomes
 and opponents; participant and AI collections still use separate fetches.
 Rule references remain in the compact result after detailed sessions are removed.
+
+## Configurable victory and diplomacy
+
+`VictoryRules` groups the individual system share, alliance permission, group
+victory permission and separate group system share. `GameSetup` normalizes these
+at creation; `GameState` rejects changes after start. Alliance permission gates
+contracts, allied station access and diplomacy views. Disabling it forces group
+victory off. SectorForces remains without diplomacy; Spaceward 1.0.0 permits
+alliances and individual victory only. Missing legacy snapshot fields derive
+these defaults from the stored reference, without migrating its version.
+
+`AllianceSpacewardTurnEngine` explicitly registers 1.1.0. `VictoryEvaluation`
+checks individual ownership first, then effective groups of at least two
+members. Neutral systems remain in the denominator; integer comparisons avoid
+rounding down. The strongest qualifying group wins, then the lowest group ID.
+Every effective member wins, including zero-system members. Departures become
+effective through the existing round pipeline before evaluation.
+
+`GameOutcome` freezes all winning player IDs and the optional group ID. Legacy
+`winnerId` remains populated for individual wins and is null for group wins.
+Snapshots, replay frames, completion events and player views carry the full
+outcome; victory/defeat reports preserve group membership at resolution time.
+Old constructors and nullable JSON fields retain legacy read compatibility.
+Account statistics use Flyway V2_11's `game_result_winners`, backfilled from
+legacy individual winners. Participants, AI names and winners are fetched with
+three separate collection queries, avoiding a Cartesian product.
+
+The internal browser acceptance route exists only in e2e sources. It previews
+the wizard's Spaceward choices without enabling public creation. The muted
+`alliance_victory.feature` covers option dependencies, both winners, reload and
+archive. The strategy harness can pair 1.1.0 scenarios with group victory on/off;
+each member receives its own win in the report.
 
 ## Spaceward navigation (M4)
 
@@ -287,8 +321,9 @@ Fixed sequence, fully inside one `writeState`:
    order is a game rule (`RoundRules.attackOrder`): random (default) or
    strongest first.
 6. Victory check (>= the configured system share, neutrals included;
-   default `GameConfig.VICTORY_SYSTEM_PERCENT`, 70%); it sends `Victory` to the winner and
-   `Defeat(winnerId, winnerName)` to every other participant.
+   default `GameConfig.VICTORY_SYSTEM_PERCENT`, 70%); optional group victory follows
+   individual victory. It sends `Victory` to every winner and `Defeat` with the
+   winning members to every other participant.
 7. `state.nextTurn()`.
 
 If `state.gameOver()` is true, `advanceTurn` is a no-op.
@@ -357,8 +392,8 @@ a game without a winner. Such victories count as losses for human participants.
 Older results default to false because a missing account alone cannot establish
 whether the original game ended with an AI victory or no winner.
 
-Only the recorded winner may resume a completed game. `resumeForFullConquest`
-raises the victory threshold to 100%, clears the outcome and submissions, and
+Any recorded winning member may resume a completed game once. `resumeForFullConquest`
+raises both victory thresholds to 100%, clears the outcome and submissions, and
 restarts the round and straggler clocks without advancing the turn.
 `GameContinued` refreshes every subscribed view and clears its outcome
 acknowledgement and any open outcome dialog. A subsequent game end therefore
@@ -674,3 +709,45 @@ acknowledgements and final-outcome gating apply to the new battle subtype.
 The independent frontend animation reads recorded results, reveals every side
 concurrently and preserves the personal sound preference. SharedBrowser mutes
 all browser acceptance tests. Spaceward creation remains disabled until M7.
+
+## Reproducible strategy experiments
+
+`src/test/java/de/zettsystems/starfare/simulation` is executable test tooling,
+excluded from the application artifact. Gradle's opt-in `strategyBenchmark`
+JavaExec task uses the test runtime, but starts neither Spring nor JUnit.
+`Scenario` creates an isolated in-memory game from explicit map and combat seeds.
+`SimulationEngine` obtains all plans before applying any command, validates them
+through FleetService and EconomyService, then invokes the normal ruleset engine
+with its automatic AI planning replaced by a no-op. Application defaults keep
+their existing AI and ThreadLocalRandom sources.
+
+`Observation` exposes only PlayerViewBuilder's filtered state, diplomacy membership
+and legal route durations. Alternative policies never receive GameState. The
+baseline adapter invokes the existing AI on a private copy with only the current
+seat marked as AI and no pending orders. Classic baseline only reads exact own
+forces and distances to non-owned systems; Spaceward baseline already consumes
+filtered views. Information-boundary tests perturb hidden forces and enemy orders.
+Only the trusted simulator and result recorder inspect complete state.
+
+CombatService accepts a DoubleSupplier, coalition combat an IntToDoubleFunction,
+and RoundPipeline a supplier for attack-order randomness. The simulator resets
+separate combat and attack-order generators from the absolute turn and combat
+seed. This makes continuation independent of how much entropy previous rounds
+consumed, without changing any damage formula or default rule. Checkpoint forks
+round-trip GameStateSnapshot to preserve fleet counters and all navigation state.
+No wall-clock field participates in the gameplay fingerprint. Diplomacy sets and
+maps are sorted before hashing. Route results are cached per simulation and
+player, keyed by geometry, rules, range, ownership and station rights; changes
+to those inputs invalidate the cache. Routes.reachableRounds batches shortest
+travel durations over one shared edge table; normal route selection and fleet
+validation remain unchanged. Classic observations use direct travel durations.
+UI replay frames are released after metrics and the fingerprint have been recorded
+to bound per-match engine history; output records grow with the requested batch.
+
+The output keeps paired seat permutations and repeated combat seeds grouped by
+map for descriptive bootstrap intervals. ROUND_LIMIT is censored, never relabelled
+as a draw or a win based on territory. Decision deltas compare matching rounds;
+changed future actions are legitimate consequences of the intervention. Invalid
+policy orders abort the experiment rather than silently becoming losses. The
+harness tests determinism, conservation, non-mutating planning, checkpoint
+continuation, information boundaries and every command-line mode without a database.

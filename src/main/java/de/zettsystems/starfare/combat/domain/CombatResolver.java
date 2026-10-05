@@ -15,8 +15,14 @@ public final class CombatResolver {
     }
 
     public static Result resolve(int attacking, int defending, int randomnessPercent) {
+        return resolve(attacking, defending, randomnessPercent, () -> ThreadLocalRandom.current().nextDouble());
+    }
+
+    /** Explicit entropy source for reproducible simulations using the same combat rules. */
+    public static Result resolve(int attacking, int defending, int randomnessPercent,
+                                 java.util.function.DoubleSupplier rolls) {
         return resolve(attacking, defending, randomnessPercent,
-                ThreadLocalRandom.current().nextDouble(), ThreadLocalRandom.current().nextDouble());
+                rolls.getAsDouble(), rolls.getAsDouble());
     }
 
     static Result resolve(int attacking, int defending, int randomnessPercent,

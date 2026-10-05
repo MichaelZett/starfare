@@ -18,9 +18,16 @@ import java.util.Objects;
         justification = "Spring-injected ReportService is kept by reference for the bean's lifetime by design.")
 public class DefaultCombatService implements CombatService {
     private final ReportService reportService;
+    private final java.util.function.DoubleSupplier rolls;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public DefaultCombatService(ReportService reportService) {
+        this(reportService, () -> java.util.concurrent.ThreadLocalRandom.current().nextDouble());
+    }
+
+    public DefaultCombatService(ReportService reportService, java.util.function.DoubleSupplier rolls) {
         this.reportService = reportService;
+        this.rolls = rolls;
     }
 
     @Override
@@ -44,7 +51,7 @@ public class DefaultCombatService implements CombatService {
         String attackerName = playerName(state, attackerId);
         String defenderName = oldOwner == null ? "" : playerName(state, oldOwner);
 
-        var res = CombatResolver.resolve(ships, defendersBefore, state.combatRandomnessPercent());
+        var res = CombatResolver.resolve(ships, defendersBefore, state.combatRandomnessPercent(), rolls);
         if (res.attackerWon()) {
             state.updateSystem(target.id(), current -> current.captureBy(attackerId, res.attackersLeft()));
 

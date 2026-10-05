@@ -111,8 +111,7 @@ public class ArchiveView extends VerticalLayout {
     }
 
     private String winnerName(GameSummary summary) {
-        Player winner = winnerPlayer(summary);
-        return winner == null ? I18n.t(UiTexts.ARCHIVE_NO_WINNER) : winner.label();
+        return OutcomeLabels.winners(summary.outcome(), summary.players());
     }
 
     private @Nullable Player winnerPlayer(GameSummary summary) {
@@ -127,11 +126,10 @@ public class ArchiveView extends VerticalLayout {
         if (seat == null) {
             return new Span(I18n.t(UiTexts.ARCHIVE_NOT_A_PLAYER));
         }
-        Integer winner = summary.outcome().winnerId();
         String key;
-        if (winner == null) {
+        if (!summary.outcome().hasWinner()) {
             key = UiTexts.ARCHIVE_RESULT_NO_WINNER;
-        } else if (winner.equals(seat)) {
+        } else if (summary.outcome().wonBy(seat)) {
             key = UiTexts.ARCHIVE_RESULT_VICTORY;
         } else {
             key = UiTexts.ARCHIVE_RESULT_DEFEAT;
@@ -177,10 +175,10 @@ public class ArchiveView extends VerticalLayout {
         Integer seat = summary.seatByPlayer().get(account());
         return switch (result) {
             case ALL -> true;
-            case VICTORY -> seat != null && Objects.equals(summary.outcome().winnerId(), seat);
-            case DEFEAT -> seat != null && summary.outcome().winnerId() != null
-                    && !Objects.equals(summary.outcome().winnerId(), seat);
-            case NO_WINNER -> seat != null && summary.outcome().winnerId() == null;
+            case VICTORY -> seat != null && summary.outcome().wonBy(seat);
+            case DEFEAT -> seat != null && summary.outcome().hasWinner()
+                    && !summary.outcome().wonBy(seat);
+            case NO_WINNER -> seat != null && !summary.outcome().hasWinner();
         };
     }
 

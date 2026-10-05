@@ -635,4 +635,10 @@ public final class UiTexts {
     public static final String CONQUEST_HINT = "conquest.hint";
     public static final String CONQUEST_ORDER = "conquest.order";
     public static final String CONQUEST_SELF = "conquest.self";
+    public static final String ALLIANCES_ALLOWED = "victory.alliancesAllowed";
+    public static final String ALLIANCE_VICTORY_ALLOWED = "victory.allianceVictoryAllowed";
+    public static final String ALLIANCE_VICTORY_PERCENT = "victory.alliancePercent";
+    public static final String ALLIANCE_WINNERS = "victory.allianceWinners";
+    public static final String ROUND_EVENT_ALLIANCE_VICTORY = "round.event.allianceVictory";
+    public static final String VICTORY_RULES_SUMMARY = "victory.rulesSummary";
 }

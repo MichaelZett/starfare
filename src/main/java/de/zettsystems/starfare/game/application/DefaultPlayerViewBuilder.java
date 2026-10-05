@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 @Component
-class DefaultPlayerViewBuilder implements PlayerViewBuilder {
+public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
 
     /** Reiserunden, die eigene Systeme und Flotten an Sensorreichweite abdecken. */
     private static final int SENSOR_RANGE_ROUNDS = 2;
@@ -67,7 +67,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var report = state.reports().getOrDefault(playerId, new TurnReport(turn - 1, List.of()));
         return new PlayerViewState(turn, players, vis, ownFleets, report, state.gameOver(), state.winnerId(),
                 plannedOrders, standing, empireStats(state, playerId, ownFleets), waitingFleetIds(state, orders),
-                state.battlePresentationEnabled(), roundStatus(state));
+                state.battlePresentationEnabled(), roundStatus(state), state.outcome());
     }
 
     @Override
@@ -75,7 +75,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         int turn = state.turn();
         return new PlayerViewState(turn, List.copyOf(state.players()), revealedSystems(state),
                 List.copyOf(state.fleets()), null, state.gameOver(), state.winnerId(),
-                List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled(), roundStatus(state));
+                List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled(), roundStatus(state), state.outcome());
     }
 
     @Override
@@ -92,7 +92,7 @@ class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         TurnReport report = frame.reports().getOrDefault(playerId, new TurnReport(frame.turn(), List.of()));
         return new PlayerViewState(frame.turn(), List.copyOf(state.players()), systems, ownFleets, report,
                 true, state.winnerId(), List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled(),
-                RoundStatus.NONE);
+                RoundStatus.NONE, frame.outcome() == null ? state.outcome() : frame.outcome());
     }
 
     /** Alle Systeme ohne Nebel: fuer Zuschauer und fuer die entschiedene Partie. */

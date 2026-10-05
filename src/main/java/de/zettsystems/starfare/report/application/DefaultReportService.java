@@ -57,8 +57,10 @@ public class DefaultReportService implements ReportService {
             case TurnEvent.DefenseHeld d ->
                     "Gehalten: %s. %d Verteidiger verbleiben.".formatted(d.systemName(), d.defendersLeft());
             case TurnEvent.CoalitionBattle battle -> "Schlacht bei %s: %d Seiten.".formatted(battle.systemName(), battle.sides().size());
-            case TurnEvent.Victory victory -> "Sieg: mindestens %d%% Systeme unter Kontrolle."
-                    .formatted(victory.systemPercent());
+            case TurnEvent.Victory victory -> victory.allianceId() == null
+                    ? "Sieg: mindestens %d%% Systeme unter Kontrolle.".formatted(victory.systemPercent())
+                    : "Bündnissieg %d: %s, mindestens %d%% Systeme unter Kontrolle."
+                            .formatted(victory.allianceId(), String.join(", ", victory.winnerNames()), victory.systemPercent());
             case TurnEvent.Defeat defeat -> "Niederlage: %s gewinnt die Partie.".formatted(defeat.winnerName());
         };
     }

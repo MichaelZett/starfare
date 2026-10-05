@@ -26,8 +26,28 @@ public record GameSummary(
         Map<String, Integer> invitedSeats,
         GameVisibility visibility,
         GameOutcome outcome,
+        RulesetRef ruleset,
+        @Nullable VictoryRules victoryRules) {
+    public GameSummary(
+        GameId gameId,
+        String name,
+        @Nullable String hostPlayerId,
+        int turn,
+        boolean started,
+        boolean gameOver,
+        boolean observersAllowed,
+        boolean reentryAllowed,
+        List<Player> players,
+        Set<Integer> joinedHumanSeats,
+        Map<String, Integer> seatByPlayer,
+        Map<String, Integer> invitedSeats,
+        GameVisibility visibility,
+        GameOutcome outcome,
         RulesetRef ruleset
 ) {
+        this(gameId, name, hostPlayerId, turn, started, gameOver, observersAllowed, reentryAllowed, players, joinedHumanSeats, seatByPlayer, invitedSeats, visibility, outcome, ruleset, null);
+    }
+
     public GameSummary(GameId gameId,
             String name,
             @Nullable String hostPlayerId,
@@ -46,6 +66,10 @@ public record GameSummary(
                 joinedHumanSeats, seatByPlayer, invitedSeats, visibility, outcome, RulesetRef.SECTOR_FORCES);
     }
 
+
+    @Override public VictoryRules victoryRules() {
+        return victoryRules == null ? VictoryRules.defaults(ruleset, GameConfig.VICTORY_SYSTEM_PERCENT) : victoryRules;
+    }
 
     public boolean belongsTo(String account) {
         return account.equals(hostPlayerId) || seatByPlayer.containsKey(account);

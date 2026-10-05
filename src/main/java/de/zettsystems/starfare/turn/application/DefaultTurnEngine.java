@@ -20,9 +20,14 @@ public class DefaultTurnEngine implements RulesetRoundImplementation {
     private final FleetService fleets;
     private final ReportService reportService;
     private final RoundPipeline pipeline;
+    @org.springframework.beans.factory.annotation.Autowired
     public DefaultTurnEngine(CombatService combat, AiService ai, ReportService reports, FleetService fleets) {
+        this(new RoundPipeline(combat, reports, fleets), ai, reports, fleets);
+    }
+
+    public DefaultTurnEngine(RoundPipeline pipeline, AiService ai, ReportService reports, FleetService fleets) {
         this.ai = ai; this.fleets = fleets; this.reportService = reports;
-        this.pipeline = new RoundPipeline(combat, reports, fleets);
+        this.pipeline = pipeline;
     }
     @Override public RulesetRef ruleset() { return RulesetRef.SECTOR_FORCES; }
     @Override public void advanceTurn(GameState state) {

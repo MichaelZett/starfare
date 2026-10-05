@@ -38,6 +38,8 @@ final class RulesetSelector extends VerticalLayout {
         }
     }
 
+    void onSelection(Runnable changed) { variants.addValueChangeListener(_ -> changed.run()); }
+
     RulesetRef selectedRuleset() {
         RulesetDefinition selected = variants.getValue();
         if (selected == null || !selected.creationEnabled()) {
