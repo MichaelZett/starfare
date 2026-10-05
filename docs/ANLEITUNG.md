@@ -19,9 +19,13 @@ der [README](../README.md).
 ## Partie erstellen und beitreten
 
 Wähle zuerst die **Spielvariante**. **SectorForces** enthält die bisherigen
-Classic-Regeln mit Regelversion **1.0.0**; die folgenden Spielregeln beschreiben
-diese Variante. **Spaceward** ist nach Spaceward Ho! geplant und wird als noch
-nicht spielbar angezeigt. Seine Auswahl ist gesperrt.
+Classic-Regeln mit Regelversion **1.0.0** und ist vorausgewählt; die folgenden
+Spielregeln beschreiben diese Variante. **Spaceward** (Regelversion **1.1.0**)
+ist nach Spaceward Ho! gestaltet und ergänzt Industrieausbau, begrenzte Reichweite,
+Bündnisse und gemeinsame Schlachten. Die Abschnitte zu Spaceward weiter unten
+beschreiben, worin es von SectorForces abweicht. Weil dort alle feindlichen Seiten
+gleichzeitig kämpfen, blendet der Dialog bei Spaceward die Einstellung
+**Reihenfolge mehrerer Angreifer** aus.
 
 Variante und Regelversion bleiben für die Partie fest. Die Anwendungsversion
 ist davon unabhängig. Alte Partien werden als SectorForces angezeigt und behalten
@@ -208,10 +212,9 @@ Zuschaueroption. Die **Statistik** zeigt deine Ergebnisse und Gegnerbilanzen.
 Mit dem Filter **Spielvariante** beschränkst du Summen, Gegnerbilanzen und
 Partienliste auf eine Variante. Ein leerer Filter zeigt alle Varianten.
 
-## Geplante Spaceward-Wirtschaft
+## Spaceward-Wirtschaft
 
-Spaceward bleibt bis zur gemeinsamen Abnahme gesperrt. Die erste interne Fassung
-verteilt die Kapazität eines Systems zwischen Schiffbau und Industrieausbau.
+Spaceward verteilt die Kapazität eines Systems zwischen Schiffbau und Industrieausbau.
 Der Ausbau sammelt Punkte; eine zusätzliche Kapazitätseinheit kostet das Doppelte
 der aktuellen Kapazität. Das Maximum ist 50. Neue Kapazität wirkt ab der folgenden
 Runde. Fortschritt bleibt bei Umschaltung und Eroberung erhalten; ein Eroberer
@@ -223,10 +226,9 @@ reicht der Schiffbau nicht, können sie auf Garnison oberhalb der Reserve zugrei
 Engpässe werden angezeigt. Rohstoffe, Forschung und Schiffstypen folgen später.
 SectorForces verwendet weiterhin seine bisherigen Regeln.
 
-## Geplante Spaceward-Navigation
+## Spaceward-Navigation
 
-Auch die Navigation ist derzeit intern umgesetzt und erst nach der gemeinsamen
-Abnahme verfügbar. Jede Partie erhält eine feste Reichweite je Reiseabschnitt.
+Jede Spaceward-Partie erhält eine feste Reichweite je Reiseabschnitt.
 Sie wird aus der Galaxie berechnet, damit alle Systeme schrittweise erreichbar
 bleiben. Reisezeit und Sensorreichweite sind davon unabhängig.
 
@@ -292,14 +294,14 @@ Bei unvollständiger Sicht und offenen Schlachten bleibt sie verborgen. Bestehen
 Partien behalten ihre Spielstände. Wissenschaftliche Grundlagen und bewusst
 vereinfachte Darstellung stehen in [System illustrations](SYSTEM-ILLUSTRATIONS.md).
 
-## Interne Spaceward-Siegoptionen
+## Spaceward-Siegoptionen
 
 Spaceward 1.1.0 ergänzt vor dem Start zwei Partieeigenschaften:
 **Bündnisse erlaubt** und **Bündnissiege erlaubt**. Die Einzelschwelle und
 die Bündnisschwelle sind getrennt einstellbar (10–100 %, jeweils Vorgabe 70 %).
 Standardmäßig sind Bündnisse erlaubt, Bündnissiege ausgeschaltet. Ohne
 erlaubte Bündnisse ist auch der Bündnissieg ausgeschaltet. SectorForces bietet
-keine Bündnisse. Die Spaceward-Auswahl bleibt bis zur Variantenabnahme gesperrt.
+keine Bündnisse.
 
 Einzelsieg wird zuerst geprüft. Danach kann eine wirksame Gruppe mit mindestens
 zwei Mitgliedern gemeinsam gewinnen. Gezählt werden ihre Systeme zusammen;
@@ -319,10 +321,9 @@ erhalten. Einstellungen bleiben in Vorlagen und Revanchen erhalten. Bestehende
 Partien bleiben bei ihrer Regelversion; Spaceward 1.0.0 behält ausschließlich
 den Einzelsieg und erlaubte Bündnisse.
 
-## Geplante Spaceward-Bündnisse
+## Spaceward-Bündnisse
 
-Die Bündnisbedienung ist intern umgesetzt; die Variante bleibt bis zur
-gemeinsamen Abnahme gesperrt. Ein Imperium gehört höchstens einer Gruppe an.
+Ein Imperium gehört höchstens einer Gruppe an.
 Alle Mitglieder sind miteinander verbündet, neutrale Systeme gehören keiner
 Gruppe an. Eine Gründung braucht beide Partner; eine Aufnahme braucht die
 Zustimmung aller bestehenden Mitglieder. Ein Imperium beantragt seinen eigenen
@@ -339,8 +340,7 @@ gesperrt, Verträge bleiben lesbar.
 
 Verbündete Systeme können als Zwischenstationen dienen. Ankommende Unterstützung
 bleibt eine eigene Flotte und übernimmt weder Garnison noch System des Partners.
-Die gemeinsame Kampfauswertung ist intern umgesetzt; die gemeinsame Abnahme
-bleibt Voraussetzung für die spätere Freigabe. Ein Vertrag verrät keine zusätzlichen militärischen
+Verbündete kämpfen gemeinsam (siehe Spaceward-Kampf). Ein Vertrag verrät keine zusätzlichen militärischen
 Werte und verändert die individuelle Siegschwelle nicht.
 
 Nach wirksamem Austritt treten fremd stationierte Schiffe automatisch die
@@ -352,10 +352,10 @@ Wartebefehle geparkt oder in einer fremden Garnison aufgelöst werden.
 Die KI stimmt Anfragen zu, sofern sie nicht bereits selbst einen Austritt
 angekündigt hat; sie gründet keine Bündnisse von sich aus.
 
-## Geplanter Spaceward-Kampf
+## Spaceward-Kampf
 
-Die gemeinsame Kampfauswertung ist intern umgesetzt. Spaceward bleibt bis zur
-Variantenabnahme gesperrt; SectorForces verwendet weiter seinen bisherigen Kampf.
+Spaceward wertet Kämpfe für ganze Bündnisgruppen gemeinsam aus; SectorForces
+verwendet weiter seinen bisherigen Kampf.
 
 An einem System kämpfen Besitzer, eintreffende Verbündete und dort stationierte
 Unterstützung als gemeinsame Seite. Andere Bündnisgruppen sowie vertragslose

@@ -9,6 +9,8 @@ import de.zettsystems.starfare.game.values.RulesetDefinition;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.i18n.I18n;
 
+import java.util.function.Consumer;
+
 /** Offers released games and explains planned variants before game-specific settings. */
 final class RulesetSelector extends VerticalLayout {
     private final RadioButtonGroup<RulesetDefinition> variants = new RadioButtonGroup<>();
@@ -38,7 +40,15 @@ final class RulesetSelector extends VerticalLayout {
         }
     }
 
-    void onSelection(Runnable changed) { variants.addValueChangeListener(_ -> changed.run()); }
+    /** Notifies about the current choice immediately and after every change. */
+    void onRulesetChange(Consumer<RulesetRef> listener) {
+        variants.addValueChangeListener(event -> {
+            if (event.getValue() != null) {
+                listener.accept(event.getValue().defaultRef());
+            }
+        });
+        listener.accept(variants.getValue().defaultRef());
+    }
 
     RulesetRef selectedRuleset() {
         RulesetDefinition selected = variants.getValue();

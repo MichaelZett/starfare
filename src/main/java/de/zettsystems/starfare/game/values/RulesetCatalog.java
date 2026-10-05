@@ -22,7 +22,7 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
                 new RulesetDefinition(RulesetRef.SECTOR_FORCES, RulesetDefinition.SECTOR_FORCES_NAME,
                         RulesetDefinition.SECTOR_FORCES_DESCRIPTION, Set.of(RulesetRef.SECTOR_FORCES.version()), true),
                 new RulesetDefinition(RulesetRef.SPACEWARD_ALLIANCE, RulesetDefinition.SPACEWARD_NAME,
-                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.SPACEWARD.version(), RulesetRef.SPACEWARD_ALLIANCE.version()), false)));
+                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.SPACEWARD.version(), RulesetRef.SPACEWARD_ALLIANCE.version()), true)));
     }
 
     public Optional<RulesetDefinition> find(String variant) {

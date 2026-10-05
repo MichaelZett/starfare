@@ -18,4 +18,9 @@ public record RulesetRef(String variant, String version) {
             throw new IllegalArgumentException("Ruleset identity must be complete");
         }
     }
+
+    /** Spaceward resolves all hostile sides simultaneously; the configured attack order does not apply. */
+    public boolean resolvesCoalitionBattles() {
+        return SPACEWARD.equals(this) || SPACEWARD_ALLIANCE.equals(this);
+    }
 }
