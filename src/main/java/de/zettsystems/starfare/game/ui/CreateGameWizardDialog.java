@@ -43,12 +43,19 @@ final class CreateGameWizardDialog {
     }
 
     static void open(GameService game, PlayerDirectory players, Runnable onCreated) {
+        open(game, players, onCreated, game.rulesets());
+    }
+
+    static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetCatalog catalog) {
         Dialog dialog = new Dialog();
         dialog.addClassName("create-game-dialog");
         dialog.setHeaderTitle(I18n.t(UiTexts.LOBBY_WIZARD_TITLE));
         dialog.setWidth("min(1380px, 96vw)");
 
-        RulesetSelector rulesets = new RulesetSelector(game.rulesets());
+        RulesetSelector rulesets = new RulesetSelector(catalog);
+        VictorySettings victorySettings = new VictorySettings();
+        rulesets.onSelection(() -> victorySettings.select(rulesets.selectedRuleset()));
+        victorySettings.select(rulesets.selectedRuleset());
         IntegerField systems = intField(I18n.t(UiTexts.LOBBY_FIELD_SYSTEMS),
                 GameConfig.MIN_SYSTEM_COUNT, GameConfig.MAX_SYSTEM_COUNT, GameConfig.DEFAULT_SYSTEM_COUNT);
         IntegerField humans = intField(I18n.t(UiTexts.LOBBY_FIELD_HUMANS),
@@ -120,7 +127,7 @@ final class CreateGameWizardDialog {
         FormLayout setupGrid = grid(3, "13em", gameName, systems, humans, ai, galaxyLayout, empireName,
                 joinAfterCreate);
         FormLayout settingsGrid = grid(3, "13em", startGarrison, combatRandomnessField,
-                observersAllowed, reentryAllowed, battlePresentation, victoryPercent);
+                observersAllowed, reentryAllowed, battlePresentation, victoryPercent, victorySettings);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
 
         ComboBox<Duration> roundLimit = durationCombo(I18n.t(UiTexts.LOBBY_FIELD_ROUND_LIMIT),
@@ -215,7 +222,7 @@ final class CreateGameWizardDialog {
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
                 observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout,
-                combatRandomness, roundLimit, stragglerLimit, attackOrder, victoryPercent, rulesets);
+                combatRandomness, roundLimit, stragglerLimit, attackOrder, victoryPercent, rulesets, victorySettings);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_REVIEW));
         createButton.set(create);
         WizardActionContext actionContext = new WizardActionContext(game, onCreated, hostName, gameName, empireName,
@@ -329,7 +336,7 @@ final class CreateGameWizardDialog {
                               ComboBox<GalaxyLayout> galaxyLayout,
                               Input combatRandomness,
                               ComboBox<Duration> roundLimit, ComboBox<Duration> stragglerLimit,
-                              ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent, RulesetSelector rulesets) {
+                              ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent, RulesetSelector rulesets, VictorySettings victorySettings) {
     }
 
     private static GameSetup buildSetup(FormInputs in) {
@@ -356,7 +363,8 @@ final class CreateGameWizardDialog {
                 sliderValue(in.combatRandomness(), GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT),
                 new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), in.attackOrder().getValue()),
                 valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)
-        ).normalized().selectRuleset(in.rulesets().selectedRuleset());
+        ).normalized().selectRuleset(in.rulesets().selectedRuleset())
+                .chooseVictoryRules(in.victorySettings().chosen(valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)));
     }
 
     private static void applyNormalizedColors(List<ComboBox<ColorOption>> inputs, GameSetup setup) {
@@ -375,6 +383,10 @@ final class CreateGameWizardDialog {
         summary.addClassName("wizard-summary-grid");
         summary.add(new Span(RulesetLabels.label(catalog, setup.ruleset())),
                 summaryLine(UiTexts.LOBBY_SUMMARY_NAME, gameName),
+                summaryLine(UiTexts.VICTORY_RULES_SUMMARY, setup.victorySystemPercent(),
+                        I18n.t(setup.victoryRules().alliancesAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED),
+                        I18n.t(setup.victoryRules().allianceVictoryAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED),
+                        setup.victoryRules().allianceSystemPercent()),
                 summaryLine(UiTexts.LOBBY_SUMMARY_VISIBILITY, I18n.t(UiTexts.GAME_PRIVATE)),
                 summaryLine(UiTexts.LOBBY_SUMMARY_SYSTEMS, setup.systemCount()),
                 summaryLine(UiTexts.LOBBY_SUMMARY_PLAYERS, setup.humanPlayers(), setup.aiPlayers()),

@@ -31,7 +31,9 @@ public class DefaultCoalitionCombatService implements CoalitionCombatService {
     public DefaultCoalitionCombatService(ReportService reports, NavigationService navigation) {
         this(reports, navigation, _ -> ThreadLocalRandom.current().nextDouble());
     }
-    DefaultCoalitionCombatService(ReportService reports, NavigationService navigation, IntToDoubleFunction roll) {
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "EI_EXPOSE_REP2",
+            justification = "The supplied entropy source must retain its state across draws, including seeded simulations.")
+    public DefaultCoalitionCombatService(ReportService reports, NavigationService navigation, IntToDoubleFunction roll) {
         this.reports = reports; this.navigation = navigation; this.roll = roll;
     }
 

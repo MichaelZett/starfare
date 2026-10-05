@@ -224,7 +224,8 @@ public class ReviewMapSteps {
         broadcaster.publish(new de.zettsystems.starfare.game.application.GameEvent.PlayerSubmitted(first.id(), 99));
         assertThat(filter.getDomProperty("value")).isEqualTo("Alpha");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ -> {
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .ignoring(org.openqa.selenium.ElementNotInteractableException.class).until(_ -> {
                     browser.awaitCss(".fleet-travel-card").sendKeys(Keys.SPACE);
                     return true;
                 });

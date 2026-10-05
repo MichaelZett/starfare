@@ -309,6 +309,12 @@ public class LobbyView extends VerticalLayout {
         Div container = new Div();
         container.addClassName("lobby-game-name");
         Span name = new Span(row.name());
+        var victory = row.summary().victoryRules();
+        name.getElement().setAttribute(de.zettsystems.starfare.style.HtmlAttributes.TITLE,
+                I18n.t(UiTexts.VICTORY_RULES_SUMMARY, victory.individualSystemPercent(),
+                        I18n.t(victory.alliancesAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED),
+                        I18n.t(victory.allianceVictoryAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED),
+                        victory.allianceSystemPercent()));
         name.addClassName("lobby-game-name-text");
         container.add(name, new Span(RulesetLabels.label(game.rulesets(), row.summary().ruleset())),
                 new Span(I18n.t(row.visibilityKey())));

@@ -248,7 +248,10 @@ public sealed interface TurnEvent {
         }
     }
 
-    record Victory(int winnerId, int systemPercent) implements TurnEvent {
+    record Victory(int winnerId, int systemPercent, @Nullable Integer allianceId,
+                   @Nullable List<String> winnerNames) implements TurnEvent {
+        public Victory { winnerNames = winnerNames == null ? List.of() : List.copyOf(winnerNames); }
+        public Victory(int winnerId, int systemPercent) { this(winnerId, systemPercent, null, List.of()); }
         public Victory(int winnerId) {
             this(winnerId, GameConfig.VICTORY_SYSTEM_PERCENT);
         }
@@ -256,11 +259,18 @@ public sealed interface TurnEvent {
         /** Historical reports without a threshold retain the original 70 percent rule. */
         @JsonCreator
         public static Victory of(@JsonProperty("winnerId") int winnerId,
-                                 @JsonProperty("systemPercent") @Nullable Integer systemPercent) {
-            return new Victory(winnerId, systemPercent != null ? systemPercent : GameConfig.VICTORY_SYSTEM_PERCENT);
+                                 @JsonProperty("systemPercent") @Nullable Integer systemPercent,
+                                 @JsonProperty("allianceId") @Nullable Integer allianceId,
+                                 @JsonProperty("winnerNames") @Nullable List<String> winnerNames) {
+            return new Victory(winnerId, systemPercent != null ? systemPercent : GameConfig.VICTORY_SYSTEM_PERCENT, allianceId, winnerNames);
         }
     }
 
     /** End-of-game notice sent to every player other than the winner. */
-    record Defeat(int winnerId, String winnerName) implements TurnEvent {}
+    record Defeat(int winnerId, String winnerName, @Nullable List<Integer> winnerIds,
+                  @Nullable Integer allianceId) implements TurnEvent {
+        public Defeat(int winnerId, String winnerName) { this(winnerId, winnerName, List.of(winnerId), null); }
+        public Defeat { winnerIds = winnerIds == null ? List.of(winnerId) : List.copyOf(winnerIds); }
+        @Override public List<Integer> winnerIds() { return java.util.Objects.requireNonNull(winnerIds); }
+    }
 }

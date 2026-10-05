@@ -915,7 +915,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, held.systemName())
                     : I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
                     held.systemName(), held.attacking(), held.defendersLeft());
-            case TurnEvent.Victory victory -> I18n.t(UiTexts.ROUND_EVENT_VICTORY, victory.systemPercent());
+            case TurnEvent.Victory victory -> victory.allianceId() == null
+                    ? I18n.t(UiTexts.ROUND_EVENT_VICTORY, victory.systemPercent())
+                    : I18n.t(UiTexts.ROUND_EVENT_ALLIANCE_VICTORY, victory.allianceId(),
+                            String.join(", ", victory.winnerNames()), victory.systemPercent());
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
         };
     }

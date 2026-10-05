@@ -8,6 +8,21 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Interne Spaceward-Regelversion 1.1.0: erlaubte Bündnisse und Bündnissiege
+  getrennt je Partie wählen, mit eigenen Einzel- und Bündnisschwellen.
+  Gemeinsame Ergebnisse nennen alle Sieger in Bericht, Dialog, Archiv und
+  Statistik; jeder Sieger darf bis zur vollständigen Eroberung fortsetzen.
+  Bestehende Partien behalten ihre Regelversion und Vorgaben. Der KI-Prüfstand
+  vergleicht identische Karten mit ein- und ausgeschaltetem Bündnissieg.
+  Spaceward bleibt bis zur Variantenabnahme gesperrt.
+
+- Reproduzierbarer KI-Strategieprüfstand für SectorForces und Spaceward:
+  Strategiematrix mit getauschten Startplätzen, Mehrspieler- und Bündnisversuche
+  sowie Vergleich einzelner Entscheidungen ab identischem Spielstand.
+  Auswertungen enthalten Rundenverläufe, Befehle, Zufallsstartwerte und getrennte
+  Siege, Unentschieden und Rundenlimits. Läuft ohne Oberfläche oder Datenbank;
+  die reguläre KI und bestehende Spielregeln bleiben erhalten.
+
 - Interner Spaceward-Kampf (M6): Bündnisgruppen kämpfen gemeinsam, mehrere
   feindliche Seiten gleichzeitig. Verluste und Abschüsse werden anteilig
   ohne Doppelzählung verteilt. Eroberungsziele lassen sich vor dem Versand

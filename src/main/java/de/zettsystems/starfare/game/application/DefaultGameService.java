@@ -57,7 +57,7 @@ public class DefaultGameService implements GameService {
     public Optional<DiplomacyView> diplomacyFor(GameId id, String account) {
         return registry.find(id).flatMap(session -> registry.readState(id, state -> {
             Integer seat = state.seatByUser().get(account);
-            if (!Routes.limited(state) || !state.started() || seat == null || !state.joinedHumanPlayerIds().contains(seat)
+            if (!state.victoryRules().alliancesAllowed() || !Routes.limited(state) || !state.started() || seat == null || !state.joinedHumanPlayerIds().contains(seat)
                     || !access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
             return Optional.of(new DiplomacyView(state.turn(), seat,
                     canPlan(state, seat, state.turn()), state.players(), new DiplomacyState(
@@ -465,7 +465,7 @@ public class DefaultGameService implements GameService {
                 state.observersAllowed(), state.reentryAllowed(),
                 List.copyOf(state.players()), Set.copyOf(state.joinedHumanPlayerIds()),
                 Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats()),
-                state.visibility(), new GameOutcome(state.winnerId(), state.finishedAt()), state.ruleset());
+                state.visibility(), state.outcome(), state.ruleset(), state.victoryRules());
     }
 
     @Override
@@ -750,7 +750,7 @@ public class DefaultGameService implements GameService {
 
     private TurnResult captureTurnResult(GameState state) {
         if (state.gameOver()) {
-            return new TurnResult.Finished(state.turn(), state.winnerId());
+            return new TurnResult.Finished(state.turn(), state.winnerId(), state.outcome().winnerIds(), state.outcome().allianceId());
         }
         return new TurnResult.Advanced(state.turn());
     }
@@ -758,10 +758,10 @@ public class DefaultGameService implements GameService {
     private void publishTurnResult(GameId gameId, TurnResult result) {
         switch (result) {
             case TurnResult.Advanced(int turn) -> broadcaster.publish(new GameEvent.TurnAdvanced(gameId, turn));
-            case TurnResult.Finished(int turn, Integer winnerId) -> {
+            case TurnResult.Finished(int turn, Integer winnerId, var winnerIds, var allianceId) -> {
                 statistics.recordFinishedGame(gameId);
                 broadcaster.publish(new GameEvent.TurnAdvanced(gameId, turn));
-                broadcaster.publish(new GameEvent.GameFinished(gameId, winnerId));
+                broadcaster.publish(new GameEvent.GameFinished(gameId, winnerId, winnerIds, allianceId));
             }
             case TurnResult.None _ -> {
                 // no event — nothing to publish when no turn was processed
@@ -980,9 +980,8 @@ public class DefaultGameService implements GameService {
             return false;
         }
         boolean continued = registry.writeState(gameId, state -> {
-            Integer winner = state.winnerId();
             Integer actor = state.seatByUser().get(account);
-            if (!state.gameOver() || winner == null || !winner.equals(actor)) {
+            if (!state.gameOver() || !state.outcome().wonBy(actor)) {
                 return false;
             }
             state.resumeForFullConquest(Instant.now());
@@ -1091,7 +1090,9 @@ public class DefaultGameService implements GameService {
         record Advanced(int turn) implements TurnResult {
         }
 
-        record Finished(int turn, @Nullable Integer winnerId) implements TurnResult {
+        record Finished(int turn, @Nullable Integer winnerId, List<Integer> winnerIds, @Nullable Integer allianceId) implements TurnResult {
+            @SuppressWarnings("EffectivelyPrivate") // Interface member records require a public canonical constructor.
+            public Finished { winnerIds = List.copyOf(winnerIds); }
         }
 
         record None() implements TurnResult {

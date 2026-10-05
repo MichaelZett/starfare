@@ -24,8 +24,30 @@ public record GameSetup(
         int combatRandomnessPercent,
         RoundRules roundRules,
         int victorySystemPercent,
+        RulesetRef ruleset,
+        @Nullable VictoryRules victoryRules) {
+    public GameSetup(
+        int systemCount,
+        int humanPlayers,
+        int aiPlayers,
+        List<Integer> startProductionPerPlayer,
+        int neutralMinProduction,
+        int neutralMaxProduction,
+        int startGarrison,
+        boolean observersAllowed,
+        boolean reentryAllowed,
+        List<String> seatColorHexes,
+        ProductionDistribution productionDistribution,
+        GalaxyLayout galaxyLayout,
+        boolean battlePresentationEnabled,
+        int combatRandomnessPercent,
+        RoundRules roundRules,
+        int victorySystemPercent,
         RulesetRef ruleset
 ) {
+        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled, combatRandomnessPercent, roundRules, victorySystemPercent, ruleset, null);
+    }
+
     public GameSetup(int systemCount,
             int humanPlayers,
             int aiPlayers,
@@ -115,13 +137,24 @@ public record GameSetup(
 
     public GameSetup {
         if (ruleset == null) { ruleset = RulesetRef.SECTOR_FORCES; }
+        victoryRules = (victoryRules == null ? VictoryRules.defaults(ruleset, victorySystemPercent) : victoryRules).forRuleset(ruleset);
+        victorySystemPercent = victoryRules.individualSystemPercent();
     }
 
     public GameSetup selectRuleset(RulesetRef selected) {
         return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
                 neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
                 seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
-                combatRandomnessPercent, roundRules, victorySystemPercent, selected);
+                combatRandomnessPercent, roundRules, victorySystemPercent, selected, VictoryRules.defaults(selected, victorySystemPercent));
+    }
+
+    @Override public VictoryRules victoryRules() { return java.util.Objects.requireNonNull(victoryRules); }
+
+    public GameSetup chooseVictoryRules(VictoryRules chosen) {
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
+                neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
+                seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
+                combatRandomnessPercent, roundRules, chosen.individualSystemPercent(), ruleset, chosen);
     }
 
     public GameSetup normalized() {
@@ -153,7 +186,7 @@ public record GameSetup(
                         GameConfig.MAX_COMBAT_RANDOMNESS_PERCENT),
                 roundRules == null ? RoundRules.defaults() : roundRules,
                 clamp(victorySystemPercent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT,
-                        GameConfig.MAX_VICTORY_SYSTEM_PERCENT), ruleset);
+                        GameConfig.MAX_VICTORY_SYSTEM_PERCENT), ruleset, victoryRules);
     }
 
     public int totalPlayers() {

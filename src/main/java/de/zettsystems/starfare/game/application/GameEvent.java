@@ -17,7 +17,12 @@ public sealed interface GameEvent {
 
     record TurnAdvanced(GameId gameId, int turn) implements GameEvent {}
 
-    record GameFinished(GameId gameId, @Nullable Integer winnerId) implements GameEvent {
+    record GameFinished(GameId gameId, @Nullable Integer winnerId, java.util.List<Integer> winnerIds,
+                        @Nullable Integer allianceId) implements GameEvent {
+        public GameFinished(GameId gameId, @Nullable Integer winnerId) {
+            this(gameId, winnerId, winnerId == null ? java.util.List.of() : java.util.List.of(winnerId), null);
+        }
+        public GameFinished { winnerIds = java.util.List.copyOf(winnerIds); }
     }
 
     record SeatAbandoned(GameId gameId, int playerId) implements GameEvent {}

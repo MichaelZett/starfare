@@ -23,15 +23,41 @@ import org.jspecify.annotations.Nullable;
                 + "are exposed on purpose so application services can mutate them; concurrency is "
                 + "serialized via GameSession's read/write lock (see CLAUDE.md \"State/repository contract\").")
 public class GameState {
+    private @Nullable VictoryRules victoryRules;
+    private List<Integer> groupWinners = List.of();
+    private @Nullable Integer winningAlliance;
+    public VictoryRules victoryRules() {
+        return victoryRules == null ? VictoryRules.defaults(ruleset, victorySystemPercent) : victoryRules;
+    }
+    public void configureVictoryRules(VictoryRules rules) {
+        if (started) { throw new IllegalStateException("Victory rules are fixed at creation"); }
+        victoryRules = rules.forRuleset(ruleset);
+        victorySystemPercent = victoryRules.individualSystemPercent();
+    }
+    public GameOutcome outcome() {
+        return new GameOutcome(winnerId, finishedAt, winningAlliance == null
+                ? (winnerId == null ? List.of() : List.of(winnerId)) : groupWinners, winningAlliance);
+    }
+    public void winAsAlliance(int group, Set<Integer> winners) {
+        if (!victoryRules().allianceVictoryAllowed() || winners.size() < 2
+                || diplomacy.groupFor(winners.iterator().next()).filter(g -> g.id() == group && g.members().equals(winners)).isEmpty()) {
+            throw new IllegalArgumentException("Victory must name an effective alliance");
+        }
+        if (gameOver) { return; }
+        endGame(null);
+        groupWinners = winners.stream().sorted().toList();
+        winningAlliance = group;
+    }
+
     private DiplomacyState diplomacy = DiplomacyState.EMPTY;
     public DiplomacyState diplomacy() { return diplomacy; }
-    public boolean allied(int left, @Nullable Integer right) { return Routes.limited(this) && right != null && diplomacy.allied(left, right); }
+    public boolean allied(int left, @Nullable Integer right) { return victoryRules().alliancesAllowed() && Routes.limited(this) && right != null && diplomacy.allied(left, right); }
     public void agreeTreaties(DiplomacyState agreed) {
-        if (!Routes.limited(this)) { throw new IllegalStateException("Diplomacy belongs only to Spaceward"); }
+        if (!Routes.limited(this) || !victoryRules().alliancesAllowed()) { throw new IllegalStateException("Diplomacy is disabled"); }
         diplomacy = agreed;
     }
     private void validateDiplomacy() {
-        if (!Routes.limited(this) && !diplomacy.equals(DiplomacyState.EMPTY)) {
+        if ((!Routes.limited(this) || !victoryRules().alliancesAllowed()) && !diplomacy.equals(DiplomacyState.EMPTY)) {
             throw new IllegalArgumentException("Diplomacy belongs only to Spaceward");
         }
         var participants = players.stream().map(Player::id).collect(java.util.stream.Collectors.toSet());
@@ -43,11 +69,11 @@ public class GameState {
     private @Nullable NavigationSettings navigation;
     public Optional<NavigationSettings> navigationSettings() { return Optional.ofNullable(navigation); }
     public void configureNavigation(NavigationSettings settings) {
-        if (started || navigation != null || !RulesetRef.SPACEWARD.equals(ruleset)) { throw new IllegalStateException("Navigation is fixed at creation"); }
+        if (started || navigation != null || !ruleset.spaceward()) { throw new IllegalStateException("Navigation is fixed at creation"); }
         navigation = settings;
     }
     public void initializeNavigation() {
-        if (RulesetRef.SPACEWARD.equals(ruleset) && navigation == null) {
+        if (ruleset.spaceward() && navigation == null) {
             navigation = RangeCalibration.forGalaxy(systems);
         }
     }
@@ -66,7 +92,7 @@ public class GameState {
     public Map<Integer, Industry> industries() { return Map.copyOf(industries); }
 
     public void initializeIndustry() {
-        if (!RulesetRef.SPACEWARD.equals(ruleset) || !industries.isEmpty()) { return; }
+        if (!ruleset.spaceward() || !industries.isEmpty()) { return; }
         systems.forEach(system -> industries.put(system.id(), Industry.establish(system.productionPerTurn())));
     }
 
@@ -111,7 +137,7 @@ public class GameState {
     }
 
     private void validateIndustry() {
-        if (!RulesetRef.SPACEWARD.equals(ruleset)) {
+        if (!ruleset.spaceward()) {
             if (!industries.isEmpty()) { throw new IllegalArgumentException("Industry belongs only to Spaceward"); }
             return;
         }
@@ -163,6 +189,7 @@ public class GameState {
         }
         originalSetup = setup;
         ruleset = setup.ruleset();
+        configureVictoryRules(setup.victoryRules());
     }
 
     /** One reversible command change per player, valid only within the current round. */
@@ -318,6 +345,8 @@ public class GameState {
     public void configureVictorySystemPercent(int percent) {
         victorySystemPercent = Math.clamp(percent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT,
                 GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
+        if (victoryRules != null) { victoryRules = new VictoryRules(victorySystemPercent,
+                victoryRules.alliancesAllowed(), victoryRules.allianceVictoryAllowed(), victoryRules.allianceSystemPercent()); }
     }
 
     public Instant turnStartedAt() {
@@ -413,19 +442,26 @@ public class GameState {
     }
 
     public void endGame(@Nullable Integer winnerId, Instant finishedAt) {
+        if (this.gameOver && (winningAlliance != null || ruleset.equals(RulesetRef.SPACEWARD_ALLIANCE))) { return; }
         if (!this.gameOver) { this.finishedAt = finishedAt; }
         this.gameOver = true;
         this.winnerId = winnerId;
+        this.groupWinners = List.of();
+        this.winningAlliance = null;
     }
 
     public void clearGameOver() {
         this.gameOver = false;
         this.finishedAt = null;
         this.winnerId = null;
+        this.groupWinners = List.of();
+        this.winningAlliance = null;
     }
 
     /** Starts a fresh round deadline when the winner resumes play towards full conquest. */
     public void resumeForFullConquest(Instant now) {
+        victoryRules = ruleset.equals(RulesetRef.SPACEWARD_ALLIANCE) ? victoryRules().forFullConquest()
+                : VictoryRules.defaults(ruleset, GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
         configureVictorySystemPercent(GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
         clearGameOver();
         turnStartedAt = now;
@@ -449,6 +485,9 @@ public class GameState {
         this.pendingOrders.clear();
         this.previousOrders.clear();
         this.originalSetup = null;
+        this.victoryRules = null;
+        this.groupWinners = List.of();
+        this.winningAlliance = null;
         this.ruleset = RulesetRef.SECTOR_FORCES;
         this.standingOrders.clear();
         this.nextStandingOrderId.clear();
@@ -488,6 +527,9 @@ public class GameState {
         this.pendingOrders.clear();
         this.previousOrders.clear();
         this.originalSetup = null;
+        this.victoryRules = null;
+        this.groupWinners = List.of();
+        this.winningAlliance = null;
         this.standingOrders.clear();
         this.nextStandingOrderId.clear();
         this.replayFrames.clear();
@@ -639,7 +681,7 @@ public class GameState {
 
     /** Captures the resolved state of the current turn without keeping mutable collections. */
     public void captureReplayFrame() {
-        replayFrames.put(turn, new ReplayFrame(turn, systems, fleets, reports, industries));
+        replayFrames.put(turn, new ReplayFrame(turn, systems, fleets, reports, industries, outcome()));
     }
 
     private record Bounds(double x, double y, double width, double height) {
@@ -675,7 +717,7 @@ public class GameState {
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
-                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy);
+                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome());
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -717,6 +759,13 @@ public class GameState {
         }
         RulesetRef storedRuleset = s.ruleset();
         c.ruleset = storedRuleset == null ? RulesetRef.SECTOR_FORCES : storedRuleset;
+        VictoryRules storedVictoryRules = s.victoryRules();
+        c.victoryRules = storedVictoryRules == null ? null : storedVictoryRules.forRuleset(c.ruleset);
+        var storedOutcome = s.outcome();
+        if (storedOutcome != null && storedOutcome.allianceVictory()) {
+            if (!s.gameOver()) { throw new IllegalArgumentException("Running game cannot have alliance winners"); }
+            c.groupWinners = storedOutcome.winnerIds(); c.winningAlliance = storedOutcome.allianceId();
+        }
         var industry = s.industries();
         if (industry != null) { c.industries.putAll(industry); }
         c.validateIndustry();
@@ -756,6 +805,14 @@ public class GameState {
         c.victorySystemPercent = victoryPercent != null
                 ? Math.clamp(victoryPercent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT, GameConfig.MAX_VICTORY_SYSTEM_PERCENT)
                 : GameConfig.VICTORY_SYSTEM_PERCENT;
+        if (c.victoryRules != null && c.victoryRules.individualSystemPercent() != c.victorySystemPercent) {
+            throw new IllegalArgumentException("Stored victory thresholds disagree");
+        }
+        if (storedOutcome != null && (!Objects.equals(storedOutcome.winnerId(), c.winnerId)
+                || (storedOutcome.allianceVictory() && (!c.victoryRules().allianceVictoryAllowed()
+                    || !c.players.stream().map(Player::id).toList().containsAll(storedOutcome.winnerIds()))))) {
+            throw new IllegalArgumentException("Stored winners disagree with game rules");
+        }
         // Aeltere Snapshots kennen das Feld nicht; dann laeuft die Zug-Uhr ab Wiederherstellung.
         Instant startedAt = s.turnStartedAt();
         c.turnStartedAt = startedAt != null ? startedAt : Instant.now();
@@ -806,6 +863,7 @@ public class GameState {
         c.battlePresentationEnabled = s.battlePresentationEnabled();
         c.combatRandomnessPercent = s.combatRandomnessPercent;
         c.victorySystemPercent = s.victorySystemPercent;
+        c.victoryRules = s.victoryRules;
         c.roundRules = s.roundRules();
         c.missedRounds.putAll(s.missedRounds());
 
@@ -814,6 +872,8 @@ public class GameState {
         }
 
         c.finishedAt = s.finishedAt();
+        c.groupWinners = s.groupWinners;
+        c.winningAlliance = s.winningAlliance;
         c.visibility = s.visibility() == null ? GameVisibility.PUBLIC : s.visibility();
         c.active = s.active();
         c.started = s.started();

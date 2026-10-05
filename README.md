@@ -410,6 +410,106 @@ node --test src/test/frontend/battle-replay.test.mjs
 Integration tests start a single PostgreSQL container via
 Testcontainers; Docker must be running.
 
+## Strategy experiments
+
+The first verified pilot results and their limitations are documented in
+[the experiment report (German)](docs/STRATEGY-EXPERIMENTS.md).
+
+The opt-in `strategyBenchmark` task runs SectorForces and internal Spaceward games
+through the real turn engines without Spring, PostgreSQL, a browser or audio.
+It does not change the lobby AI or enable Spaceward for public games.
+
+```powershell
+# Pairwise matches, with both seat assignments for every pair.
+.\gradlew.bat strategyBenchmark "-PstrategyArgs=--seeds=3 --systems=16,32 --rounds=120"
+# Rotate every strategy through every seat of a multiplayer game.
+.\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=multiplayer --seeds=3"
+# Compare one changed decision against the same checkpoint and future round seeds.
+.\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=decision --seeds=3 --combat-seeds=3 --fork-round=10"
+# Four empires, with a fixed alliance between seats 1 and 2.
+.\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=alliance --rules=spaceward --seeds=3"
+# Pair identical Spaceward 1.1 scenarios with group victory disabled/enabled.
+.\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=alliance --rules=spaceward-1.1 --alliance-victory=both --seeds=3 --combat-seeds=3"
+```
+
+Use `./gradlew` on Linux/macOS. Results default to `build/strategy-harness/<mode>/`;
+`--output=build/strategy-harness/my-run` selects another directory. Reusing an output
+directory replaces its report files. Options use `--key=value`; quote the entire
+Gradle property as shown. Paths supplied through this property must not contain spaces.
+`--rules=classic` or `--rules=spaceward` narrows the variant; `--layouts=RANDOM,EVEN`
+selects galaxy layouts. Defaults are two map seeds, 16 systems, 120 rounds and 10%
+combat variation. `--first-seed=1001` selects a disjoint validation map set after
+tuning on the initial seeds. `--combat-seed=314159` and `--combat-seeds=3` control
+independent combat repetitions per map. `--randomness=0` isolates deterministic
+combat; random attack ordering still uses its own seeded stream.
+
+Strategies are intentionally small, contrasting policies:
+
+| Profile | Behavior |
+|---|---|
+| BASELINE | Existing variant AI, invoked unchanged on an isolated copy for each seat. |
+| RUSH | Early, large attacks with a minimal reserve, including risky engagements. |
+| EXPANSION | Prefer accessible, weak or apparently neutral systems; retain a production-sized reserve. |
+| CONCENTRATION | Attack estimated beatable targets and transfer idle forces towards the front. |
+| DEFENSE | Keep a larger reserve and strongly prefer lower-risk targets. |
+| INDUSTRY | Spaceward only: invest two thirds of capacity away from known nearby enemies, one fifth near them; consolidate idle forces. |
+
+All alternative policies consume the normal fog-filtered player view and legal
+route durations. Unknown defence is estimated at five ships, not read from the
+hidden state. Policies cannot see other players' pending orders. Commands are
+validated by the normal fleet/economy services after every seat has planned.
+The maps are controlled synthetic scenarios: production geometry generator,
+farthest-next home selection, uniform neutral production 1–10, home capacity 5
+and 20 ships. They omit the lobby's final spacing relaxation and random naming;
+they are not claimed to reproduce its full map distribution.
+
+`matches.csv` records rules/version, seeds, seat assignments, outcome and a SHA-256
+fingerprint of resolved gameplay. `rounds.csv` records systems, ships, capacity,
+production, losses and industrial investment per empire and round. `orders.csv`
+contains every submitted order. `summary.md` separates wins, losses, draws and
+round-limit exits by variant, map, size, profile and opponent. Its descriptive
+95% intervals resample whole map blocks, keeping swapped seats and combat
+repetitions together. Small samples and a limited opponent set do not prove balance.
+`invocation.txt` records arguments, resolved defaults, Java version and a source
+fingerprint. Reproduction requires the same code, Java version and settings.
+
+Decision mode forks immediately before round 10 by default. SectorForces compares
+CONCENTRATION against RUSH and suppresses the first player's first send order once.
+Spaceward compares INDUSTRY against RUSH, additionally testing full expansion or
+full shipbuilding at that player's first owned system for one round. Other
+players' plans are unchanged in that round; later plans may react to the outcome.
+The original plan is always included. `decision-deltas.csv` compares the first
+player's metrics at equal resolved rounds; cumulative counters start at the fork.
+`skipped.txt` explains already finished games or interventions with no effective
+change. Future random streams restart from absolute round seeds; altered combat
+sequences may consume different draws, so compare several combat seeds.
+
+Alliance mode exercises joint combat and partner navigation with a fixed contract,
+not a negotiating AI. `--rules=spaceward` retains version 1.0.0 and individual
+victory. Version 1.1.0 (`--rules=spaceward-1.1`) accepts `--alliance-victory=true`,
+`false` (default), or `both` for paired runs. `--individual-percent=70` and
+`--alliance-percent=70` select independent thresholds (10–100%). CSV results
+include both choices and every winning seat; each winning ally counts as a win. Resource
+mining, recycling and ship generations are not available in the current rules
+and therefore are not simulated yet. Use separate validation seeds and human
+playtests before drawing conclusions or changing a ruleset.
+
+## Game victory options
+
+Internal Spaceward 1.1.0 adds fixed game options for allowing alliances and
+allowing group victory. Defaults retain alliances with individual victory only;
+the separate group threshold defaults to 70%. Disabling alliances also disables
+group victory. SectorForces has no diplomacy. Spaceward remains unavailable in
+the public wizard until variant acceptance; stored Spaceward 1.0.0 games retain
+their version and previous rules.
+
+Individual victory takes precedence. Otherwise, the eligible group controlling
+the most systems wins (group ID breaks ties). All effective members win,
+including members without systems. Neutral systems remain in the denominator.
+Results freeze every winner for reports, replay, archive and account statistics.
+Any winning member may continue once, raising both victory thresholds to 100%;
+the original statistical result remains unchanged.
+
 ## License
 
 [MIT](LICENSE).

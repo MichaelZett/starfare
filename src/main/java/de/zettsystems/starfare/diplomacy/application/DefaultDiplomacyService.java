@@ -11,13 +11,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class DefaultDiplomacyService implements DiplomacyService {
     @Override public boolean act(GameState state, int player, DiplomacyOrder order) {
-        if (!Routes.limited(state) || !state.started() || state.gameOver()) { return false; }
+        if (!state.victoryRules().alliancesAllowed() || !Routes.limited(state) || !state.started() || state.gameOver()) { return false; }
         var result = Treaties.apply(state.diplomacy(), player, order, state.turn(), state.players().stream().map(Player::id).collect(Collectors.toSet()));
         result.ifPresent(state::agreeTreaties);
         return result.isPresent();
     }
     @Override public void beginRound(GameState state, int turn) {
-        if (!Routes.limited(state)) { return; }
+        if (!Routes.limited(state) || !state.victoryRules().alliancesAllowed()) { return; }
         var previous = state.diplomacy();
         state.agreeTreaties(Treaties.beginRound(previous, turn));
         for (var fleet : java.util.List.copyOf(state.fleets())) {

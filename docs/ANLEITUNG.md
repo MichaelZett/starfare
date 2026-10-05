@@ -292,6 +292,33 @@ Bei unvollständiger Sicht und offenen Schlachten bleibt sie verborgen. Bestehen
 Partien behalten ihre Spielstände. Wissenschaftliche Grundlagen und bewusst
 vereinfachte Darstellung stehen in [System illustrations](SYSTEM-ILLUSTRATIONS.md).
 
+## Interne Spaceward-Siegoptionen
+
+Spaceward 1.1.0 ergänzt vor dem Start zwei Partieeigenschaften:
+**Bündnisse erlaubt** und **Bündnissiege erlaubt**. Die Einzelschwelle und
+die Bündnisschwelle sind getrennt einstellbar (10–100 %, jeweils Vorgabe 70 %).
+Standardmäßig sind Bündnisse erlaubt, Bündnissiege ausgeschaltet. Ohne
+erlaubte Bündnisse ist auch der Bündnissieg ausgeschaltet. SectorForces bietet
+keine Bündnisse. Die Spaceward-Auswahl bleibt bis zur Variantenabnahme gesperrt.
+
+Einzelsieg wird zuerst geprüft. Danach kann eine wirksame Gruppe mit mindestens
+zwei Mitgliedern gemeinsam gewinnen. Gezählt werden ihre Systeme zusammen;
+neutrale Systeme zählen weiterhin zur Gesamtzahl. Erfüllen mehrere Gruppen
+die Bedingung, gewinnt die mit den meisten Systemen, bei Gleichstand die mit
+der kleineren Gruppenkennung. Alle wirksamen Mitglieder gewinnen, auch solche
+ohne Systeme. Kündigungsfristen gelten bis zum tatsächlichen Austritt.
+
+Bei 16 Systemen und 70 % reichen zwölf Systeme gemeinsam: Partner mit 11 und
+5 Systemen gewinnen als Gruppe, sofern Bündnissiege erlaubt sind. Ohne diese
+Option braucht weiterhin ein einzelnes Imperium zwölf Systeme.
+
+Dialog, Bericht, Archiv und persönliche Statistik berücksichtigen jeden Sieger.
+Jeder Sieger darf einmal bis zur vollständigen Eroberung fortsetzen; dann
+steigen beide Schwellen auf 100 %. Das erste statistische Ergebnis bleibt
+erhalten. Einstellungen bleiben in Vorlagen und Revanchen erhalten. Bestehende
+Partien bleiben bei ihrer Regelversion; Spaceward 1.0.0 behält ausschließlich
+den Einzelsieg und erlaubte Bündnisse.
+
 ## Geplante Spaceward-Bündnisse
 
 Die Bündnisbedienung ist intern umgesetzt; die Variante bleibt bis zur

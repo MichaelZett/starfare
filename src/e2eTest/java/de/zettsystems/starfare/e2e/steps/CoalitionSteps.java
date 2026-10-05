@@ -125,6 +125,7 @@ public class CoalitionSteps {
                 waitFor(() -> browser.all(".event-battle-pending").size() == 1);
                 assertThat(browser.all(".event-victory")).isEmpty();
                 browser.driver().navigate().refresh(); browser.clickTabWithText("Bericht");
+                waitFor(() -> browser.all(".event-battle-pending").size() == 1);
                 assertThat(browser.all(".event-battle-pending")).hasSize(1);
             }
         }

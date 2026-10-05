@@ -25,8 +25,28 @@ public record PlayerViewState(
         EmpireStats empire,
         Set<Integer> waitingFleetIds,
         boolean battlePresentationEnabled,
+        RoundStatus roundStatus,
+        @Nullable GameOutcome outcome) {
+    public PlayerViewState(
+        int turn,
+        List<Player> players,
+        List<VisibleSystem> systems,
+        List<Fleet> ownFleets,
+        @Nullable TurnReport report,
+        boolean gameOver,
+        @Nullable Integer winnerId,
+        List<PlannedOrder> plannedOrders,
+        List<StandingOrderView> standingOrders,
+        EmpireStats empire,
+        Set<Integer> waitingFleetIds,
+        boolean battlePresentationEnabled,
         RoundStatus roundStatus
 ) {
+        this(turn, players, systems, ownFleets, report, gameOver, winnerId, plannedOrders, standingOrders, empire, waitingFleetIds, battlePresentationEnabled, roundStatus, new GameOutcome(winnerId, null));
+    }
+
+    public boolean wonBy(@Nullable Integer player) { return outcome != null && outcome.wonBy(player); }
+
     public PlayerViewState(int turn, List<Player> players, List<VisibleSystem> systems, List<Fleet> ownFleets,
                            @Nullable TurnReport report, boolean gameOver, @Nullable Integer winnerId,
                            List<PlannedOrder> plannedOrders, List<StandingOrderView> standingOrders,

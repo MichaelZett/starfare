@@ -99,6 +99,7 @@ class DefaultGameStatisticsServiceTest {
         when(state.ruleset()).thenReturn(de.zettsystems.starfare.game.values.RulesetRef.SECTOR_FORCES);
         when(state.seatByUser()).thenReturn(Map.of("alice", 1, "bob", 2));
         when(state.winnerId()).thenReturn(2);
+        when(state.outcome()).thenReturn(new de.zettsystems.starfare.game.values.GameOutcome(2, null));
         Instant finishedAt = Instant.parse("2026-09-16T10:00:00Z");
         when(state.finishedAt()).thenReturn(finishedAt);
 

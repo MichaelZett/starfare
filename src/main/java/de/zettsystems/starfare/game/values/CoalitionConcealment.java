@@ -22,6 +22,6 @@ public final class CoalitionConcealment {
         Set<Integer> participants = battles.stream().flatMap(battle -> battle.fleetIds().stream()).collect(Collectors.toSet());
         var fleets = view.ownFleets().stream().filter(fleet -> fleet.inFlight() || fleet.evacuating() || !participants.contains(fleet.globalId())).toList();
         return new PlayerViewState(view.turn(), view.players(), concealed, fleets, report, view.gameOver(), view.winnerId(),
-                view.plannedOrders(), view.standingOrders(), EmpireStats.NONE, view.waitingFleetIds(), view.battlePresentationEnabled(), view.roundStatus());
+                view.plannedOrders(), view.standingOrders(), EmpireStats.NONE, view.waitingFleetIds(), view.battlePresentationEnabled(), view.roundStatus(), view.outcome());
     }
 }

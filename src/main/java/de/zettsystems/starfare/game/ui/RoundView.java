@@ -424,7 +424,10 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, d.systemName())
                     : I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
                             d.systemName(), d.attacking(), d.defendersLeft());
-            case TurnEvent.Victory victory -> I18n.t(UiTexts.ROUND_EVENT_VICTORY, victory.systemPercent());
+            case TurnEvent.Victory victory -> victory.allianceId() == null
+                    ? I18n.t(UiTexts.ROUND_EVENT_VICTORY, victory.systemPercent())
+                    : I18n.t(UiTexts.ROUND_EVENT_ALLIANCE_VICTORY, victory.allianceId(),
+                            String.join(", ", victory.winnerNames()), victory.systemPercent());
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
         };
     }
@@ -436,13 +439,6 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private String winnerName(PlayerViewState view) {
-        Integer winnerId = view.winnerId();
-        if (winnerId == null) {
-            return "?";
-        }
-        return view.players().stream()
-                .filter(p -> p.id() == winnerId)
-                .map(Player::label)
-                .findFirst().orElse("?");
+        return OutcomeLabels.winners(view.outcome(), view.players());
     }
 }
