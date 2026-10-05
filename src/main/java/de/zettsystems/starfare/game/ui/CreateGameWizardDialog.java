@@ -54,8 +54,6 @@ final class CreateGameWizardDialog {
 
         RulesetSelector rulesets = new RulesetSelector(catalog);
         VictorySettings victorySettings = new VictorySettings();
-        rulesets.onSelection(() -> victorySettings.select(rulesets.selectedRuleset()));
-        victorySettings.select(rulesets.selectedRuleset());
         IntegerField systems = intField(I18n.t(UiTexts.LOBBY_FIELD_SYSTEMS),
                 GameConfig.MIN_SYSTEM_COUNT, GameConfig.MAX_SYSTEM_COUNT, GameConfig.DEFAULT_SYSTEM_COUNT);
         IntegerField humans = intField(I18n.t(UiTexts.LOBBY_FIELD_HUMANS),
@@ -148,6 +146,10 @@ final class CreateGameWizardDialog {
                 valueOrDefault(humans.getValue(), GameConfig.DEFAULT_HUMAN_PLAYERS) > 1);
         humans.addValueChangeListener(_ -> updateRoundTimerVisibility.run());
         updateRoundTimerVisibility.run();
+        rulesets.onRulesetChange(ruleset -> {
+            victorySettings.select(ruleset);
+            combatSection.setVisible(!ruleset.resolvesCoalitionBattles());
+        });
 
         FormLayout startProductionFields = new FormLayout();
         configureColumns(startProductionFields, 4, "13em");
@@ -346,6 +348,10 @@ final class CreateGameWizardDialog {
         List<String> seatColors = in.seatColorInputs().stream()
                 .map(field -> field.getValue() == null ? GameConfig.PLAYER_PALETTE.getFirst() : field.getValue().hex())
                 .toList();
+        RulesetRef ruleset = in.rulesets().selectedRuleset();
+        // The hidden choice must not leak into a coalition game's stored rules.
+        AttackOrder attackOrder = ruleset.resolvesCoalitionBattles()
+                ? RoundRules.DEFAULT_ATTACK_ORDER : in.attackOrder().getValue();
         return new GameSetup(
                 valueOrDefault(in.systems().getValue(), GameConfig.DEFAULT_SYSTEM_COUNT),
                 valueOrDefault(in.humans().getValue(), GameConfig.DEFAULT_HUMAN_PLAYERS),
@@ -361,9 +367,9 @@ final class CreateGameWizardDialog {
                 in.galaxyLayout().getValue(),
                 in.battlePresentation().getValue(),
                 sliderValue(in.combatRandomness(), GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT),
-                new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), in.attackOrder().getValue()),
+                new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), attackOrder),
                 valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)
-        ).normalized().selectRuleset(in.rulesets().selectedRuleset())
+        ).normalized().selectRuleset(ruleset)
                 .chooseVictoryRules(in.victorySettings().chosen(valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)));
     }
 
@@ -400,8 +406,10 @@ final class CreateGameWizardDialog {
                 summaryLine(UiTexts.LOBBY_SUMMARY_COMBAT, setup.combatRandomnessPercent(),
                         I18n.t(setup.battlePresentationEnabled() ? UiTexts.LOBBY_SUMMARY_ENABLED
                                 : UiTexts.LOBBY_SUMMARY_DISABLED)),
-                summaryLine(UiTexts.LOBBY_SUMMARY_RULES, I18n.t(setup.roundRules().attackOrder() == AttackOrder.RANDOM
-                        ? UiTexts.LOBBY_ATTACK_ORDER_RANDOM : UiTexts.LOBBY_ATTACK_ORDER_STRONGEST_FIRST)),
+                setup.ruleset().resolvesCoalitionBattles()
+                        ? summaryLine(UiTexts.LOBBY_SUMMARY_COALITION_COMBAT)
+                        : summaryLine(UiTexts.LOBBY_SUMMARY_RULES, I18n.t(setup.roundRules().attackOrder() == AttackOrder.RANDOM
+                                ? UiTexts.LOBBY_ATTACK_ORDER_RANDOM : UiTexts.LOBBY_ATTACK_ORDER_STRONGEST_FIRST)),
                 summaryLine(UiTexts.LOBBY_SUMMARY_ACCESS,
                         I18n.t(setup.observersAllowed() ? UiTexts.LOBBY_SUMMARY_OBSERVERS_ALLOWED
                                 : UiTexts.LOBBY_SUMMARY_OBSERVERS_BLOCKED),

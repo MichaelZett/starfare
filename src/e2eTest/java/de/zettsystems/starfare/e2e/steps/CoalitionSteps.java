@@ -124,7 +124,8 @@ public class CoalitionSteps {
             if (index == 0) {
                 waitFor(() -> browser.all(".event-battle-pending").size() == 1);
                 assertThat(browser.all(".event-victory")).isEmpty();
-                browser.driver().navigate().refresh(); browser.clickTabWithText("Bericht");
+                // Der Bericht rendert nach Neuladen und Reiterwechsel erst mit der nächsten Server-Antwort.
+                browser.driver().navigate().refresh(); browser.awaitCss(".map-content"); browser.clickTabWithText("Bericht");
                 waitFor(() -> browser.all(".event-battle-pending").size() == 1);
                 assertThat(browser.all(".event-battle-pending")).hasSize(1);
             }

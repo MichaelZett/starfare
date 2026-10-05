@@ -8,13 +8,21 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
-- Interne Spaceward-Regelversion 1.1.0: erlaubte Bündnisse und Bündnissiege
+- Spaceward freigegeben (M7): Die Variante ist im Dialog „Neues Spiel“ mit
+  Regelversion 1.1.0 wählbar; SectorForces bleibt vorausgewählt. Die
+  Angriffsreihenfolge entfällt dort, da alle Seiten gleichzeitig kämpfen. Wirtschaft,
+  Navigation, Bündnisse und gemeinsame Schlachten stehen damit in neuen Partien,
+  Vorlagen und Revanchen bereit. Bestehende Partien behalten ihre Regeln;
+  gespeicherte 1.0.0-Partien laufen unverändert weiter.
+- Stabilerer Browser-Abnahmetest für Bündnis-Gefechte: Nach dem Neuladen wartet
+  er auf den gerenderten Bericht.
+
+- Spaceward-Regelversion 1.1.0: erlaubte Bündnisse und Bündnissiege
   getrennt je Partie wählen, mit eigenen Einzel- und Bündnisschwellen.
   Gemeinsame Ergebnisse nennen alle Sieger in Bericht, Dialog, Archiv und
   Statistik; jeder Sieger darf bis zur vollständigen Eroberung fortsetzen.
   Bestehende Partien behalten ihre Regelversion und Vorgaben. Der KI-Prüfstand
   vergleicht identische Karten mit ein- und ausgeschaltetem Bündnissieg.
-  Spaceward bleibt bis zur Variantenabnahme gesperrt.
 
 - Reproduzierbarer KI-Strategieprüfstand für SectorForces und Spaceward:
   Strategiematrix mit getauschten Startplätzen, Mehrspieler- und Bündnisversuche
@@ -23,39 +31,37 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
   Siege, Unentschieden und Rundenlimits. Läuft ohne Oberfläche oder Datenbank;
   die reguläre KI und bestehende Spielregeln bleiben erhalten.
 
-- Interner Spaceward-Kampf (M6): Bündnisgruppen kämpfen gemeinsam, mehrere
+- Spaceward-Kampf (M6): Bündnisgruppen kämpfen gemeinsam, mehrere
   feindliche Seiten gleichzeitig. Verluste und Abschüsse werden anteilig
   ohne Doppelzählung verteilt. Eroberungsziele lassen sich vor dem Versand
   benennen; verbündete Überlebende behalten ihren Eigentümer. Berichte und
   Wiedergabe zeigen alle beteiligten Seiten. Persönliche Bestätigungen,
   Neustart, Archiv und Statistik bleiben erhalten. SectorForces behält
-  seine Kampfregeln; Spaceward bleibt bis zur Abnahme M7 gesperrt.
+  seine Kampfregeln.
 
-- Interne Spaceward-Diplomatie (M5): gemeinsame Bündnisgruppen mit einstimmiger
+- Spaceward-Diplomatie (M5): gemeinsame Bündnisgruppen mit einstimmiger
   Aufnahme und vereinbarter Kündigungsfrist. Austritte zeigen eine feste
   Wirksamkeitsrunde; Friständerungen brauchen Zustimmung aller und ändern
   laufende Kündigungen nicht. Verbündete Zwischenstationen erhalten getrennte
   Flotten; Austritte führen automatisch zur geschützten Heimreise. Verträge
-  und Reisephasen überstehen Neustarts. Gemeinsamer Kampf folgt mit M6, die
-  öffentliche Freigabe mit M7. SectorForces bleibt unverändert.
+  und Reisephasen überstehen Neustarts. SectorForces bleibt unverändert.
 
-- Interne Spaceward-Navigation (M4): feste Reichweite je Partie, automatische
+- Spaceward-Navigation (M4): feste Reichweite je Partie, automatische
   Routen über eigene Zwischenstationen und eine volle Runde zum Auftanken.
   Reiseplan und Etappen bleiben nach Neuladen erhalten; Stationsverlust
   unterbricht die Weiterreise. Verlegungen und KI beachten dieselbe Wegprüfung.
   Vorschau, Flottendetails und Kartenlinien zeigen die tatsächlichen Etappen.
   SectorForces behält unbegrenzte direkte Flüge.
 
-- Interne Spaceward-Wirtschaft (M3): Produktion zwischen Schiffbau und Ausbau
+- Spaceward-Wirtschaft (M3): Produktion zwischen Schiffbau und Ausbau
   verteilen; Ausbaukosten 2 × aktuelle Kapazität, Maximum 50. Teilfortschritt
   und Kapazität bleiben bei Eroberung erhalten. Industriegebäude, Verteilung,
   Fortschritt und Lieferengpässe in der Systemsicht; Speicherung und historische
-  Rundenstände ergänzt. SectorForces behält seine Regeln. Spaceward bleibt
-  bis zur gemeinsamen Abnahme für neue Partien gesperrt.
+  Rundenstände ergänzt. SectorForces behält seine Regeln.
 
 - Spielvarianten und feste Regelversionen: SectorForces bezeichnet die bisherigen
-  Classic-Regeln (1.0.0). Der erweiterbare Katalog zeigt Spaceward als noch nicht
-  spielbar. Lobby, Beitritt, Verwaltung, Archiv und Statistik zeigen die Regeln;
+  Classic-Regeln (1.0.0). Der Katalog ist für weitere Varianten erweiterbar.
+  Lobby, Beitritt, Verwaltung, Archiv und Statistik zeigen die Regeln;
   Vorlagen und Revanchen übernehmen sie. Alte Spielstände und Ergebnisse behalten
   SectorForces, unbekannte Regeln werden ohne Umschreibung abgewiesen.
   Statistik nach Variante filterbar; Rundenauswertung über registrierte Regelversionen.
