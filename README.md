@@ -429,6 +429,24 @@ node --test src/test/frontend/battle-replay.test.mjs
 Integration tests start a single PostgreSQL container via
 Testcontainers; Docker must be running.
 
+## Internal economy checkpoint
+
+The next economy step is available for internal acceptance as **Spaceward
+1.2.0-w1**: saved colony environments and population limit usable industry,
+with growth taking effect on the following turn. The public wizard continues
+to create **1.1.0** games. Existing rules and saved games retain their behavior.
+Finite metal and recycling are subsequent economy steps; W1 does not add mining.
+Run the saved-party browser journey with:
+
+```powershell
+.\gradlew.bat e2eTest "-Dcucumber.filter.tags=@colonies"
+```
+
+The fixture is test-only; loading and resolving stored W1 parties is supported,
+while public creation is explicitly rejected. Each further economy checkpoint
+will have its own rule reference so interrupted development can resume without
+changing the meaning of earlier saved parties.
+
 ## Strategy experiments
 
 The first verified pilot results and their limitations are documented in

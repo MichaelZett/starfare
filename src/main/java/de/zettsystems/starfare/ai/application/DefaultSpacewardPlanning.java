@@ -53,7 +53,7 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
             boolean threatened = view.systems().stream().anyMatch(contact -> contact.ownerId() != null
                     && !Objects.equals(contact.ownerId(), player.id()) && !state.allied(player.id(), contact.ownerId())
                     && state.travelRounds(system.id(), contact.id()) <= 2);
-            int allocation = threatened || industry.atMaximum() ? 0 : industry.capacity() / 3;
+            int allocation = threatened || industry.atMaximum() ? 0 : industry.usableCapacity() / 3;
             economy.allocateExpansion(state, player.id(), system.id(), allocation);
         }
         owned.stream().max(Comparator.comparingInt(DefaultSpacewardPlanning::knownGarrison))

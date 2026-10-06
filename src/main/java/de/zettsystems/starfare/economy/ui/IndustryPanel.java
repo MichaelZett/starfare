@@ -27,6 +27,7 @@ public final class IndustryPanel extends Div {
         addClassName("industry-panel");
         add(new H3(I18n.t(UiTexts.ECONOMY_TITLE)),
                 new Span(I18n.t(UiTexts.ECONOMY_CAPACITY, industry.capacity(), EconomyRules.MAX_CAPACITY)));
+        showColony(industry);
         Div bar = new Div();
         bar.addClassName("industry-allocation-bar");
         Span ships = new Span(); ships.addClassName("industry-shipbuilding");
@@ -42,6 +43,33 @@ public final class IndustryPanel extends Div {
         if (editable && !industry.atMaximum()) { addEditor(industry, apply, preview); }
         Span hint = new Span(I18n.t(UiTexts.ECONOMY_NEXT_ROUND));
         hint.addClassName("industry-hint"); add(hint);
+    }
+
+    private void showColony(IndustryView industry) {
+        var colony = industry.colony();
+        if (colony == null) { return; }
+        var quality = colony.quality();
+        Div details = new Div();
+        details.addClassName("colony-details");
+        String suitability = switch (quality.suitability()) {
+            case HARSH -> UiTexts.COLONY_HARSH;
+            case HABITABLE -> UiTexts.COLONY_HABITABLE;
+            case FERTILE -> UiTexts.COLONY_FERTILE;
+        };
+        String atmosphere = switch (quality.atmosphere()) {
+            case NONE -> UiTexts.COLONY_ATMOSPHERE_NONE;
+            case THIN -> UiTexts.COLONY_ATMOSPHERE_THIN;
+            case TEMPERATE -> UiTexts.COLONY_ATMOSPHERE_TEMPERATE;
+            case DENSE -> UiTexts.COLONY_ATMOSPHERE_DENSE;
+        };
+        details.add(new Div(new Span(I18n.t(UiTexts.COLONY_LOCATION,
+                        I18n.t(quality.moon() ? UiTexts.COLONY_MOON : UiTexts.COLONY_PLANET), I18n.t(suitability)))),
+                new Div(new Span(I18n.t(UiTexts.COLONY_POPULATION, colony.population() / 100.0,
+                        colony.populationLimit() / 100.0, colony.nextPopulation() / 100.0))),
+                new Div(new Span(I18n.t(UiTexts.COLONY_LABOR, industry.usableCapacity(), industry.capacity()))),
+                new Div(new Span(I18n.t(UiTexts.COLONY_ENVIRONMENT, quality.orbitAu(), quality.luminosity(), I18n.t(atmosphere)))),
+                new Div(new Span(I18n.t(UiTexts.COLONY_RICHNESS, quality.metalRichness()))));
+        add(details);
     }
 
     private static Div expansionProgress(IndustryView industry) {
@@ -60,19 +88,19 @@ public final class IndustryPanel extends Div {
     private void addEditor(IndustryView industry, IntConsumer apply, IntConsumer preview) {
         IntegerField allocation = new IntegerField(I18n.t(UiTexts.ECONOMY_ALLOCATION));
         allocation.setId(ALLOCATION_ID);
-        allocation.setMin(0); allocation.setMax(industry.capacity()); allocation.setStepButtonsVisible(true);
+        allocation.setMin(0); allocation.setMax(industry.usableCapacity()); allocation.setStepButtonsVisible(true);
         allocation.setValue(industry.expansionAllocation());
         allocation.addValueChangeListener(event -> {
             Integer value = event.getValue();
-            if (value != null && value >= 0 && value <= industry.capacity()) { preview.accept(value); }
+            if (value != null && value >= 0 && value <= industry.usableCapacity()) { preview.accept(value); }
         });
         Div quick = new Div(); quick.addClassName("industry-quick-actions");
         quick.add(choice(UiTexts.ECONOMY_ALL_SHIPS, allocation, 0),
-                choice(UiTexts.ECONOMY_HALF, allocation, industry.capacity() / 2),
-                choice(UiTexts.ECONOMY_ALL_EXPANSION, allocation, industry.capacity()));
+                choice(UiTexts.ECONOMY_HALF, allocation, industry.usableCapacity() / 2),
+                choice(UiTexts.ECONOMY_ALL_EXPANSION, allocation, industry.usableCapacity()));
         Button save = new Button(I18n.t(UiTexts.ECONOMY_APPLY), _ -> {
             Integer value = allocation.getValue();
-            if (value != null && value >= 0 && value <= industry.capacity()) { apply.accept(value); }
+            if (value != null && value >= 0 && value <= industry.usableCapacity()) { apply.accept(value); }
         });
         save.setId(APPLY_ID); save.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
         add(allocation, quick, save);
@@ -90,9 +118,9 @@ public final class IndustryPanel extends Div {
         Span distribution = controls.distribution();
         Span delivery = controls.delivery();
         Span estimate = controls.estimate();
-        int output = industry.capacity() - points;
-        ships.getStyle().set(CssProperties.WIDTH, (100.0 * output / industry.capacity()) + "%");
-        expansion.getStyle().set(CssProperties.WIDTH, (100.0 * points / industry.capacity()) + "%");
+        int output = industry.usableCapacity() - points;
+        ships.getStyle().set(CssProperties.WIDTH, (100.0 * output / industry.usableCapacity()) + "%");
+        expansion.getStyle().set(CssProperties.WIDTH, (100.0 * points / industry.usableCapacity()) + "%");
         distribution.setText(I18n.t(UiTexts.ECONOMY_DISTRIBUTION, output, points));
         int delivered = Math.min(reachable, Math.max(0, available + output - industry.reserveShortfall()));
         delivery.setText(I18n.t(UiTexts.ECONOMY_DELIVERY, delivered, outgoing));

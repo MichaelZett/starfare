@@ -9,10 +9,10 @@ public final class IndustryPolicy {
 
     public static int allocation(AiStrategy strategy, IndustryView industry, int enemyRounds, int availableShips) {
         if (industry.atMaximum() || enemyRounds <= 2) { return 0; }
-        if (strategy == AiStrategy.INDUSTRY_LIGHT) { return industry.capacity() / 4; }
+        if (strategy == AiStrategy.INDUSTRY_LIGHT) { return industry.usableCapacity() / 4; }
         if (strategy != AiStrategy.INDUSTRY_ADAPTIVE) { throw new IllegalArgumentException("Expected an adaptive industry profile"); }
-        if (availableShips < industry.capacity() * 2 || industry.reserveShortfall() > 0) { return 0; }
-        int points = enemyRounds <= 4 ? industry.capacity() / 4 : industry.capacity() / 2;
+        if (availableShips < industry.usableCapacity() * 2 || industry.reserveShortfall() > 0) { return 0; }
+        int points = enemyRounds <= 4 ? industry.usableCapacity() / 4 : industry.usableCapacity() / 2;
         return Math.min(points, industry.expansionCost() - industry.expansionProgress());
     }
 }

@@ -8,6 +8,13 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Interner Wirtschafts-Zwischenstand Spaceward 1.2.0-w1: gespeicherte
+  Systemqualität und Koloniewachstum begrenzen die nutzbare Industrie.
+  Systemsicht, KI, Speicherung und historische Nachbetrachtung berücksichtigen
+  Bevölkerung und Arbeitskräfte. Öffentliche Neuanlage bleibt bei 1.1.0;
+  bestehende Partien behalten ihre Regeln. Metallförderung und Recycling folgen
+  in gesonderten Regelversionen.
+
 - KI-Strategie je Sitz im Partiewizard wählen: Basisstrategie, früher Angriff,
   Expansion, Kräftekonzentration und Verteidigung; Spaceward ergänzt drei
   Industrieprofile. Auswahl und Zusammenfassung bleiben beim Zurückgehen

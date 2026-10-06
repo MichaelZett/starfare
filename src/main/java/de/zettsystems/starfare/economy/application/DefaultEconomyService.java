@@ -20,7 +20,7 @@ public class DefaultEconomyService implements EconomyService {
         StarSystem system = state.getSystem(systemId);
         Industry industry = state.industries().get(systemId);
         if (system == null || system.neutral() || !Objects.equals(system.ownerId(), playerId)
-                || industry == null || points > industry.capacity()
+                || industry == null || points > state.usableIndustrialCapacity(systemId)
                 || (industry.capacity() == EconomyRules.MAX_CAPACITY && points != 0)) { return false; }
         state.planIndustrialExpansion(systemId, industry.allocateExpansion(points));
         return true;
@@ -38,8 +38,9 @@ public class DefaultEconomyService implements EconomyService {
             Industry current = state.industries().get(system.id());
             if (current == null) { throw new IllegalStateException("Missing industry for system " + system.id()); }
             int shipped = routedShips.getOrDefault(system.id(), 0);
+            int produced = system.productionPerTurn();
             state.completeIndustrialProduction(system.id(), current.expandForOneTurn(), shipped);
-            results.add(new IndustrialProduction(ownerId, system.id(), system.name(), current.shipbuilding()));
+            results.add(new IndustrialProduction(ownerId, system.id(), system.name(), produced));
         }
         return List.copyOf(results);
     }

@@ -4,6 +4,20 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String COLONY_LOCATION = "colony.location";
+    public static final String COLONY_PLANET = "colony.planet";
+    public static final String COLONY_MOON = "colony.moon";
+    public static final String COLONY_HARSH = "colony.harsh";
+    public static final String COLONY_HABITABLE = "colony.habitable";
+    public static final String COLONY_FERTILE = "colony.fertile";
+    public static final String COLONY_POPULATION = "colony.population";
+    public static final String COLONY_LABOR = "colony.labor";
+    public static final String COLONY_ENVIRONMENT = "colony.environment";
+    public static final String COLONY_RICHNESS = "colony.richness";
+    public static final String COLONY_ATMOSPHERE_NONE = "colony.atmosphere.none";
+    public static final String COLONY_ATMOSPHERE_THIN = "colony.atmosphere.thin";
+    public static final String COLONY_ATMOSPHERE_TEMPERATE = "colony.atmosphere.temperate";
+    public static final String COLONY_ATMOSPHERE_DENSE = "colony.atmosphere.dense";
     public static final String AI_STRATEGY_SEAT = "ai.strategy.seat";
     public static final String AI_STRATEGY_HINT = "ai.strategy.hint";
     public static final String AI_STRATEGY_SUMMARY = "ai.strategy.summary";
