@@ -251,6 +251,15 @@ reicht der Schiffbau nicht, können sie auf Garnison oberhalb der Reserve zugrei
 Engpässe werden angezeigt. Rohstoffe, Forschung und Schiffstypen folgen später.
 SectorForces verwendet weiterhin seine bisherigen Regeln.
 
+Die nächste Wirtschaftsfassung wird zunächst intern geprüft. Der Zwischenstand
+**1.2.0-w1** ergänzt eine gespeicherte Hauptkolonie je System. Bevölkerung und
+Industrie bestimmen gemeinsam die nutzbare Kapazität; zusätzliche Arbeitskräfte
+und fertiger Ausbau wirken erst in der nächsten Runde. Die Systemsicht zeigt
+Bevölkerung, Wachstum, Eignung und den Engpass durch fehlende Arbeitskräfte.
+Eroberung erhält Bevölkerung und Systemeigenschaften. Metallreichtum ist hier
+eine gespeicherte Eigenschaft; Förderung und Recycling folgen später.
+Der normale Partiedialog verwendet weiterhin **1.1.0**.
+
 ## Spaceward-Navigation
 
 Jede Spaceward-Partie erhält eine feste Reichweite je Reiseabschnitt.

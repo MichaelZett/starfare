@@ -201,6 +201,46 @@ Tao's [Spaceward Ho! 5 manual](https://www.deltatao.com/ho/ho/): colony suitabil
 terraforming, finite metal, empire-wide budgets, ship design and technology are
 separate future decisions. They are not implemented as part of M3.
 
+## Internal colony checkpoint: Spaceward 1.2.0-w1
+
+`RulesetRef.SPACEWARD_COLONIES` is a separate, frozen internal rule reference.
+The catalog supports restoration and `ColonySpacewardTurnEngine` dispatch, but
+`requireCreatable` rejects public creation. The wizard still defaults to 1.1.0.
+Subsequent metal rules must use a different reference rather than change W1.
+
+`SystemQuality` saves stellar luminosity, orbital distance in AU, host body,
+whether the colony is on a moon, atmosphere and independently generated metal
+richness. `ColonyGenesis` generates this once at the explicit creation boundary.
+Home systems share fertility and richness despite different star appearances.
+`SystemComposition` renders the saved host for fully visible W1 systems;
+older versions retain their decorative generator. Richness is not yet a deposit.
+
+`ColonyEconomy` combines the immutable quality and population. One labor unit
+is 100 population points; usable capacity is min(installed industry, whole labor
+units). Suitability permits 25/35/50 labor units, with 1/2/3 percent growth per
+round, rounded up to whole population points and capped at the population limit.
+The stellar-flux proxy is luminosity / orbital-distance squared. Temperate
+atmosphere at flux 0.75–1.5 is fertile; thin or temperate atmosphere at 0.4–2 is
+habitable; other generated colonies are harsh. These thresholds are game balance
+choices, not a physical climate model. The conceptual basis is the joint role of
+distance and atmosphere described by [NASA](https://science.nasa.gov/exoplanets/habitable-zone/).
+
+`GameState.colonies`, optional snapshot and replay-frame maps preserve the exact
+properties and fractional growth. W1 rejects incomplete colony maps, including
+historical frames; restoration never regenerates them. Older versions accept
+missing fields and retain empty maps. Copying uses immutable records and separate
+maps. Conquest retains the colony while resetting allocation; neutral systems
+do not grow automatically. Actual production uses current labor and allocation;
+growth updates the next turn's output. Allocation, routing, AI and UI previews
+consume the same usable capacity. The original versions retain their outputs.
+
+Only fully visible industry views contain `ColonyView`; sensor contacts receive
+no population or environment details. Replay views use their frame's saved values.
+`ColonySnapshotTest` exercises JSON and a new store instance restoring a database
+party before resolving another round. The test-only `colonies.feature` journey
+checks allocation, growth, reload and historical review. This checkpoint adds no
+mining, resource spending, recycling, ship designs or research.
+
 ## Classic compatibility contract
 
 The Classic reference baseline is commit `c5df8d1` (2026-10-02), before ruleset

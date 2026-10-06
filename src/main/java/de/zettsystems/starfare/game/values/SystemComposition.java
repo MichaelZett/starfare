@@ -21,6 +21,13 @@ public record SystemComposition(List<StarType> stars, List<Body> bodies) {
         if (!system.fullyVisible()) {
             return Optional.empty();
         }
+        var industry = system.industry();
+        var colony = industry == null ? null : industry.colony();
+        if (colony != null) {
+            var quality = colony.quality();
+            return Optional.of(new SystemComposition(List.of(quality.star()),
+                    List.of(new Body(1, quality.body(), quality.moon() ? 1 : 0, false, 0))));
+        }
         return Optional.of(illustrate(gameId, system.id()));
     }
 

@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.time.Duration;
 
 /**
- * Persistence contract for {@link GameSession} instances. Only the in-memory implementation exists
- * today; a DB-backed one may follow.
+ * Persistence contract for {@link GameSession} instances, backed by PostgreSQL snapshots
+ * and an in-memory session cache in production.
  */
 public interface GameSessionStore {
     void save(GameSession session);
