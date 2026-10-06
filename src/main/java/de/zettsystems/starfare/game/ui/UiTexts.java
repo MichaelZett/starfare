@@ -4,6 +4,17 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String AI_STRATEGY_SEAT = "ai.strategy.seat";
+    public static final String AI_STRATEGY_HINT = "ai.strategy.hint";
+    public static final String AI_STRATEGY_SUMMARY = "ai.strategy.summary";
+    public static final String AI_STRATEGY_BASELINE = "ai.strategy.baseline";
+    public static final String AI_STRATEGY_RUSH = "ai.strategy.rush";
+    public static final String AI_STRATEGY_EXPANSION = "ai.strategy.expansion";
+    public static final String AI_STRATEGY_CONCENTRATION = "ai.strategy.concentration";
+    public static final String AI_STRATEGY_DEFENSE = "ai.strategy.defense";
+    public static final String AI_STRATEGY_INDUSTRY = "ai.strategy.industry";
+    public static final String AI_STRATEGY_INDUSTRY_LIGHT = "ai.strategy.industry_light";
+    public static final String AI_STRATEGY_INDUSTRY_ADAPTIVE = "ai.strategy.industry_adaptive";
     public static final String DIP_TITLE = "diplomacy.title";
     public static final String DIP_CLOSE = "diplomacy.close";
     public static final String DIP_RULES = "diplomacy.rules";

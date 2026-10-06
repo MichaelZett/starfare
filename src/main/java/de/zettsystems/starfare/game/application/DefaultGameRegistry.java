@@ -271,7 +271,7 @@ public class DefaultGameRegistry implements GameRegistry {
         for (int i = 1; i <= setup.aiPlayers(); i++) {
             String aiName = aiName(i);
             state.players().add(new Player(pid++, aiName, true,
-                    setup.colorForSeat(setup.humanPlayers() + i - 1), EmpireNameGenerator.forAi(i)));
+                    setup.colorForSeat(setup.humanPlayers() + i - 1), EmpireNameGenerator.forAi(i), setup.strategyForAi(i - 1)));
         }
         for (Player p : state.players()) {
             state.intel().put(p.id(), new HashMap<>());

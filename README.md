@@ -37,6 +37,25 @@ unchanged. Lobby, joining, management, archive and statistics show the selected
 rules. Templates and rematches retain them. Personal statistics can be filtered
 by variant, including totals and opponent records.
 
+## AI strategies
+
+The new-game wizard offers a separate strategy for each AI seat. SectorForces
+supports Baseline, Rush, Expansion, Concentration and Defense. Spaceward also
+supports Industry, Light industry and Adaptive industry. Baseline preserves the
+previous AI behavior and is the default for new seats and older saved games.
+
+Rush commits ships early; Expansion favors nearby neutral systems; Concentration
+moves spare forces toward the front; Defense keeps larger local reserves. Industry
+invests heavily, Light industry retains more shipbuilding, and Adaptive industry
+adjusts investment to visible threats, available ships and reserve shortages.
+These are different approaches, not difficulty levels or a guaranteed ranking.
+
+Selections survive changes to the AI count, the confirmation/back step, reloads,
+server restarts, templates and rematches. Switching to SectorForces resets any
+incompatible industry selection to Baseline. The confirmation lists each AI seat's
+strategy before creation. The alternatives use the same policies as the strategy
+benchmark and consume player-visible information and legal route durations.
+
 ## System inspector
 
 The system inspector on the right includes a schematic stellar system with
@@ -403,6 +422,7 @@ test output and a screenshot in `build/e2e-failures/`.
 ```bash
 ./gradlew test
 ./gradlew e2eTest
+./gradlew e2eTest "-Dcucumber.filter.tags=@ai-strategies"
 node --test src/test/frontend/battle-replay.test.mjs
 ```
 
@@ -414,9 +434,10 @@ Testcontainers; Docker must be running.
 The first verified pilot results and their limitations are documented in
 [the experiment report (German)](docs/STRATEGY-EXPERIMENTS.md).
 
-The opt-in `strategyBenchmark` task runs SectorForces and internal Spaceward games
+The opt-in `strategyBenchmark` task runs SectorForces and Spaceward games
 through the real turn engines without Spring, PostgreSQL, a browser or audio.
-It does not change the lobby AI or enable Spaceward for public games.
+Running the tooling does not alter stored games or their AI selections. Spaceward 1.1.0 is
+available in the lobby; `--rules=spaceward` deliberately selects the historical 1.0.0 rules.
 
 ```powershell
 # Pairwise matches, with both seat assignments for every pair.
@@ -452,7 +473,21 @@ Strategies are intentionally small, contrasting policies:
 | CONCENTRATION | Attack estimated beatable targets and transfer idle forces towards the front. |
 | DEFENSE | Keep a larger reserve and strongly prefer lower-risk targets. |
 | INDUSTRY | Spaceward only: invest two thirds of capacity away from known nearby enemies, one fifth near them; consolidate idle forces. |
+| INDUSTRY_LIGHT | Spaceward only, explicit selection: invest one quarter of capacity when visible enemies are more than two travel rounds away; use the same military policy as INDUSTRY. |
+| INDUSTRY_ADAPTIVE | Spaceward only, explicit selection: stop investing near visible enemies or with insufficient available ships/reserve; otherwise invest one quarter near the front or one half in the rear, capped at the next expansion's remaining cost. |
 
+Use `--profiles=EXPANSION,CONCENTRATION,INDUSTRY,INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE`
+to compare selected profiles in `matrix` or `multiplayer` mode. Matrix mode needs
+at least two distinct profiles; multiplayer supports two to seven. All profiles
+must support every selected ruleset. Omitting this option preserves the original
+profile sets and historical experiment dimensions. The additional industry
+profiles change only production allocation; targeting, reserves and reinforcement
+match INDUSTRY, so their comparisons isolate the allocation policy.
+
+```powershell
+# Separate validation maps, released Spaceward rules, longer matches.
+.\gradlew.bat strategyBenchmark -x vaadinBuildFrontend "-PstrategyArgs=--mode=matrix --rules=spaceward-1.1 --profiles=EXPANSION,CONCENTRATION,INDUSTRY,INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE --systems=16,32 --first-seed=1001 --seeds=5 --rounds=300 --output=build/strategy-harness/deepening-control-300"
+```
 All alternative policies consume the normal fog-filtered player view and legal
 route durations. Unknown defence is estimated at five ships, not read from the
 hidden state. Policies cannot see other players' pending orders. Commands are

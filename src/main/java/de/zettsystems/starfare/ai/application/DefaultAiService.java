@@ -14,6 +14,16 @@ import java.util.stream.Collectors;
 
 @Service
 public class DefaultAiService implements AiService {
+    private final ProfilePlanning profiles;
+
+    public DefaultAiService() {
+        this(new DefaultProfilePlanning(new de.zettsystems.starfare.game.application.DefaultPlayerViewBuilder(),
+                new de.zettsystems.starfare.economy.application.DefaultEconomyService()));
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public DefaultAiService(ProfilePlanning profiles) { this.profiles = profiles; }
+
 
     @Override
     public void planAiTurns(GameState state, FleetService fleetService) {
@@ -28,6 +38,10 @@ public class DefaultAiService implements AiService {
 
     private void doAiTurn(GameState state, FleetService fleetService, Player p, List<StarSystem> owned) {
         if (!p.ai() || owned.isEmpty()) {
+            return;
+        }
+        if (p.aiStrategy() != de.zettsystems.starfare.ai.values.AiStrategy.BASELINE) {
+            profiles.plan(state, fleetService, p);
             return;
         }
         var base = owned.stream().max(Comparator.comparingInt(StarSystem::garrison)).orElseThrow();

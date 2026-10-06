@@ -54,6 +54,7 @@ final class CreateGameWizardDialog {
 
         RulesetSelector rulesets = new RulesetSelector(catalog);
         VictorySettings victorySettings = new VictorySettings();
+        AiStrategyFields aiStrategies = new AiStrategyFields();
         IntegerField systems = intField(I18n.t(UiTexts.LOBBY_FIELD_SYSTEMS),
                 GameConfig.MIN_SYSTEM_COUNT, GameConfig.MAX_SYSTEM_COUNT, GameConfig.DEFAULT_SYSTEM_COUNT);
         IntegerField humans = intField(I18n.t(UiTexts.LOBBY_FIELD_HUMANS),
@@ -148,6 +149,7 @@ final class CreateGameWizardDialog {
         updateRoundTimerVisibility.run();
         rulesets.onRulesetChange(ruleset -> {
             victorySettings.select(ruleset);
+            aiStrategies.selectRuleset(ruleset);
             combatSection.setVisible(!ruleset.resolvesCoalitionBattles());
         });
 
@@ -163,6 +165,8 @@ final class CreateGameWizardDialog {
         humans.addValueChangeListener(_ -> rebuildProductionInputs.run());
         ai.addValueChangeListener(_ -> rebuildProductionInputs.run());
         rebuildProductionInputs.run();
+        ai.addValueChangeListener(_ -> aiStrategies.showSeats(valueOrDefault(ai.getValue(), GameConfig.DEFAULT_AI_PLAYERS)));
+        aiStrategies.showSeats(GameConfig.DEFAULT_AI_PLAYERS);
 
         Div intro = new Div();
         intro.addClassName("wizard-intro");
@@ -191,6 +195,7 @@ final class CreateGameWizardDialog {
                 intro,
                 rulesets,
                 overview,
+                aiStrategies,
                 advanced);
         body.addClassName("wizard-body");
         body.setPadding(false);
@@ -224,7 +229,7 @@ final class CreateGameWizardDialog {
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
                 observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout,
-                combatRandomness, roundLimit, stragglerLimit, attackOrder, victoryPercent, rulesets, victorySettings);
+                combatRandomness, roundLimit, stragglerLimit, attackOrder, victoryPercent, rulesets, victorySettings, aiStrategies);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_REVIEW));
         createButton.set(create);
         WizardActionContext actionContext = new WizardActionContext(game, onCreated, hostName, gameName, empireName,
@@ -338,7 +343,7 @@ final class CreateGameWizardDialog {
                               ComboBox<GalaxyLayout> galaxyLayout,
                               Input combatRandomness,
                               ComboBox<Duration> roundLimit, ComboBox<Duration> stragglerLimit,
-                              ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent, RulesetSelector rulesets, VictorySettings victorySettings) {
+                              ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent, RulesetSelector rulesets, VictorySettings victorySettings, AiStrategyFields aiStrategies) {
     }
 
     private static GameSetup buildSetup(FormInputs in) {
@@ -370,7 +375,8 @@ final class CreateGameWizardDialog {
                 new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), attackOrder),
                 valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)
         ).normalized().selectRuleset(ruleset)
-                .chooseVictoryRules(in.victorySettings().chosen(valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)));
+                .chooseVictoryRules(in.victorySettings().chosen(valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)))
+                .chooseAiStrategies(in.aiStrategies().strategies());
     }
 
     private static void applyNormalizedColors(List<ComboBox<ColorOption>> inputs, GameSetup setup) {
@@ -420,6 +426,9 @@ final class CreateGameWizardDialog {
                     index < setup.humanPlayers() ? I18n.t(UiTexts.LOBBY_SUMMARY_HUMAN, index + 1)
                             : I18n.t(UiTexts.LOBBY_SUMMARY_AI, index - setup.humanPlayers() + 1),
                     setup.startProductionForSeat(index)));
+        }
+        for (int index = 0; index < setup.aiPlayers(); index++) {
+            summary.add(summaryLine(UiTexts.AI_STRATEGY_SUMMARY, index + 1, AiStrategyFields.label(setup.strategyForAi(index))));
         }
         Div colors = new Div();
         colors.addClassName("wizard-summary-colors");

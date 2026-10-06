@@ -203,6 +203,10 @@ tasks.register('e2eTest', Test) {
     systemProperty 'e2e.headless', System.getProperty('e2e.headless', 'true')
     // Nur zur Diagnose (-De2e.lang=en-US): Die Steps erwarten die deutsche Oberfläche.
     systemProperty 'e2e.lang', System.getProperty('e2e.lang', 'de-DE')
+    def cucumberTags = System.getProperty('cucumber.filter.tags')
+    if (cucumberTags != null) {
+        systemProperty 'cucumber.filter.tags', cucumberTags
+    }
     jacoco {
         destinationFile = layout.buildDirectory.file('jacoco/e2eTest.exec').get().asFile
     }
