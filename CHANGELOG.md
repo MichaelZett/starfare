@@ -8,6 +8,24 @@ Abschnitt als Release-Body und bricht ohne ihn ab.
 
 ## Unreleased
 
+- KI-Strategie je Sitz im Partiewizard wählen: Basisstrategie, früher Angriff,
+  Expansion, Kräftekonzentration und Verteidigung; Spaceward ergänzt drei
+  Industrieprofile. Auswahl und Zusammenfassung bleiben beim Zurückgehen
+  erhalten. Speicherung, Vorlagen, Revanchen und Sitzübergaben übernehmen das
+  Profil; alte Spielstände verwenden weiterhin die Basisstrategie. Spiel-KI
+  und Strategieprüfstand teilen die alternative Planungslogik.
+
+- Strategieprüfstand erweitert: zurückhaltender und situationsabhängiger
+  Industrieausbau sowie ausdrücklich wählbare Profile für Zweikämpfe und
+  Mehrspielerläufe. Die bisherigen Versuchsvorgaben bleiben erhalten;
+  Spielregeln bleiben unverändert; die Profile sind nun auch je KI-Sitz wählbar.
+
+- Abhängigkeiten aktualisiert: Vaadin 25.3.1, Identity 1.5.0, Cucumber 8.0.4,
+  WebDriverManager 6.4.0, NullAway 0.14.2 und Plugin 3.3.0, SpotBugs-Plugin
+  6.5.12, ArchUnit 1.5.1 sowie Gradle 9.8.0 und JUnit-Berichtsaction 6.6.0.
+  Spring-Boot-verwaltete Versionen bleiben unverändert. OpenRewrite bleibt
+  wegen der nicht auflösbaren neueren Rezept-BOM auf der geprüften Paarung.
+
 - Spaceward freigegeben (M7): Die Variante ist im Dialog „Neues Spiel“ mit
   Regelversion 1.1.0 wählbar; SectorForces bleibt vorausgewählt. Die
   Angriffsreihenfolge entfällt dort, da alle Seiten gleichzeitig kämpfen. Wirtschaft,

@@ -1,6 +1,6 @@
 # Starfare – Spielanleitung
 
-Stand: 1.0.0-SNAPSHOT, 2. Oktober 2026. Die Anleitung beschreibt die
+Stand: 1.0.0-SNAPSHOT, 6. Oktober 2026. Die Anleitung beschreibt die
 Desktop-Oberfläche. Technische Einrichtung und Start der Anwendung stehen in
 der [README](../README.md).
 
@@ -36,6 +36,7 @@ Im Assistenten wählst du unter anderem:
 
 - 8–120 Systeme; mindestens so viele wie Teilnehmer.
 - Bis zu acht menschliche und sieben KI-Spieler, insgesamt höchstens zehn.
+- Eine eigene Strategie je KI-Spieler; die Zusammenfassung nennt jede Auswahl.
 - Sitzfarben, Galaxieform, Produktionsverteilung und Startwerte.
 - Produktion von 1–20 Schiffen je Runde und Startgarnison von 1–50 Schiffen.
 - Zuschauer und Wiedereinstieg, Rundenfristen sowie die Angriffsreihenfolge.
@@ -52,6 +53,30 @@ eingeladene Spieler muss selbst beitreten. Nach dem Start ist die Sichtbarkeit f
 Die Lobby zeigt offene und laufende Partien. Suche nach Partie- oder Spielernamen
 und nutze den Filter für eigene, offene oder laufende Partien. Beendete Partien
 findest du im **Archiv** über **Mein Bereich**.
+
+### KI-Strategien
+
+Unter den allgemeinen Einstellungen wählst du für jeden KI-Sitz eine Strategie.
+Die Auswahl bleibt beim Ändern der KI-Anzahl und beim Zurückgehen aus der
+Zusammenfassung erhalten. Sie wird mit der Partie gespeichert und von Vorlagen
+und Revanchen übernommen. Bestehende Partien verwenden die **Basisstrategie**.
+
+| Strategie | Schwerpunkt |
+| --- | --- |
+| Basisstrategie | Bisheriges Verhalten: stärkste Basis, nahes Ziel und begrenzter Versand; Spaceward baut zusätzlich Industrie aus. |
+| Früher Angriff | Früher Versand großer Kräfte mit kleiner Rücklage; gegnerische Systeme werden stärker bevorzugt. |
+| Expansion | Bevorzugt nahe, schwach verteidigte neutrale Systeme. |
+| Kräftekonzentration | Führt freie Schiffe aus dem Hinterland näher an die Front. |
+| Verteidigung | Hält größere Garnisonen zurück und verstärkt die Front. |
+| Industrieausbau | Investiert einen großen Produktionsanteil in weiteren Ausbau. |
+| Zurückhaltender Industrieausbau | Investiert außerhalb naher sichtbarer Bedrohung ein Viertel der Kapazität. |
+| Adaptiver Industrieausbau | Berücksichtigt sichtbare Bedrohung, Schiffsbestand und Reservebedarf; baut bei knappen Kräften nicht weiter aus. |
+
+Die drei Industrieprofile stehen nur in **Spaceward** bereit. Beim Wechsel zu
+SectorForces werden unpassende Auswahlen auf Basisstrategie zurückgesetzt.
+Strategien sind unterschiedliche Spielweisen, keine festen Schwierigkeitsstufen.
+Die zusätzlichen Profile nutzen sichtbare Informationen; verborgene Garnisonen
+und gegnerische Befehle erhalten sie nicht.
 
 ## Karte lesen und bedienen
 

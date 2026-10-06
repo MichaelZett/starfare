@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.values;
 
+import de.zettsystems.starfare.ai.values.AiStrategy;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
@@ -25,7 +26,17 @@ public record GameSetup(
         RoundRules roundRules,
         int victorySystemPercent,
         RulesetRef ruleset,
-        @Nullable VictoryRules victoryRules) {
+        @Nullable VictoryRules victoryRules, List<AiStrategy> aiStrategies) {
+    public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
+            int neutralMinProduction, int neutralMaxProduction, int startGarrison, boolean observersAllowed,
+            boolean reentryAllowed, List<String> seatColorHexes, ProductionDistribution productionDistribution,
+            GalaxyLayout galaxyLayout, boolean battlePresentationEnabled, int combatRandomnessPercent,
+            RoundRules roundRules, int victorySystemPercent, RulesetRef ruleset, @Nullable VictoryRules victoryRules) {
+        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction,
+                neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes,
+                productionDistribution, galaxyLayout, battlePresentationEnabled, combatRandomnessPercent,
+                roundRules, victorySystemPercent, ruleset, victoryRules, List.of());
+    }
     public GameSetup(
         int systemCount,
         int humanPlayers,
@@ -136,6 +147,7 @@ public record GameSetup(
     }
 
     public GameSetup {
+        aiStrategies = aiStrategies == null ? List.of() : List.copyOf(aiStrategies);
         if (ruleset == null) { ruleset = RulesetRef.SECTOR_FORCES; }
         victoryRules = (victoryRules == null ? VictoryRules.defaults(ruleset, victorySystemPercent) : victoryRules).forRuleset(ruleset);
         victorySystemPercent = victoryRules.individualSystemPercent();
@@ -145,7 +157,7 @@ public record GameSetup(
         return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
                 neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
                 seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
-                combatRandomnessPercent, roundRules, victorySystemPercent, selected, VictoryRules.defaults(selected, victorySystemPercent));
+                combatRandomnessPercent, roundRules, victorySystemPercent, selected, VictoryRules.defaults(selected, victorySystemPercent), aiStrategies);
     }
 
     @Override public VictoryRules victoryRules() { return java.util.Objects.requireNonNull(victoryRules); }
@@ -154,7 +166,7 @@ public record GameSetup(
         return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
                 neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
                 seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
-                combatRandomnessPercent, roundRules, chosen.individualSystemPercent(), ruleset, chosen);
+                combatRandomnessPercent, roundRules, chosen.individualSystemPercent(), ruleset, chosen, aiStrategies);
     }
 
     public GameSetup normalized() {
@@ -186,7 +198,20 @@ public record GameSetup(
                         GameConfig.MAX_COMBAT_RANDOMNESS_PERCENT),
                 roundRules == null ? RoundRules.defaults() : roundRules,
                 clamp(victorySystemPercent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT,
-                        GameConfig.MAX_VICTORY_SYSTEM_PERCENT), ruleset, victoryRules);
+                        GameConfig.MAX_VICTORY_SYSTEM_PERCENT), ruleset, victoryRules, java.util.stream.IntStream.range(0, ai)
+                        .mapToObj(this::strategyForAi).toList());
+    }
+
+    public GameSetup chooseAiStrategies(List<AiStrategy> selected) {
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
+                neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
+                seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
+                combatRandomnessPercent, roundRules, victorySystemPercent, ruleset, victoryRules, selected).normalized();
+    }
+
+    public AiStrategy strategyForAi(int index) {
+        AiStrategy selected = index >= 0 && index < aiStrategies.size() ? aiStrategies.get(index) : AiStrategy.BASELINE;
+        return selected.supports(ruleset) ? selected : AiStrategy.BASELINE;
     }
 
     public int totalPlayers() {

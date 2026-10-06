@@ -41,7 +41,7 @@ class SimulationTest {
         var after = Observation.capture(state, 1, views);
         assertThat(after).isEqualTo(before);
         assertThat(BaselinePolicy.plan(state, 1, views)).isEqualTo(baseline);
-        for (var strategy : Strategy.forRules(state.ruleset())) {
+        for (var strategy : spaceward ? List.of(Strategy.values()) : Strategy.forRules(state.ruleset())) {
             if (strategy != Strategy.BASELINE) {
                 assertThat(HeuristicPolicy.plan(strategy, after)).isEqualTo(HeuristicPolicy.plan(strategy, before));
             }

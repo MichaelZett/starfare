@@ -10,11 +10,12 @@ import java.util.Map;
 import java.util.Set;
 
 record BenchmarkOptions(String mode, List<RulesetRef> rules, List<GalaxyLayout> layouts,
-                        List<Integer> sizes, Seeds seeds, Limits limits, Path output, String allianceVictory, int individualPercent, int alliancePercent) {
+                        List<Integer> sizes, Seeds seeds, Limits limits, Path output, String allianceVictory, int individualPercent, int alliancePercent,
+                        List<Strategy> selectedProfiles) {
     record Seeds(long first, long combat, int count, int combatCount) { }
     record Limits(int rounds, int forkRound, int randomness) { }
     private static final Set<String> KEYS = Set.of("mode", "rules", "layouts", "systems", "first-seed", "combat-seed",
-            "seeds", "combat-seeds", "rounds", "fork-round", "randomness", "output", "alliance-victory", "individual-percent", "alliance-percent");
+            "seeds", "combat-seeds", "rounds", "fork-round", "randomness", "output", "alliance-victory", "individual-percent", "alliance-percent", "profiles");
 
     static BenchmarkOptions parse(String[] args) {
         Map<String, String> options = new HashMap<>();
@@ -56,8 +57,21 @@ record BenchmarkOptions(String mode, List<RulesetRef> rules, List<GalaxyLayout> 
         int individual = number(options, "individual-percent", 70);
         int group = number(options, "alliance-percent", 70);
         if (individual < 10 || individual > 100 || group < 10 || group > 100) { throw new IllegalArgumentException("Victory shares: 10..100"); }
+        var profiles = options.containsKey("profiles")
+                ? Arrays.stream(options.get("profiles").split(",", -1)).map(Strategy::valueOf).toList() : List.<Strategy>of();
+        validateProfiles(mode, rules, profiles);
         return new BenchmarkOptions(mode, rules, layouts, sizes, seeds, limits,
-                Path.of(options.getOrDefault("output", "build/strategy-harness/" + mode)), allianceVictory, individual, group);
+                Path.of(options.getOrDefault("output", "build/strategy-harness/" + mode)), allianceVictory, individual, group, profiles);
+    }
+
+    private static void validateProfiles(String mode, List<RulesetRef> rules, List<Strategy> profiles) {
+        if (profiles.isEmpty()) { return; }
+        if (!Set.of("matrix", "multiplayer").contains(mode) || profiles.size() < 2
+                || profiles.stream().distinct().count() != profiles.size()
+                || (mode.equals("multiplayer") && profiles.size() > 7)
+                || (rules.stream().anyMatch(rule -> !rule.spaceward()) && profiles.stream().anyMatch(Strategy::requiresIndustry))) {
+            throw new IllegalArgumentException("Profiles require distinct supported strategies: matrix >=2, multiplayer 2..7");
+        }
     }
 
     private static int number(Map<String, String> options, String key, int fallback) {

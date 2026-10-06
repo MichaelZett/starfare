@@ -83,7 +83,7 @@ legacy individual winners. Participants, AI names and winners are fetched with
 three separate collection queries, avoiding a Cartesian product.
 
 The internal browser acceptance route exists only in e2e sources. It previews
-the wizard's Spaceward choices without enabling public creation. The muted
+the wizard's Spaceward choices without modifying the production catalog, which already enables Spaceward 1.1.0 since M7. The muted
 `alliance_victory.feature` covers option dependencies, both winners, reload and
 archive. The strategy harness can pair 1.1.0 scenarios with group victory on/off;
 each member receives its own win in the report.
@@ -193,7 +193,7 @@ system illustration adds industry buildings; the adjacent `IndustryPanel`
 shows allocation, progress, time to growth and next outgoing delivery. Edits
 preview shortages before they are applied. Foreign sensor views and unresolved
 battles do not reveal the industrial details. Observers and archives are read-only.
-`DefaultSpacewardPlanning` uses filtered views, allocating one third of capacity
+The BASELINE branch of `DefaultSpacewardPlanning` uses filtered views, allocating one third of capacity
 to expansion in safe systems and all output to ships near known enemies.
 
 This is Starfare's initial approximation. The long-term inspiration is Delta
@@ -734,7 +734,23 @@ JavaExec task uses the test runtime, but starts neither Spring nor JUnit.
 `SimulationEngine` obtains all plans before applying any command, validates them
 through FleetService and EconomyService, then invokes the normal ruleset engine
 with its automatic AI planning replaced by a no-op. Application defaults keep
-their existing AI and ThreadLocalRandom sources.
+their historical BASELINE behavior and ThreadLocalRandom sources. Selected
+alternative profiles use the shared pure `ai.domain.AiPolicy`, also called by
+the benchmark adapter. `DefaultProfilePlanning` captures `AiObservation` from a
+filtered player view, allies and legal route durations, then applies `AiOrders`
+through the economy and fleet services under the caller's write lock. The policy
+receives no mutable GameState. Classic and both Spaceward engines dispatch each
+AI seat independently; Spaceward still answers diplomacy proposals before planning.
+
+`AiStrategyFields` offers one choice per AI seat and restricts items by ruleset.
+`GameSetup.aiStrategies` indexes only AI seats; normalization fills absent entries
+with BASELINE, drops extra entries and resets unsupported industry profiles.
+`DefaultGameRegistry` copies each choice into `Player.aiStrategy`. Both fields
+are included in existing JSON snapshots, requiring no database migration.
+Missing fields deserialize as the historical baseline. Player handovers retain
+the profile; templates and rematches retain the setup list. The muted
+`ai_strategies.feature` verifies ruleset switches, count changes, confirmation,
+back navigation, creation and reload.
 
 `Observation` exposes only PlayerViewBuilder's filtered state, diplomacy membership
 and legal route durations. Alternative policies never receive GameState. The
@@ -743,6 +759,14 @@ seat marked as AI and no pending orders. Classic baseline only reads exact own
 forces and distances to non-owned systems; Spaceward baseline already consumes
 filtered views. Information-boundary tests perturb hidden forces and enemy orders.
 Only the trusted simulator and result recorder inspect complete state.
+
+Explicit --profiles selections in matrix and multiplayer mode are validated
+against every chosen ruleset before any match. Historical default profile sets
+remain unchanged. The shared `ai.domain.IndustryPolicy` supplies two allocations:
+INDUSTRY_LIGHT and INDUSTRY_ADAPTIVE. They reuse INDUSTRY's military policy and
+consume only own industry, available ships, reserve shortfall and route distance
+to visible enemies. Unknown threats are not revealed. Integer allocation may be
+zero on very small colonies; no fractional growth or new economic rule is added.
 
 CombatService accepts a DoubleSupplier, coalition combat an IntToDoubleFunction,
 and RoundPipeline a supplier for attack-order randomness. The simulator resets

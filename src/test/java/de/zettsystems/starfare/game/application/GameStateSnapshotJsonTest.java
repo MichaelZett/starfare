@@ -23,6 +23,30 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     @Test
+    void aiProfilesSurviveJsonAndMissingFieldsUseTheHistoricalBaseline() {
+        var profile = de.zettsystems.starfare.ai.values.AiStrategy.INDUSTRY_ADAPTIVE;
+        GameState state = new GameState();
+        state.players().add(new Player(1, "AI", true, "#fff"));
+        state.systems().add(new StarSystem(1, "Home", 0, 0, 1, 20, 5, false));
+        state.players().replaceAll(p -> new Player(p.id(), p.name(), true, p.colorHex(), p.empireName(), profile));
+        // Remembering the setup also determines the snapshot's rule version.
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE)
+                .chooseAiStrategies(java.util.Collections.nCopies(GameSetup.defaults().aiPlayers(), profile)));
+        state.start();
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+        var restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+        assertThat(restored.players()).extracting(Player::aiStrategy).containsExactly(profile);
+        assertThat(restored.originalSetup().orElseThrow().aiStrategies()).containsOnly(profile);
+        ((ObjectNode) json.get("players").get(0)).remove("aiStrategy");
+        ((ObjectNode) json.get("originalSetup")).remove("aiStrategies");
+        var legacy = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+        assertThat(legacy.players()).extracting(Player::aiStrategy)
+                .containsExactly(de.zettsystems.starfare.ai.values.AiStrategy.BASELINE);
+        assertThat(legacy.originalSetup().orElseThrow().strategyForAi(0))
+                .isEqualTo(de.zettsystems.starfare.ai.values.AiStrategy.BASELINE);
+    }
+
+    @Test
     void originalSetupSurvivesJsonAndOldSnapshotsRemainReadable() {
         GameState state = sampleState(true);
         state.rememberOrders(1);

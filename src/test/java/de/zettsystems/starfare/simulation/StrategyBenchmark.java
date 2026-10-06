@@ -45,7 +45,7 @@ public final class StrategyBenchmark {
     }
 
     private static void run(BenchmarkOptions options, Scenario scenario, List<MatchResult> results, List<String> skipped) {
-        var profiles = Strategy.forRules(scenario.rules());
+        var profiles = options.selectedProfiles().isEmpty() ? Strategy.forRules(scenario.rules()) : options.selectedProfiles();
         switch (options.mode()) {
             case "matrix" -> {
                 for (int left = 0; left < profiles.size(); left++) {

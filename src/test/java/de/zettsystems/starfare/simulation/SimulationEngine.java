@@ -115,7 +115,8 @@ final class SimulationEngine {
     }
 
     private static void validateStrategies(GameState state, List<Strategy> strategies) {
-        if (strategies.size() != state.players().size() || !Strategy.forRules(state.ruleset()).containsAll(strategies)) {
+        if (strategies.size() != state.players().size()
+                || (!state.ruleset().spaceward() && strategies.stream().anyMatch(Strategy::requiresIndustry))) {
             throw new IllegalArgumentException("Strategies must match seats and rules");
         }
         if (!state.pendingOrders().isEmpty()) { throw new IllegalArgumentException("Simulation expects an unplanned round"); }

@@ -1,7 +1,9 @@
 # Erste Strategieprüfstände — 05.10.2026
 
-Der Prüfstand ist für SectorForces (`classic/1.0.0`) und den internen
-Spaceward-Ausbau (`spaceward/1.0.0`) verfügbar. Er verwendet die echten
+Der Prüfstand ist für SectorForces (`classic/1.0.0`) und Spaceward
+(`spaceward/1.0.0` und `spaceward/1.1.0`) verfügbar. Seit M7 ist Spaceward
+1.1.0 auch in der Lobby freigegeben. Die erste Serie unten untersucht
+ausdrücklich den damaligen Regelstand 1.0.0. Der Prüfstand verwendet die echten
 Rundenimplementierungen und prüft unterschiedliche Strategien, ohne die
 reguläre KI oder bestehende Spielregeln zu verändern. Bedienung und Profile
 stehen im [README](../README.md#strategy-experiments).
@@ -184,4 +186,215 @@ Prüfungen umfassen Schalterabhängigkeiten, getrennte Schwellen, neutrale Syste
 Einzelpriorität, Gruppengleichstand, wirksame Kündigung, alte JSON-Daten,
 gespeicherte Fortsetzung alter Versionen, mehrere Sieger, Vorlagen, Archiv und
 Statistik. Ergebnisdialog und Wizard wurden anhand der Prüfbilder unter
-`build/alliance-victory/` angesehen. Spaceward bleibt bis M7 gesperrt.
+`build/alliance-victory/` angesehen. Diese Nachprüfung erfolgte vor M7;
+die spätere Freigabe ist seit dem Merge `af837ca` vom 05.10.2026 enthalten.
+
+
+## Strategievertiefung — 06.10.2026
+
+M7 ist erledigt. Diese Serie untersucht die freigegebene Spaceward-Regelversion
+1.1.0 und SectorForces 1.0.0. Die produktive KI und Spielregeln bleiben erhalten.
+Die neuen Industrieprofile wurden nach der Entwicklungsserie nicht nachjustiert;
+alle folgenden Kontrollen verwenden denselben eingefrorenen Code. Java 25.0.3,
+Quellfingerabdruck `463f1f005e05938f10190d1c683e6d454111d4949843a0518d8c2a2812e78432`.
+Die Abhängigkeitsupdates, Build und Browserabnahme stehen im Changelog und Plan.
+
+### Aufbau und Profile
+
+INDUSTRY bleibt die bisherige Vergleichsheuristik (zwei Drittel Ausbau,
+ein Fünftel bei bekanntem Feind innerhalb zweier Reiserunden).
+INDUSTRY_LIGHT investiert ein Viertel außerhalb dieser Nahbedrohung und
+sonst nichts. INDUSTRY_ADAPTIVE investiert nur mit mindestens zweimal der
+Kapazität an versendbaren Schiffen und ohne Reservebedarf: ein Viertel bei
+Feinden in drei bis vier Reiserunden, die Hälfte weiter hinten. Seine Zuweisung
+übersteigt nicht die verbleibenden Ausbaukosten der nächsten Kapazitätssteigerung.
+Beide lesen ausschließlich erlaubte Sichtdaten. Ein unbekannter Feind ist keine
+bekannte Bedrohung; das Verfahren behauptet damit keine tatsächliche Sicherheit.
+Integer-Rundung bedeutet auf sehr kleinen Kolonien gegebenenfalls keinen Ausbau.
+
+Alle drei Industrieprofile haben dieselben militärischen Planungsregeln.
+Unterschiedliche Ausbauzuweisungen verändern später verfügbare Schiffe und
+Entscheidungen. Deshalb lässt sich die Wirkung dieser heuristischen Wahl prüfen,
+aber keine allgemeine optimale Ausbauquote oder reine Kapitalrendite ableiten.
+Expansion und Flottenkonzentration ergänzen die Zweikampfmatrix. Ohne --profiles
+behält der Prüfstand seine bisherigen Versuchsdimensionen. Die Aufrufe verwenden
+strategyBenchmark mit -x vaadinBuildFrontend; keine produktive Datenbank, Oberfläche
+oder Audio. Alle Serien laufen mit RANDOM und EVEN sowie ±10 Prozent Kampfvariation.
+
+Die Entwicklungsserie (Karten 101–103, 16/32 Systeme, 120 Runden) enthält 240
+Partien. Pro Profil sind es 96 Einsätze: Expansion gewinnt 22, Konzentration 34,
+Industrie 8, zurückhaltende Industrie 30 und adaptive Industrie 40. 106 Partien
+enden am Rundenlimit. Die anschließenden Kontrollkarten 1001–1005 wurden für
+keine Anpassung dieser Profile verwendet. Kontroll- und Wiederholungsläufe sind
+voneinander getrennte Nachweise; vertauschte Sitze sind keine unabhängigen Karten.
+
+Rohdaten unter build/strategy-harness/deepening-train, deepening-control-120,
+deepening-control-300, deepening-classic, deepening-classic-multiplayer,
+deepening-multiplayer, deepening-combat-control und deepening-repeat-a/-b.
+Jeder Ordner enthält den genauen Aufruf in invocation.txt und CSV-Nachweise.
+
+### Frühe Wirtschaftsentscheidung bei gleicher Runde
+
+In allen 80 gemeinsamen Fällen der drei Industrieprofile gegen dieselben Gegner
+Expansion und Konzentration sind die Parteien in Runde 20 noch auswertbar.
+Die Mittelwerte beziehen sich auf dieselben Karten, Sitze und Kampfstartwerte;
+sie sind nicht nur auf spätere Sieger eingeschränkt. Die reine Ausbauheuristik
+investiert wesentlich mehr und hält dabei weniger Schiffe bereit.
+
+| Profil | Systeme | Kapazität | Schiffe | Gebaut bis Runde 20 | Verloren | Investiert |
+|---|---:|---:|---:|---:|---:|---:|
+| Industrie | 7,0 | 54,1 | 172,3 | 188,6 | 36,3 | 291,1 |
+| Zurückhaltend | 7,9 | 44,3 | 330,6 | 352,2 | 41,7 | 72,6 |
+| Adaptiv | 8,0 | 49,6 | 302,5 | 324,8 | 42,4 | 134,0 |
+
+Kapazität summiert eigene Systeme; Eroberungen und Verluste wirken mit.
+Investitionen sind verwendete Produktionspunkte, keine Metallkosten.
+Die Werte beschreiben einen frühen Unterschied zwischen den Profilen und
+beweisen weder einen generellen Ausbaufehler noch falsche Spielkosten.
+
+### Reproduzierbarkeit und technische Abnahme
+
+Zwei getrennte JVMs mit EVEN, acht Systemen, Karten 2001–2002, 50 Runden
+und allen fünf Spaceward-Matrixprofilen spielen je 40 Partien. matches.csv,
+rounds.csv, orders.csv, summary.md, decision-deltas.csv und skipped.txt sind
+bytegleich. invocation.txt unterscheidet sich absichtlich im Ausgabeordner.
+
+Vollständiger Build, 664 Java-Tests, fünf Frontend-Tests und 13 stumme
+Browserabläufe bestanden. Coverage erfüllt, keine SpotBugs-Befunde. Eine
+saubere npm-ci-Installation funktioniert; npm audit meldet keine Befunde.
+Die neuen Prüfungen sichern Ausbaugrenzen, Reservebedarf, Bedrohungsnähe,
+Profilauswahl, legale Runden und dieselben Informationsgrenzen wie die übrigen
+Profile. Die historischen Standardprofile werden nicht durch die neuen ersetzt.
+
+### Kontrollserien und längere Verläufe
+
+Insgesamt wurden in dieser Vertiefung 1.904 Partien ausgewertet:
+240 Entwicklungspartien, zweimal 400 Spaceward-Kontrollpartien, 400
+SectorForces-Zweikämpfe, 100 SectorForces- und 84 Spaceward-Mehrspielerpartien,
+200 zusätzliche Kampfzufallskontrollen sowie 80 Wiederholungspartien.
+
+| Serie | Kartenstartwerte | Systeme | Rundenlimit | Partien |
+|---|---|---|---:|---:|
+| Entwicklung | 101–103 | 16, 32 | 120 | 240 |
+| Spaceward-Kontrolle | 1001–1005 | 16, 32 | 120 / 300 | 400 / 400 |
+| SectorForces-Zweikämpfe | 1001–1005 | 16, 32 | 120 | 400 |
+| SectorForces-Mehrspieler, fünf Reiche | 1001–1005 | 16, 32 | 120 | 100 |
+| Spaceward-Mehrspieler, sieben Reiche | 1001–1003 | 16, 32 | 300 | 84 |
+| Weiterer Kampfstartwert | 1001–1005 | 16 | 300 | 200 |
+| Zwei JVM-Wiederholungen, nur EVEN | 2001–2002 | 8 | 50 | 80 |
+
+Standard-Kampfstartwert ist 314159, die Zusatzserie verwendet 314160.
+Mehrspieler rotieren die Sitze und schließen keine Bündnisse. Die Spaceward-
+Mehrspielerserie umfasst BASELINE, RUSH, EXPANSION, CONCENTRATION sowie die drei
+Industrieprofile; SectorForces verwendet seine fünf ursprünglichen Profile.
+Keine Serie bewertet diplomatische Entscheidungen oder Bündnissieg erneut.
+
+| Spaceward-Profil | Siege / 160 Einsätze, 120 Runden | Siege / 160 Einsätze, 300 Runden | Offene Einsätze bei 300 | Beschreibendes 95%-Intervall der Siegquote bei 300 |
+|---|---:|---:|---:|---|
+| Expansion | 63 | 64 | 3 | 33,1–49,4 % |
+| Konzentration | 65 | 77 | 21 | 44,4–51,3 % |
+| Industrie | 13 | 29 | 19 | 11,9–25,6 % |
+| Zurückhaltend | 67 | 85 | 28 | 48,1–58,1 % |
+| Adaptiv | 73 | 97 | 25 | 56,9–64,4 % |
+
+Die Gesamtzahl offener Partien fällt von 119 auf 48. 71 zuvor offene Partien
+enden später; alle 281 bereits entschiedenen Partien behalten Sieger, Runde
+und Verlaufsfingerabdruck. Sämtliche 67.808 Rundenwerte und 1.151.161
+Befehlszeilen bis Runde 120 stimmen zwischen beiden Serien überein.
+Die höhere Grenze verändert damit ausschließlich die verfügbare Laufzeit.
+
+Die Intervalle verwenden 2.000 deterministische Bootstrap-Ziehungen ganzer
+Kartenstartwert-Blöcke (Startwert 20261006). Alle Sitze, Größen und Verteilungen
+desselben Kartenstartwerts bleiben zusammen; es sind fünf Blöcke, nicht 160
+unabhängige Karten. Sie beschreiben Unsicherheit innerhalb dieses kleinen
+Versuchssatzes. Schmale Intervalle beweisen keine allgemeine Überlegenheit.
+Die Detailberichte trennen Größe, Verteilung und Gegner nochmals auf.
+
+Gegen dieselben beiden Gegner Expansion und Konzentration sind es je 80
+Einsätze: Industrie gewinnt bei 300 Runden 19, Zurückhaltend 45 und Adaptiv 52.
+Der Vorteil gegenüber der bisherigen Ausbauheuristik bleibt somit auch bei
+identischer Gegnerauswahl sichtbar. Die Rangfolge ist dennoch ortsabhängig:
+Bei RANDOM/16 gewinnt Adaptiv 22 von 40 Einsätzen, Zurückhaltend 21 und
+Konzentration 20; bei EVEN/32 sind es 28, 20 und 15. Diese Unterschiede sind
+keine Begründung, die Spielkosten automatisch zu ändern.
+
+Alle 48 offenen Partien haben bei Runde 300 vollständig besetzte Systeme.
+Sie verteilen sich auf RANDOM/16 (15), RANDOM/32 (19), EVEN/16 (3) und EVEN/32
+(11). Fehlende neutrale Expansion erklärt diese Fälle somit nicht. Die
+Rohdaten allein erklären aber nicht, welche militärische Entscheidung die
+Front auflösen würde. Gezielt rekonstruierte Endzustände und Vergleichseingriffe
+in Konzentration, Zielwahl und Versand sind der nächste Prüfpunkt.
+
+### Zweikampf und Mehrspieler sind unterschiedliche Aufgaben
+
+| SectorForces-Profil | Zweikampfsiege / 160 Einsätze | Mehrspielersiege / 100 Partien |
+|---|---:|---:|
+| Bisherige KI | 56 | 48 |
+| Aggressiv | 113 | 6 |
+| Expansion | 106 | 16 |
+| Konzentration | 76 | 14 |
+| Verteidigung | 40 | 11 |
+
+Neun Zweikämpfe und fünf Mehrspielerpartien bleiben offen. Der frühere Befund
+wiederholt sich auf den neuen Karten: Aggression ist im Zweikampf stark und
+in diesem Mehrspielerfeld schwach. Die bisherige KI gewinnt dort deutlich
+häufiger. Ein einziges globales Strategie-Ranking wäre irreführend.
+
+Bei Spaceward mit sieben Reichen und 300 Runden gewinnen von 84 Partien:
+bisherige KI 20, Aggressiv 6, Expansion 10, Konzentration 10, Industrie 3,
+Zurückhaltend 12 und Adaptiv 18. Fünf Partien bleiben offen. Auch das adaptive
+Profil verdrängt die Referenz damit nicht als allgemeiner Sieger.
+
+### Empfindlichkeit gegenüber Kampfzufall
+
+Die 200 Zweikämpfe mit 16 Systemen wurden mit identischen Karten und Sitzen,
+aber Kampfstartwert 314160 erneut gespielt. Es ändern sich 19 Ausgangstypen
+(Sieg statt Limit oder umgekehrt) und in weiteren 19 Paaren der Sieger bei
+beiderseits entschiedenen Partien. Offene Partien: 18 bei 314159, 19 bei 314160.
+
+| Profil | Siege / 80 Einsätze, 314159 | Siege / 80 Einsätze, 314160 |
+|---|---:|---:|
+| Expansion | 34 | 38 |
+| Konzentration | 44 | 41 |
+| Industrie | 11 | 14 |
+| Zurückhaltend | 45 | 39 |
+| Adaptiv | 48 | 49 |
+
+Der Vorteil der beiden neuen Ausbauprofile gegenüber der alten Heuristik bleibt
+in dieser Zusatzprüfung bestehen. Schon diese zwei Startwerte ändern einzelne
+Ergebnisse deutlich; sie reichen nicht für eine allgemeine Aussage über alle
+Kampfzufälle. Die 32-System-Kontrolle verwendet weiterhin nur einen Kampfstartwert.
+
+### Ergebnis und Grenzen
+
+Die Vertiefung ist technisch abgenommen und dokumentiert. Sie zeigt, dass die
+bisherige feste Industrieheuristik früh zu viele Produktionspunkte bindet und
+dass zurückhaltende beziehungsweise sichtabhängige Investition in diesem
+Versuchsfeld bessere Ausgänge erzielt. Längere Laufzeit hilft, beseitigt die
+militärischen Fronten aber nicht vollständig. SectorForces bestätigt besonders
+deutlich den Unterschied zwischen Zweikampf und Mehrspieler.
+
+Die Kontrolle umfasst nur fünf Kartenstartwerte und synthetische Startwirtschaft.
+Untersucht werden begrenzte Heuristiken, keine optimalen Strategien. Weitere
+Kampfstartwerte, 32-System-Endzustände, echte Lobby-Karten und menschliche
+Partien bleiben sinnvoll. Rohstoffe, Recycling und Koloniewachstum wurden
+nicht vorgezogen; erst ihre spätere Regelumsetzung macht entsprechende
+Strategien und Bilanzgrößen prüfbar. Keine produktive KI oder gespeicherte
+Partie wurde durch diese Befunde verändert.
+## Übernahme in die Spiel-KI — 06.10.2026
+
+Nach Abschluss der oben beschriebenen Versuchsserie wurden die acht Profile auf
+ausdrücklichen Nutzerauftrag je KI-Sitz im Wizard auswählbar gemacht. Die
+historischen Befunde und ihr Quellfingerabdruck bleiben unverändert. Die neuen
+produktiven Alternativen und der Prüfstand verwenden dieselbe AiPolicy sowie
+IndustryPolicy aus ai.domain; die militärischen und wirtschaftlichen Formeln
+der untersuchten Profile wurden dabei nicht geändert.
+
+BASELINE bleibt Vorgabe und Rückfall für alte JSON-Spielstände. Die Auswahl
+ändert keine Regeln und keine bereits gespeicherte Partie. Sie wird je Spieler
+sowie in den Ausgangseinstellungen gespeichert und von Vorlagen/Revanchen
+übernommen. Vergleichstests prüfen die erzeugten Befehle aller Profile in
+SectorForces und beiden Spaceward-Versionen sowie verborgene Garnisonen und
+fremde Befehle. Die acht Profile sind keine garantierte Rangfolge und keine
+festen Schwierigkeitsstufen. Die 48 anhaltenden Fronten bleiben ein eigenes
+späteres Untersuchungsfeld.
