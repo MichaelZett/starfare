@@ -59,7 +59,8 @@ public class NavigationSteps {
         browser.awaitTextIn(".system-metric-rate", "4 (+2/Runde)");
         assertThat(browser.awaitCss(".system-details-owner").getText()).contains("Navigation Empire").doesNotContain("Navigator");
         browser.all(".system-transfer-row").stream().filter(row -> row.getText().contains("Beta → Alpha"))
-                .findFirst().orElseThrow().findElement(By.tagName("vaadin-button")).click();
+                .findFirst().orElseThrow().findElements(By.tagName("vaadin-button")).stream()
+                .filter(button -> button.getText().strip().equals("Aufheben")).findFirst().orElseThrow().click();
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> games.viewFor(id, 1).standingOrders().size() == 1);
         browser.awaitTextIn(".system-metric-rate", "4 (+0/Runde)");
         assertThat(games.viewFor(id, 1).standingOrders().getFirst().toSystemId()).isEqualTo(4);

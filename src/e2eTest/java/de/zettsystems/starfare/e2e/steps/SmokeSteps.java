@@ -242,11 +242,11 @@ public class SmokeSteps {
 
     private void verifyEnglishSystemView() throws IOException {
         changeLanguage("Englisch", "Shipyard");
-        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Schematic illustration");
+        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Star reduced");
         Files.write(Path.of("build", "system-view", "classic-english.png"),
                 ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
         changeLanguage("German", "Werft");
-        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Schematische Illustration");
+        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Stern verkleinert");
     }
 
     private void changeLanguage(String label, String shipyard) {
