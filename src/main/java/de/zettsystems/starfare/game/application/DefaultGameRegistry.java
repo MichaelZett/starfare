@@ -45,6 +45,11 @@ public class DefaultGameRegistry implements GameRegistry {
         session.writeState(state -> {
             initializeState(state, setup);
             state.initializeIndustry();
+            if (setup.ruleset().usesColonies()) {
+                state.establishColonies(de.zettsystems.starfare.economy.domain.ColonyGenesis.forGalaxy(state.systems(),
+                        java.util.concurrent.ThreadLocalRandom.current().nextLong()));
+                state.establishMetals(de.zettsystems.starfare.economy.domain.MetalGenesis.forGalaxy(state.systems(), state.players(), state.colonies()));
+            }
             state.initializeNavigation();
             return null;
         });

@@ -33,6 +33,17 @@ class PlayerViewBuilderTest {
     }
 
     @Test
+    void roundStatusUsesEmpiresWhilePlayerOverviewRetainsAccountNames() {
+        state.players().clear();
+        state.players().add(new Player(1, "Account One", false, "#aaaaaa", "First Empire"));
+        state.joinedHumanPlayerIds().add(1);
+        state.start();
+        var view = builder.forPlayer(state, 1);
+        assertThat(view.roundStatus().pendingPlayerLabels()).containsExactly("First Empire");
+        assertThat(view.players().getFirst().label()).isEqualTo("First Empire (Account One)");
+    }
+
+    @Test
     void reviewFogLimitsFleetsToSelectedPlayer() {
         var firstFleet = new Fleet(1, 1, 1, 1, 1, 3, 0, 5);
         var secondFleet = new Fleet(2, 2, 1, 2, 2, 4, 0, 5);

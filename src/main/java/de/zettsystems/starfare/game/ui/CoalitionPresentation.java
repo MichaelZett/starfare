@@ -11,16 +11,27 @@ import java.util.List;
 /** Battle facts only; the ownership outcome is shown by the report after acknowledgement. */
 final class CoalitionPresentation {
     private CoalitionPresentation() { }
-    static void populate(Div visual, List<CoalitionSide> sides) {
+    static void populate(Div visual, de.zettsystems.starfare.report.values.BattleReplay replay) {
+        List<CoalitionSide> sides = replay.coalitions();
         visual.addClassName("coalition-replay");
-        for (var side : sides) {
+        if (replay.defenderSideId() == null) {
+            visual.addClassName("coalition-roles-unknown");
+            visual.add(new Span(I18n.t(UiTexts.BATTLE_ROLES_UNKNOWN)));
+        }
+        Div attackers = new Div(); attackers.addClassName("coalition-attackers");
+        Div defenders = new Div(); defenders.addClassName("coalition-defenders");
+        visual.add(attackers, defenders);
+        for (var side : sides.stream().sorted(java.util.Comparator.comparingInt(CoalitionSide::id)).toList()) {
             Div card = new Div(); card.addClassNames("battle-side", "coalition-side");
             card.getElement().setAttribute(HtmlAttributes.COALITION_SIDE, Integer.toString(side.id()));
-            Span strength = new Span(I18n.t(UiTexts.BATTLE_REPLAY_STRENGTH,
+            boolean defender = Integer.valueOf(side.id()).equals(replay.defenderSideId());
+            if (replay.defenderSideId() != null) {
+                card.add(new Span(I18n.t(defender ? UiTexts.BATTLE_REPLAY_DEFENDERS : UiTexts.BATTLE_REPLAY_ATTACKERS)));
+            }
+            card.add(new Span(identity(side)));
+            BattleCondition.addTo(card, side.ships(), side.strength(), side.id(),
                     CombatStrengthFormat.forCoalition(side.strength(), sides.stream().map(CoalitionSide::strength).toList(),
-                            com.vaadin.flow.component.UI.getCurrentOrThrow().getLocale())));
-            strength.addClassName("battle-strength");
-            card.add(new Span(identity(side)), strength);
+                            com.vaadin.flow.component.UI.getCurrentOrThrow().getLocale()));
             Span count = new Span(Integer.toString(side.ships())); count.addClassName("battle-number");
             count.getElement().setAttribute(HtmlAttributes.COALITION_COUNT, ""); card.add(count);
             for (var member : side.members()) {
@@ -30,7 +41,10 @@ final class CoalitionPresentation {
                         memberName(member), member.remaining(), member.ships() - member.remaining()));
                 card.add(row);
             }
-            visual.add(card);
+            (defender ? defenders : attackers).add(card);
+        }
+        if (sides.size() > 2 && replay.defenderSideId() != null) {
+            visual.add(new Span(I18n.t(UiTexts.BATTLE_MULTIPLE_ATTACKERS)));
         }
         Span result = new Span(I18n.t(UiTexts.COALITION_RESOLVED));
         result.addClassName("battle-replay-result"); result.getElement().setAttribute(HtmlAttributes.BATTLE_RESULT, ""); visual.add(result);

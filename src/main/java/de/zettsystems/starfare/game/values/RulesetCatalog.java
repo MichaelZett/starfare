@@ -18,11 +18,16 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
     }
 
     public static RulesetCatalog builtIn() {
+        return builtIn(false);
+    }
+
+    /** Enables only the current acceptance candidate; older checkpoints remain restoration-only. */
+    public static RulesetCatalog builtIn(boolean economyPreview) {
         return new RulesetCatalog(List.of(
                 new RulesetDefinition(RulesetRef.SECTOR_FORCES, RulesetDefinition.SECTOR_FORCES_NAME,
                         RulesetDefinition.SECTOR_FORCES_DESCRIPTION, Set.of(RulesetRef.SECTOR_FORCES.version()), true),
-                new RulesetDefinition(RulesetRef.SPACEWARD_ALLIANCE, RulesetDefinition.SPACEWARD_NAME,
-                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.SPACEWARD.version(), RulesetRef.SPACEWARD_ALLIANCE.version(), RulesetRef.SPACEWARD_COLONIES.version()), true)));
+                new RulesetDefinition(economyPreview ? RulesetRef.SPACEWARD_ECONOMY_PREVIEW : RulesetRef.SPACEWARD_ALLIANCE, RulesetDefinition.SPACEWARD_NAME,
+                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.SPACEWARD.version(), RulesetRef.SPACEWARD_ALLIANCE.version(), RulesetRef.SPACEWARD_COLONIES.version(), RulesetRef.SPACEWARD_METALS.version(), RulesetRef.SPACEWARD_RECYCLING.version(), RulesetRef.SPACEWARD_ECONOMY_PREVIEW.version()), true)));
     }
 
     public Optional<RulesetDefinition> find(String variant) {
@@ -37,7 +42,8 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
 
     public void requireCreatable(RulesetRef ref) {
         requireSupported(ref);
-        if (ref.usesColonies()) { throw new IllegalArgumentException("Colony rules are internal and not released"); }
+        boolean preview = ref.equals(RulesetRef.SPACEWARD_ECONOMY_PREVIEW) && find(ref.variant()).orElseThrow().defaultRef().equals(ref);
+        if (ref.usesColonies() && !preview) { throw new IllegalArgumentException("Colony rules are internal and not released"); }
         if (!find(ref.variant()).orElseThrow().creationEnabled()) {
             throw new IllegalArgumentException("Game variant is not released: " + ref.variant());
         }

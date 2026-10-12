@@ -90,7 +90,7 @@ public class DefaultCombatService implements CombatService {
 
     private static String playerName(GameState state, int playerId) {
         return state.players().stream().filter(player -> player.id() == playerId)
-                .map(Player::label).findFirst().orElse("");
+                .map(Player::empireNameOrName).findFirst().orElse("");
     }
 
     private static Map<Integer, GameState.Intel> intelFor(GameState state, int playerId) {

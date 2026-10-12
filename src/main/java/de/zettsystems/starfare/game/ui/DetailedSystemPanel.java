@@ -2,13 +2,14 @@ package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import de.zettsystems.starfare.game.values.SystemComposition;
 import de.zettsystems.starfare.game.values.SystemComposition.Body;
 import de.zettsystems.starfare.game.values.SystemComposition.StarType;
+import de.zettsystems.starfare.game.values.SystemDiagramLayout;
+import de.zettsystems.starfare.economy.values.SystemQuality;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
 import de.zettsystems.starfare.style.HtmlAttributes;
@@ -19,9 +20,10 @@ import java.util.Locale;
 
 /** Shared schematic system view; its celestial controls never issue game commands. */
 final class DetailedSystemPanel extends Div {
-    private final Div industrialBuildings = new Div();
     private final Div description = new Div();
-    private final Details properties = new Details();
+    private final Div background = new Div();
+    private Runnable onInspect = () -> { };
+    private Runnable onColonyInspect = () -> { };
     private final List<Button> targets = new ArrayList<>();
 
     DetailedSystemPanel(SystemComposition composition, boolean shipyard) {
@@ -35,7 +37,7 @@ final class DetailedSystemPanel extends Div {
             addStar(diagram, composition.stars().get(index), index, composition.stars().size());
         }
         for (Body body : composition.bodies()) {
-            addBody(diagram, body, composition.bodies().size());
+            addBody(diagram, body, composition);
         }
         if (shipyard) {
             Span yard = new Span("⚒ " + I18n.t(UiTexts.SYSTEM_SHIPYARD));
@@ -43,51 +45,33 @@ final class DetailedSystemPanel extends Div {
             yard.getElement().setAttribute(HtmlAttributes.TITLE, I18n.t(UiTexts.SYSTEM_SHIPYARD_HINT));
             diagram.add(yard);
         }
-        industrialBuildings.addClassName("system-industry-buildings");
-        industrialBuildings.setVisible(false);
-        diagram.add(industrialBuildings);
         Span caption = new Span(I18n.t(UiTexts.SYSTEM_SCHEMATIC));
         caption.addClassName("system-schematic-caption");
         description.addClassName("system-body-description");
         description.getElement().setAttribute(HtmlAttributes.ARIA_LIVE, "polite");
-        properties.add(description);
         Div catalog = new Div();
         catalog.addClassName("system-body-catalog");
         composition.bodies().forEach(body -> catalog.add(catalogButton(body)));
-        Details list = new Details(I18n.t(UiTexts.SYSTEM_CATALOG), catalog);
-        add(diagram, caption, properties, list);
+        background.add(description, new Span(I18n.t(UiTexts.SYSTEM_CATALOG)), catalog);
+        add(diagram, caption);
         selectStar(composition.stars().getFirst(), 0);
-        properties.setOpened(false);
     }
 
-    void showIndustry(de.zettsystems.starfare.economy.values.IndustryView industry) {
-        industrialBuildings.setVisible(true);
-        industrialBuildings.removeAll();
-        Div skyline = new Div(); skyline.addClassName("system-industry-skyline");
-        int count = Math.ceilDiv(industry.capacity(), 10);
-        int[] heights = {17, 24, 31};
-        for (int index = 0; index < count; index++) {
-            Div building = new Div(); building.addClassName("system-industry-building");
-            building.getStyle().set(CssProperties.HEIGHT, heights[index % heights.length] + "px");
-            skyline.add(building);
-        }
-        String label = I18n.t(UiTexts.ECONOMY_BUILDINGS, industry.capacity());
-        industrialBuildings.add(skyline, new Span(label));
-        industrialBuildings.getElement().setAttribute(HtmlAttributes.TITLE, label);
-        industrialBuildings.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, label);
-    }
+    Div background() { return background; }
+
+    void onInspect(Runnable action) { onInspect = action; }
+    void onColonyInspect(Runnable action) { onColonyInspect = action; }
 
     private static void drawOrbits(Div diagram, SystemComposition composition) {
-        int count = composition.bodies().size();
         for (Body body : composition.bodies()) {
             Div orbit = new Div();
             orbit.addClassName("system-orbit");
             if (body.type() == SystemComposition.BodyType.ASTEROIDS) {
                 orbit.addClassName("system-asteroid-belt");
             }
-            double radius = radius(body.orbit(), count);
+            double radius = SystemDiagramLayout.orbitPosition(composition, body);
             orbit.getStyle().set(CssProperties.WIDTH, percent(radius * 2));
-            orbit.getStyle().set(CssProperties.HEIGHT, percent(radius * 1.65));
+            orbit.getStyle().set(CssProperties.HEIGHT, "130%");
             diagram.add(orbit);
         }
     }
@@ -95,40 +79,90 @@ final class DetailedSystemPanel extends Div {
     private void addStar(Div diagram, StarType type, int index, int count) {
         Button star = new Button();
         star.addClassNames("system-body-target", "system-star", starClass(type));
-        star.getElement().appendChild(new Span(index == 0 ? "A" : "B").getElement());
         star.setAriaLabel(I18n.t(UiTexts.SYSTEM_STAR_NAME, index == 0 ? "A" : "B")
                 + ": " + I18n.t(starKey(type)));
         star.getElement().setAttribute(HtmlAttributes.TITLE, star.getAriaLabel().orElse(""));
-        position(star, count == 1 ? 50 : 43 + index * 14, 50);
+        position(star, 0, 50);
+        String diameter = SystemDiagramLayout.starDiameter(type) + "px";
+        star.getStyle().set(CssProperties.WIDTH, diameter).set(CssProperties.HEIGHT, diameter);
         star.addClickListener(_ -> selectStar(type, index));
         targets.add(star);
-        diagram.add(star);
+        Span name = new Span(star.getAriaLabel().orElse(""));
+        name.addClassName("system-star-name");
+        Div row = new Div(star, name);
+        row.addClassName("system-star-row");
+        row.getStyle().set(CssProperties.TOP, percent(100.0 * index / count))
+                .set(CssProperties.HEIGHT, percent(100.0 / count));
+        diagram.add(row);
     }
 
-    private void addBody(Div diagram, Body body, int count) {
+    private void addBody(Div diagram, Body body, SystemComposition composition) {
         Button target = bodyButton(body);
         target.addClassName("system-body-target");
-        target.getElement().appendChild(new Span(String.valueOf(body.orbit())).getElement());
-        for (int index = 0; index < body.majorMoons(); index++) {
+        var quality = composition.colonyQuality();
+        boolean planetColony = quality != null && !quality.moon();
+        Span label = new Span(planetColony ? I18n.t(UiTexts.SYSTEM_COLONY_TARGET) : String.valueOf(body.orbit()));
+        label.addClassName("system-body-label");
+        target.getElement().appendChild(label.getElement());
+        if (quality != null && !quality.moon()) {
+            target.addClassName("system-colony-target");
+            target.setAriaLabel(I18n.t(UiTexts.SYSTEM_COLONY_PLANET));
+            applyEnvironment(target, quality);
+        }
+        for (int index = 0; index < (quality == null ? body.majorMoons() : 0); index++) {
             Span moon = new Span();
             moon.addClassNames("system-moon", "system-moon-" + index);
             target.getElement().appendChild(moon.getElement());
         }
-        double angle = Math.toRadians(35 + body.orbit() * 137.5);
-        double radius = radius(body.orbit(), count);
-        position(target, 50 + Math.cos(angle) * radius, 50 + Math.sin(angle) * radius * 0.825);
+        double x = SystemDiagramLayout.orbitPosition(composition, body);
+        position(target, x, SystemDiagramLayout.bodyHeight(composition, body));
         diagram.add(target);
+        if (quality != null && quality.moon()) { addColonyMoon(diagram, quality, x); }
+    }
+
+    private void addColonyMoon(Div diagram, SystemQuality quality, double planetX) {
+        Button moon = new Button();
+        moon.addClassNames("system-body-target", "system-world", "system-colony-moon", "system-colony-target");
+        moon.getStyle().set(CssProperties.BODY_DIAMETER, "14px");
+        Span sphere = new Span();
+        sphere.addClassNames("system-body-sphere", "system-world-rocky");
+        Span label = new Span(I18n.t(UiTexts.SYSTEM_COLONY_TARGET));
+        label.addClassName("system-body-label");
+        moon.getElement().appendChild(sphere.getElement(), label.getElement());
+        moon.setAriaLabel(I18n.t(UiTexts.SYSTEM_COLONY_MOON));
+        moon.getElement().setAttribute(HtmlAttributes.TITLE, I18n.t(UiTexts.SYSTEM_COLONY_MOON));
+        applyEnvironment(moon, quality);
+        position(moon, Math.min(planetX + 8, 87), 76);
+        moon.addClickListener(_ -> {
+            highlight(targets.indexOf(moon));
+            onColonyInspect.run();
+        });
+        targets.add(moon);
+        diagram.add(moon);
+    }
+
+    private static void applyEnvironment(Button target, SystemQuality quality) {
+        target.addClassName("system-atmosphere-" + quality.atmosphere().name().toLowerCase(Locale.ROOT));
+        target.addClassName("system-suitability-" + quality.suitability().name().toLowerCase(Locale.ROOT));
     }
 
     private Button bodyButton(Body body) {
         Button target = new Button();
-        target.addClassNames("system-world", "system-world-" + body.type().name().toLowerCase(Locale.ROOT),
-                "system-surface-" + body.appearance());
-        if (body.rings()) { target.addClassName("system-world-ringed"); }
+        target.addClassNames("system-world", "system-surface-" + body.appearance());
+        target.getStyle().set(CssProperties.BODY_DIAMETER, SystemDiagramLayout.bodyDiameter(body.type()) + "px");
+        Span sphere = new Span();
+        sphere.addClassNames("system-body-sphere", "system-world-" + body.type().name().toLowerCase(Locale.ROOT));
+        if (body.rings()) { sphere.addClassName("system-world-ringed"); }
+        target.getElement().appendChild(sphere.getElement());
         String name = I18n.t(UiTexts.SYSTEM_ORBIT, body.orbit());
         target.setAriaLabel(name + ": " + I18n.t(bodyKey(body)));
         target.getElement().setAttribute(HtmlAttributes.TITLE, target.getAriaLabel().orElse(""));
-        target.addClickListener(_ -> selectBody(body));
+        target.addClickListener(_ -> {
+            if (target.hasClassName("system-colony-target")) {
+                highlight(targets.indexOf(target));
+                onColonyInspect.run();
+            } else { selectBody(body); }
+        });
         targets.add(target);
         return target;
     }
@@ -144,23 +178,22 @@ final class DetailedSystemPanel extends Div {
     private void selectStar(StarType type, int index) {
         highlight(index);
         description.removeAll();
-        properties.setSummaryText(I18n.t(starKey(type)));
-        properties.setOpened(true);
         description.add(new Span(I18n.t(starKey(type))), new Paragraph(I18n.t(starDescriptionKey(type))));
+        onInspect.run();
     }
 
     private void selectBody(Body body) {
         // Stars precede worlds in the target list.
-        int starCount = (int) targets.stream().filter(target -> target.hasClassName("system-star")).count();
-        highlight(starCount + body.orbit() - 1);
+        targets.stream().filter(target -> target.hasClassName("system-world")
+                && !target.hasClassName("system-colony-moon"))
+                .skip(body.orbit() - 1L).findFirst().ifPresent(target -> highlight(targets.indexOf(target)));
         description.removeAll();
-        properties.setSummaryText(I18n.t(UiTexts.SYSTEM_ORBIT, body.orbit()) + " · " + I18n.t(bodyKey(body)));
-        properties.setOpened(true);
         description.add(new Span(I18n.t(UiTexts.SYSTEM_ORBIT, body.orbit()) + " · " + I18n.t(bodyKey(body))),
                 new Paragraph(I18n.t(bodyDescriptionKey(body))));
         if (body.type() != SystemComposition.BodyType.ASTEROIDS) {
             description.add(new Span(I18n.t(UiTexts.SYSTEM_MOONS, body.majorMoons())));
         }
+        onInspect.run();
     }
 
     private void highlight(int selected) {
@@ -170,7 +203,6 @@ final class DetailedSystemPanel extends Div {
         }
     }
 
-    private static double radius(int orbit, int count) { return 10 + 25.0 * orbit / count; }
     private static String percent(double value) { return String.format(Locale.ROOT, "%.3f%%", value); }
     private static void position(Button button, double x, double y) {
         button.getStyle().set(CssProperties.LEFT, percent(x));

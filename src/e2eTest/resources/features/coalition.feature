@@ -1,4 +1,6 @@
 # language: de
+@ui-acceptance
+@coalition
 Funktionalität: Spaceward-Schlachten mit Bündnisgruppen
 
   Szenario: Eroberungsziel und gemeinsame Schlachten bleiben nach Neuladen nachvollziehbar

@@ -48,9 +48,9 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         state.captureReplayFrame();
         var frame = state.replayFrames().get(1);
         economy.produce(state, Map.of());
-        assertThat(frame.industries().get(1)).isEqualTo(new Industry(10, 4, 4));
+        assertThat(frame.industries()).containsEntry(1, new Industry(10, 4, 4));
         assertThat(views.forReplay(state, frame, 1).systems().getFirst().industry().expansionProgress()).isEqualTo(4);
-        assertThat(GameState.copyOf(state).industries().get(1)).isEqualTo(new Industry(10, 4, 8));
+        assertThat(GameState.copyOf(state).industries()).containsEntry(1, new Industry(10, 4, 8));
         String json = mapper.writeValueAsString(GameState.toSnapshot(state));
         assertThat(GameState.fromSnapshot(mapper.readValue(json, GameStateSnapshot.class)).industries()).isEqualTo(state.industries());
         GameId id = save(state);
@@ -58,20 +58,20 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         Industry restored = restarted.readState(snap -> snap.industries().get(1));
         assertThat(restored).isEqualTo(new Industry(10, 4, 8));
         registry.writeState(id, snap -> { snap.endGame(1); return null; });
-        assertThat(archives.load(id).orElseThrow().state().industries().get(1)).isEqualTo(restored);
+        assertThat(archives.load(id).orElseThrow().state().industries()).containsEntry(1, restored);
     }
     @Test void missingOrInconsistentSpacewardEconomyIsRejectedButOldClassicDataStillLoads() {
         GameState state = SpacewardStates.running();
         ObjectNode json = (ObjectNode) mapper.valueToTree(GameState.toSnapshot(state));
         json.remove("industries");
         ObjectNode missing = json;
-        assertThatThrownBy(() -> GameState.fromSnapshot(mapper.treeToValue(missing, GameStateSnapshot.class)))
-                .isInstanceOf(IllegalArgumentException.class);
+        var input1 = mapper.treeToValue(missing, GameStateSnapshot.class);
+        assertThatThrownBy(() -> GameState.fromSnapshot(input1)).isInstanceOf(IllegalArgumentException.class);
         json = (ObjectNode) mapper.valueToTree(GameState.toSnapshot(state));
         ((ObjectNode) json.get("industries").get("1")).put("expansionAllocation", 4);
         ObjectNode mismatched = json;
-        assertThatThrownBy(() -> GameState.fromSnapshot(mapper.treeToValue(mismatched, GameStateSnapshot.class)))
-                .isInstanceOf(IllegalArgumentException.class);
+        var input2 = mapper.treeToValue(mismatched, GameStateSnapshot.class);
+        assertThatThrownBy(() -> GameState.fromSnapshot(input2)).isInstanceOf(IllegalArgumentException.class);
         ObjectNode classic = (ObjectNode) mapper.valueToTree(GameState.toSnapshot(new GameState()));
         classic.remove("industries");
         assertThat(GameState.fromSnapshot(mapper.treeToValue(classic, GameStateSnapshot.class)).industries()).isEmpty();
@@ -102,7 +102,7 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         assertThat(GameState.toSnapshot(state)).isEqualTo(before);
         assertThat(views.forObserver(state).systems().get(2).industry().capacity()).isEqualTo(8);
         Map<Integer, Integer> routed = fleets.applyStandingOrdersForProduction(state);
-        assertThat(routed.get(1)).isEqualTo(own.industry().nextDelivery());
+        assertThat(routed).containsEntry(1, own.industry().nextDelivery());
         economy.produce(state, routed);
         assertThat(state.getSystem(1).garrison()).isEqualTo(10);
     }
@@ -117,7 +117,7 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         assertThat(own.industry().nextDelivery()).isEqualTo(6);
         assertThat(fleets.sendFleet(state, 1, 1, 2, 2)).isTrue();
         Map<Integer, Integer> routed = fleets.applyStandingOrdersForProduction(state);
-        assertThat(routed.get(1)).isEqualTo(own.industry().nextDelivery());
+        assertThat(routed).containsEntry(1, own.industry().nextDelivery());
         economy.produce(state, routed);
         assertThat(state.getSystem(1).garrison()).isEqualTo(10);
     }
@@ -136,7 +136,7 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         assertThat(state.getSystem(1).garrison()).isEqualTo(7);
         assertThat(views.forPlayer(state, 1).systems().getFirst().industry().nextDelivery()).isEqualTo(3);
         Map<Integer, Integer> second = fleets.applyStandingOrdersForProduction(state);
-        assertThat(second.get(1)).isEqualTo(3);
+        assertThat(second).containsEntry(1, 3);
         economy.produce(state, second);
         assertThat(state.getSystem(1).garrison()).isEqualTo(10);
         assertThat(state.getSystem(1).garrisonReserve()).isEqualTo(10);

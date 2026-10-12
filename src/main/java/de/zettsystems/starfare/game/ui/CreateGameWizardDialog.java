@@ -268,9 +268,21 @@ final class CreateGameWizardDialog {
         applyNormalizedColors(context.seatColorInputs(), setup);
         context.confirmedSetup().set(setup);
         context.confirmation().removeAll();
-        context.confirmation().add(buildConfirmation(setup, context.gameName().getValue().trim(), context.game().rulesets()));
+        context.confirmation().add(buildConfirmation(setup, context.gameName().getValue().trim(), context.game().rulesets(), key -> {
+            context.back().click();
+            Component target = switch (key) {
+                case UiTexts.UX_PARTICIPANTS -> context.formInputs().humans();
+                case UiTexts.UX_VICTORY -> context.formInputs().victoryPercent();
+                case UiTexts.UX_ACCESS -> context.formInputs().observersAllowed();
+                default -> context.formInputs().systems();
+            };
+            context.body().getChildren().filter(Details.class::isInstance).map(Details.class::cast)
+                    .forEach(details -> details.setOpened(true));
+            target.getElement().executeJs("this.scrollIntoView({block: 'center'}); this.focus();");
+        }));
         context.body().setVisible(false);
         context.confirmation().setVisible(true);
+        context.confirmation().getElement().executeJs("this.scrollIntoView({block: 'start'});");
         context.back().setVisible(true);
         context.create().setText(I18n.t(UiTexts.LOBBY_WIZARD_CREATE));
     }
@@ -388,66 +400,11 @@ final class CreateGameWizardDialog {
         }
     }
 
-    private static Div buildConfirmation(GameSetup setup, String gameName, RulesetCatalog catalog) {
-        Div content = new Div();
-        content.addClassName("wizard-confirmation-content");
-        Div summary = new Div();
-        summary.addClassName("wizard-summary-grid");
-        summary.add(new Span(RulesetLabels.label(catalog, setup.ruleset())),
-                summaryLine(UiTexts.LOBBY_SUMMARY_NAME, gameName),
-                summaryLine(UiTexts.VICTORY_RULES_SUMMARY, setup.victorySystemPercent(),
-                        I18n.t(setup.victoryRules().alliancesAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED),
-                        I18n.t(setup.victoryRules().allianceVictoryAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED),
-                        setup.victoryRules().allianceSystemPercent()),
-                summaryLine(UiTexts.LOBBY_SUMMARY_VISIBILITY, I18n.t(UiTexts.GAME_PRIVATE)),
-                summaryLine(UiTexts.LOBBY_SUMMARY_SYSTEMS, setup.systemCount()),
-                summaryLine(UiTexts.LOBBY_SUMMARY_PLAYERS, setup.humanPlayers(), setup.aiPlayers()),
-                summaryLine(UiTexts.LOBBY_SUMMARY_GALAXY, I18n.t(setup.galaxyLayout() == GalaxyLayout.EVEN
-                        ? UiTexts.LOBBY_GALAXY_LAYOUT_EVEN : UiTexts.LOBBY_GALAXY_LAYOUT_RANDOM)),
-                summaryLine(UiTexts.LOBBY_SUMMARY_GARRISON, setup.startGarrison()),
-                summaryLine(UiTexts.LOBBY_SUMMARY_NEUTRAL_PRODUCTION,
-                        setup.neutralMinProduction(), setup.neutralMaxProduction()),
-                summaryLine(UiTexts.LOBBY_SUMMARY_ROUNDS, DurationLabels.label(setup.roundRules().roundLimit()),
-                        DurationLabels.label(setup.roundRules().stragglerLimit())),
-                summaryLine(UiTexts.LOBBY_SUMMARY_COMBAT, setup.combatRandomnessPercent(),
-                        I18n.t(setup.battlePresentationEnabled() ? UiTexts.LOBBY_SUMMARY_ENABLED
-                                : UiTexts.LOBBY_SUMMARY_DISABLED)),
-                setup.ruleset().resolvesCoalitionBattles()
-                        ? summaryLine(UiTexts.LOBBY_SUMMARY_COALITION_COMBAT)
-                        : summaryLine(UiTexts.LOBBY_SUMMARY_RULES, I18n.t(setup.roundRules().attackOrder() == AttackOrder.RANDOM
-                                ? UiTexts.LOBBY_ATTACK_ORDER_RANDOM : UiTexts.LOBBY_ATTACK_ORDER_STRONGEST_FIRST)),
-                summaryLine(UiTexts.LOBBY_SUMMARY_ACCESS,
-                        I18n.t(setup.observersAllowed() ? UiTexts.LOBBY_SUMMARY_OBSERVERS_ALLOWED
-                                : UiTexts.LOBBY_SUMMARY_OBSERVERS_BLOCKED),
-                        I18n.t(setup.reentryAllowed() ? UiTexts.LOBBY_SUMMARY_REENTRY_ALLOWED
-                                : UiTexts.LOBBY_SUMMARY_REENTRY_BLOCKED)));
-        for (int index = 0; index < setup.totalPlayers(); index++) {
-            summary.add(summaryLine(UiTexts.LOBBY_SUMMARY_START_PRODUCTION,
-                    index < setup.humanPlayers() ? I18n.t(UiTexts.LOBBY_SUMMARY_HUMAN, index + 1)
-                            : I18n.t(UiTexts.LOBBY_SUMMARY_AI, index - setup.humanPlayers() + 1),
-                    setup.startProductionForSeat(index)));
-        }
-        for (int index = 0; index < setup.aiPlayers(); index++) {
-            summary.add(summaryLine(UiTexts.AI_STRATEGY_SUMMARY, index + 1, AiStrategyFields.label(setup.strategyForAi(index))));
-        }
-        Div colors = new Div();
-        colors.addClassName("wizard-summary-colors");
-        for (int index = 0; index < setup.totalPlayers(); index++) {
-            Span seat = new Span(I18n.t(index < setup.humanPlayers()
-                    ? UiTexts.LOBBY_FIELD_START_PRODUCTION_HUMAN : UiTexts.LOBBY_FIELD_START_PRODUCTION_AI,
-                    index < setup.humanPlayers() ? index + 1 : index - setup.humanPlayers() + 1));
-            seat.addClassName("wizard-summary-color");
-            seat.getStyle().set("--seat-color", setup.colorForSeat(index));
-            colors.add(seat);
-        }
-        content.add(summary, colors, galaxyPreview(setup.galaxyLayout()));
+    private static Div buildConfirmation(GameSetup setup, String gameName, RulesetCatalog catalog,
+                                         java.util.function.Consumer<String> edit) {
+        Div content = new WizardSummary(setup, gameName, catalog, edit);
+        content.add(new Details(I18n.t(UiTexts.LOBBY_SUMMARY_SCHEMATIC), galaxyPreview(setup.galaxyLayout())));
         return content;
-    }
-
-    private static Span summaryLine(String key, Object... values) {
-        Span line = new Span(I18n.t(key, values));
-        line.addClassName("wizard-summary-line");
-        return line;
     }
 
     private static Div galaxyPreview(GalaxyLayout layout) {
@@ -463,7 +420,7 @@ final class CreateGameWizardDialog {
                 {77, 53}, {29, 76}, {58, 66}, {91, 81}, {6, 88}, {48, 91}};
         double[][] positions = layout == GalaxyLayout.EVEN ? evenPositions : randomPositions;
         for (double[] position : positions) {
-            Span star = new Span("✦");
+            Span star = new Span();
             star.addClassName("wizard-galaxy-star");
             star.getStyle().set(CssProperties.LEFT, position[0] + "%");
             star.getStyle().set(CssProperties.TOP, position[1] + "%");

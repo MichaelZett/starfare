@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.turn.application;
 
+import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.report.application.ReportService;
@@ -31,7 +32,7 @@ final class VictoryEvaluation {
                 .filter(entry -> entry.getValue() * 100 >= (long) state.systems().size() * state.victorySystemPercent())
                 .sorted(java.util.Map.Entry.comparingByKey()).findFirst();
         if (individual.isPresent()) {
-            int winner = individual.orElseThrow().getKey(); state.endGame(winner);
+            int winner = java.util.Objects.requireNonNull(individual.orElseThrow().getKey()); state.endGame(winner);
             announce(state, reports, List.of(winner), state.victorySystemPercent()); return;
         }
         if (!state.victoryRules().allianceVictoryAllowed()) { return; }
@@ -49,7 +50,7 @@ final class VictoryEvaluation {
         return members.stream().mapToLong(id -> counts.getOrDefault(id, 0L)).sum();
     }
     private static void announce(GameState state, ReportService reports, List<Integer> winners, int threshold) {
-        var names = state.players().stream().filter(p -> winners.contains(p.id())).map(p -> p.label()).toList();
+        var names = state.players().stream().filter(p -> winners.contains(p.id())).map(Player::empireNameOrName).toList();
         for (var player : state.players()) {
             if (winners.contains(player.id())) {
                 reports.appendEvent(state, player.id(), state.outcome().allianceVictory() ? new TurnEvent.Victory(player.id(), threshold,

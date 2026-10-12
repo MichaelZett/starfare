@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.ai.application;
 
+import de.zettsystems.starfare.economy.values.RecyclingRules;
+
 import de.zettsystems.starfare.diplomacy.application.DefaultDiplomacyService;
 import de.zettsystems.starfare.diplomacy.application.DiplomacyService;
 import de.zettsystems.starfare.economy.application.EconomyService;
@@ -41,6 +43,8 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
         state.players().stream().filter(Player::ai).forEach(player -> planPlayer(state, fleets, player));
     }
     private void planPlayer(GameState state, FleetService fleets, Player player) {
+        planMining(state, player);
+        if (state.ruleset().usesRecycling()) { planRecycling(state, player); }
         if (player.aiStrategy() != de.zettsystems.starfare.ai.values.AiStrategy.BASELINE) {
             profiles.plan(state, fleets, player);
             return;
@@ -59,6 +63,36 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
         owned.stream().max(Comparator.comparingInt(DefaultSpacewardPlanning::knownGarrison))
                 .ifPresent(base -> sendFrom(state, fleets, player, base, view));
     }
+    private void planMining(GameState state, Player player) {
+        if (state.ruleset().usesMetals()) {
+            views.forPlayer(state, player.id()).systems().stream()
+                    .filter(system -> Objects.equals(system.ownerId(), player.id()) && system.fullyVisible())
+                    .forEach(system -> {
+                        var industry = system.industry();
+                        var metal = industry == null ? null : industry.metal();
+                        if (industry != null && metal != null) {
+                            int mining = metal.remaining() == 0 ? 0 : Math.max(1, industry.usableCapacity() / 3);
+                            int expansion = Math.min(industry.expansionAllocation(), industry.usableCapacity() - mining);
+                            economy.allocateProduction(state, player.id(), system.id(), expansion, mining);
+                        }
+                    });
+        }
+    }
+    private void planRecycling(GameState state, Player player) {
+        var view = views.forPlayer(state, player.id());
+        for (var system : view.systems()) {
+            var industry = system.industry();
+            var metal = industry == null ? null : industry.metal();
+            if (!Objects.equals(system.ownerId(), player.id()) || metal == null) { continue; }
+            boolean threatened = view.systems().stream().anyMatch(contact -> contact.ownerId() != null
+                    && !Objects.equals(contact.ownerId(), player.id()) && !state.allied(player.id(), contact.ownerId())
+                    && state.travelRounds(system.id(), contact.id()) <= 2);
+            int shortage = metal.plannedShips() - metal.actualShips();
+            int surplus = Math.max(0, state.getSystem(system.id()).availableShips() - RecyclingRules.AI_REAR_GARRISON);
+            int ships = threatened || shortage <= 0 ? 0 : Math.min(surplus, Math.ceilDiv(shortage * RecyclingRules.METAL_SCALE, RecyclingRules.RETURN_TENTHS));
+            de.zettsystems.starfare.economy.domain.RecyclingOrders.plan(state, player.id(), system.id(), ships);
+        }
+    }
     private static int knownGarrison(VisibleSystem system) {
         Integer garrison = system.garrison();
         return garrison == null ? 0 : garrison;
@@ -67,7 +101,7 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
     private static void sendFrom(GameState state, FleetService fleets, Player player,
                                  VisibleSystem base, PlayerViewState view) {
         var system = state.getSystem(base.id());
-        int available = Math.max(0, system.availableShips() - Math.max(1, system.productionPerTurn()));
+        int available = Math.max(0, system.availableShips() - state.recyclingShips(base.id()) - Math.max(1, system.productionPerTurn()));
         if (available == 0) { return; }
         view.systems().stream().filter(s -> !Objects.equals(s.ownerId(), player.id()) && !state.allied(player.id(), s.ownerId()))
                 .filter(target -> Routes.plan(state, player.id(), base.id(), target.id()).isPresent())

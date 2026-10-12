@@ -76,7 +76,9 @@ class TranslationKeysCoverageTest {
 
     private static Set<String> collectUiTextsKeys() {
         Set<String> keys = new TreeSet<>();
-        for (Field f : UiTexts.class.getDeclaredFields()) {
+        for (Field f : java.util.stream.Stream.of(UiTexts.class, de.zettsystems.starfare.economy.ui.ProductionKeys.class,
+                de.zettsystems.starfare.navigation.ui.RouteKeys.class, de.zettsystems.starfare.diplomacy.ui.DiplomacyKeys.class)
+                .flatMap(type -> java.util.Arrays.stream(type.getDeclaredFields())).toList()) {
             int mods = f.getModifiers();
             if (Modifier.isPublic(mods) && Modifier.isStatic(mods) && Modifier.isFinal(mods)
                     && f.getType().equals(String.class)) {

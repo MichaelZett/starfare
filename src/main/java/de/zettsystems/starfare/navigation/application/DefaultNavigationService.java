@@ -43,9 +43,7 @@ public class DefaultNavigationService implements NavigationService {
             if (journey == null || journey.flying() || journey.evacuating()) { continue; }
             if (journey.stationed()) {
                 if (!Routes.stationAllowed(state, fleet.ownerId(), fleet.toSystemId())) { state.replaceFleet(fleet.requireReturn()); }
-                continue;
-            }
-            if (!departureAllowed(state, fleet)) {
+            } else if (!departureAllowed(state, fleet)) {
                 state.replaceFleet(fleet.holdAtBlockedStation());
             } else if (journey.blocked()) {
                 int ready = Math.max(journey.readyTurn(), accessTurn + 1);

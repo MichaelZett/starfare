@@ -14,6 +14,10 @@ public final class StrategyBenchmark {
     private StrategyBenchmark() { }
 
     public static void main(String[] args) throws IOException {
+        if (java.util.Arrays.asList(args).contains("--mode=economy")) {
+            EconomyBenchmark.main(args);
+            return;
+        }
         var options = BenchmarkOptions.parse(args);
         Files.createDirectories(options.output());
         var results = new ArrayList<MatchResult>();
@@ -30,7 +34,7 @@ public final class StrategyBenchmark {
                             for (boolean groupVictory : options.allianceVictory().equals("both") ? List.of(false, true)
                                     : List.of(Boolean.parseBoolean(options.allianceVictory()))) {
                                 var configured = scenario.withVictoryRules(new de.zettsystems.starfare.game.values.VictoryRules(
-                                        options.individualPercent(), scenario.rules().spaceward(), groupVictory, options.alliancePercent()));
+                                        options.individualPercent(), scenario.rules().isSpaceward(), groupVictory, options.alliancePercent()));
                                 run(options, configured, results, skipped);
                             }
                             System.out.printf("%s %s systems=%d mapSeed=%d combatSeed=%d: %d matches completed%n",
@@ -82,7 +86,7 @@ public final class StrategyBenchmark {
     }
 
     private static void decisions(BenchmarkOptions options, Scenario scenario, List<MatchResult> results, List<String> skipped) {
-        var strategies = List.of(scenario.rules().spaceward() ? Strategy.INDUSTRY : Strategy.CONCENTRATION, Strategy.RUSH);
+        var strategies = List.of(scenario.rules().isSpaceward() ? Strategy.INDUSTRY : Strategy.CONCENTRATION, Strategy.RUSH);
         var checkpoint = MatchRunner.checkpoint(scenario, strategies, options.limits().forkRound());
         if (checkpoint.gameOver()) { skipped.add(scenario + ": finished before fork"); return; }
         var baseline = new SimulationEngine().plan(checkpoint, strategies).getFirst();

@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.turn.application;
 
+import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.ai.application.SpacewardPlanning;
 import de.zettsystems.starfare.combat.application.CombatService;
 import de.zettsystems.starfare.economy.application.DefaultEconomyService;
@@ -25,7 +26,7 @@ class SpacewardTurnEngineTest {
         assertThatCode(() -> engine.advanceTurn(state)).doesNotThrowAnyException();
         assertThat(state.turn()).isEqualTo(2);
         assertThat(state.getSystem(1).garrison()).isEqualTo(10);
-        assertThat(state.fleets()).extracting(f -> f.ships()).containsExactly(7, 1);
+        assertThat(state.fleets()).extracting(Fleet::ships).containsExactly(7, 1);
         assertThat(state.reports().get(1).events()).contains(new TurnEvent.Production(1, 1, "Alpha", 6));
         assertThat(state.replayFrames().get(1).industries().get(1).expansionProgress()).isEqualTo(4);
         verify(ai).plan(state, fleets);
@@ -35,7 +36,8 @@ class SpacewardTurnEngineTest {
         SpacewardPlanning ai = mock(SpacewardPlanning.class);
         var engine = new SpacewardTurnEngine(new RoundPipeline(mock(CombatService.class), reports, fleets),
                 new DefaultEconomyService(), ai, fleets, reports);
-        assertThatThrownBy(() -> engine.advanceTurn(new GameState())).isInstanceOf(IllegalArgumentException.class);
+        var input1 = new GameState();
+        assertThatThrownBy(() -> engine.advanceTurn(input1)).isInstanceOf(IllegalArgumentException.class);
         GameState finished = SpacewardStates.running(); finished.endGame(1);
         var before = GameState.toSnapshot(finished);
         assertThatCode(() -> engine.advanceTurn(finished)).doesNotThrowAnyException();

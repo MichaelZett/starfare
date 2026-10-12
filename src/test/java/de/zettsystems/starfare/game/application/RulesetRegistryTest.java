@@ -3,12 +3,25 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
 import org.junit.jupiter.api.Test;
-import java.util.List;
 import java.util.Set;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RulesetRegistryTest {
+    @Test void acceptanceGamesAreCreatedWithCompleteSavedEconomicsBeforeTheirFirstRound() {
+        var store = new InMemoryGameSessionStore();
+        GameRegistry preview = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(), RulesetCatalog.builtIn(true));
+        var id = preview.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ECONOMY_PREVIEW));
+        var original = preview.readState(id, GameState::toSnapshot);
+        assertThat(original.colonies()).hasSameSizeAs(original.systems());
+        assertThat(original.metals()).isNotNull();
+        var restored = GameState.fromSnapshot(original);
+        restored.start();
+        assertThat(de.zettsystems.starfare.economy.domain.RecyclingOrders.balanceTenths(restored))
+                .isEqualTo(restored.metals().orElseThrow().recycling().initialTenths());
+        assertThat(restored.ruleset()).isEqualTo(RulesetRef.SPACEWARD_ECONOMY_PREVIEW);
+        assertThat(RulesetCatalog.builtIn().find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.SPACEWARD_ALLIANCE);
+    }
     @Test
     void unavailableVariantsAreRejectedBeforeAnyGameIsSaved() {
         GameSessionStore store = mock(GameSessionStore.class);
@@ -16,10 +29,10 @@ class RulesetRegistryTest {
         var entries = new java.util.ArrayList<>(RulesetCatalog.builtIn().definitions());
         entries.add(new RulesetDefinition(unreleased, "test.name", "test.description", Set.of("1.0.0"), false));
         GameRegistry registry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(), new RulesetCatalog(entries));
-        assertThatThrownBy(() -> registry.createGame(GameSetup.defaults().selectRuleset(unreleased)))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> registry.createGame(GameSetup.defaults().selectRuleset(new RulesetRef("classic", "9"))))
-                .isInstanceOf(IllegalArgumentException.class);
+        var input1 = GameSetup.defaults().selectRuleset(unreleased);
+        assertThatThrownBy(() -> registry.createGame(input1)).isInstanceOf(IllegalArgumentException.class);
+        var input2 = GameSetup.defaults().selectRuleset(new RulesetRef("classic", "9"));
+        assertThatThrownBy(() -> registry.createGame(input2)).isInstanceOf(IllegalArgumentException.class);
         verifyNoInteractions(store);
     }
 
@@ -66,10 +79,11 @@ class RulesetRegistryTest {
     void gameRulesCannotBeChangedAfterInitialization() {
         var state = new GameState();
         state.rememberSetup(GameSetup.defaults());
-        assertThatThrownBy(() -> state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD)))
-                .isInstanceOf(IllegalStateException.class);
+        var input3 = GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD);
+        assertThatThrownBy(() -> state.rememberSetup(input3)).isInstanceOf(IllegalStateException.class);
         state.start();
-        assertThatThrownBy(() -> state.rememberSetup(GameSetup.defaults())).isInstanceOf(IllegalStateException.class);
+        var input4 = GameSetup.defaults();
+        assertThatThrownBy(() -> state.rememberSetup(input4)).isInstanceOf(IllegalStateException.class);
         assertThat(state.ruleset()).isEqualTo(RulesetRef.SECTOR_FORCES);
     }
 }

@@ -48,7 +48,7 @@ final class BattleReplayDialog {
             result.setText(I18n.t(UiTexts.BATTLE_REPLAY_RESULT, replay.attackingRemaining(), replay.defendingRemaining()));
             visual.add(result);
 
-        } else { CoalitionPresentation.populate(visual, replay.coalitions()); }
+        } else { CoalitionPresentation.populate(visual, replay); }
 
         boolean soundEnabled = soundEnabled();
         Checkbox sound = new Checkbox(I18n.t(UiTexts.BATTLE_REPLAY_SOUND), soundEnabled);
@@ -103,11 +103,9 @@ final class BattleReplayDialog {
         number.addClassName("battle-number");
         number.getElement().setAttribute(sideClass.endsWith("attacker") ? "data-battle-attacking" : "data-battle-defending", "");
         side.add(number);
-        Span rolledStrength = new Span(I18n.t(UiTexts.BATTLE_REPLAY_STRENGTH,
+        BattleCondition.addTo(side, ships, strength, sideClass.endsWith("attacker") ? 1 : 0,
                 CombatStrengthFormat.format(strength, opposingStrength,
-                        com.vaadin.flow.component.UI.getCurrentOrThrow().getLocale())));
-        rolledStrength.addClassName("battle-strength");
-        side.add(rolledStrength);
+                        com.vaadin.flow.component.UI.getCurrentOrThrow().getLocale()));
         Div markers = new Div();
         markers.addClassName("battle-ships");
         int scale = Math.max(1, (int) Math.ceil(Math.max(ships, opponentShips) / (double) MAX_SHIP_MARKERS));

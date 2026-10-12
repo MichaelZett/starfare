@@ -1,4 +1,5 @@
 # language: de
+@navigation
 Funktionalität: Spaceward-Reichweite und Zwischenstationen
 
   Szenario: Routen, Auftanken und unterbrochene Weiterreise bleiben nach Neuladen verständlich

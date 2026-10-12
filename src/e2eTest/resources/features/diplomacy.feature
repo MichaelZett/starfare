@@ -1,4 +1,5 @@
 # language: de
+@diplomacy
 Funktionalität: Spaceward-Bündnisse und Kündigungsfrist
 
   Szenario: Zwei Imperien stimmen zu und sehen die Kündigung mit anschließender Heimreise

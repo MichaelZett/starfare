@@ -36,6 +36,8 @@ final class RulesetSelector extends VerticalLayout {
                     : I18n.t(UiTexts.RULESET_PLANNED));
             Div card = new Div(title, status, new Span(I18n.t(entry.descriptionKey())));
             card.addClassName("ruleset-card");
+            card.setVisible(entry.equals(variants.getValue()));
+            variants.addValueChangeListener(event -> card.setVisible(entry.equals(event.getValue())));
             cards.add(card);
         }
     }

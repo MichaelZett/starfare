@@ -1,5 +1,8 @@
 package de.zettsystems.starfare.simulation;
 
+import de.zettsystems.starfare.diplomacy.values.TreatyProposal;
+import de.zettsystems.starfare.diplomacy.values.AllianceGroup;
+import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import java.nio.charset.StandardCharsets;
@@ -93,7 +96,7 @@ final class MatchRunner {
 
     private static long ships(GameState state, int player) {
         return state.systems().stream().filter(s -> Objects.equals(s.ownerId(), player)).mapToLong(s -> s.garrison()).sum()
-                + state.fleets().stream().filter(f -> f.ownerId() == player).mapToLong(f -> f.ships()).sum();
+                + state.fleets().stream().filter(f -> f.ownerId() == player).mapToLong(Fleet::ships).sum();
     }
 
     private static MessageDigest sha256() {
@@ -103,10 +106,10 @@ final class MatchRunner {
 
     private static String diplomacyFingerprint(GameState state) {
         var value = new StringBuilder().append(state.diplomacy().nextId());
-        state.diplomacy().groups().stream().sorted(java.util.Comparator.comparingInt(group -> group.id())).forEach(group ->
+        state.diplomacy().groups().stream().sorted(java.util.Comparator.comparingInt(AllianceGroup::id)).forEach(group ->
                 value.append('|').append(group.id()).append(':').append(new java.util.TreeSet<>(group.members()))
                         .append(':').append(group.noticeRounds()).append(':').append(new TreeMap<>(group.departures())));
-        state.diplomacy().proposals().stream().sorted(java.util.Comparator.comparingInt(proposal -> proposal.id())).forEach(proposal ->
+        state.diplomacy().proposals().stream().sorted(java.util.Comparator.comparingInt(TreatyProposal::id)).forEach(proposal ->
                 value.append('|').append(proposal.id()).append(':').append(proposal.kind()).append(':').append(proposal.groupId())
                         .append(':').append(proposal.candidate()).append(':').append(proposal.noticeRounds())
                         .append(':').append(new java.util.TreeSet<>(proposal.voters())).append(':').append(new java.util.TreeSet<>(proposal.approvals())));

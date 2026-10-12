@@ -28,6 +28,7 @@ class RoutesTest {
         var route = Routes.plan(state, 1, 1, 4).orElseThrow();
         assertThat(route.systems()).containsExactly(1, 2, 3, 4);
         assertThat(route.rounds()).isEqualTo(8);
+        assertThat(route.legRounds()).containsExactly(2, 2, 2);
         assertThat(route.description()).isEqualTo("Alpha → Beta → Gamma → Delta");
         state.updateSystem(2, system -> system.captureBy(2, 1));
         assertThat(Routes.plan(state, 1, 1, 4)).isEmpty();
@@ -73,7 +74,9 @@ class RoutesTest {
     @Test void invalidSettingsAndImpossibleJourneyPhasesAreRejected() {
         assertThatThrownBy(() -> new NavigationSettings(Double.NaN)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new NavigationSettings(0)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new FlightJourney(List.of(1, 2), 1, FlightJourney.Phase.STATION, 3, 3)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new FlightJourney(List.of(1, 2, 1), 1, FlightJourney.Phase.FLYING, 0, 3)).isInstanceOf(IllegalArgumentException.class);
+        var input1 = List.of(1, 2);
+        assertThatThrownBy(() -> new FlightJourney(input1, 1, FlightJourney.Phase.STATION, 3, 3)).isInstanceOf(IllegalArgumentException.class);
+        var input2 = List.of(1, 2, 1);
+        assertThatThrownBy(() -> new FlightJourney(input2, 1, FlightJourney.Phase.FLYING, 0, 3)).isInstanceOf(IllegalArgumentException.class);
     }
 }

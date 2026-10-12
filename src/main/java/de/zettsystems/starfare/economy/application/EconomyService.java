@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface EconomyService {
+    boolean allocateProduction(GameState state, int playerId, int systemId, int expansion, int mining);
     boolean allocateExpansion(GameState state, int playerId, int systemId, int points);
     List<IndustrialProduction> produce(GameState state, Map<Integer, Integer> routedShips);
 }

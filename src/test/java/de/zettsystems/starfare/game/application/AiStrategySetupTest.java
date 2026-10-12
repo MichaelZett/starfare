@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.application;
 
+import static org.mockito.Mockito.mock;
 import de.zettsystems.starfare.ai.values.AiStrategy;
 import de.zettsystems.starfare.game.values.*;
 import java.util.List;
@@ -29,8 +30,8 @@ class AiStrategySetupTest {
         List<Player> originalPlayers = registry.readState(id, state -> List.copyOf(state.players()));
         assertThat(originalPlayers).extracting(Player::aiStrategy)
                 .containsExactly(AiStrategy.BASELINE, AiStrategy.RUSH, AiStrategy.DEFENSE);
-        var templates = new DefaultGameTemplateService(registry, org.mockito.Mockito.mock(GameArchiveStore.class),
-                new DefaultGameAccessPolicy(), org.mockito.Mockito.mock(Broadcaster.class));
+        var templates = new DefaultGameTemplateService(registry, mock(GameArchiveStore.class),
+                new DefaultGameAccessPolicy(), mock(Broadcaster.class));
         var copy = templates.create(id, "host", "Copy", true).orElseThrow();
         List<AiStrategy> copiedProfiles = registry.readState(copy, state -> state.originalSetup().orElseThrow().aiStrategies());
         assertThat(copiedProfiles)

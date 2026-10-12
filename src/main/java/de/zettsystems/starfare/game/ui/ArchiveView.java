@@ -29,7 +29,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Comparator;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Route("archive")
@@ -52,7 +51,7 @@ public class ArchiveView extends VerticalLayout {
         this.templates = templates;
         this.broadcaster = broadcaster;
         setSizeFull();
-        add(new AccountNavigation(), new de.zettsystems.starfare.legal.ui.LegalFooter());
+        add(new AccountNavigation());
         search.setPlaceholder(I18n.t(UiTexts.LOBBY_SEARCH));
         search.setClearButtonVisible(true);
         search.addValueChangeListener(_ -> refresh());
@@ -68,7 +67,7 @@ public class ArchiveView extends VerticalLayout {
                         _ -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)))));
         grid.addComponentColumn(this::archiveCard).setHeader("").setFlexGrow(1);
         grid.setWidthFull();
-        add(grid, empty);
+        add(grid, empty, new de.zettsystems.starfare.legal.ui.LegalFooter());
     }
 
     private Div archiveCard(GameSummary summary) {

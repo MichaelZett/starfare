@@ -33,6 +33,24 @@ class SystemCompositionTest {
     }
 
     @Test
+    void colonyCompositionUsesSavedEnvironmentOnlyWithFullVisibility() {
+        var quality = new de.zettsystems.starfare.economy.values.SystemQuality(
+                SystemComposition.StarType.YELLOW, 1, 2.4, SystemComposition.BodyType.GAS_GIANT, true,
+                de.zettsystems.starfare.economy.values.SystemQuality.Atmosphere.THIN, 3);
+        var industry = new de.zettsystems.starfare.economy.values.IndustryView(5, 0, 0, 10, 5, false, 0,
+                new de.zettsystems.starfare.economy.values.ColonyView(quality, 500, 505));
+        var full = new VisibleSystem(1, "Colony", 0, 0, 1, 5, 5, true, "#fff", 1,
+                false, 0, 0, 5, List.of(), industry);
+        var partial = new VisibleSystem(1, "Colony", 0, 0, 1, 5, 5, false, "#fff", 1,
+                true, null, null, null, List.of(), industry);
+        var composition = SystemComposition.forVisible(GAME, full).orElseThrow();
+        assertThat(composition.colonyQuality()).isEqualTo(quality);
+        assertThat(composition.stars()).containsExactly(quality.star());
+        assertThat(composition.bodies().getFirst().type()).isEqualTo(quality.body());
+        assertThat(SystemComposition.forVisible(GAME, partial)).isEmpty();
+    }
+
+    @Test
     void variedSystemsStayCompactAndUseContiguousOrbits() {
         Set<SystemComposition.StarType> stars = new HashSet<>();
         Set<SystemComposition.BodyType> bodies = new HashSet<>();

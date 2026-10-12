@@ -1,4 +1,5 @@
 # language: de
+@ui-decisions
 @colonies
 Funktionalität: Gespeicherte Systemqualität und Koloniewachstum
 

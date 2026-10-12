@@ -27,8 +27,9 @@ class ColonyTest {
         assertThat(new Colony(4999).grow(quality)).isEqualTo(new Colony(5000));
         assertThat(new Colony(5000).grow(quality)).isEqualTo(new Colony(5000));
         assertThatThrownBy(() -> new Colony(99)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new ColonyEconomy(quality(1, 1, SystemQuality.Atmosphere.NONE, 3), new Colony(2501)))
-                .isInstanceOf(IllegalArgumentException.class);
+        var input1 = quality(1, 1, SystemQuality.Atmosphere.NONE, 3);
+        var input2 = new Colony(2501);
+        assertThatThrownBy(() -> new ColonyEconomy(input1, input2)).isInstanceOf(IllegalArgumentException.class);
     }
     @Test void invalidPhysicalInputsAreRejectedAndMoonsCanHostColonies() {
         assertThatThrownBy(() -> quality(Double.NaN, 1, SystemQuality.Atmosphere.NONE, 1)).isInstanceOf(IllegalArgumentException.class);

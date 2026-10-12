@@ -21,7 +21,8 @@ public record AllianceGroup(int id, Set<Integer> members, int noticeRounds, Map<
     }
     public AllianceGroup agreeNotice(int rounds) { return new AllianceGroup(id, members, rounds, departures); }
     public AllianceGroup announceDeparture(int player, int turn) {
-        var updated = new HashMap<>(departures); updated.put(player, turn + Math.max(1, noticeRounds));
+        var updated = new HashMap<>(departures); updated.put(player, departureTurn(turn));
         return new AllianceGroup(id, members, noticeRounds, updated);
     }
+    public int departureTurn(int turn) { return turn + Math.max(1, noticeRounds); }
 }

@@ -37,7 +37,7 @@ for (const attackerWon of [true, false]) {
         const defenseNumber = {textContent: ''};
         const root = {
             classList,
-            getAttribute() { return String(attackerWon); },
+            dataset: {battleAttackerWon: String(attackerWon)},
             querySelector(selector) {
                 if (selector === '[data-battle-attacking]') return attackNumber;
                 if (selector === '[data-battle-defending]') return defenseNumber;
@@ -66,7 +66,7 @@ test('coalition playback reveals the stored survivors and member losses together
     const panels = sides.map(side => {
         const classes = new Set();
         const number = {textContent: ''};
-        const members = side.members.map(member => ({textContent: 'initial', getAttribute: () => `${member.remaining} remaining`}));
+        const members = side.members.map(member => ({textContent: 'initial', dataset: {coalitionFinal: `${member.remaining} remaining`}}));
         return {classes, number, members, classList: {add: value => classes.add(value)},
             querySelector: () => number, querySelectorAll: () => members};
     });

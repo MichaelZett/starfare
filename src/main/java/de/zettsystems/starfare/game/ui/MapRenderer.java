@@ -101,7 +101,7 @@ final class MapRenderer {
             return;
         }
         LaneGeometry geom = computeLaneGeometry(a, b, len);
-        String color = in.playerId() >= 0 ? resolveFleetColor(in, in.playerId()) : "#58a6ff";
+        String color = "#a9b6c7";
         String tooltip = I18n.t(UiTexts.MAP_PLANNED_LANE_TOOLTIP,
                 order.fromSystem(), order.toSystem(),
                 order.ships() == null ? "?" : String.valueOf(order.ships()));
@@ -109,6 +109,7 @@ final class MapRenderer {
         // Gleiche Geometrie wie eine fliegende Flotte; nur Strichelung und Farbe
         // kommen ueber die zusaetzliche Klasse dazu.
         Div lane = buildLaneDiv(geom, color, tooltip, false);
+        routeData(lane, "planned-" + order.index() + "-" + fromId, a, b, geom);
         lane.addClassName("fleet-lane-planned");
         lane.getStyle().set("borderTopColor", color);
         map.add(lane);
@@ -142,6 +143,7 @@ final class MapRenderer {
                 order.fromSystem(), order.toSystem(), order.ships());
         boolean highlighted = Objects.equals(order.id(), in.highlightedStandingOrderId());
         Div lane = buildLaneDiv(geometry, "#bc8cff", tooltip, highlighted);
+        routeData(lane, "standing-" + order.id() + "-" + from, source, target, geometry);
         lane.addClassName("fleet-lane-standing");
         if (in.logisticsMode()) {
             lane.addClassName("fleet-lane-logistics");
@@ -149,6 +151,7 @@ final class MapRenderer {
         map.add(lane);
 
         Div badge = new Div();
+        routeData(badge, "standing-" + order.id() + "-" + from, source, target, geometry);
         badge.addClassName("standing-order-badge");
         if (highlighted) {
             badge.addClassName("standing-order-badge-highlighted");
@@ -237,7 +240,8 @@ final class MapRenderer {
     private static Div buildReportMarker(VisibleSystem sys, Inputs in) {
         Div marker = new Div();
         marker.addClassName("sys-report-marker");
-        marker.setText("!");
+        marker.setText(in.pendingBattleSystemIds().contains(sys.id()) ? "⚔" : "!");
+        marker.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, sys.name() + ": " + I18n.t(UiTexts.MAP_REPORT_MARKER_HINT));
         KeyboardActions.enable(marker);
         marker.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.MAP_REPORT_MARKER_HINT));
         marker.getElement().addEventListener("click", _ -> in.onReportSystemSelected().accept(sys.id()))
@@ -325,8 +329,9 @@ final class MapRenderer {
             }
         });
         if (!in.observer() && in.playerId() >= 0 && sys.fullyVisible()) {
-            ContextMenu menu = new ContextMenu(dot);
-            menu.addItem(I18n.t(UiTexts.MAP_SEND_FLEET), _ -> in.onSelectSource().accept(sys));
+            dot.getElement().addEventListener("contextmenu", _ -> in.onSelectSource().accept(sys))
+                    .addEventData("event.preventDefault()")
+                    .addEventData("event.stopPropagation()");
         }
     }
 
@@ -344,15 +349,26 @@ final class MapRenderer {
 
         LaneGeometry geom = computeLaneGeometry(a, b, len);
         String color = resolveFleetColor(in, f.ownerId());
-        String tooltip = f.journey() == null ? fleetTooltip(f, in.view().turn()) : NavigationDisplay.status(f, in.view());
+        String empire = in.view().players().stream().filter(player -> player.id() == f.ownerId())
+                .map(Player::empireNameOrName).findFirst().orElse("");
+        String tooltip = empire + " · " + (f.journey() == null ? fleetTooltip(f, in.view().turn()) : NavigationDisplay.status(f, in.view()));
         Integer highlightedFleetId = in.highlightedFleetId();
         boolean highlighted = highlightedFleetId != null && highlightedFleetId == f.globalId();
 
-        if (f.inFlight()) { map.add(buildLaneDiv(geom, color, tooltip, highlighted)); }
-        map.add(buildFleetBadge(f, a, b, color, tooltip, in, highlighted));
+        Div lane = buildLaneDiv(geom, "#a9b6c7", tooltip, highlighted);
+        routeData(lane, "fleet-" + f.globalId(), a, b, geom);
+        map.add(lane);
+        if (!f.inFlight()) { lane.addClassName("fleet-lane-orbiting"); }
+        Div badge = buildFleetBadge(f, a, b, color, tooltip, in, highlighted);
+        routeData(badge, "fleet-" + f.globalId(), a, b, geom);
+        badge.getElement().setAttribute(HtmlAttributes.MAP_PROGRESS, Double.toString(etaProgress(f, in.view().turn())));
+        map.add(badge);
 
         if (!in.observer() && in.playerId() >= 0 && f.inFlight()) {
-            map.add(buildFleetHitArea(f, a.x(), a.y(), len, geom.angle, in));
+            Div hit = buildFleetHitArea(f, a.x(), a.y(), len, geom.angle, in);
+            routeData(hit, "fleet-" + f.globalId(), a, b, geom);
+            hit.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, tooltip);
+            map.add(hit);
         }
     }
 
@@ -388,12 +404,22 @@ final class MapRenderer {
         double dy = b.y() - a.y();
         double ux = dx / len;
         double uy = dy / len;
-        double offset = len > 100 ? 45 : 0;
+        double offset = 0;
         double laneLen = Math.max(1, len - 2 * offset);
         double x1 = a.x() + ux * offset;
         double y1 = a.y() + uy * offset;
         double angle = Math.toDegrees(Math.atan2(dy, dx));
         return new LaneGeometry(x1, y1, laneLen, angle);
+    }
+
+    private static void routeData(Div node, String key, VisibleSystem a, VisibleSystem b, LaneGeometry geometry) {
+        node.getElement().setAttribute(HtmlAttributes.MAP_ROUTE, key);
+        node.getElement().setAttribute(HtmlAttributes.MAP_PAIR, Math.min(a.id(), b.id()) + "-" + Math.max(a.id(), b.id()));
+        node.getElement().setAttribute(HtmlAttributes.MAP_REVERSE, String.valueOf(a.id() > b.id()));
+        node.getElement().setAttribute(HtmlAttributes.MAP_X, Double.toString(a.x()));
+        node.getElement().setAttribute(HtmlAttributes.MAP_Y, Double.toString(a.y()));
+        node.getElement().setAttribute(HtmlAttributes.MAP_LENGTH, Double.toString(geometry.laneLen()));
+        node.getElement().setAttribute(HtmlAttributes.MAP_ANGLE, Double.toString(Math.toRadians(geometry.angle())));
     }
 
     private static Div buildLaneDiv(LaneGeometry geom, String color, String tooltip, boolean highlighted) {

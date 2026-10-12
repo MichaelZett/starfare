@@ -9,10 +9,10 @@ public record VictoryRules(int individualSystemPercent, boolean alliancesAllowed
         allianceVictoryAllowed = alliancesAllowed && allianceVictoryAllowed;
     }
     public static VictoryRules defaults(RulesetRef rules, int individualPercent) {
-        return new VictoryRules(individualPercent, rules.spaceward(), false, GameConfig.VICTORY_SYSTEM_PERCENT);
+        return new VictoryRules(individualPercent, rules.isSpaceward(), false, GameConfig.VICTORY_SYSTEM_PERCENT);
     }
     public VictoryRules forRuleset(RulesetRef rules) {
-        if (!rules.spaceward()) { return defaults(rules, individualSystemPercent); }
+        if (!rules.isSpaceward()) { return defaults(rules, individualSystemPercent); }
         if (rules.equals(RulesetRef.SPACEWARD) && !equals(defaults(rules, individualSystemPercent))) {
             throw new IllegalArgumentException("Custom diplomacy requires Spaceward 1.1.0");
         }

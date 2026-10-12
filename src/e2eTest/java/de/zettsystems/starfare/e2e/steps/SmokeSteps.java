@@ -115,12 +115,41 @@ public class SmokeSteps {
     }
 
     @Wenn("ich ein Standardspiel anlege und beitrete")
-    public void createDefaultGameAndJoin() {
+    public void createDefaultGameAndJoin() throws IOException {
+        browser.captureUiAcceptance("lobby");
         browser.clickButtonWithText("Neues Spiel");
-        // Der Assistent zeigt vor dem Anlegen eine Zusammenfassung.
         browser.clickButtonWithText("Zusammenfassung prüfen");
+        browser.awaitCss(".wizard-summary-group");
+        browser.captureUiAcceptance("wizard-summary");
+        browser.clickCss(".wizard-summary-group vaadin-button");
+        WebElement systems = wizardSystems();
+        String original = systems.getDomProperty("value");
+        int corrected = Integer.parseInt(original) + 1;
+        systems.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"));
+        systems.sendKeys(String.valueOf(corrected), org.openqa.selenium.Keys.TAB);
+        browser.clickButtonWithText("Zusammenfassung prüfen");
+        browser.awaitTextIn(".wizard-summary-line", "Systeme: " + corrected);
+        assertThat(browser.textsOf(".wizard-summary-line")).contains("Systeme: " + corrected);
+        browser.captureUiAcceptance("wizard-corrected");
+        // Restore the standard fixture after verifying the correction round trip.
+        browser.clickCss(".wizard-summary-group vaadin-button");
+        systems = wizardSystems();
+        systems.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"));
+        systems.sendKeys(original, org.openqa.selenium.Keys.TAB);
+        browser.clickButtonWithText("Zusammenfassung prüfen");
+        browser.awaitTextIn(".wizard-summary-line", "Systeme: " + original);
         browser.clickButtonWithText("Spiel anlegen");
         browser.awaitUrl(url -> url.contains("/map/"), "Die KI-Partie wurde nicht automatisch gestartet.");
+    }
+
+    private WebElement wizardSystems() {
+        return new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .until(_ -> browser.all(".create-game-dialog vaadin-integer-field").stream()
+                        .filter(WebElement::isDisplayed)
+                        .filter(field -> "Galaxiegröße (Systeme)".equals(field.getDomProperty("label")))
+                        .findFirst().map(field -> field.findElement(org.openqa.selenium.By.cssSelector("input")))
+                        .orElse(null));
     }
 
     @Dann("zeigt der Verwalten-Dialog den Spieler {string}")
@@ -155,6 +184,19 @@ public class SmokeSteps {
         browser.clickButtonWithText("Zielwahl abbrechen");
         browser.clickButtonWithText("Flotte senden");
         browser.awaitText("Ziel auf der Karte auswählen");
+        browser.clickCss(".sys-target:not(.sys-selected)");
+        browser.awaitText("Reisedauer");
+        browser.clickButtonWithText("Abbrechen");
+        new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .until(_ -> {
+                    new org.openqa.selenium.interactions.Actions(browser.driver())
+                            .contextClick(browser.awaitCss(".sys-action-source")).perform();
+                    return true;
+                });
+        browser.awaitText("Ziel auf der Karte auswählen");
+        assertThat(browser.all(".sys-selected")).hasSize(1);
+        assertThat(browser.all("vaadin-context-menu-overlay[opened]")).isEmpty();
         browser.clickCss(".sys-target:not(.sys-selected)");
         browser.awaitText("Reisedauer");
         browser.clickButtonWithText("Abbrechen");

@@ -19,8 +19,11 @@ import de.zettsystems.starfare.i18n.I18n;
 final class MapHeaderBar extends HorizontalLayout {
 
     private final Span gameNameLabel = new Span();
+    private final Span empireNameLabel = new Span();
     private final Span roundLabel = new Span();
     private final EmpireStatsBar empireStats = new EmpireStatsBar();
+    private final de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices = new de.zettsystems.starfare.economy.ui.EconomyNoticeBar();
+    de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices() { return economyNotices; }
     private final Button next;
     private final Button logistics;
     private final MenuItem leaveItem;
@@ -31,6 +34,8 @@ final class MapHeaderBar extends HorizontalLayout {
         H1 title = new H1(I18n.t(UiTexts.MAP_HEADER_TITLE));
         title.addClassName("app-header-title");
         gameNameLabel.addClassName("app-header-game");
+        empireNameLabel.addClassName("app-header-empire");
+        empireNameLabel.setVisible(false);
         roundLabel.addClassName("app-header-round");
         roundLabel.setText(I18n.t(UiTexts.MAP_ROUND_LABEL, 1));
 
@@ -51,7 +56,7 @@ final class MapHeaderBar extends HorizontalLayout {
         leaveItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LEAVE), _ -> onLeave.run());
         menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LOBBY), _ -> onLobby.run());
 
-        var headerLeft = new HorizontalLayout(title, gameNameLabel, roundLabel, empireStats);
+        var headerLeft = new HorizontalLayout(title, gameNameLabel, empireNameLabel, roundLabel, empireStats, economyNotices);
         headerLeft.setAlignItems(Alignment.BASELINE);
         headerLeft.setSpacing(true);
         headerLeft.addClassName("app-header-left");
@@ -70,6 +75,11 @@ final class MapHeaderBar extends HorizontalLayout {
 
     void setGameName(String name) {
         gameNameLabel.setText(name);
+    }
+
+    void setEmpireName(String name) {
+        empireNameLabel.setText(name);
+        empireNameLabel.setVisible(!name.isBlank());
     }
 
     void setRound(int turn) {

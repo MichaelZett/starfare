@@ -4,8 +4,13 @@ import java.util.Optional;
 
 /** Combat-only presentation data. Ownership changes are deliberately kept outside the replay. */
 public record BattleReplay(String systemName, int attacking, int defending, Outcome outcome,
-                           double attackerStrength, double defenderStrength, java.util.List<CoalitionSide> coalitions) {
+                           double attackerStrength, double defenderStrength, java.util.List<CoalitionSide> coalitions,
+                           @org.jspecify.annotations.Nullable Integer defenderSideId) {
     public BattleReplay { coalitions = java.util.List.copyOf(coalitions); }
+    public BattleReplay(String systemName, int attacking, int defending, Outcome outcome,
+                        double attackerStrength, double defenderStrength, java.util.List<CoalitionSide> coalitions) {
+        this(systemName, attacking, defending, outcome, attackerStrength, defenderStrength, coalitions, null);
+    }
     public BattleReplay(String systemName, int attacking, int defending, Outcome outcome,
                         double attackerStrength, double defenderStrength) {
         this(systemName, attacking, defending, outcome, attackerStrength, defenderStrength, java.util.List.of());
@@ -40,8 +45,7 @@ public record BattleReplay(String systemName, int attacking, int defending, Outc
 
     public static Optional<BattleReplay> from(TurnEvent event) {
         return switch (event) {
-            case TurnEvent.CoalitionBattle battle -> Optional.of(new BattleReplay(battle.systemName(), 0, 0,
-                    new Outcome(0, 0, false), 0, 0, battle.sides()));
+            case TurnEvent.CoalitionBattle battle -> Optional.of(coalitionReplay(battle));
             case TurnEvent.BattleWon battle -> Optional.of(new BattleReplay(battle.systemName(), battle.attacking(),
                     battle.defending(), new Outcome(battle.remaining(), 0, true),
                     battle.attackerStrength(), battle.defenderStrength()));
@@ -56,8 +60,16 @@ public record BattleReplay(String systemName, int attacking, int defending, Outc
                     ? Optional.of(new BattleReplay(held.systemName(), held.attacking(), held.defending(),
                     new Outcome(0, held.defendersLeft(), false),
                     held.attackerStrength(), held.defenderStrength())) : Optional.empty();
-            case TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
+            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
                     Optional.empty();
         };
+    }
+
+    private static BattleReplay coalitionReplay(TurnEvent.CoalitionBattle battle) {
+        Integer owner = battle.previousOwner();
+        int defender = owner == null ? 0 : owner;
+        Integer sideId = battle.sides().stream().filter(side -> side.contains(defender))
+                .map(CoalitionSide::id).findFirst().orElse(null);
+        return new BattleReplay(battle.systemName(), 0, 0, new Outcome(0, 0, false), 0, 0, battle.sides(), sideId);
     }
 }

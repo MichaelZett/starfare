@@ -11,8 +11,8 @@ public record GameOutcome(@Nullable Integer winnerId, @Nullable Instant finished
         this(winnerId, finishedAt, winnerId == null ? List.of() : List.of(winnerId), null);
     }
     public GameOutcome {
-        winnerIds = winnerIds == null ? (winnerId == null ? List.of() : List.of(winnerId))
-                : winnerIds.stream().distinct().sorted().toList();
+        List<Integer> individualWinners = winnerId == null ? List.of() : List.of(winnerId);
+        winnerIds = winnerIds == null ? individualWinners : winnerIds.stream().distinct().sorted().toList();
         if (allianceId != null && (winnerId != null || winnerIds.size() < 2)) {
             throw new IllegalArgumentException("Group victory requires multiple winners");
         }

@@ -1,7 +1,7 @@
 package de.zettsystems.starfare.navigation.domain;
 
+import de.zettsystems.starfare.navigation.values.NavigationSettings;
 import de.zettsystems.starfare.game.domain.GameState;
-import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.navigation.values.RoutePreview;
 import java.util.*;
@@ -9,7 +9,7 @@ import java.util.*;
 /** Pure planning used by commands, production routing, AI and previews. */
 public final class Routes {
     private Routes() { }
-    public static boolean limited(GameState state) { return state.ruleset().spaceward(); }
+    public static boolean limited(GameState state) { return state.ruleset().isSpaceward(); }
     public static boolean stationAllowed(GameState state, int owner, int system) {
         StarSystem station = state.systems().stream().filter(candidate -> candidate.id() == system).findFirst().orElse(null);
         return station != null && (Objects.equals(station.ownerId(), owner) || state.allied(owner, station.ownerId()));
@@ -100,7 +100,7 @@ public final class Routes {
                         .min(Comparator.comparingInt((Integer id) -> costs.getOrDefault(id, Integer.MAX_VALUE))
                                 .thenComparingInt(Integer::intValue)).orElse(null);
                 if (current == null) { return Optional.empty(); }
-                if (current == to) { return Optional.of(preview(state, reconstruct(previous, from, to))); }
+                if (current == to) { return Optional.of(preview(state, reconstruct())); }
                 visited.add(current); explore(current);
             }
         }
@@ -114,22 +114,26 @@ public final class Routes {
                 }
             }
         }
+        private List<Integer> reconstruct() {
+            List<Integer> path = new ArrayList<>(); path.add(to);
+            while (path.getLast() != from) { path.add(Objects.requireNonNull(previous.get(path.getLast()))); }
+            Collections.reverse(path); return List.copyOf(path);
+        }
         private boolean usable(int current, int target) {
             return !visited.contains(target) && (target == to || stationAllowed(state, owner, target))
                     && withinRange(state, current, target);
         }
     }
 
-    private static List<Integer> reconstruct(Map<Integer, Integer> previous, int from, int to) {
-        List<Integer> path = new ArrayList<>(); path.add(to);
-        while (path.getLast() != from) { path.add(Objects.requireNonNull(previous.get(path.getLast()))); }
-        Collections.reverse(path); return List.copyOf(path);
-    }
     public static RoutePreview preview(GameState state, List<Integer> path) {
         int rounds = Math.max(0, path.size() - 2);
-        for (int index = 1; index < path.size(); index++) { rounds += state.travelRounds(path.get(index - 1), path.get(index)); }
-        double range = state.navigationSettings().map(settings -> settings.range()).orElse(0.0);
-        return new RoutePreview(path, path.stream().map(id -> state.getSystem(id).name()).toList(), rounds, range);
+        List<Integer> legs = new ArrayList<>();
+        for (int index = 1; index < path.size(); index++) {
+            int duration = state.travelRounds(path.get(index - 1), path.get(index));
+            legs.add(duration); rounds += duration;
+        }
+        double range = state.navigationSettings().map(NavigationSettings::range).orElse(0.0);
+        return new RoutePreview(path, path.stream().map(id -> state.getSystem(id).name()).toList(), rounds, range, legs);
     }
     public static int remainingRounds(GameState state, List<Integer> stations, int legIndex) {
         return preview(state, stations.subList(legIndex, stations.size())).rounds();

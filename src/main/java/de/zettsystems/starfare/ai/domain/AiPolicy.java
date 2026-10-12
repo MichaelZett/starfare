@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.ai.domain;
 
+import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.ai.values.AiObservation;
 import de.zettsystems.starfare.ai.values.AiOrders;
 import de.zettsystems.starfare.ai.values.AiStrategy;
@@ -57,8 +58,11 @@ public final class AiPolicy {
                     .mapToInt(target -> observation.rounds(source.id(), target.id())).min().orElse(Integer.MAX_VALUE);
             points = IndustryPolicy.allocation(strategy, industry, nearestEnemy, available(source));
         }
+        var metal = industry.metal();
+        int mining = metal == null ? 0 : metal.miningPoints();
+        points = Math.min(points, industry.usableCapacity() - mining);
         expansion.put(source.id(), points);
-        return industry.usableCapacity() - points;
+        return industry.usableCapacity() - points - mining;
     }
 
     private static int reserve(AiStrategy strategy, int output) {
@@ -96,7 +100,7 @@ public final class AiPolicy {
         int growth = target.ownerId() != null && production != null ? production * rounds : 0;
         int inbound = view.view().ownFleets().stream()
                 .filter(fleet -> fleet.toSystemId() == target.id() && fleet.arrivalTurn() <= view.view().turn() + rounds)
-                .mapToInt(fleet -> fleet.ships()).sum();
+                .mapToInt(Fleet::ships).sum();
         return Math.max(1, (int) Math.ceil((knownDefense(target) + growth) * 1.35) + 1
                 - inbound - committed.getOrDefault(target.id(), 0));
     }

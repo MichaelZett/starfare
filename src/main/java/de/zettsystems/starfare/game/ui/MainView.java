@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 @CssImport("./styles/starfare.css")
 @JsModule("./battle-replay.js")
 @PermitAll
-public class MainView extends VerticalLayout implements BeforeEnterObserver {
+public class MainView extends VerticalLayout implements BeforeEnterObserver, com.vaadin.flow.router.BeforeLeaveObserver {
 
     private enum TargetSelection { NONE, FLEET, RELOCATION }
     private static final String GAME_ID_PARAMETER = "gameId";
@@ -85,6 +85,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private @Nullable Dialog outcomeDialog;
     private @Nullable GameChatDialog chatDialog;
     private boolean logisticsMode;
+    private @Nullable PlayerViewState economicView;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
     private final BattleAcknowledgements acknowledgements;
 
@@ -115,7 +116,27 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::cancelTargetSelectionAndRefresh);
         mapCanvas = new MapCanvas(this::onMapBackgroundClick);
         fleetsPanel.onEditOrder(order -> planningDialogs().edit(order));
+        fleetsPanel.onFleetWait(id -> executeFleetAction(id, false));
+        fleetsPanel.onFleetDisband(id -> executeFleetAction(id, true));
+        fleetsPanel.onRouteStationSelected(id -> {
+            var view = viewForCurrentMode();
+            if (view != null) { view.systems().stream().filter(system -> system.id() == id).findFirst().ifPresent(system -> {
+                selectedSystem = system; highlightedFleetId = null; cancelTargetSelection();
+                mapCanvas.centerOn(system.x(), system.y()); fleetsPanel.showDetails(); refresh();
+            }); }
+        });
+        fleetsPanel.onDiplomacySelected(this::openDiplomacy);
         fleetsPanel.onProductionAllocation(this::allocateExpansion);
+        fleetsPanel.onDraftsChanged(this::updateEconomyNotices);
+        fleetsPanel.onEconomySelected(this::openEconomicSystem);
+        fleetsPanel.onProductionPreview(plan -> game.previewProduction(gameId, UserContext.currentPlayerId().orElse(""), plan));
+        fleetsPanel.onRecycling(order -> {
+            int player = currentSeat();
+            if (player < 0 || !game.planRecycling(gameId, player, order.turn(), order.systemId(), order.ships())) {
+                Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
+                refresh();
+            }
+        });
         planningActions.addClassName("planning-actions");
         planningActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_UNDO), _ -> {
             if (!game.undoOrders(gameId, currentSeat(), Objects.requireNonNull(displayedTurn))) {
@@ -126,10 +147,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_RESERVES), _ -> planningDialogs().reserves()));
         actionBar.addClassName("map-controls");
         actionBar.add(treatyActions, planningActions);
-        treatyActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.DIP_TITLE), _ -> {
-            var dialog = new DiplomacyDialog(game, gameId, UserContext.currentPlayerId().orElse(""));
-            diplomacyDialog = dialog; dialog.refresh(); dialog.open();
-        }));
+        treatyActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.DIP_TITLE), _ -> openDiplomacy()));
         header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::doLeave,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules);
 
@@ -157,7 +175,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             badgesShowingFleetNo.clear();
             refresh();
         });
-        add(header, roundStatus, actionBar, spectatorControls, reviewControls, buildContent());
+        add(header, roundStatus, actionBar, spectatorControls, reviewControls, buildContent(),
+                new de.zettsystems.starfare.legal.ui.LegalFooter());
+    }
+
+    private void openDiplomacy() {
+        if (game.diplomacyFor(gameId, UserContext.currentPlayerId().orElse("")).isEmpty()) { return; }
+        var dialog = new DiplomacyDialog(game, gameId, UserContext.currentPlayerId().orElse(""));
+        diplomacyDialog = dialog; dialog.refresh(); dialog.open();
     }
 
     private PlanningDialogs planningDialogs() {
@@ -193,6 +218,16 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void onNextRound() {
+        int count = fleetsPanel.productionDraftSystems().size();
+        if (count > 0 && !isObserver()) {
+            de.zettsystems.starfare.economy.ui.ProductionNavigation.submit(count, () -> submitRound(true),
+                    () -> fleetsPanel.showEconomy(null, true), this::refresh);
+            return;
+        }
+        submitRound(false);
+    }
+
+    private void submitRound(boolean discardDrafts) {
         String playerId = UserContext.currentPlayerId().orElse(null);
         if (isObserver()) {
             if (!game.advanceForObserver(gameId, playerId)) {
@@ -211,7 +246,48 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             Notification.show(I18n.t(UiTexts.MAP_SUBMIT_FAILED));
             return;
         }
+        if (discardDrafts) { fleetsPanel.discardProductionDrafts(); }
         refresh();
+    }
+
+    @Override
+    public void beforeLeave(com.vaadin.flow.router.BeforeLeaveEvent event) {
+        if (fleetsPanel.productionDraftSystems().isEmpty()) { return; }
+        var navigation = event.postpone();
+        de.zettsystems.starfare.economy.ui.ProductionNavigation.leave(() -> {
+            fleetsPanel.discardProductionDrafts(); navigation.proceed();
+        }, () -> { });
+    }
+
+    private void updateEconomyNotices() {
+        var view = economicView;
+        if (view == null) { return; }
+        var issues = de.zettsystems.starfare.economy.values.EconomyIssues.forView(view, currentSeat(), pendingBattleSystemIds(view));
+        boolean hidden = isObserver() || reviewing || !pendingBattleSystemIds(view).isEmpty();
+        header.economyNotices().show(hidden ? List.of() : issues, hidden ? 0 : fleetsPanel.productionDraftSystems().size(),
+                kind -> fleetsPanel.showEconomy(kind, false), () -> fleetsPanel.showEconomy(null, true));
+        mapCanvas.economyMarkers(hidden ? List.of() : issues, reportedSystemIds(view), id -> {
+            issues.stream().filter(issue -> issue.system().id() == id).findFirst()
+                    .ifPresent(issue -> fleetsPanel.showEconomy(issue.reasons().getFirst(), false));
+        });
+        getElement().executeJs("""
+                window.__starfareProductionDirty = $0;
+                if (!window.__starfareProductionLeaveInstalled) {
+                    window.__starfareProductionLeaveInstalled = true;
+                    window.addEventListener('beforeunload', event => {
+                        if (window.__starfareProductionDirty) { event.preventDefault(); event.returnValue = ''; }
+                    });
+                }
+                """, !fleetsPanel.productionDraftSystems().isEmpty());
+    }
+
+    private void openEconomicSystem(int id, int section) {
+        var view = viewForCurrentMode();
+        if (view == null) { return; }
+        view.systems().stream().filter(system -> system.id() == id && system.garrisonReserve() != null).findFirst().ifPresent(system -> {
+            selectedSystem = system; cancelTargetSelection(); highlightedFleetId = null;
+            mapCanvas.centerOn(system.x(), system.y()); fleetsPanel.showDetails(); refresh(); fleetsPanel.openProduction(section);
+        });
     }
 
     private void onMapBackgroundClick() {
@@ -227,6 +303,17 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         logisticsMode = !logisticsMode;
         if (logisticsMode) {
             fleetsPanel.showLogistics();
+        }
+        refresh();
+    }
+
+    private void executeFleetAction(int fleetId, boolean disband) {
+        int pid = currentSeat();
+        boolean accepted = pid >= 0 && (disband
+                ? game.disbandFleet(gameId, pid, fleetId)
+                : game.setFleetWait(gameId, pid, fleetId));
+        if (!accepted) {
+            Notification.show(I18n.t(disband ? UiTexts.MAP_DISBAND_FAILED : UiTexts.MAP_WAIT_FAILED));
         }
         refresh();
     }
@@ -280,12 +367,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         refresh();
     }
 
-    private void allocateExpansion(de.zettsystems.starfare.economy.values.ProductionAllocation allocation) {
+    private boolean allocateExpansion(de.zettsystems.starfare.economy.values.ProductionAllocation allocation) {
         int pid = currentSeat();
-        if (pid < 0 || !game.allocateExpansion(gameId, pid, allocation.turn(), allocation.systemId(), allocation.expansionPoints())) {
+        boolean accepted = pid >= 0 && game.commitProduction(gameId, UserContext.currentPlayerId().orElse(""), allocation);
+        if (!accepted) {
             Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
+            refresh();
         }
-        refresh();
+        return accepted;
     }
 
     private void setGarrisonReserve(int systemId, int reserve) {
@@ -323,10 +412,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             Notification.show(I18n.t(UiTexts.MAP_REMOVE_STANDING_ORDER_FAILED));
             return;
         }
-        SendFleetDialog.editRelocation(game, gameId, pid, from, to, order.ships(), () -> {
-            refresh();
-            fleetsPanel.showRelocations();
-        });
+        SendFleetDialog.editRelocation(game, gameId, pid, from, to, order.ships(), new SendDialogOutcome(this::refresh, this::refresh));
     }
 
     @Override
@@ -403,8 +489,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     @Override
     protected void onDetach(DetachEvent detachEvent) {
+        detachEvent.getUI().getPage().executeJs("window.__starfareProductionDirty = false");
         closeGameChat();
         resetOutcomePresentation();
+        if (diplomacyDialog != null) { diplomacyDialog.close(); diplomacyDialog = null; }
         if (broadcasterSubscription != null) {
             broadcasterSubscription.remove();
             broadcasterSubscription = null;
@@ -412,6 +500,16 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void doLeave() {
+        if (!fleetsPanel.productionDraftSystems().isEmpty()) {
+            de.zettsystems.starfare.economy.ui.ProductionNavigation.leave(() -> {
+                fleetsPanel.discardProductionDrafts(); leaveGameNow();
+            }, () -> { });
+            return;
+        }
+        leaveGameNow();
+    }
+
+    private void leaveGameNow() {
         String playerId = UserContext.currentPlayerId().orElse(null);
         if (isObserver()) {
             game.leaveObserve(gameId, playerId);
@@ -448,7 +546,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         displayedTurn = view.turn();
         boolean observer = isObserver() || reviewing;
         int playerId = observer ? -1 : currentSeat();
-        treatyActions.setVisible(!observer && game.diplomacyFor(gameId, UserContext.currentPlayerId().orElse("")).isPresent());
+        var diplomacy = observer ? java.util.Optional.<de.zettsystems.starfare.diplomacy.values.DiplomacyView>empty()
+                : game.diplomacyFor(gameId, UserContext.currentPlayerId().orElse(""));
+        treatyActions.setVisible(diplomacy.isPresent());
+        fleetsPanel.diplomacyAvailable(treatyActions.isVisible());
+        fleetsPanel.alliedOwners(diplomacy.flatMap(value -> value.treaties().groupFor(value.player()))
+                .map(de.zettsystems.starfare.diplomacy.values.AllianceGroup::members).orElse(java.util.Set.of()));
         var treaties = diplomacyDialog;
         if (treaties != null && treaties.isOpened()) { treaties.refresh(); }
         planningActions.setVisible(!observer && !view.gameOver() && !view.roundStatus().hasSubmitted(playerId));
@@ -534,6 +637,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         RoundStatus status = reviewing ? RoundStatus.NONE : view.roundStatus();
         roundStatus.update(status, playerId);
         header.setGameName(game.gameNameOf(gameId));
+        header.setEmpireName(observer ? "" : view.players().stream().filter(player -> player.id() == playerId)
+                .map(de.zettsystems.starfare.game.values.Player::empireNameOrName).findFirst().orElse(""));
         header.updateTurnAction(status, playerId, observer, view.gameOver());
         header.setLogisticsActive(logisticsMode);
         gameOverBanner.setVisible(view.gameOver() && reviewing);
@@ -642,6 +747,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::refresh));
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
+        economicView = view;
+        updateEconomyNotices();
     }
 
     private void inspectSystem(VisibleSystem system) {
@@ -745,12 +852,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (pid < 0) {
             return;
         }
-        SendFleetDialog.open(game, gameId, pid, from, to, () -> {
+        SendFleetDialog.open(game, gameId, pid, from, to, new SendDialogOutcome(() -> {
             cancelTargetSelection();
-            selectedSystem = to;
+            selectedSystem = from;
             refresh();
-            fleetsPanel.showOrders();
-        });
+        }, this::refresh));
     }
 
     private void openRelocation(VisibleSystem from, VisibleSystem to) {
@@ -761,15 +867,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (pid < 0) {
             return;
         }
-        SendFleetDialog.openRelocation(game, gameId, pid, from, to, () -> {
+        SendFleetDialog.openRelocation(game, gameId, pid, from, to, new SendDialogOutcome(() -> {
             cancelTargetSelection();
-            selectedSystem = to;
+            selectedSystem = from;
             refresh();
-            fleetsPanel.showRelocations();
-        });
+        }, this::refresh));
     }
 
     private String winnerName(PlayerViewState view) {
-        return OutcomeLabels.winners(view.outcome(), view.players());
+        return OutcomeLabels.winningEmpires(view.outcome(), view.players());
     }
 }

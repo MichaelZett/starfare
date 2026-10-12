@@ -29,7 +29,7 @@ public class DefaultFleetService implements FleetService {
         if (ships <= 0 || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
             return false;
         }
-        int committed = committedShipsFrom(state, playerId, fromId);
+        int committed = committedShipsFrom(state, playerId, fromId) + state.recyclingShips(fromId);
         if (from.availableShips() - committed < ships) {
             return false;
         }
@@ -87,7 +87,7 @@ public class DefaultFleetService implements FleetService {
         if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)) {
             return false;
         }
-        if (ships <= 0 || from.availableShips() < ships || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
+        if (ships <= 0 || from.availableShips() - state.recyclingShips(fromId) < ships || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
             return false;
         }
         state.updateSystem(fromId, current -> current.launchFleet(ships));
@@ -166,7 +166,7 @@ public class DefaultFleetService implements FleetService {
                 .filter(o -> o.toSystemId() == systemId)
                 .mapToInt(StandingOrder::ships)
                 .sum();
-        return system.productionPerTurn() + incoming;
+        return state.expectedShipProduction(systemId) + incoming;
     }
 
     @Override
@@ -234,7 +234,7 @@ public class DefaultFleetService implements FleetService {
         // abzueglich dessen, was fruehere Verlegungen desselben Systems schon nehmen.
         if (Routes.plan(state, playerId, o.fromSystemId(), o.toSystemId()).isEmpty()) { return; }
         int alreadyRouted = routed.getOrDefault(o.fromSystemId(), 0);
-        int available = from.garrison() + from.productionPerTurn() - from.garrisonReserve() - alreadyRouted;
+        int available = from.garrison() + (state.ruleset().usesMetals() ? 0 : from.productionPerTurn()) - from.garrisonReserve() - alreadyRouted;
         int ships = Math.clamp(o.ships(), 0, Math.max(0, available));
         if (ships <= 0) {
             return;

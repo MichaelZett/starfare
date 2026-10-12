@@ -11,7 +11,6 @@ import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.AttackOrder;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.StarSystem;
-import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.navigation.application.DefaultNavigationService;
 import de.zettsystems.starfare.navigation.application.NavigationService;
 import de.zettsystems.starfare.report.application.ReportService;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -78,11 +76,18 @@ public class RoundPipeline {
         planOrders.run();
         applyOrders(state);
         navigation.departReadyFleets(state);
-        produce.accept(fleetService.applyStandingOrdersForProduction(state));
+        state.recycleShips().forEach(event -> reportService.appendEvent(state, event.playerId(), event));
+        if (state.ruleset().usesMetals()) {
+            produce.accept(Map.of());
+            fleetService.applyStandingOrdersForProduction(state)
+                    .forEach((system, ships) -> state.updateSystem(system, current -> current.launchFleet(ships)));
+        } else { produce.accept(fleetService.applyStandingOrdersForProduction(state)); }
         applyWaitOrders(state);
+        long shipsBeforeCombat = state.totalShips();
         diplomacy.beginRound(state, state.turn() + 1);
         resolveArrivals(state);
         navigation.refreshStationAccess(state, state.turn() + 1);
+        state.recordCombatLoss(shipsBeforeCombat - state.totalShips());
         checkVictory(state);
         state.captureReplayFrame();
         state.nextTurn();
@@ -105,7 +110,7 @@ public class RoundPipeline {
     }
 
     private void resolveArrivals(GameState state) {
-        if (state.ruleset().spaceward()) {
+        if (state.ruleset().isSpaceward()) {
             coalitions.resolveArrivals(state); return;
         }
         for (Fleet fleet : List.copyOf(state.fleets())) {
@@ -173,7 +178,7 @@ public class RoundPipeline {
             for (FleetOrder order : orders) {
                 switch (order) {
                     case FleetOrder.Send(int ownerId, int from, int to, int ships, var beneficiary) -> {
-                        if (state.ruleset().spaceward()) {
+                        if (state.ruleset().isSpaceward()) {
                             fleetService.sendFleet(state, ownerId, from, to, ships, beneficiary);
                         } else { fleetService.sendFleet(state, ownerId, from, to, ships); }
                     }

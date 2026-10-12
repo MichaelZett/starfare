@@ -157,7 +157,7 @@ class ClassicTurnContractTest {
         assertThat(state.systems()).extracting(StarSystem::garrison).containsExactly(7, 7, 7, 3);
         assertThat(state.systems()).extracting(StarSystem::ownerId).containsOnly(1);
         assertThat(state.reports().get(1).events()).contains(new TurnEvent.Victory(1, 100));
-        assertThat(state.replayFrames().get(1)).isEqualTo(firstFrame);
+        assertThat(state.replayFrames()).containsEntry(1, firstFrame);
         assertThat(firstFrame.reports().get(1).events()).contains(new TurnEvent.Victory(1, 70));
     }
 }

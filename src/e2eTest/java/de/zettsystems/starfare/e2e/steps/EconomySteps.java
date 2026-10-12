@@ -52,14 +52,17 @@ public class EconomySteps {
     @Dann("kann ich den Schiffbau zugunsten der Industrie umschalten und sehe den Lieferengpass")
     public void allocate() throws IOException {
         browser.awaitTextIn(".industry-panel", "Kapazität 10 / 50");
+        browser.clickCss("#production-plan-open");
         WebElement input = browser.awaitCss("#industry-expansion input");
         input.sendKeys(Keys.chord(Keys.CONTROL, "a"), "4", Keys.TAB);
-        browser.awaitTextIn(".industry-panel", "Schiffbau: 6 · Ausbau: 4");
-        browser.awaitTextIn(".industry-panel", "8 / 10 Schiffe");
+        browser.awaitTextIn(".production-plan-results", "6 Punkte für Schiffbau → voraussichtlich 6 Schiffe");
+        browser.awaitTextIn(".production-plan-results", "Verlegung: voraussichtlich 8 Schiffe");
         assertThat(registry.readState(id, state -> state.industries().get(1).expansionAllocation()).intValue()).isZero();
         browser.clickCss("#industry-apply");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> registry.readState(id, state -> state.industries().get(1).expansionAllocation()) == 4);
-        browser.awaitCss(".industry-bottleneck"); browser.awaitCss(".system-industry-buildings");
+        browser.awaitTextIn(".industry-panel", "6 Punkte für Schiffbau"); browser.awaitCss(".production-functions");
+        browser.awaitTextIn(".system-metric-rate", "6 (+0/Runde)");
+        browser.captureUiAcceptance("spaceward-production-feedback");
         ((JavascriptExecutor) browser.driver()).executeScript("document.querySelector('.system-details-heading').scrollIntoView({block:'start'})");
         screenshot("spaceward-system");
         ((JavascriptExecutor) browser.driver()).executeScript("document.querySelector('.industry-panel').scrollIntoView({block:'center'})");
@@ -71,7 +74,9 @@ public class EconomySteps {
     @Dann("bleibt die Verteilung nach Neuladen erhalten und sperrt sich nach Abgabe")
     public void reloadAndSubmit() {
         browser.driver().navigate().refresh(); selectAlpha();
+        browser.clickCss("#production-plan-open");
         assertThat(browser.awaitCss("#industry-expansion input").getDomProperty("value")).isEqualTo("4");
+        browser.clickButtonWithText("Verwerfen und schließen");
         browser.clickButtonWithText("Runde abgeben");
         browser.awaitText("Abgegeben");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> browser.all("#industry-apply").isEmpty());
@@ -83,16 +88,17 @@ public class EconomySteps {
         for (int round = 2; round <= 5; round++) { assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue(); }
         browser.awaitText("Runde 6");
         selectAlpha(); browser.awaitTextIn(".industry-panel", "Kapazität 11 / 50");
-        browser.awaitTextIn(".industry-panel", "Schiffbau: 7 · Ausbau: 4");
+        browser.awaitTextIn(".industry-panel", "Verteilung: 4 Ausbau · 7 Schiffbau");
         browser.awaitTextIn(".industry-panel", "Ausbaufortschritt: 0 / 22");
         assertThat(games.viewFor(id, 1).systems().getFirst().garrison()).isEqualTo(10);
-        assertThat(registry.readState(id, state -> state.turn()).intValue()).isEqualTo(6);
+        assertThat(registry.readState(id, GameState::turn).intValue()).isEqualTo(6);
         registry.writeState(id, state -> { state.updateSystem(1, system -> system.afterDefense(1)); return null; });
         browser.driver().navigate().refresh(); selectAlpha();
-        browser.awaitTextIn(".industry-panel", "0 / 10 Schiffe");
+        browser.clickCss("#production-plan-open");
+        browser.awaitTextIn(".production-plan-results", "Verlegung: voraussichtlich 0 Schiffe");
         browser.awaitCss("#industry-expansion input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB);
-        browser.awaitTextIn(".industry-panel", "Schiffbau: 11 · Ausbau: 0");
-        browser.awaitTextIn(".industry-panel", "2 / 10 Schiffe");
+        browser.awaitTextIn(".production-plan-results", "11 Punkte für Schiffbau → voraussichtlich 11 Schiffe");
+        browser.awaitTextIn(".production-plan-results", "Verlegung: voraussichtlich 2 Schiffe");
         assertThat(registry.readState(id, state -> state.industries().get(1).expansionAllocation()).intValue()).isEqualTo(4);
     }
     private void selectAlpha() {

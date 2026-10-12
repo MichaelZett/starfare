@@ -58,7 +58,7 @@ final class PlanningDialogs {
         Integer beneficiary = order.beneficiaryId();
         if (beneficiary != null) {
             dialog.add(new Paragraph(I18n.t(UiTexts.CONQUEST_ORDER, view.players().stream()
-                    .filter(candidate -> candidate.id() == beneficiary).map(Player::label).findFirst().orElse("?"))));
+                    .filter(candidate -> candidate.id() == beneficiary).map(Player::empireNameOrName).findFirst().orElse("?"))));
         }
         footer(dialog, save);
     }
@@ -110,7 +110,7 @@ final class PlanningDialogs {
     private static List<FleetDispatch> dispatches(MultiSelectComboBox<VisibleSystem> sources, IntegerField amount, Checkbox all) {
         Integer count = amount.getValue();
         return sources.getValue().stream().sorted(java.util.Comparator.comparingInt(VisibleSystem::id))
-                .map(system -> new FleetDispatch(system.id(), all.getValue()
+                .map(system -> new FleetDispatch(system.id(), Boolean.TRUE.equals(all.getValue())
                         ? Objects.requireNonNullElse(system.availableShips(), 0) : Objects.requireNonNullElse(count, 0))).toList();
     }
 

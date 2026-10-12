@@ -1,4 +1,5 @@
 # language: de
+@ui-acceptance
 Funktionalität: Private Lobby und Archiv
 
   Szenario: Sichtbarkeit, Einladung und lesende Nachbetrachtung

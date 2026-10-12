@@ -11,10 +11,15 @@ public record RulesetRef(String variant, String version) {
     public static final RulesetRef SPACEWARD_ALLIANCE = new RulesetRef(SPACEWARD_VARIANT, "1.1.0");
     public static final RulesetRef SPACEWARD_COLONIES = new RulesetRef(SPACEWARD_VARIANT, "1.2.0-w1");
 
-    public boolean usesColonies() { return SPACEWARD_COLONIES.equals(this); }
+    public static final RulesetRef SPACEWARD_METALS = new RulesetRef(SPACEWARD_VARIANT, "1.2.0-w2");
+    public static final RulesetRef SPACEWARD_RECYCLING = new RulesetRef(SPACEWARD_VARIANT, "1.2.0-w3");
+    public static final RulesetRef SPACEWARD_ECONOMY_PREVIEW = new RulesetRef(SPACEWARD_VARIANT, "1.2.0-w4");
+    public boolean usesRecycling() { return SPACEWARD_RECYCLING.equals(this) || SPACEWARD_ECONOMY_PREVIEW.equals(this); }
+    public boolean usesMetals() { return SPACEWARD_METALS.equals(this) || usesRecycling(); }
+    public boolean usesColonies() { return SPACEWARD_COLONIES.equals(this) || usesMetals(); }
     public boolean usesConfigurableVictory() { return SPACEWARD_ALLIANCE.equals(this) || usesColonies(); }
 
-    public boolean spaceward() { return variant.equals(SPACEWARD.variant()); }
+    public boolean isSpaceward() { return variant.equals(SPACEWARD.variant()); }
 
     public RulesetRef {
         Objects.requireNonNull(variant, "variant");

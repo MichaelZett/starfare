@@ -47,15 +47,15 @@ public final class OrderPlanning {
     public static boolean valid(GameState state, int player, List<FleetOrder> orders) {
         Map<Integer, Long> committed = new HashMap<>();
         for (FleetOrder order : orders) {
-            if (order instanceof FleetOrder.Send send) {
-                var source = state.systems().stream().filter(system -> system.id() == send.fromSystemId()).findFirst().orElse(null);
-                if (source == null || !Objects.equals(source.ownerId(), player) || send.ownerId() != player
-                        || !ConquestOrders.allowed(state, player, send.beneficiaryId())
-                        || send.ships() <= 0 || send.fromSystemId() == send.toSystemId()
-                        || state.systems().stream().noneMatch(system -> system.id() == send.toSystemId())
-                        || Routes.plan(state, player, send.fromSystemId(), send.toSystemId()).isEmpty()) { return false; }
-                long total = committed.merge(send.fromSystemId(), (long) send.ships(), Long::sum);
-                if (total > source.availableShips()) { return false; }
+            if (order instanceof FleetOrder.Send(int owner, int from, int to, int ships, Integer beneficiary)) {
+                var source = state.systems().stream().filter(system -> system.id() == from).findFirst().orElse(null);
+                if (source == null || !Objects.equals(source.ownerId(), player) || owner != player
+                        || !ConquestOrders.allowed(state, player, beneficiary)
+                        || ships <= 0 || from == to
+                        || state.systems().stream().noneMatch(system -> system.id() == to)
+                        || Routes.plan(state, player, from, to).isEmpty()) { return false; }
+                long total = committed.merge(from, (long) ships, Long::sum);
+                if (total + state.recyclingShips(source.id()) > source.availableShips()) { return false; }
             }
         }
         return true;
@@ -70,7 +70,7 @@ public final class OrderPlanning {
             long committed = state.pendingOrders().getOrDefault(player, List.of()).stream()
                     .filter(order -> order instanceof FleetOrder.Send send && send.fromSystemId() == id)
                     .mapToLong(order -> ((FleetOrder.Send) order).ships()).sum();
-            if (committed > Math.max(0L, system.garrison() - (long) desired)) { return false; }
+            if (committed + state.recyclingShips(id) > Math.max(0L, system.garrison() - (long) desired)) { return false; }
         }
         systems.forEach(id -> state.updateSystem(id, system -> system.reserveGarrison(production ? system.productionPerTurn() : reserve)));
         return true;

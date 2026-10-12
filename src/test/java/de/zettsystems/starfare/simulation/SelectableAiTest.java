@@ -53,7 +53,7 @@ class SelectableAiTest {
         plan(before);
         plan(state);
         assertThat(state.pendingOrders().getOrDefault(1, List.of())).isEqualTo(before.pendingOrders().getOrDefault(1, List.of()));
-        assertThat(state.industries().get(1)).isEqualTo(before.industries().get(1));
+        assertThat(state.industries()).containsEntry(1, before.industries().get(1));
     }
 
     @Test
@@ -69,7 +69,7 @@ class SelectableAiTest {
 
     private static void plan(GameState state) {
         var fleets = new DefaultFleetService();
-        if (state.ruleset().spaceward()) {
+        if (state.ruleset().isSpaceward()) {
             new DefaultSpacewardPlanning(new DefaultEconomyService(), new DefaultPlayerViewBuilder()).plan(state, fleets);
         } else {
             new DefaultAiService().planAiTurns(state, fleets);

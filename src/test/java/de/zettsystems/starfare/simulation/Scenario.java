@@ -19,7 +19,7 @@ record Scenario(RulesetRef rules, GalaxyLayout layout, int systems, long mapSeed
         return new Scenario(rules, layout, systems, mapSeed, combatSeed, roundLimit, randomness, chosen.forRuleset(rules));
     }
     Scenario {
-        if (!List.of(RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD, RulesetRef.SPACEWARD_ALLIANCE).contains(rules)
+        if (!List.of(RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD, RulesetRef.SPACEWARD_ALLIANCE, RulesetRef.SPACEWARD_RECYCLING).contains(rules)
                 || systems < 8 || systems > 120 || roundLimit < 1 || roundLimit > 2000
                 || randomness < 0 || randomness > 30) {
             throw new IllegalArgumentException("Unsupported scenario settings");
@@ -27,6 +27,10 @@ record Scenario(RulesetRef rules, GalaxyLayout layout, int systems, long mapSeed
     }
 
     GameState create(int seats) {
+        return create(seats, EconomyMaps.Environment.NATURAL);
+    }
+
+    GameState create(int seats, EconomyMaps.Environment environment) {
         if (seats < 2 || seats > 7 || seats > systems) { throw new IllegalArgumentException("Expected 2..7 seats"); }
         var setup = new GameSetup(systems, 0, seats, Collections.nCopies(seats, 5),
                 1, 10, 20, true, false, GameConfig.PLAYER_PALETTE,
@@ -49,6 +53,12 @@ record Scenario(RulesetRef rules, GalaxyLayout layout, int systems, long mapSeed
             state.intel().put(seat, new java.util.HashMap<>());
             int owner = seat;
             state.updateSystem(homes.get(seat - 1).id(), system -> system.colonize(owner, 20, 5));
+        }
+        if (rules.usesColonies()) {
+            state.initializeIndustry();
+            var colonies = EconomyMaps.colonies(state.systems(), mapSeed, environment);
+            state.establishColonies(colonies);
+            state.establishMetals(EconomyMaps.resources(state, environment));
         }
         state.start();
         return state;

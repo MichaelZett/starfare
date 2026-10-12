@@ -17,6 +17,7 @@ import java.util.OptionalInt;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
+        @JsonSubTypes.Type(value = TurnEvent.Recycling.class, name = "recycling"),
         @JsonSubTypes.Type(value = TurnEvent.Production.class, name = "production"),
         @JsonSubTypes.Type(value = TurnEvent.Reinforcement.class, name = "reinforcement"),
         @JsonSubTypes.Type(value = TurnEvent.BattleWon.class, name = "battleWon"),
@@ -32,6 +33,7 @@ public sealed interface TurnEvent {
     /** Returns the system affected by this event, if it has one. */
     default OptionalInt affectedSystemId() {
         return switch (this) {
+            case Recycling event -> OptionalInt.of(event.systemId());
             case Production event -> OptionalInt.of(event.systemId());
             case Reinforcement event -> OptionalInt.of(event.systemId());
             case BattleWon event -> OptionalInt.of(event.systemId());
@@ -51,11 +53,14 @@ public sealed interface TurnEvent {
             case SystemLost event -> OptionalInt.of(event.systemId());
             case DefenseHeld event -> OptionalInt.of(event.systemId());
             case CoalitionBattle event -> OptionalInt.of(event.systemId());
-            case Production _, Reinforcement _, Victory _, Defeat _ -> OptionalInt.empty();
+            case Recycling _, Production _, Reinforcement _, Victory _, Defeat _ -> OptionalInt.empty();
         };
     }
 
     record Production(int playerId, int systemId, String systemName, int amount)
+            implements TurnEvent {}
+
+    record Recycling(int playerId, int systemId, String systemName, int ships, long recoveredTenths)
             implements TurnEvent {}
 
     record Reinforcement(int playerId, int systemId, String systemName, int ships, int totalGarrison, String fleetLabel)

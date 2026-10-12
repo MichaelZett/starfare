@@ -2,11 +2,93 @@
 
 Alle nennenswerten Änderungen an Starfare. Format nach
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach
-[SemVer](https://semver.org/lang/de/). Beim Release wird `## Unreleased` in
-`## <appVersion> - <Datum>` umbenannt; der Release-Job extrahiert genau diesen
-Abschnitt als Release-Body und bricht ohne ihn ab.
+[SemVer](https://semver.org/lang/de/). Beim Release wird der Abschnitt
+`## Unreleased
+
+- Systeme bleiben zwischen Flottenstrecken erreichbar, auch bei kreuzenden Routen
+  und wechselndem Zoom. Flottenlinien erhalten eine eigene Farbe; Ereignis- und
+  Engpasszeichen sind größer und getrennt bedienbar.
+- Kampfseiten folgen Angriff und Verteidigung. Mannschaftstexte vermitteln die
+  momentane Gefechtsverfassung; Zahlen sind unter Kampfdetails erreichbar.
+- Verlegungen zeigen Bearbeiten direkt neben Aufheben, auch in der Systemsicht.
+  Die Schnellmenge Alle außer Produktion berücksichtigt eingehende und ausgehende
+  Verlegungen zusätzlich zur Reserve.` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
+verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
+
+- Systeme bleiben zwischen Flottenstrecken erreichbar, auch bei kreuzenden Routen
+  und wechselndem Zoom. Flottenlinien erhalten eine eigene Farbe; Ereignis- und
+  Engpasszeichen sind größer und getrennt bedienbar.
+- Kampfseiten folgen Angriff und Verteidigung. Mannschaftstexte vermitteln die
+  momentane Gefechtsverfassung; Zahlen sind unter Kampfdetails erreichbar.
+- Verlegungen zeigen Bearbeiten direkt neben Aufheben, auch in der Systemsicht.
+  Die Schnellmenge Alle außer Produktion berücksichtigt eingehende und ausgehende
+  Verlegungen zusätzlich zur Reserve.
+
+- Metallförderung zeigt eine vereinfachte Industriezeche mit großem Seilrad
+  und niedriger Werkhalle.
+
+- Grafische Routenstreifen in Flottenversand, Flottenkarten und Details,
+  sichtbare Stationszustände und passende Einstiege bei Blockaden.
+  Bündniskarten zeigen Entscheidungen zuerst, erhalten Fristeingaben bei
+  Aktualisierungen und bestätigen Kündigungen samt Austrittsrunde und Folgen.
+
+- Produktionsbedienung direkt am System: fünf Schnellvorgaben, unterscheidbare
+  Werft-, Förder- und Ausbauaktionen, lokale Entwürfe über Systemwechsel,
+  Konfliktprüfung vor Übernahme und bewusste Abgabe mit gespeicherten Plänen.
+  Reichshinweise öffnen gefilterte Logistiklisten; offene Schlachten bleiben geschützt.
+
+- Systemgrafik mit angeschnittenen Sternen, festen Typgrößen und unterscheidbaren
+  Planetenoberflächen. Gespeicherte Spaceward-Bahnen zeigen echte Entfernungsunterschiede;
+  besiedelte Monde sind sichtbar und öffnen direkt die Kolonieangaben.
+
+- Spielanzeigen verwenden Imperiumsnamen; der Kartenkopf zeigt das eigene Reich.
+  Produktion zeigt eingehende Verlegungen unmittelbar in Klammern. Verlegungen
+  lassen sich direkt an Quelle und Ziel zurücknehmen, auch in Spaceward.
+
+- Wiederholbare UI-Abnahmeprüfung für Zusammenfassungskorrektur, Lobby und
+  Archiv, Fristen sowie Schlachten; aktuelle Ansichtsaufnahmen für die
+  persönliche Prüfung werden unter `build/ui-acceptance/` erzeugt.
+- Leere Nebenaktionen in Lobbykarten ausblenden; das Ergebnisraster nutzt
+  die Dialogbreite, damit Kennzahlen auf Desktop nebeneinander erscheinen.
+
+- Flottenversand trennt Abbruch und Erfolg, behält die Quelle und vermeidet
+  erzwungene Reiterwechsel. Warten und zulässiges Auflösen sind direkt an
+  Flottenkarten und Details erreichbar; Reisedaten und Ankunftsliste aufklappbar.
+
+- Systemdetails zeigen versendbare Schiffe und Versandaktionen vor dem Bild.
+  Logistik, Reserve und Kolonieangaben sowie Hintergrundwissen sind lokal
+  aufklappbar; geöffnete Bereiche bleiben bei Systemwechseln erhalten.
+
+- Rechtsklick auf ein eigenes Kartensystem beginnt die Flottenzielwahl direkt,
+  ohne ein zusätzliches Menü mit nur einem Eintrag.
+
+- Verlegungsvorschau auch bei großen Garnisonen ohne Ganzzahlüberlauf anzeigen;
+  Wiederherstellung und Wirtschaftsplanung vereinfachen. Vollständige lokale
+  SonarQube-Prüfung mit null offenen Befunden bestanden.
+
+- Wirtschaftsabnahme-Kandidat Spaceward 1.2.0-w4 über das lokale Startprofil
+  economy-preview anlegen; normale Neuanlage bleibt bei 1.1.0. Stummer
+  Wirtschaftsprüfstand mit gepaarten Karten, Förder- und Recyclingvergleichen,
+  strenger Befehlsprüfung, Metallbilanz und reproduzierbaren Ergebnisdateien.
+  Alle KI-Profile berücksichtigen belegte Förderkapazität bei Ausbau und Reserve.
+
+- Interner Wirtschafts-Zwischenstand Spaceward 1.2.0-w3: bearbeitbare
+  Recyclingbefehle, 70 Prozent Metallrückgewinnung mit gespeicherten Zehntelresten,
+  gemeinsame Schiffsreservierung und vollständige Metallbilanz einschließlich
+  Kampfverlusten. Alle acht KI-Profile nutzen legales Recycling im Hinterland.
+  Bestehende Regelfassungen behalten ihr Verhalten.
+
+- Interner Wirtschafts-Zwischenstand Spaceward 1.2.0-w2: endliche örtliche
+  Metallvorkommen, reichsweite Vorräte und gemeinsame Kapazitätszuweisung für
+  Förderung, Ausbau und Schiffbau. Ein Schiff kostet 1 Metall. Bei Knappheit
+  erfolgt die Zuteilung proportional; Verlegungen verwenden nur tatsächlich
+  vorhandene Schiffe. Systemsicht, Speicherung und historische Nachbetrachtung
+  erhalten die Ressourcen. W1 und ältere Partien behalten ihre Regeln;
+  öffentliche Neuanlage bleibt bei 1.1.0. Recycling folgt gesondert.
+- Spielstandkopien erhalten Rundenuhr, Abgaben und Flottenzähler vollständig,
+  ohne beim Kopieren künstliche Rundenwechsel auszuführen.
 
 - Interner Wirtschafts-Zwischenstand Spaceward 1.2.0-w1: gespeicherte
   Systemqualität und Koloniewachstum begrenzen die nutzbare Industrie.

@@ -58,7 +58,8 @@ class NavigationIntegrationTest extends AbstractIntegrationTest {
         ((ObjectNode) old.get("fleets").get(0)).remove("journey");
         GameState restored = GameState.fromSnapshot(mapper.treeToValue(old, GameStateSnapshot.class));
         assertThat(restored.navigationSettings()).isPresent(); assertThat(restored.fleets().getFirst().journey()).isNull();
-        assertThatThrownBy(() -> restored.configureNavigation(new de.zettsystems.starfare.navigation.values.NavigationSettings(10))).isInstanceOf(IllegalStateException.class);
+        var input1 = new de.zettsystems.starfare.navigation.values.NavigationSettings(10);
+        assertThatThrownBy(() -> restored.configureNavigation(input1)).isInstanceOf(IllegalStateException.class);
     }
     @Test void routeViewCommandsAndPausedIndustryUseTheSameRulesWithoutMutatingReads() {
         GameState state = NavigationStates.running(); GameId id = save(state);
@@ -100,7 +101,8 @@ class NavigationIntegrationTest extends AbstractIntegrationTest {
         assertBadSnapshot(classic);
     }
     private void assertBadSnapshot(ObjectNode json) {
-        assertThatThrownBy(() -> GameState.fromSnapshot(mapper.treeToValue(json, GameStateSnapshot.class))).isInstanceOf(IllegalArgumentException.class);
+        var input2 = mapper.treeToValue(json, GameStateSnapshot.class);
+        assertThatThrownBy(() -> GameState.fromSnapshot(input2)).isInstanceOf(IllegalArgumentException.class);
     }
     @Test void blockedFleetHasNoInventedArrivalOrHiddenEnemyData() {
         GameState state = NavigationStates.running(); fleets.sendFleet(state, 1, 1, 4, 10);

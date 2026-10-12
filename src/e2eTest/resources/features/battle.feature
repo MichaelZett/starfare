@@ -1,4 +1,6 @@
 # language: de
+@ui-acceptance
+@battle
 Funktionalität: Schlachten vor dem Spielende auswerten
 
   Szenario: Offene Schlachten verbergen Sieg und offene Karte auch nach dem Neuladen

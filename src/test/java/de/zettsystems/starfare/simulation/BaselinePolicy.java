@@ -7,7 +7,6 @@ import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.application.PlayerViewBuilder;
 import de.zettsystems.starfare.game.domain.GameState;
-import de.zettsystems.starfare.game.values.RulesetRef;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,7 +19,7 @@ final class BaselinePolicy {
         state.pendingOrders().clear();
         state.players().replaceAll(p -> p.id() == player ? p.asAi() : p.asHuman());
         var fleets = new DefaultFleetService();
-        if (state.ruleset().spaceward()) {
+        if (state.ruleset().isSpaceward()) {
             new DefaultSpacewardPlanning(new DefaultEconomyService(), views).plan(state, fleets);
         } else {
             new DefaultAiService().planAiTurns(state, fleets);

@@ -1,4 +1,5 @@
 # language: de
+@ui-acceptance
 Funktionalität: Rundenstatus
 
   Szenario: Mitspieler sehen Abgaben und die Nachzügler-Uhr

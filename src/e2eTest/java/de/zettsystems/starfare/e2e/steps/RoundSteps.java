@@ -127,10 +127,11 @@ public class RoundSteps {
     }
 
     @Dann("läuft die Nachzügler-Uhr bei {string}")
-    public void stragglerClockRuns(String label) {
+    public void stragglerClockRuns(String label) throws java.io.IOException {
         browser.awaitTextIn(".round-status-seat.straggler", label);
         assertThat(browser.textsOf(".round-status-seat.straggler .round-status-clock"))
                 .singleElement().matches(t -> t.matches(CLOCK));
         assertThat(browser.all(".round-status-ends")).as("statt Rundenende steht die Uhr beim Nachzügler").isEmpty();
+        browser.captureUiAcceptance("round-deadline");
     }
 }

@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.combat.application;
 
+import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.combat.domain.CoalitionResolver;
 import de.zettsystems.starfare.combat.domain.ProportionalAllocation;
 import de.zettsystems.starfare.game.domain.GameState;
@@ -100,7 +101,7 @@ public class DefaultCoalitionCombatService implements CoalitionCombatService {
         return state.diplomacy().groupFor(player).map(group -> group.members().stream().min(Integer::compareTo).orElseThrow()).orElse(player);
     }
     private static String name(GameState state, int player) {
-        return state.players().stream().filter(candidate -> candidate.id() == player).map(candidate -> candidate.label()).findFirst().orElse("");
+        return state.players().stream().filter(candidate -> candidate.id() == player).map(Player::empireNameOrName).findFirst().orElse("");
     }
 
     private static Map<Integer, Integer> allocateContingents(StarSystem target, List<Fleet> fleets, List<CoalitionSide> result) {

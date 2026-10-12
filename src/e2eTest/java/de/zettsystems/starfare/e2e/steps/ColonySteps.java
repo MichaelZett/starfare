@@ -39,7 +39,7 @@ public class ColonySteps {
     @Dann("prüfe ich die interne Koloniewirtschaft mit Rundenwechsel und gespeicherter Nachbetrachtung")
     public void colonyJourney() throws IOException {
         String host = String.valueOf(accounts.findByEmail("colonies@example.test").orElseThrow().id());
-        var state = ColonyStates.ready();
+        var state = ColonyStates.readyWithMoon();
         state.seatByUser().put(host, 1); state.start();
         id = GameId.newId();
         store.save(new GameSession(id, "Colony acceptance", host, Instant.now(), state));
@@ -47,6 +47,7 @@ public class ColonySteps {
         selectAlpha();
         browser.awaitTextIn(".colony-details", "Nutzbare Industrie: 6 von 10");
         browser.awaitTextIn(".colony-details", "Bevölkerung: 6,9");
+        browser.clickCss("#production-plan-open");
         assertThat(browser.awaitCss("#industry-expansion").getDomProperty("max")).isEqualTo("6");
         screenshot("initial");
         var input = browser.awaitCss("#industry-expansion input");
@@ -73,6 +74,7 @@ public class ColonySteps {
                 slider.value = slider.min;
                 slider.dispatchEvent(new Event('change', {bubbles:true}));
                 """);
+        browser.awaitTextIn(".review-controls", "Zeitleiste: Runde 1");
         selectAlpha();
         browser.awaitTextIn(".colony-details", "Bevölkerung: 7,11");
         screenshot("history");
@@ -89,6 +91,15 @@ public class ColonySteps {
                     system.click(); return true;
                     """)));
         browser.awaitTextIn(".system-details-heading", "Alpha");
+        var moon = browser.awaitCss(".system-colony-moon");
+        assertThat(moon.getRect().getWidth()).isGreaterThanOrEqualTo(44);
+        moon.sendKeys(Keys.ENTER);
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> Boolean.TRUE.equals(
+                ((JavascriptExecutor) browser.driver()).executeScript(
+                        "return document.querySelector('.system-operations')?.opened")));
+        browser.awaitTextIn(".colony-details", "Hauptkolonie auf einem Mond");
+        assertThat(((JavascriptExecutor) browser.driver()).executeScript(
+                "return document.querySelector('.system-operations').opened")).isEqualTo(true);
     }
     private void screenshot(String name) throws IOException {
         ((JavascriptExecutor) browser.driver()).executeScript("arguments[0].scrollIntoView({block:'center'});",

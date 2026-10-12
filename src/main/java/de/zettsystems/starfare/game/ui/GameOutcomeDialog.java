@@ -41,6 +41,7 @@ final class GameOutcomeDialog {
                 metric("⚔", UiTexts.GAME_OUTCOME_DESTROYED, statistics.shipsDestroyed()),
                 metric("✕", UiTexts.GAME_OUTCOME_LOST, statistics.shipsLost()));
         metrics.addClassName("game-outcome-metrics");
+        metrics.setWidthFull();
         content.add(title, winner, personalResult, metrics);
         Button review = new Button(I18n.t(UiTexts.GAME_OUTCOME_REVIEW), _ -> {
             dialog.close();

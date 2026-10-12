@@ -93,6 +93,26 @@ Focusable map objects and action cards accept Enter and Space. Background update
 preserve unchanged input controls and focus. **My account** groups statistics,
 archive and account actions; imprint and privacy share a footer.
 
+System details put sendable ships, total garrison, reserve and forecast ship
+production per round above the send and relocation actions, followed by the
+system diagram. **Logistics & reserve** (or **Colony & logistics**) expands rates,
+arrivals, colony data and reserve editing. **Background** expands descriptions,
+environment values and ownership history. Expanded sections stay open across
+updates and system selections while their data follows the selected system.
+
+The system diagram uses clipped stellar discs and fixed type sizes, with separate
+scales for stars and planets. Saved Spaceward colony orbits use the same compressed
+distance scale across systems. Colonized planets and moons open the existing
+colony details directly; atmospheric appearance follows the colonized body.
+SectorForces illustrations remain decorative and reveal no hidden information.
+
+Cancelling a send with Cancel, Escape or an outside click retains the source and
+target selection. Success confirms the queued order and keeps the source details
+open for the next send. Relocation edits retain their current context.
+
+Fleet cards and fleet details offer **Wait** directly and **Disband** when the
+fleet can return to an owned garrison. Action clicks retain the current tab.
+**Travel details** and **Joint arrivals** expand the additional journey data.
 The Fleets tab aggregates your fleets and queued sends by destination and arrival
 turn, including waits. Use **Edit order** to change a queued send's destination or
 amount. **Undo last order change** reverses your most recent queue change in the
@@ -119,13 +139,19 @@ known hostile systems with an estimate or a counted garrison. Select a system or
 the map to inspect it in Details: systems show their known ownership history,
 fleets their owner, launch turn, travel time and ETA. The report entry contains
 the complete filterable round timeline, including victory and defeat reports.
-Submitting a new command opens Orders; resolving a new round opens Report.
+Single sends and relocations retain the current tab; bulk planning opens Orders.
+Resolving a new round opens Report.
 Systems mentioned in a report carry a gold marker on the map. Select a report
 entry to centre the map on it, or select the marker to return to its report
 entry.
 Production relocations appear as purple dashed connections with their amount.
 Drag one of your systems onto another system to create or replace a relocation;
 the dialog limits the amount to the available routing capacity.
+System details and the send dialog show incoming transfers immediately after
+production, for example `4 (+6/turn)`. Source and destination details offer
+**Cancel transfer** directly; already travelling fleets remain unchanged.
+Gameplay and the map header use empire names; overviews and diplomacy also show
+account names in parentheses.
 All game commands remain available only in a running game.
 
 ## Tech stack
@@ -203,8 +229,15 @@ For local development with Vaadin hot reload:
 ```
 
 The SonarCloud analysis includes application sources, authored frontend files and
-both test source sets. Generated frontend files are excluded. Set `SONAR_TOKEN`
-locally and run `./gradlew sonar`; CI uses the repository secret of the same name.
+both test source sets. Generated frontend files are excluded. CI uses the
+repository secret `SONAR_TOKEN` for SonarCloud. For the shared local SonarQube
+instance, use its local token and select the target explicitly (global Gradle
+properties may otherwise select the cloud organization):
+
+```powershell
+$env:SONAR_TOKEN = "<SonarQube-Token>"
+.\gradlew.bat test jacocoTestReport sonar "-Dsonar.host.url=http://localhost:9000" "-Dsonar.projectKey=starfare" "-Dsonar.token=$env:SONAR_TOKEN"
+```
 
 ## Sign in
 
@@ -282,17 +315,19 @@ along sits a small pill with the ship count, whose tooltip shows the
 arrival round and remaining turns.
 
 - **Pan**: hold left mouse button and drag.
-- **Select system**: click. First click as source, second click on a
-  different system as target.
+- **Inspect system**: left-click to open its details.
+- **Prepare a fleet**: right-click your source system to start target selection
+  directly, then left-click the target. You can also use **Send fleet** in the
+  system inspector.
 - The initial view centres on your home system.
 
 ### Send a fleet
 
-1. Click your source system.
+1. Right-click your source system, or select it and choose **Send fleet**.
 2. Click the target system.
 3. Set the ship count via slider or input field. Quick buttons:
    **Half**, **Double**, **All** (available ships after reserves and queued sends),
-   and **All except production**.
+   and **All except production**, which retains the nonnegative net flow of production + incoming − outgoing transfers in addition to the reserve. Incoming ships still travel normally.
 4. **Send fleet**.
 
 The order lands in **Orders** in the right-hand sidebar. Before submitting your
@@ -305,7 +340,7 @@ given number of ships is shipped every turn. A system may route at most its
 own production plus whatever is routed into it, and several targets share that
 budget — the map shows the still-free share in brackets after `P:`. Whatever
 is not routed stays behind as garrison. The **Relocations** tab also offers
-**Edit** and **Delete** on every route; editing opens the same capacity-aware
+**Edit** and **Cancel transfer** on every route and directly at either system; editing opens the same capacity-aware
 dialog.
 
 ### Own fleets
@@ -313,6 +348,17 @@ dialog.
 The **Fleets** tab shows route cards for ships already in transit and a combined
 arrival preview with queued sends. Select a card to see fleet details. Route
 search filters the cards; the summary groups arrivals by destination and round.
+
+The send dialog, fleet cards and details share a graphical itinerary. Known
+system points focus the map without sending orders or changing the quantity.
+Long routes expand inline; the current and next stations remain visible when
+collapsed. Blocked journeys show an open arrival rather than an old promise.
+The send dialog lists exact leg durations and refuelling stays in its details.
+
+Spaceward's **Alliances** dialog puts pending decisions before your alliance
+and possible partners. Notice-period edits survive unrelated updates. Leaving
+requires confirmation showing the effective round and consequences for stationed
+fleets; treaty rules remain in an expandable background section.
 
 - **Wait** — the fleet rests one round at its current position
   (ETA +1).
@@ -419,9 +465,15 @@ preserved inputs during external updates. CI runs it as a separate job
 (`[skip e2e]` in the commit message skips it). Failures leave page text in the
 test output and a screenshot in `build/e2e-failures/`.
 
+The `@ui-acceptance` journeys cover summary corrections, lobby invitations and
+archive access, two-player deadlines, final battles and coalition dispatch.
+They save current screenshots and visible text in `build/ui-acceptance/` for
+personal review. Automated checks do not replace a player's usability assessment.
+
 ```bash
 ./gradlew test
 ./gradlew e2eTest
+./gradlew e2eTest "-Dcucumber.filter.tags=@ui-acceptance"
 ./gradlew e2eTest "-Dcucumber.filter.tags=@ai-strategies"
 node --test src/test/frontend/battle-replay.test.mjs
 ```
@@ -435,7 +487,7 @@ The next economy step is available for internal acceptance as **Spaceward
 1.2.0-w1**: saved colony environments and population limit usable industry,
 with growth taking effect on the following turn. The public wizard continues
 to create **1.1.0** games. Existing rules and saved games retain their behavior.
-Finite metal and recycling are subsequent economy steps; W1 does not add mining.
+W1 retains its original behavior without mining. The separate internal **1.2.0-w2** checkpoint adds finite metal; the separate internal **1.2.0-w3** checkpoint adds recycling.
 Run the saved-party browser journey with:
 
 ```powershell
@@ -446,6 +498,37 @@ The fixture is test-only; loading and resolving stored W1 parties is supported,
 while public creation is explicitly rejected. Each further economy checkpoint
 will have its own rule reference so interrupted development can resume without
 changing the meaning of earlier saved parties.
+
+### Internal metal economy: 1.2.0-w2
+
+Every system has a saved finite deposit and a yield per mining capacity point.
+Players share metal across their own empire, without an automatic alliance pool.
+Mining and expansion use the same local labor and industrial capacity; the rest
+requests shipbuilding. Ships cost **1 metal each**. All extraction happens before
+empire-wide shipbuilding, so newly mined metal can be used in the same round.
+Scarce metal is allocated in proportion to requested ships, with integer leftovers
+assigned by largest fractional remainder, then by system ID. Unused metal stays
+in stock; unused capacity creates no debt. Industry expansion consumes no metal.
+
+Regular dispatch uses existing ships first. Production relocations follow actual
+construction and retain permanent garrison reserves. Growth and expanded industry
+only contribute to the following round. The system panel shows the saved plan's
+forecast across the empire; apply mining and expansion together to refresh it.
+Deposits survive conquest without replenishment; empire stock remains with its
+player. Saved snapshots and historical review retain resources without executing
+extraction on load. Internal trial values are 10 starting metal per player,
+200 deposit metal per richness level, and 1 extraction per richness level and
+mining point. These are fixed W2 test values, pending W4 balance acceptance.
+
+Run the test-only saved-party browser journey silently:
+
+```powershell
+.\gradlew.bat e2eTest "-Dcucumber.filter.tags=@metals"
+```
+
+W2 is supported for saved-game restoration and round resolution. Public creation,
+templates and rematches cannot create unreleased checkpoints. W1 and all released
+rules retain their behavior; the public wizard still uses 1.1.0.
 
 ## Strategy experiments
 
@@ -564,3 +647,92 @@ the original statistical result remains unchanged.
 ## License
 
 [MIT](LICENSE).
+
+### Internal recycling: 1.2.0-w3
+
+The separate W3 checkpoint adds editable recycling orders at owned industrial
+systems. Ships are reserved together with dispatches and permanent garrisons.
+Set the order to zero to cancel it. Resolution occurs after ordinary dispatch,
+before mining and construction, without additional industrial capacity use.
+Arriving ships become eligible in the next round. Credits are never immediate.
+
+Each ship returns **0.7 metal** of its one-metal construction cost. Saved tenths
+per player make split and bulk orders equivalent; only whole metal pays for new
+ships. Start ships, including neutral garrisons, bind one metal each. The ledger
+retains initial material, combat losses and the 30% recycling loss. Battles have
+no salvage. Reloading or replaying does not apply a recycling order again.
+
+All eight AI profiles can recycle surplus rear-area ships when metal constrains
+construction, preserving a reserve and excluding known nearby enemies. The W4
+comparison is documented in `docs/ECONOMY-EXPERIMENTS.md`. W2 and older references retain their
+behavior. W3 remains internal; public creation still uses 1.1.0.
+
+Run the silent saved-game acceptance journey with:
+
+```powershell
+.\gradlew.bat e2eTest "-Dcucumber.filter.tags=@recycling"
+```
+
+### Economy acceptance candidate: 1.2.0-w4
+
+The complete economy can now be created through the ordinary wizard in a local,
+opt-in acceptance profile. SectorForces remains initially selected. Choose
+Spaceward and check that its card says **1.2.0-w4**.
+
+```powershell
+.\gradlew.bat bootRun "--args=--spring.profiles.active=local,economy-preview"
+```
+
+Without `economy-preview`, ordinary Spaceward creation stays at **1.1.0**.
+The switch affects creation only: saved W4 games remain supported when the
+profile is disabled. W1, W2 and W3 stay restoration-only. Colony properties,
+finite deposits, stock, fractions and initial material are established once
+when the new game is saved, including before its first round.
+
+W4 keeps the checkpoint's values: **1 metal per ship**, 10 starting metal,
+200 deposit metal per richness level, richness yield per mining point, and
+70% recycling recovery. All eight selectable AI profiles account for mining
+when allocating industry and retaining ships. Experimental economic policies
+remain test-only. Evidence and its limits: [economy experiments](docs/ECONOMY-EXPERIMENTS.md).
+Public 1.2.0 release follows personal acceptance of this candidate.
+
+```powershell
+.\gradlew.bat e2eTest -PeconomyPreview=true "-Dcucumber.filter.tags=@economy-launch"
+```
+
+The same journey without `-PeconomyPreview=true` verifies the released default.
+The `@metals` and `@recycling` journeys cover shortages, reload, exact fractional
+recovery and historical views. These browser runs are silent.
+
+### Decision-oriented game interface
+
+The setup wizard shows only the selected variant's rules and groups the final
+summary by galaxy, participants, victory and access. Each group can be edited.
+The schematic galaxy preview is secondary and expandable.
+
+Spaceward production functions open their allocation directly: a shipyard, mining
+tower and construction crane have distinct shapes and show saved activity.
+Five presets (Ships, Metal, Industry, Even split, Self-sufficient shipbuilding)
+create a local draft immediately and preserve pinned shares. Self-sufficient
+shipbuilding splits free capacity between ships and mining, with an odd remainder
+assigned to mining; it does not guarantee exclusive access to empire metal.
+Production planning uses coupled whole-point sliders for shipbuilding,
+mining and industry expansion, with optional pinned shares. A read-only empire-wide
+preview uses the actual economy calculation, including reserved recycling, metal
+shortages and relocation capacity. Each system retains its local draft and pins
+while the map is open. Stale rounds or external plan changes require an explicit
+recheck, and commits compare the saved plan under the game write lock. Submitting
+a turn with pending drafts requires a deliberate choice to use saved plans; no
+automatic bulk apply occurs. Reloading or leaving warns before losing drafts.
+Header notices open filtered logistics lists using saved plans, with one system
+per cause and a separate draft count. Pending battles suppress these notices.
+Older
+rules without metal use two allocation areas. The empire's current metal stock
+appears in the header; planet data and rare scrapping actions are expandable.
+
+Fleet sending explains reachability, intermediate stations and arrival rounds
+without exposing internal distance coordinates. Ally conquest is offered only
+when meaningful; SectorForces shares the simpler setup, overview and sending UI.
+Legal links in the footer open in a new tab to preserve ongoing edits.
+
+Fleet selection areas occupy only free route segments, protecting source, destination and crossing systems at every zoom. Warning markers are separate prominent targets. Combat playback keeps attackers left and defenders right, with neutral colors until the result. Crew-condition text describes stored combat variation; optional combat details retain exact strengths.

@@ -74,10 +74,13 @@ public class CoalitionSteps {
         browser.awaitCss(".sys-selected"); selectSystem("Gamma");
         browser.awaitCss(".send-fleet-dialog");
         browser.awaitCss(".send-fleet-amount input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "40", Keys.TAB);
+        browser.clickCss(".conquest-selection vaadin-details");
         browser.awaitCss(".conquest-selection vaadin-combo-box input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "Partner", Keys.ENTER, Keys.TAB);
-        browser.awaitTextIn(".conquest-selection", "Schiffe behalten ihren Eigentümer"); screenshot("claim");
+        browser.awaitTextIn(".conquest-selection", "deine Schiffe bleiben deine"); screenshot("claim");
         browser.clickCss(".send-fleet-dialog vaadin-button[theme~='primary']");
         waitFor(() -> games.viewFor(id, 1).plannedOrders().size() == 1);
+        browser.awaitSelectedTabWithText("Details");
+        browser.clickTabWithText("Befehle");
         browser.awaitTextIn(".fleet-travel-card-planned", "Erobern für: Partner");
         assertThat(games.viewFor(id, 1).plannedOrders().getFirst().beneficiaryId()).isEqualTo(2);
         browser.driver().navigate().refresh(); browser.clickTabWithText("Befehle");
@@ -106,6 +109,14 @@ public class CoalitionSteps {
         for (int index = 0; index < 2; index++) {
             browser.awaitCss(".event-battle-pending").click(); browser.awaitCss(".coalition-replay");
             assertThat(browser.all(".coalition-side")).hasSize(index == 0 ? 2 : 3);
+            assertThat(browser.all(".coalition-defenders .coalition-side")).hasSize(1);
+            assertThat(browser.all(".coalition-attackers .coalition-side")).hasSize(index == 0 ? 1 : 2);
+            assertThat(((JavascriptExecutor) browser.driver()).executeScript("""
+                    const a = document.querySelector('.coalition-attackers').getBoundingClientRect();
+                    const d = document.querySelector('.coalition-defenders').getBoundingClientRect();
+                    return a.left < d.left && [...document.querySelectorAll('.coalition-side')]
+                        .every(card => getComputedStyle(card).color === 'rgb(255, 216, 106)');
+                    """)).isEqualTo(true);
             assertThat(browser.textsOf(".coalition-side")).anyMatch(text -> text.contains("Commander + Partner"));
             assertThat(browser.awaitCss(".battle-replay-dialog vaadin-checkbox").getDomProperty("checked")).isEqualTo("false");
             browser.awaitCss(".battle-replay-result-visible");

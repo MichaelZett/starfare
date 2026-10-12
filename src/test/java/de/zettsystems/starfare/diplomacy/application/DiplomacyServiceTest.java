@@ -81,9 +81,15 @@ class DiplomacyServiceTest {
         var classic = new GameState(); classic.start(); var before = GameState.toSnapshot(classic);
         assertThat(service.act(classic, 1, order(DiplomacyOrder.Action.FOUND, 2, 3))).isFalse();
         service.beginRound(classic, 10); assertThat(GameState.toSnapshot(classic)).isEqualTo(before);
-        assertThatThrownBy(() -> new AllianceGroup(1, Set.of(1), 1, Map.of())).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new AllianceGroup(1, Set.of(1, 2), -1, Map.of())).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new DiplomacyState(3, List.of(new AllianceGroup(1, Set.of(1, 2), 1, Map.of()), new AllianceGroup(2, Set.of(2, 3), 1, Map.of())), List.of())).isInstanceOf(IllegalArgumentException.class);
+        var input1 = Set.of(1);
+        Map<Integer, Integer> input2 = Map.of();
+        assertThatThrownBy(() -> new AllianceGroup(1, input1, 1, input2)).isInstanceOf(IllegalArgumentException.class);
+        var input3 = Set.of(1, 2);
+        Map<Integer, Integer> input4 = Map.of();
+        assertThatThrownBy(() -> new AllianceGroup(1, input3, -1, input4)).isInstanceOf(IllegalArgumentException.class);
+        var input5 = List.of(new AllianceGroup(1, Set.of(1, 2), 1, Map.of()), new AllianceGroup(2, Set.of(2, 3), 1, Map.of()));
+        List<de.zettsystems.starfare.diplomacy.values.TreatyProposal> input6 = List.of();
+        assertThatThrownBy(() -> new DiplomacyState(3, input5, input6)).isInstanceOf(IllegalArgumentException.class);
         var state = NavigationStates.running();
         assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 99, 3))).isFalse();
         assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 51))).isFalse();

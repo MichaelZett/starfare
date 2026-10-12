@@ -1,0 +1,4 @@
+# Local acceptance only; the default catalog keeps Spaceward 1.1.0.
+starfare:
+  rules:
+    economy-preview: true
