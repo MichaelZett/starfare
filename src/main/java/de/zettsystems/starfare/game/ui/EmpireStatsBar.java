@@ -17,6 +17,8 @@ final class EmpireStatsBar extends HorizontalLayout {
 
     private final Span systemsValue = new Span("0");
     private final Span productionValue = new Span("0");
+    private final Span metalValue = new Span();
+    private final com.vaadin.flow.component.details.Details metalDetails = new com.vaadin.flow.component.details.Details();
     private final Span shipsValue = new Span("0");
 
     EmpireStatsBar() {
@@ -28,6 +30,8 @@ final class EmpireStatsBar extends HorizontalLayout {
                 buildStat(VaadinIcon.COGS, productionValue, I18n.t(UiTexts.MAP_STATS_PRODUCTION_TOOLTIP)),
                 buildStat(VaadinIcon.ROCKET, shipsValue, I18n.t(UiTexts.MAP_STATS_SHIPS_TOOLTIP))
         );
+        metalDetails.addClassName("empire-metal");
+        add(metalDetails);
         setVisible(false);
     }
 
@@ -36,6 +40,14 @@ final class EmpireStatsBar extends HorizontalLayout {
         systemsValue.setText(String.valueOf(empire.systems()));
         productionValue.setText(String.valueOf(empire.production()));
         shipsValue.setText(String.valueOf(empire.ships()));
+        var metal = empire.metal();
+        metalDetails.setVisible(metal != null);
+        if (metal != null) {
+            metalDetails.setSummaryText(I18n.t(UiTexts.UX_METAL_STOCK, metal.current()));
+            metalValue.setText(I18n.t(UiTexts.UX_METAL_BALANCE, metal.extraction(), metal.recycling(), metal.consumption(), metal.next()));
+            metalDetails.removeAll();
+            metalDetails.add(metalValue);
+        }
     }
 
     private static Span buildStat(VaadinIcon icon, Span valueSpan, String tooltip) {

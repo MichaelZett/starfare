@@ -8,6 +8,18 @@ import static org.assertj.core.api.Assertions.*;
 class RulesetCatalogTest {
     private final RulesetCatalog catalog = RulesetCatalog.builtIn();
 
+    @Test void acceptanceSwitchEnablesOnlyTheCurrentCandidateAndKeepsRestorationAvailable() {
+        var preview = RulesetCatalog.builtIn(true);
+        assertThat(preview.find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.SPACEWARD_ECONOMY_PREVIEW);
+        assertThatCode(() -> preview.requireCreatable(RulesetRef.SPACEWARD_ECONOMY_PREVIEW)).doesNotThrowAnyException();
+        assertThatCode(() -> catalog.requireSupported(RulesetRef.SPACEWARD_ECONOMY_PREVIEW)).doesNotThrowAnyException();
+        assertThatThrownBy(() -> catalog.requireCreatable(RulesetRef.SPACEWARD_ECONOMY_PREVIEW)).isInstanceOf(IllegalArgumentException.class);
+        for (var old : List.of(RulesetRef.SPACEWARD_COLONIES, RulesetRef.SPACEWARD_METALS, RulesetRef.SPACEWARD_RECYCLING)) {
+            assertThatThrownBy(() -> preview.requireCreatable(old)).isInstanceOf(IllegalArgumentException.class);
+        }
+        assertThat(preview.definitions().getFirst().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
+    }
+
     @Test
     void sectorForcesAndSpacewardAreReleased() {
         assertThat(catalog.definitions()).hasSize(2);
@@ -18,8 +30,8 @@ class RulesetCatalogTest {
                 .isEqualTo(RulesetRef.SPACEWARD_ALLIANCE);
         assertThatCode(() -> catalog.requireCreatable(RulesetRef.SPACEWARD)).doesNotThrowAnyException();
         assertThatCode(() -> catalog.requireCreatable(RulesetRef.SPACEWARD_ALLIANCE)).doesNotThrowAnyException();
-        assertThatThrownBy(() -> catalog.requireCreatable(new RulesetRef("spaceward", "2.0.0")))
-                .isInstanceOf(IllegalArgumentException.class);
+        var input1 = new RulesetRef("spaceward", "2.0.0");
+        assertThatThrownBy(() -> catalog.requireCreatable(input1)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -32,10 +44,10 @@ class RulesetCatalogTest {
 
     @Test
     void unknownVersionsAndVariantsNeverFallBackToClassic() {
-        assertThatThrownBy(() -> catalog.requireCreatable(new RulesetRef("classic", "2.0.0")))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> catalog.requireSupported(new RulesetRef("unknown", "1.0.0")))
-                .isInstanceOf(IllegalArgumentException.class);
+        var input2 = new RulesetRef("classic", "2.0.0");
+        assertThatThrownBy(() -> catalog.requireCreatable(input2)).isInstanceOf(IllegalArgumentException.class);
+        var input3 = new RulesetRef("unknown", "1.0.0");
+        assertThatThrownBy(() -> catalog.requireSupported(input3)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new RulesetRef("classic", " ")).isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -65,8 +77,9 @@ class RulesetCatalogTest {
     @Test
     void duplicateIdentitiesAndReleasedUnimplementedDefaultsAreRejected() {
         var entry = catalog.definitions().getFirst();
-        assertThatThrownBy(() -> new RulesetCatalog(List.of(entry, entry))).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new RulesetDefinition(RulesetRef.SPACEWARD,
-                "test.name", "test.description", Set.of(), true)).isInstanceOf(IllegalArgumentException.class);
+        var input4 = List.of(entry, entry);
+        assertThatThrownBy(() -> new RulesetCatalog(input4)).isInstanceOf(IllegalArgumentException.class);
+        Set<String> input5 = Set.of();
+        assertThatThrownBy(() -> new RulesetDefinition(RulesetRef.SPACEWARD, "test.name", "test.description", input5, true)).isInstanceOf(IllegalArgumentException.class);
     }
 }

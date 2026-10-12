@@ -29,7 +29,7 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
             ((ObjectNode) json.get("originalSetup")).remove("victoryRules");
             var restored = GameState.fromSnapshot(mapper.treeToValue(json, GameStateSnapshot.class));
             assertThat(restored.ruleset()).isEqualTo(ref);
-            assertThat(restored.victoryRules().alliancesAllowed()).isEqualTo(ref.spaceward());
+            assertThat(restored.victoryRules().alliancesAllowed()).isEqualTo(ref.isSpaceward());
             assertThat(restored.victoryRules().allianceVictoryAllowed()).isFalse();
             assertThat(restored.outcome().winnerIds()).containsExactly(1);
             restored.resumeForFullConquest(Instant.now());
@@ -89,7 +89,7 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
             state.systems().add(new StarSystem(player, "S" + player, player * 100, 100, player, 5, 2, false));
         }
         state.start();
-        if (ref.spaceward()) { state.agreeTreaties(new DiplomacyState(2,
+        if (ref.isSpaceward()) { state.agreeTreaties(new DiplomacyState(2,
                 List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of())); }
         return state;
     }

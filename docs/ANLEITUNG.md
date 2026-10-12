@@ -103,19 +103,44 @@ unbekannte Systeme haben eine einheitliche Größe.
 - Ein Berichtsmarker führt zur zugehörigen Meldung. Eine Meldung zentriert die Karte
   auf das betroffene System.
 
+Im Spiel und im Kartenkopf erscheinen Imperiumsnamen. Spielernamen in Klammern
+stehen nur in Übersichten und in der Diplomatie.
+
 Die Seitenleiste enthält **Kontakte, Details, Flotten, Befehle, Verlegungen,
-Logistik und Bericht**. Ein neuer Befehl öffnet den Befehlsreiter, eine ausgewertete
-Runde den Bericht. Aktualisierungen unveränderter Inhalte erhalten Eingaben und
+Logistik und Bericht**. Einzelversand und Verlegungen behalten den aktuellen
+Reiter; Sammelbefehle öffnen den Befehlsreiter, eine ausgewertete Runde den Bericht. Aktualisierungen unveränderter Inhalte erhalten Eingaben und
 Fokus; neue Chat-Nachrichten löschen keinen begonnenen Nachrichtenentwurf.
+
+In den Systemdetails stehen versendbare Schiffe, Gesamtbestand und Reserve oben;
+außerdem die erwartete Schiffproduktion pro Runde. **Flotte senden** und
+**Verlegung anlegen** stehen direkt darunter, vor dem Systembild.
+**Logistik & Reserve** öffnet Zu- und Abflüsse, Ankünfte und die Reservebearbeitung;
+bei Kolonien heißt dieser Bereich **Kolonie & Logistik**. **Hintergrund** enthält
+Beschreibungen, Umweltwerte und Besitzhistorie. Die geöffneten Bereiche bleiben
+bei Aktualisierungen und Systemwechseln geöffnet; die Angaben folgen der Auswahl.
+
+Sterne sind links angeschnitten und zeigen ihre Farbe und Typgröße. Planeten
+unterscheiden sich durch Größenklasse und Oberfläche. Stern- und Planetengrößen
+verwenden getrennte Maßstäbe; die Abstände sind schematisch. Hat Spaceward
+gespeicherte Koloniedaten, liegt eine fernere Bahn sichtbar weiter außen.
+Ein besiedelter Planet oder Mond trägt eine Koloniemarkierung. Seine Auswahl
+öffnet die vorhandenen Kolonieangaben; sie erteilt keinen Siedlungsbefehl.
+SectorForces-Körper bleiben dekorativ. Hintergrundwerte folgen dem Kriegsnebel.
 
 ## Flotten und Befehle
 
 ### Einzelne Flotte senden
 
-Wähle zuerst ein eigenes System und dann das Ziel. Stelle die Menge per Regler,
+Rechtsklick auf ein eigenes System beginnt direkt die Zielwahl. Alternativ
+wähle das System mit Linksklick und nutze **Flotte senden** in den Details.
+Klicke anschließend auf das Ziel. Stelle die Menge per Regler,
 Eingabefeld oder Schnellknopf ein. **Alle** nutzt die verfügbaren Schiffe nach
 Abzug von Reserve und bereits vorgemerkten Sendungen. **Alle außer Produktion**
-behält zusätzlich die aktuelle Produktionsmenge zurück.
+behält zusätzlich den Nettozufluss einer Runde zurück: Produktion + eingehende − ausgehende Verlegungen, mindestens null. Eingehende Schiffe bleiben bis zu ihrer tatsächlichen Ankunft unterwegs.
+
+**Abbrechen**, Escape und ein Klick außerhalb des Dialogs erhalten die bisherige
+Auswahl und Zielwahl. Nach dem Bestätigen erscheint eine kurze Meldung; die
+Quellsicht bleibt geöffnet, sodass du gleich einen weiteren Auftrag beginnen kannst.
 
 Der Auftrag erscheint unter **Befehle**. Solange du die Runde noch nicht abgegeben
 hast, kannst du ihn **Stornieren** oder mit **Befehl bearbeiten** Menge und Ziel
@@ -141,13 +166,17 @@ Runde gewechselt, wird keine Teilmenge der Befehle übernommen.
 
 ### Unterwegs und Ankunftsvorschau
 
-Der Reiter **Flotten** zeigt eigene Flotten als Karten. **Gemeinsame Ankünfte**
-summiert reisende Flotten und vorgemerkte Sendungen nach Ziel und Ankunftsrunde.
+Der Reiter **Flotten** zeigt eigene Flotten als Karten. Der aufklappbare Bereich
+**Gemeinsame Ankünfte** summiert reisende Flotten und vorgemerkte Sendungen nach
+Ziel und Ankunftsrunde. **Reisedetails** öffnet zusätzliche Reiseangaben.
 Die Routensuche schränkt die angezeigten Karten ein.
 
-**Warten** verschiebt eine reisende Flotte um eine Runde; die Vorschau berücksichtigt
-das ohne Doppelzählung. **Auflösen** gibt die Schiffe auf. Beide Aktionen werden
-als Befehle für die Rundenabgabe vorgemerkt.
+**Warten** steht direkt an der Flottenkarte und in ihren Details und verschiebt
+eine Flotte um eine Runde; die Vorschau berücksichtigt das ohne Doppelzählung.
+**Auflösen** erscheint nur bei einer gerade gestarteten oder an einem eigenen
+System stationierten Flotte und führt ihre Schiffe in die Garnison zurück.
+Rückzugsflotten bieten diese Aktionen nicht an. Beide Aktionen werden als Befehle
+für die Rundenabgabe vorgemerkt. Ein Aktionsklick behält den aktuellen Reiter.
 
 ## Reserven und Produktionsverlegungen
 
@@ -163,7 +192,11 @@ dazu passen; andernfalls wird die gesamte Änderung abgelehnt.
 
 Eine **Produktionsverlegung** sendet jede Runde eine feste Anzahl Schiffe.
 Ziehe ein eigenes System auf das Ziel oder wähle die Verlegung im Sendedialog.
-Unter **Verlegungen** kannst du die Menge **Anpassen** oder die Route **Löschen**.
+Unter **Verlegungen** und direkt an Quelle oder Ziel stehen **Bearbeiten** und **Aufheben** nebeneinander. Bearbeiten öffnet die vorhandene Route; beim Speichern wird sie ersetzt.
+Beim Aufheben der Route bleiben bereits
+reisende Flotten erhalten. Hinter der Produktion steht der eingehende
+Zufluss, zum Beispiel `4 (+6/Runde)`. Das gemeinsame Verlegungslimit beträgt
+dann 10, abzüglich anderer ausgehender Aufträge.
 
 Das gemeinsame Limit aller ausgehenden Verlegungen ist die eigene Produktion plus
 die eingehenden Verlegungsmengen. Eingehende Schiffe brauchen trotzdem ihre normale
@@ -260,6 +293,34 @@ Eroberung erhält Bevölkerung und Systemeigenschaften. Metallreichtum ist hier
 eine gespeicherte Eigenschaft; Förderung und Recycling folgen später.
 Der normale Partiedialog verwendet weiterhin **1.1.0**.
 
+### Interne Metallwirtschaft 1.2.0-w2
+
+Diese gesonderte interne Regelfassung ergänzt endliche Vorkommen je System und
+Metallvorräte je Spieler. Ein Schiff kostet **1 Metall**. Der Vorrat steht im
+gesamten eigenen Reich zur Verfügung; Bündnispartner teilen ihn nicht automatisch.
+Die Spielleiste zeigt den Reichsvorrat; die Systemsicht zeigt Restvorkommen, Förderergiebigkeit und geplante Förderung
+und den metallgedeckten Schiffbau. Förderung und Ausbau werden gemeinsam zugewiesen
+und dürfen zusammen die nutzbare Industrie nicht überschreiten. Die übrige
+Kapazität dient dem Schiffbau. Der Planungsdialog zeigt ihn als eigenen gekoppelten
+Regler; die Vorschau reagiert vor dem Speichern auf jede Änderung. Nach Übernahme wird die reichsweite
+Vorschau aktualisiert; sie verwendet den gespeicherten Plan.
+
+Zuerst werden reguläre Flotten aus vorhandenen Schiffen verschickt. Danach erfolgt
+reichsweit die Förderung und der Schiffbau. Bei Metallknappheit erhält jedes System
+einen proportionalen Anteil seiner geplanten Schiffe; ganzzahlige Reste gehen nach
+größtem Bruchrest, bei Gleichstand nach Systemkennung. Verlegungen verwenden danach
+nur tatsächlich vorhandene Schiffe und halten die Garnisonsreserve ein.
+Industrieausbau kostet kein Metall; Wachstum und Ausbau wirken erst nächste Runde.
+Unverbrauchtes Metall bleibt erhalten, unerfüllter Schiffbau erzeugt keine Schuld.
+
+Erschöpfte Vorkommen bleiben erschöpft, auch bei Eroberung. Örtliche Restvorkommen
+gehen an den neuen Besitzer, der Reichsvorrat bleibt beim bisherigen Spieler.
+Neuladen und Nachbetrachtung verändern keine Rohstoffmengen. Interne Prüfwerte sind
+10 Startmetall je Spieler, 200 Metallvorkommen je Reichtumsstufe und eine Fördermenge
+je Reichtumsstufe und Kapazitätspunkt. Die Wirtschaftsabnahme steht noch aus.
+W1 und ältere Partien behalten ihre Regeln; die öffentliche Neuanlage bleibt bei
+1.1.0. Recycling gehört erst zum folgenden Ausbau.
+
 ## Spaceward-Navigation
 
 Jede Spaceward-Partie erhält eine feste Reichweite je Reiseabschnitt.
@@ -267,8 +328,12 @@ Sie wird aus der Galaxie berechnet, damit alle Systeme schrittweise erreichbar
 bleiben. Reisezeit und Sensorreichweite sind davon unabhängig.
 
 Für ein entferntes Ziel sucht der Flottenversand automatisch den schnellsten
-Weg über eigene oder verbündete Systeme. Der Dialog zeigt alle Zwischenstationen und die
-Ankunftsrunde einschließlich der Aufenthalte. Ohne erreichbaren Weg ist der
+Weg über eigene oder verbündete Systeme. Der Dialog zeigt einen grafischen
+Routenstreifen und einmal die Ankunftsrunde einschließlich der Aufenthalte.
+Lange Routen lassen sich mit **+… Stationen** vollständig aufklappen.
+Ein Klick auf einen bekannten Systempunkt markiert ihn und zentriert die Karte,
+ohne Menge oder Versandmodus zu ändern. Die Reisedetails nennen Teilstrecken
+und Aufenthalte. Ohne erreichbaren Weg ist der
 Versand gesperrt. Unverbündete Systeme können angegriffen werden, dienen aber erst
 nach ihrer Eroberung als Zwischenstationen.
 
@@ -276,7 +341,11 @@ An jeder Zwischenstation bleibt die Flotte eine volle Runde zum Auftanken.
 Sie bleibt ein eigener Verband und wird nicht zur Garnison. Die Flottendetails
 zeigen den Reiseplan und den frühesten Abflug. Mit **Warten** lässt sich die
 Weiterreise verschieben; **Auflösen** fügt den Verband der aktuellen eigenen
-Station hinzu. Die Aktionen stehen am Flottenmarker über das Kontextmenü bereit.
+Station hinzu. Die Aktionen stehen direkt an Flottenkarten und in den Details
+bereit; am Flottenmarker gibt es weiterhin das Kontextmenü. Der Routenstreifen
+kennzeichnet erreichte Abschnitte, aktuellen Aufenthalt und nächste Station.
+Eine blockierte Reise verspricht keine Ankunft; **System ansehen** öffnet den
+Standort, bei bekanntem fremdem Besitzer auch **Bündnisse ansehen**, sofern erlaubt.
 
 Geht eine Station während des Fluges verloren, kämpft die Flotte dort nach den
 normalen Regeln; ihre Weiterreise endet. Geht sie während des Aufenthalts
@@ -357,6 +426,14 @@ den Einzelsieg und erlaubte Bündnisse.
 
 ## Spaceward-Bündnisse
 
+**Bündnisse** zeigt zuerst offene Entscheidungen, danach dein Bündnis und
+mögliche Partner. Zustimmen und Ablehnen stehen direkt am Vorschlag.
+**Frist ändern** und die Gründung am Partner öffnen die genaue Eingabe;
+gültige Eingaben bleiben bei fremden Aktualisierungen erhalten.
+**Bündnis kündigen** verlangt eine Bestätigung mit der genauen Austrittsrunde
+und den Folgen für stationierte Flotten. Abbrechen kündigt nichts.
+Allgemeine Regeln stehen im aufklappbaren Hintergrundbereich.
+
 Ein Imperium gehört höchstens einer Gruppe an.
 Alle Mitglieder sind miteinander verbündet, neutrale Systeme gehören keiner
 Gruppe an. Eine Gründung braucht beide Partner; eine Aufnahme braucht die
@@ -434,3 +511,98 @@ Persönliche Statistiken zählen verlorene Schiffe exakt und teilen Abschüsse
 anhand des verursachten Feuers auf, sodass jedes zerstörte Schiff insgesamt
 nur einmal als Abschuss gezählt wird. Kampfentscheidungen und Flucht folgen
 in einem gesonderten Ausbau.
+
+### Internes Schiffsrecycling 1.2.0-w3
+
+In dieser gesonderten internen Fassung können eigene stationierte Schiffe an
+Systemen mit Industrie verschrottet werden. In den Systemdetails eine Menge
+vormerken; **0 hebt den Befehl auf**. Die Schiffe bleiben bis zur Rundenauflösung
+stehen, sind aber gemeinsam mit Versand und Garnisonsreserve reserviert.
+Die Verschrottung erfolgt nach dem regulären Versand und vor Förderung und
+Schiffbau. Sie benötigt keine zusätzlichen Kapazitätspunkte. Ankommende Schiffe
+stehen erst in der folgenden Runde zum Recycling bereit.
+
+Ein Schiff liefert **0,7 Metall** zurück. Zehntelreste werden reichsweit gespeichert:
+zehn einzeln verschrottete Schiffe ergeben ebenso 7 Metall wie ein gemeinsamer
+Befehl. Neue Schiffe benötigen weiterhin je 1 ganzes Metall. Die Vorschau
+berücksichtigt die vorgemerkte Rückgewinnung, die tatsächliche Gutschrift erfolgt
+nur einmal bei der Rundenauflösung und erscheint im Bericht. Kampfverluste liefern
+kein Metall zurück. Startschiffe und neutrale Garnisonen zählen zur Metallbilanz.
+
+Alle acht KI-Profile nutzen Recycling bei Metallknappheit für überschüssige Schiffe
+im Hinterland; sie behalten eine Garnison und schonen Systeme mit bekannten nahen
+Gegnern. Der Wirtschaftsvergleich für W4 steht in `docs/ECONOMY-EXPERIMENTS.md`. W2-Partien erhalten
+keine Recyclingbefehle. W3 bleibt intern, die öffentliche Neuanlage bei 1.1.0.
+
+### Wirtschaftsstand 1.2.0-w4 erproben
+
+Das lokale Startprofil `economy-preview` schaltet den vollständigen Wirtschaftsstand
+im normalen Spielassistenten frei. „SectorForces“ bleibt vorausgewählt.
+Für die neue Wirtschaft „Spaceward“ auswählen; die Karte muss „Regeln 1.2.0-w4“
+zeigen. Ältere Partien übernehmen die neue Wirtschaft nicht.
+
+Ein Schiff benötigt 1 Metall. Förderung, Ausbau und Schiffbau teilen sich die
+nutzbare Kapazität; Recycling gewinnt 70 Prozent zurück und speichert Zehntelreste.
+Die Metallwerte bleiben für diese Erprobung unverändert. Alle acht KI-Profile
+berücksichtigen die Förderung bei ihrer Industrie- und Flottenplanung.
+
+Ohne das Startprofil bleibt die Neuanlage bei Spaceward 1.1.0. Gespeicherte
+W4-Partien lassen sich trotzdem fortsetzen. Die öffentliche Freigabe von 1.2.0
+folgt nach der persönlichen Erprobung. Startbefehl und technische Prüfergebnisse
+stehen in README und `docs/ECONOMY-EXPERIMENTS.md`.
+
+### Entscheidungen in der Oberfläche
+
+Der Spielassistent zeigt nur die Regeln der gewählten Variante. Die Zusammenfassung
+ordnet Galaxie, Teilnehmer, Sieg und Runden/Zugang; **Ändern** führt zur jeweiligen
+Einstellung zurück. Die Galaxienvorschau ist ein aufklappbares Verteilungsbeispiel.
+
+In den Systemdetails öffnen Werfthalle, Förderturm mit Seilrad und Werkhalle sowie Baukran direkt den jeweiligen
+Anteil. Ihre Zahlen zeigen die gespeicherte Aktivität, keine Anzahl gekaufter Gebäude.
+**Produktion planen** öffnet die gekoppelte Verteilung am System.
+Spaceward mit Metall verwendet **Schiffe bauen**, **Metall fördern** und
+**Industrie ausbauen**. Mehr Punkte in einem Bereich reduzieren die anderen im
+bisherigen Verhältnis. **Wert festhalten** schützt einen Anteil; bei zwei festen
+Werten ist der dritte bestimmt. Ältere Regeln ohne Metall haben zwei Bereiche.
+Die Vorgaben **Schiffe**, **Metall**, **Industrie**, **Gleichmäßig** und **Autarker
+Schiffbau** erzeugen direkt einen Entwurf. Fixierte Werte bleiben erhalten.
+Autarker Schiffbau teilt freie Punkte auf Schiffbau und Förderung; ein ungerader
+Restpunkt geht in die Förderung. Das ist eine einmalige Aufteilung und garantiert
+keine Metallversorgung. Nicht anwendbare Vorgaben zeigen den Grund.
+Die nutzbare Kapazität ist das gemeinsame Budget. Metallmangel kann den tatsächlichen
+Schiffbau zusätzlich begrenzen; die Vorschau nennt diesen Grund ausdrücklich.
+
+**Plan übernehmen** speichert die Verteilung. Reglerbewegungen verändern nur den
+Entwurf. **Gespeicherten Plan laden** setzt ihn zurück; **Verwerfen und schließen**
+verwirft die Änderungen dieses Systems und klappt den Editor ein. Fixierungen bleiben erhalten.
+Die Vorschau zeigt Förderung, Schiffbau, Ausbau und Verlegung sowie die Metallbilanz
+für das gesamte Imperium. Der aktuelle Metallvorrat steht oben in der Spielleiste.
+Planeteneigenschaften liegen unter **Planet und Wirtschaft — Hintergrund**.
+
+Produktionsentwürfe bleiben bei Systemwechsel während der geöffneten Karte erhalten.
+Rundenwechsel oder fremde Planänderungen sperren veraltete Entwürfe bis **Neu prüfen**.
+Bei Rundenabgabe kann man offene Entwürfe ansehen oder bewusst mit gespeicherten
+Plänen abgeben. Es gibt keine automatische Sammelübernahme. Neuladen und Verlassen
+warnen vor dem Verlust; Entwürfe sind nicht dauerhaft gespeichert.
+
+Die Reichshinweise neben den Kennzahlen führen zu gefilterten Logistiklisten:
+Metallmangel, begrenzte Förderung, fehlende Arbeitskräfte und stockende Verlegungen.
+Die Gruppen zählen jeweils Systeme; sie dürfen nicht zu einer Gesamtsumme addiert
+werden. Entwürfe erscheinen getrennt. Hinweise verwenden gespeicherte Pläne und
+bleiben während offener Schlachten verborgen.
+
+**Weitere Aktionen → Schiffe verschrotten** öffnet die selten benötigte
+Recyclingplanung. Ein vorgemerkter Befehl bleibt sichtbar und lässt sich aufheben.
+Eine Rückgewinnung wird erst bei der Rundenauflösung gutgeschrieben.
+
+Der Flottenversand nennt direkte Erreichbarkeit oder konkrete Zwischenstationen,
+Reisedauer und Ankunftsrunde. Die Gesamtzeit enthält die Aufenthalte. Ohne verfügbaren
+Weg ist Senden gesperrt. **Für Bündnispartner erobern** erscheint nur, wenn eine
+Eroberungsentscheidung mit anderen zulässigen Partnern möglich ist; eigene oder
+verbündete Verstärkung benötigt diese Wahl nicht. Die eigene Partei bleibt Vorgabe.
+SectorForces nutzt denselben Versandaufbau ohne Spaceward-Wirtschaft und Bündniswahl.
+
+Impressum und Datenschutz stehen im Seitenfuß und öffnen in einem neuen Tab,
+damit laufende Eingaben erhalten bleiben.
+
+Flotten lassen sich auf freien Strecken auswählen. Systeme und ihre unmittelbare Umgebung bleiben auch unter kreuzenden Linien erreichbar; fehlt Platz für eine Flottenmarke, nutze die Flottenliste. Schlacht- und Engpasszeichen öffnen ihre eigene Information. In Schlachten stehen Angreifer links und Verteidiger rechts. Die Darstellung bleibt bis zum Ergebnis neutral; kurze Mannschaftstexte beschreiben die momentane Gefechtsverfassung. Exakte Stärken stehen unter **Kampfdetails**.

@@ -42,6 +42,10 @@ public record StarSystem(int id, String name, double x, double y,
         if (shipsPerTurn < 0) { throw new IllegalArgumentException("Ship output must not be negative"); }
         return new StarSystem(id, name, x, y, ownerId, garrison, shipsPerTurn, neutral, garrisonReserve);
     }
+    public StarSystem scrapShips(int ships) {
+        if (ships < 0 || ships > availableShips()) { throw new IllegalArgumentException("Recycling must preserve the reserve"); }
+        return new StarSystem(id, name, x, y, ownerId, garrison - ships, productionPerTurn, neutral, garrisonReserve);
+    }
 
     /** Produces using this round's capacity; expanded output becomes available next round. */
     public StarSystem completeShipbuilding(int produced, int routed, int nextOutput) {

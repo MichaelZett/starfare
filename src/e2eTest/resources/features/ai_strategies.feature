@@ -1,4 +1,5 @@
 # language: de
+@ui-decisions
 @ai-strategies
 Funktionalität: Unterschiedliche Strategien je KI-Sitz
 

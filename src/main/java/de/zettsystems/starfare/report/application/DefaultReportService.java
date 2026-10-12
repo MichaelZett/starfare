@@ -45,6 +45,7 @@ public class DefaultReportService implements ReportService {
 
     private static String textFor(TurnEvent e) {
         return switch (e) {
+            case TurnEvent.Recycling r -> "Recycling: %s, %d ships, %d tenths of metal recovered.".formatted(r.systemName(), r.ships(), r.recoveredTenths());
             case TurnEvent.Production p -> "Produktion: %s +%d".formatted(p.systemName(), p.amount());
             case TurnEvent.Reinforcement r ->
                     "Verstärkung: %s +%d (%s)".formatted(r.systemName(), r.ships(), r.fleetLabel());

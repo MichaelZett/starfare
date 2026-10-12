@@ -5,7 +5,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.textfield.IntegerField;
 import de.zettsystems.starfare.economy.values.EconomyRules;
 import de.zettsystems.starfare.economy.values.IndustryView;
 import de.zettsystems.starfare.game.ui.UiTexts;
@@ -19,38 +18,65 @@ public final class IndustryPanel extends Div {
     private static final long serialVersionUID = 1L;
     public static final String ALLOCATION_ID = "industry-expansion";
     public static final String APPLY_ID = "industry-apply";
-    private record PreviewControls(Span ships, Span expansion, Span distribution, Span delivery, Span estimate) { }
-    public IndustryPanel(IndustryView industry, int available, int outgoing, boolean editable, IntConsumer apply) {
-        this(industry, available, outgoing, outgoing, editable, apply);
+    private final Div colonyDetails = new Div();
+    private final Div background = new Div();
+    private @org.jspecify.annotations.Nullable ProductionEditor editor;
+    public void focusProduction(int index) { if (editor != null) { editor.focus(index); } }
+    public record Actions(IntConsumer recycling,
+                          java.util.function.Function<de.zettsystems.starfare.economy.values.AllocationSplit,
+                                  java.util.Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview>> preview,
+                          java.util.function.Predicate<de.zettsystems.starfare.economy.values.AllocationSplit> commit) { }
+    public IndustryPanel(IndustryView industry, boolean editable, Actions actions) {
+        this(industry, editable, actions, new de.zettsystems.starfare.economy.values.ProductionDrafts()
+                .forSystem(0, 0, industry), 0, () -> { });
     }
-    public IndustryPanel(IndustryView industry, int available, int outgoing, int reachable, boolean editable, IntConsumer apply) {
+
+    public IndustryPanel(IndustryView industry, boolean editable, Actions actions,
+                         de.zettsystems.starfare.economy.values.ProductionDrafts.Draft draft,
+                         int turn, Runnable changed) {
         addClassName("industry-panel");
         add(new H3(I18n.t(UiTexts.ECONOMY_TITLE)),
                 new Span(I18n.t(UiTexts.ECONOMY_CAPACITY, industry.capacity(), EconomyRules.MAX_CAPACITY)));
+        var metal = industry.metal();
+        if (metal != null) { addClassName("metal-details"); }
+        int mining = metal == null ? 0 : metal.miningPoints();
+        int ships = industry.usableCapacity() - mining - industry.expansionAllocation();
+        String allocation = metal == null
+                ? I18n.t(UiTexts.UX_ALLOCATION_WITHOUT_METAL, industry.expansionAllocation(), ships)
+                : I18n.t(UiTexts.UX_ALLOCATION_SUMMARY, mining, industry.expansionAllocation(), ships);
+        add(new Span(allocation),
+                new Div(new Span(I18n.t(UiTexts.UX_SHIP_RESULT,
+                        industry.usableCapacity() - mining - industry.expansionAllocation(), industry.shipbuilding()))),
+                expansionProgress(industry));
+        if (industry.usableCapacity() < industry.capacity()) {
+            add(new Span(I18n.t(UiTexts.UX_LABOR_LIMIT, industry.usableCapacity(), industry.capacity())));
+        }
+        if (editable) {
+            editor = new ProductionEditor(draft, turn, actions.preview(), actions.commit(), changed);
+            add(editor);
+        } else {
+            add(new ProductionFunctions(industry, _ -> { }));
+            getChildren().filter(ProductionFunctions.class::isInstance).forEach(component ->
+                    component.getElement().getChildren().forEach(element -> element.setProperty("disabled", true)));
+        }
         showColony(industry);
-        Div bar = new Div();
-        bar.addClassName("industry-allocation-bar");
-        Span ships = new Span(); ships.addClassName("industry-shipbuilding");
-        Span expansion = new Span(); expansion.addClassName("industry-expansion");
-        bar.add(ships, expansion);
-        Span distribution = new Span(); distribution.addClassName("industry-distribution");
-        Span delivery = new Span(); delivery.addClassName("industry-delivery");
-        Span estimate = new Span(); estimate.addClassName("industry-estimate");
-        add(bar, distribution, expansionProgress(industry), estimate, delivery);
-        PreviewControls controls = new PreviewControls(ships, expansion, distribution, delivery, estimate);
-        IntConsumer preview = points -> preview(industry, available, outgoing, reachable, points, controls);
-        preview.accept(industry.expansionAllocation());
-        if (editable && !industry.atMaximum()) { addEditor(industry, apply, preview); }
-        Span hint = new Span(I18n.t(UiTexts.ECONOMY_NEXT_ROUND));
-        hint.addClassName("industry-hint"); add(hint);
+        if (metal != null) {
+            background.add(new Div(new Span(I18n.t(UiTexts.METAL_DEPOSIT, metal.remaining(), metal.yieldPerPoint()))));
+            var recycling = metal.recycling();
+            if (recycling != null) { add(new RecyclingPanel(recycling, editable, actions.recycling())); }
+        }
     }
+
+    public Div colonyDetails() { return colonyDetails; }
+
+    public Div background() { return background; }
 
     private void showColony(IndustryView industry) {
         var colony = industry.colony();
         if (colony == null) { return; }
         var quality = colony.quality();
         Div details = new Div();
-        details.addClassName("colony-details");
+        colonyDetails.addClassName("colony-details");
         String suitability = switch (quality.suitability()) {
             case HARSH -> UiTexts.COLONY_HARSH;
             case HABITABLE -> UiTexts.COLONY_HABITABLE;
@@ -62,14 +88,14 @@ public final class IndustryPanel extends Div {
             case TEMPERATE -> UiTexts.COLONY_ATMOSPHERE_TEMPERATE;
             case DENSE -> UiTexts.COLONY_ATMOSPHERE_DENSE;
         };
-        details.add(new Div(new Span(I18n.t(UiTexts.COLONY_LOCATION,
+        colonyDetails.add(new Div(new Span(I18n.t(UiTexts.COLONY_LOCATION,
                         I18n.t(quality.moon() ? UiTexts.COLONY_MOON : UiTexts.COLONY_PLANET), I18n.t(suitability)))),
                 new Div(new Span(I18n.t(UiTexts.COLONY_POPULATION, colony.population() / 100.0,
                         colony.populationLimit() / 100.0, colony.nextPopulation() / 100.0))),
-                new Div(new Span(I18n.t(UiTexts.COLONY_LABOR, industry.usableCapacity(), industry.capacity()))),
-                new Div(new Span(I18n.t(UiTexts.COLONY_ENVIRONMENT, quality.orbitAu(), quality.luminosity(), I18n.t(atmosphere)))),
+                new Div(new Span(I18n.t(UiTexts.COLONY_LABOR, industry.usableCapacity(), industry.capacity()))));
+        details.add(new Div(new Span(I18n.t(UiTexts.COLONY_ENVIRONMENT, quality.orbitAu(), quality.luminosity(), I18n.t(atmosphere)))),
                 new Div(new Span(I18n.t(UiTexts.COLONY_RICHNESS, quality.metalRichness()))));
-        add(details);
+        background.add(details);
     }
 
     private static Div expansionProgress(IndustryView industry) {
@@ -85,48 +111,4 @@ public final class IndustryPanel extends Div {
         return progress;
     }
 
-    private void addEditor(IndustryView industry, IntConsumer apply, IntConsumer preview) {
-        IntegerField allocation = new IntegerField(I18n.t(UiTexts.ECONOMY_ALLOCATION));
-        allocation.setId(ALLOCATION_ID);
-        allocation.setMin(0); allocation.setMax(industry.usableCapacity()); allocation.setStepButtonsVisible(true);
-        allocation.setValue(industry.expansionAllocation());
-        allocation.addValueChangeListener(event -> {
-            Integer value = event.getValue();
-            if (value != null && value >= 0 && value <= industry.usableCapacity()) { preview.accept(value); }
-        });
-        Div quick = new Div(); quick.addClassName("industry-quick-actions");
-        quick.add(choice(UiTexts.ECONOMY_ALL_SHIPS, allocation, 0),
-                choice(UiTexts.ECONOMY_HALF, allocation, industry.usableCapacity() / 2),
-                choice(UiTexts.ECONOMY_ALL_EXPANSION, allocation, industry.usableCapacity()));
-        Button save = new Button(I18n.t(UiTexts.ECONOMY_APPLY), _ -> {
-            Integer value = allocation.getValue();
-            if (value != null && value >= 0 && value <= industry.usableCapacity()) { apply.accept(value); }
-        });
-        save.setId(APPLY_ID); save.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
-        add(allocation, quick, save);
-    }
-
-    private static Button choice(String key, IntegerField field, int points) {
-        Button button = new Button(I18n.t(key), _ -> field.setValue(points));
-        button.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY); return button;
-    }
-
-    private static void preview(IndustryView industry, int available, int outgoing, int reachable, int points,
-                                PreviewControls controls) {
-        Span ships = controls.ships();
-        Span expansion = controls.expansion();
-        Span distribution = controls.distribution();
-        Span delivery = controls.delivery();
-        Span estimate = controls.estimate();
-        int output = industry.usableCapacity() - points;
-        ships.getStyle().set(CssProperties.WIDTH, (100.0 * output / industry.usableCapacity()) + "%");
-        expansion.getStyle().set(CssProperties.WIDTH, (100.0 * points / industry.usableCapacity()) + "%");
-        distribution.setText(I18n.t(UiTexts.ECONOMY_DISTRIBUTION, output, points));
-        int delivered = Math.min(reachable, Math.max(0, available + output - industry.reserveShortfall()));
-        delivery.setText(I18n.t(UiTexts.ECONOMY_DELIVERY, delivered, outgoing));
-        delivery.setClassName("industry-delivery" + (delivered < outgoing ? " industry-bottleneck" : ""));
-        int turns = points == 0 || industry.atMaximum() ? 0 : Math.ceilDiv(industry.expansionCost() - industry.expansionProgress(), points);
-        estimate.setText(I18n.t(turns == 0 ? UiTexts.ECONOMY_PAUSED : UiTexts.ECONOMY_ESTIMATE, turns));
-        distribution.getElement().setAttribute(HtmlAttributes.ARIA_LIVE, "polite");
-    }
 }

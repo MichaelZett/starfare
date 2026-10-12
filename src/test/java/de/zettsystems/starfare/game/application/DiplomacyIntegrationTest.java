@@ -83,10 +83,12 @@ class DiplomacyIntegrationTest extends AbstractIntegrationTest {
         assertThat(GameState.fromSnapshot(mapper.treeToValue(old, GameStateSnapshot.class)).diplomacy()).isEqualTo(DiplomacyState.EMPTY);
         var state = NavigationStates.running(); found(state);
         var classic = (ObjectNode) mapper.valueToTree(GameState.toSnapshot(new GameState())); classic.set("diplomacy", mapper.valueToTree(state.diplomacy()));
-        assertThatThrownBy(() -> GameState.fromSnapshot(mapper.treeToValue(classic, GameStateSnapshot.class))).isInstanceOf(IllegalArgumentException.class);
+        var input1 = mapper.treeToValue(classic, GameStateSnapshot.class);
+        assertThatThrownBy(() -> GameState.fromSnapshot(input1)).isInstanceOf(IllegalArgumentException.class);
         var unknown = (ObjectNode) mapper.valueToTree(GameState.toSnapshot(state));
         ((ObjectNode) unknown.get("diplomacy").get("groups").get(0)).set("members", mapper.valueToTree(List.of(1, 99)));
-        assertThatThrownBy(() -> GameState.fromSnapshot(mapper.treeToValue(unknown, GameStateSnapshot.class))).isInstanceOf(IllegalArgumentException.class);
+        var input2 = mapper.treeToValue(unknown, GameStateSnapshot.class);
+        assertThatThrownBy(() -> GameState.fromSnapshot(input2)).isInstanceOf(IllegalArgumentException.class);
     }
     @Test void partnerContingentsAndBlockedReturnsSurviveRestartWithTheirOwner() {
         var state = NavigationStates.running(); found(state);

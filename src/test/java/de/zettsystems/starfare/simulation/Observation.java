@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.simulation;
 
+import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.application.PlayerViewBuilder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.PlayerViewState;
@@ -42,7 +43,7 @@ record Observation(int player, PlayerViewState view, Map<Route, Integer> travel,
 
     static Observation capture(GameState state, int player, PlayerViewState view, Map<Route, Integer> travel) {
         var allies = state.players().stream().filter(p -> state.allied(player, p.id()))
-                .map(p -> p.id()).collect(Collectors.toSet());
+                .map(Player::id).collect(Collectors.toSet());
         return new Observation(player, view, travel, allies);
     }
 

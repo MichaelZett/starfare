@@ -46,7 +46,7 @@ record BenchmarkOptions(String mode, List<RulesetRef> rules, List<GalaxyLayout> 
                 || rules.stream().distinct().count() != rules.size() || layouts.stream().distinct().count() != layouts.size()
                 || sizes.stream().distinct().count() != sizes.size()) { throw new IllegalArgumentException("Invalid or duplicate experiment dimensions"); }
         for (int size : sizes) { new Scenario(rules.getFirst(), layouts.getFirst(), size, seeds.first(), seeds.combat(), limits.rounds(), limits.randomness()); }
-        if (mode.equals("alliance") && (rules.size() != 1 || !rules.getFirst().spaceward())) {
+        if (mode.equals("alliance") && (rules.size() != 1 || !rules.getFirst().isSpaceward())) {
             throw new IllegalArgumentException("Alliance mode requires --rules=spaceward");
         }
         String allianceVictory = options.getOrDefault("alliance-victory", "false");
@@ -69,7 +69,7 @@ record BenchmarkOptions(String mode, List<RulesetRef> rules, List<GalaxyLayout> 
         if (!Set.of("matrix", "multiplayer").contains(mode) || profiles.size() < 2
                 || profiles.stream().distinct().count() != profiles.size()
                 || (mode.equals("multiplayer") && profiles.size() > 7)
-                || (rules.stream().anyMatch(rule -> !rule.spaceward()) && profiles.stream().anyMatch(Strategy::requiresIndustry))) {
+                || (rules.stream().anyMatch(rule -> !rule.isSpaceward()) && profiles.stream().anyMatch(Strategy::requiresIndustry))) {
             throw new IllegalArgumentException("Profiles require distinct supported strategies: matrix >=2, multiplayer 2..7");
         }
     }

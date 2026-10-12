@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.economy.application;
 
+import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.game.domain.GameState;
@@ -19,7 +20,7 @@ class EconomyServiceTest {
         }
         assertThat(state.getSystem(1).garrison()).isEqualTo(42);
         assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(7);
-        assertThat(state.industries().get(1)).isEqualTo(new Industry(11, 4, 0));
+        assertThat(state.industries()).containsEntry(1, new Industry(11, 4, 0));
         economy.produce(state, Map.of());
         assertThat(state.getSystem(1).garrison()).isEqualTo(49);
     }
@@ -32,8 +33,8 @@ class EconomyServiceTest {
         assertThat(fleets.routingCapacity(state, 1, 1)).isEqualTo(6);
         assertThat(fleets.addStandingOrder(state, 1, 1, 3, 7)).isEqualTo(-1);
         Map<Integer, Integer> routed = fleets.applyStandingOrdersForProduction(state);
-        assertThat(routed.get(1)).isEqualTo(8);
-        assertThat(state.fleets()).extracting(f -> f.ships()).containsExactly(7, 1);
+        assertThat(routed).containsEntry(1, 8);
+        assertThat(state.fleets()).extracting(Fleet::ships).containsExactly(7, 1);
         economy.produce(state, routed);
         assertThat(state.getSystem(1).garrison()).isEqualTo(10);
         assertThat(state.standingOrders().get(1)).hasSize(2);
@@ -44,7 +45,7 @@ class EconomyServiceTest {
         economy.produce(state, Map.of());
         economy.produce(state, Map.of());
         state.updateSystem(1, system -> system.captureBy(2, 5));
-        assertThat(state.industries().get(1)).isEqualTo(new Industry(10, 0, 8));
+        assertThat(state.industries()).containsEntry(1, new Industry(10, 0, 8));
         assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(10);
         assertThat(state.getSystem(1).garrisonReserve()).isZero();
         assertThat(state.getSystem(1).garrison()).isEqualTo(5);
@@ -69,7 +70,8 @@ class EconomyServiceTest {
         assertThat(GameState.toSnapshot(state)).isEqualTo(before);
         GameState classic = new GameState();
         assertThat(economy.allocateExpansion(classic, 1, 1, 1)).isFalse();
-        assertThatThrownBy(() -> economy.produce(classic, Map.of())).isInstanceOf(IllegalArgumentException.class);
+        Map<Integer, Integer> input1 = Map.of();
+        assertThatThrownBy(() -> economy.produce(classic, input1)).isInstanceOf(IllegalArgumentException.class);
         assertThat(classic.industries()).isEmpty();
     }
 }

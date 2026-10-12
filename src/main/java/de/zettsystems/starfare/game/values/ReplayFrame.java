@@ -1,7 +1,7 @@
 package de.zettsystems.starfare.game.values;
 
+import de.zettsystems.starfare.economy.domain.MetalEconomy;
 import de.zettsystems.starfare.report.values.TurnReport;
-
 import java.util.List;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.economy.domain.ColonyEconomy;
@@ -11,7 +11,13 @@ import java.util.Map;
 /** Immutable map state after one resolved turn, retained for game review. */
 public record ReplayFrame(int turn, List<StarSystem> systems, List<Fleet> fleets,
                           Map<Integer, TurnReport> reports, @Nullable Map<Integer, Industry> industries,
-        @Nullable GameOutcome outcome, @Nullable Map<Integer, ColonyEconomy> colonies) {
+        @Nullable GameOutcome outcome, @Nullable Map<Integer, ColonyEconomy> colonies,
+                          @Nullable MetalEconomy metals) {
+    public ReplayFrame(int turn, List<StarSystem> systems, List<Fleet> fleets,
+                       Map<Integer, TurnReport> reports, @Nullable Map<Integer, Industry> industries,
+                       @Nullable GameOutcome outcome, @Nullable Map<Integer, ColonyEconomy> colonies) {
+        this(turn, systems, fleets, reports, industries, outcome, colonies, null);
+    }
     public ReplayFrame(int turn, List<StarSystem> systems, List<Fleet> fleets,
                        Map<Integer, TurnReport> reports, @Nullable Map<Integer, Industry> industries,
                        @Nullable GameOutcome outcome) {

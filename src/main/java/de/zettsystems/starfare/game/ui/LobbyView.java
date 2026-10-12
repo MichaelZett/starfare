@@ -230,7 +230,9 @@ public class LobbyView extends VerticalLayout {
             actions.add(abort);
         }
         if (actions.getComponentCount() == 0) {
-            return new Details();
+            Details empty = new Details();
+            empty.setVisible(false);
+            return empty;
         }
         Details details = new Details(I18n.t(UiTexts.LOBBY_CARD_MORE_ACTIONS), actions);
         details.addClassName("lobby-game-card-more");

@@ -47,7 +47,7 @@ class ColonyEconomyTest {
         var colony = state.colonies().get(1);
         economy.allocateExpansion(state, 1, 1, 3);
         state.updateSystem(1, system -> system.captureBy(2, 5));
-        assertThat(state.colonies().get(1)).isEqualTo(colony);
+        assertThat(state.colonies()).containsEntry(1, colony);
         assertThat(state.industries().get(1).expansionAllocation()).isZero();
         assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(6);
         assertThat(state.getSystem(1).garrisonReserve()).isZero();
@@ -57,8 +57,8 @@ class ColonyEconomyTest {
         var before = GameState.toSnapshot(state);
         var copy = GameState.copyOf(state);
         economy.produce(copy, Map.of());
-        assertThat(copy.colonies().get(4)).isEqualTo(state.colonies().get(4));
-        assertThat(copy.colonies().get(1)).isNotEqualTo(state.colonies().get(1));
+        assertThat(copy.colonies()).containsEntry(4, state.colonies().get(4));
+        assertThat(copy.colonies()).doesNotContainEntry(1, state.colonies().get(1));
         assertThat(GameState.toSnapshot(state)).isEqualTo(before);
         copy.resetForNewGame();
         assertThat(copy.colonies()).isEmpty();
@@ -88,7 +88,7 @@ class ColonyEconomyTest {
         assertThat(fleets.addStandingOrder(state, 1, 1, 2, 7)).isEqualTo(-1);
         economy.allocateExpansion(state, 1, 1, 3);
         var shipped = fleets.applyStandingOrdersForProduction(state);
-        assertThat(shipped.get(1)).isEqualTo(5);
+        assertThat(shipped).containsEntry(1, 5);
         economy.produce(state, shipped);
         assertThat(state.getSystem(1).garrison()).isEqualTo(10);
         assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(4);
@@ -113,8 +113,8 @@ class ColonyEconomyTest {
     }
     @Test void unfinishedRulesCannotBeCreatedPubliclyAndMissingPropertiesAreNeverRegenerated() {
         assertThatCode(() -> RulesetCatalog.builtIn().requireSupported(RulesetRef.SPACEWARD_COLONIES)).doesNotThrowAnyException();
-        assertThatThrownBy(() -> RulesetCatalog.builtIn().requireCreatable(RulesetRef.SPACEWARD_COLONIES))
-                .isInstanceOf(IllegalArgumentException.class);
+        var target1 = RulesetCatalog.builtIn();
+        assertThatThrownBy(() -> target1.requireCreatable(RulesetRef.SPACEWARD_COLONIES)).isInstanceOf(IllegalArgumentException.class);
         var state = new GameState();
         state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_COLONIES));
         state.systems().add(new StarSystem(1, "Home", 0, 0, 1, 5, 4, false));

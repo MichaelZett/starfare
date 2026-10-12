@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.domain;
 
+import de.zettsystems.starfare.economy.domain.MetalEconomy;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.economy.domain.ColonyEconomy;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyState;
@@ -61,7 +62,56 @@ public record GameStateSnapshot(
         @Nullable DiplomacyState diplomacy,
         @Nullable VictoryRules victoryRules,
         @Nullable GameOutcome outcome,
+        @Nullable Map<Integer, ColonyEconomy> colonies,
+        @Nullable MetalEconomy metals) {
+    public GameStateSnapshot(
+        int turn,
+        int nextGlobalFleetId,
+        Map<Integer, Integer> nextLocalFleetNo,
+        List<Player> players,
+        List<StarSystem> systems,
+        List<Fleet> fleets,
+        Map<Integer, TurnReport> reports,
+        Map<Integer, Map<Integer, GameState.Intel>> intel,
+        Set<Integer> waitThisTurn,
+        Set<Integer> submittedThisTurn,
+        boolean gameOver,
+        @Nullable Integer winnerId,
+        boolean active,
+        boolean started,
+        Set<Integer> joinedHumanPlayerIds,
+        Set<Integer> originalHumanPlayerIds,
+        Set<String> observers,
+        Map<String, Integer> seatByUser,
+        @Nullable Map<String, Integer> invitedSeats,
+        Map<Integer, List<FleetOrder>> pendingOrders,
+        @Nullable Map<Integer, List<StandingOrder>> standingOrders,
+        Map<Integer, Integer> nextStandingOrderId,
+        boolean observersAllowed,
+        boolean reentryAllowed,
+        @Nullable Instant turnStartedAt,
+        @Nullable GameVisibility visibility,
+        @Nullable Instant finishedAt,
+        @Nullable Map<Integer, List<SystemOwnership>> ownershipHistory,
+        @Nullable Map<Integer, ReplayFrame> replayFrames,
+        @Nullable Boolean battlePresentationEnabled,
+        @Nullable Integer combatRandomnessPercent,
+        @Nullable RoundRules roundRules,
+        @Nullable Instant stragglerSince,
+        @Nullable Map<Integer, Integer> missedRounds,
+        @Nullable Integer victorySystemPercent,
+        @Nullable GameSetup originalSetup,
+        @Nullable Map<Integer, List<FleetOrder>> previousOrders,
+        @Nullable RulesetRef ruleset,
+        @Nullable Map<Integer, Industry> industries,
+        @Nullable NavigationSettings navigation,
+        @Nullable DiplomacyState diplomacy,
+        @Nullable VictoryRules victoryRules,
+        @Nullable GameOutcome outcome,
         @Nullable Map<Integer, ColonyEconomy> colonies) {
+        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, victoryRules, outcome, colonies, null);
+    }
+
     /** Compatibility constructor for snapshots written before colony rules. */
     public GameStateSnapshot(
         int turn,

@@ -37,7 +37,7 @@ public class NavigationSteps {
         String host = String.valueOf(accounts.findByEmail(email).orElseThrow().id());
         GameState state = new GameState(); state.resetForNewGame();
         state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
-        state.players().addAll(List.of(new Player(1, "Navigator", false, "#56b4e9"), new Player(2, "Opponent", false, "#d55e00")));
+        state.players().addAll(List.of(new Player(1, "Navigator", false, "#56b4e9", "Navigation Empire"), new Player(2, "Opponent", false, "#d55e00")));
         state.systems().addAll(List.of(new StarSystem(1, "Alpha", 400, 350, 1, 50, 4, false),
                 new StarSystem(2, "Beta", 850, 350, 1, 5, 4, false), new StarSystem(3, "Gamma", 1300, 350, 1, 5, 4, false),
                 new StarSystem(4, "Delta", 1750, 350, 2, 100, 4, false)));
@@ -52,13 +52,32 @@ public class NavigationSteps {
     }
     @Dann("zeigt der Flottenversand Zwischenstationen und lehnt unerreichbare Ziele ab")
     public void previewAndSend() throws IOException {
+        assertThat(browser.awaitCss(".app-header-empire").getText()).isEqualTo("Navigation Empire");
+        assertThat(games.addStandingOrder(id, 1, 2, 1, 2)).isTrue();
+        browser.driver().navigate().refresh();
+        selectSystem("Alpha");
+        browser.awaitTextIn(".system-metric-rate", "4 (+2/Runde)");
+        assertThat(browser.awaitCss(".system-details-owner").getText()).contains("Navigation Empire").doesNotContain("Navigator");
+        browser.all(".system-transfer-row").stream().filter(row -> row.getText().contains("Beta → Alpha"))
+                .findFirst().orElseThrow().findElement(By.tagName("vaadin-button")).click();
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> games.viewFor(id, 1).standingOrders().size() == 1);
+        browser.awaitTextIn(".system-metric-rate", "4 (+0/Runde)");
+        assertThat(games.viewFor(id, 1).standingOrders().getFirst().toSystemId()).isEqualTo(4);
         openSend("Delta");
-        browser.awaitTextIn(".send-fleet-route", "Alpha → Beta → Gamma → Delta");
-        browser.awaitTextIn(".send-fleet-route", "Zwischenstopps: 2");
-        browser.awaitTextIn(".send-fleet-arrival", String.valueOf(finalArrival));
+        browser.awaitTextIn(".send-fleet-route", "Gamma");
+        assertThat(browser.textsOf(".send-fleet-route .route-stop")).containsExactly("Alpha", "Beta", "Gamma", "Delta");
+        String amount = browser.awaitCss(".send-fleet-amount input").getDomProperty("value");
+        browser.clickCss(".send-fleet-route [data-route-system='2']");
+        browser.awaitCss(".send-fleet-route .route-selected");
+        assertThat(browser.awaitCss(".send-fleet-amount input").getDomProperty("value")).isEqualTo(amount);
+        assertThat(games.viewFor(id, 1).plannedOrders()).isEmpty();
+        browser.awaitTextIn(".send-fleet-duration", "2 Aufenthalten");
+        assertThat(browser.awaitCss(".send-fleet-dialog").getText()).doesNotContain("Reichweite");
+        assertThat(browser.all("#route-preview")).hasSize(1);
+        browser.awaitTextIn(".send-fleet-duration", "Ankunft Runde " + finalArrival);
         screenshot("route-preview");
         cancelDialog();
-        openSend("Remote 5"); browser.awaitTextIn(".send-fleet-route", "Kein erreichbarer Weg");
+        openSend("Remote 5"); browser.awaitTextIn(".send-fleet-duration", "Kein erreichbarer Weg");
         assertThat(browser.awaitCss(".send-fleet-dialog vaadin-button[theme~='primary']").getDomAttribute("disabled")).isNotNull();
         cancelDialog();
         openSend("Delta");
@@ -76,7 +95,10 @@ public class NavigationSteps {
         while (games.viewFor(id, 1).turn() < stopArrival) { advance(); }
         browser.driver().navigate().refresh(); showFleets();
         browser.awaitTextIn(".fleet-travel-card", "Auftanken in Beta");
-        browser.awaitTextIn(".fleet-travel-card", "Alpha → Beta → Gamma → Delta");
+        browser.openDetailsWithText("Reisedetails");
+        browser.awaitTextIn(".fleet-travel-card .route-strip", "Gamma");
+        assertThat(browser.all(".fleet-travel-card").getFirst().findElements(By.cssSelector(".route-stop"))
+                .stream().map(WebElement::getText).toList()).containsExactly("Alpha", "Beta", "Gamma", "Delta");
         browser.awaitTextIn(".fleet-travel-card", "Ankunftsrunde: " + finalArrival);
         screenshot("refuel");
         var original = browser.driver().manage().window().getSize();

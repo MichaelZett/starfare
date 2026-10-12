@@ -64,11 +64,22 @@ public class DiplomacySteps {
         browser.awaitTextIn(".diplomacy-content", "Kündigungsfrist: 3 Runden");
         assertThat(registry.readState(id, state -> state.allied(1, 2)).booleanValue()).isTrue();
         screenshot("group");
+        captureEnglishGroup();
     }
     @Dann("vereinbaren beide eine neue Kündigungsfrist ohne gemeinsame Schiffseigentümer")
     public void changeNoticeAndDock() {
+        browser.clickCss(".diplomacy-card vaadin-details");
         WebElement notice = browser.awaitCss(".diplomacy-card vaadin-integer-field input");
-        notice.sendKeys(Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB); browser.clickButtonWithText("Neue Frist vorschlagen");
+        notice.sendKeys(Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB);
+        partner.clickCss(".diplomacy-card vaadin-details");
+        partner.awaitCss(".diplomacy-card vaadin-integer-field input")
+                .sendKeys(Keys.chord(Keys.CONTROL, "a"), "5", Keys.TAB);
+        partner.clickButtonWithText("Neue Frist vorschlagen");
+        browser.awaitTextIn(".diplomacy-content", "Frist von 5 Runden");
+        assertThat(browser.awaitCss(".diplomacy-card vaadin-integer-field input").getDomProperty("value")).isEqualTo("0");
+        partner.clickButtonWithText("Ablehnen / zurückziehen");
+        waitFor(() -> registry.readState(id, state -> state.diplomacy().proposals().isEmpty()).booleanValue());
+        browser.clickButtonWithText("Neue Frist vorschlagen");
         partner.awaitTextIn(".diplomacy-content", "Frist von 0 Runden"); partner.clickButtonWithText("Zustimmen");
         browser.awaitTextIn(".diplomacy-content", "Kündigungsfrist: 0 Runden");
         browser.clickButtonWithText("Schließen"); partner.clickButtonWithText("Schließen");
@@ -82,6 +93,11 @@ public class DiplomacySteps {
     @Dann("bleibt die sichtbare Kündigung nach Neuladen erhalten und löst eine Heimreise aus")
     public void leaveAndReturn() throws IOException {
         int effective = games.viewFor(id, 1).turn() + 1; browser.clickButtonWithText("Bündnis kündigen");
+        browser.awaitTextIn("#diplomacy-leave-confirm", "Runde " + effective);
+        browser.clickButtonWithText("Abbrechen");
+        assertThat(registry.readState(id, state -> state.diplomacy().groupFor(1).orElseThrow().departures()).isEmpty()).isTrue();
+        browser.clickButtonWithText("Bündnis kündigen");
+        browser.clickButtonWithText("Kündigung bestätigen");
         String text = "Diplomat scheidet zu Beginn von Runde " + effective + " aus.";
         partner.awaitTextIn(".diplomacy-content", text);
         browser.driver().navigate().refresh(); openTreaties(browser); browser.awaitTextIn(".diplomacy-content", text);
@@ -98,7 +114,25 @@ public class DiplomacySteps {
         assertThat(registry.readState(id, state -> state.fleets().isEmpty()).booleanValue()).isTrue();
         assertThat(registry.readState(id, state -> state.getSystem(2).ownerId()).intValue()).isEqualTo(2);
     }
-    private void choosePartner() { browser.awaitCss(".diplomacy-card vaadin-combo-box input").sendKeys("Partner", Keys.ENTER, Keys.TAB); }
+    private void choosePartner() { browser.clickCss("[data-diplomacy-partner='2'] vaadin-details"); }
+    private void captureEnglishGroup() throws IOException {
+        browser.clickButtonWithText("Schließen"); switchLanguage("Englisch");
+        browser.clickButtonWithText("Alliances"); browser.awaitTextIn(".diplomacy-content", "Your alliance");
+        for (int width : new int[]{1366, 1024}) {
+            browser.driver().manage().window().setSize(new Dimension(width, 768));
+            browser.captureUiAcceptance("diplomacy-en-" + width);
+        }
+        browser.clickButtonWithText("Close"); switchLanguage("German");
+        browser.driver().manage().window().setSize(new Dimension(1366, 768));
+        openTreaties(browser);
+    }
+    private void switchLanguage(String label) {
+        browser.awaitCss(".lang-switcher input").sendKeys(Keys.chord(Keys.CONTROL, "a"), label);
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).ignoring(StaleElementReferenceException.class).until(_ -> {
+            var option = browser.all("vaadin-combo-box-item").stream().filter(item -> item.isDisplayed() && item.getText().equals(label)).findFirst();
+            if (option.isEmpty()) { return false; } option.get().click(); return true;
+        });
+    }
     private static void openTreaties(Browser target) { target.clickButtonWithText("Bündnisse"); target.awaitCss(".diplomacy-content"); }
     private void advance() { assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue(); }
     private void waitFor(java.util.function.BooleanSupplier condition) { new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> condition.getAsBoolean()); }

@@ -11,9 +11,20 @@ import java.util.List;
 
 public final class ColonyStates {
     private ColonyStates() { }
-    public static GameState ready() {
+    public static GameState ready() { return ready(RulesetRef.SPACEWARD_COLONIES); }
+    public static GameState ready(RulesetRef rules) { return ready(rules, java.util.function.UnaryOperator.identity()); }
+    public static GameState ready(RulesetRef rules,
+            java.util.function.UnaryOperator<de.zettsystems.starfare.economy.domain.MetalEconomy> resources) {
+        return ready(rules, resources, false);
+    }
+    public static GameState readyWithMoon() {
+        return ready(RulesetRef.SPACEWARD_COLONIES, java.util.function.UnaryOperator.identity(), true);
+    }
+    private static GameState ready(RulesetRef rules,
+            java.util.function.UnaryOperator<de.zettsystems.starfare.economy.domain.MetalEconomy> resources,
+            boolean moon) {
         GameState state = new GameState();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_COLONIES));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(rules));
         state.players().addAll(List.of(new Player(1, "Colonist", false, "#111111"),
                 new Player(2, "Opponent", false, "#222222")));
         state.systems().addAll(List.of(new StarSystem(1, "Alpha", 100, 100, 1, 12, 10, false, 10),
@@ -23,7 +34,14 @@ public final class ColonyStates {
         state.initializeIndustry();
         var colonies = new HashMap<>(ColonyGenesis.forGalaxy(state.systems(), 42));
         colonies.put(1, new ColonyEconomy(colonies.get(1).quality(), new Colony(690)));
+        if (moon) {
+            var quality = new de.zettsystems.starfare.economy.values.SystemQuality(
+                    SystemComposition.StarType.YELLOW, 1, 1, SystemComposition.BodyType.GAS_GIANT, true,
+                    de.zettsystems.starfare.economy.values.SystemQuality.Atmosphere.TEMPERATE, 3);
+            colonies.put(1, new ColonyEconomy(quality, new Colony(690)));
+        }
         state.establishColonies(colonies);
+        if (rules.usesMetals()) { state.establishMetals(resources.apply(de.zettsystems.starfare.economy.domain.MetalGenesis.forGalaxy(state.systems(), state.players(), colonies))); }
         state.configureNavigation(new NavigationSettings(5000));
         state.joinedHumanPlayerIds().addAll(List.of(1, 2));
         state.originalHumanPlayerIds().addAll(List.of(1, 2));

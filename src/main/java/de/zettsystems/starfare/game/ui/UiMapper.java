@@ -69,10 +69,9 @@ public final class UiMapper {
         var journey = fleet.journey(); return journey == null ? fleet.toSystemId() : journey.destination();
     }
     private static int etaOf(de.zettsystems.starfare.game.values.Fleet fleet, PlayerViewState view) {
-        var journey = fleet.journey();
-        if (journey != null && (journey.blocked() || journey.stationed())) { return -1; }
-        int arrival = journey == null ? fleet.arrivalTurn() : journey.finalArrivalTurn();
-        return Math.max(0, arrival - view.turn()) + (view.waitingFleetIds().contains(fleet.globalId()) ? 1 : 0);
+        Integer arrival = de.zettsystems.starfare.navigation.values.RouteState
+                .forFleet(fleet, view.waitingFleetIds().contains(fleet.globalId())).arrivalTurn();
+        return arrival == null ? -1 : Math.max(0, arrival - view.turn());
     }
 
     public static List<FleetView> standingAsFleetRows(PlayerViewState view) {

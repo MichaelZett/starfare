@@ -11,8 +11,16 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public interface GameService {
+    Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview> previewProduction(
+            GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan);
+
+    boolean commitProduction(GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan);
+
     default Optional<DiplomacyView> diplomacyFor(GameId id, String account) { return Optional.empty(); }
     default boolean diplomacyOrder(GameId id, String account, int turn, DiplomacyOrder order) { return false; }
+    default boolean planRecycling(GameId id, int player, int turn, int system, int ships) { return false; }
+
+    default boolean allocateProduction(GameId id, int playerId, int expectedTurn, int systemId, int expansion, int mining) { return false; }
     default boolean allocateExpansion(GameId id, int playerId, int expectedTurn, int systemId, int points) { return false; }
 
     default de.zettsystems.starfare.game.values.RulesetCatalog rulesets() {

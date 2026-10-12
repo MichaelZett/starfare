@@ -32,8 +32,9 @@ public class AiStrategySteps {
     }
 
     @Dann("kann ich unterschiedliche KI-Strategien im Wizard wählen und dauerhaft speichern")
-    public void chooseAndPersist() {
+    public void chooseAndPersist() throws java.io.IOException {
         browser.clickButtonWithText("Neues Spiel");
+        assertRuleCard("SectorForces");
         awaitChoices(5);
         choose(1, "Früher Angriff");
         choose(2, "Verteidigung");
@@ -57,6 +58,9 @@ public class AiStrategySteps {
         browser.clickButtonWithText("Zusammenfassung prüfen");
         browser.awaitText("KI 1: Adaptiver Industrieausbau");
         browser.awaitText("KI 2: Verteidigung");
+        assertThat(browser.all(".wizard-summary-group")).hasSize(4);
+        assertThat(browser.awaitCss(".wizard-confirmation").getText()).contains("Keine Rundenfrist");
+        captureSummary();
         browser.clickButtonWithText("Zurück zu den Einstellungen");
         assertSelection(1, "Adaptiver Industrieausbau");
         browser.clickButtonWithText("Zusammenfassung prüfen");
@@ -71,6 +75,19 @@ public class AiStrategySteps {
         browser.awaitText(games.gameNameOf(created));
         var restored = store.load(created).orElseThrow().readState(state -> state.originalSetup().orElseThrow());
         assertThat(restored.aiStrategies()).containsExactly(AiStrategy.INDUSTRY_ADAPTIVE, AiStrategy.DEFENSE);
+    }
+
+    private void captureSummary() throws java.io.IOException {
+        java.nio.file.Path folder = java.nio.file.Path.of("build", "ui-decisions");
+        java.nio.file.Files.createDirectories(folder);
+        java.nio.file.Files.write(folder.resolve("summary-de.png"),
+                ((org.openqa.selenium.TakesScreenshot) browser.driver()).getScreenshotAs(org.openqa.selenium.OutputType.BYTES));
+        var size = browser.driver().manage().window().getSize();
+        try {
+            browser.driver().manage().window().setSize(new org.openqa.selenium.Dimension(1024, 768));
+            java.nio.file.Files.write(folder.resolve("summary-de-1024.png"),
+                    ((org.openqa.selenium.TakesScreenshot) browser.driver()).getScreenshotAs(org.openqa.selenium.OutputType.BYTES));
+        } finally { browser.driver().manage().window().setSize(size); }
     }
 
     private void choose(int seat, String label) {
@@ -107,6 +124,14 @@ public class AiStrategySteps {
                 [...document.querySelectorAll('#ruleset-selection vaadin-radio-button')]
                     .find(r => r.textContent.includes(arguments[0])).click();
                 """, name);
+        assertRuleCard(name);
+    }
+
+    private void assertRuleCard(String name) {
+        var cards = new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .until(_ -> { var visible = browser.all(".ruleset-card").stream().filter(org.openqa.selenium.WebElement::isDisplayed).toList();
+                    return visible.size() == 1 && visible.getFirst().getText().contains(name) ? visible : null; });
+        assertThat(cards).hasSize(1);
     }
 
     private void awaitChoices(int count) {

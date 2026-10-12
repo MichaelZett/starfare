@@ -4,7 +4,7 @@ import com.vaadin.flow.server.VaadinSession;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.social.application.UserPreferencesService;
 import de.zettsystems.starfare.social.values.DisplaySetting;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 /** Account-bound cache. Every explicit choice is also saved in the database. */
@@ -16,7 +16,8 @@ final class DisplayPreferences {
     private DisplayPreferences(UserPreferencesService service, String account) {
         this.service = service;
         this.account = account;
-        values = new HashMap<>(service.displaySettings(account));
+        values = new EnumMap<>(DisplaySetting.class);
+        values.putAll(service.displaySettings(account));
     }
 
     static void load(UserPreferencesService service) {

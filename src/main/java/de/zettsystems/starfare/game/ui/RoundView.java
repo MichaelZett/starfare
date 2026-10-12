@@ -118,13 +118,13 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                 ? I18n.t(UiTexts.BATTLE_REPLAY_OFF) : value + "×");
         GameId presentationGame = gameId;
         presentation.setValue(presentationGame == null ? (battlePresentationEnabled ? 1.0 : 0.0)
-                : BattlePresentationPreference.speed(presentationGame, reportTurn(), battlePresentationEnabled));
+                : BattlePresentationPreference.speed(battlePresentationEnabled));
         presentation.addValueChangeListener(event -> {
             if (event.getValue() == null) { return; }
             GameId current = gameId;
             if (current != null) {
                 battlePresentationEnabled = event.getValue() > 0;
-                BattlePresentationPreference.setSpeed(current, reportTurn(), event.getValue());
+                BattlePresentationPreference.setSpeed(event.getValue());
                 buildFilterBar();
                 renderTimeline();
             }
@@ -180,7 +180,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private static Optional<EventCategory> categoryOf(TurnEvent e) {
         return Optional.ofNullable(switch (e) {
             case TurnEvent.CoalitionBattle _ -> EventCategory.COALITION;
-            case TurnEvent.Production _ -> EventCategory.PRODUCTION;
+            case TurnEvent.Recycling _, TurnEvent.Production _ -> EventCategory.PRODUCTION;
             case TurnEvent.Reinforcement _ -> EventCategory.REINFORCEMENT;
             case TurnEvent.BattleWon _ -> EventCategory.BATTLE_WON;
             case TurnEvent.BattleLost _ -> EventCategory.BATTLE_LOST;
@@ -234,8 +234,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         acknowledgements.reload();
         currentReport = report;
         lastEvents = report != null ? report.events() : List.of();
-        battlePresentationEnabled = BattlePresentationPreference.enabled(gameId, view.turn() - 1,
-                view.battlePresentationEnabled());
+        battlePresentationEnabled = BattlePresentationPreference.enabled(view.battlePresentationEnabled());
         buildFilterBar();
         renderTimeline();
     }
@@ -278,7 +277,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
             case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
             case TurnEvent.Reinforcement _ -> 3;
-            case TurnEvent.Production _ -> 4;
+            case TurnEvent.Recycling _, TurnEvent.Production _ -> 4;
         };
     }
 
@@ -322,7 +321,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                     youName(lost.defenderName()));
             case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponentName(held.attackerName()),
                     youName(held.defenderName()));
-            case TurnEvent.CoalitionBattle _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
+            case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
                     new BattleReplayDialog.BattleSides("", "");
         };
     }
@@ -377,6 +376,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
     private static String iconFor(TurnEvent e) {
         return switch (e) {
+            case TurnEvent.Recycling _ -> "♻";
             case TurnEvent.Production _ -> "⬆";
             case TurnEvent.Reinforcement _ -> "→";
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _ -> "⚔";
@@ -390,6 +390,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
 
     private static String cssFor(TurnEvent e) {
         return switch (e) {
+            case TurnEvent.Recycling _ -> "event-recycling";
             case TurnEvent.Production _ -> "event-production";
             case TurnEvent.Reinforcement _ -> "event-reinforcement";
             case TurnEvent.CoalitionBattle _ -> "event-coalition-battle";
@@ -406,6 +407,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         return switch (e) {
             case TurnEvent.CoalitionBattle battle -> presentationEnabled
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName()) : CoalitionPresentation.report(battle);
+            case TurnEvent.Recycling r -> I18n.t(UiTexts.RECYCLING_EVENT, r.systemName(), r.ships(), r.recoveredTenths() / 10.0);
             case TurnEvent.Production p -> I18n.t(UiTexts.ROUND_EVENT_PRODUCTION, p.systemName(), p.amount());
             case TurnEvent.Reinforcement r -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
                     r.systemName(), r.ships(), r.totalGarrison(), r.fleetLabel());
@@ -432,13 +434,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
         };
     }
 
-    private int reportTurn() {
-        PlayerViewState view = gameId == null ? null
-                : game.viewForAccount(gameId, UserContext.currentPlayerId().orElse("")).orElse(null);
-        return view == null ? 0 : view.turn() - 1;
-    }
-
     private String winnerName(PlayerViewState view) {
-        return OutcomeLabels.winners(view.outcome(), view.players());
+        return OutcomeLabels.winningEmpires(view.outcome(), view.players());
     }
 }

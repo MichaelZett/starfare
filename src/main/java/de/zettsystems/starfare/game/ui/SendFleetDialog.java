@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.ui;
 
+import de.zettsystems.starfare.navigation.values.RoutePreview;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
@@ -29,7 +30,7 @@ final class SendFleetDialog {
     }
 
     private record SendContext(GameService game, GameId gameId, int pid,
-                               VisibleSystem from, VisibleSystem to, int openedTurn, Runnable onClose) {
+                               VisibleSystem from, VisibleSystem to, int openedTurn, SendDialogOutcome outcome) {
     }
 
     private record DialogControls(Input slider, IntegerField shipsInput, Span consequence, Div capacityFill,
@@ -44,6 +45,7 @@ final class SendFleetDialog {
     private static final class AmountState {
         private int current;
         private int sliderMax;
+        private int maximum;
         private final ConsequenceControls consequenceControls;
 
         private AmountState(int current, int sliderMax, ConsequenceControls consequenceControls) {
@@ -63,27 +65,30 @@ final class SendFleetDialog {
         }
     }
 
-    private record HeaderLabels(Span route, Span duration, Span arrival, Span available, Span production) {
+    private record HeaderLabels(com.vaadin.flow.component.Component route, Span duration, Span available, Span production, com.vaadin.flow.component.details.Details details) {
     }
 
     static void open(GameService game, GameId gameId, int pid,
-                     VisibleSystem from, VisibleSystem to, Runnable onClose) {
-        open(new SendContext(game, gameId, pid, from, to, game.viewFor(gameId, pid).turn(), onClose), false, null);
+                     VisibleSystem from, VisibleSystem to, SendDialogOutcome outcome) {
+        open(new SendContext(game, gameId, pid, from, to, game.viewFor(gameId, pid).turn(), outcome), false, null);
     }
 
     static void openRelocation(GameService game, GameId gameId, int pid,
-                               VisibleSystem from, VisibleSystem to, Runnable onClose) {
-        open(new SendContext(game, gameId, pid, from, to, game.viewFor(gameId, pid).turn(), onClose), true, null);
+                               VisibleSystem from, VisibleSystem to, SendDialogOutcome outcome) {
+        open(new SendContext(game, gameId, pid, from, to, game.viewFor(gameId, pid).turn(), outcome), true, null);
     }
 
     static void editRelocation(GameService game, GameId gameId, int pid, VisibleSystem from, VisibleSystem to,
-                               int ships, Runnable onClose) {
-        open(new SendContext(game, gameId, pid, from, to, game.viewFor(gameId, pid).turn(), onClose), true, ships);
+                               int ships, SendDialogOutcome outcome) {
+        open(new SendContext(game, gameId, pid, from, to, game.viewFor(gameId, pid).turn(), outcome), true, ships);
     }
 
     private static void open(SendContext ctx, boolean relocation, @Nullable Integer initialShips) {
         DialogParams params = DialogParams.from(ctx.from(), initialShips, ctx.openedTurn());
         Dialog dialog = buildDialog();
+        dialog.addOpenedChangeListener(event -> {
+            if (!event.isOpened()) { ctx.outcome().closed(); }
+        });
 
         Input slider = buildSlider(params);
         IntegerField shipsInput = buildShipsInput(params);
@@ -110,13 +115,10 @@ final class SendFleetDialog {
         Button exceptProductionBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_EXCEPT_PRODUCTION,
                 _ -> selectExceptProduction(shipsInput, amountState, productionOf(ctx.from())));
         ConquestSelection conquest = new ConquestSelection(ctx.game(), ctx.gameId(), ctx.pid());
-        conquest.setVisible(ctx.from().industry() != null && !standingCheckbox.getValue());
-        standingCheckbox.addValueChangeListener(event -> conquest.setVisible(ctx.from().industry() != null && !event.getValue()));
+        conquest.setVisible(conquest.availableFor(ctx.to().ownerId()) && !standingCheckbox.getValue());
+        standingCheckbox.addValueChangeListener(event -> conquest.setVisible(conquest.availableFor(ctx.to().ownerId()) && !event.getValue()));
         Button sendBtn = buildSendButton(ctx, shipsInput, standingCheckbox, dialog, conquest);
-        Button cancelBtn = new Button(I18n.t(UiTexts.MAP_DIALOG_CANCEL), _ -> {
-            dialog.close();
-            ctx.onClose().run();
-        });
+        Button cancelBtn = new Button(I18n.t(UiTexts.MAP_DIALOG_CANCEL), _ -> dialog.close());
 
         DialogControls controls = new DialogControls(slider, shipsInput, consequence, capacityFill,
                 halfBtn, doubleBtn, allBtn, exceptProductionBtn,
@@ -126,7 +128,32 @@ final class SendFleetDialog {
         applyAmountMode(controls, params, amountState);
 
         layoutDialog(dialog, buildHeaderLabels(ctx, params), controls, capacityTrack, cancelBtn, conquest);
+        highlightRoute(dialog, ctx);
         dialog.open();
+    }
+
+    private static void highlightRoute(Dialog dialog, SendContext ctx) {
+        var route = ctx.game().routeFor(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id());
+        var view = ctx.game().viewFor(ctx.gameId(), ctx.pid());
+        java.util.List<Integer> ids = route.map(RoutePreview::systems).orElse(java.util.List.of(ctx.from().id(), ctx.to().id()));
+        String points = ids.stream().map(id -> view.systems().stream().filter(system -> system.id() == id).findFirst().orElseThrow())
+                .map(system -> system.x() + "," + system.y()).collect(java.util.stream.Collectors.joining(" "));
+        dialog.addOpenedChangeListener(event -> dialog.getElement().executeJs("""
+                document.querySelector('#route-preview')?.remove();
+                if (!$0) return;
+                const map = document.querySelector('#map');
+                if (!map) return;
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.id = 'route-preview';
+                svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4';
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                path.setAttribute('points', $1);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', '#80c8e8');
+                path.setAttribute('stroke-width', '4');
+                path.setAttribute('stroke-dasharray', '10 6');
+                svg.append(path); map.append(svg);
+                """, event.isOpened() && (ctx.from().industry() == null || route.isPresent()), points));
     }
 
     private static Dialog buildDialog() {
@@ -138,30 +165,40 @@ final class SendFleetDialog {
     }
 
     private static HeaderLabels buildHeaderLabels(SendContext ctx, DialogParams params) {
-        var routeLabel = new Span(ctx.from().name() + " → " + ctx.to().name());
-        routeLabel.addClassName("send-fleet-route");
+        var view = ctx.game().viewFor(ctx.gameId(), ctx.pid());
         var route = ctx.game().routeFor(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id());
-        if (ctx.from().industry() != null) {
-            routeLabel.setText(route.map(r -> I18n.t(UiTexts.NAV_ROUTE, r.description(), r.range(), r.systems().size() - 2))
-                    .orElseGet(() -> I18n.t(UiTexts.NAV_UNREACHABLE)));
-        }
+        RoutePreview path = route.orElseGet(() -> new RoutePreview(java.util.List.of(ctx.from().id(), ctx.to().id()),
+                java.util.List.of(ctx.from().name(), ctx.to().name()), 0, 0));
+        var routeLabel = new de.zettsystems.starfare.navigation.ui.RouteStrip(path, view, ctx.pid(), route.isPresent());
+        routeLabel.addClassName("send-fleet-route");
 
         int travelTurns = travelRounds(ctx);
-        String durationKey = travelTurns == 1 ? UiTexts.MAP_DURATION_SINGULAR : UiTexts.MAP_DURATION_PLURAL;
-        var durationLabel = new Span(travelTurns < 0 ? I18n.t(UiTexts.NAV_UNREACHABLE) : I18n.t(durationKey, travelTurns));
+        var durationLabel = new Span(travelTurns < 0 ? I18n.t(UiTexts.UX_ROUTE_BLOCKED)
+                : I18n.t(de.zettsystems.starfare.navigation.ui.RouteKeys.ARRIVAL,
+                        params.openedTurn() + travelTurns, travelTurns, Math.max(0, path.systems().size() - 2)));
         durationLabel.addClassName("send-fleet-duration");
-        int arrivalTurn = params.openedTurn() + travelTurns;
-        var arrivalLabel = new Span(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": " + (travelTurns < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : arrivalTurn));
-        arrivalLabel.addClassName("send-fleet-arrival");
 
         var availableLabel = new Span(I18n.t(UiTexts.MAP_AVAILABLE, params.maxShips()));
         availableLabel.addClassName("send-fleet-available");
         ProductionFlow flow = ProductionFlow.at(ctx.from().id(),
-                ctx.game().viewFor(ctx.gameId(), ctx.pid()).standingOrders());
-        Span production = new Span(I18n.t(UiTexts.MAP_PRODUCTION_FLOW, productionOf(ctx.from()),
-                flow.incoming(), flow.outgoing()));
+                view.standingOrders());
+        Span production = new Span(I18n.t(UiTexts.SYSTEM_PRODUCTION_RATE) + ": "
+                + I18n.t(UiTexts.SYSTEM_PRODUCTION_INCOMING, productionOf(ctx.from()), flow.incoming()));
         production.addClassName("send-fleet-production");
-        return new HeaderLabels(routeLabel, durationLabel, arrivalLabel, availableLabel, production);
+        Div itinerary = new Div(new Span(I18n.t(UiTexts.MAP_PRODUCTION_FLOW, productionOf(ctx.from()),
+                flow.incoming(), flow.outgoing())));
+        route.ifPresent(preview -> {
+            for (int index = 0; index < preview.legRounds().size(); index++) {
+                itinerary.add(new Div(new Span(I18n.t(de.zettsystems.starfare.navigation.ui.RouteKeys.LEG,
+                        preview.names().get(index), preview.names().get(index + 1), preview.legRounds().get(index)))));
+                if (index + 1 < preview.legRounds().size()) {
+                    itinerary.add(new Div(new Span(I18n.t(de.zettsystems.starfare.navigation.ui.RouteKeys.STAY,
+                            preview.names().get(index + 1)))));
+                }
+            }
+        });
+        return new HeaderLabels(routeLabel, durationLabel, availableLabel, production,
+                new com.vaadin.flow.component.details.Details(I18n.t(UiTexts.UX_TRAVEL_DETAILS), itinerary));
     }
 
     private static Input buildSlider(DialogParams params) {
@@ -241,10 +278,15 @@ final class SendFleetDialog {
     }
 
     private static void selectExceptProduction(IntegerField shipsInput, AmountState state, int production) {
-        int ships = state.sliderMax - production;
+        int ships = productionFlow(state).sendExceptProduction(state.maximum, production);
         if (ships > 0) {
             shipsInput.setValue(clamp(ships, 1, state.sliderMax));
         }
+    }
+
+    private static ProductionFlow productionFlow(AmountState state) {
+        SendContext ctx = state.consequenceControls.context();
+        return ProductionFlow.at(ctx.from().id(), ctx.game().viewFor(ctx.gameId(), ctx.pid()).standingOrders());
     }
 
     private static int currentOr(IntegerField shipsInput, int fallback) {
@@ -288,8 +330,10 @@ final class SendFleetDialog {
         if (!accepted) {
             return;
         }
+        ctx.outcome().accepted();
         dialog.close();
-        ctx.onClose().run();
+        Notification.show(I18n.t(Boolean.TRUE.equals(standingCheckbox.getValue())
+                ? UiTexts.MAP_RELOCATION_SAVED : UiTexts.MAP_FLEET_QUEUED));
     }
 
     private static void wireStandingToggle(DialogControls c, DialogParams params, AmountState state) {
@@ -300,14 +344,23 @@ final class SendFleetDialog {
         boolean standing = Boolean.TRUE.equals(c.standingCheckbox().getValue());
         ConsequenceControls consequence = state.consequenceControls;
         int max = standing ? consequence.routingHeadroom() : params.maxShips();
+        state.maximum = max;
         state.sliderMax = Math.max(1, max);
         c.slider().getElement().setAttribute("max", String.valueOf(state.sliderMax));
         c.shipsInput().setMax(state.sliderMax);
+        c.shipsInput().setLabel(I18n.t(standing ? UiTexts.MAP_COLUMN_STANDING_SHIPS : UiTexts.MAP_SHIPS_LABEL));
         int amount = clamp(currentOr(c.shipsInput(), 1), 1, state.sliderMax);
         c.shipsInput().setValue(amount);
         c.slider().setValue(String.valueOf(amount));
         setAmountEnablement(c, max >= 1 && travelRounds(consequence.context()) >= 0);
-        c.exceptProductionBtn().setEnabled(max > productionOf(consequence.context().from()));
+        ProductionFlow flow = productionFlow(state);
+        int production = productionOf(consequence.context().from());
+        c.exceptProductionBtn().setEnabled(travelRounds(consequence.context()) >= 0
+                && flow.sendExceptProduction(max, production) > 0);
+        c.exceptProductionBtn().getElement().setProperty(de.zettsystems.starfare.style.HtmlAttributes.TITLE,
+                I18n.t(UiTexts.MAP_SEND_EXCEPT_FLOW, production, flow.incoming(), flow.outgoing(), flow.retainedShips(production)));
+        c.exceptProductionBtn().setAriaLabel(I18n.t(UiTexts.MAP_SEND_QUICK_EXCEPT_PRODUCTION) + ". "
+                + I18n.t(UiTexts.MAP_SEND_EXCEPT_FLOW, production, flow.incoming(), flow.outgoing(), flow.retainedShips(production)));
         c.sendBtn().setText(I18n.t(standing ? UiTexts.MAP_SAVE_STANDING_ORDER : UiTexts.MAP_SEND_FLEET));
         updateConsequence(c.consequence(), c.capacityFill(), consequence.context(), amount,
                 standing, consequence.routingHeadroom());
@@ -333,7 +386,7 @@ final class SendFleetDialog {
     private static int travelRounds(SendContext ctx) {
         if (ctx.from().industry() == null) { return ctx.game().travelTurns(ctx.gameId(), ctx.from().id(), ctx.to().id()); }
         return ctx.game().routeFor(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id())
-                .map(route -> route.rounds()).orElse(-1);
+                .map(RoutePreview::rounds).orElse(-1);
     }
 
     private static void updateCapacityFill(Div fill, int amount, int capacity) {
@@ -379,9 +432,10 @@ final class SendFleetDialog {
         capacityTrack.getElement().setAttribute("role", "progressbar");
         capacityTrack.getElement().setAttribute("aria-valuemin", "0");
         capacityTrack.getElement().setAttribute("aria-valuemax", "100");
-        var body = new VerticalLayout(labels.route(), labels.duration(), labels.arrival(), labels.available(),
-                labels.production(), c.consequence(), capacityTrack,
-                sliderRow, c.shipsInput(), quickRow, c.standingCheckbox(), conquest);
+        var body = new VerticalLayout(labels.route(), labels.duration(), labels.available(), labels.production(),
+                c.consequence(), capacityTrack,
+                sliderRow, c.shipsInput(), quickRow, c.standingCheckbox(), conquest,
+                labels.details());
         body.setPadding(false);
         body.setSpacing(false);
         body.addClassName("send-fleet-body");

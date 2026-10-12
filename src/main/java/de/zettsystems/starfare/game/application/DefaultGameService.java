@@ -39,9 +39,67 @@ import org.springframework.stereotype.Service;
         justification = "Spring-injected collaborators are kept by reference for the bean's lifetime by design.")
 public class DefaultGameService implements GameService {
 
+    @Override
+    public Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview> previewProduction(
+            GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            Integer player = state.seatByUser().get(account);
+            if (player == null || !canPlan(state, player, plan.turn())
+                    || !access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
+            GameState draft = GameState.copyOf(state);
+            boolean accepted = draft.ruleset().usesMetals()
+                    ? economy.allocateProduction(draft, player, plan.systemId(), plan.expansionPoints(), plan.miningPoints())
+                    : economy.allocateExpansion(draft, player, plan.systemId(), plan.expansionPoints());
+            if (!accepted) { return Optional.empty(); }
+            PlayerViewState view = playerViewBuilder.forPlayer(draft, player);
+            return view.systems().stream().filter(system -> system.id() == plan.systemId())
+                    .map(VisibleSystem::industry).filter(Objects::nonNull)
+                    .map(industry -> new de.zettsystems.starfare.economy.values.ProductionPlanPreview(industry, view.empire())).findFirst();
+        }));
+    }
+
+    @Override
+    public boolean commitProduction(GameId id, String account,
+                                     de.zettsystems.starfare.economy.values.ProductionAllocation plan) {
+        if (!isRunningGame(id)) { return false; }
+        boolean accepted = registry.writeState(id, state -> {
+            Integer player = state.seatByUser().get(account);
+            if (player == null || !canPlan(state, player, plan.turn()) || plan.expected() == null) { return false; }
+            var visible = playerViewBuilder.forPlayer(state, player).systems().stream()
+                    .filter(system -> system.id() == plan.systemId() && java.util.Objects.equals(system.ownerId(), player))
+                    .map(VisibleSystem::industry).filter(Objects::nonNull).findFirst();
+            if (visible.isEmpty() || !de.zettsystems.starfare.economy.values.ProductionPreset.saved(visible.orElseThrow()).equals(plan.expected())) {
+                return false;
+            }
+            return state.ruleset().usesMetals()
+                    ? economy.allocateProduction(state, player, plan.systemId(), plan.expansionPoints(), plan.miningPoints())
+                    : economy.allocateExpansion(state, player, plan.systemId(), plan.expansionPoints());
+        });
+        if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
+        return accepted;
+    }
+
     private static boolean canPlan(GameState state, int player, int expectedTurn) {
         return state.active() && state.started() && !state.gameOver() && state.turn() == expectedTurn
                 && state.joinedHumanPlayerIds().contains(player) && !state.submittedThisTurn().contains(player);
+    }
+
+    @Override
+    public boolean allocateProduction(GameId id, int playerId, int expectedTurn, int systemId, int expansion, int mining) {
+        if (!isRunningGame(id)) { return false; }
+        boolean accepted = registry.writeState(id, state -> canPlan(state, playerId, expectedTurn)
+                && economy.allocateProduction(state, playerId, systemId, expansion, mining));
+        if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
+        return accepted;
+    }
+
+    @Override
+    public boolean planRecycling(GameId id, int player, int turn, int system, int ships) {
+        if (!isRunningGame(id)) { return false; }
+        boolean accepted = registry.writeState(id, state -> canPlan(state, player, turn)
+                && de.zettsystems.starfare.economy.domain.RecyclingOrders.plan(state, player, system, ships));
+        if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
+        return accepted;
     }
 
     @Override
@@ -508,6 +566,9 @@ public class DefaultGameService implements GameService {
             if (state.gameOver() || system == null || !Objects.equals(system.ownerId(), playerId)) {
                 return false;
             }
+            if (state.ruleset().usesRecycling()) {
+                return de.zettsystems.starfare.fleet.domain.OrderPlanning.reserves(state, playerId, List.of(systemId), reserve, false);
+            }
             state.updateSystem(systemId, current -> current.reserveGarrison(reserve));
             return true;
         });
@@ -923,7 +984,7 @@ public class DefaultGameService implements GameService {
             case TurnEvent.BattleLost battle -> battle.systemName();
             case TurnEvent.SystemLost conquest -> conquest.systemName();
             case TurnEvent.DefenseHeld battle -> battle.systemName();
-            case TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ -> "";
+            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ -> "";
         };
     }
 
@@ -1075,7 +1136,7 @@ public class DefaultGameService implements GameService {
                         lost += battle.lostBy(playerId);
                         destroyed += battle.destroyedBy(playerId);
                     }
-                    case TurnEvent.Reinforcement _,
+                    case TurnEvent.Recycling _, TurnEvent.Reinforcement _,
                             TurnEvent.Victory _,
                             TurnEvent.Defeat _ -> { }
                 }

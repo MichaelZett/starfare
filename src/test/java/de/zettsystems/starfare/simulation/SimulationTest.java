@@ -90,7 +90,7 @@ class SimulationTest {
         var changed = engine.advance(state, profiles, 72, SimulationEngine.Intervention.EXPAND_FIRST);
         assertThat(changed.get(1)).isEqualTo(plans.get(1));
         assertThat(changed.getFirst().sends()).isEqualTo(plans.getFirst().sends());
-        assertThat(changed.getFirst().expansion().values()).contains(5);
+        assertThat(changed.getFirst().expansion()).containsValue(5);
     }
 
     @Test void roundLimitIsNotReportedAsDrawAndMetricsBalanceShips() {
@@ -132,8 +132,10 @@ class SimulationTest {
         assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--typo=1"})).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--seeds=0"})).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--mode=alliance"})).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new SimulationEngine().plan(scenario(false, 20).create(2), List.of(Strategy.INDUSTRY, Strategy.RUSH)))
-                .isInstanceOf(IllegalArgumentException.class);
+        var input1 = scenario(false, 20).create(2);
+        var input2 = List.of(Strategy.INDUSTRY, Strategy.RUSH);
+        var target3 = new SimulationEngine();
+        assertThatThrownBy(() -> target3.plan(input1, input2)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @ParameterizedTest @org.junit.jupiter.params.provider.EnumSource(value = Strategy.class)

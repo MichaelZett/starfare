@@ -1,4 +1,6 @@
 # language: de
+@ui-decisions
+@industry-feedback
 Funktionalität: Spaceward-Industrieansicht
 
   Szenario: Produktionsverteilung, Ausbaufortschritt und Lieferengpässe bleiben konsistent

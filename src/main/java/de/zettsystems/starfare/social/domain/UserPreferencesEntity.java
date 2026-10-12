@@ -25,7 +25,7 @@ public class UserPreferencesEntity extends AbstractBaseEntity<String> {
     @MapKeyColumn(name = "setting_key", length = 40)
     @MapKeyEnumerated(EnumType.STRING)
     @Column(name = "setting_value", nullable = false, length = 512)
-    private java.util.Map<de.zettsystems.starfare.social.values.DisplaySetting, String> displaySettings = new java.util.HashMap<>();
+    private java.util.Map<de.zettsystems.starfare.social.values.DisplaySetting, String> displaySettings = new java.util.EnumMap<>(de.zettsystems.starfare.social.values.DisplaySetting.class);
 
     public java.util.Map<de.zettsystems.starfare.social.values.DisplaySetting, String> displaySettings() {
         return java.util.Map.copyOf(displaySettings);

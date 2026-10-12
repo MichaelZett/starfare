@@ -21,11 +21,11 @@ final class VictorySettings extends VerticalLayout {
         add(alliances, groupVictory, groupPercent); select(RulesetRef.SECTOR_FORCES);
     }
     void select(RulesetRef rules) {
-        alliances.setEnabled(rules.spaceward()); alliances.setValue(rules.spaceward());
+        alliances.setEnabled(rules.isSpaceward()); alliances.setValue(rules.isSpaceward());
         groupVictory.setValue(false); refresh();
     }
     private void refresh() {
-        if (!alliances.getValue()) { groupVictory.setValue(false); }
+        if (!Boolean.TRUE.equals(alliances.getValue())) { groupVictory.setValue(false); }
         groupVictory.setEnabled(alliances.isEnabled() && alliances.getValue());
         groupPercent.setEnabled(groupVictory.isEnabled() && groupVictory.getValue());
     }

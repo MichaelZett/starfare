@@ -78,7 +78,7 @@ final class SimulationEngine {
         // Absolute round seeds allow forks to share future entropy without copying Random internals.
         combatRandom.setSeed(mix(combatSeed, state.turn()));
         orderRandom.setSeed(mix(combatSeed ^ 0x6a09e667f3bcc909L, state.turn()));
-        if (state.ruleset().spaceward()) {
+        if (state.ruleset().isSpaceward()) {
             (state.ruleset().equals(RulesetRef.SPACEWARD_ALLIANCE) ? allianceSpaceward : spaceward).advanceTurn(state);
         }
         else { classic.advanceTurn(state); }
@@ -104,7 +104,7 @@ final class SimulationEngine {
         if (intervention == Intervention.OMIT_FIRST_SEND) {
             return new StrategyOrders(orders.sends().stream().skip(1).toList(), orders.expansion());
         }
-        if (!state.ruleset().spaceward()) { throw new IllegalArgumentException("Industry requires Spaceward"); }
+        if (!state.ruleset().isSpaceward()) { throw new IllegalArgumentException("Industry requires Spaceward"); }
         var expansion = new TreeMap<>(orders.expansion());
         state.systems().stream().filter(s -> java.util.Objects.equals(s.ownerId(), 1)).findFirst().ifPresent(system -> {
             var industry = state.industries().get(system.id());
@@ -116,7 +116,7 @@ final class SimulationEngine {
 
     private static void validateStrategies(GameState state, List<Strategy> strategies) {
         if (strategies.size() != state.players().size()
-                || (!state.ruleset().spaceward() && strategies.stream().anyMatch(Strategy::requiresIndustry))) {
+                || (!state.ruleset().isSpaceward() && strategies.stream().anyMatch(Strategy::requiresIndustry))) {
             throw new IllegalArgumentException("Strategies must match seats and rules");
         }
         if (!state.pendingOrders().isEmpty()) { throw new IllegalArgumentException("Simulation expects an unplanned round"); }

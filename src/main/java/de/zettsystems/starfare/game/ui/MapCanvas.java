@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.html.Div;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.style.CssProperties;
+import de.zettsystems.starfare.style.HtmlAttributes;
 
 import static de.zettsystems.starfare.game.values.GameConfig.MAX_X;
 import static de.zettsystems.starfare.game.values.GameConfig.MAX_Y;
@@ -12,6 +13,7 @@ import static de.zettsystems.starfare.game.values.GameConfig.MAX_Y;
  * Scrollable container for the game map. Wraps the scroll Div + inner map Div,
  * installs drag-to-pan on attach, and delegates content rendering to {@link MapRenderer}.
  */
+@com.vaadin.flow.component.dependency.JsModule("./map-geometry.js")
 final class MapCanvas extends Div {
 
     private final Div map = new Div();
@@ -52,6 +54,7 @@ final class MapCanvas extends Div {
         if (rendering.equals(lastRender)) { return; }
         lastRender = rendering;
         MapRenderer.render(map, inputs);
+        map.getElement().executeJs("window.starfareMapGeometry(this)");
     }
 
     void zoom(double factor) {
@@ -66,6 +69,25 @@ final class MapCanvas extends Div {
                 this.scrollTop = y * zoom - this.clientHeight / 2;
                 this.dispatchEvent(new Event('scroll'));
                 """, factor);
+    }
+
+    void economyMarkers(java.util.List<de.zettsystems.starfare.economy.values.EconomyIssues.Issue> issues,
+                        java.util.Set<Integer> reported, java.util.function.IntConsumer selected) {
+        map.getChildren().filter(component -> component.hasClassName("sys-economy-marker"))
+                .toList().forEach(map::remove);
+        for (var issue : issues) {
+            var system = issue.system();
+            if (reported.contains(system.id())) { continue; }
+            var button = new com.vaadin.flow.component.button.Button("!", _ -> selected.accept(system.id()));
+            button.addClassName("sys-economy-marker");
+            button.getElement().setAttribute(HtmlAttributes.MAP_X, Double.toString(system.x()));
+            button.getElement().setAttribute(HtmlAttributes.MAP_Y, Double.toString(system.y()));
+            button.setAriaLabel(system.name() + ": " + de.zettsystems.starfare.i18n.I18n.t(
+                    de.zettsystems.starfare.economy.ui.EconomyNoticeBar.key(issue.reasons().getFirst()), 1));
+            button.getStyle().set(CssProperties.LEFT, (system.x() + SystemDisplaySize.pixelsFor(system) / 2.0) + "px")
+                    .set(CssProperties.TOP, (system.y() - 16) + "px");
+            map.add(button);
+        }
     }
 
     void resetViewport() {
@@ -138,7 +160,7 @@ final class MapCanvas extends Div {
                         + "let pressed = false, dragged = false, sx = 0, sy = 0, lx = 0, ly = 0;"
                         + "const T = 4;"
                         + "el.addEventListener('mousedown', e => {"
-                        + "  if (e.button !== 0) return;"
+                        + "  if (e.button !== 0 || e.target.closest('.sys-own, .sys-fog, .fleet-badge, .fleet-lane-hit, .sys-report-marker, .sys-economy-marker, .standing-order-badge')) return;"
                         + "  pressed = true; dragged = false;"
                         + "  sx = e.pageX; sy = e.pageY; lx = el.scrollLeft; ly = el.scrollTop;"
                         + "});"

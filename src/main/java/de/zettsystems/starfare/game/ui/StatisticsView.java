@@ -54,7 +54,7 @@ public class StatisticsView extends VerticalLayout {
         this.statistics = statistics;
         this.players = players;
         setSizeFull();
-        add(new AccountNavigation(), new de.zettsystems.starfare.legal.ui.LegalFooter());
+        add(new AccountNavigation());
         addClassName("statistics-view");
         summaryCards.addClassName("statistics-summary-cards");
         opponentCards.addClassName("statistics-opponent-cards");
@@ -71,6 +71,7 @@ public class StatisticsView extends VerticalLayout {
                         _ -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)))),
                 new H2(I18n.t(UiTexts.STATISTICS_OPPONENTS)), opponentCards, noOpponents,
                 new H2(I18n.t(UiTexts.STATISTICS_HISTORY)), completedGames, empty);
+        add(new de.zettsystems.starfare.legal.ui.LegalFooter());
     }
 
     @Override

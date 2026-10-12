@@ -78,9 +78,8 @@ public class LobbySteps {
     private void verifyRulesetSelection() throws IOException {
         browser.awaitText("SectorForces");
         browser.awaitText("Spaceward");
-        assertThat(browser.textsOf(".ruleset-card")).hasSize(2)
-                .anyMatch(text -> text.contains("SectorForces") && text.contains("Regeln 1.0.0"))
-                .anyMatch(text -> text.contains("Spaceward") && text.contains("Regeln 1.1.0"));
+        assertThat(browser.textsOf(".ruleset-card")).hasSize(1)
+                .allMatch(text -> text.contains("SectorForces") && text.contains("Regeln 1.0.0"));
         List<WebElement> variantChoices = browser.all("#ruleset-selection vaadin-radio-button");
         assertThat(variantChoices).hasSize(2);
         assertThat(variantChoices.getFirst().getDomAttribute("checked")).isNotNull();
@@ -153,7 +152,12 @@ public class LobbySteps {
     }
 
     @Wenn("ich die Lobby-Einladung annehme")
-    public void acceptInvite() { browser.clickButtonWithText("Annehmen"); }
+    public void acceptInvite() throws IOException {
+        browser.awaitCss(".invitations-row");
+        assertThat(browser.all(".lobby-game-card vaadin-details")).noneMatch(org.openqa.selenium.WebElement::isDisplayed);
+        browser.captureUiAcceptance("invitation");
+        browser.clickButtonWithText("Annehmen");
+    }
 
     @Wenn("die Lobby-Partie regulär beendet wird")
     public void finishGame() {
@@ -164,7 +168,7 @@ public class LobbySteps {
     }
 
     @Dann("liegt die Partie nur im Archiv und lässt sich lesend öffnen")
-    public void reviewArchive() {
+    public void reviewArchive() throws IOException {
         browser.open("/");
         browser.awaitCss(".lobby-root");
         assertThat(browser.pageText()).doesNotContain(name);
@@ -172,9 +176,11 @@ public class LobbySteps {
         browser.all("vaadin-menu-bar-item").stream().filter(item -> item.getText().strip().equals("Archiv"))
                 .findFirst().orElseThrow().click();
         browser.awaitText(name);
+        browser.captureUiAcceptance("archive");
         browser.clickButtonWithText("Ansehen");
         browser.awaitUrl(url -> url.contains("/map/"), "Archive map did not open");
         browser.awaitText(name);
+        browser.captureUiAcceptance("review");
         assertThat(browser.pageText()).doesNotContain("Nächste Runde", "Runde abgeben", "Verlegungen verwalten");
     }
     @Dann("kann ich Perspektive und Kriegsnebel der Nachbetrachtung wechseln")

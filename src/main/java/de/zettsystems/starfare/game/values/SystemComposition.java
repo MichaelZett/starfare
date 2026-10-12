@@ -4,12 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import de.zettsystems.starfare.economy.values.SystemQuality;
+import org.jspecify.annotations.Nullable;
 
 /** Stable, decorative system illustration. Never used by the game simulation. */
-public record SystemComposition(List<StarType> stars, List<Body> bodies) {
+public record SystemComposition(List<StarType> stars, List<Body> bodies,
+                                @Nullable SystemQuality colonyQuality) {
     public enum StarType { RED, ORANGE, YELLOW, YELLOW_WHITE, WHITE }
     public enum BodyType { ROCKY, SUPER_EARTH, GAS_GIANT, ICE_GIANT, DWARF, ASTEROIDS }
     public record Body(int orbit, BodyType type, int majorMoons, boolean rings, int appearance) { }
+
+    public SystemComposition(List<StarType> stars, List<Body> bodies) {
+        this(stars, bodies, null);
+    }
 
     public SystemComposition {
         stars = List.copyOf(stars);
@@ -26,7 +33,7 @@ public record SystemComposition(List<StarType> stars, List<Body> bodies) {
         if (colony != null) {
             var quality = colony.quality();
             return Optional.of(new SystemComposition(List.of(quality.star()),
-                    List.of(new Body(1, quality.body(), quality.moon() ? 1 : 0, false, 0))));
+                    List.of(new Body(1, quality.body(), quality.moon() ? 1 : 0, false, 0)), quality));
         }
         return Optional.of(illustrate(gameId, system.id()));
     }

@@ -98,10 +98,12 @@ class AllianceVictoryTest {
         var allowed = new GameState(); allowed.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE));
         allowed.players().addAll(state.players()); allowed.start();
         assertThat(new DefaultDiplomacyService().act(allowed, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 3))).isTrue();
-        assertThatThrownBy(() -> state.configureVictoryRules(new VictoryRules(80, true, true, 90)))
-                .isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD)
-                .chooseVictoryRules(new VictoryRules(70, true, true, 70))).isInstanceOf(IllegalArgumentException.class);
+        var input1 = new VictoryRules(80, true, true, 90);
+        assertThatThrownBy(() -> state.configureVictoryRules(input1)).isInstanceOf(IllegalStateException.class);
+        var input2 = new VictoryRules(70, true, true, 70);
+        var target3 = GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD)
+                ;
+        assertThatThrownBy(() -> target3.chooseVictoryRules(input2)).isInstanceOf(IllegalArgumentException.class);
         assertThat(GameSetup.defaults().chooseVictoryRules(new VictoryRules(70, true, true, 70))
                 .victoryRules().alliancesAllowed()).isFalse();
     }

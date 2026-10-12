@@ -212,6 +212,15 @@ public class Browser {
         return driver().findElement(By.tagName("body")).getText();
     }
 
+    /** Saves the current rendered view for the personal UI acceptance. */
+    public void captureUiAcceptance(String name) throws java.io.IOException {
+        java.nio.file.Path target = java.nio.file.Path.of("build", "ui-acceptance", name + ".png");
+        java.nio.file.Files.createDirectories(target.getParent());
+        java.nio.file.Files.write(target, ((org.openqa.selenium.TakesScreenshot) driver())
+                .getScreenshotAs(org.openqa.selenium.OutputType.BYTES));
+        java.nio.file.Files.writeString(target.resolveSibling(name + ".txt"), pageText());
+    }
+
     private String fullPageText() {
         String text = driver().findElement(By.tagName("body")).getDomProperty("textContent");
         return text == null ? "" : text;

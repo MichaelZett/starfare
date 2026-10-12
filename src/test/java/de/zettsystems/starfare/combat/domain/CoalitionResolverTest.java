@@ -31,9 +31,9 @@ class CoalitionResolverTest {
         var pair = CoalitionResolver.resolve(List.of(side(1, 20), side(2, 20)), 0, _ -> 0.5);
         var triple = CoalitionResolver.resolve(List.of(side(3, 20), side(1, 20), side(2, 20)), 0, _ -> 0.5);
         var deadlock = CoalitionResolver.resolve(List.of(side(1, 100), side(2, 100), side(3, 1)), 0, _ -> 0.5);
-        assertThat(pair).allMatch(side -> side.remaining() == 0);
-        assertThat(triple).allMatch(side -> side.remaining() == 0);
-        assertThat(deadlock).allMatch(side -> side.remaining() == 0);
+        assertThat(pair).isNotEmpty().allMatch(side -> side.remaining() == 0);
+        assertThat(triple).isNotEmpty().allMatch(side -> side.remaining() == 0);
+        assertThat(deadlock).isNotEmpty().allMatch(side -> side.remaining() == 0);
     }
     @Test void remainderTiesUsePlayerIdAndZeroForceNeverReceivesShips() {
         assertThat(ProportionalAllocation.distribute(3, Map.of(3, 0.0, 2, 2.0, 1, 2.0)))
@@ -69,7 +69,9 @@ class CoalitionResolverTest {
         var reversed = new CoalitionSide(1, 0, List.of(two, one));
         assertThat(CoalitionResolver.resolve(List.of(reversed, side(3, 3)), 0, _ -> .5))
                 .isEqualTo(CoalitionResolver.resolve(List.of(forward, side(3, 3)), 0, _ -> .5));
-        assertThatThrownBy(() -> CoalitionResolver.resolve(List.of(side(1, 3), side(1, 4)), 0, _ -> .5)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> CoalitionResolver.resolve(List.of(side(1, 3), side(2, 4)), 0, _ -> Double.NaN)).isInstanceOf(IllegalArgumentException.class);
+        var input1 = List.of(side(1, 3), side(1, 4));
+        assertThatThrownBy(() -> CoalitionResolver.resolve(input1, 0, _ -> .5)).isInstanceOf(IllegalArgumentException.class);
+        var input2 = List.of(side(1, 3), side(2, 4));
+        assertThatThrownBy(() -> CoalitionResolver.resolve(input2, 0, _ -> Double.NaN)).isInstanceOf(IllegalArgumentException.class);
     }
 }

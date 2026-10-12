@@ -54,7 +54,7 @@ class ColonySnapshotTest extends AbstractIntegrationTest {
         assertThat(GameState.fromSnapshot(mapper.treeToValue(legacy, GameStateSnapshot.class)).colonies()).isEmpty();
         ObjectNode incomplete = (ObjectNode) mapper.valueToTree(GameState.toSnapshot(ColonyStates.running()));
         incomplete.remove("colonies");
-        assertThatThrownBy(() -> GameState.fromSnapshot(mapper.treeToValue(incomplete, GameStateSnapshot.class)))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Missing stored colony");
+        var input1 = mapper.treeToValue(incomplete, GameStateSnapshot.class);
+        assertThatThrownBy(() -> GameState.fromSnapshot(input1)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Missing stored colony");
     }
 }

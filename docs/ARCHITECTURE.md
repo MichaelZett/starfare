@@ -201,6 +201,33 @@ Tao's [Spaceward Ho! 5 manual](https://www.deltatao.com/ho/ho/): colony suitabil
 terraforming, finite metal, empire-wide budgets, ship design and technology are
 separate future decisions. They are not implemented as part of M3.
 
+## Internal metal checkpoint: Spaceward 1.2.0-w2
+
+`RulesetRef.SPACEWARD_METALS` extends colony rules under an independent frozen
+reference. `MetalSpacewardTurnEngine` is registered alongside W1 and older rules.
+`MetalEconomy` holds immutable deposit, player-stock and mining-allocation maps;
+`MetalGenesis` is an explicit creation boundary. Snapshots and replay frames carry
+an optional `metals` field. W2 requires complete current and historical resources;
+legacy games do not acquire deposits when loaded. Public creation stays disabled.
+
+`MetalProduction.calculate` is the pure shared empire forecast. It extracts finite
+local deposits, pools each player's metal, and distributes whole ships by largest
+remainder with system-ID ties. `DefaultEconomyService` validates both allocations
+before mutation and applies construction, expansion and growth under the game lock.
+W2 dispatches ordinary orders before production, then relocates from actual
+garrisons; the legacy pre-production relocation path remains unchanged.
+`StarSystem.productionPerTurn` retains planned capacity minus mining and expansion
+for stored state validation. Player views, empire totals and routing headroom use
+the shared metal forecast for actual buildable output. Sensors expose only the
+existing approximate production information; exact resources require complete visibility.
+Historical views calculate from frame resources rather than the current economy.
+
+W2 trial constants are in `MetalRules`: one metal per ship, 10 initial stock,
+200 deposit metal per richness, and richness metal per mining point. W4 will assess
+balance; changing these values requires another reference. All AI profiles receive
+a legal common mining assignment before their existing industry and fleet policies;
+new mining or recycling strategy comparisons remain a W4 task.
+
 ## Internal colony checkpoint: Spaceward 1.2.0-w1
 
 `RulesetRef.SPACEWARD_COLONIES` is a separate, frozen internal rule reference.
@@ -830,3 +857,93 @@ changed future actions are legitimate consequences of the intervention. Invalid
 policy orders abort the experiment rather than silently becoming losses. The
 harness tests determinism, conservation, non-mutating planning, checkpoint
 continuation, information boundaries and every command-line mode without a database.
+
+## Internal recycling checkpoint: Spaceward 1.2.0-w3
+
+`SPACEWARD_RECYCLING` has its own `RecyclingSpacewardTurnEngine`. W2 retains its
+original reference. `MetalEconomy.recycling` is optional for older snapshots but
+required, with complete system and player keys, in W3 current and replay state.
+Explicit creation records the initial whole-galaxy material, including neutral
+ships; restoration never synthesizes orders, fractions or a new balance.
+
+`RecyclingOrders` validates ownership and the combined dispatch/recycling/reserve
+budget. Single dispatch, batch edits, undo and reserve changes share the same
+reservation. `GameService.planRecycling` validates the round and unsubmitted seat
+inside `GameRegistry.writeState`; zero cancels or replaces the local order.
+`Recycling.calculate` is pure fixed-point settlement. Seven of ten metal tenths
+return per ship, with empire-wide fractions retained across rounds and reloads.
+Only whole stock funds construction; split and bulk recycling conserve the same
+material. `MetalProduction.forPlan` includes planned credits without mutation.
+Actual production rejects unsettled recycling rather than crediting it twice.
+
+The round pipeline resolves dispatch, recycling with structured report events,
+mining/construction, relocations and arrivals in that order. The galaxy ledger
+records combat losses after arrival resolution and recycling losses at settlement.
+Its initial total equals remaining deposits, stock and fractions, surviving ships,
+combat losses and recycling losses. All ships have the fixed one-metal W3 value.
+
+Player views expose personal orders and fractions only with full visibility.
+Recycling controls and the saved plan remain read-only in archive replay.
+All eight AI profiles use the same filtered view and legal command validator;
+rear-area recycling targets construction shortages while preserving eight
+unreserved ships and avoiding known enemies within two travel rounds. W4 compares this trial policy; see `docs/ECONOMY-EXPERIMENTS.md`.
+
+Restoration loads pending dispatches before validating resource reservations;
+otherwise an overbooked recycling order could appear valid against an empty
+order list. `RecyclingSnapshotTest` covers corrupt totals and combined budgets.
+
+## Economy acceptance candidate: Spaceward 1.2.0-w4
+
+`SPACEWARD_ECONOMY_PREVIEW` dispatches through its own provider and shares the
+frozen W3 material formulas. `RulesetProperties.economyPreview` is false by default;
+the `economy-preview` application profile enables only the current candidate.
+The catalog always supports its saved reference, but creation requires the
+opt-in catalog default. Older checkpoints remain creation-disabled. This is
+an acceptance switch, not migration of existing snapshots or a public release.
+
+The registry initializes industry, colony geology and resources before saving
+any new candidate. Initial material includes all neutral and player ships.
+`AiPolicy` subtracts mining points before validating expansion and calculating
+fleet reserves; its legacy results without metal remain unchanged.
+
+`strategyBenchmark --mode=economy` runs real production AI and round resolution
+without Spring, a browser or audio. Experimental economic interventions share
+CONCENTRATION fleet planning; they use filtered own-resource observations and
+normal allocation/recycling commands. Rejected commands fail the experiment.
+Paired environments isolate geology and growth. Every round validates exact
+material conservation; snapshots are restored every 25 resolved rounds.
+CSV evidence separates shortage capacity from unused labor capacity and records
+initial metal and global irreversible losses. Reproducibility and interpretation
+are documented in `docs/ECONOMY-EXPERIMENTS.md`.
+
+### Production drafts and authorized forecasts
+
+`GameService.previewProduction` resolves the account's joined human seat and checks
+access, round, ownership and submission under the registry read lock. It applies
+the requested allocation to `GameState.copyOf`, then reuses `PlayerViewBuilder`
+and `MetalProduction` for the local and empire-wide result. The original session,
+orders and persisted snapshot remain untouched. `ProductionPlanPreview` contains
+immutable industry and empire views; `EmpireStats.metal` is absent for non-metal
+rules and unprivileged observer views.
+
+`AllocationSplit` redistributes integer capacity shares while retaining pinned
+values. `ProductionPlanDialog` keeps the allocation draft in a modal editor,
+previews each edit and applies the existing atomic production command only on
+confirmation. Pins are view-local and require no snapshot migration. Older
+Spaceward references retain their two-way expansion/shipbuilding rule. Fleet
+routing still uses the same internal distance limit; presentation replaces the
+numeric limit with reachability and station information.
+
+Map interaction geometry is computed by `map-geometry.js` from the actual browser
+zoom and rendered system diameter. Shared free lane intervals drive both visible
+lines and interactive hit areas. Source, destination and intersecting systems
+have protected circles; badges occupy free space, with the fleet list as fallback.
+Pure segment and placement functions are covered by Node tests.
+
+`BattleReplay.defenderSideId` projects the coalition containing the original owner
+(or neutral member zero) into a presentation role, without exposing the subsequent
+ownership transition. Missing roles in historical data remain explicitly unknown.
+`CombatReadiness` derives deterministic, transient crew-condition buckets from
+stored opening strength, never from survivors or the winner.
+`ProductionFlow` also supplies the net retained production amount used by the
+send dialog, on top of its already reserve-adjusted mode maximum.

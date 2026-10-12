@@ -110,6 +110,16 @@ public class BattleSteps {
         for (int battle = 0; battle < 2; battle++) {
             browser.awaitCss(PENDING).click();
             browser.awaitCss(".battle-replay");
+            assertThat(browser.textsOf(".battle-condition")).hasSize(2);
+            assertThat(js().executeScript("""
+                    const root = document.querySelector('.battle-replay');
+                    const a = root.querySelector('.battle-attacker');
+                    const d = root.querySelector('.battle-defender');
+                    return !root.classList.contains('battle-replay-result-known')
+                        && a.getBoundingClientRect().left < d.getBoundingClientRect().left
+                        && getComputedStyle(a).color === 'rgb(255, 216, 106)'
+                        && getComputedStyle(d).color === 'rgb(255, 216, 106)';
+                    """)).isEqualTo(true);
             String expectedStrength = battle == 0 ? "64,8" : "97,2";
             assertThat(browser.textsOf(".battle-strength")).anyMatch(text -> text.contains(expectedStrength));
             browser.awaitCss(".sys-report-event-active");
@@ -137,12 +147,17 @@ public class BattleSteps {
     }
 
     @Dann("erscheint das Spielergebnis vor der offenen Nachbetrachtung")
-    public void outcomeThenReview() {
+    public void outcomeThenReview() throws IOException {
         browser.awaitText("Sieg:");
         assertThat(browser.all(".review-controls")).noneMatch(WebElement::isDisplayed);
+        assertThat(browser.all(".game-outcome-metrics > div").stream()
+                .map(metric -> metric.getRect().getX()).distinct().count())
+                .as("desktop result metrics use multiple columns").isGreaterThan(1);
+        browser.captureUiAcceptance("outcome");
         browser.clickButtonWithText("Nachbetrachtung öffnen");
         browser.awaitCss(".review-controls");
         assertThat(browser.all("#map .sys-fog")).isEmpty();
+        browser.captureUiAcceptance("battle-review");
     }
 
     private JavascriptExecutor js() {

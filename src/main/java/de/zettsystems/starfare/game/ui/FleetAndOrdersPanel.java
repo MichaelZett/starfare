@@ -31,6 +31,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import org.jspecify.annotations.Nullable;
+import de.zettsystems.starfare.economy.ui.IndustryPanel;
+import de.zettsystems.starfare.economy.values.EconomyIssues;
 
 /** Switchable right-hand map sidebar that keeps the map context visible. */
 final class FleetAndOrdersPanel extends VerticalLayout {
@@ -55,6 +57,30 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final Tab reportTab;
 
     private boolean readOnly;
+    private final de.zettsystems.starfare.economy.values.ProductionDrafts productionDrafts = new de.zettsystems.starfare.economy.values.ProductionDrafts();
+    private Runnable onDraftsChanged = () -> { };
+    private @Nullable IndustryPanel industryPanel;
+    private EconomyIssues.@Nullable Kind economyFilter;
+    private boolean draftsFilter;
+    private boolean economyFiltered;
+    private BiConsumer<Integer, Integer> onEconomySelected = (_, _) -> { };
+    void onEconomySelected(BiConsumer<Integer, Integer> action) { onEconomySelected = action; }
+    void openProduction(int index) {
+        var panel = industryPanel;
+        if (index >= 0 && panel != null) { panel.focusProduction(index); }
+        if (index < 0) { detailsPage.getChildren().filter(Details.class::isInstance)
+                .map(Details.class::cast).filter(details -> details.hasClassName("system-operations"))
+                .forEach(details -> details.setOpened(true)); }
+    }
+    void showEconomy(EconomyIssues.@Nullable Kind kind, boolean drafts) {
+        economyFilter = kind; draftsFilter = drafts; economyFiltered = true;
+        var view = currentView;
+        if (view != null) { renderLogistics(view); }
+        showLogistics();
+    }
+    void onDraftsChanged(Runnable action) { onDraftsChanged = action; }
+    java.util.Set<Integer> productionDraftSystems() { return productionDrafts.pending(); }
+    void discardProductionDrafts() { productionDrafts.discardAll(); onDraftsChanged.run(); }
     private boolean battlePresentationEnabled;
     private @Nullable GameId gameId;
     private @Nullable VisibleSystem selectedSystem;
@@ -75,10 +101,27 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final BattleAcknowledgements acknowledgements;
     private @Nullable Integer selectedReportSystemId;
     private final IntConsumer onFleetRowSelected;
+    private IntConsumer onRouteStationSelected = _ -> { };
+    private Runnable onDiplomacySelected = () -> { };
+    private boolean diplomacyAvailable;
+    private java.util.Set<Integer> alliedOwners = java.util.Set.of();
+    void alliedOwners(java.util.Set<Integer> owners) { alliedOwners = owners; }
+    void diplomacyAvailable(boolean available) { diplomacyAvailable = available; }
+    void onRouteStationSelected(IntConsumer action) { onRouteStationSelected = action; }
+    void onDiplomacySelected(Runnable action) { onDiplomacySelected = action; }
     private final Consumer<PlannedOrder> onCancelOrder;
     private String routeFilter = "";
-    private Consumer<de.zettsystems.starfare.economy.values.ProductionAllocation> onProductionAllocation = _ -> { };
-    void onProductionAllocation(Consumer<de.zettsystems.starfare.economy.values.ProductionAllocation> action) { onProductionAllocation = action; }
+    private Consumer<de.zettsystems.starfare.economy.values.RecyclingOrder> onRecycling = _ -> { };
+    void onRecycling(Consumer<de.zettsystems.starfare.economy.values.RecyclingOrder> action) { onRecycling = action; }
+    private java.util.function.Function<de.zettsystems.starfare.economy.values.ProductionAllocation, Boolean> onProductionAllocation = _ -> false;
+    private java.util.function.Function<de.zettsystems.starfare.economy.values.ProductionAllocation, java.util.Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview>> onPreview = _ -> java.util.Optional.empty();
+    void onProductionPreview(java.util.function.Function<de.zettsystems.starfare.economy.values.ProductionAllocation, java.util.Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview>> action) { onPreview = action; }
+    void onProductionAllocation(java.util.function.Function<de.zettsystems.starfare.economy.values.ProductionAllocation, Boolean> action) { onProductionAllocation = action; }
+
+    private IntConsumer onFleetWait = _ -> { };
+    private IntConsumer onFleetDisband = _ -> { };
+    void onFleetWait(IntConsumer action) { onFleetWait = action; }
+    void onFleetDisband(IntConsumer action) { onFleetDisband = action; }
 
     private Consumer<PlannedOrder> onEditOrder = _ -> { };
 
@@ -109,7 +152,14 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final List<TextField> routeFilters = new java.util.ArrayList<>();
     private @Nullable Object lastDetails;
     private @Nullable DetailedSystemPanel detailedSystem;
-    private String detailedSystemKey = "";
+    private Object detailedSystemKey = "";
+    private boolean fleetArrivalsOpened;
+    private final java.util.Set<Integer> openedFleetDetails = new java.util.HashSet<>();
+    private final java.util.Set<Integer> expandedFleetRoutes = new java.util.HashSet<>();
+    private boolean systemOperationsOpened;
+    private boolean systemBackgroundOpened;
+    private record ReserveEditor(int systemId, int savedReserve, IntegerField input) { }
+    private @Nullable ReserveEditor reserveEditor;
     private @Nullable Object lastTravel;
     private @Nullable Object lastLogistics;
     private @Nullable Object lastReport;
@@ -172,6 +222,12 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     void update(GameId gameId, PlayerViewState view, @Nullable VisibleSystem system, @Nullable Integer fleetId,
                 @Nullable Integer standingOrderId,
                 boolean spectator, boolean targetSelectionActive) {
+        if (!gameId.equals(this.gameId)) {
+            openedFleetDetails.clear();
+            expandedFleetRoutes.clear();
+            fleetArrivalsOpened = false;
+            lastTravel = null;
+        }
         this.gameId = gameId;
         currentView = view;
         selectedSystem = system == null ? null : view.systems().stream()
@@ -179,18 +235,21 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         selectedFleetId = fleetId;
         selectedStandingOrderId = standingOrderId;
         readOnly = view.gameOver() || spectator;
+        productionDrafts.reconcile(gameId.value(), view.turn(), view.systems().stream()
+                .filter(candidate -> !spectator && candidate.fullyVisible() && candidate.industry() != null
+                        && candidate.garrisonReserve() != null && !isBattlePending(candidate.id()))
+                .collect(java.util.stream.Collectors.toMap(VisibleSystem::id, candidate -> Objects.requireNonNull(candidate.industry()))));
         TurnReport report = view.report();
-        int reportTurn = report != null ? report.turn() : view.turn() - 1;
-        battlePresentationEnabled = BattlePresentationPreference.enabled(gameId, reportTurn,
-                view.battlePresentationEnabled());
+        battlePresentationEnabled = BattlePresentationPreference.enabled(view.battlePresentationEnabled());
         Object travel = java.util.Arrays.asList(view.turn(), view.ownFleets(), view.plannedOrders(),
                 view.standingOrders(), view.waitingFleetIds(), readOnly, fleetId, standingOrderId);
         if (!travel.equals(lastTravel)) { renderTravelCards(view); lastTravel = travel; }
         renderContacts(view);
         Integer detailOwner = selectedSystem == null ? null : selectedSystem.ownerId();
         boolean industryLocked = detailOwner != null && view.roundStatus().hasSubmitted(detailOwner);
-        Object details = java.util.Arrays.asList(gameId, selectedSystem, fleetId, view.ownFleets(),
-                view.waitingFleetIds(), view.standingOrders(), view.turn(), industryLocked, readOnly, targetSelectionActive,
+        Object details = java.util.Arrays.asList(gameId, selectedSystem, fleetId, view.ownFleets(), view.plannedOrders(),
+                view.empire(),
+                view.waitingFleetIds(), view.standingOrders(), view.turn(), industryLocked, view.roundStatus(), readOnly, targetSelectionActive,
                 selectedSystem != null && isBattlePending(selectedSystem.id()));
         if (!details.equals(lastDetails)) { renderDetails(view, targetSelectionActive); lastDetails = details; }
         Object logistics = List.of(view.systems(), view.standingOrders(), readOnly);
@@ -238,6 +297,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private void renderLogistics(PlayerViewState view) {
         logisticsPage.removeAll();
+        if (economyFiltered) { renderEconomyList(view); return; }
         logisticsPage.add(header(UiTexts.MAP_SIDEBAR_LOGISTICS),
                 new Paragraph(I18n.t(UiTexts.MAP_LOGISTICS_INTRO)));
         Map<Integer, LogisticsSystemSummary> summaries = LogisticsSystemSummary.forSystems(view.systems(),
@@ -262,6 +322,47 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             view.standingOrders().forEach(order -> routes.add(logisticsRouteCard(order)));
             logisticsPage.add(header(UiTexts.MAP_LOGISTICS_ROUTES), routes);
         }
+    }
+
+    private void renderEconomyList(PlayerViewState view) {
+        if (view.systems().stream().anyMatch(system -> isBattlePending(system.id()))) { return; }
+        int player = view.systems().stream().filter(system -> system.garrisonReserve() != null)
+                .map(VisibleSystem::ownerId).filter(Objects::nonNull).findFirst().orElse(-1);
+        var issues = EconomyIssues.forView(view, player, java.util.Set.of());
+        var issueMap = issues.stream().collect(java.util.stream.Collectors.toMap(issue -> issue.system().id(), issue -> issue));
+        var shown = view.systems().stream().filter(system -> draftsFilter ? productionDraftSystems().contains(system.id())
+                        : issueMap.containsKey(system.id()) && issueMap.get(system.id()).reasons().contains(economyFilter))
+                .sorted(java.util.Comparator.comparing(VisibleSystem::name).thenComparingInt(VisibleSystem::id)).toList();
+        String key = draftsFilter ? de.zettsystems.starfare.economy.ui.ProductionKeys.DRAFTS
+                : de.zettsystems.starfare.economy.ui.EconomyNoticeBar.key(Objects.requireNonNull(economyFilter));
+        Button clear = new Button(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.CLEAR), _ -> {
+            economyFiltered = false; var current = currentView; if (current != null) { renderLogistics(current); }
+        });
+        logisticsPage.add(new H2(I18n.t(key, shown.size())), clear);
+        logisticsPage.add(new Span(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.LOCAL)));
+        int section = 0;
+        if (economyFilter == EconomyIssues.Kind.DEPOSIT) { section = 1; }
+        if (economyFilter == EconomyIssues.Kind.LABOR) { section = -1; }
+        for (var system : shown) { logisticsPage.add(economyIssueCard(view, system, Optional.ofNullable(issueMap.get(system.id())), section)); }
+    }
+
+    private Div economyIssueCard(PlayerViewState view, VisibleSystem system, Optional<EconomyIssues.Issue> issue, int section) {
+        Div card = new Div(new Span(system.name())); card.addClassName("economy-issue-card");
+        issue.ifPresent(candidate -> candidate.reasons().forEach(reason ->
+                card.add(new Span(I18n.t(de.zettsystems.starfare.economy.ui.EconomyNoticeBar.key(reason), 1)))));
+        var industry = system.industry();
+        if (industry != null) { card.add(new Span(I18n.t(UiTexts.UX_SHIP_RESULT,
+                de.zettsystems.starfare.economy.values.ProductionPreset.saved(industry).ships(), industry.shipbuilding()))); }
+        card.add(new Button(I18n.t(section < 0 ? de.zettsystems.starfare.economy.ui.ProductionKeys.COLONY
+                : de.zettsystems.starfare.economy.ui.ProductionKeys.CHANGE), _ -> onEconomySelected.accept(system.id(), section)));
+        if (issue.map(candidate -> candidate.reasons().contains(EconomyIssues.Kind.DELIVERY)).orElse(false)) {
+            view.standingOrders().stream().filter(order -> order.fromSystemId() == system.id())
+                    .forEach(order -> card.add(logisticsRouteCard(order)));
+            view.ownFleets().stream().filter(fleet -> fleet.toSystemId() == system.id())
+                    .filter(fleet -> { var journey = fleet.journey(); return journey != null && journey.blocked(); })
+                    .forEach(fleet -> card.add(new Button(I18n.t(UiTexts.MAP_OWN_FLEETS), _ -> onFleetRowSelected.accept(fleet.globalId()))));
+        }
+        return card;
     }
 
     private void addLogisticsFilters() {
@@ -344,7 +445,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         edit.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
         card.add(new Span(order.fromSystem() + " → " + order.toSystem()),
                 new Span("◆ " + order.ships() + " / " + I18n.t(UiTexts.MAP_LOGISTICS_PER_TURN)), edit);
-        card.addClickListener(_ -> onStandingOrderSelected.accept(order.id()));
+        card.getElement().addEventListener("click", _ -> onStandingOrderSelected.accept(order.id()))
+                .setFilter("!event.target.closest('vaadin-button, vaadin-details')");
         KeyboardActions.enable(card);
         return card;
     }
@@ -391,7 +493,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return "—";
         }
         return view.players().stream().filter(player -> player.id() == ownerId)
-                .map(Player::label).findFirst().orElse("?");
+                .map(Player::empireNameOrName).findFirst().orElse("?");
     }
 
     private static String shipValue(VisibleSystem system) {
@@ -421,11 +523,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (selectedSystem != null) {
             VisibleSystem system = selectedSystem;
             if (isBattlePending(system.id())) {
+                reserveEditor = null;
                 detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS),
                         new Paragraph(I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, system.name())));
                 return;
             }
             if (!system.fullyVisible()) {
+                reserveEditor = null;
                 detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS),
                         detail(I18n.t(UiTexts.MAP_SIDEBAR_SYSTEM), system.name()), intelligenceHeader(),
                         detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())),
@@ -435,35 +539,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                         detail(I18n.t(UiTexts.MAP_SIDEBAR_LAST_CONTACT), contactAge(system)));
                 return;
             }
-            H2 systemHeading = new H2(system.name());
-            systemHeading.addClassName("system-details-heading");
-            detailsPage.add(systemHeading, detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())));
-            renderSystemIllustration(system);
-            Div metrics = new Div(
-                    systemMetric("🛡", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
-                    systemMetric("⚙", I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION),
-                            value(system.productionPerTurn())));
-            if (system.garrisonReserve() != null) {
-                metrics.add(systemMetric("⛨", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE),
-                        system.garrisonReserve()));
-            }
-            if (system.availableShips() != null) {
-                metrics.add(systemMetric("➤", I18n.t(UiTexts.MAP_SIDEBAR_SHIPS), system.availableShips()));
-            }
-            if (system.routedProduction() != null) {
-                ProductionFlow flow = ProductionFlow.at(system.id(), view.standingOrders());
-                detailsPage.add(metrics, systemFlow(system, flow));
-            } else {
-                detailsPage.add(metrics);
-            }
-            metrics.addClassName("system-metrics");
-            renderSystemActions(system, targetSelectionActive);
-            renderIndustry(view, system);
-            renderGarrisonReserve(system);
-            renderOwnershipHistory(view, system);
+            renderVisibleSystem(view, system, targetSelectionActive);
             return;
         }
         detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS));
+        reserveEditor = null;
         Fleet selectedFleet = view.ownFleets().stream()
                 .filter(fleet -> selectedFleetId != null && fleet.globalId() == selectedFleetId)
                 .findFirst().orElse(null);
@@ -471,36 +551,126 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             FleetView fleet = UiMapper.toFleetViews(view).stream()
                     .filter(row -> row.fleetId() == selectedFleet.globalId()).findFirst().orElseThrow();
             detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET), String.valueOf(fleet.localNo())),
-                    detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, selectedFleet.ownerId())),
                     detail(I18n.t(UiTexts.MAP_COLUMN_FROM), fleet.fromName()),
                     detail(I18n.t(UiTexts.MAP_COLUMN_TO), fleet.toName()),
                     detail(I18n.t(UiTexts.MAP_COLUMN_SHIPS), fleet.ships()),
-                    detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET_LAUNCHED), selectedFleet.launchTurn()),
-                    detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET_TRAVELLING),
-                            Math.max(0, view.turn() - selectedFleet.launchTurn())),
-                    detail(I18n.t(UiTexts.MAP_COLUMN_ETA), fleet.eta() < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : fleet.eta()),
                     detail(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN), fleet.eta() < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : view.turn() + fleet.eta()));
-            NavigationDisplay.addJourney(detailsPage, selectedFleet, view);
+            detailsPage.add(fleetActions(selectedFleet, view));
+            Div journeyDetails = new Div(
+                    detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, selectedFleet.ownerId())),
+                    detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET_LAUNCHED), selectedFleet.launchTurn()),
+                    detail(I18n.t(UiTexts.MAP_SIDEBAR_FLEET_TRAVELLING), Math.max(0, view.turn() - selectedFleet.launchTurn())),
+                    detail(I18n.t(UiTexts.MAP_COLUMN_ETA), fleet.eta() < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : fleet.eta()));
+            if (selectedFleet.journey() != null) {
+                detailsPage.add(new Span(NavigationDisplay.status(selectedFleet, view)));
+            }
+            rememberRoute(NavigationDisplay.addItinerary(detailsPage, selectedFleet, view), selectedFleet.globalId());
+            Details travelDetails = new Details(I18n.t(UiTexts.MAP_FLEET_DETAILS), journeyDetails);
+            rememberTravelDetails(travelDetails, selectedFleet.globalId());
+            detailsPage.add(travelDetails);
             return;
         }
         detailsPage.add(new Paragraph(I18n.t(UiTexts.MAP_SIDEBAR_DETAILS_EMPTY)));
     }
 
-    private void renderSystemIllustration(VisibleSystem system) {
+    private void renderVisibleSystem(PlayerViewState view, VisibleSystem system, boolean targetSelectionActive) {
+        H2 heading = new H2(system.name());
+        heading.addClassName("system-details-heading");
+        var owner = detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId()));
+        owner.addClassName("system-details-owner");
+        detailsPage.add(heading, owner, systemHeaderMetrics(system, ProductionFlow.at(system.id(), view.standingOrders())));
+        renderSystemActions(system, targetSelectionActive);
+        renderSystemTransfers(view, system);
+        var logistics = LogisticsSystemSummary.forSystems(view.systems(), view.standingOrders()).get(system.id());
+        if (logistics != null && logistics.deliveryBottleneck()) {
+            Span warning = new Span(I18n.t(UiTexts.SYSTEM_DELIVERY_BOTTLENECK));
+            warning.addClassName("logistics-delivery-bottleneck");
+            detailsPage.add(warning);
+        }
+        VerticalLayout operations = page();
+        VerticalLayout background = page();
+        Details backgroundDetails = new Details(I18n.t(UiTexts.UX_BACKGROUND), background);
+        backgroundDetails.addClassName("system-background");
+        backgroundDetails.setOpened(systemBackgroundOpened);
+        backgroundDetails.addOpenedChangeListener(event -> systemBackgroundOpened = event.isOpened());
+        renderIndustry(view, system, operations, background);
+        renderSystemIllustration(system, background, () -> backgroundDetails.setOpened(true));
+        if (system.routedProduction() != null) {
+            operations.add(systemFlow(system, ProductionFlow.at(system.id(), view.standingOrders())));
+        }
+        ArrivalPreview.from(view).stream().filter(arrival -> arrival.systemId() == system.id())
+                .forEach(arrival -> operations.add(new Paragraph(I18n.t(UiTexts.PLAN_ARRIVAL,
+                        arrival.systemName(), arrival.turn(), arrival.ships()))));
+        renderGarrisonReserve(system, operations);
+        if (operations.getChildren().findAny().isPresent()) {
+            var industry = system.industry();
+            Details operationalDetails = new Details(I18n.t(industry != null && industry.colony() != null
+                    ? UiTexts.SYSTEM_COLONY_LOGISTICS : UiTexts.SYSTEM_LOGISTICS_RESERVE), operations);
+            operationalDetails.addClassName("system-operations");
+            operationalDetails.setOpened(systemOperationsOpened);
+            operationalDetails.addOpenedChangeListener(event -> systemOperationsOpened = event.isOpened());
+            DetailedSystemPanel systemPanel = detailedSystem;
+            if (systemPanel != null && industry != null && industry.colony() != null) {
+                systemPanel.onColonyInspect(() -> {
+                    operationalDetails.setOpened(true);
+                    operations.getElement().executeJs("this.querySelector('.colony-details')?.scrollIntoView({block:'nearest'})");
+                });
+            }
+            detailsPage.add(operationalDetails);
+        }
+        renderOwnershipHistory(view, system, background);
+        detailsPage.add(backgroundDetails);
+    }
+
+    private void renderSystemTransfers(PlayerViewState view, VisibleSystem system) {
+        view.standingOrders().stream()
+                .filter(order -> order.fromSystemId() == system.id() || order.toSystemId() == system.id())
+                .forEach(order -> {
+                    Div row = relocationCard(order);
+                    row.addClassName("system-transfer-row");
+                    row.addComponentAsFirst(new Span(I18n.t(order.toSystemId() == system.id()
+                            ? UiTexts.SYSTEM_TRANSFER_INCOMING : UiTexts.SYSTEM_TRANSFER_OUTGOING)));
+                    detailsPage.add(row);
+                });
+    }
+
+    private static Div systemHeaderMetrics(VisibleSystem system, ProductionFlow flow) {
+        Div metrics = new Div();
+        metrics.addClassNames("system-metrics", "system-header-metrics");
+        Integer available = system.availableShips();
+        if (available != null) {
+            Div sendable = systemMetric("➤", I18n.t(UiTexts.SYSTEM_SENDABLE_SHIPS), available);
+            sendable.addClassName("system-metric-sendable");
+            metrics.add(sendable);
+        }
+        metrics.add(systemMetric("🛡", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())));
+        Integer reserve = system.garrisonReserve();
+        if (reserve != null) {
+            metrics.add(systemMetric("⛨", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE), reserve));
+        }
+        String rate = system.routedProduction() == null ? value(system.productionPerTurn())
+                : I18n.t(UiTexts.SYSTEM_PRODUCTION_INCOMING, value(system.productionPerTurn()), flow.incoming());
+        Div production = systemMetric("⚙", I18n.t(UiTexts.SYSTEM_PRODUCTION_RATE), rate);
+        production.addClassName("system-metric-rate");
+        metrics.add(production);
+        return metrics;
+    }
+
+    private void renderSystemIllustration(VisibleSystem system, VerticalLayout background, Runnable revealBackground) {
         GameId currentGame = gameId;
         if (currentGame == null) { return; }
         SystemComposition.forVisible(currentGame, system).ifPresent(composition -> {
             boolean shipyard = system.ownerId() != null && system.productionPerTurn() != null;
-            String identity = currentGame.value() + "/" + system.id() + "/" + shipyard + "/" + (system.industry() != null);
+            Object identity = List.of(currentGame, system.id(), shipyard, composition);
             DetailedSystemPanel panel = detailedSystem;
             if (panel == null || !identity.equals(detailedSystemKey)) {
                 panel = new DetailedSystemPanel(composition, shipyard);
                 detailedSystem = panel;
                 detailedSystemKey = identity;
             }
-            var industry = system.industry();
-            if (industry != null) { panel.showIndustry(industry); }
+            panel.onInspect(revealBackground);
             detailsPage.add(panel);
+            background.add(panel.background());
         });
     }
 
@@ -525,32 +695,42 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         detailsPage.add(actions);
     }
 
-    private void renderIndustry(PlayerViewState view, VisibleSystem system) {
+    private void renderIndustry(PlayerViewState view, VisibleSystem system, VerticalLayout operations,
+                                VerticalLayout background) {
         var industry = system.industry();
         if (industry == null) { return; }
         Integer owner = system.ownerId();
         boolean editable = !readOnly && owner != null && system.availableShips() != null
                 && !view.roundStatus().hasSubmitted(owner);
-        ProductionFlow flow = ProductionFlow.at(system.id(), view.standingOrders());
-        Integer available = system.availableShips();
-        detailsPage.add(new de.zettsystems.starfare.economy.ui.IndustryPanel(industry,
-                available == null ? 0 : available, flow.outgoing(), view.standingOrders().stream()
-                        .filter(order -> order.fromSystemId() == system.id() && order.route() != null)
-                        .mapToInt(StandingOrderView::ships).sum(), editable,
-                points -> onProductionAllocation.accept(new de.zettsystems.starfare.economy.values.ProductionAllocation(
-                        system.id(), view.turn(), points))));
+        var draft = productionDrafts.forSystem(system.id(), view.turn(), industry);
+        var panel = new de.zettsystems.starfare.economy.ui.IndustryPanel(industry, editable,
+                new de.zettsystems.starfare.economy.ui.IndustryPanel.Actions(
+                ships -> onRecycling.accept(new de.zettsystems.starfare.economy.values.RecyclingOrder(system.id(), view.turn(), ships)),
+                split -> onPreview.apply(new de.zettsystems.starfare.economy.values.ProductionAllocation(system.id(), view.turn(), split.expansion(), split.mining())),
+                split -> onProductionAllocation.apply(new de.zettsystems.starfare.economy.values.ProductionAllocation(system.id(), view.turn(), split.expansion(),
+                        industry.metal() == null ? -1 : split.mining(), draft.original()))), draft, view.turn(), onDraftsChanged);
+        industryPanel = panel;
+        detailsPage.add(panel);
+        if (industry.colony() != null) { operations.add(panel.colonyDetails()); }
+        background.add(panel.background());
     }
 
-    private void renderGarrisonReserve(VisibleSystem system) {
+    private void renderGarrisonReserve(VisibleSystem system, VerticalLayout operations) {
         Integer reserveValue = system.garrisonReserve();
         Integer garrison = system.garrison();
         if (readOnly || reserveValue == null || garrison == null) {
+            reserveEditor = null;
             return;
         }
         IntegerField reserve = new IntegerField(I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE));
         reserve.setMin(0);
         reserve.setMax(garrison);
-        reserve.setValue(reserveValue);
+        ReserveEditor previous = reserveEditor;
+        Integer draft = previous == null ? null : previous.input().getValue();
+        boolean retainDraft = previous != null && previous.systemId() == system.id()
+                && previous.savedReserve() == reserveValue && draft != null && draft >= 0 && draft <= garrison;
+        reserve.setValue(retainDraft ? draft : reserveValue);
+        reserveEditor = new ReserveEditor(system.id(), reserveValue, reserve);
         reserve.setStepButtonsVisible(true);
         Button save = new Button(I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE_SAVE), _ -> {
             Integer value = reserve.getValue();
@@ -559,24 +739,24 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             }
         });
         save.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
-        detailsPage.add(reserve, save);
+        operations.add(reserve, save);
     }
 
-    private void renderOwnershipHistory(PlayerViewState view, VisibleSystem system) {
+    private void renderOwnershipHistory(PlayerViewState view, VisibleSystem system, VerticalLayout background) {
         if (!system.fullyVisible() || system.ownershipHistory().isEmpty()) {
             return;
         }
         List<SystemOwnership> periods = system.ownershipHistory();
         SystemOwnership current = periods.getLast();
-        detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNED_SINCE), current.sinceTurn()));
+        background.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNED_SINCE), current.sinceTurn()));
         if (periods.size() == 1) {
-            detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_PREVIOUS_OWNER),
+            background.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_PREVIOUS_OWNER),
                     I18n.t(UiTexts.MAP_SIDEBAR_NONE)));
             return;
         }
         for (int index = periods.size() - 2; index >= 0; index--) {
             SystemOwnership previous = periods.get(index);
-            detailsPage.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_PREVIOUS_OWNER),
+            background.add(detail(I18n.t(UiTexts.MAP_SIDEBAR_PREVIOUS_OWNER),
                     ownerName(view, previous.ownerId()) + " (" + I18n.t(UiTexts.MAP_SIDEBAR_UNTIL_TURN,
                     periods.get(index + 1).sinceTurn() - 1) + ")"));
         }
@@ -609,16 +789,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 ? I18n.t(UiTexts.BATTLE_REPLAY_OFF) : value + "×");
         GameId presentationGame = gameId;
         presentation.setValue(presentationGame == null ? (view.battlePresentationEnabled() ? 1.0 : 0.0)
-                : BattlePresentationPreference.speed(presentationGame,
-                        report != null ? report.turn() : view.turn() - 1, view.battlePresentationEnabled()));
+                : BattlePresentationPreference.speed(view.battlePresentationEnabled()));
         presentation.addValueChangeListener(event -> {
             if (event.getValue() == null) { return; }
             GameId current = gameId;
-            TurnReport currentReport = view.report();
             if (current != null) {
-                int reportTurn = currentReport != null ? currentReport.turn() : view.turn() - 1;
                 battlePresentationEnabled = event.getValue() > 0;
-                BattlePresentationPreference.setSpeed(current, reportTurn, event.getValue());
+                BattlePresentationPreference.setSpeed(event.getValue());
                 renderReport(view);
             }
         });
@@ -693,7 +870,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
             case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
             case TurnEvent.Reinforcement _ -> 3;
-            case TurnEvent.Production _ -> 4;
+            case TurnEvent.Recycling _, TurnEvent.Production _ -> 4;
         };
     }
 
@@ -729,7 +906,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private static Optional<EventCategory> categoryOf(TurnEvent event) {
         return Optional.ofNullable(switch (event) {
             case TurnEvent.CoalitionBattle _ -> EventCategory.COALITION;
-            case TurnEvent.Production _ -> EventCategory.PRODUCTION;
+            case TurnEvent.Recycling _, TurnEvent.Production _ -> EventCategory.PRODUCTION;
             case TurnEvent.Reinforcement _ -> EventCategory.REINFORCEMENT;
             case TurnEvent.BattleWon _ -> EventCategory.BATTLE_WON;
             case TurnEvent.BattleLost _ -> EventCategory.BATTLE_LOST;
@@ -785,7 +962,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     youName(lost.defenderName()));
             case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponentName(held.attackerName()),
                     youName(held.defenderName()));
-            case TurnEvent.CoalitionBattle _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
+            case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
                     new BattleReplayDialog.BattleSides("", "");
         };
     }
@@ -863,6 +1040,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return "⚔";
         }
         return switch (event) {
+            case TurnEvent.Recycling _ -> "♻";
             case TurnEvent.Production _ -> "⬆";
             case TurnEvent.Reinforcement _ -> "→";
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _ -> "⚔";
@@ -879,6 +1057,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return "event-battle-pending";
         }
         return switch (event) {
+            case TurnEvent.Recycling _ -> "event-recycling";
             case TurnEvent.Production _ -> "event-production";
             case TurnEvent.Reinforcement _ -> "event-reinforcement";
             case TurnEvent.CoalitionBattle _ -> "event-coalition-battle";
@@ -895,6 +1074,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return switch (event) {
             case TurnEvent.CoalitionBattle battle -> isEventPending(eventIndex)
                     ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName()) : CoalitionPresentation.report(battle);
+            case TurnEvent.Recycling r -> I18n.t(UiTexts.RECYCLING_EVENT, r.systemName(), r.ships(), r.recoveredTenths() / 10.0);
             case TurnEvent.Production production -> I18n.t(UiTexts.ROUND_EVENT_PRODUCTION,
                     production.systemName(), production.amount());
             case TurnEvent.Reinforcement reinforcement -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
@@ -927,9 +1107,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         fleetCards.removeAll();
         orderCards.removeAll();
         relocationCards.removeAll();
-        fleetCards.add(header(UiTexts.PLAN_ARRIVALS));
-        ArrivalPreview.from(view).forEach(arrival -> fleetCards.add(new Paragraph(I18n.t(UiTexts.PLAN_ARRIVAL,
+        Div arrivals = new Div();
+        ArrivalPreview.from(view).forEach(arrival -> arrivals.add(new Paragraph(I18n.t(UiTexts.PLAN_ARRIVAL,
                 arrival.systemName(), arrival.turn(), arrival.ships()))));
+        Details arrivalDetails = new Details(I18n.t(UiTexts.PLAN_ARRIVALS), arrivals);
+        arrivalDetails.setOpened(fleetArrivalsOpened);
+        arrivalDetails.addOpenedChangeListener(event -> fleetArrivalsOpened = event.isOpened());
+        fleetCards.add(arrivalDetails);
 
         List<FleetView> fleets = UiMapper.toFleetViews(view).stream()
                 .filter(fleet -> matchesRoute(fleet.fromName(), fleet.toName()))
@@ -1024,24 +1208,82 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         Div top = new Div();
         top.addClassName("fleet-travel-card-top");
         top.add(new Span("✦ #" + fleet.localNo()), fleetNumber(fleet.ships()));
-        Span route = new Span(fleet.fromName() + " → " + fleet.toName());
-        route.addClassName("fleet-travel-route");
         int arrivalTurn = currentView == null || fleet.eta() < 0 ? -1 : currentView.turn() + fleet.eta();
-        Span arrival = new Span(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": "
-                + (arrivalTurn < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : arrivalTurn) + " · " + I18n.t(UiTexts.MAP_COLUMN_ETA) + ": " + (fleet.eta() < 0 ? I18n.t(UiTexts.NAV_UNKNOWN) : fleet.eta()));
+        String arrivalText = I18n.t(UiTexts.NAV_UNKNOWN);
+        if (arrivalTurn >= 0) {
+            arrivalText = I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": " + arrivalTurn
+                    + " · " + I18n.t(UiTexts.MAP_COLUMN_ETA) + ": " + fleet.eta();
+        }
+        Span arrival = new Span(arrivalText);
         arrival.addClassName("fleet-travel-arrival");
-        card.add(top, route, travelProgress(fleet), arrival);
+        card.add(top, travelProgress(fleet), arrival);
         PlayerViewState view = currentView;
         if (view != null) {
             view.ownFleets().stream().filter(candidate -> candidate.globalId() == fleet.fleetId()).findFirst()
-                    .ifPresent(candidate -> NavigationDisplay.addJourney(card, candidate, view));
+                    .ifPresent(candidate -> {
+                        NavigationDisplay.addJourney(card, candidate, view)
+                                .ifPresent(details -> rememberTravelDetails(details, candidate.globalId()));
+                        card.getChildren().filter(de.zettsystems.starfare.navigation.ui.RouteStrip.class::isInstance)
+                                .map(de.zettsystems.starfare.navigation.ui.RouteStrip.class::cast)
+                                .forEach(strip -> rememberRoute(strip, candidate.globalId()));
+                        card.add(fleetActions(candidate, view));
+                    });
         }
-        card.addClickListener(_ -> onFleetRowSelected.accept(fleet.fleetId()));
+        card.getElement().addEventListener("click", _ -> onFleetRowSelected.accept(fleet.fleetId()))
+                .setFilter("!event.target.closest('vaadin-button, vaadin-details')");
         KeyboardActions.enable(card);
         if (Integer.valueOf(fleet.fleetId()).equals(selectedFleetId)) {
             card.addClassName("fleet-travel-card-selected");
         }
         return card;
+    }
+
+    private void rememberRoute(de.zettsystems.starfare.navigation.ui.RouteStrip strip, int fleetId) {
+        strip.alliedOwners(alliedOwners);
+        strip.rememberExpansion(expandedFleetRoutes.contains(fleetId), expanded -> {
+            if (expanded) { expandedFleetRoutes.add(fleetId); }
+            else { expandedFleetRoutes.remove(fleetId); }
+        });
+    }
+
+    private void rememberTravelDetails(Details details, int fleetId) {
+        details.setOpened(openedFleetDetails.contains(fleetId));
+        details.addOpenedChangeListener(event -> {
+            if (event.isOpened()) { openedFleetDetails.add(fleetId); }
+            else { openedFleetDetails.remove(fleetId); }
+        });
+    }
+
+    private Div fleetActions(Fleet fleet, PlayerViewState view) {
+        Div actions = new Div();
+        actions.addClassName("fleet-direct-actions");
+        if (readOnly || fleet.evacuating() || view.roundStatus().hasSubmitted(fleet.ownerId())) { return actions; }
+        var journey = fleet.journey();
+        if (journey != null && journey.blocked()) {
+            actions.add(new Button(I18n.t(de.zettsystems.starfare.navigation.ui.RouteKeys.SYSTEM),
+                    _ -> onRouteStationSelected.accept(fleet.toSystemId())));
+            boolean foreignStation = view.systems().stream().anyMatch(system -> system.id() == fleet.toSystemId()
+                    && system.ownerId() != null && !Objects.equals(system.ownerId(), fleet.ownerId()));
+            if (diplomacyAvailable && foreignStation) {
+                actions.add(new Button(I18n.t(de.zettsystems.starfare.navigation.ui.RouteKeys.ALLIANCES), _ -> onDiplomacySelected.run()));
+            }
+        }
+        boolean waiting = view.waitingFleetIds().contains(fleet.globalId());
+        Button wait = new Button(I18n.t(waiting ? UiTexts.MAP_ACTION_WAITING : UiTexts.MAP_ACTION_WAIT),
+                _ -> onFleetWait.accept(fleet.globalId()));
+        wait.setEnabled(!waiting);
+        wait.addThemeVariants(ButtonVariant.SMALL);
+        actions.add(wait);
+        int location = fleet.inFlight() ? fleet.fromSystemId() : fleet.toSystemId();
+        boolean ownLocation = view.systems().stream().anyMatch(system -> system.id() == location
+                && Objects.equals(system.ownerId(), fleet.ownerId()));
+        if ((!fleet.inFlight() || fleet.launchTurn() == view.turn()) && ownLocation) {
+            Button disband = new Button(I18n.t(UiTexts.MAP_ACTION_DISBAND),
+                    _ -> onFleetDisband.accept(fleet.globalId()));
+            disband.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+            actions.add(disband);
+        }
+        return actions;
     }
 
     private Div orderCard(PlannedOrder order) {
@@ -1055,7 +1297,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         PlayerViewState view = currentView;
         if (beneficiary != null && view != null) {
             card.add(new Span(I18n.t(UiTexts.CONQUEST_ORDER, view.players().stream()
-                    .filter(player -> player.id() == beneficiary).map(Player::label).findFirst().orElse("?"))));
+                    .filter(player -> player.id() == beneficiary).map(Player::empireNameOrName).findFirst().orElse("?"))));
         }
         route.addClassName("fleet-travel-route");
         Span arrival = new Span(I18n.t(UiTexts.MAP_COLUMN_ARRIVAL_TURN) + ": " + value(order.arrivalTurn()));
@@ -1103,7 +1345,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         card.addClassNames("fleet-travel-card", "fleet-travel-card-relocation");
         card.add(new Span("⇢ " + I18n.t(UiTexts.MAP_ORDER_TYPE_STANDING)),
                 new Span(order.fromSystem() + " → " + order.toSystem()),
-                fleetNumber(order.ships() + " / " + I18n.t(UiTexts.MAP_LOGISTICS_PER_TURN)));
+                fleetNumber(order.ships() + " " + I18n.t(UiTexts.MAP_COLUMN_STANDING_SHIPS)));
         var route = order.route();
         if (order.rangeLimited()) {
             card.add(new Span(route == null ? I18n.t(UiTexts.NAV_PAUSED)
@@ -1111,12 +1353,25 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
         if (!readOnly) {
             Button edit = new Button(I18n.t(UiTexts.MAP_ACTION_EDIT_STANDING), _ -> onEditStandingOrder.accept(order));
-            edit.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
-            Button delete = new Button(I18n.t(UiTexts.MAP_ACTION_DELETE_STANDING), _ -> onDeleteStandingOrder.accept(order));
-            delete.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY, ButtonVariant.ERROR);
-            card.add(new HorizontalLayout(edit, delete));
+            edit.addThemeVariants(ButtonVariant.SMALL);
+            Button delete = new Button(I18n.t(UiTexts.SYSTEM_CANCEL_TRANSFER), _ -> onDeleteStandingOrder.accept(order));
+            delete.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+            PlayerViewState view = currentView;
+            boolean editable = view != null && view.systems().stream()
+                    .filter(source -> source.id() == order.fromSystemId())
+                    .anyMatch(source -> {
+                        Integer owner = source.ownerId();
+                        return source.availableShips() != null && owner != null
+                                && !view.roundStatus().hasSubmitted(owner);
+                    });
+            edit.setEnabled(editable);
+            delete.setEnabled(editable);
+            HorizontalLayout actions = new HorizontalLayout(edit, delete);
+            actions.addClassName("system-transfer-actions");
+            card.add(actions);
         }
-        card.addClickListener(_ -> onStandingOrderSelected.accept(order.id()));
+        card.getElement().addEventListener("click", _ -> onStandingOrderSelected.accept(order.id()))
+                .setFilter("!event.target.closest('vaadin-button, vaadin-details')");
         KeyboardActions.enable(card);
         if (Integer.valueOf(order.id()).equals(selectedStandingOrderId)) {
             card.addClassName("fleet-travel-card-selected");
@@ -1196,7 +1451,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         iconSpan.getElement().setAttribute("aria-label", label);
         Span valueSpan = new Span(String.valueOf(value));
         valueSpan.addClassName("system-metric-value");
-        Div metric = new Div(iconSpan, valueSpan);
+        Span labelSpan = new Span(label);
+        labelSpan.addClassName("system-metric-label");
+        Div metric = new Div(iconSpan, new Div(valueSpan, labelSpan));
         metric.addClassName("system-metric");
         metric.getElement().setAttribute("aria-label", label + ": " + value);
         return metric;
@@ -1215,7 +1472,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     private static Span flowStep(String icon, String label, int value) {
-        Span step = new Span(icon + " " + value);
+        Span step = new Span(new Span(icon + " " + value), new Span(label));
         step.addClassName("system-flow-step");
         step.getElement().setAttribute("title", label);
         step.getElement().setAttribute("aria-label", label + ": " + value);

@@ -1,5 +1,9 @@
 package de.zettsystems.starfare.game.domain;
 
+import de.zettsystems.starfare.economy.values.RecyclingRules;
+
+import de.zettsystems.starfare.economy.domain.MetalProduction;
+import de.zettsystems.starfare.economy.domain.MetalEconomy;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyState;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.economy.domain.ColonyEconomy;
@@ -36,8 +40,8 @@ public class GameState {
         victorySystemPercent = victoryRules.individualSystemPercent();
     }
     public GameOutcome outcome() {
-        return new GameOutcome(winnerId, finishedAt, winningAlliance == null
-                ? (winnerId == null ? List.of() : List.of(winnerId)) : groupWinners, winningAlliance);
+        List<Integer> individualWinners = winnerId == null ? List.of() : List.of(winnerId);
+        return new GameOutcome(winnerId, finishedAt, winningAlliance == null ? individualWinners : groupWinners, winningAlliance);
     }
     public void winAsAlliance(int group, Set<Integer> winners) {
         if (!victoryRules().allianceVictoryAllowed() || winners.size() < 2
@@ -70,11 +74,11 @@ public class GameState {
     private @Nullable NavigationSettings navigation;
     public Optional<NavigationSettings> navigationSettings() { return Optional.ofNullable(navigation); }
     public void configureNavigation(NavigationSettings settings) {
-        if (started || navigation != null || !ruleset.spaceward()) { throw new IllegalStateException("Navigation is fixed at creation"); }
+        if (started || navigation != null || !ruleset.isSpaceward()) { throw new IllegalStateException("Navigation is fixed at creation"); }
         navigation = settings;
     }
     public void initializeNavigation() {
-        if (ruleset.spaceward() && navigation == null) {
+        if (ruleset.isSpaceward() && navigation == null) {
             navigation = RangeCalibration.forGalaxy(systems);
         }
     }
@@ -89,6 +93,89 @@ public class GameState {
     private RulesetRef ruleset = RulesetRef.SECTOR_FORCES;
     private final Map<Integer, Industry> industries = new HashMap<>();
     private final Map<Integer, ColonyEconomy> colonies = new HashMap<>();
+    private @Nullable MetalEconomy metals;
+    public Optional<MetalEconomy> metals() { return Optional.ofNullable(metals); }
+    public MetalProduction metalPreview() {
+        return MetalProduction.forPlan(systems, industries, colonies, Objects.requireNonNull(metals));
+    }
+    public int recyclingShips(int system) {
+        var metal = metals;
+        var recycling = metal == null ? null : metal.recycling();
+        return recycling == null ? 0 : recycling.orders().getOrDefault(system, 0);
+    }
+    public void planRecycling(int system, int ships) {
+        if (!ruleset.usesRecycling()) { throw new IllegalArgumentException("Recycling requires W3 rules"); }
+        metals = Objects.requireNonNull(metals).planRecycling(system, ships);
+    }
+    public List<de.zettsystems.starfare.report.values.TurnEvent.Recycling> recycleShips() {
+        if (!ruleset.usesRecycling()) { return List.of(); }
+        var settlement = de.zettsystems.starfare.economy.domain.Recycling.calculate(systems, Objects.requireNonNull(metals));
+        var events = settlement.ships().entrySet().stream().sorted(Map.Entry.comparingByKey()).map(entry -> {
+            var system = getSystem(entry.getKey());
+            return new de.zettsystems.starfare.report.values.TurnEvent.Recycling(Objects.requireNonNull(system.ownerId()),
+                    system.id(), system.name(), entry.getValue(), (long) entry.getValue() * RecyclingRules.RETURN_TENTHS);
+        }).toList();
+        settlement.ships().forEach((id, count) -> updateSystem(id, system -> system.scrapShips(count)));
+        metals = settlement.economy();
+        return events;
+    }
+    public long totalShips() {
+        return systems.stream().mapToLong(StarSystem::garrison).sum() + fleets.stream().mapToLong(Fleet::ships).sum();
+    }
+    public void recordCombatLoss(long ships) {
+        if (ruleset.usesRecycling()) { metals = Objects.requireNonNull(metals).recordCombatLoss(ships); }
+    }
+    public int expectedShipProduction(int systemId) {
+        return ruleset.usesMetals() ? metalPreview().ships().getOrDefault(systemId, 0) : getSystem(systemId).productionPerTurn();
+    }
+    public void establishMetals(MetalEconomy initial) {
+        if (started || !ruleset.usesMetals() || metals != null) { throw new IllegalArgumentException("Metal economy is fixed at creation"); }
+        metals = ruleset.usesRecycling() ? initial.establishRecycling(totalShips()) : initial;
+        validateMetals();
+        systems.replaceAll(system -> system.planShipbuilding(shipbuilding(system.id(), Objects.requireNonNull(industries.get(system.id())))));
+    }
+    public void planMining(int systemId, int points) {
+        if (points < 0 || points > usableIndustrialCapacity(systemId)
+                - Objects.requireNonNull(industries.get(systemId)).expansionAllocation()) {
+            throw new IllegalArgumentException("Mining exceeds available capacity");
+        }
+        metals = Objects.requireNonNull(metals).allocateMining(systemId, points);
+        updateSystem(systemId, system -> system.planShipbuilding(shipbuilding(systemId, Objects.requireNonNull(industries.get(systemId)))));
+    }
+    public void completeMetalProduction(MetalProduction production) {
+        for (StarSystem system : List.copyOf(systems)) {
+            if (system.ownerId() == null || system.neutral()) { continue; }
+            Industry expanded = Objects.requireNonNull(industries.get(system.id())).expandForOneTurn();
+            ColonyEconomy grown = Objects.requireNonNull(colonies.get(system.id())).grow();
+            colonies.put(system.id(), grown);
+            industries.put(system.id(), expanded);
+            int next = grown.shipbuilding(expanded) - Objects.requireNonNull(Objects.requireNonNull(metals).mining().get(system.id()));
+            updateSystem(system.id(), current -> current.completeShipbuilding(Objects.requireNonNull(production.ships().get(system.id())), 0, next));
+        }
+        metals = production.economy();
+    }
+    private void validateMetals() {
+        if (!ruleset.usesMetals()) {
+            if (metals != null) { throw new IllegalArgumentException("Metal economy requires W2 rules"); }
+            return;
+        }
+        var stored = metals;
+        if (stored == null) { throw new IllegalArgumentException("Missing stored metal economy"); }
+        de.zettsystems.starfare.economy.domain.RecyclingOrders.validate(this, stored);
+        var participants = players.stream().map(Player::id).collect(java.util.stream.Collectors.toSet());
+        if (!stored.deposits().keySet().equals(industries.keySet()) || !stored.stocks().keySet().equals(participants)
+                || systems.stream().anyMatch(system -> Objects.requireNonNull(stored.mining().get(system.id())) > usableIndustrialCapacity(system.id())
+                        - Objects.requireNonNull(industries.get(system.id())).expansionAllocation()
+                        || (system.neutral() && Objects.requireNonNull(stored.mining().get(system.id())) != 0))
+                || replayFrames.values().stream().anyMatch(frame -> {
+                    var historical = frame.metals();
+                    if (historical != null) { de.zettsystems.starfare.economy.domain.RecyclingOrders.validateReference(ruleset, historical); }
+                    return historical == null || !historical.deposits().keySet().equals(industries.keySet())
+                            || !historical.stocks().keySet().equals(participants);
+                })) {
+            throw new IllegalArgumentException("Incomplete stored metal economy");
+        }
+    }
 
     public Map<Integer, ColonyEconomy> colonies() { return Map.copyOf(colonies); }
 
@@ -115,7 +202,8 @@ public class GameState {
 
     private int shipbuilding(int systemId, Industry industry) {
         ColonyEconomy colony = colonies.get(systemId);
-        return colony == null ? industry.shipbuilding() : colony.shipbuilding(industry);
+        int output = colony == null ? industry.shipbuilding() : colony.shipbuilding(industry);
+        return output - (metals == null ? 0 : Objects.requireNonNull(metals.mining().get(systemId)));
     }
 
     private void validateColonies() {
@@ -137,7 +225,7 @@ public class GameState {
     public Map<Integer, Industry> industries() { return Map.copyOf(industries); }
 
     public void initializeIndustry() {
-        if (!ruleset.spaceward() || !industries.isEmpty()) { return; }
+        if (!ruleset.isSpaceward() || !industries.isEmpty()) { return; }
         systems.forEach(system -> industries.put(system.id(), Industry.establish(system.productionPerTurn())));
     }
 
@@ -147,7 +235,7 @@ public class GameState {
                 || planned.expansionProgress() != current.expansionProgress()) {
             throw new IllegalArgumentException("Allocation must preserve industrial capacity and progress");
         }
-        if (planned.expansionAllocation() > usableIndustrialCapacity(systemId)) {
+        if (planned.expansionAllocation() > usableIndustrialCapacity(systemId) - (metals == null ? 0 : Objects.requireNonNull(metals.mining().get(systemId)))) {
             throw new IllegalArgumentException("Expansion exceeds available colony labor");
         }
         updateSystem(systemId, system -> system.planShipbuilding(shipbuilding(systemId, planned)));
@@ -190,7 +278,7 @@ public class GameState {
     }
 
     private void validateIndustry() {
-        if (!ruleset.spaceward()) {
+        if (!ruleset.isSpaceward()) {
             if (!industries.isEmpty()) { throw new IllegalArgumentException("Industry belongs only to Spaceward"); }
             return;
         }
@@ -338,6 +426,7 @@ public class GameState {
     public void start() {
         initializeIndustry();
         validateColonies();
+        validateMetals();
         initializeNavigation();
         this.started = true;
         this.turnStartedAt = Instant.now();
@@ -558,6 +647,7 @@ public class GameState {
         this.systems.clear();
         this.industries.clear();
         colonies.clear();
+        metals = null;
         navigation = null;
         diplomacy = DiplomacyState.EMPTY;
         this.fleets.clear();
@@ -695,10 +785,10 @@ public class GameState {
             if (current.id() == id) {
                 StarSystem updated = updater.apply(current);
                 if (!Objects.equals(current.ownerId(), updated.ownerId())) {
-                    Industry industry = industries.get(id);
-                    if (industry != null) {
-                        industries.put(id, industry.captured());
-                        updated = updated.planShipbuilding(shipbuilding(id, industry.captured()));
+                    Industry captured = industries.computeIfPresent(id, (_, industry) -> industry.captured());
+                    if (captured != null) {
+                        if (metals != null) { metals = metals.allocateMining(id, 0); }
+                        updated = updated.planShipbuilding(shipbuilding(id, captured));
                     }
                 }
                 systems.set(i, updated);
@@ -737,7 +827,7 @@ public class GameState {
 
     /** Captures the resolved state of the current turn without keeping mutable collections. */
     public void captureReplayFrame() {
-        replayFrames.put(turn, new ReplayFrame(turn, systems, fleets, reports, industries, outcome(), colonies));
+        replayFrames.put(turn, new ReplayFrame(turn, systems, fleets, reports, industries, outcome(), colonies, metals));
     }
 
     private record Bounds(double x, double y, double width, double height) {
@@ -751,6 +841,7 @@ public class GameState {
 
     public static GameStateSnapshot toSnapshot(GameState s) {
         s.validateColonies();
+        s.validateMetals();
         s.validateIndustry();
         s.validateNavigation();
         s.validateDiplomacy();
@@ -774,7 +865,7 @@ public class GameState {
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
-                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome(), new HashMap<>(s.colonies));
+                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome(), new HashMap<>(s.colonies), s.metals);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -787,6 +878,17 @@ public class GameState {
         c.fleets.addAll(s.fleets());
         c.reports.putAll(s.reports());
         s.intel().forEach((pid, inner) -> c.intel.put(pid, new HashMap<>(inner)));
+        restoreOwnership(c, s);
+        restoreEconomy(c, s);
+        restoreTravel(c, s);
+        restoreOrders(c, s);
+        restoreSettings(c, s);
+        validateOutcome(c, s);
+        restoreTiming(c, s);
+        return c;
+    }
+
+    private static void restoreOwnership(GameState c, GameStateSnapshot s) {
         Map<Integer, List<SystemOwnership>> history = s.ownershipHistory();
         if (history != null) {
             history.forEach((systemId, periods) -> c.ownershipHistory.put(systemId, new ArrayList<>(periods)));
@@ -814,6 +916,9 @@ public class GameState {
         if (invited != null) {
             c.invitedSeats.putAll(invited);
         }
+    }
+
+    private static void restoreEconomy(GameState c, GameStateSnapshot s) {
         RulesetRef storedRuleset = s.ruleset();
         c.ruleset = storedRuleset == null ? RulesetRef.SECTOR_FORCES : storedRuleset;
         VictoryRules storedVictoryRules = s.victoryRules();
@@ -827,8 +932,14 @@ public class GameState {
         if (industry != null) { c.industries.putAll(industry); }
         var storedColonies = s.colonies();
         if (storedColonies != null) { c.colonies.putAll(storedColonies); }
+        c.metals = s.metals();
+        s.pendingOrders().forEach((pid, orders) -> c.pendingOrders.put(pid, new ArrayList<>(orders)));
         c.validateColonies();
+        c.validateMetals();
         c.validateIndustry();
+    }
+
+    private static void restoreTravel(GameState c, GameStateSnapshot s) {
         var treaties = s.diplomacy();
         c.diplomacy = treaties == null ? DiplomacyState.EMPTY : treaties;
         c.validateDiplomacy();
@@ -842,9 +953,11 @@ public class GameState {
         if (c.originalSetup != null && !c.originalSetup.ruleset().equals(c.ruleset)) {
             throw new IllegalArgumentException("Snapshot and original setup disagree on game rules");
         }
+    }
+
+    private static void restoreOrders(GameState c, GameStateSnapshot s) {
         var previous = s.previousOrders();
         if (previous != null) { previous.forEach((pid, orders) -> c.previousOrders.put(pid, List.copyOf(orders))); }
-        s.pendingOrders().forEach((pid, orders) -> c.pendingOrders.put(pid, new ArrayList<>(orders)));
         Map<Integer, List<StandingOrder>> standing = s.standingOrders();
         if (standing != null) {
             standing.forEach((pid, orders) -> c.standingOrders.put(pid, new ArrayList<>(orders)));
@@ -852,6 +965,9 @@ public class GameState {
         if (s.nextStandingOrderId() != null) {
             c.nextStandingOrderId.putAll(s.nextStandingOrderId());
         }
+    }
+
+    private static void restoreSettings(GameState c, GameStateSnapshot s) {
         c.observersAllowed = s.observersAllowed();
         c.reentryAllowed = s.reentryAllowed();
         Boolean presentationEnabled = s.battlePresentationEnabled();
@@ -865,6 +981,10 @@ public class GameState {
         c.victorySystemPercent = victoryPercent != null
                 ? Math.clamp(victoryPercent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT, GameConfig.MAX_VICTORY_SYSTEM_PERCENT)
                 : GameConfig.VICTORY_SYSTEM_PERCENT;
+    }
+
+    private static void validateOutcome(GameState c, GameStateSnapshot s) {
+        var storedOutcome = s.outcome();
         if (c.victoryRules != null && c.victoryRules.individualSystemPercent() != c.victorySystemPercent) {
             throw new IllegalArgumentException("Stored victory thresholds disagree");
         }
@@ -873,6 +993,9 @@ public class GameState {
                     || !c.players.stream().map(Player::id).toList().containsAll(storedOutcome.winnerIds()))))) {
             throw new IllegalArgumentException("Stored winners disagree with game rules");
         }
+    }
+
+    private static void restoreTiming(GameState c, GameStateSnapshot s) {
         // Aeltere Snapshots kennen das Feld nicht; dann laeuft die Zug-Uhr ab Wiederherstellung.
         Instant startedAt = s.turnStartedAt();
         c.turnStartedAt = startedAt != null ? startedAt : Instant.now();
@@ -883,7 +1006,6 @@ public class GameState {
         if (missed != null) {
             c.missedRounds.putAll(missed);
         }
-        return c;
     }
 
     /**
@@ -938,14 +1060,17 @@ public class GameState {
         c.active = s.active();
         c.started = s.started();
 
-        // Turn angleichen (ohne direkten Setter)
-        while (c.turn() < s.turn()) {
-            c.nextTurn();
-        }
+        // Rehydrate counters and clocks without executing a new round.
+        c.turn = s.turn;
+        c.nextGlobalFleetId = s.nextGlobalFleetId;
+        c.nextLocalFleetNo.putAll(s.nextLocalFleetNo);
+        c.turnStartedAt = s.turnStartedAt;
+        c.stragglerSince = s.stragglerSince;
 
         c.ruleset = s.ruleset;
         c.industries.putAll(s.industries);
         c.colonies.putAll(s.colonies);
+        c.metals = s.metals;
         c.navigation = s.navigation;
         c.diplomacy = s.diplomacy;
         c.originalSetup = s.originalSetup;
