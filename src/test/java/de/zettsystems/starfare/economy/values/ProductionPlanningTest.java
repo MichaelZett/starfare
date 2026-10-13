@@ -58,38 +58,78 @@ class ProductionPlanningTest {
             }
         }
     }
-    @Test void switchingSystemsRetainsDraftsAndLocksButChangingGamesDoesNot() {
-        var drafts = new ProductionDrafts(); var industry = industry(10, 0, 0, 100);
-        drafts.reconcile("one", 1, Map.of(1, industry, 2, industry));
-        var alpha = drafts.forSystem(1, 1, industry); alpha.pin(2, true); alpha.choose(new AllocationSplit(5, 5, 0));
-        drafts.forSystem(2, 1, industry).choose(new AllocationSplit(0, 10, 0));
-        assertThat(drafts.forSystem(1, 1, industry).allocation()).isEqualTo(new AllocationSplit(5, 5, 0));
-        assertThat(drafts.pending()).containsExactlyInAnyOrder(1, 2);
-        alpha.discard(); assertThat(alpha.locks()).containsExactly(2);
-        assertThat(drafts.pending()).containsExactly(2);
-        drafts.reconcile("two", 1, Map.of(1, industry)); assertThat(drafts.pending()).isEmpty();
-        assertThat(drafts.forSystem(1, 1, industry).locks()).isEmpty();
+    @Test void inputsKeepPinsAndViewStateAcrossSystemsButNotAcrossGames() {
+        var inputs = new ProductionInputs(); var industry = industry(10, 0, 0, 100);
+        inputs.reconcile("one", 1, Map.of(1, industry, 2, industry));
+        var alpha = inputs.forSystem(1, 1, industry); alpha.pin(2, true); alpha.expand(); alpha.focus(1);
+        inputs.forSystem(2, 1, industry).choose(new AllocationSplit(0, 10, 0));
+        assertThat(inputs.forSystem(1, 1, industry).locks()).containsExactly(2);
+        inputs.reconcile("one", 1, Map.of(1, industry, 2, industry));
+        assertThat(alpha.expanded()).isTrue();
+        assertThat(alpha.focus()).isEqualTo(1);
+        assertThat(inputs.forSystem(2, 1, industry).changed()).isFalse();
+        inputs.reconcile("two", 1, Map.of(1, industry));
+        assertThat(inputs.forSystem(1, 1, industry).locks()).isEmpty();
     }
-    @Test void roundAndExternalPlanChangesRequireExplicitRecheck() {
-        var drafts = new ProductionDrafts(); var industry = industry(10, 0, 0, 100);
-        drafts.reconcile("one", 1, Map.of(1, industry));
-        var draft = drafts.forSystem(1, 1, industry); draft.choose(new AllocationSplit(5, 5, 0));
-        drafts.reconcile("one", 2, Map.of(1, industry));
-        assertThat(draft.stale()).isTrue(); assertThat(draft.allocation()).isEqualTo(new AllocationSplit(5, 5, 0));
-        assertThat(draft.recheck(2)).isTrue(); assertThat(draft.stale()).isFalse();
-        drafts.reconcile("one", 2, Map.of(1, industry(10, 1, 0, 100)));
-        assertThat(draft.stale()).isTrue();
-        drafts.reconcile("one", 3, Map.of(1, industry(8, 1, 0, 100)));
-        assertThat(draft.recheck(3)).isFalse(); assertThat(draft.stale()).isTrue();
-        draft.adjust(1, 3);
-        assertThat(draft.allocation().total()).isEqualTo(8);
-        assertThat(draft.allocation().mining()).isEqualTo(3);
-        assertThat(draft.stale()).isTrue();
-        assertThat(draft.recheck(3)).isTrue();
-        drafts.reconcile("one", 4, Map.of(1, industry(8, 1, 0, 100)));
-        draft.discard(); draft.choose(new AllocationSplit(4, 4, 0));
-        drafts.reconcile("one", 4, Map.of(1, industry(8, 1, 0, 100)));
-        assertThat(draft.stale()).isFalse();
-        drafts.reconcile("one", 4, Map.of()); assertThat(drafts.pending()).isEmpty();
+    @Test void acceptedAndRejectedSavesNeverLeaveAnUnsavedWish() {
+        var inputs = new ProductionInputs(); var industry = industry(10, 0, 0, 100);
+        var input = inputs.forSystem(1, 1, industry);
+        input.adjust(1, 4);
+        assertThat(input.changed()).isTrue();
+        assertThat(input.allocation()).isEqualTo(new AllocationSplit(6, 4, 0));
+        var shortened = new de.zettsystems.starfare.game.values.RelocationAdjustment(3, 1, 2, "Vega", 6, 4);
+        input.accepted(java.util.List.of(shortened));
+        assertThat(input.changed()).isFalse();
+        assertThat(input.saved()).isEqualTo(new AllocationSplit(6, 4, 0));
+        assertThat(input.status()).isEqualTo(ProductionInputs.Status.SAVED);
+        assertThat(input.relocations()).containsExactly(shortened);
+        input.adjust(1, 8);
+        assertThat(input.status()).isEqualTo(ProductionInputs.Status.NONE);
+        input.rejected();
+        assertThat(input.allocation()).isEqualTo(new AllocationSplit(6, 4, 0));
+        assertThat(input.status()).isEqualTo(ProductionInputs.Status.NOT_SAVED);
+    }
+    @Test void serverUpdatesWinAndANewRoundClearsFeedback() {
+        var inputs = new ProductionInputs(); var industry = industry(10, 0, 0, 100);
+        inputs.reconcile("one", 1, Map.of(1, industry));
+        var input = inputs.forSystem(1, 1, industry);
+        input.adjust(1, 3); input.accepted(java.util.List.of()); input.focus(4);
+        inputs.reconcile("one", 1, Map.of(1, industry(10, 1, 0, 100)));
+        assertThat(input.allocation()).isEqualTo(new AllocationSplit(9, 1, 0));
+        assertThat(input.status()).isEqualTo(ProductionInputs.Status.SAVED);
+        inputs.reconcile("one", 2, Map.of(1, industry(8, 1, 0, 100)));
+        assertThat(input.allocation()).isEqualTo(new AllocationSplit(7, 1, 0));
+        assertThat(input.status()).isEqualTo(ProductionInputs.Status.NONE);
+        assertThat(input.focus()).isNull();
+        assertThat(input.turn()).isEqualTo(2);
+        inputs.reconcile("one", 2, Map.of());
+        assertThat(inputs.forSystem(1, 2, industry).locks()).isEmpty();
+    }
+    @Test void outcomesSeparatePointsYieldAndActualResults() {
+        var plan = new IndustryView(6, 0, 8, 12, 0, false, 0, null, new MetalView(100, 3, 2, 10, 6, 4, 4));
+        var outcome = ProductionOutcome.of(new AllocationSplit(4, 2, 0), plan);
+        assertThat(outcome.ships()).isEqualTo(4);
+        assertThat(outcome.metal()).isEqualTo(6);
+        assertThat(outcome.yieldPerPoint()).isEqualTo(3);
+        assertThat(outcome.shipsShort()).isFalse();
+        assertThat(outcome.depositLimited()).isFalse();
+        var short_ = ProductionOutcome.of(new AllocationSplit(4, 2, 0),
+                new IndustryView(6, 0, 8, 12, 0, false, 0, null, new MetalView(1, 3, 2, 0, 1, 4, 2)));
+        assertThat(short_.shipsShort()).isTrue();
+        assertThat(short_.plannedShips()).isEqualTo(4);
+        assertThat(short_.ships()).isEqualTo(2);
+        assertThat(short_.depositLimited()).isTrue();
+        var growth = ProductionOutcome.of(new AllocationSplit(3, 0, 2),
+                new IndustryView(5, 2, 8, 12, 0, false, 0));
+        assertThat(growth.progress()).isEqualTo(8);
+        assertThat(growth.nextProgress()).isEqualTo(10);
+        assertThat(growth.cost()).isEqualTo(12);
+        assertThat(ProductionOutcome.of(new AllocationSplit(0, 0, 9), new IndustryView(10, 9, 8, 12, 0, false, 0)).nextProgress()).isEqualTo(12);
+    }
+    @Test void metalChangeIsTheRoundedStockDifference() {
+        assertThat(new MetalBalance(24, 2, 1, 6, 21).formattedChange()).isEqualTo("(\u22123)");
+        assertThat(new MetalBalance(10, 4, 0, 1, 13).formattedChange()).isEqualTo("(+3)");
+        assertThat(new MetalBalance(5, 0, 0, 0, 5).formattedChange()).isEqualTo("(±0)");
+        assertThat(new MetalBalance(24, 2, 1, 6, 21).change()).isEqualTo(-3);
     }
 }

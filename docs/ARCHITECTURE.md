@@ -938,9 +938,23 @@ immutable industry and empire views; `EmpireStats.metal` is absent for non-metal
 rules and unprivileged observer views.
 
 `AllocationSplit` redistributes integer capacity shares while retaining pinned
-values. `ProductionPlanDialog` keeps the allocation draft in a modal editor,
-previews each edit and applies the existing atomic production command only on
-confirmation. Pins are view-local and require no snapshot migration. Older
+values. `ProductionEditor` saves every completed input through
+`GameService.commitProduction`; slider dragging only calls the copy-based preview.
+`ProductionInputs` keeps the transient input, pins, opened editor, focused control
+and the last save feedback per system of one map view; a server update always
+replaces the input. `ProductionOutcome` turns an authorized forecast into points,
+yield and actual ships, metal or progress. Pins are view-local and require no
+snapshot migration. `MetalBalance.formattedChange` derives the header change from
+`next - current`, so the rounded display matches the forecast stock.
+
+`RelocationTrim` is the single rule for W5 relocation shortening: floor(old × limit /
+total), remaining ships by largest remainder, ties by order id, zero removes the
+route. `FleetService.trimRelocations` applies it with `routingCapacity` (expected
+shipbuilding plus incoming routes) as limit. `DefaultGameService.allocate` runs the
+production command and, only for `RulesetRef.adjustsRelocationsToShipbuilding()` and
+a lower expected shipbuilding, the trim in the same write lock; the preview performs
+the identical steps on its copy. `ProductionCommit` and `ProductionPlanPreview`
+return the adjustments. Metal shortage alone never rewrites standing orders. Older
 Spaceward references retain their two-way expansion/shipbuilding rule. Fleet
 routing still uses the same internal distance limit; presentation replaces the
 numeric limit with reachability and station information.

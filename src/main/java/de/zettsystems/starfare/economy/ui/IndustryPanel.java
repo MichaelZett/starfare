@@ -1,7 +1,5 @@
 package de.zettsystems.starfare.economy.ui;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
@@ -10,14 +8,12 @@ import de.zettsystems.starfare.economy.values.IndustryView;
 import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
-import de.zettsystems.starfare.style.HtmlAttributes;
 import java.util.function.IntConsumer;
 
-/** Explains the saved allocation and previews an edit before applying it. */
+/** Shows what the saved allocation produces and edits it in place; every completed change is saved at once. */
 public final class IndustryPanel extends Div {
     private static final long serialVersionUID = 1L;
     public static final String ALLOCATION_ID = "industry-expansion";
-    public static final String APPLY_ID = "industry-apply";
     private final Div colonyDetails = new Div();
     private final Div background = new Div();
     private @org.jspecify.annotations.Nullable ProductionEditor editor;
@@ -25,40 +21,33 @@ public final class IndustryPanel extends Div {
     public record Actions(IntConsumer recycling,
                           java.util.function.Function<de.zettsystems.starfare.economy.values.AllocationSplit,
                                   java.util.Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview>> preview,
-                          java.util.function.Predicate<de.zettsystems.starfare.economy.values.AllocationSplit> commit) { }
+                          java.util.function.Function<de.zettsystems.starfare.economy.values.AllocationSplit,
+                                  de.zettsystems.starfare.economy.values.ProductionCommit> commit) { }
     public IndustryPanel(IndustryView industry, boolean editable, Actions actions) {
-        this(industry, editable, actions, new de.zettsystems.starfare.economy.values.ProductionDrafts()
-                .forSystem(0, 0, industry), 0, () -> { });
+        this(industry, editable, actions, new de.zettsystems.starfare.economy.values.ProductionInputs()
+                .forSystem(0, 0, industry));
     }
 
     public IndustryPanel(IndustryView industry, boolean editable, Actions actions,
-                         de.zettsystems.starfare.economy.values.ProductionDrafts.Draft draft,
-                         int turn, Runnable changed) {
+                         de.zettsystems.starfare.economy.values.ProductionInputs.Input input) {
         addClassName("industry-panel");
         add(new H3(I18n.t(UiTexts.ECONOMY_TITLE)),
                 new Span(I18n.t(UiTexts.ECONOMY_CAPACITY, industry.capacity(), EconomyRules.MAX_CAPACITY)));
         var metal = industry.metal();
         if (metal != null) { addClassName("metal-details"); }
-        int mining = metal == null ? 0 : metal.miningPoints();
-        int ships = industry.usableCapacity() - mining - industry.expansionAllocation();
-        String allocation = metal == null
-                ? I18n.t(UiTexts.UX_ALLOCATION_WITHOUT_METAL, industry.expansionAllocation(), ships)
-                : I18n.t(UiTexts.UX_ALLOCATION_SUMMARY, mining, industry.expansionAllocation(), ships);
-        add(new Span(allocation),
-                new Div(new Span(I18n.t(UiTexts.UX_SHIP_RESULT,
-                        industry.usableCapacity() - mining - industry.expansionAllocation(), industry.shipbuilding()))),
-                expansionProgress(industry));
         if (industry.usableCapacity() < industry.capacity()) {
             add(new Span(I18n.t(UiTexts.UX_LABOR_LIMIT, industry.usableCapacity(), industry.capacity())));
         }
         if (editable) {
-            editor = new ProductionEditor(draft, turn, actions.preview(), actions.commit(), changed);
+            editor = new ProductionEditor(input, actions.preview(), actions.commit());
             add(editor);
         } else {
-            add(new ProductionFunctions(industry, _ -> { }));
-            getChildren().filter(ProductionFunctions.class::isInstance).forEach(component ->
-                    component.getElement().getChildren().forEach(element -> element.setProperty("disabled", true)));
+            var functions = new ProductionFunctions(de.zettsystems.starfare.economy.values.ProductionOutcome.of(
+                    de.zettsystems.starfare.economy.values.ProductionPreset.saved(industry), industry), metal != null, _ -> { });
+            functions.getElement().getChildren().forEach(element -> element.setProperty("disabled", true));
+            add(functions);
         }
+        add(expansionProgress(industry));
         showColony(industry);
         if (metal != null) {
             background.add(new Div(new Span(I18n.t(UiTexts.METAL_DEPOSIT, metal.remaining(), metal.yieldPerPoint()))));

@@ -8,6 +8,15 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Spaceward-Produktion gilt sofort: Zahlenfelder, Plus/Minus und Vorgaben speichern
+  direkt, der Schieberegler beim Loslassen. Entwürfe, Übernehmen, Neu prüfen und
+  die Warnung vor offenen Entwürfen entfallen. Jede Funktion zeigt Punkte und Ertrag
+  je Runde (z. B. „2 Punkte × 3 → 6 Metall/Runde“), Metallmangel und erschöpfte
+  Vorkommen direkt am Ergebnis. Der Kopf zeigt Metallbarren, Vorrat und Änderung
+  zur nächsten Runde; die Logistik nennt Fördereignung und Restvorkommen.
+- 1.2.0-w5 kürzt bei weniger Schiffbau die ausgehenden Verlegungen des Systems
+  anteilig und meldet jede Änderung; ältere Fassungen bleiben unverändert.
+
 - Interner Spaceward-Wirtschaftskandidat 1.2.0-w5 für das lokale Erprobungsprofil:
   Bevölkerung wächst weiter und beschreibt die Kolonie, begrenzt aber nicht mehr
   die nutzbare Industrie. Gespeicherte Partien behalten ihre Regelversion; 1.2.0-w4

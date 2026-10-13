@@ -36,6 +36,13 @@ public interface FleetService {
     /** Summe der bereits von diesem System ausgehenden Verlegungen. */
     int routedFrom(GameState state, int playerId, int systemId);
 
+    /**
+     * Shortens the outgoing relocations of {@code systemId} to its current routing capacity
+     * (expected shipbuilding plus incoming routes). Routes that drop to zero are removed.
+     */
+    java.util.List<de.zettsystems.starfare.game.values.RelocationAdjustment> trimRelocations(
+            GameState state, int playerId, int systemId);
+
     /** Groesse, die eine neue oder ersetzte Verlegung {@code fromId → toId} hoechstens haben darf. */
     int routingHeadroom(GameState state, int playerId, int fromId, int toId);
 

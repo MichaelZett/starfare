@@ -52,10 +52,8 @@ public class ColonySteps {
         screenshot("initial");
         var input = browser.awaitCss("#industry-expansion input");
         input.sendKeys(Keys.chord(Keys.CONTROL, "a"), "3", Keys.TAB);
-        // The server enables saving only after it has processed the edit; a click before that is ignored.
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                browser.awaitCss("#industry-apply").getDomAttribute("disabled") == null);
-        browser.clickCss("#industry-apply");
+        // A completed number entry is saved immediately; there is no separate apply step.
+        browser.awaitTextIn(".production-save-status", "Gespeichert");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                 registry.readState(id, current -> current.industries().get(1).expansionAllocation()) == 3);
         assertThat(games.submitTurn(id, 1)).isTrue();

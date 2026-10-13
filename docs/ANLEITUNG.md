@@ -563,37 +563,49 @@ ordnet Galaxie, Teilnehmer, Sieg und Runden/Zugang; **Ändern** führt zur jewei
 Einstellung zurück. Die Galaxienvorschau ist ein aufklappbares Verteilungsbeispiel.
 
 In den Systemdetails öffnen Werfthalle, Förderturm mit Seilrad und Werkhalle sowie Baukran direkt den jeweiligen
-Anteil. Ihre Zahlen zeigen die gespeicherte Aktivität, keine Anzahl gekaufter Gebäude.
+Anteil. Jede Funktion zeigt eingesetzte Punkte und ihren Ertrag je Runde, etwa
+„4 Punkte → 4 Schiffe/Runde“, „2 Punkte × 3 → 6 Metall/Runde“ oder
+„3 Punkte → Fortschritt 8/12 → 11/12“. Fehlt Metall, steht dort „4 Punkte → 2 von
+4 Schiffen/Runde“; reicht das Vorkommen nicht, „Vorkommen erschöpft“. Die
+Fördereignung („3 je Punkt“) steht direkt an der Förderung.
 **Produktion planen** öffnet die gekoppelte Verteilung am System.
 Spaceward mit Metall verwendet **Schiffe bauen**, **Metall fördern** und
 **Industrie ausbauen**. Mehr Punkte in einem Bereich reduzieren die anderen im
 bisherigen Verhältnis. **Wert festhalten** schützt einen Anteil; bei zwei festen
 Werten ist der dritte bestimmt. Ältere Regeln ohne Metall haben zwei Bereiche.
 Die Vorgaben **Schiffe**, **Metall**, **Industrie**, **Gleichmäßig** und **Autarker
-Schiffbau** erzeugen direkt einen Entwurf. Fixierte Werte bleiben erhalten.
+Schiffbau** gelten sofort. Fixierte Werte bleiben erhalten.
 Autarker Schiffbau teilt freie Punkte auf Schiffbau und Förderung; ein ungerader
 Restpunkt geht in die Förderung. Das ist eine einmalige Aufteilung und garantiert
 keine Metallversorgung. Nicht anwendbare Vorgaben zeigen den Grund.
 Die nutzbare Kapazität ist das gemeinsame Budget. Metallmangel kann den tatsächlichen
 Schiffbau zusätzlich begrenzen; die Vorschau nennt diesen Grund ausdrücklich.
 
-**Plan übernehmen** speichert die Verteilung. Reglerbewegungen verändern nur den
-Entwurf. **Gespeicherten Plan laden** setzt ihn zurück; **Verwerfen und schließen**
-verwirft die Änderungen dieses Systems und klappt den Editor ein. Fixierungen bleiben erhalten.
-Die Vorschau zeigt Förderung, Schiffbau, Ausbau und Verlegung sowie die Metallbilanz
-für das gesamte Imperium. Der aktuelle Metallvorrat steht oben in der Spielleiste.
+Es gibt keinen Übernehmen-Knopf: Zahlenfeld, Plus/Minus und Vorgaben speichern
+sofort, der Schieberegler beim Loslassen. Während des Ziehens zeigt die Ansicht nur
+eine Vorschau. „Gespeichert“ bestätigt die Änderung; wird sie abgelehnt, etwa nach
+Rundenabgabe, erscheint „Änderung nicht gespeichert“ mit dem gespeicherten Plan.
+Fixierungen gelten nur in der geöffneten Karte und speichern nichts.
+Die Vorschau zeigt Verlegung und die Metallbilanz für das gesamte Imperium.
+Oben in der Spielleiste stehen Metallbarren, Vorrat und Änderung zur nächsten Runde,
+etwa „24 (−3)“: Förderung plus Recycling minus Verbrauch. Die Aufschlüsselung
+öffnet sich per Klick oder Tastatur.
 Planeteneigenschaften liegen unter **Planet und Wirtschaft — Hintergrund**.
 
-Produktionsentwürfe bleiben bei Systemwechsel während der geöffneten Karte erhalten.
-Rundenwechsel oder fremde Planänderungen sperren veraltete Entwürfe bis **Neu prüfen**.
-Bei Rundenabgabe kann man offene Entwürfe ansehen oder bewusst mit gespeicherten
-Plänen abgeben. Es gibt keine automatische Sammelübernahme. Neuladen und Verlassen
-warnen vor dem Verlust; Entwürfe sind nicht dauerhaft gespeichert.
+Ab 1.2.0-w5 kürzt weniger Schiffbau die ausgehenden Verlegungen des bearbeiteten
+Systems, soweit sie Schiffbau plus Zulieferung übersteigen. Mehrere Routen werden
+anteilig gekürzt, etwa 6/4 bei 6 verfügbaren Schiffen auf 4/2; eine Route bei 0
+wird aufgehoben. Die Rückmeldung nennt jede Änderung, z. B. „Verlegung nach Vega:
+6 → 4/Runde“. Späterer Mehrbau erhöht nichts automatisch, und reiner Metallmangel
+ohne eigene Eingabe ändert keine Verlegung. Ältere Fassungen behalten ihre Routen.
+
+Die Logistiksicht nennt für Fördersysteme Ertrag je Punkt und Restvorkommen;
+**Nach Fördereignung sortieren** stellt die ergiebigsten Vorkommen nach vorn.
 
 Die Reichshinweise neben den Kennzahlen führen zu gefilterten Logistiklisten:
 Metallmangel, begrenzte Förderung, fehlende Arbeitskräfte und stockende Verlegungen.
 Die Gruppen zählen jeweils Systeme; sie dürfen nicht zu einer Gesamtsumme addiert
-werden. Entwürfe erscheinen getrennt. Hinweise verwenden gespeicherte Pläne und
+werden. Hinweise verwenden gespeicherte Pläne und
 bleiben während offener Schlachten verborgen.
 
 **Weitere Aktionen → Schiffe verschrotten** öffnet die selten benötigte

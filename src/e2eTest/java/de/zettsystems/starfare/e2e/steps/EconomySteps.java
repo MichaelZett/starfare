@@ -55,12 +55,12 @@ public class EconomySteps {
         browser.clickCss("#production-plan-open");
         WebElement input = browser.awaitCss("#industry-expansion input");
         input.sendKeys(Keys.chord(Keys.CONTROL, "a"), "4", Keys.TAB);
-        browser.awaitTextIn(".production-plan-results", "6 Punkte für Schiffbau → voraussichtlich 6 Schiffe");
-        browser.awaitTextIn(".production-plan-results", "Verlegung: voraussichtlich 8 Schiffe");
-        assertThat(registry.readState(id, state -> state.industries().get(1).expansionAllocation()).intValue()).isZero();
-        browser.clickCss("#industry-apply");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> registry.readState(id, state -> state.industries().get(1).expansionAllocation()) == 4);
-        browser.awaitTextIn(".industry-panel", "6 Punkte für Schiffbau"); browser.awaitCss(".production-functions");
+        browser.awaitTextIn(".production-save-status", "Gespeichert");
+        browser.awaitTextIn(".industry-panel", "6 Punkte → 6 Schiffe/Runde");
+        browser.awaitTextIn(".industry-panel", "4 Punkte → Fortschritt 0/20 → 4/20");
+        browser.awaitTextIn(".production-plan-results", "Verlegung: voraussichtlich 8 Schiffe");
+        browser.awaitCss(".production-functions");
         browser.awaitTextIn(".system-metric-rate", "6 (+0/Runde)");
         browser.captureUiAcceptance("spaceward-production-feedback");
         ((JavascriptExecutor) browser.driver()).executeScript("document.querySelector('.system-details-heading').scrollIntoView({block:'start'})");
@@ -76,10 +76,9 @@ public class EconomySteps {
         browser.driver().navigate().refresh(); selectAlpha();
         browser.clickCss("#production-plan-open");
         assertThat(browser.awaitCss("#industry-expansion input").getDomProperty("value")).isEqualTo("4");
-        browser.clickButtonWithText("Verwerfen und schließen");
         browser.clickButtonWithText("Runde abgeben");
         browser.awaitText("Abgegeben");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> browser.all("#industry-apply").isEmpty());
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> browser.all("#industry-expansion").isEmpty());
         assertThat(games.allocateExpansion(id, 1, 1, 1, 0)).isFalse();
     }
     @Dann("erhöht sich die Kapazität nach fünf Runden ohne vorzeitige Schiffsproduktion")
@@ -88,7 +87,8 @@ public class EconomySteps {
         for (int round = 2; round <= 5; round++) { assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue(); }
         browser.awaitText("Runde 6");
         selectAlpha(); browser.awaitTextIn(".industry-panel", "Kapazität 11 / 50");
-        browser.awaitTextIn(".industry-panel", "Verteilung: 4 Ausbau · 7 Schiffbau");
+        browser.awaitTextIn(".industry-panel", "7 Punkte → 7 Schiffe/Runde");
+        browser.awaitTextIn(".industry-panel", "4 Punkte → Fortschritt 0/22 → 4/22");
         browser.awaitTextIn(".industry-panel", "Ausbaufortschritt: 0 / 22");
         assertThat(games.viewFor(id, 1).systems().getFirst().garrison()).isEqualTo(10);
         assertThat(registry.readState(id, GameState::turn).intValue()).isEqualTo(6);
@@ -97,9 +97,9 @@ public class EconomySteps {
         browser.clickCss("#production-plan-open");
         browser.awaitTextIn(".production-plan-results", "Verlegung: voraussichtlich 0 Schiffe");
         browser.awaitCss("#industry-expansion input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB);
-        browser.awaitTextIn(".production-plan-results", "11 Punkte für Schiffbau → voraussichtlich 11 Schiffe");
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> registry.readState(id, state -> state.industries().get(1).expansionAllocation()) == 0);
+        browser.awaitTextIn(".industry-panel", "11 Punkte → 11 Schiffe/Runde");
         browser.awaitTextIn(".production-plan-results", "Verlegung: voraussichtlich 2 Schiffe");
-        assertThat(registry.readState(id, state -> state.industries().get(1).expansionAllocation()).intValue()).isEqualTo(4);
     }
     private void selectAlpha() {
         browser.awaitCss(".map-content");

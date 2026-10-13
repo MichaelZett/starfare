@@ -45,11 +45,11 @@ public class EconomyLaunchSteps {
         assertThat(snapshot.metals()).isNotNull();
         int home = snapshot.systems().stream().filter(system -> Integer.valueOf(1).equals(system.ownerId())).findFirst().orElseThrow().id();
         clickHome();
-        browser.awaitTextIn(".app-header-stats", "Metall: 10");
+        browser.awaitTextIn(".app-header-stats", "10 (");
         browser.clickCss("#production-plan-open");
         enter("#industry-mining input", "1");
-        browser.clickCss("#industry-apply");
-        browser.awaitTextIn(".metal-details", "Verteilung: 1 Förderung");
+        browser.awaitTextIn(".production-save-status", "Gespeichert");
+        browser.awaitTextIn(".metal-details", "1 Punkt × 3 → 3 Metall/Runde");
         ((JavascriptExecutor) browser.driver()).executeScript(
                 "document.querySelectorAll('.recycling-details vaadin-details').forEach(d => d.opened = true);");
         browser.clickCss("#recycling-open");

@@ -513,7 +513,7 @@ in stock; unused capacity creates no debt. Industry expansion consumes no metal.
 Regular dispatch uses existing ships first. Production relocations follow actual
 construction and retain permanent garrison reserves. Growth and expanded industry
 only contribute to the following round. The system panel shows the saved plan's
-forecast across the empire; apply mining and expansion together to refresh it.
+forecast across the empire; every completed change is saved immediately.
 Deposits survive conquest without replenishment; empire stock remains with its
 player. Saved snapshots and historical review retain resources without executing
 extraction on load. Internal trial values are 10 starting metal per player,
@@ -712,21 +712,25 @@ summary by galaxy, participants, victory and access. Each group can be edited.
 The schematic galaxy preview is secondary and expandable.
 
 Spaceward production functions open their allocation directly: a shipyard, mining
-tower and construction crane have distinct shapes and show saved activity.
+tower and construction crane have distinct shapes and show invested points and their
+result per round, e.g. "4 points → 4 ships/round" or "2 points × 3 → 6 metal/round".
 Five presets (Ships, Metal, Industry, Even split, Self-sufficient shipbuilding)
-create a local draft immediately and preserve pinned shares. Self-sufficient
+are saved immediately and preserve pinned shares. Self-sufficient
 shipbuilding splits free capacity between ships and mining, with an odd remainder
 assigned to mining; it does not guarantee exclusive access to empire metal.
 Production planning uses coupled whole-point sliders for shipbuilding,
 mining and industry expansion, with optional pinned shares. A read-only empire-wide
 preview uses the actual economy calculation, including reserved recycling, metal
-shortages and relocation capacity. Each system retains its local draft and pins
-while the map is open. Stale rounds or external plan changes require an explicit
-recheck, and commits compare the saved plan under the game write lock. Submitting
-a turn with pending drafts requires a deliberate choice to use saved plans; no
-automatic bulk apply occurs. Reloading or leaving warns before losing drafts.
+shortages and relocation capacity. There is no apply step: numbers, step buttons and
+presets save at once, a slider saves when released; dragging only previews. Each save
+compares the shown plan with the stored one under the game write lock, and a rejected
+change shows the stored plan again. In 1.2.0-w5, lowering a system's shipbuilding
+proportionally shortens its outgoing relocations that no longer fit, and the panel
+names each change. The header shows a metal bar, stock and next-round change, such as
+"24 (−3)", with an accessible breakdown. Logistics lists mining yield per point and
+remaining deposit and can sort by yield.
 Header notices open filtered logistics lists using saved plans, with one system
-per cause and a separate draft count. Pending battles suppress these notices.
+per cause. Pending battles suppress these notices.
 Older
 rules without metal use two allocation areas. The empire's current metal stock
 appears in the header; planet data and rare scrapping actions are expandable.
