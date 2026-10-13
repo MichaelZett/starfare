@@ -185,7 +185,7 @@ public class SmokeSteps {
         browser.clickButtonWithText("Flotte senden");
         browser.awaitText("Ziel auf der Karte auswählen");
         browser.clickCss(".sys-target:not(.sys-selected)");
-        browser.awaitText("Reisedauer");
+        browser.awaitTextIn(".send-fleet-duration", "Ankunft Runde");
         browser.clickButtonWithText("Abbrechen");
         new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
                 .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
@@ -198,7 +198,7 @@ public class SmokeSteps {
         assertThat(browser.all(".sys-selected")).hasSize(1);
         assertThat(browser.all("vaadin-context-menu-overlay[opened]")).isEmpty();
         browser.clickCss(".sys-target:not(.sys-selected)");
-        browser.awaitText("Reisedauer");
+        browser.awaitTextIn(".send-fleet-duration", "Ankunft Runde");
         browser.clickButtonWithText("Abbrechen");
     }
 
