@@ -185,7 +185,7 @@ public class SmokeSteps {
         browser.clickButtonWithText("Flotte senden");
         browser.awaitText("Ziel auf der Karte auswählen");
         browser.clickCss(".sys-target:not(.sys-selected)");
-        browser.awaitText("Reisedauer");
+        browser.awaitTextIn(".send-fleet-duration", "Ankunft Runde");
         browser.clickButtonWithText("Abbrechen");
         new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
                 .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
@@ -198,7 +198,7 @@ public class SmokeSteps {
         assertThat(browser.all(".sys-selected")).hasSize(1);
         assertThat(browser.all("vaadin-context-menu-overlay[opened]")).isEmpty();
         browser.clickCss(".sys-target:not(.sys-selected)");
-        browser.awaitText("Reisedauer");
+        browser.awaitTextIn(".send-fleet-duration", "Ankunft Runde");
         browser.clickButtonWithText("Abbrechen");
     }
 
@@ -242,11 +242,11 @@ public class SmokeSteps {
 
     private void verifyEnglishSystemView() throws IOException {
         changeLanguage("Englisch", "Shipyard");
-        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Schematic illustration");
+        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Star reduced");
         Files.write(Path.of("build", "system-view", "classic-english.png"),
                 ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
         changeLanguage("German", "Werft");
-        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Schematische Illustration");
+        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Stern verkleinert");
     }
 
     private void changeLanguage(String label, String shipyard) {
