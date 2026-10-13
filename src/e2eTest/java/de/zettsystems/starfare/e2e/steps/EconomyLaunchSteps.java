@@ -38,7 +38,7 @@ public class EconomyLaunchSteps {
         id = new GameId(value);
         var snapshot = registry.readState(id, de.zettsystems.starfare.game.domain.GameState::toSnapshot);
         assertThat(snapshot.ruleset()).isEqualTo(rules);
-        if (!rules.equals(RulesetRef.SPACEWARD_ECONOMY_PREVIEW)) {
+        if (!rules.usesMetals()) {
             assertThat(snapshot.metals()).isNull();
             return;
         }

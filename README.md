@@ -673,19 +673,20 @@ Run the silent saved-game acceptance journey with:
 .\gradlew.bat e2eTest "-Dcucumber.filter.tags=@recycling"
 ```
 
-### Economy acceptance candidate: 1.2.0-w4
+### Economy acceptance candidate: 1.2.0-w5
 
 The complete economy can now be created through the ordinary wizard in a local,
 opt-in acceptance profile. SectorForces remains initially selected. Choose
-Spaceward and check that its card says **1.2.0-w4**.
+Spaceward and check that its card says **1.2.0-w5**. W5 equals W4 except that
+population no longer limits usable industry; colonies still grow as atmosphere.
 
 ```powershell
 .\gradlew.bat bootRun "--args=--spring.profiles.active=local,economy-preview"
 ```
 
 Without `economy-preview`, ordinary Spaceward creation stays at **1.1.0**.
-The switch affects creation only: saved W4 games remain supported when the
-profile is disabled. W1, W2 and W3 stay restoration-only. Colony properties,
+The switch affects creation only: saved W4 and W5 games remain supported when the
+profile is disabled. W1, W2, W3 and W4 stay restoration-only. Colony properties,
 finite deposits, stock, fractions and initial material are established once
 when the new game is saved, including before its first round.
 

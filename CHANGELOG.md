@@ -3,19 +3,15 @@
 Alle nennenswerten Änderungen an Starfare. Format nach
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach
 [SemVer](https://semver.org/lang/de/). Beim Release wird der Abschnitt
-`## Unreleased
-
-- Systeme bleiben zwischen Flottenstrecken erreichbar, auch bei kreuzenden Routen
-  und wechselndem Zoom. Flottenlinien erhalten eine eigene Farbe; Ereignis- und
-  Engpasszeichen sind größer und getrennt bedienbar.
-- Kampfseiten folgen Angriff und Verteidigung. Mannschaftstexte vermitteln die
-  momentane Gefechtsverfassung; Zahlen sind unter Kampfdetails erreichbar.
-- Verlegungen zeigen Bearbeiten direkt neben Aufheben, auch in der Systemsicht.
-  Die Schnellmenge Alle außer Produktion berücksichtigt eingehende und ausgehende
-  Verlegungen zusätzlich zur Reserve.` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
+`## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
+
+- Interner Spaceward-Wirtschaftskandidat 1.2.0-w5 für das lokale Erprobungsprofil:
+  Bevölkerung wächst weiter und beschreibt die Kolonie, begrenzt aber nicht mehr
+  die nutzbare Industrie. Gespeicherte Partien behalten ihre Regelversion; 1.2.0-w4
+  bleibt fortsetzbar, neue Erprobungspartien verwenden 1.2.0-w5.
 
 - Systeme bleiben zwischen Flottenstrecken erreichbar, auch bei kreuzenden Routen
   und wechselndem Zoom. Flottenlinien erhalten eine eigene Farbe; Ereignis- und

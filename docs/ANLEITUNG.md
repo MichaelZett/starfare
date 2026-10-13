@@ -534,12 +534,17 @@ im Hinterland; sie behalten eine Garnison und schonen Systeme mit bekannten nahe
 Gegnern. Der Wirtschaftsvergleich für W4 steht in `docs/ECONOMY-EXPERIMENTS.md`. W2-Partien erhalten
 keine Recyclingbefehle. W3 bleibt intern, die öffentliche Neuanlage bei 1.1.0.
 
-### Wirtschaftsstand 1.2.0-w4 erproben
+### Wirtschaftsstand 1.2.0-w5 erproben
 
 Das lokale Startprofil `economy-preview` schaltet den vollständigen Wirtschaftsstand
 im normalen Spielassistenten frei. „SectorForces“ bleibt vorausgewählt.
-Für die neue Wirtschaft „Spaceward“ auswählen; die Karte muss „Regeln 1.2.0-w4“
+Für die neue Wirtschaft „Spaceward“ auswählen; die Karte muss „Regeln 1.2.0-w5“
 zeigen. Ältere Partien übernehmen die neue Wirtschaft nicht.
+
+In 1.2.0-w5 ist die Bevölkerung vorerst Atmosphäre: Sie wächst und beschreibt die
+Kolonie, begrenzt aber nicht mehr die nutzbare Industrie. Die gesamte installierte
+Kapazität steht für Schiffbau, Förderung und Ausbau bereit. Gespeicherte
+W4-Partien behalten die Begrenzung durch Arbeitskräfte.
 
 Ein Schiff benötigt 1 Metall. Förderung, Ausbau und Schiffbau teilen sich die
 nutzbare Kapazität; Recycling gewinnt 70 Prozent zurück und speichert Zehntelreste.
@@ -547,7 +552,7 @@ Die Metallwerte bleiben für diese Erprobung unverändert. Alle acht KI-Profile
 berücksichtigen die Förderung bei ihrer Industrie- und Flottenplanung.
 
 Ohne das Startprofil bleibt die Neuanlage bei Spaceward 1.1.0. Gespeicherte
-W4-Partien lassen sich trotzdem fortsetzen. Die öffentliche Freigabe von 1.2.0
+W4- und W5-Partien lassen sich trotzdem fortsetzen. Die öffentliche Freigabe von 1.2.0
 folgt nach der persönlichen Erprobung. Startbefehl und technische Prüfergebnisse
 stehen in README und `docs/ECONOMY-EXPERIMENTS.md`.
 

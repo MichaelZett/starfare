@@ -91,8 +91,10 @@ public final class IndustryPanel extends Div {
         colonyDetails.add(new Div(new Span(I18n.t(UiTexts.COLONY_LOCATION,
                         I18n.t(quality.moon() ? UiTexts.COLONY_MOON : UiTexts.COLONY_PLANET), I18n.t(suitability)))),
                 new Div(new Span(I18n.t(UiTexts.COLONY_POPULATION, colony.population() / 100.0,
-                        colony.populationLimit() / 100.0, colony.nextPopulation() / 100.0))),
-                new Div(new Span(I18n.t(UiTexts.COLONY_LABOR, industry.usableCapacity(), industry.capacity()))));
+                        colony.populationLimit() / 100.0, colony.nextPopulation() / 100.0))));
+        if (colony.laborLimited()) {
+            colonyDetails.add(new Div(new Span(I18n.t(UiTexts.COLONY_LABOR, industry.usableCapacity(), industry.capacity()))));
+        }
         details.add(new Div(new Span(I18n.t(UiTexts.COLONY_ENVIRONMENT, quality.orbitAu(), quality.luminosity(), I18n.t(atmosphere)))),
                 new Div(new Span(I18n.t(UiTexts.COLONY_RICHNESS, quality.metalRichness()))));
         background.add(details);

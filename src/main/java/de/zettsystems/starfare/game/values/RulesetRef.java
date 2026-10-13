@@ -14,7 +14,15 @@ public record RulesetRef(String variant, String version) {
     public static final RulesetRef SPACEWARD_METALS = new RulesetRef(SPACEWARD_VARIANT, "1.2.0-w2");
     public static final RulesetRef SPACEWARD_RECYCLING = new RulesetRef(SPACEWARD_VARIANT, "1.2.0-w3");
     public static final RulesetRef SPACEWARD_ECONOMY_PREVIEW = new RulesetRef(SPACEWARD_VARIANT, "1.2.0-w4");
-    public boolean usesRecycling() { return SPACEWARD_RECYCLING.equals(this) || SPACEWARD_ECONOMY_PREVIEW.equals(this); }
+    /** W4 economy with population as atmosphere only: installed industry is fully usable. */
+    public static final RulesetRef SPACEWARD_DIRECT_ECONOMY = new RulesetRef(SPACEWARD_VARIANT, "1.2.0-w5");
+    public boolean usesRecycling() {
+        return SPACEWARD_RECYCLING.equals(this) || SPACEWARD_ECONOMY_PREVIEW.equals(this) || SPACEWARD_DIRECT_ECONOMY.equals(this);
+    }
+    /** W1–W4 cap usable industry by colony labor; W5 keeps population as atmosphere only. */
+    public boolean limitsIndustryByLabor() { return usesColonies() && !SPACEWARD_DIRECT_ECONOMY.equals(this); }
+    /** W5 shortens a system's outgoing relocations when its planned shipbuilding no longer covers them. */
+    public boolean adjustsRelocationsToShipbuilding() { return SPACEWARD_DIRECT_ECONOMY.equals(this); }
     public boolean usesMetals() { return SPACEWARD_METALS.equals(this) || usesRecycling(); }
     public boolean usesColonies() { return SPACEWARD_COLONIES.equals(this) || usesMetals(); }
     public boolean usesConfigurableVictory() { return SPACEWARD_ALLIANCE.equals(this) || usesColonies(); }

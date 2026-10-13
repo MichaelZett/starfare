@@ -916,6 +916,17 @@ CSV evidence separates shortage capacity from unused labor capacity and records
 initial metal and global irreversible losses. Reproducibility and interpretation
 are documented in `docs/ECONOMY-EXPERIMENTS.md`.
 
+## Economy candidate: Spaceward 1.2.0-w5
+
+`SPACEWARD_DIRECT_ECONOMY` replaces W4 as `RulesetCatalog.ECONOMY_CANDIDATE`;
+W4 is restoration-only like W1–W3. W5 keeps all W4 formulas but treats
+population as atmosphere: `RulesetRef.limitsIndustryByLabor()` is false, so
+`ColonyEconomy.usableCapacity(industry, false)` returns the installed capacity.
+`GameState`, `MetalProduction.forPlan/calculate`, the player view and every AI
+profile read this single rule; growth still changes population, never industry.
+`ColonyView.laborLimited` carries the rule to the UI, which then shows neither
+labor lines nor `EconomyIssues.Kind.LABOR`. Saved games are never re-labelled.
+
 ### Production drafts and authorized forecasts
 
 `GameService.previewProduction` resolves the account's joined human seat and checks

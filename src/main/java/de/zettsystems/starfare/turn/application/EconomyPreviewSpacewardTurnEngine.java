@@ -7,7 +7,7 @@ import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.report.application.ReportService;
 import org.springframework.stereotype.Service;
 
-/** Full economy acceptance candidate; old checkpoints keep their complete references. */
+/** Former economy acceptance candidate W4; old checkpoints keep their complete references. */
 @Service
 public class EconomyPreviewSpacewardTurnEngine extends SpacewardTurnEngine {
     public EconomyPreviewSpacewardTurnEngine(RoundPipeline pipeline, EconomyService economy, SpacewardPlanning ai,

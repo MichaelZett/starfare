@@ -86,14 +86,15 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
     public PlayerViewState forReplay(GameState state, ReplayFrame frame, int playerId) {
         var metals = frame.metals();
         var metalForecast = metals == null ? null : MetalProduction.forPlan(
-                frame.systems(), Objects.requireNonNull(frame.industries()), Objects.requireNonNull(frame.colonies()), metals);
+                frame.systems(), Objects.requireNonNull(frame.industries()), Objects.requireNonNull(frame.colonies()), metals,
+                state.ruleset().limitsIndustryByLabor());
         List<VisibleSystem> systems = frame.systems().stream().map(system -> {
             Integer owner = system.ownerId();
             String color = owner != null ? playerById(state, owner).colorHex() : null;
             return new VisibleSystem(system.id(), system.name(), system.x(), system.y(), owner,
                     system.garrison(), metalForecast == null ? Integer.valueOf(system.productionPerTurn()) : metalForecast.ships().getOrDefault(system.id(), 0), true, color, frame.turn(), false,
                     null, system.garrisonReserve(), system.availableShips(), ownershipHistory(state, system.id()),
-                    metalIndustry(industryView(frame.industries(), frame.colonies(), system, system.availableShips(), 0),
+                    metalIndustry(industryView(frame.industries(), frame.colonies(), state.ruleset(), system, system.availableShips(), 0),
                             metalForecast, system, system.availableShips(), 0, 0));
         }).toList();
         List<Fleet> ownFleets = frame.fleets().stream().filter(fleet -> fleet.ownerId() == playerId).toList();
@@ -114,7 +115,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                     s.id(), s.name(), s.x(), s.y(),
                     ownerId, s.garrison(), metalForecast == null ? Integer.valueOf(s.productionPerTurn()) : metalForecast.ships().getOrDefault(s.id(), 0),
                     true, color, turn, false, null, s.garrisonReserve(), s.availableShips(), ownershipHistory(state, s.id()),
-                    metalIndustry(industryView(state.industries(), state.colonies(), s, s.availableShips(), 0),
+                    metalIndustry(industryView(state.industries(), state.colonies(), state.ruleset(), s, s.availableShips(), 0),
                             metalForecast, s, s.availableShips(), 0, 0));
         }).toList();
     }
@@ -256,7 +257,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 .filter(order -> order.fromSystemId() == system.id()
                         && Routes.plan(state, player, order.fromSystemId(), order.toSystemId()).isPresent())
                 .mapToInt(StandingOrder::ships).sum();
-        IndustryView base = industryView(state.industries(), state.colonies(), system, available, reachable);
+        IndustryView base = industryView(state.industries(), state.colonies(), state.ruleset(), system, available, reachable);
         if (base == null) { return null; }
         if (state.ruleset().usesMetals()) {
             return metalIndustry(base, metalForecast, system, available, reachable, planned);
@@ -267,7 +268,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
 
     private static @Nullable IndustryView industryView(@Nullable Map<Integer, Industry> industries,
                                                         @Nullable Map<Integer, de.zettsystems.starfare.economy.domain.ColonyEconomy> colonies,
-                                                        StarSystem system, int available, int routed) {
+                                                        RulesetRef rules, StarSystem system, int available, int routed) {
         Industry industry = industries == null ? null : industries.get(system.id());
         if (industry == null) { return null; }
         int shortfall = Math.max(0, system.garrisonReserve() - system.garrison());
@@ -276,7 +277,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         int nextPopulation = 0;
         if (saved != null) { nextPopulation = system.neutral() ? saved.colony().population() : saved.grow().colony().population(); }
         var colony = saved == null ? null : new de.zettsystems.starfare.economy.values.ColonyView(
-                saved.quality(), saved.colony().population(), nextPopulation);
+                saved.quality(), saved.colony().population(), nextPopulation, rules.limitsIndustryByLabor());
         return new IndustryView(industry.capacity(), industry.expansionAllocation(), industry.expansionProgress(),
                 industry.expansionCost(), delivery, delivery < routed, shortfall, colony);
     }
