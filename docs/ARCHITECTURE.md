@@ -955,9 +955,16 @@ production command and, only for `RulesetRef.adjustsRelocationsToShipbuilding()`
 a lower expected shipbuilding, the trim in the same write lock; the preview performs
 the identical steps on its copy. `ProductionCommit` and `ProductionPlanPreview`
 return the adjustments. Metal shortage alone never rewrites standing orders. Older
-Spaceward references retain their two-way expansion/shipbuilding rule. Fleet
-routing still uses the same internal distance limit; presentation replaces the
-numeric limit with reachability and station information.
+Spaceward references retain their two-way expansion/shipbuilding rule.
+
+`Routes.rangeFrom` classifies every target from a permitted station as direct,
+via stations or unreachable with the same `withinRange`, station and travel-edge
+rules as route commands, and stores the straight-line distance as a share of the
+range. `RangeShare` rounds down inside and up beyond the limit (one decimal near
+100 %), so a target just outside never reads as 100 %. `GameService.rangeFor` is
+read-only; `MapRenderer` draws `RangeOverlay` only during target selection in map
+coordinates without click handling, and marks targets by outline, opacity,
+`data-reach` and accessible text. SectorForces returns no range view.
 
 Map interaction geometry is computed by `map-geometry.js` from the actual browser
 zoom and rendered system diameter. Shared free lane intervals drive both visible

@@ -327,6 +327,14 @@ Jede Spaceward-Partie erhält eine feste Reichweite je Reiseabschnitt.
 Sie wird aus der Galaxie berechnet, damit alle Systeme schrittweise erreichbar
 bleiben. Reisezeit und Sensorreichweite sind davon unabhängig.
 
+Während der Zielwahl zeigt ein gestrichelter Kreis um die Quelle die direkte
+Reichweite. Ziele tragen einen Zustand: durchgezogener Rahmen für direkt erreichbar,
+gestrichelter Rahmen für „nur über Stationen“, abgeblendet für „kein Weg“. Der
+Hinweistext und der Versanddialog nennen den Zustand samt Entfernung als Anteil der
+direkten Reichweite, etwa „90 % der direkten Reichweite“. Knapp außerhalb liegende
+Ziele erscheinen nie als genau 100 %. SectorForces hat keine Reichweitengrenze und
+zeigt keinen Kreis.
+
 Für ein entferntes Ziel sucht der Flottenversand automatisch den schnellsten
 Weg über eigene oder verbündete Systeme. Der Dialog zeigt einen grafischen
 Routenstreifen und einmal die Ankunftsrunde einschließlich der Aufenthalte.

@@ -64,7 +64,15 @@ public class NavigationSteps {
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> games.viewFor(id, 1).standingOrders().size() == 1);
         browser.awaitTextIn(".system-metric-rate", "4 (+0/Runde)");
         assertThat(games.viewFor(id, 1).standingOrders().getFirst().toSystemId()).isEqualTo(4);
-        openSend("Delta");
+        selectSystem("Alpha"); browser.awaitTextIn(".system-details-heading", "Alpha");
+        browser.clickButtonWithText("Flotte senden"); browser.awaitCss(".sys-selected");
+        browser.awaitCss(".map-range-circle");
+        assertThat(reach("Beta")).isEqualTo("direct");
+        assertThat(reach("Delta")).isEqualTo("stations");
+        assertThat(reach("Remote 5")).isEqualTo("none");
+        assertThat(systemTitle("Beta")).contains("Direkt erreichbar · 100 % der direkten Reichweite");
+        screenshot("range-circle");
+        selectSystem("Delta"); browser.awaitCss(".send-fleet-dialog");
         browser.awaitTextIn(".send-fleet-route", "Gamma");
         assertThat(browser.textsOf(".send-fleet-route .route-stop")).containsExactly("Alpha", "Beta", "Gamma", "Delta");
         String amount = browser.awaitCss(".send-fleet-amount input").getDomProperty("value");
@@ -73,12 +81,13 @@ public class NavigationSteps {
         assertThat(browser.awaitCss(".send-fleet-amount input").getDomProperty("value")).isEqualTo(amount);
         assertThat(games.viewFor(id, 1).plannedOrders()).isEmpty();
         browser.awaitTextIn(".send-fleet-duration", "2 Aufenthalten");
-        assertThat(browser.awaitCss(".send-fleet-dialog").getText()).doesNotContain("Reichweite");
+        browser.awaitTextIn(".send-fleet-range", "Nur über Stationen · 300 % der direkten Reichweite");
         assertThat(browser.all("#route-preview")).hasSize(1);
         browser.awaitTextIn(".send-fleet-duration", "Ankunft Runde " + finalArrival);
         screenshot("route-preview");
         cancelDialog();
         openSend("Remote 5"); browser.awaitTextIn(".send-fleet-duration", "Kein erreichbarer Weg");
+        browser.awaitTextIn(".send-fleet-range", "Kein Weg ·");
         assertThat(browser.awaitCss(".send-fleet-dialog vaadin-button[theme~='primary']").getDomAttribute("disabled")).isNotNull();
         cancelDialog();
         openSend("Delta");
@@ -142,6 +151,18 @@ public class NavigationSteps {
                 const system = [...document.querySelectorAll('#map .sys-own, #map .sys-fog')].find(element => element.textContent.startsWith(arguments[0]));
                 if (!system) return false; system.click(); return true;
                 """, name)));
+    }
+    private String reach(String name) {
+        return (String) ((JavascriptExecutor) browser.driver()).executeScript("""
+                const system = [...document.querySelectorAll('#map .sys-own, #map .sys-fog')].find(element => element.textContent.startsWith(arguments[0]));
+                return system?.getAttribute('data-reach');
+                """, name);
+    }
+    private String systemTitle(String name) {
+        return (String) ((JavascriptExecutor) browser.driver()).executeScript("""
+                const system = [...document.querySelectorAll('#map .sys-own, #map .sys-fog')].find(element => element.textContent.startsWith(arguments[0]));
+                return system?.title;
+                """, name);
     }
     private void showFleets() { clickTab("Flotten"); }
     private void showRelocations() { clickTab("Verlegungen"); }

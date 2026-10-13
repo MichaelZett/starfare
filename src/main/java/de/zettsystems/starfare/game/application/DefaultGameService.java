@@ -547,6 +547,11 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public java.util.Optional<de.zettsystems.starfare.navigation.values.RangeView> rangeFor(GameId id, int player, int from) {
+        return registry.readState(id, state -> Routes.rangeFrom(state, player, from));
+    }
+
+    @Override
     public int travelTurns(GameId gameId, int fromId, int toId) {
         return registry.readState(gameId, state -> state.travelRounds(fromId, toId));
     }

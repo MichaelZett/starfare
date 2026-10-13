@@ -704,11 +704,18 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::onBadgeToggleLabel,
                 this::onFleetHighlight,
                 this::onReportMarkerSelected,
-                this::refresh));
+                this::refresh,
+                rangeForSelection(playerId, observer)));
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
         economicView = view;
         updateEconomyNotices();
+    }
+
+    private de.zettsystems.starfare.navigation.values.@Nullable RangeView rangeForSelection(int playerId, boolean observer) {
+        VisibleSystem source = selectedFrom;
+        if (source == null || observer || playerId < 0 || targetSelection == TargetSelection.NONE) { return null; }
+        return game.rangeFor(gameId, playerId, source.id()).orElse(null);
     }
 
     private void inspectSystem(VisibleSystem system) {

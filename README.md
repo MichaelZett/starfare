@@ -736,7 +736,10 @@ rules without metal use two allocation areas. The empire's current metal stock
 appears in the header; planet data and rare scrapping actions are expandable.
 
 Fleet sending explains reachability, intermediate stations and arrival rounds
-without exposing internal distance coordinates. Ally conquest is offered only
+without exposing internal distance coordinates. During Spaceward target selection a
+dashed circle shows the direct range; targets are marked as direct, via stations or
+unreachable, and the send dialog states the distance as a share of the direct range
+(e.g. "90% of the direct range"; a target just outside never reads as 100%). Ally conquest is offered only
 when meaningful; SectorForces shares the simpler setup, overview and sending UI.
 Legal links in the footer open in a new tab to preserve ongoing edits.
 

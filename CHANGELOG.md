@@ -8,6 +8,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Spaceward-Zielwahl zeigt die direkte Reichweite als Kreis um die Quelle und
+  kennzeichnet Ziele als direkt erreichbar, nur über Stationen oder ohne Weg. Der
+  Versanddialog nennt die Entfernung als Anteil der direkten Reichweite.
+
 - Spaceward-Produktion gilt sofort: Zahlenfelder, Plus/Minus und Vorgaben speichern
   direkt, der Schieberegler beim Loslassen. Entwürfe, Übernehmen, Neu prüfen und
   die Warnung vor offenen Entwürfen entfallen. Jede Funktion zeigt Punkte und Ertrag

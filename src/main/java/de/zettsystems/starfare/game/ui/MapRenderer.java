@@ -49,12 +49,16 @@ final class MapRenderer {
                   IntConsumer onBadgeToggleLabel,
                   IntConsumer onFleetHighlight,
                   IntConsumer onReportSystemSelected,
-                  Runnable onRefresh) {
+                  Runnable onRefresh,
+                  de.zettsystems.starfare.navigation.values.@Nullable RangeView range) {
     }
 
     static void render(Div map, Inputs in) {
         map.removeAll();
         map.setClassName(in.logisticsMode() ? "map-logistics-mode" : "");
+        var range = in.range();
+        VisibleSystem source = in.selectedFrom();
+        if (range != null && source != null) { map.add(RangeOverlay.circle(source, range)); }
         for (VisibleSystem sys : in.systems()) {
             map.add(buildSystemDot(sys, in));
         }
@@ -309,10 +313,12 @@ final class MapRenderer {
         }
 
         dot.addClassName(selected == null ? "sys-clickable" : "sys-target");
-        dot.getElement().setProperty(HtmlAttributes.TITLE,
-                UiMapper.systemTooltip(sys, in.view().turn()) + " — "
-                        + I18n.t(selected == null ? UiTexts.MAP_HINT_INSPECT_SYSTEM
-                        : UiTexts.MAP_HINT_PICK_TARGET));
+        String hint = I18n.t(selected == null ? UiTexts.MAP_HINT_INSPECT_SYSTEM : UiTexts.MAP_HINT_PICK_TARGET);
+        var range = in.range();
+        if (selected != null && range != null && !isSelected && range.targets().containsKey(sys.id())) {
+            hint = RangeOverlay.markTarget(dot, range.target(sys.id())) + " — " + hint;
+        }
+        dot.getElement().setProperty(HtmlAttributes.TITLE, UiMapper.systemTooltip(sys, in.view().turn()) + " — " + hint);
         KeyboardActions.enable(dot);
         dot.addClickListener(_ -> {
             VisibleSystem from = in.selectedFrom();
