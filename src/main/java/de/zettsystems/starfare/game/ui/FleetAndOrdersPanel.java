@@ -859,7 +859,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         List<Integer> filtered = java.util.stream.IntStream.range(0, events.size()).boxed()
                 .filter(eventIndex -> isEventEnabled(events.get(eventIndex)))
                 .sorted(java.util.Comparator.comparingInt(this::eventPriority)).toList();
-        if (events.isEmpty()) {
+        if (events.stream().allMatch(TurnEvent.EconomySummary.class::isInstance)) {
             reportPage.add(new Paragraph(I18n.t(UiTexts.ROUND_NO_EVENTS)));
             return;
         }
@@ -904,7 +904,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
             case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
             case TurnEvent.Reinforcement _ -> 3;
-            case TurnEvent.Recycling _, TurnEvent.Production _ -> 4;
+            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.EconomySummary _ -> 4;
         };
     }
 
@@ -927,6 +927,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private @Nullable PlayerViewState currentView;
 
     private boolean isEventEnabled(TurnEvent event) {
+        if (event instanceof TurnEvent.EconomySummary) { return false; }
         PlayerViewState view = currentView;
         TurnReport report = view == null ? null : view.report();
         if ((event instanceof TurnEvent.Victory || event instanceof TurnEvent.Defeat)
@@ -946,7 +947,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.BattleLost _ -> EventCategory.BATTLE_LOST;
             case TurnEvent.SystemLost _ -> EventCategory.SYSTEM_LOST;
             case TurnEvent.DefenseHeld _ -> EventCategory.DEFENSE_HELD;
-            case TurnEvent.Victory _, TurnEvent.Defeat _ -> null;
+            case TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _ -> null;
         });
     }
 
@@ -996,7 +997,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     youName(lost.defenderName()));
             case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponentName(held.attackerName()),
                     youName(held.defenderName()));
-            case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
+            case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
+                 TurnEvent.EconomySummary _ ->
                     new BattleReplayDialog.BattleSides("", "");
         };
     }
@@ -1075,7 +1077,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
         return switch (event) {
             case TurnEvent.Recycling _ -> "♻";
-            case TurnEvent.Production _ -> "⬆";
+            case TurnEvent.Production _, TurnEvent.EconomySummary _ -> "⬆";
             case TurnEvent.Reinforcement _ -> "→";
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _ -> "⚔";
             case TurnEvent.BattleLost _ -> "✕";
@@ -1092,7 +1094,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
         return switch (event) {
             case TurnEvent.Recycling _ -> "event-recycling";
-            case TurnEvent.Production _ -> "event-production";
+            case TurnEvent.Production _, TurnEvent.EconomySummary _ -> "event-production";
             case TurnEvent.Reinforcement _ -> "event-reinforcement";
             case TurnEvent.CoalitionBattle _ -> "event-coalition-battle";
             case TurnEvent.BattleWon _ -> "event-battle-won";
@@ -1134,6 +1136,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     : I18n.t(UiTexts.ROUND_EVENT_ALLIANCE_VICTORY, victory.allianceId(),
                             String.join(", ", victory.winnerNames()), victory.systemPercent());
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
+            case TurnEvent.EconomySummary _ -> "";
         };
     }
 

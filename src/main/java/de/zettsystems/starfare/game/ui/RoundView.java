@@ -186,7 +186,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             case TurnEvent.BattleLost _ -> EventCategory.BATTLE_LOST;
             case TurnEvent.SystemLost _ -> EventCategory.SYSTEM_LOST;
             case TurnEvent.DefenseHeld _ -> EventCategory.DEFENSE_HELD;
-            case TurnEvent.Victory _, TurnEvent.Defeat _ -> null;
+            case TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _ -> null;
         });
     }
 
@@ -249,12 +249,13 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
             return;
         }
-        if (lastEvents.isEmpty()) {
+        if (lastEvents.stream().allMatch(TurnEvent.EconomySummary.class::isInstance)) {
             timeline.add(new Paragraph(I18n.t(UiTexts.ROUND_NO_EVENTS)));
             return;
         }
         EnumSet<EventCategory> enabled = enabledCategories();
         List<Integer> filtered = java.util.stream.IntStream.range(0, lastEvents.size()).boxed()
+                .filter(i -> !(lastEvents.get(i) instanceof TurnEvent.EconomySummary))
                 .filter(i -> !pending || !(lastEvents.get(i) instanceof TurnEvent.Victory || lastEvents.get(i) instanceof TurnEvent.Defeat))
                 .filter(i -> categoryOf(lastEvents.get(i)).map(enabled::contains).orElse(true))
                 .sorted(Comparator.comparingInt(this::eventPriority))
@@ -277,7 +278,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
             case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
             case TurnEvent.Reinforcement _ -> 3;
-            case TurnEvent.Recycling _, TurnEvent.Production _ -> 4;
+            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.EconomySummary _ -> 4;
         };
     }
 
@@ -321,7 +322,8 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                     youName(lost.defenderName()));
             case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponentName(held.attackerName()),
                     youName(held.defenderName()));
-            case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
+            case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
+                 TurnEvent.EconomySummary _ ->
                     new BattleReplayDialog.BattleSides("", "");
         };
     }
@@ -377,7 +379,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private static String iconFor(TurnEvent e) {
         return switch (e) {
             case TurnEvent.Recycling _ -> "♻";
-            case TurnEvent.Production _ -> "⬆";
+            case TurnEvent.Production _, TurnEvent.EconomySummary _ -> "⬆";
             case TurnEvent.Reinforcement _ -> "→";
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _ -> "⚔";
             case TurnEvent.BattleLost _ -> "✕";
@@ -391,7 +393,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private static String cssFor(TurnEvent e) {
         return switch (e) {
             case TurnEvent.Recycling _ -> "event-recycling";
-            case TurnEvent.Production _ -> "event-production";
+            case TurnEvent.Production _, TurnEvent.EconomySummary _ -> "event-production";
             case TurnEvent.Reinforcement _ -> "event-reinforcement";
             case TurnEvent.CoalitionBattle _ -> "event-coalition-battle";
             case TurnEvent.BattleWon _ -> "event-battle-won";
@@ -431,6 +433,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                     : I18n.t(UiTexts.ROUND_EVENT_ALLIANCE_VICTORY, victory.allianceId(),
                             String.join(", ", victory.winnerNames()), victory.systemPercent());
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
+            case TurnEvent.EconomySummary _ -> "";
         };
     }
 

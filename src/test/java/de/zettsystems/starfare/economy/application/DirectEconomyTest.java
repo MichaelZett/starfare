@@ -12,6 +12,7 @@ import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.game.values.VisibleSystem;
 import de.zettsystems.starfare.report.application.DefaultReportService;
+import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.testsupport.ColonyStates;
 import de.zettsystems.starfare.turn.application.DirectEconomySpacewardTurnEngine;
 import de.zettsystems.starfare.turn.application.RoundPipeline;
@@ -102,6 +103,43 @@ class DirectEconomyTest {
         engine.advanceTurn(restored);
         assertThat(restored.turn()).isEqualTo(3);
         assertThat(restored.industries().get(1).expansionAllocation()).isLessThanOrEqualTo(restored.usableIndustrialCapacity(1));
+    }
+
+    @Test void eachResolvedRoundRecordsMinedConsumedAndBuiltCapacityWithoutAReportLine() {
+        var state = running(RulesetRef.SPACEWARD_DIRECT_ECONOMY);
+        assertThat(economy.allocateProduction(state, 1, 1, 0, 2)).isTrue();
+        var forecast = state.metalPreview();
+        long mined = forecast.extracted().get(1) + forecast.extracted().get(2);
+        int ships = forecast.ships().get(1) + forecast.ships().get(2);
+        var fleets = new DefaultFleetService();
+        var reports = new DefaultReportService();
+        var engine = new DirectEconomySpacewardTurnEngine(new RoundPipeline(new DefaultCombatService(reports), reports, fleets),
+                economy, (current, unused) -> { }, fleets, reports);
+        engine.advanceTurn(state);
+        var report = state.reports().get(1);
+        var summary = report.events().stream().filter(TurnEvent.EconomySummary.class::isInstance)
+                .map(TurnEvent.EconomySummary.class::cast).toList();
+        assertThat(summary).containsExactly(new TurnEvent.EconomySummary(1, mined, ships, 0));
+        assertThat(state.reports().get(2).events()).filteredOn(TurnEvent.EconomySummary.class::isInstance).hasSize(1);
+        assertThat(report.lines()).noneMatch(line -> line.contains("Wirtschaft") || line.isBlank());
+        assertThat(report.lines()).hasSize(report.events().size() - 1);
+    }
+
+    @Test void finishedExpansionCountsAsBuiltIndustry() {
+        var state = running(RulesetRef.SPACEWARD_DIRECT_ECONOMY);
+        assertThat(economy.allocateProduction(state, 1, 1, 10, 0)).isTrue();
+        var fleets = new DefaultFleetService();
+        var reports = new DefaultReportService();
+        var engine = new DirectEconomySpacewardTurnEngine(new RoundPipeline(new DefaultCombatService(reports), reports, fleets),
+                economy, (current, unused) -> { }, fleets, reports);
+        int gained = 0;
+        for (int round = 0; round < 2; round++) {
+            engine.advanceTurn(state);
+            gained += state.reports().get(1).events().stream().filter(TurnEvent.EconomySummary.class::isInstance)
+                    .map(TurnEvent.EconomySummary.class::cast).mapToInt(TurnEvent.EconomySummary::capacityGained).sum();
+        }
+        assertThat(gained).isEqualTo(1);
+        assertThat(state.industries().get(1).capacity()).isEqualTo(11);
     }
 
     private static VisibleSystem own(java.util.List<VisibleSystem> systems) {

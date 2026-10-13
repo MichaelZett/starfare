@@ -76,7 +76,10 @@ filter your games and open a completed map without issuing further orders.
 When the final round contains a battle, the normal round report remains open first.
 Resolve every battle from that report, individually or together in **Instant** mode;
 only then does the victory or defeat dialog appear,
-with personal totals for built, destroyed and lost ships.
+with personal totals for built, destroyed and lost ships. Spaceward also lists
+the game's economy: industry built in capacity points and, with metal, metal mined
+and consumed. Totals come from per-round summaries captured at the production step;
+older games say "not recorded", and later starts or gaps are labelled as such.
 In the completed map, select any participant (including AI) and enable **Fog of war**
 to see their final perspective. Disable fog to reveal all systems and fleets.
 For newly completed games, the timeline can rewind to every resolved round;

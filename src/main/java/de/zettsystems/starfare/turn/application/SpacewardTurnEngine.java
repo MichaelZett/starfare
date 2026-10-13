@@ -27,8 +27,25 @@ public class SpacewardTurnEngine implements RulesetRoundImplementation {
     @Override public RulesetRef ruleset() { return RulesetRef.SPACEWARD; }
     @Override public void advanceTurn(GameState state) {
         if (!ruleset().equals(state.ruleset())) { throw new IllegalArgumentException("Spaceward cannot resolve " + state.ruleset()); }
-        pipeline.advanceTurn(state, () -> ai.plan(state, fleets), routed -> economy.produce(state, routed)
-                .forEach(result -> reports.appendEvent(state, result.ownerId(),
-                        new TurnEvent.Production(result.ownerId(), result.systemId(), result.systemName(), result.ships()))));
+        pipeline.advanceTurn(state, () -> ai.plan(state, fleets), routed -> {
+            var results = economy.produce(state, routed);
+            results.forEach(result -> reports.appendEvent(state, result.ownerId(),
+                    new TurnEvent.Production(result.ownerId(), result.systemId(), result.systemName(), result.ships())));
+            recordEconomy(state, results);
+        });
+    }
+
+    /** One summary per participant and resolved round, zero included, captured before combat. */
+    private void recordEconomy(GameState state, java.util.List<de.zettsystems.starfare.economy.values.IndustrialProduction> results) {
+        for (var player : state.players()) {
+            long mined = 0;
+            long consumed = 0;
+            int gained = 0;
+            for (var result : results) {
+                if (result.ownerId() != player.id()) { continue; }
+                mined += result.metalMined(); consumed += result.metalConsumed(); gained += result.capacityGained();
+            }
+            reports.appendEvent(state, player.id(), new TurnEvent.EconomySummary(player.id(), mined, consumed, gained));
+        }
     }
 }

@@ -254,7 +254,12 @@ weder die Kampfstärke noch Rundenfristen oder Ergebnisse.
 Gewonnen hat, wer den eingestellten Anteil aller Systeme kontrolliert; neutrale
 Systeme zählen zur Gesamtzahl. Die Vorgabe ist 70 %. Wenn die letzte Runde noch
 offene Schlachten enthält, erscheint zunächst der Bericht. Erst nach deren
-Bestätigung öffnet sich das Ergebnis mit persönlichen Schiffssummen.
+Bestätigung öffnet sich das Ergebnis mit persönlichen Schiffssummen. Spaceward
+zeigt zusätzlich die Wirtschaft der Partie: gebaute Industrie in Kapazitätspunkten
+und, mit Metall, gefördertes und verbrauchtes Metall. Recycling zählt nicht als
+Förderung. Fehlt die Erfassung für ältere Partien, steht dort „nicht erfasst“;
+beginnt sie später oder hat Lücken, nennt der Dialog „seit Runde N“ bzw.
+„unvollständig erfasst“.
 
 Der Sieger darf **Bis zur vollständigen Eroberung weiterspielen** wählen. Das Ziel
 steigt dann auf 100 %, die Abgaben werden zurückgesetzt und die Fristen starten neu.

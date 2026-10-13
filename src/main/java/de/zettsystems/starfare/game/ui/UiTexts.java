@@ -554,6 +554,12 @@ public final class UiTexts {
     public static final String GAME_OUTCOME_BUILT = "gameOutcome.built";
     public static final String GAME_OUTCOME_DESTROYED = "gameOutcome.destroyed";
     public static final String GAME_OUTCOME_LOST = "gameOutcome.lost";
+    public static final String GAME_OUTCOME_METAL_MINED = "gameOutcome.metalMined";
+    public static final String GAME_OUTCOME_METAL_CONSUMED = "gameOutcome.metalConsumed";
+    public static final String GAME_OUTCOME_INDUSTRY_BUILT = "gameOutcome.industryBuilt";
+    public static final String GAME_OUTCOME_ECONOMY_NOT_RECORDED = "gameOutcome.economyNotRecorded";
+    public static final String GAME_OUTCOME_ECONOMY_SINCE = "gameOutcome.economySince";
+    public static final String GAME_OUTCOME_ECONOMY_PARTIAL = "gameOutcome.economyPartial";
 
     // Language switcher
     public static final String LANG_LABEL = "lang.label";

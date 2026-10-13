@@ -916,6 +916,18 @@ CSV evidence separates shortage capacity from unused labor capacity and records
 initial metal and global irreversible losses. Reproducibility and interpretation
 are documented in `docs/ECONOMY-EXPERIMENTS.md`.
 
+## Economy totals in the final summary
+
+`TurnEvent.EconomySummary` is appended once per participant and resolved Spaceward
+round at the production step, before combat: metal actually extracted, metal booked
+for ships (`ships × SHIP_COST`) and capacity gained from finished expansion, all
+taken from the same `IndustrialProduction` results that `EconomyService.produce`
+books. Zero summaries are stored so that missing history differs from a true zero.
+The event adds no report line and is filtered from report lists while keeping the
+original event indices used by battle acknowledgements. `EconomyTotals.of` sums the
+summaries of the replay frames' resolved rounds and labels coverage as complete,
+since a later round, partial or not recorded; SectorForces carries no economy.
+
 ## Economy candidate: Spaceward 1.2.0-w5
 
 `SPACEWARD_DIRECT_ECONOMY` replaces W4 as `RulesetCatalog.ECONOMY_CANDIDATE`;

@@ -3,6 +3,7 @@ package de.zettsystems.starfare.economy.application;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.economy.values.EconomyRules;
 import de.zettsystems.starfare.economy.values.IndustrialProduction;
+import de.zettsystems.starfare.economy.values.MetalRules;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.StarSystem;
 import org.springframework.stereotype.Service;
@@ -51,11 +52,16 @@ public class DefaultEconomyService implements EconomyService {
                 throw new IllegalStateException("Recycling must settle before production");
             }
             var forecast = state.metalPreview();
-            var results = state.systems().stream().filter(system -> system.ownerId() != null && !system.neutral())
-                    .map(system -> new IndustrialProduction(Objects.requireNonNull(system.ownerId()), system.id(), system.name(),
-                            java.util.Objects.requireNonNull(forecast.ships().get(system.id())))).toList();
+            Map<Integer, Industry> before = state.industries();
+            var owned = state.systems().stream().filter(system -> system.ownerId() != null && !system.neutral()).toList();
             state.completeMetalProduction(forecast);
-            return results;
+            Map<Integer, Industry> after = state.industries();
+            return owned.stream().map(system -> {
+                int ships = Objects.requireNonNull(forecast.ships().get(system.id()));
+                return new IndustrialProduction(Objects.requireNonNull(system.ownerId()), system.id(), system.name(), ships,
+                        forecast.extracted().getOrDefault(system.id(), 0L), (long) ships * MetalRules.SHIP_COST,
+                        Objects.requireNonNull(after.get(system.id())).capacity() - Objects.requireNonNull(before.get(system.id())).capacity());
+            }).toList();
         }
         List<IndustrialProduction> results = new ArrayList<>();
         for (StarSystem system : List.copyOf(state.systems())) {
@@ -65,8 +71,10 @@ public class DefaultEconomyService implements EconomyService {
             if (current == null) { throw new IllegalStateException("Missing industry for system " + system.id()); }
             int shipped = routedShips.getOrDefault(system.id(), 0);
             int produced = system.productionPerTurn();
-            state.completeIndustrialProduction(system.id(), current.expandForOneTurn(), shipped);
-            results.add(new IndustrialProduction(ownerId, system.id(), system.name(), produced));
+            Industry expanded = current.expandForOneTurn();
+            state.completeIndustrialProduction(system.id(), expanded, shipped);
+            results.add(new IndustrialProduction(ownerId, system.id(), system.name(), produced, 0, 0,
+                    expanded.capacity() - current.capacity()));
         }
         return List.copyOf(results);
     }

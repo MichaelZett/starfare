@@ -28,7 +28,7 @@ public class DefaultReportService implements ReportService {
         return rep != null && rep.turn() == state.turn() - 1 && !rep.lines().isEmpty();
     }
 
-    private void appendRaw(GameState state, int playerId, String line, @Nullable TurnEvent event) {
+    private void appendRaw(GameState state, int playerId, @Nullable String line, @Nullable TurnEvent event) {
         var prev = state.reports().get(playerId);
         var lines = new ArrayList<String>();
         var events = new ArrayList<TurnEvent>();
@@ -36,14 +36,17 @@ public class DefaultReportService implements ReportService {
             lines.addAll(prev.lines());
             events.addAll(prev.events());
         }
-        lines.add(line);
+        if (line != null) {
+            lines.add(line);
+        }
         if (event != null) {
             events.add(event);
         }
         state.reports().put(playerId, new TurnReport(state.turn(), List.copyOf(lines), List.copyOf(events)));
     }
 
-    private static String textFor(TurnEvent e) {
+    /** Economy summaries are statistics only and add no report line, so they never count as news. */
+    private static @Nullable String textFor(TurnEvent e) {
         return switch (e) {
             case TurnEvent.Recycling r -> "Recycling: %s, %d ships, %d tenths of metal recovered.".formatted(r.systemName(), r.ships(), r.recoveredTenths());
             case TurnEvent.Production p -> "Produktion: %s +%d".formatted(p.systemName(), p.amount());
@@ -63,6 +66,7 @@ public class DefaultReportService implements ReportService {
                     : "Bündnissieg %d: %s, mindestens %d%% Systeme unter Kontrolle."
                             .formatted(victory.allianceId(), String.join(", ", victory.winnerNames()), victory.systemPercent());
             case TurnEvent.Defeat defeat -> "Niederlage: %s gewinnt die Partie.".formatted(defeat.winnerName());
+            case TurnEvent.EconomySummary _ -> null;
         };
     }
 }

@@ -8,6 +8,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Der Spaceward-Abschlussbericht zeigt gebaute Industrie und, mit Metall,
+  gefördertes und verbrauchtes Metall der Partie. Die Werte werden je Runde am
+  Produktionsschritt erfasst; ältere Partien zeigen „nicht erfasst“, späterer
+  Beginn oder Lücken werden gekennzeichnet.
+
 - Spaceward-Zielwahl zeigt die direkte Reichweite als Kreis um die Quelle und
   kennzeichnet Ziele als direkt erreichbar, nur über Stationen oder ohne Weg. Der
   Versanddialog nennt die Entfernung als Anteil der direkten Reichweite.

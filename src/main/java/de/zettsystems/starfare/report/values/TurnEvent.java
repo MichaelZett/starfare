@@ -19,6 +19,7 @@ import java.util.OptionalInt;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = TurnEvent.Recycling.class, name = "recycling"),
         @JsonSubTypes.Type(value = TurnEvent.Production.class, name = "production"),
+        @JsonSubTypes.Type(value = TurnEvent.EconomySummary.class, name = "economySummary"),
         @JsonSubTypes.Type(value = TurnEvent.Reinforcement.class, name = "reinforcement"),
         @JsonSubTypes.Type(value = TurnEvent.BattleWon.class, name = "battleWon"),
         @JsonSubTypes.Type(value = TurnEvent.BattleLost.class, name = "battleLost"),
@@ -41,7 +42,7 @@ public sealed interface TurnEvent {
             case SystemLost event -> OptionalInt.of(event.systemId());
             case DefenseHeld event -> OptionalInt.of(event.systemId());
             case CoalitionBattle event -> OptionalInt.of(event.systemId());
-            case Victory _, Defeat _ -> OptionalInt.empty();
+            case Victory _, Defeat _, EconomySummary _ -> OptionalInt.empty();
         };
     }
 
@@ -53,11 +54,20 @@ public sealed interface TurnEvent {
             case SystemLost event -> OptionalInt.of(event.systemId());
             case DefenseHeld event -> OptionalInt.of(event.systemId());
             case CoalitionBattle event -> OptionalInt.of(event.systemId());
-            case Recycling _, Production _, Reinforcement _, Victory _, Defeat _ -> OptionalInt.empty();
+            case Recycling _, Production _, Reinforcement _, Victory _, Defeat _, EconomySummary _ -> OptionalInt.empty();
         };
     }
 
     record Production(int playerId, int systemId, String systemName, int amount)
+            implements TurnEvent {}
+
+    /**
+     * One player's economy in one resolved round, captured at the production step before
+     * combat: metal actually mined, metal actually booked for ships and finished capacity.
+     * Recorded even when all values are zero, so missing history differs from a true zero.
+     * Not shown as a report line; only the final summary reads it.
+     */
+    record EconomySummary(int playerId, long metalMined, long metalConsumed, int capacityGained)
             implements TurnEvent {}
 
     record Recycling(int playerId, int systemId, String systemName, int ships, long recoveredTenths)

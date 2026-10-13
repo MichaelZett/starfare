@@ -1004,7 +1004,8 @@ public class DefaultGameService implements GameService {
             case TurnEvent.BattleLost battle -> battle.systemName();
             case TurnEvent.SystemLost conquest -> conquest.systemName();
             case TurnEvent.DefenseHeld battle -> battle.systemName();
-            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ -> "";
+            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
+                 TurnEvent.EconomySummary _ -> "";
         };
     }
 
@@ -1115,7 +1116,21 @@ public class DefaultGameService implements GameService {
             int systems = (int) state.systems().stream()
                     .filter(system -> Objects.equals(system.ownerId(), playerId)).count();
             return new GameOutcomeStatistics(Math.max(0, state.turn() - 1), systems, totals.built, totals.destroyed,
-                    totals.lost);
+                    totals.lost, economy(state, playerId));
+        }
+
+        private static de.zettsystems.starfare.game.values.@org.jspecify.annotations.Nullable EconomyTotals economy(
+                GameState state, int playerId) {
+            if (!state.ruleset().isSpaceward()) { return null; }
+            java.util.SortedSet<Integer> rounds = new java.util.TreeSet<>();
+            Map<Integer, de.zettsystems.starfare.report.values.TurnReport> reports = new java.util.HashMap<>();
+            state.replayFrames().forEach((round, frame) -> {
+                if (round >= state.turn()) { return; }
+                rounds.add(round);
+                var report = frame.reports().get(playerId);
+                if (report != null) { reports.put(round, report); }
+            });
+            return de.zettsystems.starfare.game.values.EconomyTotals.of(reports, rounds, playerId, state.ruleset().usesMetals());
         }
 
         private static final class Totals {
@@ -1157,7 +1172,7 @@ public class DefaultGameService implements GameService {
                         destroyed += battle.destroyedBy(playerId);
                     }
                     case TurnEvent.Recycling _, TurnEvent.Reinforcement _,
-                            TurnEvent.Victory _,
+                            TurnEvent.Victory _, TurnEvent.EconomySummary _,
                             TurnEvent.Defeat _ -> { }
                 }
             }
