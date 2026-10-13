@@ -95,4 +95,56 @@ class DiplomacyServiceTest {
         assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 51))).isFalse();
         assertThat(state.diplomacy()).isEqualTo(DiplomacyState.EMPTY);
     }
+
+    private static GameState withAi(boolean aiAlliances) {
+        var state = NavigationStates.running(de.zettsystems.starfare.game.values.RulesetRef.SPACEWARD_ALLIANCE,
+                new de.zettsystems.starfare.game.values.VictoryRules(70, true, false, 70, aiAlliances));
+        state.players().add(new Player(3, "Machine", true, "#009e73"));
+        return state;
+    }
+    @Test void withoutAiAlliancesNoAiEmpireBecomesANewPartyButHumansStillAlly() {
+        var state = withAi(false);
+        assertThat(state.victoryRules().aiAlliancesAllowed()).isFalse();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 3, 2))).isFalse();
+        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.FOUND, 1, 2))).isFalse();
+        assertThat(state.diplomacy().proposals()).isEmpty();
+        found(state, 2);
+        assertThat(state.allied(1, 2)).isTrue();
+        int group = state.diplomacy().groups().getFirst().id();
+        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.JOIN, group, 0))).isFalse();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.NOTICE, 0, 5))).isTrue();
+        service.answerAiProposals(state);
+        assertThat(state.diplomacy().proposals()).hasSize(1);
+    }
+    @Test void enabledAiAlliancesKeepThePreviousAcceptingBehaviour() {
+        var state = withAi(true);
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 3, 2))).isTrue();
+        service.answerAiProposals(state);
+        assertThat(state.allied(1, 3)).isTrue();
+    }
+    @Test void aiTakeoverKeepsExistingTreatiesAndRefusesNewEntriesUntilTheHumanReturns() {
+        var state = withAi(false);
+        found(state, 2);
+        state.players().replaceAll(player -> player.id() == 2 ? player.asAi() : player);
+        assertThat(state.allied(1, 2)).isTrue();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.NOTICE, 0, 4))).isTrue();
+        service.answerAiProposals(state);
+        assertThat(state.diplomacy().groups().getFirst().noticeRounds()).isEqualTo(4);
+        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.LEAVE, 0, 0))).isTrue();
+        service.beginRound(state, state.turn() + 5);
+        assertThat(state.diplomacy().groups()).isEmpty();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 1))).isFalse();
+        state.players().replaceAll(player -> player.id() == 2 ? player.asHuman() : player);
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 1))).isTrue();
+    }
+    @Test void staleProposalsThatWouldBringInAnAiAreRejectedNotApproved() {
+        var state = withAi(false);
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 1))).isTrue();
+        state.players().replaceAll(player -> player.id() == 2 ? player.asAi() : player);
+        int proposal = state.diplomacy().proposals().getFirst().id();
+        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.APPROVE, proposal, 0))).isFalse();
+        service.answerAiProposals(state);
+        assertThat(state.diplomacy().proposals()).isEmpty();
+        assertThat(state.diplomacy().groups()).isEmpty();
+    }
 }

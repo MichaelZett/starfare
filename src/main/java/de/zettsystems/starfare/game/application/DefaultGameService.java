@@ -135,7 +135,8 @@ public class DefaultGameService implements GameService {
             return Optional.of(new DiplomacyView(state.turn(), seat,
                     canPlan(state, seat, state.turn()), state.players(), new DiplomacyState(
                             state.diplomacy().nextId(), state.diplomacy().groups(), state.diplomacy().proposals().stream()
-                            .filter(proposal -> proposal.voters().contains(seat)).toList())));
+                            .filter(proposal -> proposal.voters().contains(seat)).toList()),
+                    state.victoryRules().aiAlliancesAllowed()));
         }));
     }
     @Override

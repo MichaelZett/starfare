@@ -8,6 +8,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Neue Spaceward-Partieoption **KI darf Bündnisse eingehen** (Vorgabe an). Ist sie
+  aus, treten KI-Imperien keinen neuen Bündnissen bei; bestehende Verträge nach
+  einer KI-Übernahme bleiben gültig. Ältere Partien behalten die bisherige Teilnahme.
+
 - Der Spaceward-Abschlussbericht zeigt gebaute Industrie und, mit Metall,
   gefördertes und verbrauchtes Metall der Partie. Die Werte werden je Runde am
   Produktionsschritt erfasst; ältere Partien zeigen „nicht erfasst“, späterer

@@ -476,6 +476,15 @@ Wartebefehle geparkt oder in einer fremden Garnison aufgelöst werden.
 Die KI stimmt Anfragen zu, sofern sie nicht bereits selbst einen Austritt
 angekündigt hat; sie gründet keine Bündnisse von sich aus.
 
+Beim Anlegen einer Spaceward-Partie legt **KI darf Bündnisse eingehen** fest, ob
+KI-Imperien neuen Bündnissen beitreten oder sie gründen dürfen (Vorgabe: ja). Ist
+die Option aus, erscheinen KI-Imperien in der Bündnisauswahl mit dem Hinweis, dass
+sie in dieser Partie keine Bündnisse eingehen; Bündnisse zwischen Menschen bleiben
+möglich. Übernimmt die KI einen menschlichen Sitz, bleiben bestehende Verträge
+samt Fristen und Kündigungen gültig; nur neue Beitritte sind gesperrt. Kehrt der
+Mensch zurück, gelten wieder seine Rechte. Ohne erlaubte Bündnisse ist die Option
+wirkungslos; ältere Partien behalten die bisherige KI-Teilnahme.
+
 ## Spaceward-Kampf
 
 Spaceward wertet Kämpfe für ganze Bündnisgruppen gemeinsam aus; SectorForces

@@ -638,7 +638,11 @@ Spaceward 1.1.0 adds fixed game options for allowing alliances and
 allowing group victory. Defaults retain alliances with individual victory only;
 the separate group threshold defaults to 70%. Disabling alliances also disables
 group victory. SectorForces has no diplomacy. Stored Spaceward 1.0.0 games retain
-their version and previous rules.
+their version and previous rules. **AI may form alliances** (default on) decides
+whether AI empires may newly found or join alliances; when off, humans can still ally
+with each other, existing treaties of a seat taken over by the AI stay in force, and
+the alliance dialog explains why AI empires cannot be offered a treaty. Stored games
+without this option keep the previous AI participation.
 
 Individual victory takes precedence. Otherwise, the eligible group controlling
 the most systems wins (group ID breaks ties). All effective members win,

@@ -489,8 +489,7 @@ public class GameState {
     public void configureVictorySystemPercent(int percent) {
         victorySystemPercent = Math.clamp(percent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT,
                 GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
-        if (victoryRules != null) { victoryRules = new VictoryRules(victorySystemPercent,
-                victoryRules.alliancesAllowed(), victoryRules.allianceVictoryAllowed(), victoryRules.allianceSystemPercent()); }
+        if (victoryRules != null) { victoryRules = victoryRules.withIndividualPercent(victorySystemPercent); }
     }
 
     public Instant turnStartedAt() {

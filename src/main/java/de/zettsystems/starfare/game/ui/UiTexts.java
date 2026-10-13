@@ -747,6 +747,10 @@ public final class UiTexts {
     public static final String ALLIANCE_WINNERS = "victory.allianceWinners";
     public static final String ROUND_EVENT_ALLIANCE_VICTORY = "round.event.allianceVictory";
     public static final String VICTORY_RULES_SUMMARY = "victory.rulesSummary";
+    public static final String AI_ALLIANCES_ALLOWED = "victory.aiAlliancesAllowed";
+    public static final String AI_ALLIANCES_HINT = "victory.aiAlliancesHint";
+    public static final String AI_ALLIANCES_SUMMARY = "victory.aiAlliancesSummary";
+    public static final String DIP_AI_BLOCKED = "diplomacy.aiBlocked";
     public static final String RECYCLING_PLAN = "economy.recycling.plan";
     public static final String RECYCLING_FRACTION = "economy.recycling.fraction";
     public static final String RECYCLING_HINT = "economy.recycling.hint";

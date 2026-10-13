@@ -135,6 +135,15 @@ member becomes contractless. Founding requires both partners, admission requires
 all current members plus the applicant, and notice changes require all members.
 Overlapping votes are rejected. Roster changes discard stale electorates.
 
+`VictoryRules.aiAlliancesAllowed` is fixed per game (setup, snapshot, templates);
+missing JSON reads as `true` through the `@JsonCreator`, and the value is only
+effective while alliances are allowed. When it is false,
+`DefaultDiplomacyService.act` refuses FOUND with an AI party, JOIN by an AI and
+APPROVE of such a proposal; NOTICE, REJECT and LEAVE stay available so existing
+treaties of an AI-controlled seat can still be managed. `answerAiProposals` rejects
+proposals that would bring in an AI. `DiplomacyView.aiAlliancesAllowed` lets the
+dialog explain the blocked partners instead of offering them.
+
 Notice periods are 0–50 whole rounds. A departure takes effect at current turn
 plus max(1, notice), processed at the resolution boundary before arrivals.
 Already announced dates are never changed by a later agreement. Account-facing
