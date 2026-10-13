@@ -1,7 +1,6 @@
 package de.zettsystems.starfare.economy.ui;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Input;
@@ -9,70 +8,79 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.IntegerField;
 import de.zettsystems.starfare.economy.values.*;
 import de.zettsystems.starfare.game.ui.UiTexts;
+import de.zettsystems.starfare.game.values.RelocationAdjustment;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.HtmlAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
-/** Inline editing reuses authorized forecasting; drafts belong to the map workspace. */
+/**
+ * Inline production editing without a separate apply step: numbers, step buttons and presets
+ * save immediately, a slider saves when released. Dragging only previews on a copy.
+ */
 public final class ProductionEditor extends Div {
     private static final String[] LABELS = {UiTexts.UX_BUILD_SHIPS, UiTexts.UX_MINE_METAL, UiTexts.UX_EXPAND_INDUSTRY};
-    private static final String[] IDS = {"industry-shipbuilding", MetalEconomyPanel.MINING_ID, IndustryPanel.ALLOCATION_ID};
-    private final ProductionDrafts.Draft draft;
-    private final int turn;
+    public static final String MINING_ID = "industry-mining";
+    private static final String[] IDS = {"industry-shipbuilding", MINING_ID, IndustryPanel.ALLOCATION_ID};
+    private final ProductionInputs.Input input;
     private final Function<AllocationSplit, Optional<ProductionPlanPreview>> preview;
-    private final Predicate<AllocationSplit> commit;
-    private final Runnable changed;
+    private final Function<AllocationSplit, ProductionCommit> commit;
+    private final ProductionFunctions functions;
     private final Div editor = new Div();
     private final Div results = new Div();
     private final Div presets = new Div();
-    private final Span state = new Span();
-    private final Button save = new Button(I18n.t(UiTexts.ECONOMY_APPLY));
-    private final Button recheck = new Button(I18n.t(ProductionKeys.RECHECK));
+    private final Span status = new Span();
     private final List<IntegerField> amounts = new ArrayList<>();
     private final List<Input> sliders = new ArrayList<>();
     private final List<Checkbox> locks = new ArrayList<>();
     private boolean updating;
 
-    public ProductionEditor(ProductionDrafts.Draft draft, int turn,
+    public ProductionEditor(ProductionInputs.Input input,
                             Function<AllocationSplit, Optional<ProductionPlanPreview>> preview,
-                            Predicate<AllocationSplit> commit, Runnable changed) {
-        this.draft = draft; this.turn = turn; this.preview = preview; this.commit = commit; this.changed = changed;
+                            Function<AllocationSplit, ProductionCommit> commit) {
+        this.input = input; this.preview = preview; this.commit = commit;
         addClassName("production-editor");
         editor.addClassName("production-inline-fields");
         presets.addClassName("production-presets");
-        add(new ProductionFunctions(draft.industry(), this::focus));
-        add(presets);
+        functions = new ProductionFunctions(ProductionOutcome.of(input.allocation(), input.industry()),
+                input.industry().metal() != null, this::focus);
+        add(functions, presets);
         Button open = new Button(I18n.t(UiTexts.UX_PLAN_PRODUCTION), _ -> focus(0));
         open.setId("production-plan-open");
         add(open, editor);
+        editor.add(new Span(I18n.t(UiTexts.UX_CAPACITY_BUDGET, input.industry().usableCapacity())));
         for (int index = 0; index < 3; index++) { addRow(index); }
         results.addClassName("production-plan-results");
-        results.getElement().setAttribute(HtmlAttributes.ARIA_LIVE, "polite");
-        recheck.addClickListener(_ -> { draft.recheck(turn); sync(); changed.run(); });
-        save.setId(IndustryPanel.APPLY_ID); save.addThemeVariants(ButtonVariant.PRIMARY);
-        save.addClickListener(_ -> apply());
-        Button discard = new Button(I18n.t(UiTexts.UX_DISCARD), _ -> { draft.discard(); draft.collapse(); sync(); changed.run(); });
-        Button reset = new Button(I18n.t(UiTexts.UX_RESET), _ -> { draft.discard(); sync(); changed.run(); });
-        editor.add(new Span(I18n.t(UiTexts.UX_CAPACITY_BUDGET, draft.industry().usableCapacity())));
-        editor.add(state, results, new Div(reset, discard, recheck, save), new Span(I18n.t(ProductionKeys.LOCAL)));
+        status.addClassName("production-save-status");
+        status.getElement().setAttribute(HtmlAttributes.ARIA_LIVE, "polite");
+        editor.add(results);
+        add(status);
         sync();
+        restoreFocus();
     }
 
     public void focus(int index) {
-        draft.expand(); editor.setVisible(true);
+        input.expand(); editor.setVisible(true);
         amounts.get(index).focus();
         editor.getElement().executeJs("this.scrollIntoView({block:'nearest'})");
     }
 
-    private void apply() {
-        if (draft.stale() || !draft.valid() || preview.apply(draft.allocation()).isEmpty()) { return; }
-        if (commit.test(draft.allocation())) { draft.accepted(); }
-        else { draft.observe(turn + 1, draft.industry()); }
-        sync(); changed.run();
+    private void restoreFocus() {
+        Integer index = input.focus();
+        if (index == null || !input.expanded()) { return; }
+        if (index < 3) { amounts.get(index).focus(); }
+        else { sliders.get(index - 3).getElement().callJsFunction("focus"); }
+    }
+
+    /** Saves the complete current allocation once; unchanged or refused input shows the stored plan. */
+    private void save() {
+        if (!input.changed()) { sync(); return; }
+        if (!input.valid()) { input.rejected(); sync(); return; }
+        ProductionCommit result = commit.apply(input.allocation());
+        if (result.accepted()) { input.accepted(result.relocations()); } else { input.rejected(); }
+        sync();
     }
 
     private void addRow(int index) {
@@ -83,51 +91,74 @@ public final class ProductionEditor extends Div {
         slider.getElement().setAttribute(HtmlAttributes.MIN, "0");
         slider.getElement().setAttribute(HtmlAttributes.STEP, "1");
         slider.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, I18n.t(LABELS[index]));
-        Checkbox pin = new Checkbox(I18n.t(UiTexts.UX_PIN), draft.locks().contains(index));
+        Checkbox pin = new Checkbox(I18n.t(UiTexts.UX_PIN), input.locks().contains(index));
         pin.setId(IDS[index] + "-pin");
-        pin.addValueChangeListener(event -> { if (!updating) { draft.pin(index, event.getValue()); sync(); changed.run(); } });
+        pin.addValueChangeListener(event -> { if (!updating) { input.pin(index, event.getValue()); sync(); } });
         amount.addValueChangeListener(event -> {
-            if (!updating && event.getValue() != null) { adjust(index, event.getValue()); }
+            if (!updating && event.isFromClient() && event.getValue() != null) { input.adjust(index, event.getValue()); save(); }
         });
         slider.getElement().addEventListener("input", event -> {
-            if (!updating) { adjust(index, event.getEventData().path("element.value").asInt()); }
+            if (!updating) { input.adjust(index, event.getEventData().path("element.value").asInt()); sync(); }
         }).addEventData("element.value");
+        slider.getElement().addEventListener("change", event -> {
+            if (!updating) { input.adjust(index, event.getEventData().path("element.value").asInt()); save(); }
+        }).addEventData("element.value");
+        amount.getElement().addEventListener("focusin", _ -> input.focus(index));
+        amount.getElement().addEventListener("focusout", _ -> input.focus(null));
+        slider.getElement().addEventListener("focus", _ -> input.focus(index + 3));
+        slider.getElement().addEventListener("blur", _ -> input.focus(null));
         amounts.add(amount); sliders.add(slider); locks.add(pin);
         Div row = new Div(new Span(I18n.t(LABELS[index])), amount, slider, pin);
         row.addClassName("production-allocation-row");
-        row.setVisible(index != 1 || draft.industry().metal() != null);
+        row.setVisible(index != 1 || input.industry().metal() != null);
         editor.add(row);
     }
-    private void adjust(int index, int value) { draft.adjust(index, value); sync(); changed.run(); }
 
     private void sync() {
         updating = true;
-        int[] limits = ProductionPreset.limits(draft.industry());
+        int[] limits = ProductionPreset.limits(input.industry());
         for (int index = 0; index < 3; index++) {
-            amounts.get(index).setMax(limits[index]); amounts.get(index).setValue(draft.allocation().at(index));
+            amounts.get(index).setMax(limits[index]); amounts.get(index).setValue(input.allocation().at(index));
             sliders.get(index).getElement().setAttribute(HtmlAttributes.MAX, String.valueOf(limits[index]));
-            sliders.get(index).setValue(String.valueOf(draft.allocation().at(index)));
-            boolean enabled = !draft.locks().contains(index) && draft.locks().size() < 2 && limits[index] > 0;
+            sliders.get(index).setValue(String.valueOf(input.allocation().at(index)));
+            boolean enabled = !input.locks().contains(index) && input.locks().size() < 2 && limits[index] > 0;
             amounts.get(index).setEnabled(enabled); sliders.get(index).setEnabled(enabled);
         }
         updating = false;
-        editor.setVisible(draft.expanded());
-        String key = UiTexts.UX_SAVED;
-        if (draft.dirty()) { key = UiTexts.UX_UNSAVED; }
-        if (draft.stale()) { key = ProductionKeys.STALE; }
-        state.setText(I18n.t(key));
-        recheck.setVisible(draft.stale());
-        renderPresets(); renderResults();
+        editor.setVisible(input.expanded());
+        renderPresets(); renderResults(); renderStatus();
+    }
+
+    private void renderStatus() {
+        status.removeAll();
+        switch (input.status()) {
+            case SAVED -> {
+                status.add(new Span(I18n.t(ProductionKeys.SAVED)));
+                input.relocations().forEach(adjustment -> status.add(new Span(relocation(adjustment))));
+            }
+            case NOT_SAVED -> {
+                Span warning = new Span(I18n.t(ProductionKeys.NOT_SAVED)); warning.addClassName("production-warning");
+                status.add(warning);
+            }
+            case NONE -> { }
+        }
+        status.setVisible(input.status() != ProductionInputs.Status.NONE);
+    }
+
+    static String relocation(RelocationAdjustment adjustment) {
+        return adjustment.removed()
+                ? I18n.t(ProductionKeys.RELOCATION_REMOVED, adjustment.toSystem(), adjustment.before())
+                : I18n.t(ProductionKeys.RELOCATION_SHORTENED, adjustment.toSystem(), adjustment.before(), adjustment.after());
     }
 
     private void renderPresets() {
         presets.removeAll();
         for (var preset : ProductionPreset.values()) {
-            if (draft.industry().metal() == null && (preset == ProductionPreset.METAL || preset == ProductionPreset.AUTARK)) { continue; }
-            var result = preset.apply(draft.industry(), draft.allocation(), draft.locks());
+            if (input.industry().metal() == null && (preset == ProductionPreset.METAL || preset == ProductionPreset.AUTARK)) { continue; }
+            var result = preset.apply(input.industry(), input.allocation(), input.locks());
             Button button = new Button(I18n.t(ProductionKeys.preset(preset)), _ -> {
-                draft.choose(preset.apply(draft.industry(), draft.allocation(), draft.locks()).allocation());
-                sync(); changed.run();
+                input.choose(preset.apply(input.industry(), input.allocation(), input.locks()).allocation());
+                save();
             });
             button.setId("production-preset-" + preset.name().toLowerCase(java.util.Locale.ROOT));
             button.setEnabled(result.applicable());
@@ -135,39 +166,32 @@ public final class ProductionEditor extends Div {
             if (!result.applicable()) { item.add(new Span(I18n.t(ProductionKeys.rejection(result.rejection())))); }
             presets.add(item);
         }
-        for (int index : draft.locks()) { presets.add(new Span(I18n.t(ProductionKeys.PINNED, I18n.t(LABELS[index]), draft.allocation().at(index)))); }
+        for (int index : input.locks()) { presets.add(new Span(I18n.t(ProductionKeys.PINNED, I18n.t(LABELS[index]), input.allocation().at(index)))); }
     }
 
     private void renderResults() {
         results.removeAll();
-        var forecast = draft.valid() ? preview.apply(draft.allocation()) : Optional.<ProductionPlanPreview>empty();
-        save.setEnabled(draft.dirty() && !draft.stale() && forecast.isPresent());
-        if (forecast.isEmpty()) { results.add(new Span(I18n.t(ProductionKeys.INVALID))); return; }
-        IndustryView before = draft.industry();
-        IndustryView after = forecast.orElseThrow().industry();
-        var beforeMetal = before.metal();
-        var afterMetal = after.metal();
-        long beforeMining = beforeMetal == null ? 0 : beforeMetal.extraction();
-        long afterMining = afterMetal == null ? 0 : afterMetal.extraction();
-        results.add(new Span(I18n.t(ProductionKeys.BEFORE_AFTER, before.shipbuilding(), after.shipbuilding(),
-                beforeMining, afterMining, before.expansionAllocation(), after.expansionAllocation())),
-                new Div(new Span(I18n.t(UiTexts.UX_SHIP_RESULT, draft.allocation().ships(), after.shipbuilding()))),
-                new Div(new Span(I18n.t(UiTexts.UX_DELIVERY_RESULT, after.nextDelivery()))));
-        results.add(new Div(new Span(I18n.t(UiTexts.UX_EXPANSION_RESULT, after.expansionAllocation(),
-                Math.min(after.expansionCost(), after.expansionProgress() + after.expansionAllocation()), after.expansionCost()))));
-        if (afterMetal != null) { results.add(new Div(new Span(I18n.t(UiTexts.UX_EXTRACTION_RESULT, afterMetal.extraction())))); }
-        if (afterMetal != null && afterMetal.actualShips() < afterMetal.plannedShips()) { warn(UiTexts.UX_METAL_SHORTAGE); }
-        if (afterMetal != null && afterMetal.remaining() == 0 && draft.allocation().mining() > 0) { warn(UiTexts.UX_DEPOSIT_EMPTY); }
-        if (after.deliveryBottleneck()) { warn(UiTexts.UX_DELIVERY_SHORTAGE); }
-        if (after.shipbuilding() == 0) {
-            String reason = UiTexts.UX_METAL_SHORTAGE;
-            if (draft.allocation().total() == 0) { reason = UiTexts.UX_NO_CAPACITY; }
-            else if (draft.allocation().ships() == 0) { reason = UiTexts.UX_NO_SHIP_ALLOCATION; }
-            warn(reason);
+        // The shown industry can lag behind a just accepted save until the server update arrives.
+        boolean shown = input.allocation().equals(ProductionPreset.saved(input.industry()));
+        Optional<ProductionPlanPreview> forecast = shown || !input.valid() ? Optional.empty() : preview.apply(input.allocation());
+        if (!shown && forecast.isEmpty()) {
+            results.add(new Span(I18n.t(ProductionKeys.INVALID)));
+            functions.show(ProductionOutcome.of(input.saved(), input.industry()), input.industry().metal() != null);
+            return;
         }
-        var balance = forecast.orElseThrow().empire().metal();
-        if (balance != null) { results.add(new Div(new Span(I18n.t(UiTexts.UX_METAL_BALANCE,
-                balance.extraction(), balance.recycling(), balance.consumption(), balance.next())))); }
+        IndustryView after = forecast.map(ProductionPlanPreview::industry).orElse(input.industry());
+        functions.show(ProductionOutcome.of(input.allocation(), after), after.metal() != null);
+        results.add(new Div(new Span(I18n.t(UiTexts.UX_DELIVERY_RESULT, after.nextDelivery()))));
+        if (after.deliveryBottleneck()) { warn(UiTexts.UX_DELIVERY_SHORTAGE); }
+        forecast.ifPresent(plan -> {
+            plan.relocations().forEach(adjustment -> warn(relocation(adjustment), false));
+            var balance = plan.empire().metal();
+            if (balance != null) { results.add(new Div(new Span(I18n.t(UiTexts.UX_METAL_BALANCE,
+                    balance.extraction(), balance.recycling(), balance.consumption(), balance.next())))); }
+        });
     }
-    private void warn(String key) { Span label = new Span(I18n.t(key)); label.addClassName("production-warning"); results.add(label); }
+    private void warn(String key) { warn(I18n.t(key), true); }
+    private void warn(String text, boolean warning) {
+        Span label = new Span(text); label.addClassName(warning ? "production-warning" : "production-relocation"); results.add(label);
+    }
 }

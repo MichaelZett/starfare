@@ -22,12 +22,20 @@ public record MetalProduction(MetalEconomy economy, Map<Integer, Integer> ships,
     }
     public static MetalProduction forPlan(List<StarSystem> systems, Map<Integer, Industry> industries,
                                           Map<Integer, ColonyEconomy> colonies, MetalEconomy current) {
+        return forPlan(systems, industries, colonies, current, true);
+    }
+    public static MetalProduction forPlan(List<StarSystem> systems, Map<Integer, Industry> industries,
+                                          Map<Integer, ColonyEconomy> colonies, MetalEconomy current, boolean laborLimited) {
         var settled = Recycling.calculate(systems, current);
-        var forecast = calculate(systems, industries, colonies, settled.economy());
+        var forecast = calculate(systems, industries, colonies, settled.economy(), laborLimited);
         return new MetalProduction(forecast.economy(), forecast.ships(), forecast.extracted(), current.stocks(), current.recycling());
     }
     public static MetalProduction calculate(List<StarSystem> systems, Map<Integer, Industry> industries,
                                             Map<Integer, ColonyEconomy> colonies, MetalEconomy current) {
+        return calculate(systems, industries, colonies, current, true);
+    }
+    public static MetalProduction calculate(List<StarSystem> systems, Map<Integer, Industry> industries,
+                                            Map<Integer, ColonyEconomy> colonies, MetalEconomy current, boolean laborLimited) {
         var deposits = new HashMap<>(current.deposits());
         var stocks = new HashMap<>(current.stocks());
         Map<Integer, Long> extracted = new HashMap<>();
@@ -37,7 +45,7 @@ public record MetalProduction(MetalEconomy economy, Map<Integer, Integer> ships,
             Integer owner = system.ownerId();
             if (owner == null || system.neutral()) { continue; }
             int mining = Objects.requireNonNull(current.mining().get(system.id()));
-            int capacity = Objects.requireNonNull(colonies.get(system.id())).shipbuilding(Objects.requireNonNull(industries.get(system.id())));
+            int capacity = Objects.requireNonNull(colonies.get(system.id())).shipbuilding(Objects.requireNonNull(industries.get(system.id())), laborLimited);
             if (mining > capacity) { throw new IllegalArgumentException("Mining exceeds available capacity"); }
             long amount = Objects.requireNonNull(deposits.get(system.id())).extraction(mining);
             deposits.put(system.id(), Objects.requireNonNull(deposits.get(system.id())).extract(amount));

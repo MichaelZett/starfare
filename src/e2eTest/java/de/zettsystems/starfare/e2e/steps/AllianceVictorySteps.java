@@ -40,10 +40,13 @@ public class AllianceVictorySteps {
         assertThat(browser.awaitCss("#alliances-allowed").getAttribute("disabled")).isNotNull();
         ((JavascriptExecutor) browser.driver()).executeScript("const radios=[...document.querySelectorAll('#ruleset-selection vaadin-radio-button')]; radios.find(r=>r.textContent.includes('Spaceward')).click();");
         awaitEnabled("#alliance-victory-allowed", true);
+        awaitEnabled("#ai-alliances-allowed", true);
+        assertThat(browser.awaitCss("#ai-alliances-allowed").getDomProperty("checked")).isEqualTo("true");
         browser.clickCss("#alliance-victory-allowed");
         awaitEnabled("#alliance-victory-percent", true);
         browser.clickCss("#alliances-allowed");
         awaitEnabled("#alliance-victory-allowed", false);
+        awaitEnabled("#ai-alliances-allowed", false);
         browser.clickCss("#alliances-allowed");
         awaitEnabled("#alliance-victory-allowed", true);
         browser.clickCss("#alliance-victory-allowed");
@@ -53,6 +56,7 @@ public class AllianceVictorySteps {
         Files.write(target, ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
         browser.clickButtonWithText("Zusammenfassung prüfen");
         browser.awaitText("Bündnissiege: aktiv (70%)");
+        browser.awaitText("KI-Bündnisse: aktiv");
         browser.open("/");
     }
     private void awaitEnabled(String selector, boolean enabled) {
@@ -88,6 +92,8 @@ public class AllianceVictorySteps {
         Path target = Path.of("build", "alliance-victory", "outcome.png");
         Files.write(target, ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
         assertThat(browser.awaitCss(".game-outcome-personal-result").getText()).contains("Sieg");
+        browser.awaitTextIn(".game-outcome-economy", "Industrie gebaut: 0 Kapazitätspunkte");
+        assertThat(browser.awaitCss(".game-outcome-economy").getText()).doesNotContain("Metall").doesNotContain("erfasst");
         browser.driver().navigate().refresh();
         browser.awaitText("Spiel beendet. Sieger: Bündnis 1: Commander, Partner");
         assertThat(browser.awaitCss(".review-controls")).isNotNull();

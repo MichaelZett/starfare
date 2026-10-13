@@ -42,51 +42,58 @@ public class MetalSteps {
         id = GameId.newId();
         store.save(new GameSession(id, "Metal acceptance", host, Instant.now(), state));
         browser.open("/map/" + id.value()); selectAlpha();
-        browser.awaitTextIn(".metal-details", "6 Punkte für Schiffbau → voraussichtlich 1 Schiffe");
-        browser.awaitTextIn(".app-header-stats", "Metall: 2");
+        browser.awaitTextIn(".metal-details", "6 Punkte → 1 von 6 Schiffen/Runde · Metall fehlt");
+        browser.awaitTextIn(".metal-details", "Metall fördern · 3 je Punkt");
+        browser.awaitTextIn(".app-header-stats", "2 (\u22122)");
         screenshot("initial");
-        switchLanguage("Englisch", "Metal: 2");
-        selectAlpha(); browser.clickCss("#production-plan-open");
+        switchLanguage("Englisch", "2 (\u22122)");
+        selectAlpha(); browser.awaitTextIn(".metal-details", "6 points → 1 of 6 ships/round · metal missing");
+        browser.clickCss("#production-plan-open");
         browser.awaitTextIn(".production-editor", "Distribute 6 capacity points");
         screenshot("allocation-en");
-        browser.clickButtonWithText("Discard and close");
-        switchLanguage("German", "Metall: 2");
+        switchLanguage("German", "2 (\u22122)");
         selectAlpha(); browser.clickCss("#production-plan-open");
         browser.awaitCss("#industry-mining input");
         var before = registry.readState(id, de.zettsystems.starfare.game.domain.GameState::toSnapshot);
+        // Dragging only previews; nothing is stored before the slider is released.
         ((JavascriptExecutor) browser.driver()).executeScript("""
                 const slider = document.querySelectorAll('.production-allocation-row input[type=range]')[1];
                 slider.value = 6; slider.dispatchEvent(new Event('input', {bubbles:true}));
                 """);
-        browser.awaitTextIn(".production-plan-results", "Keine Schiffe nächste Runde");
+        browser.awaitTextIn(".metal-details", "0 Punkte → 0 Schiffe/Runde");
         assertFieldValue("#industry-shipbuilding input", "0");
-        browser.clickButtonWithText("Verwerfen und schließen");
-        browser.clickCss("#production-plan-open");
         assertThat(registry.readState(id, de.zettsystems.starfare.game.domain.GameState::toSnapshot)).isEqualTo(before);
-        browser.clickButtonWithText("Gespeicherten Plan laden");
-        enter("#industry-expansion input", "2");
+        save(() -> ((JavascriptExecutor) browser.driver()).executeScript("""
+                const slider = document.querySelectorAll('.production-allocation-row input[type=range]')[1];
+                slider.value = 6; slider.dispatchEvent(new Event('change', {bubbles:true}));
+                """), () -> mining() == 6);
+        save(() -> enter("#industry-expansion input", "2"), () -> mining() == 4);
         browser.clickCss("#industry-expansion-pin");
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                "true".equals(browser.awaitCss("#industry-expansion-pin").getDomProperty("checked")));
         enter("#industry-mining input", "6");
         assertFieldValue("#industry-expansion input", "2");
         assertFieldValue("#industry-mining input", "4");
+        assertThat(mining()).isEqualTo(4);
         browser.clickCss("#industry-expansion-pin");
-        browser.clickButtonWithText("Gespeicherten Plan laden");
-        enter("#industry-mining input", "2");
-        enter("#industry-expansion input", "1");
-        screenshot("allocation-preview");
-        browser.clickCss("#industry-apply");
+        save(() -> browser.clickCss("#production-preset-ships"), () -> mining() == 0);
+        save(() -> enter("#industry-mining input", "2"), () -> mining() == 2);
+        save(() -> enter("#industry-expansion input", "1"), () -> registry.readState(id, current -> current.industries().get(1).expansionAllocation()) == 1);
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                registry.readState(id, current -> current.metals().orElseThrow().mining().get(1)) == 2);
-        browser.awaitTextIn(".metal-details", "3 Punkte für Schiffbau → voraussichtlich 3 Schiffe");
-        browser.clickCss("#production-plan-open");
-        browser.awaitTextIn(".production-plan-results", "Förderung: 5 Metall");
-        browser.clickButtonWithText("Verwerfen und schließen");
+                registry.readState(id, current -> current.industries().get(1).expansionAllocation()) == 1);
+        screenshot("allocation-saved");
+        browser.awaitTextIn(".metal-details", "3 Punkte → 3 Schiffe/Runde");
+        browser.awaitTextIn(".metal-details", "2 Punkte → 5 Metall/Runde · Vorkommen erschöpft");
+        browser.awaitTextIn(".production-save-status", "Gespeichert");
+        browser.driver().navigate().refresh(); selectAlpha();
+        browser.awaitTextIn(".metal-details", "3 Punkte → 3 Schiffe/Runde");
+        browser.awaitTextIn(".app-header-stats", "2 (\u22122)");
         assertThat(games.submitTurn(id, 1)).isTrue();
         assertThat(games.submitTurn(id, 2)).isTrue();
         browser.driver().navigate().refresh(); selectAlpha();
         browser.awaitTextIn(".system-background", "Metallvorkommen: 0");
-        browser.awaitTextIn(".app-header-stats", "Metall: 0");
-        browser.awaitTextIn(".metal-details", "4 Punkte für Schiffbau → voraussichtlich 0 Schiffe");
+        browser.awaitTextIn(".app-header-stats", "0 (");
+        browser.awaitTextIn(".metal-details", "→ 0 von 4 Schiffen/Runde · Metall fehlt");
         assertThat(registry.<Integer>readState(id, current -> current.getSystem(1).garrison())).isEqualTo(15);
         screenshot("exhausted");
         assertThat(games.allocateProduction(id, 1, 2, 1, 1, 0)).isTrue();
@@ -95,7 +102,7 @@ public class MetalSteps {
         assertThat(registry.<Integer>readState(id, current -> current.getSystem(1).garrison())).isEqualTo(15);
         registry.writeState(id, current -> { current.endGame(1); return null; });
         browser.driver().navigate().refresh(); browser.awaitCss(".review-controls"); selectAlpha();
-        browser.awaitTextIn(".metal-details", "Verteilung: 0 Förderung");
+        browser.awaitTextIn(".metal-details", "0 Punkte × 3 → 0 Metall/Runde");
         ((JavascriptExecutor) browser.driver()).executeScript("""
                 const slider = document.querySelector('#review-timeline');
                 slider.value = slider.min;
@@ -103,7 +110,7 @@ public class MetalSteps {
                 """);
         browser.awaitTextIn(".review-notice", "Historischer Stand: vollständig aufgedeckt.");
         selectAlpha(); browser.awaitTextIn(".system-background", "Metallvorkommen: 0");
-        browser.awaitTextIn(".metal-details", "Verteilung: 2 Förderung");
+        browser.awaitTextIn(".metal-details", "2 Punkte → 0 Metall/Runde · Vorkommen erschöpft");
         assertThat(browser.driver().findElements(org.openqa.selenium.By.cssSelector("#industry-mining"))).isEmpty();
         screenshot("history");
         browser.open("/archive"); browser.awaitText("Metal acceptance");
@@ -126,7 +133,8 @@ public class MetalSteps {
         enter("#recycling-ships input", "0"); browser.clickCss("#recycling-apply");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                 registry.readState(id, current -> current.recyclingShips(1)) == 0);
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ ->
                 !browser.all(".recycling-details").getFirst().getText().contains("Vorgemerkt:"));
         assertThat(browser.all(".recycling-details").getFirst().getText()).doesNotContain("Vorgemerkt:");
         openDetails(); browser.clickCss("#recycling-open");
@@ -144,7 +152,7 @@ public class MetalSteps {
         openDetails(); browser.clickCss("#recycling-open");
         enter("#recycling-ships input", "9"); browser.clickCss("#recycling-apply");
         browser.awaitTextIn(".recycling-details", "Vorgemerkt: 9 Schiffe");
-        browser.awaitTextIn(".metal-details", "voraussichtlich 4 Schiffe");
+        browser.awaitTextIn(".metal-details", "7 Punkte → 4 von 7 Schiffen/Runde · Metall fehlt");
         assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue();
         browser.driver().navigate().refresh(); selectAlpha();
         openDetails(); browser.awaitTextIn(".recycling-details", "Gespeicherter Metallrest: 0,0");
@@ -174,6 +182,12 @@ public class MetalSteps {
                                 .filter(item -> item.isDisplayed() && item.getText().strip().equals(label))
                                 .findFirst().orElse(null)).click();
         browser.awaitTextIn(".app-header-stats", expected);
+    }
+    private int mining() {
+        return registry.readState(id, current -> current.metals().orElseThrow().mining().get(1));
+    }
+    private void save(Runnable input, java.util.function.BooleanSupplier stored) {
+        browser.saveAndAwaitRebuild(".industry-panel", input, stored);
     }
     private void assertFieldValue(String selector, String value) {
         Boolean matched = new WebDriverWait(browser.driver(), Duration.ofSeconds(10))

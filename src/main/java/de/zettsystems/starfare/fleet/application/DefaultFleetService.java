@@ -1,9 +1,11 @@
 package de.zettsystems.starfare.fleet.application;
 
 import de.zettsystems.starfare.fleet.domain.ConquestOrders;
+import de.zettsystems.starfare.fleet.domain.RelocationTrim;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.Fleet;
+import de.zettsystems.starfare.game.values.RelocationAdjustment;
 import de.zettsystems.starfare.game.values.StandingOrder;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.navigation.domain.Routes;
@@ -179,6 +181,24 @@ public class DefaultFleetService implements FleetService {
                 .sum();
         return Math.max(0, routingCapacity(state, playerId, fromId)
                 - routedFrom(state, playerId, fromId) + existing);
+    }
+
+    @Override
+    public List<RelocationAdjustment> trimRelocations(GameState state, int playerId, int systemId) {
+        List<StandingOrder> list = state.standingOrders().get(playerId);
+        if (list == null) { return List.of(); }
+        List<StandingOrder> outgoing = list.stream().filter(o -> o.fromSystemId() == systemId).toList();
+        Map<Integer, Integer> sizes = RelocationTrim.trim(outgoing, routingCapacity(state, playerId, systemId));
+        List<RelocationAdjustment> adjustments = new ArrayList<>();
+        for (StandingOrder order : outgoing) {
+            Integer size = sizes.get(order.id());
+            if (size == null) { continue; }
+            adjustments.add(new RelocationAdjustment(order.id(), systemId, order.toSystemId(),
+                    state.getSystem(order.toSystemId()).name(), order.ships(), size));
+            if (size == 0) { list.remove(order); }
+            else { list.set(list.indexOf(order), new StandingOrder(order.id(), playerId, systemId, order.toSystemId(), size)); }
+        }
+        return List.copyOf(adjustments);
     }
 
     @Override

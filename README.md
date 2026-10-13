@@ -76,7 +76,10 @@ filter your games and open a completed map without issuing further orders.
 When the final round contains a battle, the normal round report remains open first.
 Resolve every battle from that report, individually or together in **Instant** mode;
 only then does the victory or defeat dialog appear,
-with personal totals for built, destroyed and lost ships.
+with personal totals for built, destroyed and lost ships. Spaceward also lists
+the game's economy: industry built in capacity points and, with metal, metal mined
+and consumed. Totals come from per-round summaries captured at the production step;
+older games say "not recorded", and later starts or gaps are labelled as such.
 In the completed map, select any participant (including AI) and enable **Fog of war**
 to see their final perspective. Disable fog to reveal all systems and fleets.
 For newly completed games, the timeline can rewind to every resolved round;
@@ -513,7 +516,7 @@ in stock; unused capacity creates no debt. Industry expansion consumes no metal.
 Regular dispatch uses existing ships first. Production relocations follow actual
 construction and retain permanent garrison reserves. Growth and expanded industry
 only contribute to the following round. The system panel shows the saved plan's
-forecast across the empire; apply mining and expansion together to refresh it.
+forecast across the empire; every completed change is saved immediately.
 Deposits survive conquest without replenishment; empire stock remains with its
 player. Saved snapshots and historical review retain resources without executing
 extraction on load. Internal trial values are 10 starting metal per player,
@@ -635,7 +638,11 @@ Spaceward 1.1.0 adds fixed game options for allowing alliances and
 allowing group victory. Defaults retain alliances with individual victory only;
 the separate group threshold defaults to 70%. Disabling alliances also disables
 group victory. SectorForces has no diplomacy. Stored Spaceward 1.0.0 games retain
-their version and previous rules.
+their version and previous rules. **AI may form alliances** (default on) decides
+whether AI empires may newly found or join alliances; when off, humans can still ally
+with each other, existing treaties of a seat taken over by the AI stay in force, and
+the alliance dialog explains why AI empires cannot be offered a treaty. Stored games
+without this option keep the previous AI participation.
 
 Individual victory takes precedence. Otherwise, the eligible group controlling
 the most systems wins (group ID breaks ties). All effective members win,
@@ -673,19 +680,20 @@ Run the silent saved-game acceptance journey with:
 .\gradlew.bat e2eTest "-Dcucumber.filter.tags=@recycling"
 ```
 
-### Economy acceptance candidate: 1.2.0-w4
+### Economy acceptance candidate: 1.2.0-w5
 
 The complete economy can now be created through the ordinary wizard in a local,
 opt-in acceptance profile. SectorForces remains initially selected. Choose
-Spaceward and check that its card says **1.2.0-w4**.
+Spaceward and check that its card says **1.2.0-w5**. W5 equals W4 except that
+population no longer limits usable industry; colonies still grow as atmosphere.
 
 ```powershell
 .\gradlew.bat bootRun "--args=--spring.profiles.active=local,economy-preview"
 ```
 
 Without `economy-preview`, ordinary Spaceward creation stays at **1.1.0**.
-The switch affects creation only: saved W4 games remain supported when the
-profile is disabled. W1, W2 and W3 stay restoration-only. Colony properties,
+The switch affects creation only: saved W4 and W5 games remain supported when the
+profile is disabled. W1, W2, W3 and W4 stay restoration-only. Colony properties,
 finite deposits, stock, fractions and initial material are established once
 when the new game is saved, including before its first round.
 
@@ -711,27 +719,34 @@ summary by galaxy, participants, victory and access. Each group can be edited.
 The schematic galaxy preview is secondary and expandable.
 
 Spaceward production functions open their allocation directly: a shipyard, mining
-tower and construction crane have distinct shapes and show saved activity.
+tower and construction crane have distinct shapes and show invested points and their
+result per round, e.g. "4 points → 4 ships/round" or "2 points × 3 → 6 metal/round".
 Five presets (Ships, Metal, Industry, Even split, Self-sufficient shipbuilding)
-create a local draft immediately and preserve pinned shares. Self-sufficient
+are saved immediately and preserve pinned shares. Self-sufficient
 shipbuilding splits free capacity between ships and mining, with an odd remainder
 assigned to mining; it does not guarantee exclusive access to empire metal.
 Production planning uses coupled whole-point sliders for shipbuilding,
 mining and industry expansion, with optional pinned shares. A read-only empire-wide
 preview uses the actual economy calculation, including reserved recycling, metal
-shortages and relocation capacity. Each system retains its local draft and pins
-while the map is open. Stale rounds or external plan changes require an explicit
-recheck, and commits compare the saved plan under the game write lock. Submitting
-a turn with pending drafts requires a deliberate choice to use saved plans; no
-automatic bulk apply occurs. Reloading or leaving warns before losing drafts.
+shortages and relocation capacity. There is no apply step: numbers, step buttons and
+presets save at once, a slider saves when released; dragging only previews. Each save
+compares the shown plan with the stored one under the game write lock, and a rejected
+change shows the stored plan again. In 1.2.0-w5, lowering a system's shipbuilding
+proportionally shortens its outgoing relocations that no longer fit, and the panel
+names each change. The header shows a metal bar, stock and next-round change, such as
+"24 (−3)", with an accessible breakdown. Logistics lists mining yield per point and
+remaining deposit and can sort by yield.
 Header notices open filtered logistics lists using saved plans, with one system
-per cause and a separate draft count. Pending battles suppress these notices.
+per cause. Pending battles suppress these notices.
 Older
 rules without metal use two allocation areas. The empire's current metal stock
 appears in the header; planet data and rare scrapping actions are expandable.
 
 Fleet sending explains reachability, intermediate stations and arrival rounds
-without exposing internal distance coordinates. Ally conquest is offered only
+without exposing internal distance coordinates. During Spaceward target selection a
+dashed circle shows the direct range; targets are marked as direct, via stations or
+unreachable, and the send dialog states the distance as a share of the direct range
+(e.g. "90% of the direct range"; a target just outside never reads as 100%). Ally conquest is offered only
 when meaningful; SectorForces shares the simpler setup, overview and sending UI.
 Legal links in the footer open in a new tab to preserve ongoing edits.
 

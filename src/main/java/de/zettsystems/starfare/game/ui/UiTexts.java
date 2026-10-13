@@ -37,8 +37,6 @@ public final class UiTexts {
     public static final String UX_CONQUEST_RESULT = "ux.conquest.result";
     public static final String UX_STOP_WAIT = "ux.stop.wait";
     public static final String UX_FIXED_REST = "ux.fixed.rest";
-    public static final String UX_NO_CAPACITY = "ux.no.capacity";
-    public static final String UX_EXPANSION_RESULT = "ux.expansion.result";
 
     public static final String UX_NEUTRAL_DISTRIBUTION = "ux.neutral.distribution";
     public static final String UX_GALAXY = "ux.galaxy";
@@ -56,23 +54,11 @@ public final class UiTexts {
     public static final String UX_MINE_METAL = "ux.mine.metal";
     public static final String UX_EXPAND_INDUSTRY = "ux.expand.industry";
     public static final String UX_PIN = "ux.pin";
-    public static final String UX_UNSAVED = "ux.unsaved";
-    public static final String UX_SAVED = "ux.saved";
     public static final String UX_STALE_PLAN = "ux.stale.plan";
-    public static final String UX_DISCARD = "ux.discard";
-    public static final String UX_RESET = "ux.reset";
     public static final String UX_DISCARD_QUESTION = "ux.discard.question";
-    public static final String UX_KEEP_EDITING = "ux.keep.editing";
     public static final String UX_NEXT_PREVIEW = "ux.next.preview";
-    public static final String UX_SHIP_RESULT = "ux.ship.result";
     public static final String UX_DELIVERY_RESULT = "ux.delivery.result";
-    public static final String UX_EXTRACTION_RESULT = "ux.extraction.result";
-    public static final String UX_METAL_SHORTAGE = "ux.metal.shortage";
-    public static final String UX_DEPOSIT_EMPTY = "ux.deposit.empty";
-    public static final String UX_NO_SHIP_ALLOCATION = "ux.no.ship.allocation";
     public static final String UX_DELIVERY_SHORTAGE = "ux.delivery.shortage";
-    public static final String UX_ALLOCATION_WITHOUT_METAL = "ux.allocation.withoutMetal";
-    public static final String UX_ALLOCATION_SUMMARY = "ux.allocation.summary";
     public static final String UX_LABOR_LIMIT = "ux.labor.limit";
     public static final String UX_BACKGROUND = "ux.background";
     public static final String SYSTEM_SENDABLE_SHIPS = "system.sendableShips";
@@ -90,12 +76,6 @@ public final class UiTexts {
     public static final String UX_TRAVEL_DETAILS = "ux.travel.details";
     public static final String UX_NEW_TAB = "ux.new.tab";
     public static final String METAL_DEPOSIT = "metal.deposit";
-    public static final String METAL_STOCK = "metal.stock";
-    public static final String METAL_SHIPS = "metal.ships";
-    public static final String METAL_ASSIGNMENT = "metal.assignment";
-    public static final String METAL_MINING = "metal.mining";
-    public static final String METAL_CAPACITY = "metal.capacity";
-    public static final String METAL_FORECAST_HINT = "metal.forecastHint";
     public static final String METAL_DELIVERY = "metal.delivery";
     public static final String COLONY_LOCATION = "colony.location";
     public static final String COLONY_PLANET = "colony.planet";
@@ -147,7 +127,6 @@ public final class UiTexts {
 
     public static final String ECONOMY_TITLE = "economy.title";
     public static final String ECONOMY_CAPACITY = "economy.capacity";
-    public static final String ECONOMY_ALLOCATION = "economy.allocation";
     public static final String ECONOMY_DISTRIBUTION = "economy.distribution";
     public static final String ECONOMY_PROGRESS = "economy.progress";
     public static final String ECONOMY_ESTIMATE = "economy.estimate";
@@ -155,7 +134,6 @@ public final class UiTexts {
     public static final String ECONOMY_MAXIMUM = "economy.maximum";
     public static final String ECONOMY_NEXT_ROUND = "economy.nextRound";
     public static final String ECONOMY_DELIVERY = "economy.delivery";
-    public static final String ECONOMY_APPLY = "economy.apply";
     public static final String ECONOMY_ALL_SHIPS = "economy.allShips";
     public static final String ECONOMY_HALF = "economy.half";
     public static final String ECONOMY_ALL_EXPANSION = "economy.allExpansion";
@@ -576,6 +554,12 @@ public final class UiTexts {
     public static final String GAME_OUTCOME_BUILT = "gameOutcome.built";
     public static final String GAME_OUTCOME_DESTROYED = "gameOutcome.destroyed";
     public static final String GAME_OUTCOME_LOST = "gameOutcome.lost";
+    public static final String GAME_OUTCOME_METAL_MINED = "gameOutcome.metalMined";
+    public static final String GAME_OUTCOME_METAL_CONSUMED = "gameOutcome.metalConsumed";
+    public static final String GAME_OUTCOME_INDUSTRY_BUILT = "gameOutcome.industryBuilt";
+    public static final String GAME_OUTCOME_ECONOMY_NOT_RECORDED = "gameOutcome.economyNotRecorded";
+    public static final String GAME_OUTCOME_ECONOMY_SINCE = "gameOutcome.economySince";
+    public static final String GAME_OUTCOME_ECONOMY_PARTIAL = "gameOutcome.economyPartial";
 
     // Language switcher
     public static final String LANG_LABEL = "lang.label";
@@ -763,6 +747,10 @@ public final class UiTexts {
     public static final String ALLIANCE_WINNERS = "victory.allianceWinners";
     public static final String ROUND_EVENT_ALLIANCE_VICTORY = "round.event.allianceVictory";
     public static final String VICTORY_RULES_SUMMARY = "victory.rulesSummary";
+    public static final String AI_ALLIANCES_ALLOWED = "victory.aiAlliancesAllowed";
+    public static final String AI_ALLIANCES_HINT = "victory.aiAlliancesHint";
+    public static final String AI_ALLIANCES_SUMMARY = "victory.aiAlliancesSummary";
+    public static final String DIP_AI_BLOCKED = "diplomacy.aiBlocked";
     public static final String RECYCLING_PLAN = "economy.recycling.plan";
     public static final String RECYCLING_FRACTION = "economy.recycling.fraction";
     public static final String RECYCLING_HINT = "economy.recycling.hint";

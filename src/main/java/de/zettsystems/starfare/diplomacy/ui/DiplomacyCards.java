@@ -54,6 +54,16 @@ final class DiplomacyCards {
         card.add(action(view, UiTexts.DIP_REJECT, new DiplomacyOrder(DiplomacyOrder.Action.REJECT, proposal.id(), 0)));
         return card;
     }
+    /** AI empire in a game without AI alliances: shown, but explained instead of offered. */
+    Div blockedPartner(DiplomacyView view, Player player) {
+        Div card = card(); card.add(member(view, player.id()));
+        card.getElement().setAttribute(de.zettsystems.starfare.style.HtmlAttributes.DIPLOMACY_PARTNER, String.valueOf(player.id()));
+        Span reason = new Span(I18n.t(UiTexts.DIP_AI_BLOCKED));
+        reason.addClassName("diplomacy-ai-blocked");
+        card.add(reason);
+        return card;
+    }
+
     Div partner(DiplomacyView view, Player player) {
         Div card = card(); card.add(member(view, player.id()));
         card.getElement().setAttribute(de.zettsystems.starfare.style.HtmlAttributes.DIPLOMACY_PARTNER, String.valueOf(player.id()));

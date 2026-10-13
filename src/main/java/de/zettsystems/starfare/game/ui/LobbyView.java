@@ -316,7 +316,9 @@ public class LobbyView extends VerticalLayout {
                 I18n.t(UiTexts.VICTORY_RULES_SUMMARY, victory.individualSystemPercent(),
                         I18n.t(victory.alliancesAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED),
                         I18n.t(victory.allianceVictoryAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED),
-                        victory.allianceSystemPercent()));
+                        victory.allianceSystemPercent())
+                        + (victory.alliancesAllowed() ? " · " + I18n.t(UiTexts.AI_ALLIANCES_SUMMARY,
+                        I18n.t(victory.aiAlliancesAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED)) : ""));
         name.addClassName("lobby-game-name-text");
         container.add(name, new Span(RulesetLabels.label(game.rulesets(), row.summary().ruleset())),
                 new Span(I18n.t(row.visibilityKey())));

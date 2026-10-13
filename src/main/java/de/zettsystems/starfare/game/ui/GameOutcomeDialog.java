@@ -7,6 +7,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import de.zettsystems.starfare.game.values.EconomyTotals;
 import de.zettsystems.starfare.game.values.GameOutcomeStatistics;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
@@ -43,6 +44,8 @@ final class GameOutcomeDialog {
         metrics.addClassName("game-outcome-metrics");
         metrics.setWidthFull();
         content.add(title, winner, personalResult, metrics);
+        var economy = statistics.economy();
+        if (economy != null) { content.add(economy(economy)); }
         Button review = new Button(I18n.t(UiTexts.GAME_OUTCOME_REVIEW), _ -> {
             dialog.close();
             onReview.run();
@@ -65,7 +68,32 @@ final class GameOutcomeDialog {
         return dialog;
     }
 
-    private static Div metric(String icon, String key, int value) {
+    /** Spaceward only: recorded sums, never an invented zero for missing history. */
+    private static Div economy(EconomyTotals economy) {
+        Div section = new Div();
+        section.addClassName("game-outcome-economy");
+        if (!economy.recorded()) {
+            section.add(new Span(I18n.t(UiTexts.GAME_OUTCOME_ECONOMY_NOT_RECORDED)));
+            return section;
+        }
+        Div metrics = new Div();
+        metrics.addClassName("game-outcome-metrics");
+        metrics.setWidthFull();
+        if (economy.metal()) {
+            metrics.add(metric("⛏", UiTexts.GAME_OUTCOME_METAL_MINED, economy.metalMined()),
+                    metric("⬇", UiTexts.GAME_OUTCOME_METAL_CONSUMED, economy.metalConsumed()));
+        }
+        metrics.add(metric("⚙", UiTexts.GAME_OUTCOME_INDUSTRY_BUILT, economy.industryBuilt()));
+        section.add(metrics);
+        switch (economy.coverage()) {
+            case SINCE -> section.add(new Span(I18n.t(UiTexts.GAME_OUTCOME_ECONOMY_SINCE, economy.firstRound())));
+            case PARTIAL -> section.add(new Span(I18n.t(UiTexts.GAME_OUTCOME_ECONOMY_PARTIAL)));
+            case COMPLETE, NOT_RECORDED -> { }
+        }
+        return section;
+    }
+
+    private static Div metric(String icon, String key, long value) {
         Span iconSpan = new Span(icon);
         iconSpan.addClassName("game-outcome-metric-icon");
         Span number = new Span(String.valueOf(value));

@@ -7,9 +7,11 @@ import java.util.List;
 
 public final class NavigationStates {
     private NavigationStates() { }
-    public static GameState running() {
+    public static GameState running() { return running(RulesetRef.SPACEWARD, null); }
+    public static GameState running(RulesetRef rules, @org.jspecify.annotations.Nullable VictoryRules victory) {
         GameState state = new GameState(); state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(rules));
+        if (victory != null) { state.configureVictoryRules(victory); }
         state.players().addAll(List.of(new Player(1, "Navigator", false, "#56b4e9"), new Player(2, "Opponent", false, "#d55e00")));
         state.systems().addAll(List.of(
                 new StarSystem(1, "Alpha", 100, 100, 1, 50, 4, false),

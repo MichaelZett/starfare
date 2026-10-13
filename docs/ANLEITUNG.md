@@ -254,7 +254,12 @@ weder die Kampfstärke noch Rundenfristen oder Ergebnisse.
 Gewonnen hat, wer den eingestellten Anteil aller Systeme kontrolliert; neutrale
 Systeme zählen zur Gesamtzahl. Die Vorgabe ist 70 %. Wenn die letzte Runde noch
 offene Schlachten enthält, erscheint zunächst der Bericht. Erst nach deren
-Bestätigung öffnet sich das Ergebnis mit persönlichen Schiffssummen.
+Bestätigung öffnet sich das Ergebnis mit persönlichen Schiffssummen. Spaceward
+zeigt zusätzlich die Wirtschaft der Partie: gebaute Industrie in Kapazitätspunkten
+und, mit Metall, gefördertes und verbrauchtes Metall. Recycling zählt nicht als
+Förderung. Fehlt die Erfassung für ältere Partien, steht dort „nicht erfasst“;
+beginnt sie später oder hat Lücken, nennt der Dialog „seit Runde N“ bzw.
+„unvollständig erfasst“.
 
 Der Sieger darf **Bis zur vollständigen Eroberung weiterspielen** wählen. Das Ziel
 steigt dann auf 100 %, die Abgaben werden zurückgesetzt und die Fristen starten neu.
@@ -326,6 +331,14 @@ W1 und ältere Partien behalten ihre Regeln; die öffentliche Neuanlage bleibt b
 Jede Spaceward-Partie erhält eine feste Reichweite je Reiseabschnitt.
 Sie wird aus der Galaxie berechnet, damit alle Systeme schrittweise erreichbar
 bleiben. Reisezeit und Sensorreichweite sind davon unabhängig.
+
+Während der Zielwahl zeigt ein gestrichelter Kreis um die Quelle die direkte
+Reichweite. Ziele tragen einen Zustand: durchgezogener Rahmen für direkt erreichbar,
+gestrichelter Rahmen für „nur über Stationen“, abgeblendet für „kein Weg“. Der
+Hinweistext und der Versanddialog nennen den Zustand samt Entfernung als Anteil der
+direkten Reichweite, etwa „90 % der direkten Reichweite“. Knapp außerhalb liegende
+Ziele erscheinen nie als genau 100 %. SectorForces hat keine Reichweitengrenze und
+zeigt keinen Kreis.
 
 Für ein entferntes Ziel sucht der Flottenversand automatisch den schnellsten
 Weg über eigene oder verbündete Systeme. Der Dialog zeigt einen grafischen
@@ -463,6 +476,15 @@ Wartebefehle geparkt oder in einer fremden Garnison aufgelöst werden.
 Die KI stimmt Anfragen zu, sofern sie nicht bereits selbst einen Austritt
 angekündigt hat; sie gründet keine Bündnisse von sich aus.
 
+Beim Anlegen einer Spaceward-Partie legt **KI darf Bündnisse eingehen** fest, ob
+KI-Imperien neuen Bündnissen beitreten oder sie gründen dürfen (Vorgabe: ja). Ist
+die Option aus, erscheinen KI-Imperien in der Bündnisauswahl mit dem Hinweis, dass
+sie in dieser Partie keine Bündnisse eingehen; Bündnisse zwischen Menschen bleiben
+möglich. Übernimmt die KI einen menschlichen Sitz, bleiben bestehende Verträge
+samt Fristen und Kündigungen gültig; nur neue Beitritte sind gesperrt. Kehrt der
+Mensch zurück, gelten wieder seine Rechte. Ohne erlaubte Bündnisse ist die Option
+wirkungslos; ältere Partien behalten die bisherige KI-Teilnahme.
+
 ## Spaceward-Kampf
 
 Spaceward wertet Kämpfe für ganze Bündnisgruppen gemeinsam aus; SectorForces
@@ -534,12 +556,17 @@ im Hinterland; sie behalten eine Garnison und schonen Systeme mit bekannten nahe
 Gegnern. Der Wirtschaftsvergleich für W4 steht in `docs/ECONOMY-EXPERIMENTS.md`. W2-Partien erhalten
 keine Recyclingbefehle. W3 bleibt intern, die öffentliche Neuanlage bei 1.1.0.
 
-### Wirtschaftsstand 1.2.0-w4 erproben
+### Wirtschaftsstand 1.2.0-w5 erproben
 
 Das lokale Startprofil `economy-preview` schaltet den vollständigen Wirtschaftsstand
 im normalen Spielassistenten frei. „SectorForces“ bleibt vorausgewählt.
-Für die neue Wirtschaft „Spaceward“ auswählen; die Karte muss „Regeln 1.2.0-w4“
+Für die neue Wirtschaft „Spaceward“ auswählen; die Karte muss „Regeln 1.2.0-w5“
 zeigen. Ältere Partien übernehmen die neue Wirtschaft nicht.
+
+In 1.2.0-w5 ist die Bevölkerung vorerst Atmosphäre: Sie wächst und beschreibt die
+Kolonie, begrenzt aber nicht mehr die nutzbare Industrie. Die gesamte installierte
+Kapazität steht für Schiffbau, Förderung und Ausbau bereit. Gespeicherte
+W4-Partien behalten die Begrenzung durch Arbeitskräfte.
 
 Ein Schiff benötigt 1 Metall. Förderung, Ausbau und Schiffbau teilen sich die
 nutzbare Kapazität; Recycling gewinnt 70 Prozent zurück und speichert Zehntelreste.
@@ -547,7 +574,7 @@ Die Metallwerte bleiben für diese Erprobung unverändert. Alle acht KI-Profile
 berücksichtigen die Förderung bei ihrer Industrie- und Flottenplanung.
 
 Ohne das Startprofil bleibt die Neuanlage bei Spaceward 1.1.0. Gespeicherte
-W4-Partien lassen sich trotzdem fortsetzen. Die öffentliche Freigabe von 1.2.0
+W4- und W5-Partien lassen sich trotzdem fortsetzen. Die öffentliche Freigabe von 1.2.0
 folgt nach der persönlichen Erprobung. Startbefehl und technische Prüfergebnisse
 stehen in README und `docs/ECONOMY-EXPERIMENTS.md`.
 
@@ -558,37 +585,49 @@ ordnet Galaxie, Teilnehmer, Sieg und Runden/Zugang; **Ändern** führt zur jewei
 Einstellung zurück. Die Galaxienvorschau ist ein aufklappbares Verteilungsbeispiel.
 
 In den Systemdetails öffnen Werfthalle, Förderturm mit Seilrad und Werkhalle sowie Baukran direkt den jeweiligen
-Anteil. Ihre Zahlen zeigen die gespeicherte Aktivität, keine Anzahl gekaufter Gebäude.
+Anteil. Jede Funktion zeigt eingesetzte Punkte und ihren Ertrag je Runde, etwa
+„4 Punkte → 4 Schiffe/Runde“, „2 Punkte × 3 → 6 Metall/Runde“ oder
+„3 Punkte → Fortschritt 8/12 → 11/12“. Fehlt Metall, steht dort „4 Punkte → 2 von
+4 Schiffen/Runde“; reicht das Vorkommen nicht, „Vorkommen erschöpft“. Die
+Fördereignung („3 je Punkt“) steht direkt an der Förderung.
 **Produktion planen** öffnet die gekoppelte Verteilung am System.
 Spaceward mit Metall verwendet **Schiffe bauen**, **Metall fördern** und
 **Industrie ausbauen**. Mehr Punkte in einem Bereich reduzieren die anderen im
 bisherigen Verhältnis. **Wert festhalten** schützt einen Anteil; bei zwei festen
 Werten ist der dritte bestimmt. Ältere Regeln ohne Metall haben zwei Bereiche.
 Die Vorgaben **Schiffe**, **Metall**, **Industrie**, **Gleichmäßig** und **Autarker
-Schiffbau** erzeugen direkt einen Entwurf. Fixierte Werte bleiben erhalten.
+Schiffbau** gelten sofort. Fixierte Werte bleiben erhalten.
 Autarker Schiffbau teilt freie Punkte auf Schiffbau und Förderung; ein ungerader
 Restpunkt geht in die Förderung. Das ist eine einmalige Aufteilung und garantiert
 keine Metallversorgung. Nicht anwendbare Vorgaben zeigen den Grund.
 Die nutzbare Kapazität ist das gemeinsame Budget. Metallmangel kann den tatsächlichen
 Schiffbau zusätzlich begrenzen; die Vorschau nennt diesen Grund ausdrücklich.
 
-**Plan übernehmen** speichert die Verteilung. Reglerbewegungen verändern nur den
-Entwurf. **Gespeicherten Plan laden** setzt ihn zurück; **Verwerfen und schließen**
-verwirft die Änderungen dieses Systems und klappt den Editor ein. Fixierungen bleiben erhalten.
-Die Vorschau zeigt Förderung, Schiffbau, Ausbau und Verlegung sowie die Metallbilanz
-für das gesamte Imperium. Der aktuelle Metallvorrat steht oben in der Spielleiste.
+Es gibt keinen Übernehmen-Knopf: Zahlenfeld, Plus/Minus und Vorgaben speichern
+sofort, der Schieberegler beim Loslassen. Während des Ziehens zeigt die Ansicht nur
+eine Vorschau. „Gespeichert“ bestätigt die Änderung; wird sie abgelehnt, etwa nach
+Rundenabgabe, erscheint „Änderung nicht gespeichert“ mit dem gespeicherten Plan.
+Fixierungen gelten nur in der geöffneten Karte und speichern nichts.
+Die Vorschau zeigt Verlegung und die Metallbilanz für das gesamte Imperium.
+Oben in der Spielleiste stehen Metallbarren, Vorrat und Änderung zur nächsten Runde,
+etwa „24 (−3)“: Förderung plus Recycling minus Verbrauch. Die Aufschlüsselung
+öffnet sich per Klick oder Tastatur.
 Planeteneigenschaften liegen unter **Planet und Wirtschaft — Hintergrund**.
 
-Produktionsentwürfe bleiben bei Systemwechsel während der geöffneten Karte erhalten.
-Rundenwechsel oder fremde Planänderungen sperren veraltete Entwürfe bis **Neu prüfen**.
-Bei Rundenabgabe kann man offene Entwürfe ansehen oder bewusst mit gespeicherten
-Plänen abgeben. Es gibt keine automatische Sammelübernahme. Neuladen und Verlassen
-warnen vor dem Verlust; Entwürfe sind nicht dauerhaft gespeichert.
+Ab 1.2.0-w5 kürzt weniger Schiffbau die ausgehenden Verlegungen des bearbeiteten
+Systems, soweit sie Schiffbau plus Zulieferung übersteigen. Mehrere Routen werden
+anteilig gekürzt, etwa 6/4 bei 6 verfügbaren Schiffen auf 4/2; eine Route bei 0
+wird aufgehoben. Die Rückmeldung nennt jede Änderung, z. B. „Verlegung nach Vega:
+6 → 4/Runde“. Späterer Mehrbau erhöht nichts automatisch, und reiner Metallmangel
+ohne eigene Eingabe ändert keine Verlegung. Ältere Fassungen behalten ihre Routen.
+
+Die Logistiksicht nennt für Fördersysteme Ertrag je Punkt und Restvorkommen;
+**Nach Fördereignung sortieren** stellt die ergiebigsten Vorkommen nach vorn.
 
 Die Reichshinweise neben den Kennzahlen führen zu gefilterten Logistiklisten:
 Metallmangel, begrenzte Förderung, fehlende Arbeitskräfte und stockende Verlegungen.
 Die Gruppen zählen jeweils Systeme; sie dürfen nicht zu einer Gesamtsumme addiert
-werden. Entwürfe erscheinen getrennt. Hinweise verwenden gespeicherte Pläne und
+werden. Hinweise verwenden gespeicherte Pläne und
 bleiben während offener Schlachten verborgen.
 
 **Weitere Aktionen → Schiffe verschrotten** öffnet die selten benötigte

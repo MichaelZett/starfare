@@ -43,11 +43,31 @@ final class EmpireStatsBar extends HorizontalLayout {
         var metal = empire.metal();
         metalDetails.setVisible(metal != null);
         if (metal != null) {
-            metalDetails.setSummaryText(I18n.t(UiTexts.UX_METAL_STOCK, metal.current()));
-            metalValue.setText(I18n.t(UiTexts.UX_METAL_BALANCE, metal.extraction(), metal.recycling(), metal.consumption(), metal.next()));
+            String breakdown = I18n.t(UiTexts.UX_METAL_BALANCE, metal.extraction(), metal.recycling(), metal.consumption(), metal.next());
+            Span amount = new Span(metal.current() + " " + metal.formattedChange());
+            amount.addClassName("app-header-stat-value");
+            Span summary = new Span(ingot(), amount);
+            summary.addClassName("empire-metal-summary");
+            summary.getStyle().set("display", "inline-flex").set("align-items", "center").set("gap", ".35rem");
+            summary.getElement().setAttribute(HtmlAttributes.ARIA_LABEL,
+                    I18n.t(UiTexts.UX_METAL_STOCK, metal.current(), metal.formattedChange()));
+            metalDetails.setSummary(summary);
+            metalDetails.getElement().setProperty(HtmlAttributes.TITLE, breakdown);
+            metalValue.setText(breakdown);
             metalDetails.removeAll();
             metalDetails.add(metalValue);
         }
+    }
+
+    /** Raw-material symbol: a metal bar, deliberately unlike the mine silhouette of the mining function. */
+    private static Span ingot() {
+        Span ingot = new Span();
+        ingot.addClassName("metal-ingot-icon");
+        ingot.getElement().setAttribute("aria-hidden", "true");
+        ingot.getStyle().set("display", "inline-block").set("width", "1.05rem").set("height", ".6rem")
+                .set("background", "linear-gradient(180deg, #e3e8ee 0%, #9aa7b5 55%, #6d7987 100%)")
+                .set("clip-path", "polygon(18% 0, 82% 0, 100% 100%, 0 100%)");
+        return ingot;
     }
 
     private static Span buildStat(VaadinIcon icon, Span valueSpan, String tooltip) {

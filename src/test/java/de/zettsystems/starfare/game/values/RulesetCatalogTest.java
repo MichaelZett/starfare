@@ -10,14 +10,28 @@ class RulesetCatalogTest {
 
     @Test void acceptanceSwitchEnablesOnlyTheCurrentCandidateAndKeepsRestorationAvailable() {
         var preview = RulesetCatalog.builtIn(true);
-        assertThat(preview.find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.SPACEWARD_ECONOMY_PREVIEW);
-        assertThatCode(() -> preview.requireCreatable(RulesetRef.SPACEWARD_ECONOMY_PREVIEW)).doesNotThrowAnyException();
-        assertThatCode(() -> catalog.requireSupported(RulesetRef.SPACEWARD_ECONOMY_PREVIEW)).doesNotThrowAnyException();
-        assertThatThrownBy(() -> catalog.requireCreatable(RulesetRef.SPACEWARD_ECONOMY_PREVIEW)).isInstanceOf(IllegalArgumentException.class);
-        for (var old : List.of(RulesetRef.SPACEWARD_COLONIES, RulesetRef.SPACEWARD_METALS, RulesetRef.SPACEWARD_RECYCLING)) {
+        assertThat(preview.find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.SPACEWARD_DIRECT_ECONOMY);
+        assertThatCode(() -> preview.requireCreatable(RulesetRef.SPACEWARD_DIRECT_ECONOMY)).doesNotThrowAnyException();
+        for (var stored : List.of(RulesetRef.SPACEWARD_ECONOMY_PREVIEW, RulesetRef.SPACEWARD_DIRECT_ECONOMY)) {
+            assertThatCode(() -> catalog.requireSupported(stored)).doesNotThrowAnyException();
+            assertThatThrownBy(() -> catalog.requireCreatable(stored)).isInstanceOf(IllegalArgumentException.class);
+        }
+        for (var old : List.of(RulesetRef.SPACEWARD_COLONIES, RulesetRef.SPACEWARD_METALS, RulesetRef.SPACEWARD_RECYCLING,
+                RulesetRef.SPACEWARD_ECONOMY_PREVIEW)) {
             assertThatThrownBy(() -> preview.requireCreatable(old)).isInstanceOf(IllegalArgumentException.class);
         }
         assertThat(preview.definitions().getFirst().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
+    }
+
+    @Test void onlyTheDirectCandidateDropsTheLaborLimit() {
+        assertThat(RulesetRef.SPACEWARD_DIRECT_ECONOMY.limitsIndustryByLabor()).isFalse();
+        assertThat(RulesetRef.SPACEWARD_DIRECT_ECONOMY.usesRecycling()).isTrue();
+        assertThat(RulesetRef.SPACEWARD_DIRECT_ECONOMY.usesConfigurableVictory()).isTrue();
+        for (var limited : List.of(RulesetRef.SPACEWARD_COLONIES, RulesetRef.SPACEWARD_METALS, RulesetRef.SPACEWARD_RECYCLING,
+                RulesetRef.SPACEWARD_ECONOMY_PREVIEW)) {
+            assertThat(limited.limitsIndustryByLabor()).isTrue();
+        }
+        assertThat(RulesetRef.SPACEWARD_ALLIANCE.limitsIndustryByLabor()).isFalse();
     }
 
     @Test

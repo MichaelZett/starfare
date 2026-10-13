@@ -15,7 +15,7 @@ public record IndustryView(int capacity, int expansionAllocation, int expansionP
         this(capacity, expansionAllocation, expansionProgress, expansionCost, nextDelivery,
                 deliveryBottleneck, reserveShortfall, null);
     }
-    public int usableCapacity() { return colony == null ? capacity : Math.min(capacity, colony.labor()); }
+    public int usableCapacity() { return colony == null || !colony.laborLimited() ? capacity : Math.min(capacity, colony.labor()); }
     public int shipbuilding() { return metal == null ? usableCapacity() - expansionAllocation : metal.actualShips(); }
     public boolean atMaximum() { return capacity == EconomyRules.MAX_CAPACITY; }
     public int turnsToExpansion() {

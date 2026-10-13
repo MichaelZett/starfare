@@ -12,26 +12,31 @@ import de.zettsystems.starfare.i18n.I18n;
 final class VictorySettings extends VerticalLayout {
     private final Checkbox alliances = new Checkbox(I18n.t(UiTexts.ALLIANCES_ALLOWED));
     private final Checkbox groupVictory = new Checkbox(I18n.t(UiTexts.ALLIANCE_VICTORY_ALLOWED));
+    private final Checkbox aiAlliances = new Checkbox(I18n.t(UiTexts.AI_ALLIANCES_ALLOWED));
     private final IntegerField groupPercent = new IntegerField(I18n.t(UiTexts.ALLIANCE_VICTORY_PERCENT));
     VictorySettings() {
         setPadding(false); alliances.setId("alliances-allowed"); groupVictory.setId("alliance-victory-allowed");
         groupPercent.setId("alliance-victory-percent"); groupPercent.setMin(GameConfig.MIN_VICTORY_SYSTEM_PERCENT);
         groupPercent.setMax(100); groupPercent.setValue(GameConfig.VICTORY_SYSTEM_PERCENT);
+        aiAlliances.setId("ai-alliances-allowed"); aiAlliances.setValue(true);
+        aiAlliances.setHelperText(I18n.t(UiTexts.AI_ALLIANCES_HINT));
         alliances.addValueChangeListener(_ -> refresh()); groupVictory.addValueChangeListener(_ -> refresh());
-        add(alliances, groupVictory, groupPercent); select(RulesetRef.SECTOR_FORCES);
+        add(alliances, aiAlliances, groupVictory, groupPercent); select(RulesetRef.SECTOR_FORCES);
     }
     void select(RulesetRef rules) {
         alliances.setEnabled(rules.isSpaceward()); alliances.setValue(rules.isSpaceward());
+        aiAlliances.setVisible(rules.isSpaceward()); aiAlliances.setValue(true);
         groupVictory.setValue(false); refresh();
     }
     private void refresh() {
         if (!Boolean.TRUE.equals(alliances.getValue())) { groupVictory.setValue(false); }
         groupVictory.setEnabled(alliances.isEnabled() && alliances.getValue());
+        aiAlliances.setEnabled(alliances.isEnabled() && alliances.getValue());
         groupPercent.setEnabled(groupVictory.isEnabled() && groupVictory.getValue());
     }
     VictoryRules chosen(int individual) {
         Integer percent = groupPercent.getValue();
         return new VictoryRules(individual, alliances.getValue(), groupVictory.getValue(),
-                percent == null ? GameConfig.VICTORY_SYSTEM_PERCENT : percent);
+                percent == null ? GameConfig.VICTORY_SYSTEM_PERCENT : percent, aiAlliances.getValue());
     }
 }

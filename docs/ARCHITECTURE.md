@@ -135,6 +135,15 @@ member becomes contractless. Founding requires both partners, admission requires
 all current members plus the applicant, and notice changes require all members.
 Overlapping votes are rejected. Roster changes discard stale electorates.
 
+`VictoryRules.aiAlliancesAllowed` is fixed per game (setup, snapshot, templates);
+missing JSON reads as `true` through the `@JsonCreator`, and the value is only
+effective while alliances are allowed. When it is false,
+`DefaultDiplomacyService.act` refuses FOUND with an AI party, JOIN by an AI and
+APPROVE of such a proposal; NOTICE, REJECT and LEAVE stay available so existing
+treaties of an AI-controlled seat can still be managed. `answerAiProposals` rejects
+proposals that would bring in an AI. `DiplomacyView.aiAlliancesAllowed` lets the
+dialog explain the blocked partners instead of offering them.
+
 Notice periods are 0–50 whole rounds. A departure takes effect at current turn
 plus max(1, notice), processed at the resolution boundary before arrivals.
 Already announced dates are never changed by a later agreement. Account-facing
@@ -916,6 +925,29 @@ CSV evidence separates shortage capacity from unused labor capacity and records
 initial metal and global irreversible losses. Reproducibility and interpretation
 are documented in `docs/ECONOMY-EXPERIMENTS.md`.
 
+## Economy totals in the final summary
+
+`TurnEvent.EconomySummary` is appended once per participant and resolved Spaceward
+round at the production step, before combat: metal actually extracted, metal booked
+for ships (`ships × SHIP_COST`) and capacity gained from finished expansion, all
+taken from the same `IndustrialProduction` results that `EconomyService.produce`
+books. Zero summaries are stored so that missing history differs from a true zero.
+The event adds no report line and is filtered from report lists while keeping the
+original event indices used by battle acknowledgements. `EconomyTotals.of` sums the
+summaries of the replay frames' resolved rounds and labels coverage as complete,
+since a later round, partial or not recorded; SectorForces carries no economy.
+
+## Economy candidate: Spaceward 1.2.0-w5
+
+`SPACEWARD_DIRECT_ECONOMY` replaces W4 as `RulesetCatalog.ECONOMY_CANDIDATE`;
+W4 is restoration-only like W1–W3. W5 keeps all W4 formulas but treats
+population as atmosphere: `RulesetRef.limitsIndustryByLabor()` is false, so
+`ColonyEconomy.usableCapacity(industry, false)` returns the installed capacity.
+`GameState`, `MetalProduction.forPlan/calculate`, the player view and every AI
+profile read this single rule; growth still changes population, never industry.
+`ColonyView.laborLimited` carries the rule to the UI, which then shows neither
+labor lines nor `EconomyIssues.Kind.LABOR`. Saved games are never re-labelled.
+
 ### Production drafts and authorized forecasts
 
 `GameService.previewProduction` resolves the account's joined human seat and checks
@@ -927,12 +959,33 @@ immutable industry and empire views; `EmpireStats.metal` is absent for non-metal
 rules and unprivileged observer views.
 
 `AllocationSplit` redistributes integer capacity shares while retaining pinned
-values. `ProductionPlanDialog` keeps the allocation draft in a modal editor,
-previews each edit and applies the existing atomic production command only on
-confirmation. Pins are view-local and require no snapshot migration. Older
-Spaceward references retain their two-way expansion/shipbuilding rule. Fleet
-routing still uses the same internal distance limit; presentation replaces the
-numeric limit with reachability and station information.
+values. `ProductionEditor` saves every completed input through
+`GameService.commitProduction`; slider dragging only calls the copy-based preview.
+`ProductionInputs` keeps the transient input, pins, opened editor, focused control
+and the last save feedback per system of one map view; a server update always
+replaces the input. `ProductionOutcome` turns an authorized forecast into points,
+yield and actual ships, metal or progress. Pins are view-local and require no
+snapshot migration. `MetalBalance.formattedChange` derives the header change from
+`next - current`, so the rounded display matches the forecast stock.
+
+`RelocationTrim` is the single rule for W5 relocation shortening: floor(old × limit /
+total), remaining ships by largest remainder, ties by order id, zero removes the
+route. `FleetService.trimRelocations` applies it with `routingCapacity` (expected
+shipbuilding plus incoming routes) as limit. `DefaultGameService.allocate` runs the
+production command and, only for `RulesetRef.adjustsRelocationsToShipbuilding()` and
+a lower expected shipbuilding, the trim in the same write lock; the preview performs
+the identical steps on its copy. `ProductionCommit` and `ProductionPlanPreview`
+return the adjustments. Metal shortage alone never rewrites standing orders. Older
+Spaceward references retain their two-way expansion/shipbuilding rule.
+
+`Routes.rangeFrom` classifies every target from a permitted station as direct,
+via stations or unreachable with the same `withinRange`, station and travel-edge
+rules as route commands, and stores the straight-line distance as a share of the
+range. `RangeShare` rounds down inside and up beyond the limit (one decimal near
+100 %), so a target just outside never reads as 100 %. `GameService.rangeFor` is
+read-only; `MapRenderer` draws `RangeOverlay` only during target selection in map
+coordinates without click handling, and marks targets by outline, opacity,
+`data-reach` and accessible text. SectorForces returns no range view.
 
 Map interaction geometry is computed by `map-geometry.js` from the actual browser
 zoom and rendered system diameter. Shared free lane intervals drive both visible

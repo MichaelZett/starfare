@@ -20,6 +20,18 @@ class TurnEventJsonTest {
     }
 
     @Test
+    void economySummariesRoundTripWithoutAnySystemOrBattle() {
+        TurnEvent summary = new TurnEvent.EconomySummary(2, 6, 4, 1);
+        String json = mapper.writeValueAsString(summary);
+        assertThat(json).contains("\"type\":\"economySummary\"");
+        TurnEvent restored = mapper.readValue(json, TurnEvent.class);
+        assertThat(restored).isEqualTo(summary);
+        assertThat(restored.affectedSystemId()).isEmpty();
+        assertThat(restored.battleSystemId()).isEmpty();
+        assertThat(BattleReplay.from(restored)).isEmpty();
+    }
+
+    @Test
     void allBattleEventsPreserveFractionalStrengths() {
         List<TurnEvent> events = List.of(
                 new TurnEvent.BattleWon(1, 5, "Vega", 3, 3, 0, false, 3.24, 2.76),

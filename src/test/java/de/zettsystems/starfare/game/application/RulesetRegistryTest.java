@@ -11,7 +11,7 @@ class RulesetRegistryTest {
     @Test void acceptanceGamesAreCreatedWithCompleteSavedEconomicsBeforeTheirFirstRound() {
         var store = new InMemoryGameSessionStore();
         GameRegistry preview = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(), RulesetCatalog.builtIn(true));
-        var id = preview.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ECONOMY_PREVIEW));
+        var id = preview.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_DIRECT_ECONOMY));
         var original = preview.readState(id, GameState::toSnapshot);
         assertThat(original.colonies()).hasSameSizeAs(original.systems());
         assertThat(original.metals()).isNotNull();
@@ -19,7 +19,7 @@ class RulesetRegistryTest {
         restored.start();
         assertThat(de.zettsystems.starfare.economy.domain.RecyclingOrders.balanceTenths(restored))
                 .isEqualTo(restored.metals().orElseThrow().recycling().initialTenths());
-        assertThat(restored.ruleset()).isEqualTo(RulesetRef.SPACEWARD_ECONOMY_PREVIEW);
+        assertThat(restored.ruleset()).isEqualTo(RulesetRef.SPACEWARD_DIRECT_ECONOMY);
         assertThat(RulesetCatalog.builtIn().find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.SPACEWARD_ALLIANCE);
     }
     @Test

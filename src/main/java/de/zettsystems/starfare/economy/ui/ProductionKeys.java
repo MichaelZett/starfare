@@ -14,17 +14,8 @@ public final class ProductionKeys {
     public static final String LIMIT = PREFIX + "rejection.limit";
     public static final String EMPTY = PREFIX + "rejection.empty";
     public static final String SMALL = PREFIX + "rejection.small";
-    public static final String BEFORE_AFTER = PREFIX + "beforeAfter";
     public static final String PINNED = PREFIX + "pinned";
-    public static final String RECHECK = PREFIX + "recheck";
-    public static final String STALE = PREFIX + "stale";
     public static final String INVALID = PREFIX + "invalid";
-    public static final String LOCAL = PREFIX + "local";
-    public static final String DRAFTS = PREFIX + "drafts";
-    public static final String SUBMIT = PREFIX + "submit";
-    public static final String SUBMIT_SAVED = PREFIX + "submitSaved";
-    public static final String SEE_DRAFTS = PREFIX + "seeDrafts";
-    public static final String LEAVE = PREFIX + "leave";
     public static final String DELIVERY = PREFIX + "issue.delivery";
     public static final String SHORTAGE = PREFIX + "issue.shortage";
     public static final String DEPOSIT = PREFIX + "issue.deposit";
@@ -32,6 +23,18 @@ public final class ProductionKeys {
     public static final String CLEAR = PREFIX + "clear";
     public static final String CHANGE = PREFIX + "change";
     public static final String COLONY = PREFIX + "colony";
+    public static final String OUTCOME_SHIPS = PREFIX + "outcome.ships";
+    public static final String OUTCOME_SHIPS_SHORT = PREFIX + "outcome.shipsShort";
+    public static final String OUTCOME_METAL = PREFIX + "outcome.metal";
+    public static final String OUTCOME_METAL_LIMITED = PREFIX + "outcome.metalLimited";
+    public static final String OUTCOME_EXPANSION = PREFIX + "outcome.expansion";
+    public static final String MINING_YIELD = PREFIX + "miningYield";
+    public static final String SAVED = PREFIX + "saved";
+    public static final String NOT_SAVED = PREFIX + "notSaved";
+    public static final String RELOCATION_SHORTENED = PREFIX + "relocation.shortened";
+    public static final String RELOCATION_REMOVED = PREFIX + "relocation.removed";
+    public static final String LOGISTICS_YIELD = PREFIX + "logistics.yield";
+    public static final String LOGISTICS_SORT_YIELD = PREFIX + "logistics.sortYield";
     public static String preset(de.zettsystems.starfare.economy.values.ProductionPreset preset) {
         return switch (preset) { case SHIPS -> SHIPS; case METAL -> METAL; case INDUSTRY -> INDUSTRY;
             case EVEN -> EVEN; case AUTARK -> AUTARK; };

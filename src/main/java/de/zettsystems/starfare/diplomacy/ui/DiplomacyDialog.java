@@ -58,7 +58,8 @@ public class DiplomacyDialog extends Dialog {
                 .sorted(java.util.Comparator.comparingInt(AllianceGroup::id)).forEach(group -> others.add(cards.group(view, group)));
         if (view.treaties().groupFor(view.player()).isEmpty()) {
             view.players().stream().filter(player -> player.id() != view.player() && view.treaties().groupFor(player.id()).isEmpty())
-                    .forEach(player -> others.add(cards.partner(view, player)));
+                    .forEach(player -> others.add(!view.aiAlliancesAllowed() && player.ai()
+                            ? cards.blockedPartner(view, player) : cards.partner(view, player)));
         }
         if (others.getChildren().findAny().isPresent()) { content.add(new H3(I18n.t(DiplomacyKeys.OTHERS)), others); }
         content.add(new Details(I18n.t(DiplomacyKeys.BACKGROUND), new Span(I18n.t(UiTexts.DIP_RULES))));
@@ -68,6 +69,7 @@ public class DiplomacyDialog extends Dialog {
         view.treaties().groupFor(view.player()).ifPresent(group -> valid.add(new DiplomacyDrafts.Key(DiplomacyOrder.Action.NOTICE, group.id())));
         if (view.treaties().groupFor(view.player()).isEmpty()) {
             view.players().stream().filter(player -> player.id() != view.player() && view.treaties().groupFor(player.id()).isEmpty())
+                    .filter(player -> view.aiAlliancesAllowed() || !player.ai())
                     .forEach(player -> valid.add(new DiplomacyDrafts.Key(DiplomacyOrder.Action.FOUND, player.id())));
         }
         if (drafts.retain(valid)) { Notification.show(I18n.t(DiplomacyKeys.LOST_TARGET)); }

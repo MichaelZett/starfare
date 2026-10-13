@@ -96,7 +96,7 @@ public class GameState {
     private @Nullable MetalEconomy metals;
     public Optional<MetalEconomy> metals() { return Optional.ofNullable(metals); }
     public MetalProduction metalPreview() {
-        return MetalProduction.forPlan(systems, industries, colonies, Objects.requireNonNull(metals));
+        return MetalProduction.forPlan(systems, industries, colonies, Objects.requireNonNull(metals), ruleset.limitsIndustryByLabor());
     }
     public int recyclingShips(int system) {
         var metal = metals;
@@ -149,7 +149,7 @@ public class GameState {
             ColonyEconomy grown = Objects.requireNonNull(colonies.get(system.id())).grow();
             colonies.put(system.id(), grown);
             industries.put(system.id(), expanded);
-            int next = grown.shipbuilding(expanded) - Objects.requireNonNull(Objects.requireNonNull(metals).mining().get(system.id()));
+            int next = grown.shipbuilding(expanded, ruleset.limitsIndustryByLabor()) - Objects.requireNonNull(Objects.requireNonNull(metals).mining().get(system.id()));
             updateSystem(system.id(), current -> current.completeShipbuilding(Objects.requireNonNull(production.ships().get(system.id())), 0, next));
         }
         metals = production.economy();
@@ -186,7 +186,7 @@ public class GameState {
             throw new IllegalArgumentException("Colonies must be complete and established once before start");
         }
         if (initial.entrySet().stream().anyMatch(entry ->
-                entry.getValue().shipbuilding(Objects.requireNonNull(industries.get(entry.getKey()))) < 0)) {
+                entry.getValue().shipbuilding(Objects.requireNonNull(industries.get(entry.getKey())), ruleset.limitsIndustryByLabor()) < 0)) {
             throw new IllegalArgumentException("Colony labor cannot support the allocation");
         }
         colonies.putAll(initial);
@@ -197,12 +197,12 @@ public class GameState {
         Industry industry = industries.get(systemId);
         if (industry == null) { throw new IllegalArgumentException("Unknown industry"); }
         ColonyEconomy colony = colonies.get(systemId);
-        return colony == null ? industry.capacity() : colony.usableCapacity(industry);
+        return colony == null ? industry.capacity() : colony.usableCapacity(industry, ruleset.limitsIndustryByLabor());
     }
 
     private int shipbuilding(int systemId, Industry industry) {
         ColonyEconomy colony = colonies.get(systemId);
-        int output = colony == null ? industry.shipbuilding() : colony.shipbuilding(industry);
+        int output = colony == null ? industry.shipbuilding() : colony.shipbuilding(industry, ruleset.limitsIndustryByLabor());
         return output - (metals == null ? 0 : Objects.requireNonNull(metals.mining().get(systemId)));
     }
 
@@ -250,7 +250,7 @@ public class GameState {
         int produced = shipbuilding(systemId, current);
         ColonyEconomy colony = colonies.get(systemId);
         ColonyEconomy grown = colony == null ? null : colony.grow();
-        int nextOutput = grown == null ? expanded.shipbuilding() : grown.shipbuilding(expanded);
+        int nextOutput = grown == null ? expanded.shipbuilding() : grown.shipbuilding(expanded, ruleset.limitsIndustryByLabor());
         updateSystem(systemId, system -> system.completeShipbuilding(produced, routed, nextOutput));
         if (grown != null) { colonies.put(systemId, grown); }
         industries.put(systemId, expanded);
@@ -489,8 +489,7 @@ public class GameState {
     public void configureVictorySystemPercent(int percent) {
         victorySystemPercent = Math.clamp(percent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT,
                 GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
-        if (victoryRules != null) { victoryRules = new VictoryRules(victorySystemPercent,
-                victoryRules.alliancesAllowed(), victoryRules.allianceVictoryAllowed(), victoryRules.allianceSystemPercent()); }
+        if (victoryRules != null) { victoryRules = victoryRules.withIndividualPercent(victorySystemPercent); }
     }
 
     public Instant turnStartedAt() {

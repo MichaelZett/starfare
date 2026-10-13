@@ -19,4 +19,7 @@ public final class RouteKeys {
     public static final String SYSTEM = "route.system";
     public static final String ALLIANCES = "route.alliances";
     public static final String RULES = "route.rules";
+    public static final String REACH_DIRECT = "route.reach.direct";
+    public static final String REACH_STATIONS = "route.reach.stations";
+    public static final String REACH_NONE = "route.reach.none";
 }

@@ -197,7 +197,15 @@ final class SendFleetDialog {
                 }
             }
         });
-        return new HeaderLabels(routeLabel, durationLabel, availableLabel, production,
+        com.vaadin.flow.component.Component routeBlock = routeLabel;
+        var reach = ctx.game().rangeFor(ctx.gameId(), ctx.pid(), ctx.from().id())
+                .map(range -> range.targets().get(ctx.to().id()));
+        if (reach.isPresent()) {
+            Span share = new Span(RangeOverlay.describe(reach.orElseThrow()));
+            share.addClassName("send-fleet-range");
+            routeBlock = new Div(routeLabel, share);
+        }
+        return new HeaderLabels(routeBlock, durationLabel, availableLabel, production,
                 new com.vaadin.flow.component.details.Details(I18n.t(UiTexts.UX_TRAVEL_DETAILS), itinerary));
     }
 

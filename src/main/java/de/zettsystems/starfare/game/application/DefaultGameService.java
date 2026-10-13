@@ -47,36 +47,51 @@ public class DefaultGameService implements GameService {
             if (player == null || !canPlan(state, player, plan.turn())
                     || !access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
             GameState draft = GameState.copyOf(state);
-            boolean accepted = draft.ruleset().usesMetals()
-                    ? economy.allocateProduction(draft, player, plan.systemId(), plan.expansionPoints(), plan.miningPoints())
-                    : economy.allocateExpansion(draft, player, plan.systemId(), plan.expansionPoints());
-            if (!accepted) { return Optional.empty(); }
+            var relocations = allocate(draft, player, plan);
+            if (relocations == null) { return Optional.empty(); }
             PlayerViewState view = playerViewBuilder.forPlayer(draft, player);
             return view.systems().stream().filter(system -> system.id() == plan.systemId())
                     .map(VisibleSystem::industry).filter(Objects::nonNull)
-                    .map(industry -> new de.zettsystems.starfare.economy.values.ProductionPlanPreview(industry, view.empire())).findFirst();
+                    .map(industry -> new de.zettsystems.starfare.economy.values.ProductionPlanPreview(industry, view.empire(), relocations)).findFirst();
         }));
     }
 
     @Override
-    public boolean commitProduction(GameId id, String account,
+    public de.zettsystems.starfare.economy.values.ProductionCommit commitProduction(GameId id, String account,
                                      de.zettsystems.starfare.economy.values.ProductionAllocation plan) {
-        if (!isRunningGame(id)) { return false; }
-        boolean accepted = registry.writeState(id, state -> {
+        var rejected = de.zettsystems.starfare.economy.values.ProductionCommit.REJECTED;
+        if (!isRunningGame(id)) { return rejected; }
+        var result = registry.writeState(id, state -> {
             Integer player = state.seatByUser().get(account);
-            if (player == null || !canPlan(state, player, plan.turn()) || plan.expected() == null) { return false; }
+            if (player == null || !canPlan(state, player, plan.turn()) || plan.expected() == null) { return rejected; }
             var visible = playerViewBuilder.forPlayer(state, player).systems().stream()
                     .filter(system -> system.id() == plan.systemId() && java.util.Objects.equals(system.ownerId(), player))
                     .map(VisibleSystem::industry).filter(Objects::nonNull).findFirst();
             if (visible.isEmpty() || !de.zettsystems.starfare.economy.values.ProductionPreset.saved(visible.orElseThrow()).equals(plan.expected())) {
-                return false;
+                return rejected;
             }
-            return state.ruleset().usesMetals()
-                    ? economy.allocateProduction(state, player, plan.systemId(), plan.expansionPoints(), plan.miningPoints())
-                    : economy.allocateExpansion(state, player, plan.systemId(), plan.expansionPoints());
+            var relocations = allocate(state, player, plan);
+            return relocations == null ? rejected : new de.zettsystems.starfare.economy.values.ProductionCommit(true, relocations);
         });
-        if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
-        return accepted;
+        if (result.accepted()) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
+        return result;
+    }
+
+    /**
+     * Applies one production plan; W5 then shortens the system's outgoing relocations when its
+     * expected shipbuilding dropped below them. Returns null for a rejected plan. Validation fails
+     * before any mutation, and the copy-based preview runs the very same steps.
+     */
+    private @org.jspecify.annotations.Nullable List<de.zettsystems.starfare.game.values.RelocationAdjustment> allocate(
+            GameState state, int player, de.zettsystems.starfare.economy.values.ProductionAllocation plan) {
+        boolean adjusts = state.ruleset().adjustsRelocationsToShipbuilding();
+        int before = adjusts ? state.expectedShipProduction(plan.systemId()) : 0;
+        boolean accepted = state.ruleset().usesMetals()
+                ? economy.allocateProduction(state, player, plan.systemId(), plan.expansionPoints(), plan.miningPoints())
+                : economy.allocateExpansion(state, player, plan.systemId(), plan.expansionPoints());
+        if (!accepted) { return null; }
+        if (!adjusts || state.expectedShipProduction(plan.systemId()) >= before) { return List.of(); }
+        return fleetService.trimRelocations(state, player, plan.systemId());
     }
 
     private static boolean canPlan(GameState state, int player, int expectedTurn) {
@@ -120,7 +135,8 @@ public class DefaultGameService implements GameService {
             return Optional.of(new DiplomacyView(state.turn(), seat,
                     canPlan(state, seat, state.turn()), state.players(), new DiplomacyState(
                             state.diplomacy().nextId(), state.diplomacy().groups(), state.diplomacy().proposals().stream()
-                            .filter(proposal -> proposal.voters().contains(seat)).toList())));
+                            .filter(proposal -> proposal.voters().contains(seat)).toList()),
+                    state.victoryRules().aiAlliancesAllowed()));
         }));
     }
     @Override
@@ -529,6 +545,11 @@ public class DefaultGameService implements GameService {
     @Override
     public java.util.Optional<RoutePreview> routeFor(GameId id, int player, int from, int to) {
         return registry.readState(id, state -> Routes.plan(state, player, from, to));
+    }
+
+    @Override
+    public java.util.Optional<de.zettsystems.starfare.navigation.values.RangeView> rangeFor(GameId id, int player, int from) {
+        return registry.readState(id, state -> Routes.rangeFrom(state, player, from));
     }
 
     @Override
@@ -984,7 +1005,8 @@ public class DefaultGameService implements GameService {
             case TurnEvent.BattleLost battle -> battle.systemName();
             case TurnEvent.SystemLost conquest -> conquest.systemName();
             case TurnEvent.DefenseHeld battle -> battle.systemName();
-            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ -> "";
+            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
+                 TurnEvent.EconomySummary _ -> "";
         };
     }
 
@@ -1095,7 +1117,21 @@ public class DefaultGameService implements GameService {
             int systems = (int) state.systems().stream()
                     .filter(system -> Objects.equals(system.ownerId(), playerId)).count();
             return new GameOutcomeStatistics(Math.max(0, state.turn() - 1), systems, totals.built, totals.destroyed,
-                    totals.lost);
+                    totals.lost, economy(state, playerId));
+        }
+
+        private static de.zettsystems.starfare.game.values.@org.jspecify.annotations.Nullable EconomyTotals economy(
+                GameState state, int playerId) {
+            if (!state.ruleset().isSpaceward()) { return null; }
+            java.util.SortedSet<Integer> rounds = new java.util.TreeSet<>();
+            Map<Integer, de.zettsystems.starfare.report.values.TurnReport> reports = new java.util.HashMap<>();
+            state.replayFrames().forEach((round, frame) -> {
+                if (round >= state.turn()) { return; }
+                rounds.add(round);
+                var report = frame.reports().get(playerId);
+                if (report != null) { reports.put(round, report); }
+            });
+            return de.zettsystems.starfare.game.values.EconomyTotals.of(reports, rounds, playerId, state.ruleset().usesMetals());
         }
 
         private static final class Totals {
@@ -1137,7 +1173,7 @@ public class DefaultGameService implements GameService {
                         destroyed += battle.destroyedBy(playerId);
                     }
                     case TurnEvent.Recycling _, TurnEvent.Reinforcement _,
-                            TurnEvent.Victory _,
+                            TurnEvent.Victory _, TurnEvent.EconomySummary _,
                             TurnEvent.Defeat _ -> { }
                 }
             }

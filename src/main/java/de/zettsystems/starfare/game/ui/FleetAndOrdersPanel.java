@@ -57,12 +57,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final Tab reportTab;
 
     private boolean readOnly;
-    private final de.zettsystems.starfare.economy.values.ProductionDrafts productionDrafts = new de.zettsystems.starfare.economy.values.ProductionDrafts();
-    private Runnable onDraftsChanged = () -> { };
+    private final de.zettsystems.starfare.economy.values.ProductionInputs productionInputs = new de.zettsystems.starfare.economy.values.ProductionInputs();
     private @Nullable IndustryPanel industryPanel;
     private EconomyIssues.@Nullable Kind economyFilter;
-    private boolean draftsFilter;
     private boolean economyFiltered;
+    private boolean sortByYield;
     private BiConsumer<Integer, Integer> onEconomySelected = (_, _) -> { };
     void onEconomySelected(BiConsumer<Integer, Integer> action) { onEconomySelected = action; }
     void openProduction(int index) {
@@ -72,15 +71,12 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 .map(Details.class::cast).filter(details -> details.hasClassName("system-operations"))
                 .forEach(details -> details.setOpened(true)); }
     }
-    void showEconomy(EconomyIssues.@Nullable Kind kind, boolean drafts) {
-        economyFilter = kind; draftsFilter = drafts; economyFiltered = true;
+    void showEconomy(EconomyIssues.Kind kind) {
+        economyFilter = kind; economyFiltered = true;
         var view = currentView;
         if (view != null) { renderLogistics(view); }
         showLogistics();
     }
-    void onDraftsChanged(Runnable action) { onDraftsChanged = action; }
-    java.util.Set<Integer> productionDraftSystems() { return productionDrafts.pending(); }
-    void discardProductionDrafts() { productionDrafts.discardAll(); onDraftsChanged.run(); }
     private boolean battlePresentationEnabled;
     private @Nullable GameId gameId;
     private @Nullable VisibleSystem selectedSystem;
@@ -113,10 +109,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private String routeFilter = "";
     private Consumer<de.zettsystems.starfare.economy.values.RecyclingOrder> onRecycling = _ -> { };
     void onRecycling(Consumer<de.zettsystems.starfare.economy.values.RecyclingOrder> action) { onRecycling = action; }
-    private java.util.function.Function<de.zettsystems.starfare.economy.values.ProductionAllocation, Boolean> onProductionAllocation = _ -> false;
+    private java.util.function.Function<de.zettsystems.starfare.economy.values.ProductionAllocation, de.zettsystems.starfare.economy.values.ProductionCommit> onProductionAllocation = _ -> de.zettsystems.starfare.economy.values.ProductionCommit.REJECTED;
     private java.util.function.Function<de.zettsystems.starfare.economy.values.ProductionAllocation, java.util.Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview>> onPreview = _ -> java.util.Optional.empty();
     void onProductionPreview(java.util.function.Function<de.zettsystems.starfare.economy.values.ProductionAllocation, java.util.Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview>> action) { onPreview = action; }
-    void onProductionAllocation(java.util.function.Function<de.zettsystems.starfare.economy.values.ProductionAllocation, Boolean> action) { onProductionAllocation = action; }
+    void onProductionAllocation(java.util.function.Function<de.zettsystems.starfare.economy.values.ProductionAllocation, de.zettsystems.starfare.economy.values.ProductionCommit> action) { onProductionAllocation = action; }
 
     private IntConsumer onFleetWait = _ -> { };
     private IntConsumer onFleetDisband = _ -> { };
@@ -235,7 +231,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         selectedFleetId = fleetId;
         selectedStandingOrderId = standingOrderId;
         readOnly = view.gameOver() || spectator;
-        productionDrafts.reconcile(gameId.value(), view.turn(), view.systems().stream()
+        productionInputs.reconcile(gameId.value(), view.turn(), view.systems().stream()
                 .filter(candidate -> !spectator && candidate.fullyVisible() && candidate.industry() != null
                         && candidate.garrisonReserve() != null && !isBattlePending(candidate.id()))
                 .collect(java.util.stream.Collectors.toMap(VisibleSystem::id, candidate -> Objects.requireNonNull(candidate.industry()))));
@@ -303,12 +299,16 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         Map<Integer, LogisticsSystemSummary> summaries = LogisticsSystemSummary.forSystems(view.systems(),
                 view.standingOrders());
         addLogisticsFilters();
+        boolean mining = view.systems().stream().anyMatch(system -> metalOf(system) != null);
+        if (mining) { addYieldSort(); }
+        java.util.Comparator<VisibleSystem> ranking = (left, right) -> Integer.compare(logisticsPriority(right, summaries),
+                logisticsPriority(left, summaries));
+        if (mining && sortByYield) { ranking = yieldOrder().thenComparing(ranking); }
         List<VisibleSystem> ownSystems = view.systems().stream()
                 .filter(VisibleSystem::fullyVisible)
                 .filter(system -> summaries.containsKey(system.id()))
                 .filter(system -> matchesLogisticsFilters(logisticsSummary(summaries, system.id())))
-                .sorted((left, right) -> Integer.compare(logisticsPriority(right, summaries),
-                        logisticsPriority(left, summaries)))
+                .sorted(ranking)
                 .toList();
         if (ownSystems.isEmpty()) {
             logisticsPage.add(new Paragraph(I18n.t(UiTexts.MAP_LOGISTICS_EMPTY)));
@@ -330,16 +330,14 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 .map(VisibleSystem::ownerId).filter(Objects::nonNull).findFirst().orElse(-1);
         var issues = EconomyIssues.forView(view, player, java.util.Set.of());
         var issueMap = issues.stream().collect(java.util.stream.Collectors.toMap(issue -> issue.system().id(), issue -> issue));
-        var shown = view.systems().stream().filter(system -> draftsFilter ? productionDraftSystems().contains(system.id())
-                        : issueMap.containsKey(system.id()) && issueMap.get(system.id()).reasons().contains(economyFilter))
+        var shown = view.systems().stream().filter(system ->
+                        issueMap.containsKey(system.id()) && issueMap.get(system.id()).reasons().contains(economyFilter))
                 .sorted(java.util.Comparator.comparing(VisibleSystem::name).thenComparingInt(VisibleSystem::id)).toList();
-        String key = draftsFilter ? de.zettsystems.starfare.economy.ui.ProductionKeys.DRAFTS
-                : de.zettsystems.starfare.economy.ui.EconomyNoticeBar.key(Objects.requireNonNull(economyFilter));
+        String key = de.zettsystems.starfare.economy.ui.EconomyNoticeBar.key(Objects.requireNonNull(economyFilter));
         Button clear = new Button(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.CLEAR), _ -> {
             economyFiltered = false; var current = currentView; if (current != null) { renderLogistics(current); }
         });
         logisticsPage.add(new H2(I18n.t(key, shown.size())), clear);
-        logisticsPage.add(new Span(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.LOCAL)));
         int section = 0;
         if (economyFilter == EconomyIssues.Kind.DEPOSIT) { section = 1; }
         if (economyFilter == EconomyIssues.Kind.LABOR) { section = -1; }
@@ -351,8 +349,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         issue.ifPresent(candidate -> candidate.reasons().forEach(reason ->
                 card.add(new Span(I18n.t(de.zettsystems.starfare.economy.ui.EconomyNoticeBar.key(reason), 1)))));
         var industry = system.industry();
-        if (industry != null) { card.add(new Span(I18n.t(UiTexts.UX_SHIP_RESULT,
-                de.zettsystems.starfare.economy.values.ProductionPreset.saved(industry).ships(), industry.shipbuilding()))); }
+        if (industry != null) {
+            var outcome = de.zettsystems.starfare.economy.values.ProductionOutcome.of(
+                    de.zettsystems.starfare.economy.values.ProductionPreset.saved(industry), industry);
+            card.add(new Span(outcome.shipsShort()
+                    ? I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.OUTCOME_SHIPS_SHORT, outcome.shipPoints(), outcome.ships(), outcome.plannedShips())
+                    : I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.OUTCOME_SHIPS, outcome.shipPoints(), outcome.ships())));
+        }
         card.add(new Button(I18n.t(section < 0 ? de.zettsystems.starfare.economy.ui.ProductionKeys.COLONY
                 : de.zettsystems.starfare.economy.ui.ProductionKeys.CHANGE), _ -> onEconomySelected.accept(system.id(), section)));
         if (issue.map(candidate -> candidate.reasons().contains(EconomyIssues.Kind.DELIVERY)).orElse(false)) {
@@ -404,6 +407,30 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 || summary.plannedOutgoing() == 0);
     }
 
+    private void addYieldSort() {
+        Checkbox sort = new Checkbox(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.LOGISTICS_SORT_YIELD), sortByYield);
+        sort.setId("logistics-sort-yield");
+        sort.addValueChangeListener(event -> {
+            sortByYield = event.getValue();
+            PlayerViewState view = currentView;
+            if (view != null) { renderLogistics(view); }
+        });
+        logisticsPage.add(sort);
+    }
+
+    private static de.zettsystems.starfare.economy.values.@Nullable MetalView metalOf(VisibleSystem system) {
+        var industry = system.industry();
+        return industry == null ? null : industry.metal();
+    }
+
+    /** Best mining yield first; equal yield prefers the larger remaining deposit. */
+    private static java.util.Comparator<VisibleSystem> yieldOrder() {
+        return java.util.Comparator.comparingInt((VisibleSystem system) -> {
+                    var metal = metalOf(system); return metal == null ? -1 : metal.yieldPerPoint(); }).reversed()
+                .thenComparing(java.util.Comparator.comparingLong((VisibleSystem system) -> {
+                    var metal = metalOf(system); return metal == null ? -1 : metal.remaining(); }).reversed());
+    }
+
     private static int logisticsPriority(VisibleSystem system, Map<Integer, LogisticsSystemSummary> summaries) {
         LogisticsSystemSummary summary = logisticsSummary(summaries, system.id());
         return (summary.deliveryBottleneck() ? 10_000 : 0) + Math.abs(summary.netFlow());
@@ -435,6 +462,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 summary.nextDelivery()));
         delivery.addClassName(summary.deliveryBottleneck() ? "logistics-delivery-bottleneck" : "logistics-delivery");
         card.add(name, direction, metrics, reserve, delivery);
+        var metal = metalOf(system);
+        if (metal != null) {
+            Span yield = new Span(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.LOGISTICS_YIELD,
+                    metal.yieldPerPoint(), metal.remaining()));
+            yield.addClassName("logistics-system-yield");
+            card.add(yield);
+        }
         return card;
     }
 
@@ -702,13 +736,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         Integer owner = system.ownerId();
         boolean editable = !readOnly && owner != null && system.availableShips() != null
                 && !view.roundStatus().hasSubmitted(owner);
-        var draft = productionDrafts.forSystem(system.id(), view.turn(), industry);
+        var input = productionInputs.forSystem(system.id(), view.turn(), industry);
         var panel = new de.zettsystems.starfare.economy.ui.IndustryPanel(industry, editable,
                 new de.zettsystems.starfare.economy.ui.IndustryPanel.Actions(
                 ships -> onRecycling.accept(new de.zettsystems.starfare.economy.values.RecyclingOrder(system.id(), view.turn(), ships)),
                 split -> onPreview.apply(new de.zettsystems.starfare.economy.values.ProductionAllocation(system.id(), view.turn(), split.expansion(), split.mining())),
                 split -> onProductionAllocation.apply(new de.zettsystems.starfare.economy.values.ProductionAllocation(system.id(), view.turn(), split.expansion(),
-                        industry.metal() == null ? -1 : split.mining(), draft.original()))), draft, view.turn(), onDraftsChanged);
+                        industry.metal() == null ? -1 : split.mining(), input.saved()))), input);
         industryPanel = panel;
         detailsPage.add(panel);
         if (industry.colony() != null) { operations.add(panel.colonyDetails()); }
@@ -825,7 +859,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         List<Integer> filtered = java.util.stream.IntStream.range(0, events.size()).boxed()
                 .filter(eventIndex -> isEventEnabled(events.get(eventIndex)))
                 .sorted(java.util.Comparator.comparingInt(this::eventPriority)).toList();
-        if (events.isEmpty()) {
+        if (events.stream().allMatch(TurnEvent.EconomySummary.class::isInstance)) {
             reportPage.add(new Paragraph(I18n.t(UiTexts.ROUND_NO_EVENTS)));
             return;
         }
@@ -870,7 +904,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
             case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
             case TurnEvent.Reinforcement _ -> 3;
-            case TurnEvent.Recycling _, TurnEvent.Production _ -> 4;
+            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.EconomySummary _ -> 4;
         };
     }
 
@@ -893,6 +927,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private @Nullable PlayerViewState currentView;
 
     private boolean isEventEnabled(TurnEvent event) {
+        if (event instanceof TurnEvent.EconomySummary) { return false; }
         PlayerViewState view = currentView;
         TurnReport report = view == null ? null : view.report();
         if ((event instanceof TurnEvent.Victory || event instanceof TurnEvent.Defeat)
@@ -912,7 +947,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.BattleLost _ -> EventCategory.BATTLE_LOST;
             case TurnEvent.SystemLost _ -> EventCategory.SYSTEM_LOST;
             case TurnEvent.DefenseHeld _ -> EventCategory.DEFENSE_HELD;
-            case TurnEvent.Victory _, TurnEvent.Defeat _ -> null;
+            case TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _ -> null;
         });
     }
 
@@ -962,7 +997,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     youName(lost.defenderName()));
             case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponentName(held.attackerName()),
                     youName(held.defenderName()));
-            case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _ ->
+            case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
+                 TurnEvent.EconomySummary _ ->
                     new BattleReplayDialog.BattleSides("", "");
         };
     }
@@ -1041,7 +1077,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
         return switch (event) {
             case TurnEvent.Recycling _ -> "♻";
-            case TurnEvent.Production _ -> "⬆";
+            case TurnEvent.Production _, TurnEvent.EconomySummary _ -> "⬆";
             case TurnEvent.Reinforcement _ -> "→";
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _ -> "⚔";
             case TurnEvent.BattleLost _ -> "✕";
@@ -1058,7 +1094,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
         return switch (event) {
             case TurnEvent.Recycling _ -> "event-recycling";
-            case TurnEvent.Production _ -> "event-production";
+            case TurnEvent.Production _, TurnEvent.EconomySummary _ -> "event-production";
             case TurnEvent.Reinforcement _ -> "event-reinforcement";
             case TurnEvent.CoalitionBattle _ -> "event-coalition-battle";
             case TurnEvent.BattleWon _ -> "event-battle-won";
@@ -1100,6 +1136,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     : I18n.t(UiTexts.ROUND_EVENT_ALLIANCE_VICTORY, victory.allianceId(),
                             String.join(", ", victory.winnerNames()), victory.systemPercent());
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
+            case TurnEvent.EconomySummary _ -> "";
         };
     }
 

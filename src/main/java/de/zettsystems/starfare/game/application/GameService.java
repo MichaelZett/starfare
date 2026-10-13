@@ -14,7 +14,8 @@ public interface GameService {
     Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview> previewProduction(
             GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan);
 
-    boolean commitProduction(GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan);
+    de.zettsystems.starfare.economy.values.ProductionCommit commitProduction(
+            GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan);
 
     default Optional<DiplomacyView> diplomacyFor(GameId id, String account) { return Optional.empty(); }
     default boolean diplomacyOrder(GameId id, String account, int turn, DiplomacyOrder order) { return false; }
@@ -122,6 +123,11 @@ public interface GameService {
 
     int travelTurns(GameId gameId, int fromId, int toId);
     default java.util.Optional<RoutePreview> routeFor(GameId id, int player, int from, int to) { return java.util.Optional.empty(); }
+
+    /** Direct range and target reachability around a source during target selection; empty without range rules. */
+    default java.util.Optional<de.zettsystems.starfare.navigation.values.RangeView> rangeFor(GameId id, int player, int from) {
+        return java.util.Optional.empty();
+    }
 
     boolean sendFleet(GameId gameId, int playerId, int fromId, int toId, int ships);
 

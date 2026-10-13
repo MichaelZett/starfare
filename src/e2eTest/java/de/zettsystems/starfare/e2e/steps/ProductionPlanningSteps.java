@@ -6,9 +6,12 @@ import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.application.GameSessionStore;
 import de.zettsystems.starfare.game.domain.GameSession;
-import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
-import de.zettsystems.starfare.testsupport.MetalStates;
+import de.zettsystems.starfare.economy.domain.MetalEconomy;
+import de.zettsystems.starfare.fleet.application.DefaultFleetService;
+import de.zettsystems.starfare.game.values.RulesetRef;
+import de.zettsystems.starfare.game.values.StandingOrder;
+import de.zettsystems.starfare.testsupport.ColonyStates;
 import io.cucumber.java.After;
 import io.cucumber.java.de.Dann;
 import java.io.IOException;
@@ -16,10 +19,11 @@ import java.time.Duration;
 import java.time.Instant;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Full inline journey, including two systems and an external saved-plan conflict. */
+/** Direct production journey: presets and inputs save at once, relocations shrink with shipbuilding. */
 public class ProductionPlanningSteps {
     private final Browser browser;
     private final GameService games;
@@ -31,23 +35,39 @@ public class ProductionPlanningSteps {
                                    GameSessionStore store, UserAccountService accounts) {
         this.browser = browser; this.games = games; this.registry = registry; this.store = store; this.accounts = accounts;
     }
-    @Dann("prüfe ich Produktionsvorgaben und mehrere lokale Entwürfe")
+    @Dann("prüfe ich direkt gespeicherte Produktion und angepasste Verlegungen")
     public void planning() throws IOException {
         String host = String.valueOf(accounts.findByEmail("production@example.test").orElseThrow().id());
-        var state = MetalStates.ready(2, 100); state.seatByUser().put(host, 1); state.start();
+        var state = ColonyStates.ready(RulesetRef.SPACEWARD_DIRECT_ECONOMY, original -> {
+            var stocks = new java.util.HashMap<>(original.stocks());
+            stocks.replaceAll((_, _) -> 100L);
+            return new MetalEconomy(original.deposits(), stocks, original.mining(), original.recycling());
+        });
+        state.seatByUser().put(host, 1); state.start();
+        var fleets = new DefaultFleetService();
+        assertThat(fleets.addStandingOrder(state, 1, 1, 2, 6)).isPositive();
+        assertThat(fleets.addStandingOrder(state, 1, 1, 3, 4)).isPositive();
         id = GameId.newId(); store.save(new GameSession(id, "Production planning", host, Instant.now(), state));
         browser.open("/map/" + id.value());
-        browser.clickCss("#economy-notice-metal"); browser.awaitTextIn(".economy-issue-card", "Alpha");
-        browser.clickButtonWithText("Produktion ändern"); browser.awaitCss(".production-functions");
-        var before = registry.readState(id, GameState::toSnapshot);
-        browser.clickCss("#production-preset-autark");
-        field("#industry-shipbuilding input", "3"); field("#industry-mining input", "3");
-        assertThat(registry.readState(id, GameState::toSnapshot)).isEqualTo(before);
+        select("Alpha");
+        browser.awaitTextIn(".production-functions", "10 Punkte → 10 Schiffe/Runde");
+        save(() -> browser.clickCss("#production-preset-autark"), () -> mining(1) == 5);
+        browser.awaitTextIn(".production-save-status", "Verlegung nach Beta: 6 → 3/Runde");
+        browser.awaitTextIn(".production-save-status", "Verlegung nach Enemy: 4 → 2/Runde");
+        assertThat(routes()).containsEntry(2, 3).containsEntry(3, 2);
+        browser.awaitTextIn(".production-functions", "5 Punkte → 5 Schiffe/Runde");
+        browser.clickCss("#production-plan-open");
+        field("#industry-mining input", "5");
+        save(() -> enter("#industry-mining input", "3"), () -> mining(1) == 3);
+        assertThat(routes()).containsEntry(2, 3).containsEntry(3, 2);
         browser.clickCss("#industry-expansion-pin");
-        select("Beta"); browser.clickCss("#production-preset-metal");
-        browser.awaitTextIn(".economy-notices", "2 Entwürfe");
-        select("Alpha"); field("#industry-mining input", "3");
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                "true".equals(browser.awaitCss("#industry-expansion-pin").getDomProperty("checked")));
+        select("Beta");
+        save(() -> browser.clickCss("#production-preset-metal"), () -> mining(2) == 4);
+        select("Alpha");
         assertThat(browser.awaitCss("#industry-expansion-pin").getDomProperty("checked")).isEqualTo("true");
+        field("#industry-mining input", "3");
         for (int width : new int[]{1366, 1024}) {
             browser.driver().manage().window().setSize(new Dimension(width, 768));
             ((JavascriptExecutor) browser.driver()).executeScript("document.querySelector('.production-functions').scrollIntoView({block:'start'})");
@@ -55,30 +75,30 @@ public class ProductionPlanningSteps {
             browser.assertNoSidewaysScrolling();
         }
         browser.driver().manage().window().setSize(new Dimension(1366, 768));
-        browser.clickButtonWithText("Runde abgeben"); browser.awaitCss("#production-submit-warning");
-        browser.clickButtonWithText("Entwürfe ansehen"); browser.awaitTextIn(".economy-issue-card", "Beta");
-        browser.clickButtonWithText("Produktion ändern");
-        ((JavascriptExecutor) browser.driver()).executeScript("document.querySelector('#industry-apply').scrollIntoView({block:'nearest'})");
-        browser.clickCss("#industry-apply");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                registry.readState(id, current -> current.metals().orElseThrow().mining().get(1)) == 3);
-        browser.awaitTextIn(".economy-notices", "1 Entwurf");
         assertThat(games.allocateProduction(id, 1, 1, 2, 1, 0)).isTrue();
-        select("Beta"); browser.awaitTextIn(".production-editor", "veraltet");
-        ((JavascriptExecutor) browser.driver()).executeScript("document.querySelector('#industry-apply').scrollIntoView({block:'nearest'})");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                "true".equals(browser.awaitCss("#industry-apply").getDomProperty("disabled")));
-        assertThat(browser.awaitCss("#industry-apply").getDomProperty("disabled")).isEqualTo("true");
-        browser.clickButtonWithText("Neu prüfen"); browser.awaitTextIn(".production-editor", "Ungespeicherte Änderungen");
-        browser.clickButtonWithText("Gespeicherten Plan laden");
-        browser.clickCss("#production-preset-metal");
-        browser.clickButtonWithText("Runde abgeben"); browser.awaitCss("#production-submit-warning");
-        browser.clickButtonWithText("Mit gespeicherten Plänen abgeben"); browser.awaitText("Abgegeben");
-        assertThat(registry.readState(id, current -> current.metals().orElseThrow().mining().get(2)).intValue()).isZero();
-        assertThat(registry.readState(id, current -> current.industries().get(2).expansionAllocation()).intValue()).isEqualTo(1);
+        select("Beta"); field("#industry-mining input", "0");
+        save(() -> browser.clickCss("#production-preset-ships"),
+                () -> registry.readState(id, current -> current.industries().get(2).expansionAllocation()) == 0);
         browser.driver().navigate().refresh(); select("Alpha");
-        assertThat(browser.all("#industry-apply")).isEmpty();
-        assertThat(browser.all("#production-drafts-open")).isEmpty();
+        browser.clickCss("#production-plan-open");
+        field("#industry-mining input", "3");
+        browser.clickButtonWithText("Runde abgeben"); browser.awaitText("Abgegeben");
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> browser.all("#industry-mining").isEmpty());
+        assertThat(mining(1)).isEqualTo(3);
+        assertThat(browser.all("#production-submit-warning")).isEmpty();
+    }
+    private void save(Runnable input, java.util.function.BooleanSupplier stored) {
+        browser.saveAndAwaitRebuild(".industry-panel", input, stored);
+    }
+    private int mining(int system) {
+        return registry.readState(id, current -> current.metals().orElseThrow().mining().get(system));
+    }
+    private java.util.Map<Integer, Integer> routes() {
+        return registry.readState(id, current -> current.standingOrders().get(1).stream().collect(
+                java.util.stream.Collectors.toMap(StandingOrder::toSystemId, StandingOrder::ships)));
+    }
+    private void enter(String selector, String value) {
+        browser.awaitCss(selector).sendKeys(Keys.chord(Keys.CONTROL, "a"), value, Keys.TAB);
     }
     private void select(String name) {
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> Boolean.TRUE.equals(

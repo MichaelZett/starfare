@@ -3,6 +3,7 @@ package de.zettsystems.starfare.navigation.domain;
 import de.zettsystems.starfare.navigation.values.NavigationSettings;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.navigation.values.RangeView;
 import de.zettsystems.starfare.navigation.values.RoutePreview;
 import java.util.*;
 
@@ -74,6 +75,30 @@ public final class Routes {
         }
         costs.remove(from);
         return Map.copyOf(costs);
+    }
+
+    /**
+     * Range view for target selection from one permitted station; empty for unlimited rules.
+     * Uses the same straight-line distance, range and station rules as every route command.
+     */
+    public static Optional<RangeView> rangeFrom(GameState state, int owner, int from) {
+        var settings = state.navigationSettings();
+        if (!limited(state) || settings.isEmpty() || !stationAllowed(state, owner, from)) { return Optional.empty(); }
+        double range = settings.orElseThrow().range();
+        Set<Integer> stations = new HashSet<>();
+        for (StarSystem system : state.systems()) {
+            if (stationAllowed(state, owner, system.id())) { stations.add(system.id()); }
+        }
+        var reachable = shortestRounds(from, stations, travelEdges(state));
+        Map<Integer, RangeView.Target> targets = new HashMap<>();
+        for (StarSystem system : state.systems()) {
+            if (system.id() == from) { continue; }
+            RangeView.Reach reach = RangeView.Reach.NONE;
+            if (withinRange(state, from, system.id())) { reach = RangeView.Reach.DIRECT; }
+            else if (reachable.containsKey(system.id())) { reach = RangeView.Reach.STATIONS; }
+            targets.put(system.id(), new RangeView.Target(reach, state.distance(from, system.id()) / range));
+        }
+        return Optional.of(new RangeView(from, range, targets));
     }
 
     /** Only automatic evacuation may start at a station without current treaty access. */

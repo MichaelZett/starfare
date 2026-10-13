@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 @CssImport("./styles/starfare.css")
 @JsModule("./battle-replay.js")
 @PermitAll
-public class MainView extends VerticalLayout implements BeforeEnterObserver, com.vaadin.flow.router.BeforeLeaveObserver {
+public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private enum TargetSelection { NONE, FLEET, RELOCATION }
     private static final String GAME_ID_PARAMETER = "gameId";
@@ -127,7 +127,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, com
         });
         fleetsPanel.onDiplomacySelected(this::openDiplomacy);
         fleetsPanel.onProductionAllocation(this::allocateExpansion);
-        fleetsPanel.onDraftsChanged(this::updateEconomyNotices);
         fleetsPanel.onEconomySelected(this::openEconomicSystem);
         fleetsPanel.onProductionPreview(plan -> game.previewProduction(gameId, UserContext.currentPlayerId().orElse(""), plan));
         fleetsPanel.onRecycling(order -> {
@@ -148,7 +147,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, com
         actionBar.addClassName("map-controls");
         actionBar.add(treatyActions, planningActions);
         treatyActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.DIP_TITLE), _ -> openDiplomacy()));
-        header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::doLeave,
+        header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules);
 
         gameOverBanner.setVisible(false);
@@ -218,16 +217,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, com
     }
 
     private void onNextRound() {
-        int count = fleetsPanel.productionDraftSystems().size();
-        if (count > 0 && !isObserver()) {
-            de.zettsystems.starfare.economy.ui.ProductionNavigation.submit(count, () -> submitRound(true),
-                    () -> fleetsPanel.showEconomy(null, true), this::refresh);
-            return;
-        }
-        submitRound(false);
-    }
-
-    private void submitRound(boolean discardDrafts) {
         String playerId = UserContext.currentPlayerId().orElse(null);
         if (isObserver()) {
             if (!game.advanceForObserver(gameId, playerId)) {
@@ -246,17 +235,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, com
             Notification.show(I18n.t(UiTexts.MAP_SUBMIT_FAILED));
             return;
         }
-        if (discardDrafts) { fleetsPanel.discardProductionDrafts(); }
         refresh();
-    }
-
-    @Override
-    public void beforeLeave(com.vaadin.flow.router.BeforeLeaveEvent event) {
-        if (fleetsPanel.productionDraftSystems().isEmpty()) { return; }
-        var navigation = event.postpone();
-        de.zettsystems.starfare.economy.ui.ProductionNavigation.leave(() -> {
-            fleetsPanel.discardProductionDrafts(); navigation.proceed();
-        }, () -> { });
     }
 
     private void updateEconomyNotices() {
@@ -264,21 +243,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, com
         if (view == null) { return; }
         var issues = de.zettsystems.starfare.economy.values.EconomyIssues.forView(view, currentSeat(), pendingBattleSystemIds(view));
         boolean hidden = isObserver() || reviewing || !pendingBattleSystemIds(view).isEmpty();
-        header.economyNotices().show(hidden ? List.of() : issues, hidden ? 0 : fleetsPanel.productionDraftSystems().size(),
-                kind -> fleetsPanel.showEconomy(kind, false), () -> fleetsPanel.showEconomy(null, true));
+        header.economyNotices().show(hidden ? List.of() : issues, fleetsPanel::showEconomy);
         mapCanvas.economyMarkers(hidden ? List.of() : issues, reportedSystemIds(view), id -> {
             issues.stream().filter(issue -> issue.system().id() == id).findFirst()
-                    .ifPresent(issue -> fleetsPanel.showEconomy(issue.reasons().getFirst(), false));
+                    .ifPresent(issue -> fleetsPanel.showEconomy(issue.reasons().getFirst()));
         });
-        getElement().executeJs("""
-                window.__starfareProductionDirty = $0;
-                if (!window.__starfareProductionLeaveInstalled) {
-                    window.__starfareProductionLeaveInstalled = true;
-                    window.addEventListener('beforeunload', event => {
-                        if (window.__starfareProductionDirty) { event.preventDefault(); event.returnValue = ''; }
-                    });
-                }
-                """, !fleetsPanel.productionDraftSystems().isEmpty());
     }
 
     private void openEconomicSystem(int id, int section) {
@@ -367,14 +336,15 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, com
         refresh();
     }
 
-    private boolean allocateExpansion(de.zettsystems.starfare.economy.values.ProductionAllocation allocation) {
-        int pid = currentSeat();
-        boolean accepted = pid >= 0 && game.commitProduction(gameId, UserContext.currentPlayerId().orElse(""), allocation);
-        if (!accepted) {
-            Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
+    private de.zettsystems.starfare.economy.values.ProductionCommit allocateExpansion(
+            de.zettsystems.starfare.economy.values.ProductionAllocation allocation) {
+        var result = currentSeat() < 0 ? de.zettsystems.starfare.economy.values.ProductionCommit.REJECTED
+                : game.commitProduction(gameId, UserContext.currentPlayerId().orElse(""), allocation);
+        if (!result.accepted()) {
+            Notification.show(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.NOT_SAVED));
             refresh();
         }
-        return accepted;
+        return result;
     }
 
     private void setGarrisonReserve(int systemId, int reserve) {
@@ -497,16 +467,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, com
             broadcasterSubscription.remove();
             broadcasterSubscription = null;
         }
-    }
-
-    private void doLeave() {
-        if (!fleetsPanel.productionDraftSystems().isEmpty()) {
-            de.zettsystems.starfare.economy.ui.ProductionNavigation.leave(() -> {
-                fleetsPanel.discardProductionDrafts(); leaveGameNow();
-            }, () -> { });
-            return;
-        }
-        leaveGameNow();
     }
 
     private void leaveGameNow() {
@@ -744,11 +704,18 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, com
                 this::onBadgeToggleLabel,
                 this::onFleetHighlight,
                 this::onReportMarkerSelected,
-                this::refresh));
+                this::refresh,
+                rangeForSelection(playerId, observer)));
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
         economicView = view;
         updateEconomyNotices();
+    }
+
+    private de.zettsystems.starfare.navigation.values.@Nullable RangeView rangeForSelection(int playerId, boolean observer) {
+        VisibleSystem source = selectedFrom;
+        if (source == null || observer || playerId < 0 || targetSelection == TargetSelection.NONE) { return null; }
+        return game.rangeFor(gameId, playerId, source.id()).orElse(null);
     }
 
     private void inspectSystem(VisibleSystem system) {

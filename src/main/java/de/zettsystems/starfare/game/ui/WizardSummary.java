@@ -50,6 +50,9 @@ final class WizardSummary extends Div {
             section.add(line(UiTexts.VICTORY_RULES_SUMMARY, setup.victorySystemPercent(),
                     enabled(setup.victoryRules().alliancesAllowed()), enabled(setup.victoryRules().allianceVictoryAllowed()),
                     setup.victoryRules().allianceSystemPercent()));
+            if (setup.victoryRules().alliancesAllowed()) {
+                section.add(line(UiTexts.AI_ALLIANCES_SUMMARY, enabled(setup.victoryRules().aiAlliancesAllowed())));
+            }
         } else { section.add(line(UiTexts.UX_SOLO_VICTORY, setup.victorySystemPercent())); }
         section.add(line(UiTexts.LOBBY_SUMMARY_COMBAT, setup.combatRandomnessPercent(), enabled(setup.battlePresentationEnabled())));
         if (setup.ruleset().resolvesCoalitionBattles()) { section.add(line(UiTexts.LOBBY_SUMMARY_COALITION_COMBAT)); }
