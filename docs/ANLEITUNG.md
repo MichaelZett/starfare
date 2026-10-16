@@ -28,9 +28,11 @@ Kontaktadresse im Impressum.
 
 ## Partie erstellen und beitreten
 
-Wähle zuerst die **Spielvariante**. **SectorForces** enthält die bisherigen
-Classic-Regeln mit Regelversion **1.0.0** und ist vorausgewählt; die folgenden
-Spielregeln beschreiben diese Variante. **Spaceward** (Regelversion **1.1.0**)
+Wähle zuerst die **Spielvariante**. **SectorForces** (Regelversion **1.0.0**)
+orientiert sich an Sector Forces, einem C64-Spiel der 80er-Jahre: Jedes System
+baut Schiffe, Flotten erobern fremde Systeme, und wer genug der Galaxie
+beherrscht, gewinnt. Die Variante ist vorausgewählt; die folgenden Spielregeln
+beschreiben sie. **Spaceward** (Regelversion **1.1.0**)
 ist nach Spaceward Ho! gestaltet und ergänzt Industrieausbau, begrenzte Reichweite,
 Bündnisse und gemeinsame Schlachten. Die Abschnitte zu Spaceward weiter unten
 beschreiben, worin es von SectorForces abweicht. Weil dort alle feindlichen Seiten

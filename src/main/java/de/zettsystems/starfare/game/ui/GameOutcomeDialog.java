@@ -17,7 +17,8 @@ final class GameOutcomeDialog {
 
     private GameOutcomeDialog() {}
 
-    static Dialog open(boolean victory, String winnerName, String winnerColor,
+    /** {@code continuable}: offer continuing towards full conquest, false once it already is the goal. */
+    static Dialog open(boolean victory, boolean continuable, String winnerName, String winnerColor,
                      GameOutcomeStatistics statistics, Runnable onContinue, Runnable onReview, Runnable onLobby) {
         Dialog dialog = new Dialog();
         dialog.setCloseOnEsc(false);
@@ -56,7 +57,7 @@ final class GameOutcomeDialog {
             dialog.close();
             onContinue.run();
         });
-        continueGame.setVisible(victory);
+        continueGame.setVisible(victory && continuable);
         Button lobby = new Button(I18n.t(UiTexts.GAME_OUTCOME_LOBBY), _ -> {
             dialog.close();
             onLobby.run();

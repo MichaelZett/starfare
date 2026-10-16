@@ -2,8 +2,11 @@ package de.zettsystems.starfare.game.domain;
 
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.values.Player;
+import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.game.values.SystemOwnership;
+import de.zettsystems.starfare.game.values.VictoryRules;
+import de.zettsystems.starfare.testsupport.NavigationStates;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -14,6 +17,21 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GameStateTest {
+
+    @Test
+    void fullConquestIsRequiredOnlyOnceEveryVictoryPathNeedsAllSystems() {
+        GameState lowerGroupThreshold = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE,
+                new VictoryRules(100, true, true, 70));
+        GameState groupVictoryOff = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE,
+                new VictoryRules(100, true, false, 70));
+
+        assertThat(lowerGroupThreshold.requiresFullConquest()).isFalse();
+        assertThat(groupVictoryOff.requiresFullConquest()).isTrue();
+
+        lowerGroupThreshold.resumeForFullConquest(Instant.now());
+
+        assertThat(lowerGroupThreshold.requiresFullConquest()).isTrue();
+    }
 
     @Test
     void fullConquestResumesWithFreshDeadlineAndNoOldSubmissions() {

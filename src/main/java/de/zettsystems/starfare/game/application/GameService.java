@@ -46,6 +46,9 @@ public interface GameService {
 
     Optional<GameOutcomeStatistics> outcomeStatisticsFor(GameId id, String account);
 
+    /** Whether {@link #continueAfterVictory} would succeed: the account won and full conquest is not yet the goal. */
+    boolean canContinueAfterVictory(GameId gameId, String account);
+
     /** Lets the recorded winner continue the running match towards full conquest. */
     boolean continueAfterVictory(GameId gameId, String account);
 

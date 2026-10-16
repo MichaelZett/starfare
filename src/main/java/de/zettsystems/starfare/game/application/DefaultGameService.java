@@ -1058,13 +1058,20 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public boolean canContinueAfterVictory(GameId gameId, String account) {
+        if (account == null || account.isBlank() || registry.find(gameId).isEmpty()) {
+            return false;
+        }
+        return registry.readState(gameId, state -> continuable(state, account));
+    }
+
+    @Override
     public boolean continueAfterVictory(GameId gameId, String account) {
         if (account == null || account.isBlank() || registry.find(gameId).isEmpty()) {
             return false;
         }
         boolean continued = registry.writeState(gameId, state -> {
-            Integer actor = state.seatByUser().get(account);
-            if (!state.gameOver() || !state.outcome().wonBy(actor)) {
+            if (!continuable(state, account)) {
                 return false;
             }
             state.resumeForFullConquest(Instant.now());
@@ -1074,6 +1081,10 @@ public class DefaultGameService implements GameService {
             broadcaster.publish(new GameEvent.GameContinued(gameId));
         }
         return continued;
+    }
+
+    private static boolean continuable(GameState state, String account) {
+        return state.gameOver() && state.outcome().wonBy(state.seatByUser().get(account)) && !state.requiresFullConquest();
     }
 
     @Override

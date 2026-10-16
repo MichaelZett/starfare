@@ -601,6 +601,16 @@ public class GameState {
         this.winningAlliance = null;
     }
 
+    /**
+     * Whether every victory path already requires all systems, e.g. after a continuation; resuming
+     * again could not change the goal, so the winner is not offered it.
+     */
+    public boolean requiresFullConquest() {
+        VictoryRules rules = victoryRules();
+        return victorySystemPercent >= GameConfig.MAX_VICTORY_SYSTEM_PERCENT
+                && (!rules.allianceVictoryAllowed() || rules.allianceSystemPercent() >= GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
+    }
+
     /** Starts a fresh round deadline when the winner resumes play towards full conquest. */
     public void resumeForFullConquest(Instant now) {
         victoryRules = ruleset.usesConfigurableVictory() ? victoryRules().forFullConquest()

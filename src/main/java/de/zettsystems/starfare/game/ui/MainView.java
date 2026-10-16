@@ -655,7 +655,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         String winnerColor = view.players().stream()
                 .filter(player -> Objects.equals(view.winnerId(), player.id()))
                 .map(Player::colorHex).findFirst().orElse("");
-        outcomeDialog = GameOutcomeDialog.open(view.wonBy(currentSeat()), winnerName(view), winnerColor,
+        outcomeDialog = GameOutcomeDialog.open(view.wonBy(currentSeat()),
+                game.canContinueAfterVictory(gameId, account), winnerName(view), winnerColor,
                 statistics, () -> {
             game.continueAfterVictory(gameId, UserContext.currentPlayerId().orElse(""));
             resetOutcomePresentation();

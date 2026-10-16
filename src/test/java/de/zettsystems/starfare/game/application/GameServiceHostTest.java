@@ -172,6 +172,23 @@ class GameServiceHostTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void victoryAtFullConquestOffersNoFurtherContinuation() {
+        GameId id = createGameWithHost("alice");
+        seedTwoHumanSeats(id, "alice", "bob");
+        registry.writeState(id, state -> { state.endGame(1); return null; });
+        assertThat(game.canContinueAfterVictory(id, "bob")).isFalse();
+        assertThat(game.canContinueAfterVictory(id, "alice")).isTrue();
+        assertThat(game.continueAfterVictory(id, "alice")).isTrue();
+        assertThat(game.canContinueAfterVictory(id, "alice")).isFalse();
+
+        registry.writeState(id, state -> { state.endGame(1); return null; });
+
+        assertThat(game.canContinueAfterVictory(id, "alice")).isFalse();
+        assertThat(game.continueAfterVictory(id, "alice")).isFalse();
+        assertThat(registry.readState(id, GameState::gameOver).booleanValue()).isTrue();
+    }
+
+    @Test
     void continuationBroadcastsOnlyForTheWinnerAndPersistsFreshDeadline() {
         GameId id = createGameWithHost("alice");
         seedTwoHumanSeats(id, "alice", "bob");

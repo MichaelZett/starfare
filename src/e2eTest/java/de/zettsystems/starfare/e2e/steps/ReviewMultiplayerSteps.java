@@ -137,6 +137,11 @@ public class ReviewMultiplayerSteps {
         acknowledgeBattle(browser, true);
         browser.awaitCss(OUTCOME);
         browser.awaitTextIn(".event-victory", "100");
+        List<String> visibleButtons = new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .until(_ -> browser.all("vaadin-button").stream().filter(WebElement::isDisplayed)
+                        .map(WebElement::getText).toList());
+        assertThat(visibleButtons).doesNotContain("Bis zur vollständigen Eroberung weiterspielen");
         assertPending(guest);
         guest.openDetailsWithText("Filter: 6 von 6 Ereignisarten");
         var speed = guest.awaitCss(".report-filter-options vaadin-combo-box input");

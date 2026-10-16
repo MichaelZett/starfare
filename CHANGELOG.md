@@ -6,6 +6,14 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Die Variantenkarte von SectorForces erklärt das Spiel ohne Vorwissen und nennt
+  das Vorbild, das C64-Spiel Sector Forces aus den 80er-Jahren.
+- Der Ergebnisdialog bietet **Bis zur vollständigen Eroberung weiterspielen** nicht
+  mehr an, wenn ohnehin schon alle Systeme gefordert waren, etwa beim zweiten
+  Spielende nach einer Fortsetzung. Auch der Server lehnt diese Fortsetzung ab.
+
 ## 0.1.0 - 2026-10-16
 
 - Erste öffentliche Version auf hetzner-zs: Release-Pushes bauen ein Docker-Image
