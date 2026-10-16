@@ -91,9 +91,9 @@ public class AllianceVictorySteps {
         browser.awaitTextIn(".game-outcome-winner", "Commander, Partner");
         Path target = Path.of("build", "alliance-victory", "outcome.png");
         Files.write(target, ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
-        assertThat(browser.awaitCss(".game-outcome-personal-result").getText()).contains("Sieg");
+        browser.awaitTextIn(".game-outcome-personal-result", "Sieg");
         browser.awaitTextIn(".game-outcome-economy", "Industrie gebaut: 0 Kapazitätspunkte");
-        assertThat(browser.awaitCss(".game-outcome-economy").getText()).doesNotContain("Metall").doesNotContain("erfasst");
+        assertThat(browser.textsOf(".game-outcome-economy").getFirst()).doesNotContain("Metall").doesNotContain("erfasst");
         browser.driver().navigate().refresh();
         browser.awaitText("Spiel beendet. Sieger: Bündnis 1: Commander, Partner");
         assertThat(browser.awaitCss(".review-controls")).isNotNull();

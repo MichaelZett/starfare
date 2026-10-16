@@ -50,8 +50,7 @@ public class ColonySteps {
         browser.clickCss("#production-plan-open");
         assertThat(browser.awaitCss("#industry-expansion").getDomProperty("max")).isEqualTo("6");
         screenshot("initial");
-        var input = browser.awaitCss("#industry-expansion input");
-        input.sendKeys(Keys.chord(Keys.CONTROL, "a"), "3", Keys.TAB);
+        browser.type("#industry-expansion input", Keys.chord(Keys.CONTROL, "a"), "3", Keys.TAB);
         // A completed number entry is saved immediately; there is no separate apply step.
         browser.awaitTextIn(".production-save-status", "Gespeichert");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
@@ -94,7 +93,7 @@ public class ColonySteps {
         browser.awaitTextIn(".system-details-heading", "Alpha");
         var moon = browser.awaitCss(".system-colony-moon");
         assertThat(moon.getRect().getWidth()).isGreaterThanOrEqualTo(44);
-        moon.sendKeys(Keys.ENTER);
+        browser.type(".system-colony-moon", Keys.ENTER);
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> Boolean.TRUE.equals(
                 ((JavascriptExecutor) browser.driver()).executeScript(
                         "return document.querySelector('.system-operations')?.opened")));

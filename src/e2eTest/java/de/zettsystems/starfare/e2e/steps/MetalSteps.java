@@ -136,7 +136,7 @@ public class MetalSteps {
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                 .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ ->
                 !browser.all(".recycling-details").getFirst().getText().contains("Vorgemerkt:"));
-        assertThat(browser.all(".recycling-details").getFirst().getText()).doesNotContain("Vorgemerkt:");
+        assertThat(browser.textsOf(".recycling-details").getFirst()).doesNotContain("Vorgemerkt:");
         openDetails(); browser.clickCss("#recycling-open");
         enter("#recycling-ships input", "1"); browser.clickCss("#recycling-apply");
         browser.awaitTextIn(".recycling-details", "Vorgemerkt: 1 Schiffe");
@@ -147,7 +147,7 @@ public class MetalSteps {
         assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue();
         browser.driver().navigate().refresh(); selectAlpha();
         openDetails(); browser.awaitTextIn(".recycling-details", "Gespeicherter Metallrest: 0,7");
-        assertThat(browser.all(".recycling-details").getFirst().getText()).doesNotContain("Vorgemerkt:");
+        assertThat(browser.textsOf(".recycling-details").getFirst()).doesNotContain("Vorgemerkt:");
         assertThat(registry.<Integer>readState(id, current -> current.getSystem(1).garrison())).isEqualTo(11);
         openDetails(); browser.clickCss("#recycling-open");
         enter("#recycling-ships input", "9"); browser.clickCss("#recycling-apply");
@@ -175,12 +175,8 @@ public class MetalSteps {
         screenshot("recycling-history");
     }
     private void switchLanguage(String label, String expected) {
-        browser.awaitCss(".lang-switcher input").sendKeys(Keys.chord(Keys.CONTROL, "a"), label);
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ ->
-                        browser.all("vaadin-combo-box-item").stream()
-                                .filter(item -> item.isDisplayed() && item.getText().strip().equals(label))
-                                .findFirst().orElse(null)).click();
+        browser.type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), label);
+        browser.clickMatching("vaadin-combo-box-item", item -> item.getText().strip().equals(label), "Sprache " + label);
         browser.awaitTextIn(".app-header-stats", expected);
     }
     private int mining() {
@@ -195,7 +191,7 @@ public class MetalSteps {
         assertThat(matched).isTrue();
     }
     private void enter(String selector, String value) {
-        browser.awaitCss(selector).sendKeys(Keys.chord(Keys.CONTROL, "a"), value, Keys.TAB);
+        browser.type(selector, Keys.chord(Keys.CONTROL, "a"), value, Keys.TAB);
     }
     private void selectAlpha() {
         browser.awaitCss(".map-content");

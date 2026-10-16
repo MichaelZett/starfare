@@ -60,7 +60,7 @@ public class ReviewMultiplayerSteps {
     public void liveChat() {
         openChat(browser);
         openChat(guest);
-        browser.awaitCss(CHAT_INPUT).sendKeys("Ungesendeter Entwurf");
+        browser.type(CHAT_INPUT, "Ungesendeter Entwurf");
         sendChat(guest, "Erste Nachricht");
         browser.awaitTextIn(".game-chat-messages", "Erste Nachricht");
         assertThat(browser.awaitCss(CHAT_INPUT).getDomProperty("value")).isEqualTo("Ungesendeter Entwurf");
@@ -91,7 +91,7 @@ public class ReviewMultiplayerSteps {
     }
 
     private void sendChat(Browser session, String text) {
-        session.awaitCss(CHAT_INPUT).sendKeys(text);
+        session.type(CHAT_INPUT, text);
         session.clickButtonWithText("Senden");
         session.awaitTextIn(".game-chat-messages", text);
     }
@@ -104,7 +104,7 @@ public class ReviewMultiplayerSteps {
         acknowledgeBattle(browser, true);
         browser.awaitCss(OUTCOME);
         browser.awaitTextIn(".event-victory", "60");
-        assertThat(browser.all(".review-controls")).noneMatch(WebElement::isDisplayed);
+        browser.awaitNoneDisplayed(".review-controls");
     }
 
     @Wenn("der Sieger bis zur vollständigen Eroberung weiterspielt")
@@ -144,14 +144,11 @@ public class ReviewMultiplayerSteps {
         assertThat(visibleButtons).doesNotContain("Bis zur vollständigen Eroberung weiterspielen");
         assertPending(guest);
         guest.openDetailsWithText("Filter: 6 von 6 Ereignisarten");
-        var speed = guest.awaitCss(".report-filter-options vaadin-combo-box input");
-        speed.sendKeys(Keys.chord(Keys.CONTROL, "a"), "Sofort");
-        new WebDriverWait(guest.driver(), Duration.ofSeconds(10)).until(_ ->
-                guest.all("vaadin-combo-box-item").stream().filter(WebElement::isDisplayed)
-                        .filter(item -> item.getText().strip().equals("Sofort")).findFirst().orElse(null)).click();
+        guest.type(".report-filter-options vaadin-combo-box input", Keys.chord(Keys.CONTROL, "a"), "Sofort");
+        guest.clickMatching("vaadin-combo-box-item", item -> item.getText().strip().equals("Sofort"), "Geschwindigkeit Sofort");
         guest.clickButtonWithText("Alle offenen Schlachten auswerten");
         guest.awaitCss(OUTCOME);
-        assertThat(guest.textsOf(".game-outcome-personal-result")).contains("Dein Ergebnis: Niederlage");
+        guest.awaitTextIn(".game-outcome-personal-result", "Dein Ergebnis: Niederlage");
     }
 
     private void finishRound(boolean fullConquest) {
@@ -198,7 +195,7 @@ public class ReviewMultiplayerSteps {
         session.awaitCss(".event-battle-pending");
         assertThat(session.all(".event-battle-pending")).hasSize(1);
         assertThat(session.all(OUTCOME)).isEmpty();
-        assertThat(session.all(".review-controls")).noneMatch(WebElement::isDisplayed);
+        session.awaitNoneDisplayed(".review-controls");
     }
 
     private void awaitNoOutcome(Browser session) {

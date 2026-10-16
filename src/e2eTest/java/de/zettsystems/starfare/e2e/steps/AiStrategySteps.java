@@ -59,7 +59,7 @@ public class AiStrategySteps {
         browser.awaitText("KI 1: Adaptiver Industrieausbau");
         browser.awaitText("KI 2: Verteidigung");
         assertThat(browser.all(".wizard-summary-group")).hasSize(4);
-        assertThat(browser.awaitCss(".wizard-confirmation").getText()).contains("Keine Rundenfrist");
+        browser.awaitTextIn(".wizard-confirmation", "Keine Rundenfrist");
         captureSummary();
         browser.clickButtonWithText("Zurück zu den Einstellungen");
         assertSelection(1, "Adaptiver Industrieausbau");
@@ -91,14 +91,10 @@ public class AiStrategySteps {
     }
 
     private void choose(int seat, String label) {
-        var input = browser.awaitCss("#ai-strategy-" + seat + " input");
-        input.sendKeys(Keys.chord(Keys.CONTROL, "a"), label);
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
-                .until(_ -> browser.all("vaadin-combo-box-item").stream()
-                        .filter(item -> item.isDisplayed() && item.getText().strip().equals(label))
-                        .findFirst().orElse(null)).click();
-        input.sendKeys(Keys.TAB);
+        String input = "#ai-strategy-" + seat + " input";
+        browser.type(input, Keys.chord(Keys.CONTROL, "a"), label);
+        browser.clickMatching("vaadin-combo-box-item", item -> item.getText().strip().equals(label), "Strategie " + label);
+        browser.type(input, Keys.TAB);
         assertSelection(seat, label);
     }
 
@@ -110,13 +106,20 @@ public class AiStrategySteps {
     }
 
     private void changeCount(int count) {
-        var field = new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                browser.all("vaadin-integer-field, vaadin-number-field").stream()
-                        .filter(element -> "KI-Spieler".equals(element.getDomProperty("label")))
-                        .findFirst().orElse(null));
-        ((JavascriptExecutor) browser.driver()).executeScript("arguments[0].scrollIntoView({block:'center'});", field);
-        field.findElement(By.cssSelector("input"))
-                .sendKeys(Keys.chord(Keys.CONTROL, "a"), String.valueOf(count), Keys.TAB);
+        // Find, scroll and type together: the wizard re-renders the field while seats change.
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .ignoring(org.openqa.selenium.ElementNotInteractableException.class)
+                .until(_ -> {
+                    var field = browser.all("vaadin-integer-field, vaadin-number-field").stream()
+                            .filter(element -> "KI-Spieler".equals(element.getDomProperty("label")))
+                            .findFirst().orElse(null);
+                    if (field == null) { return false; }
+                    ((JavascriptExecutor) browser.driver()).executeScript("arguments[0].scrollIntoView({block:'center'});", field);
+                    field.findElement(By.cssSelector("input"))
+                            .sendKeys(Keys.chord(Keys.CONTROL, "a"), String.valueOf(count), Keys.TAB);
+                    return true;
+                });
     }
 
     private void variant(String name) {
@@ -136,7 +139,8 @@ public class AiStrategySteps {
 
     private void awaitChoices(int count) {
         Boolean matched = new WebDriverWait(browser.driver(), Duration.ofSeconds(15))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ -> {
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .ignoring(org.openqa.selenium.ElementNotInteractableException.class).until(_ -> {
             var input = browser.awaitCss("#ai-strategy-1 input");
             boolean opened = Boolean.TRUE.equals(((JavascriptExecutor) browser.driver()).executeScript(
                     "return document.querySelector('#ai-strategy-1').opened;"));
@@ -150,7 +154,7 @@ public class AiStrategySteps {
             return choices instanceof Number number && number.intValue() == count;
         });
         assertThat(matched).isTrue();
-        browser.awaitCss("#ai-strategy-1 input").sendKeys(Keys.ESCAPE, Keys.TAB);
+        browser.type("#ai-strategy-1 input", Keys.ESCAPE, Keys.TAB);
     }
 
     @After

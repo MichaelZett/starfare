@@ -69,11 +69,9 @@ public class DiplomacySteps {
     @Dann("vereinbaren beide eine neue Kündigungsfrist ohne gemeinsame Schiffseigentümer")
     public void changeNoticeAndDock() {
         browser.clickCss(".diplomacy-card vaadin-details");
-        WebElement notice = browser.awaitCss(".diplomacy-card vaadin-integer-field input");
-        notice.sendKeys(Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB);
+        browser.type(".diplomacy-card vaadin-integer-field input", Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB);
         partner.clickCss(".diplomacy-card vaadin-details");
-        partner.awaitCss(".diplomacy-card vaadin-integer-field input")
-                .sendKeys(Keys.chord(Keys.CONTROL, "a"), "5", Keys.TAB);
+        partner.type(".diplomacy-card vaadin-integer-field input", Keys.chord(Keys.CONTROL, "a"), "5", Keys.TAB);
         partner.clickButtonWithText("Neue Frist vorschlagen");
         browser.awaitTextIn(".diplomacy-content", "Frist von 5 Runden");
         assertThat(browser.awaitCss(".diplomacy-card vaadin-integer-field input").getDomProperty("value")).isEqualTo("0");
@@ -127,11 +125,8 @@ public class DiplomacySteps {
         openTreaties(browser);
     }
     private void switchLanguage(String label) {
-        browser.awaitCss(".lang-switcher input").sendKeys(Keys.chord(Keys.CONTROL, "a"), label);
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).ignoring(StaleElementReferenceException.class).until(_ -> {
-            var option = browser.all("vaadin-combo-box-item").stream().filter(item -> item.isDisplayed() && item.getText().equals(label)).findFirst();
-            if (option.isEmpty()) { return false; } option.get().click(); return true;
-        });
+        browser.type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), label);
+        browser.clickMatching("vaadin-combo-box-item", item -> item.getText().equals(label), "Sprache " + label);
     }
     private static void openTreaties(Browser target) { target.clickButtonWithText("Bündnisse"); target.awaitCss(".diplomacy-content"); }
     private void advance() { assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue(); }

@@ -73,9 +73,9 @@ public class CoalitionSteps {
         selectSystem("Alpha"); browser.awaitTextIn(".system-details-heading", "Alpha"); browser.clickButtonWithText("Flotte senden");
         browser.awaitCss(".sys-selected"); selectSystem("Gamma");
         browser.awaitCss(".send-fleet-dialog");
-        browser.awaitCss(".send-fleet-amount input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "40", Keys.TAB);
+        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.chord(Keys.CONTROL, "a"), "40", Keys.TAB);
         browser.clickCss(".conquest-selection vaadin-details");
-        browser.awaitCss(".conquest-selection vaadin-combo-box input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "Partner", Keys.ENTER, Keys.TAB);
+        browser.type(".conquest-selection vaadin-combo-box input", Keys.chord(Keys.CONTROL, "a"), "Partner", Keys.ENTER, Keys.TAB);
         browser.awaitTextIn(".conquest-selection", "deine Schiffe bleiben deine"); screenshot("claim");
         browser.clickCss(".send-fleet-dialog vaadin-button[theme~='primary']");
         waitFor(() -> games.viewFor(id, 1).plannedOrders().size() == 1);
@@ -107,7 +107,7 @@ public class CoalitionSteps {
     @Dann("zeigt die stumme Wiedergabe alle Seiten und ihre gespeicherten Verluste")
     public void playback() throws IOException {
         for (int index = 0; index < 2; index++) {
-            browser.awaitCss(".event-battle-pending").click(); browser.awaitCss(".coalition-replay");
+            browser.clickCss(".event-battle-pending"); browser.awaitCss(".coalition-replay");
             assertThat(browser.all(".coalition-side")).hasSize(index == 0 ? 2 : 3);
             assertThat(browser.all(".coalition-defenders .coalition-side")).hasSize(1);
             assertThat(browser.all(".coalition-attackers .coalition-side")).hasSize(index == 0 ? 1 : 2);
@@ -117,13 +117,14 @@ public class CoalitionSteps {
                     return a.left < d.left && [...document.querySelectorAll('.coalition-side')]
                         .every(card => getComputedStyle(card).color === 'rgb(255, 216, 106)');
                     """)).isEqualTo(true);
-            assertThat(browser.textsOf(".coalition-side")).anyMatch(text -> text.contains("Commander + Partner"));
+            browser.awaitTextIn(".coalition-side", "Commander + Partner");
             assertThat(browser.awaitCss(".battle-replay-dialog vaadin-checkbox").getDomProperty("checked")).isEqualTo("false");
             browser.awaitCss(".battle-replay-result-visible");
             var report = games.viewFor(id, 1).report();
             var battle = (TurnEvent.CoalitionBattle) report.events().stream().filter(event -> event instanceof TurnEvent.CoalitionBattle).toList().get(index);
             for (var side : battle.sides()) {
-                assertThat(browser.awaitCss("[data-coalition-side='" + side.id() + "'] [data-coalition-count]").getText()).isEqualTo(Integer.toString(side.remaining()));
+                String count = "[data-coalition-side='" + side.id() + "'] [data-coalition-count]";
+                browser.awaitTexts(count, List.of(Integer.toString(side.remaining()))::equals, "Restschiffe von Seite " + side.id());
             }
             screenshot("battle-" + index);
             if (index == 1) {

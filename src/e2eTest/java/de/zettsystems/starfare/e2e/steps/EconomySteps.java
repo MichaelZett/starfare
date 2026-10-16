@@ -53,8 +53,7 @@ public class EconomySteps {
     public void allocate() throws IOException {
         browser.awaitTextIn(".industry-panel", "Kapazität 10 / 50");
         browser.clickCss("#production-plan-open");
-        WebElement input = browser.awaitCss("#industry-expansion input");
-        input.sendKeys(Keys.chord(Keys.CONTROL, "a"), "4", Keys.TAB);
+        browser.type("#industry-expansion input", Keys.chord(Keys.CONTROL, "a"), "4", Keys.TAB);
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> registry.readState(id, state -> state.industries().get(1).expansionAllocation()) == 4);
         browser.awaitTextIn(".production-save-status", "Gespeichert");
         browser.awaitTextIn(".industry-panel", "6 Punkte → 6 Schiffe/Runde");
@@ -75,7 +74,9 @@ public class EconomySteps {
     public void reloadAndSubmit() {
         browser.driver().navigate().refresh(); selectAlpha();
         browser.clickCss("#production-plan-open");
-        assertThat(browser.awaitCss("#industry-expansion input").getDomProperty("value")).isEqualTo("4");
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .until(_ -> "4".equals(browser.awaitCss("#industry-expansion input").getDomProperty("value")));
         browser.clickButtonWithText("Runde abgeben");
         browser.awaitText("Abgegeben");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> browser.all("#industry-expansion").isEmpty());
@@ -96,7 +97,7 @@ public class EconomySteps {
         browser.driver().navigate().refresh(); selectAlpha();
         browser.clickCss("#production-plan-open");
         browser.awaitTextIn(".production-plan-results", "Verlegung: voraussichtlich 0 Schiffe");
-        browser.awaitCss("#industry-expansion input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB);
+        browser.type("#industry-expansion input", Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB);
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> registry.readState(id, state -> state.industries().get(1).expansionAllocation()) == 0);
         browser.awaitTextIn(".industry-panel", "11 Punkte → 11 Schiffe/Runde");
         browser.awaitTextIn(".production-plan-results", "Verlegung: voraussichtlich 2 Schiffe");

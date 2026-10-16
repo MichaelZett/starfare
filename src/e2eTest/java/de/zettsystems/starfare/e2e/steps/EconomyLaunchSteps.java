@@ -77,6 +77,6 @@ public class EconomyLaunchSteps {
         ((JavascriptExecutor) browser.driver()).executeScript("document.querySelector('#map .sys-own').click();");
         browser.awaitCss(".industry-panel");
     }
-    private void enter(String selector, String value) { browser.awaitCss(selector).sendKeys(Keys.chord(Keys.CONTROL, "a"), value, Keys.TAB); }
+    private void enter(String selector, String value) { browser.type(selector, Keys.chord(Keys.CONTROL, "a"), value, Keys.TAB); }
     @After public void cleanup() { if (id != null) { store.delete(id); } }
 }

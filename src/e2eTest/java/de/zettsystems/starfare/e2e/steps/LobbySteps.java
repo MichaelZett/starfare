@@ -131,7 +131,7 @@ public class LobbySteps {
     public void publishGame() {
         browser.openDetailsWithText("Weitere Aktionen");
         browser.clickButtonWithText("Verwalten");
-        browser.awaitCss("vaadin-checkbox").click();
+        browser.clickCss("vaadin-checkbox");
         browser.clickButtonWithText("Schließen");
         browser.awaitText("Öffentlich");
         assertThat(games.summaryOf(id).visibility()).isEqualTo(GameVisibility.PUBLIC);
@@ -154,7 +154,7 @@ public class LobbySteps {
     @Wenn("ich die Lobby-Einladung annehme")
     public void acceptInvite() throws IOException {
         browser.awaitCss(".invitations-row");
-        assertThat(browser.all(".lobby-game-card vaadin-details")).noneMatch(org.openqa.selenium.WebElement::isDisplayed);
+        browser.awaitNoneDisplayed(".lobby-game-card vaadin-details");
         browser.captureUiAcceptance("invitation");
         browser.clickButtonWithText("Annehmen");
     }
@@ -173,8 +173,7 @@ public class LobbySteps {
         browser.awaitCss(".lobby-root");
         assertThat(browser.pageText()).doesNotContain(name);
         browser.clickCss("vaadin-menu-bar-button");
-        browser.all("vaadin-menu-bar-item").stream().filter(item -> item.getText().strip().equals("Archiv"))
-                .findFirst().orElseThrow().click();
+        browser.clickMatching("vaadin-menu-bar-item", item -> item.getText().strip().equals("Archiv"), "Menüeintrag Archiv");
         browser.awaitText(name);
         browser.captureUiAcceptance("archive");
         browser.clickButtonWithText("Ansehen");
@@ -185,17 +184,12 @@ public class LobbySteps {
     }
     @Dann("kann ich Perspektive und Kriegsnebel der Nachbetrachtung wechseln")
     public void switchReviewPerspective() {
-        browser.awaitCss("#review-fog").click();
+        browser.clickCss("#review-fog");
         browser.awaitCss(".sys-fog");
         String aiName = games.reviewFor(id, host).orElseThrow().players().stream()
                 .filter(Player::ai).findFirst().orElseThrow().label();
-        var selection = browser.awaitCss("#review-perspective input");
-        selection.sendKeys(Keys.chord(Keys.CONTROL, "a"));
-        selection.sendKeys(aiName);
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .until(_ -> browser.all("vaadin-combo-box-item").stream()
-                        .filter(item -> item.isDisplayed() && item.getText().equals(aiName))
-                        .findFirst().orElse(null)).click();
+        browser.type("#review-perspective input", Keys.chord(Keys.CONTROL, "a"), aiName);
+        browser.clickMatching("vaadin-combo-box-item", item -> item.getText().equals(aiName), "Perspektive " + aiName);
         var ai = games.reviewFor(id, host).orElseThrow().players().stream()
                 .filter(player -> player.label().equals(aiName)).findFirst().orElseThrow();
         var home = games.reviewFor(id, host, ai.id(), true).orElseThrow().systems().stream()
@@ -203,7 +197,7 @@ public class LobbySteps {
                 .findFirst().orElseThrow();
         browser.awaitTextIn(".sys-own", home.name());
         assertThat(browser.awaitCss("#review-perspective input").getDomProperty("value")).isEqualTo(aiName);
-        browser.awaitCss("#review-fog").click();
+        browser.clickCss("#review-fog");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                 .until(_ -> browser.all(".sys-fog").isEmpty());
         assertThat(browser.all(".sys-fog")).isEmpty();

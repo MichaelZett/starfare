@@ -17,21 +17,18 @@ public class RouteAcceptanceSteps {
         browser.open("/acceptance/routes"); browser.awaitCss("#route-acceptance");
         assertThat(browser.all("#route-blocked .route-stop").stream()
                 .map(point -> point.getDomAttribute("data-route-system")).toList()).containsExactly("1", "5", "6", "7");
-        browser.awaitCss("#route-preview .route-more").sendKeys(Keys.ENTER);
+        browser.type("#route-preview .route-more", Keys.ENTER);
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> browser.all("#route-preview .route-stop").size() == 7);
         assertThat(browser.awaitCss("#route-preview [data-route-system='2']").getText()).startsWith("◇");
         assertThat(browser.awaitCss("#route-unknown [data-route-system='99']").getText()).isEqualTo("?");
         assertThat(browser.awaitCss("#route-unknown [data-route-system='99']").getDomAttribute("disabled")).isNotNull();
-        browser.awaitCss("#route-direct [data-route-system='7']").sendKeys(Keys.ENTER);
+        browser.type("#route-direct [data-route-system='7']", Keys.ENTER);
         browser.awaitCss("#route-direct .route-selected");
         for (String language : new String[]{"de", "en"}) {
             if (language.equals("en")) {
-                browser.awaitCss(".lang-switcher input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "Englisch");
-                new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).ignoring(StaleElementReferenceException.class).until(_ -> {
-                    var option = browser.all("vaadin-combo-box-item").stream().filter(item -> item.isDisplayed() && item.getText().equals("Englisch")).findFirst();
-                    if (option.isEmpty()) { return false; } option.get().click(); return true;
-                });
-                browser.awaitCss("#route-preview .route-more").sendKeys(Keys.ENTER);
+                browser.type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), "Englisch");
+                browser.clickMatching("vaadin-combo-box-item", option -> option.getText().equals("Englisch"), "Sprache Englisch");
+                browser.type("#route-preview .route-more", Keys.ENTER);
                 new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> browser.all("#route-preview .route-stop").size() == 7);
             }
             for (int width : new int[]{1366, 1024}) {

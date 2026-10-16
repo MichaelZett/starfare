@@ -79,8 +79,8 @@ public class SmokeSteps {
     public void register(String displayName, String email) {
         world.rememberAccount(displayName, email);
         browser.open("/register");
-        browser.awaitCss("vaadin-text-field input").sendKeys(displayName);
-        browser.all("vaadin-email-field input").getFirst().sendKeys(email);
+        browser.type("vaadin-text-field input", displayName);
+        browser.type("vaadin-email-field input", email);
         List<WebElement> passwordFields = browser.awaitAtLeast("vaadin-password-field input", 2);
         passwordFields.get(0).sendKeys(Browser.PASSWORD);
         passwordFields.get(1).sendKeys(Browser.PASSWORD);
@@ -122,24 +122,33 @@ public class SmokeSteps {
         browser.awaitCss(".wizard-summary-group");
         browser.captureUiAcceptance("wizard-summary");
         browser.clickCss(".wizard-summary-group vaadin-button");
-        WebElement systems = wizardSystems();
-        String original = systems.getDomProperty("value");
+        String original = wizardSystems().getDomProperty("value");
         int corrected = Integer.parseInt(original) + 1;
-        systems.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"));
-        systems.sendKeys(String.valueOf(corrected), org.openqa.selenium.Keys.TAB);
+        typeWizardSystems(String.valueOf(corrected));
         browser.clickButtonWithText("Zusammenfassung prüfen");
         browser.awaitTextIn(".wizard-summary-line", "Systeme: " + corrected);
         assertThat(browser.textsOf(".wizard-summary-line")).contains("Systeme: " + corrected);
         browser.captureUiAcceptance("wizard-corrected");
         // Restore the standard fixture after verifying the correction round trip.
         browser.clickCss(".wizard-summary-group vaadin-button");
-        systems = wizardSystems();
-        systems.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"));
-        systems.sendKeys(original, org.openqa.selenium.Keys.TAB);
+        typeWizardSystems(original);
         browser.clickButtonWithText("Zusammenfassung prüfen");
         browser.awaitTextIn(".wizard-summary-line", "Systeme: " + original);
         browser.clickButtonWithText("Spiel anlegen");
         browser.awaitUrl(url -> url.contains("/map/"), "Die KI-Partie wurde nicht automatisch gestartet.");
+    }
+
+    /** The wizard page is rebuilt when it opens; retry the input until the visible field accepts it. */
+    private void typeWizardSystems(String value) {
+        new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .ignoring(org.openqa.selenium.ElementNotInteractableException.class)
+                .until(_ -> {
+                    WebElement systems = wizardSystems();
+                    systems.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"));
+                    systems.sendKeys(value, org.openqa.selenium.Keys.TAB);
+                    return true;
+                });
     }
 
     private WebElement wizardSystems() {
@@ -168,9 +177,8 @@ public class SmokeSteps {
 
     @Dann("zeigen die Empire-Stats {int} System, Produktion {int} und {int} Schiffe")
     public void empireStatsShow(int systems, int production, int ships) {
-        browser.awaitTextIn(".app-header-stat-value", String.valueOf(ships));
-        assertThat(browser.textsOf(".app-header-stat-value"))
-                .containsExactly(String.valueOf(systems), String.valueOf(production), String.valueOf(ships));
+        List<String> expected = List.of(String.valueOf(systems), String.valueOf(production), String.valueOf(ships));
+        browser.awaitTexts(".app-header-stat-value", expected::equals, "Empire-Stats zeigen nicht " + expected);
     }
 
     @Dann("kann ich im Systeminspektor eine Flotte oder Verlegung vorbereiten und abbrechen")
@@ -215,7 +223,7 @@ public class SmokeSteps {
         assertThat(browser.all(".system-world")).hasSizeBetween(2, 7);
         List<String> original = browser.all(".system-body-target").stream()
                 .map(element -> element.getAttribute("aria-label")).toList();
-        browser.awaitCss(".system-world").sendKeys(org.openqa.selenium.Keys.ENTER);
+        browser.type(".system-world", org.openqa.selenium.Keys.ENTER);
         browser.awaitTextIn(".system-body-description", "Umlaufbahn");
         assertThat(browser.all("vaadin-dialog[opened]")).isEmpty();
         assertThat(browser.all(".system-shipyard")).hasSize(1);
@@ -235,7 +243,8 @@ public class SmokeSteps {
             browser.awaitCss(".system-orrery");
             assertThat(browser.all(".system-body-target").stream()
                     .map(element -> element.getAttribute("aria-label")).toList()).isEqualTo(original);
-            assertThat(browser.textsOf(".app-header-stat-value")).containsExactly("1", "4", "8");
+            browser.awaitTexts(".app-header-stat-value", List.of("1", "4", "8")::equals,
+                    "Empire-Stats nach dem Neuladen zeigen nicht 1, 4, 8");
             verifyEnglishSystemView();
         } finally {
             browser.driver().manage().window().setSize(originalSize);
@@ -244,16 +253,15 @@ public class SmokeSteps {
 
     private void verifyEnglishSystemView() throws IOException {
         changeLanguage("Englisch", "Shipyard");
-        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Star reduced");
+        browser.awaitTextIn(".system-schematic-caption", "Star reduced");
         Files.write(Path.of("build", "system-view", "classic-english.png"),
                 ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
         changeLanguage("German", "Werft");
-        assertThat(browser.awaitCss(".system-schematic-caption").getText()).contains("Stern verkleinert");
+        browser.awaitTextIn(".system-schematic-caption", "Stern verkleinert");
     }
 
     private void changeLanguage(String label, String shipyard) {
-        WebElement input = browser.awaitCss("vaadin-combo-box input");
-        input.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"), label);
+        browser.type("vaadin-combo-box input", org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"), label);
         browser.awaitTextIn("vaadin-combo-box-item", label);
         browser.clickCss("vaadin-combo-box-item");
         browser.awaitText(shipyard.equals("Werft") ? "Runde abgeben" : "Submit turn");
@@ -273,11 +281,14 @@ public class SmokeSteps {
         browser.awaitText("Runde " + (round + 1));
     }
 
+    /** Mail delivery may run after the confirmation page is shown; poll instead of reading once. */
     private String confirmationUrlFor(String email) {
-        return mails.sent().stream()
-                .filter(mail -> mail.recipient().equals(email))
-                .reduce((_, second) -> second)
-                .map(RecordingMailSender.Sent::url)
-                .orElseThrow(() -> new AssertionError("Keine aufgezeichnete Mail an " + email + "."));
+        return new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
+                .withMessage("Keine aufgezeichnete Mail an " + email + ".")
+                .until(_ -> mails.sent().stream()
+                        .filter(mail -> mail.recipient().equals(email))
+                        .reduce((_, second) -> second)
+                        .map(RecordingMailSender.Sent::url)
+                        .orElse(null));
     }
 }

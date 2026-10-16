@@ -94,22 +94,24 @@ public class RoundSteps {
         for (Browser session : List.of(browser, guestSession)) {
             session.awaitTextIn(".app-header-round", "Runde 2");
             assertSubmissionAvailable(session);
-            assertThat(session.all(".round-status-waiting")).isEmpty();
-            assertThat(session.all(".round-status-seat.submitted")).isEmpty();
+            session.awaitCount(".round-status-waiting", 0);
+            session.awaitCount(".round-status-seat.submitted", 0);
         }
     }
 
     private static void assertSubmissionAvailable(Browser session) {
         session.awaitTextIn(".round-submit", "Runde abgeben");
         new WebDriverWait(session.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
                 .until(_ -> session.awaitCss(".round-submit").getDomAttribute("disabled") == null);
-        assertThat(session.awaitCss(".round-submit").getDomAttribute("disabled")).isNull();
     }
 
     private static void assertWaiting(Browser session, String player) {
         session.awaitTextIn(".round-status-waiting", "Abgegeben – warte auf " + player);
-        assertThat(session.awaitCss(".round-submit").getText()).isEqualTo("Abgegeben");
-        assertThat(session.awaitCss(".round-submit").getDomAttribute("disabled")).isNotNull();
+        session.awaitTexts(".round-submit", List.of("Abgegeben")::equals, "Knopf zeigt nicht „Abgegeben“");
+        new WebDriverWait(session.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .until(_ -> session.awaitCss(".round-submit").getDomAttribute("disabled") != null);
     }
 
     @Dann("zeigt die Rundenleiste {int} Spieler, davon {int} mit Haken")

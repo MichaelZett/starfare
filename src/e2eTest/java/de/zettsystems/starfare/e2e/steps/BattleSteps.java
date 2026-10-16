@@ -87,7 +87,7 @@ public class BattleSteps {
     private void assertConcealed() {
         assertThat(browser.all(PENDING)).hasSize(2);
         assertThat(browser.all(".event-victory")).isEmpty();
-        assertThat(browser.all(".review-controls")).noneMatch(WebElement::isDisplayed);
+        browser.awaitNoneDisplayed(".review-controls");
         assertThat(browser.all("#map .sys-fog")).isNotEmpty();
     }
 
@@ -100,7 +100,7 @@ public class BattleSteps {
         WebElement map = browser.awaitCss(".map-left");
         int before = map.getSize().getWidth();
         new Actions(browser.driver()).dragAndDropBy(splitter, -120, 0).perform();
-        assertThat(map.getSize().getWidth()).isLessThan(before - 50);
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> map.getSize().getWidth() < before - 50);
         browser.assertNoSidewaysScrolling();
         screenshot("map-1024");
     }
@@ -108,9 +108,9 @@ public class BattleSteps {
     @Wenn("ich beide Schlachten mit Ton auswerte")
     public void playBattles() throws IOException {
         for (int battle = 0; battle < 2; battle++) {
-            browser.awaitCss(PENDING).click();
+            browser.clickCss(PENDING);
             browser.awaitCss(".battle-replay");
-            assertThat(browser.textsOf(".battle-condition")).hasSize(2);
+            browser.awaitTexts(".battle-condition", texts -> texts.size() == 2, "Zwei Zustandsangaben in der Schlacht");
             assertThat(js().executeScript("""
                     const root = document.querySelector('.battle-replay');
                     const a = root.querySelector('.battle-attacker');
@@ -121,7 +121,7 @@ public class BattleSteps {
                         && getComputedStyle(d).color === 'rgb(255, 216, 106)';
                     """)).isEqualTo(true);
             String expectedStrength = battle == 0 ? "64,8" : "97,2";
-            assertThat(browser.textsOf(".battle-strength")).anyMatch(text -> text.contains(expectedStrength));
+            browser.awaitTextIn(".battle-strength", expectedStrength);
             browser.awaitCss(".sys-report-event-active");
             new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                     "running".equals(js().executeScript("return window.starfareBattleAudio.context?.state")));
@@ -133,7 +133,7 @@ public class BattleSteps {
             assertThat(browser.textsOf("[data-battle-attacking]")).contains(battle == 0 ? "20" : "60");
             assertThat(browser.textsOf("[data-battle-defending]")).contains("0");
             browser.clickButtonWithText("Ergebnis übernehmen");
-            browser.awaitCss(".capture-summary-dialog vaadin-button").click();
+            browser.clickCss(".capture-summary-dialog vaadin-button");
             new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(
                     org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated(
                             By.cssSelector(".capture-summary-dialog[opened]")));
@@ -149,14 +149,15 @@ public class BattleSteps {
     @Dann("erscheint das Spielergebnis vor der offenen Nachbetrachtung")
     public void outcomeThenReview() throws IOException {
         browser.awaitText("Sieg:");
-        assertThat(browser.all(".review-controls")).noneMatch(WebElement::isDisplayed);
+        browser.awaitNoneDisplayed(".review-controls");
         assertThat(browser.all(".game-outcome-metrics > div").stream()
                 .map(metric -> metric.getRect().getX()).distinct().count())
                 .as("desktop result metrics use multiple columns").isGreaterThan(1);
         browser.captureUiAcceptance("outcome");
         browser.clickButtonWithText("Nachbetrachtung öffnen");
         browser.awaitCss(".review-controls");
-        assertThat(browser.all("#map .sys-fog")).isEmpty();
+        // The review redraws the map without fog; wait for that instead of reading the old map.
+        browser.awaitCount("#map .sys-fog", 0);
         browser.captureUiAcceptance("battle-review");
     }
 
@@ -208,8 +209,10 @@ public class BattleSteps {
                         """)));
         WebElement sound = browser.awaitCss(".battle-replay-dialog vaadin-checkbox");
         sound.click();
-        assertThat(js().executeScript("return window.starfareBattleAudio.enabled")).isEqualTo(false);
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(5)).until(_ ->
+                Boolean.FALSE.equals(js().executeScript("return window.starfareBattleAudio.enabled")));
         sound.click();
-        assertThat(js().executeScript("return window.starfareBattleAudio.enabled")).isEqualTo(true);
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(5)).until(_ ->
+                Boolean.TRUE.equals(js().executeScript("return window.starfareBattleAudio.enabled")));
     }
 }

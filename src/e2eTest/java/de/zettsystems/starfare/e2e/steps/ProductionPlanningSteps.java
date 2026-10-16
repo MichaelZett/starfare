@@ -98,7 +98,7 @@ public class ProductionPlanningSteps {
                 java.util.stream.Collectors.toMap(StandingOrder::toSystemId, StandingOrder::ships)));
     }
     private void enter(String selector, String value) {
-        browser.awaitCss(selector).sendKeys(Keys.chord(Keys.CONTROL, "a"), value, Keys.TAB);
+        browser.type(selector, Keys.chord(Keys.CONTROL, "a"), value, Keys.TAB);
     }
     private void select(String name) {
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> Boolean.TRUE.equals(
@@ -113,9 +113,9 @@ public class ProductionPlanningSteps {
         browser.awaitTextIn(".system-details-heading", name);
     }
     private void field(String selector, String expected) {
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                browser.awaitCss(selector).getDomProperty("value").equals(expected));
-        assertThat(browser.awaitCss(selector).getDomProperty("value")).isEqualTo(expected);
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ ->
+                        expected.equals(browser.awaitCss(selector).getDomProperty("value")));
     }
     @After public void cleanup() { if (id != null) { store.delete(id); } }
 }

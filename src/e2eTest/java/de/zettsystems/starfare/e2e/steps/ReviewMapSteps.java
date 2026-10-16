@@ -104,8 +104,7 @@ public class ReviewMapSteps {
     public void bulkPlanning() {
         browser.clickButtonWithText("Reserven gesammelt setzen");
         selectSources();
-        WebElement amount = browser.awaitCss(".planning-dialog vaadin-integer-field input");
-        amount.sendKeys(Keys.chord(Keys.CONTROL, "a"), "1", Keys.TAB);
+        browser.type(".planning-dialog vaadin-integer-field input", Keys.chord(Keys.CONTROL, "a"), "1", Keys.TAB);
         browser.clickButtonWithText("Speichern");
         awaitPlanningClosed();
         assertThat(games.viewFor(first.id(), first.hostSeat()).systems().stream()
@@ -114,21 +113,24 @@ public class ReviewMapSteps {
         selectSources();
         selectTarget("Gamma");
         browser.awaitTextIn(".planning-dialog", "Schiffe");
-        browser.all(".planning-dialog vaadin-button").stream().filter(button -> button.getText().equals("Flotten gesammelt senden"))
-                .findFirst().orElseThrow().click();
+        browser.clickMatching(".planning-dialog vaadin-button", button -> button.getText().equals("Flotten gesammelt senden"),
+                "Flotten gesammelt senden im Planungsdialog");
         awaitPlanningClosed();
         browser.awaitSelectedTabWithText("Befehle");
         assertThat(games.viewFor(first.id(), first.hostSeat()).plannedOrders()).hasSize(2);
-        browser.all(".fleet-travel-card-planned").stream().filter(card -> card.getText().contains("Alpha → Gamma"))
-                .findFirst().orElseThrow().findElements(org.openqa.selenium.By.tagName("vaadin-button")).stream()
-                .filter(button -> button.getText().equals("Befehl bearbeiten")).findFirst().orElseThrow().click();
+        browser.clickMatching(".fleet-travel-card-planned vaadin-button", button -> button.getText().equals("Befehl bearbeiten")
+                        && button.findElement(org.openqa.selenium.By.xpath(
+                                "ancestor::*[contains(concat(' ', @class, ' '), ' fleet-travel-card-planned ')]"))
+                        .getText().contains("Alpha → Gamma"),
+                "Befehl bearbeiten an Alpha → Gamma");
         selectTarget("Beta");
-        amount = browser.awaitCss(".planning-dialog vaadin-integer-field input");
-        amount.sendKeys(Keys.chord(Keys.CONTROL, "a"), "2", Keys.TAB);
+        browser.type(".planning-dialog vaadin-integer-field input", Keys.chord(Keys.CONTROL, "a"), "2", Keys.TAB);
         browser.clickButtonWithText("Speichern");
         awaitPlanningClosed();
-        browser.awaitTextIn(".fleet-travel-card-planned", "Beta");
-        assertThat(games.viewFor(first.id(), first.hostSeat()).plannedOrders().getFirst().ships()).isEqualTo(2);
+        // "Beta" already appears on the Beta → Gamma card; the stored amount is the real signal.
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                Integer.valueOf(2).equals(games.viewFor(first.id(), first.hostSeat()).plannedOrders().getFirst().ships()));
+        browser.awaitTextIn(".fleet-travel-card-planned", "Alpha → Beta");
         browser.clickButtonWithText("Letzten Befehlschritt zurücknehmen");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                 Integer.valueOf(4).equals(games.viewFor(first.id(), first.hostSeat()).plannedOrders().getFirst().ships()));
@@ -149,13 +151,15 @@ public class ReviewMapSteps {
         browser.logIn("comfort@example.test");
         open(first);
         browser.clickTabWithText("Flotten");
-        assertThat(visibleRouteFilter().getDomProperty("value")).isEqualTo("Gamma");
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+                .until(_ -> "Gamma".equals(visibleRouteFilter().getDomProperty("value")));
         var before = registry.listIds();
         browser.open("/");
         browser.clickButtonWithText("Als Vorlage / Revanche");
-        browser.awaitCss("vaadin-dialog[opened] vaadin-checkbox").click();
-        browser.all("vaadin-dialog[opened] vaadin-button").stream().filter(button -> button.getText().equals("Neues Spiel"))
-                .findFirst().orElseThrow().click();
+        browser.clickCss("vaadin-dialog[opened] vaadin-checkbox");
+        browser.clickMatching("vaadin-dialog[opened] vaadin-button", button -> button.getText().equals("Neues Spiel"),
+                "Neues Spiel im Vorlagendialog");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> registry.listIds().size() > before.size());
         copiedGame = registry.listIds().stream().filter(id -> !before.contains(id)).findFirst().orElseThrow();
         assertThat(registry.readState(copiedGame, state -> state.invitedSeats().size()).intValue()).isEqualTo(1);
@@ -169,26 +173,23 @@ public class ReviewMapSteps {
     }
 
     private void selectSources() {
-        WebElement input = browser.awaitCss(".planning-dialog vaadin-multi-select-combo-box input");
-        input.sendKeys("Alpha");
+        String sources = ".planning-dialog vaadin-multi-select-combo-box input";
+        browser.type(sources, "Alpha");
         selectComboItem("vaadin-multi-select-combo-box-item", "Alpha");
-        input.sendKeys(Keys.chord(Keys.CONTROL, "a"), "Beta");
+        browser.type(sources, Keys.chord(Keys.CONTROL, "a"), "Beta");
         selectComboItem("vaadin-multi-select-combo-box-item", "Beta");
-        input.sendKeys(Keys.TAB);
+        browser.type(sources, Keys.TAB);
     }
 
     private void selectTarget(String name) {
-        WebElement target = browser.awaitCss(".planning-dialog vaadin-combo-box input");
-        target.sendKeys(Keys.chord(Keys.CONTROL, "a"), name);
+        String target = ".planning-dialog vaadin-combo-box input";
+        browser.type(target, Keys.chord(Keys.CONTROL, "a"), name);
         selectComboItem("vaadin-combo-box-item", name);
-        target.sendKeys(Keys.TAB);
+        browser.type(target, Keys.TAB);
     }
 
     private void selectComboItem(String selector, String name) {
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
-                .until(_ -> browser.all(selector).stream().filter(WebElement::isDisplayed)
-                        .filter(item -> item.getText().strip().equals(name)).findFirst().orElse(null)).click();
+        browser.clickMatching(selector, item -> item.getText().strip().equals(name), "Auswahleintrag " + name);
     }
 
     private void awaitPlanningClosed() {
@@ -220,8 +221,7 @@ public class ReviewMapSteps {
         browser.awaitText("Ziel auf der Karte auswählen");
         clickSystem("Beta");
         browser.awaitCss(".send-fleet-dialog[opened]");
-        WebElement amount = browser.awaitCss(".send-fleet-amount input");
-        amount.sendKeys(Keys.chord(Keys.CONTROL, "a"), "20", Keys.TAB);
+        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.chord(Keys.CONTROL, "a"), "20", Keys.TAB);
         awaitAmount(20);
         assertMax(20);
         browser.clickButtonWithText("Hälfte");
@@ -259,7 +259,8 @@ public class ReviewMapSteps {
         assertSourceSelected();
         assertThat(games.viewFor(first.id(), first.hostSeat()).plannedOrders()).isEmpty();
         clickSystem("Beta");
-        browser.awaitCss(".send-fleet-amount input").sendKeys(Keys.ESCAPE);
+        browser.awaitCss(".send-fleet-dialog[opened]");
+        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.ESCAPE);
         awaitSendClosed();
         assertSourceSelected();
         clickSystem("Beta");
@@ -269,8 +270,7 @@ public class ReviewMapSteps {
         assertSourceSelected();
         clickSystem("Beta");
         browser.awaitCss(".send-fleet-dialog[opened]");
-        browser.all(".send-fleet-dialog[opened] vaadin-button").stream()
-                .filter(button -> button.getText().equals("Flotte senden")).findFirst().orElseThrow().click();
+        clickSendInDialog();
         awaitSendClosed();
         browser.awaitSelectedTabWithText("Details");
         browser.awaitTextIn(".system-details-heading", "Alpha");
@@ -279,8 +279,7 @@ public class ReviewMapSteps {
         browser.awaitCss(".sys-selected");
         clickSystem("Beta");
         browser.awaitCss(".send-fleet-dialog[opened]");
-        browser.all(".send-fleet-dialog[opened] vaadin-button").stream()
-                .filter(button -> button.getText().equals("Flotte senden")).findFirst().orElseThrow().click();
+        clickSendInDialog();
         awaitSendClosed();
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                 games.viewFor(first.id(), first.hostSeat()).plannedOrders().size() == 2);
@@ -298,7 +297,7 @@ public class ReviewMapSteps {
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                 games.viewFor(first.id(), first.hostSeat()).plannedOrders().size() == 2);
         browser.clickTabWithText("Flotten");
-        browser.awaitCss(".fleet-direct-actions vaadin-button").click();
+        browser.clickCss(".fleet-direct-actions vaadin-button");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                 !games.viewFor(first.id(), first.hostSeat()).waitingFleetIds().isEmpty());
         browser.awaitSelectedTabWithText("Flotten");
@@ -322,10 +321,16 @@ public class ReviewMapSteps {
                 browser.all(".send-fleet-dialog[opened]").isEmpty());
     }
 
+    private void clickSendInDialog() {
+        browser.clickMatching(".send-fleet-dialog[opened] vaadin-button", button -> button.getText().equals("Flotte senden"),
+                "Flotte senden im Sendedialog");
+    }
+
     private void assertSourceSelected() {
         browser.awaitSelectedTabWithText("Details");
         browser.awaitTextIn(".system-details-heading", "Alpha");
-        assertThat(browser.awaitCss(".sys-selected").getText()).contains("Alpha");
+        // The map redraws completely; wait for the new selection marker instead of reading a stale one.
+        browser.awaitTextIn(".sys-selected", "Alpha");
     }
 
     @Dann("kann ich eine Verlegung per Ziehen erstellen und an ihrer Reisekarte bearbeiten")
@@ -336,7 +341,7 @@ public class ReviewMapSteps {
         awaitSendClosed();
         browser.clickTabWithText("Verlegungen");
         browser.clickButtonWithText("Bearbeiten");
-        browser.awaitCss(".send-fleet-amount input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "2", Keys.TAB);
+        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.chord(Keys.CONTROL, "a"), "2", Keys.TAB);
         browser.clickButtonWithText("Verlegung speichern");
         awaitSendClosed();
         browser.awaitSelectedTabWithText("Verlegungen");
@@ -412,8 +417,8 @@ public class ReviewMapSteps {
         assertThat(js().executeScript("return document.querySelector('.system-background').opened")).isEqualTo(true);
         assertThat(browser.awaitCss(".system-operations vaadin-integer-field input").getDomProperty("value"))
                 .isEqualTo("0");
-        WebElement reserve = browser.awaitCss(".system-operations vaadin-integer-field input");
-        reserve.sendKeys(Keys.chord(Keys.CONTROL, "a"), "1", Keys.TAB);
+        WebElement reserve = browser.type(".system-operations vaadin-integer-field input",
+                Keys.chord(Keys.CONTROL, "a"), "1", Keys.TAB);
         browser.clickButtonWithText("Reserve speichern");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                 Integer.valueOf(1).equals(games.viewFor(first.id(), first.hostSeat()).systems().stream()
@@ -421,8 +426,7 @@ public class ReviewMapSteps {
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                 .until(org.openqa.selenium.support.ui.ExpectedConditions.stalenessOf(reserve));
         assertThat(js().executeScript("return document.querySelector('.system-operations').opened")).isEqualTo(true);
-        browser.awaitCss(".system-operations vaadin-integer-field input")
-                .sendKeys(Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB);
+        browser.type(".system-operations vaadin-integer-field input", Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB);
         browser.clickButtonWithText("Reserve speichern");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                 Integer.valueOf(0).equals(games.viewFor(first.id(), first.hostSeat()).systems().stream()
@@ -435,14 +439,15 @@ public class ReviewMapSteps {
     public void incomingTransferAndCancellation() throws java.io.IOException {
         clickSystem("Beta");
         browser.awaitTextIn(".system-metric-rate", "2 (+20/Runde)");
-        assertThat(browser.awaitCss(".system-details-owner").getText()).contains("Host Empire").doesNotContain("Review Host");
+        browser.awaitTextIn(".system-details-owner", "Host Empire");
+        assertThat(browser.textsOf(".system-details-owner")).noneMatch(owner -> owner.contains("Review Host"));
         browser.clickButtonWithText("Verlegung anlegen");
         browser.awaitText("Ziel auf der Karte auswählen");
         clickSystem("Alpha");
         browser.awaitTextIn(".send-fleet-production", "2 (+20/Runde)");
-        WebElement input = browser.awaitCss(".send-fleet-amount input");
         assertMax(22);
-        input.sendKeys(Keys.chord(Keys.CONTROL, "a"), "22", Keys.TAB);
+        WebElement input = browser.type(".send-fleet-dialog[opened] .send-fleet-amount input",
+                Keys.chord(Keys.CONTROL, "a"), "22", Keys.TAB);
         assertThat(input.getDomProperty("value")).isEqualTo("22");
         browser.clickButtonWithText("Abbrechen");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
@@ -450,24 +455,26 @@ public class ReviewMapSteps {
         clickSystem("Beta");
         int fleets = games.viewFor(first.id(), first.hostSeat()).ownFleets().size();
         browser.awaitTextIn(".system-transfer-row", "Alpha → Beta");
-        browser.awaitCss(".system-transfer-row vaadin-button").click();
+        browser.clickCss(".system-transfer-row vaadin-button");
         browser.awaitTextIn(".send-fleet-route", "Alpha");
-        browser.awaitCss(".send-fleet-amount input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "19", Keys.TAB);
+        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.chord(Keys.CONTROL, "a"), "19", Keys.TAB);
         browser.clickButtonWithText("Abbrechen");
         awaitSendClosed();
         assertThat(games.viewFor(first.id(), first.hostSeat()).standingOrders()).singleElement()
                 .satisfies(order -> assertThat(order.ships()).isEqualTo(20));
-        browser.awaitCss(".system-transfer-row vaadin-button").click();
-        browser.awaitCss(".send-fleet-amount input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "19", Keys.TAB);
+        browser.clickCss(".system-transfer-row vaadin-button");
+        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.chord(Keys.CONTROL, "a"), "19", Keys.TAB);
         browser.clickButtonWithText("Verlegung speichern");
         awaitSendClosed();
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                games.viewFor(first.id(), first.hostSeat()).standingOrders().getFirst().ships() == 19);
         assertThat(games.viewFor(first.id(), first.hostSeat()).standingOrders()).singleElement()
                 .satisfies(order -> assertThat(order.ships()).isEqualTo(19));
         clickSystem("Beta");
         browser.awaitTextIn(".system-transfer-row", "19");
         browser.captureUiAcceptance("system-transfer-feedback");
-        browser.all(".system-transfer-row vaadin-button").stream().filter(button -> button.getText().equals("Aufheben"))
-                .findFirst().orElseThrow().click();
+        browser.clickMatching(".system-transfer-row vaadin-button", button -> button.getText().equals("Aufheben"),
+                "Aufheben an der Verlegung");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                 games.viewFor(first.id(), first.hostSeat()).standingOrders().isEmpty());
         browser.awaitTextIn(".system-metric-rate", "2 (+0/Runde)");
@@ -476,11 +483,11 @@ public class ReviewMapSteps {
     }
 
     private void openSystemDetails(String selector) {
-        browser.awaitCss(selector + " > vaadin-details-summary").click();
+        browser.clickCss(selector + " > vaadin-details-summary");
     }
 
     private void switchLanguage(String option, String selected) {
-        browser.awaitCss(".lang-switcher input").sendKeys(Keys.chord(Keys.CONTROL, "a"), option);
+        browser.type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), option);
         selectComboItem("vaadin-combo-box-item", option);
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                 .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ ->
@@ -521,19 +528,20 @@ public class ReviewMapSteps {
         browser.clickCss(".fleet-travel-card");
         browser.awaitSelectedTabWithText("Details");
         browser.awaitTextIn(".map-right", "Reisedetails");
-        assertThat(browser.all(".system-metric")).noneMatch(WebElement::isDisplayed);
+        browser.awaitNoneDisplayed(".system-metric");
         clickSystem("Alpha");
         browser.awaitCss(".system-metric");
         browser.clickCss(".fleet-badge");
         browser.awaitTextIn(".map-right", "Reisedetails");
-        assertThat(browser.all(".system-metric")).noneMatch(WebElement::isDisplayed);
+        browser.awaitNoneDisplayed(".system-metric");
     }
 
     @Dann("bleiben Zoom und Kartenposition für beide Partien getrennt")
     public void independentViewports() {
         storeViewport(first, 1.4, 1100);
         open(second);
-        assertThat(js().executeScript("return document.querySelector('#map').style.zoom")).isEqualTo("1");
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                "1".equals(js().executeScript("return document.querySelector('#map').style.zoom")));
         storeViewport(second, 0.8, 600);
         open(first);
         assertViewport(1.4, 1100);
@@ -544,12 +552,10 @@ public class ReviewMapSteps {
     @Dann("bleiben Eingaben bei Aktualisierungen erhalten und ist die Karte per Tastatur bedienbar")
     public void stableInputsAndKeyboard() {
         open(first);
-        WebElement system = browser.awaitCss("#map .sys-own");
-        system.sendKeys(Keys.ENTER);
+        browser.type("#map .sys-own", Keys.ENTER);
         browser.awaitCss(".system-metric");
         openSystemDetails(".system-operations");
-        WebElement reserve = browser.awaitCss(".map-right vaadin-integer-field input");
-        reserve.sendKeys(Keys.chord(Keys.CONTROL, "a"), "3");
+        WebElement reserve = browser.type(".map-right vaadin-integer-field input", Keys.chord(Keys.CONTROL, "a"), "3");
         broadcaster.publish(new de.zettsystems.starfare.game.application.GameEvent.PlayerSubmitted(first.id(), 99));
         browser.clickButtonWithText("Vergrößern");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
@@ -588,7 +594,8 @@ public class ReviewMapSteps {
 
     private void storeViewport(ReviewGameFixture.Game game, double zoom, int left) {
         String key = "starfare.viewport." + game.id().value();
-        assertThat(js().executeScript("return document.querySelector('#scroll').__starfareViewportKey")).isEqualTo(key);
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                key.equals(js().executeScript("return document.querySelector('#scroll').__starfareViewportKey")));
         js().executeScript("""
                 const el = document.querySelector('#scroll');
                 el.querySelector('#map').style.zoom = String(arguments[0]);
@@ -629,16 +636,19 @@ public class ReviewMapSteps {
                         """, name)));
     }
 
+    /** A typed amount is in the field at once, the slider only after the server's answer; wait for both. */
     private void awaitAmount(int value) {
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                String.valueOf(value).equals(browser.awaitCss(".send-fleet-amount input").getDomProperty("value")));
-        assertThat(browser.awaitCss(".send-fleet-slider").getDomProperty("value")).isEqualTo(String.valueOf(value));
+        String expected = String.valueOf(value);
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ ->
+                        expected.equals(browser.awaitCss(".send-fleet-amount input").getDomProperty("value"))
+                                && expected.equals(browser.awaitCss(".send-fleet-slider").getDomProperty("value")));
     }
 
     private void assertMax(int max) {
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                String.valueOf(max).equals(browser.awaitCss(".send-fleet-slider").getDomAttribute("max")));
-        assertThat(browser.awaitCss(".send-fleet-slider").getDomAttribute("max")).isEqualTo(String.valueOf(max));
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
+                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ ->
+                        String.valueOf(max).equals(browser.awaitCss(".send-fleet-slider").getDomAttribute("max")));
     }
 
     private JavascriptExecutor js() {

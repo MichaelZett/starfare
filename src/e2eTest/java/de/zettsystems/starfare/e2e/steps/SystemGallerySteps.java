@@ -22,14 +22,8 @@ public class SystemGallerySteps {
         var js = (JavascriptExecutor) browser.driver();
         for (String language : new String[]{"de", "en"}) {
             if (language.equals("en")) {
-                browser.awaitCss(".lang-switcher input").sendKeys(Keys.chord(Keys.CONTROL, "a"), "Englisch");
-                new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
-                        .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ -> {
-                            var item = browser.all("vaadin-combo-box-item").stream()
-                                    .filter(option -> option.isDisplayed() && option.getText().equals("Englisch")).findFirst();
-                            if (item.isEmpty()) { return false; }
-                            item.get().click(); return true;
-                        });
+                browser.type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), "Englisch");
+                browser.clickMatching("vaadin-combo-box-item", option -> option.getText().equals("Englisch"), "Sprache Englisch");
                 browser.awaitTextIn(".system-schematic-caption", "Star reduced");
             }
             for (int width : new int[]{1366, 1024}) {
@@ -64,8 +58,7 @@ public class SystemGallerySteps {
         String color = star.getCssValue("background-image");
         new org.openqa.selenium.interactions.Actions(browser.driver()).moveToElement(star, 30, 0).click().perform();
         assertThat(star.getCssValue("background-image")).isEqualTo(color);
-        var moon = browser.awaitCss("#gallery-moon .system-colony-moon");
-        moon.sendKeys(Keys.ENTER);
+        browser.type("#gallery-moon .system-colony-moon", Keys.ENTER);
         browser.awaitTextIn("#gallery-moon .gallery-colony-inspected", "Kolonie geöffnet");
         assertThat(browser.awaitCss("#gallery-moon .system-colony-moon").getDomAttribute("aria-pressed")).isEqualTo("true");
         String position = (String) js.executeScript("return document.querySelector('#gallery-near .system-world').style.left");

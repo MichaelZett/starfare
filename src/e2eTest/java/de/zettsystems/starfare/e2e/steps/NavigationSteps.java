@@ -57,10 +57,12 @@ public class NavigationSteps {
         browser.driver().navigate().refresh();
         selectSystem("Alpha");
         browser.awaitTextIn(".system-metric-rate", "4 (+2/Runde)");
-        assertThat(browser.awaitCss(".system-details-owner").getText()).contains("Navigation Empire").doesNotContain("Navigator");
-        browser.all(".system-transfer-row").stream().filter(row -> row.getText().contains("Beta → Alpha"))
-                .findFirst().orElseThrow().findElements(By.tagName("vaadin-button")).stream()
-                .filter(button -> button.getText().strip().equals("Aufheben")).findFirst().orElseThrow().click();
+        browser.awaitTextIn(".system-details-owner", "Navigation Empire");
+        assertThat(browser.textsOf(".system-details-owner")).noneMatch(owner -> owner.contains("Navigator"));
+        browser.clickMatching(".system-transfer-row vaadin-button", button -> button.getText().strip().equals("Aufheben")
+                        && button.findElement(By.xpath("ancestor::*[contains(concat(' ', @class, ' '), ' system-transfer-row ')]"))
+                        .getText().contains("Beta → Alpha"),
+                "Aufheben an Beta → Alpha");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> games.viewFor(id, 1).standingOrders().size() == 1);
         browser.awaitTextIn(".system-metric-rate", "4 (+0/Runde)");
         assertThat(games.viewFor(id, 1).standingOrders().getFirst().toSystemId()).isEqualTo(4);
@@ -73,8 +75,8 @@ public class NavigationSteps {
         assertThat(systemTitle("Beta")).contains("Direkt erreichbar · 100 % der direkten Reichweite");
         screenshot("range-circle");
         selectSystem("Delta"); browser.awaitCss(".send-fleet-dialog");
-        browser.awaitTextIn(".send-fleet-route", "Gamma");
-        assertThat(browser.textsOf(".send-fleet-route .route-stop")).containsExactly("Alpha", "Beta", "Gamma", "Delta");
+        browser.awaitTexts(".send-fleet-route .route-stop", List.of("Alpha", "Beta", "Gamma", "Delta")::equals,
+                "Route Alpha, Beta, Gamma, Delta");
         String amount = browser.awaitCss(".send-fleet-amount input").getDomProperty("value");
         browser.clickCss(".send-fleet-route [data-route-system='2']");
         browser.awaitCss(".send-fleet-route .route-selected");
@@ -91,12 +93,11 @@ public class NavigationSteps {
         assertThat(browser.awaitCss(".send-fleet-dialog vaadin-button[theme~='primary']").getDomAttribute("disabled")).isNotNull();
         cancelDialog();
         openSend("Delta");
-        WebElement input = browser.awaitCss(".send-fleet-amount input"); input.sendKeys(Keys.chord(Keys.CONTROL, "a"), "10", Keys.TAB);
+        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.chord(Keys.CONTROL, "a"), "10", Keys.TAB);
         browser.clickCss(".send-fleet-dialog vaadin-button[theme~='primary']");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> games.viewFor(id, 1).plannedOrders().size() == 1);
-        browser.awaitCss(".fleet-lane-planned");
-        assertThat(browser.all(".fleet-lane-planned")).hasSize(3);
-        assertThat(browser.all(".fleet-lane-standing")).hasSize(3);
+        browser.awaitCount(".fleet-lane-planned", 3);
+        browser.awaitCount(".fleet-lane-standing", 3);
     }
     @Dann("bleibt der Auftankaufenthalt samt Ankunftsrunde nach Neuladen erhalten")
     public void refuelAndReload() throws IOException {
@@ -107,8 +108,10 @@ public class NavigationSteps {
         browser.awaitTextIn(".fleet-travel-card", "Auftanken in Beta");
         browser.openDetailsWithText("Reisedetails");
         browser.awaitTextIn(".fleet-travel-card .route-strip", "Gamma");
-        assertThat(browser.all(".fleet-travel-card").getFirst().findElements(By.cssSelector(".route-stop"))
-                .stream().map(WebElement::getText).toList()).containsExactly("Alpha", "Beta", "Gamma", "Delta");
+        List<String> stops = new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).ignoring(StaleElementReferenceException.class)
+                .until(_ -> browser.all(".fleet-travel-card").getFirst().findElements(By.cssSelector(".route-stop"))
+                        .stream().map(WebElement::getText).toList());
+        assertThat(stops).containsExactly("Alpha", "Beta", "Gamma", "Delta");
         browser.awaitTextIn(".fleet-travel-card", "Ankunftsrunde: " + finalArrival);
         screenshot("refuel");
         var original = browser.driver().manage().window().getSize();

@@ -3,6 +3,7 @@ package de.zettsystems.starfare.e2e;
 import org.jspecify.annotations.Nullable;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
+import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -77,8 +78,8 @@ public class Browser {
 
     public void logIn(String email) {
         open("/login");
-        awaitCss("input[name='username']").sendKeys(email);
-        driver().findElement(By.cssSelector("input[name='password']")).sendKeys(PASSWORD + Keys.ENTER);
+        type("input[name='username']", email);
+        type("input[name='password']", PASSWORD + Keys.ENTER);
         awaitUrl(url -> !url.contains("/login"), "Anmeldung als " + email + " blieb auf /login hängen.");
     }
 
@@ -111,16 +112,68 @@ public class Browser {
         return driver().findElements(By.cssSelector(css));
     }
 
-    /** Für Ansichten ohne Element-Kennungen: der Knopf mit genau diesem Text. */
+    /**
+     * Für Ansichten ohne Element-Kennungen: der Knopf mit genau diesem Text. Rendert Vaadin
+     * zwischen Suchen und Klicken neu (alter Knopf weg, neuer noch nicht bedienbar), sucht die
+     * Wait erneut statt abzubrechen.
+     */
     public void clickButtonWithText(String label) {
-        WebElement button = new WebDriverWait(driver(), LOAD)
-                .withMessage("Kein Knopf „" + label + "“ auf der Seite.")
-                .until(_ -> buttonWithText(label));
-        try {
-            button.click();
-        } catch (ElementClickInterceptedException _) {
-            ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", button);
-        }
+        new WebDriverWait(driver(), LOAD)
+                .withMessage("Kein bedienbarer Knopf „" + label + "“ auf der Seite.")
+                .ignoring(StaleElementReferenceException.class)
+                .ignoring(ElementNotInteractableException.class)
+                .until(_ -> {
+                    WebElement button = buttonWithText(label);
+                    if (button == null) {
+                        return false;
+                    }
+                    try {
+                        button.click();
+                    } catch (ElementClickInterceptedException _) {
+                        ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", button);
+                    }
+                    return true;
+                });
+    }
+
+    /**
+     * Klickt das erste sichtbare Element zum Selektor, das die Bedingung erfüllt. Liste und
+     * Klick werden bei einem Neu-Rendern gemeinsam wiederholt.
+     */
+    public void clickMatching(String css, Predicate<WebElement> filter, String description) {
+        new WebDriverWait(driver(), LOAD)
+                .withMessage("Kein bedienbares Element: " + description)
+                .ignoring(StaleElementReferenceException.class)
+                .ignoring(ElementNotInteractableException.class)
+                .until(_ -> {
+                    WebElement element = all(css).stream().filter(WebElement::isDisplayed).filter(filter)
+                            .findFirst().orElse(null);
+                    if (element == null) {
+                        return false;
+                    }
+                    try {
+                        element.click();
+                    } catch (ElementClickInterceptedException _) {
+                        ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", element);
+                    }
+                    return true;
+                });
+    }
+
+    /**
+     * Tippt in das sichtbare Element zum Selektor. Ein Feld eines sich öffnenden Dialogs steht
+     * schon im DOM, bevor es Eingaben annimmt; die Wait wiederholt dann die Eingabe.
+     */
+    public WebElement type(String css, CharSequence... keys) {
+        return new WebDriverWait(driver(), LOAD)
+                .withMessage("Feld " + css + " nimmt keine Eingabe an.")
+                .ignoring(StaleElementReferenceException.class)
+                .ignoring(ElementNotInteractableException.class)
+                .until(_ -> {
+                    WebElement field = awaitCss(css);
+                    field.sendKeys(keys);
+                    return field;
+                });
     }
 
     /** Klickt einen sichtbaren Reiter mit exakt diesem Text. */
@@ -194,10 +247,37 @@ public class Browser {
                         .anyMatch(text -> text.contains(snippet)));
     }
 
+    /** Momentaufnahme der Texte; ein Neu-Rendern während des Auslesens liest erneut. */
     public List<String> textsOf(String css) {
-        return all(css).stream()
-                .map(element -> String.valueOf(element.getDomProperty("textContent")).strip())
-                .toList();
+        return new WebDriverWait(driver(), LOAD).ignoring(StaleElementReferenceException.class)
+                .until(_ -> all(css).stream()
+                        .map(element -> String.valueOf(element.getDomProperty("textContent")).strip())
+                        .toList());
+    }
+
+    /** Wartet, bis die Texte zum Selektor die Bedingung erfüllen, statt eine Momentaufnahme zu prüfen. */
+    public List<String> awaitTexts(String css, Predicate<List<String>> condition, String message) {
+        return new WebDriverWait(driver(), LOAD).withMessage(message)
+                .ignoring(StaleElementReferenceException.class)
+                .until(_ -> {
+                    List<String> texts = all(css).stream()
+                            .map(element -> String.valueOf(element.getDomProperty("textContent")).strip())
+                            .toList();
+                    return condition.test(texts) ? texts : null;
+                });
+    }
+
+    /** Wartet, bis kein Element zum Selektor mehr sichtbar ist (entfernte Elemente zählen als unsichtbar). */
+    public void awaitNoneDisplayed(String css) {
+        new WebDriverWait(driver(), LOAD).withMessage("Noch sichtbar: " + css)
+                .ignoring(StaleElementReferenceException.class)
+                .until(_ -> all(css).stream().noneMatch(WebElement::isDisplayed));
+    }
+
+    /** Wartet, bis genau {@code count} Elemente zum Selektor im DOM stehen. */
+    public void awaitCount(String css, int count) {
+        new WebDriverWait(driver(), LOAD).withMessage("Erwartet " + count + " Elemente für " + css)
+                .until(_ -> all(css).size() == count);
     }
 
     /**
