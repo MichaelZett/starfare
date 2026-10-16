@@ -32,6 +32,8 @@ spring:
           provider_disables_autocommit: true
         jdbc:
           time_zone: UTC
+        # Counts SQL statements per page build (PageTiming). Costs next to nothing.
+        generate_statistics: true
     open-in-view: false
   flyway:
     enabled: true
@@ -49,6 +51,11 @@ zs:
     base-url: http://localhost:8110
 
 starfare:
+  timing:
+    # Page builds/UI actions and round resolutions at least this long are logged
+    # at WARN (PageTiming, RulesetTurnEngine; prod-langsam.sh). 0 disables.
+    slow-page-ms: 500
+    slow-round-ms: 1000
   legal:
     operator-name: ${STARFARE_LEGAL_OPERATOR_NAME:}
     postal-address: ${STARFARE_LEGAL_POSTAL_ADDRESS:}

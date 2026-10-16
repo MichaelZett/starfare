@@ -83,6 +83,8 @@ dependencies {
     implementation 'com.vaadin:vaadin-spring-boot-starter'
     developmentOnly 'com.vaadin:vaadin-dev'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    // identity-core only declares mail compileOnly; without the starter, account mails go to the log.
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

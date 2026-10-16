@@ -1,13 +1,19 @@
-# CI + Release (ohne Deploy).
+# CI + Release + Deploy (hetzner-zs, Coolify).
 #
 # Push auf main:
 #   build + e2e (parallel)
 #   -> release (nur wenn appVersion in gradle.properties NICHT auf -SNAPSHOT
-#      endet: Tag v<version> + GitHub-Release mit starfare.jar)
-#      -> bump_version (appVersion auf nächstes Patch-SNAPSHOT, [skip ci])
+#      endet: Tag v<version> + GitHub-Release mit starfare.jar) — VOR dem
+#      Deploy, damit jede deployte Version rollbar ist
+#      -> docker (Image nach GHCR: latest + v<version> + sha, dann Coolify-Webhook)
+#         -> bump_version (appVersion auf nächstes Patch-SNAPSHOT, [skip ci])
 #
 # SNAPSHOT-Pushes bauen und testen nur. Nach einem Release steht main wieder
 # auf -SNAPSHOT; vor dem Weiterarbeiten einmal `git pull`.
+#
+# Manuell (workflow_dispatch): Rollback — retaggt das Image v<version> in GHCR
+# als latest (ohne Rebuild) und stößt den Coolify-Webhook an.
+# Deploy-Secrets: COOLIFY_WEBHOOK_URL, COOLIFY_API_TOKEN.
 #
 # SonarCloud: Secret SONAR_TOKEN. Die Organisationskennung ist der stabile
 # technische Schlüssel aus SonarCloud, nicht der Anzeigename der Organisation.
@@ -18,11 +24,19 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      rollback_version:
+        description: "Rollback: bereits releaste Version, z. B. 0.1.0 (Image-Tag v<version> wird wieder latest)"
+        required: true
 
 permissions:
   contents: read
   checks: write
   pull-requests: write
+
+env:
+  IMAGE: ghcr.io/michaelzett/starfare
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -32,6 +46,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
       app_version: ${{ steps.app_version.outputs.value }}
@@ -126,7 +141,8 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     if: >-
-      !contains(github.event.head_commit.message, '[skip e2e]')
+      github.event_name != 'workflow_dispatch'
+      && !contains(github.event.head_commit.message, '[skip e2e]')
       && !contains(github.event.head_commit.message, '[skip-e2e]')
     steps:
       - uses: actions/checkout@v7
@@ -222,12 +238,104 @@ jobs:
           generate_release_notes: true
           files: build/libs/starfare.jar
 
-  # Nach dem Release: appVersion auf nächstes Patch-SNAPSHOT heben, damit
+  # Release-Image nach GHCR und Deploy über den Coolify-Webhook. Explizite
+  # Bedingung, weil needs Skips transitiv vererbt (übersprungener e2e-Job).
+  docker:
+    runs-on: ubuntu-latest
+    needs: [ build, release ]
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.release.result == 'success' }}
+    permissions:
+      contents: read
+      packages: write
+      deployments: write
+    # Job-Env, weil der secrets-Kontext in Step-if nicht verfügbar ist.
+    env:
+      COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+      COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+      APP_VERSION: ${{ needs.build.outputs.app_version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: boot-jar
+          path: build/libs/
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v6
+        id: meta
+        with:
+          images: ${{ env.IMAGE }}
+          # latest zieht Coolify; v<version> bleibt für den Rollback liegen.
+          tags: |
+            type=raw,value=latest
+            type=raw,value=v${{ needs.build.outputs.app_version }}
+            type=sha
+
+      - uses: docker/build-push-action@v7
+        # Kein Build-Record-Artefakt (90 Tage Default-Aufbewahrung).
+        env:
+          DOCKER_BUILD_SUMMARY: false
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Keine Attestationen: sonst je Release zwei untagged GHCR-Versionen.
+          provenance: false
+          sbom: false
+
+      - name: Create GitHub deployment
+        id: gh_deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          deployment_id=$(jq -n \
+            --arg ref "${{ github.sha }}" \
+            --arg version "v$APP_VERSION" \
+            '{ref: $ref, environment: "Hetzner", auto_merge: false, required_contexts: [], description: ("Coolify-Deploy " + $version)}' \
+            | gh api "repos/${{ github.repository }}/deployments" --input - --jq .id)
+          echo "id=$deployment_id" >> "$GITHUB_OUTPUT"
+
+      # POST, nicht GET: Coolify 4.3 lehnt GET am Deploy-Endpunkt ab.
+      - name: Trigger Coolify deploy
+        if: env.COOLIFY_WEBHOOK_URL != ''
+        run: >-
+          curl -fsS -X POST -H "Authorization: Bearer $COOLIFY_API_TOKEN"
+          "$COOLIFY_WEBHOOK_URL"
+
+      - name: Mark GitHub deployment successful
+        if: ${{ success() && steps.gh_deployment.outputs.id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/deployments/${{ steps.gh_deployment.outputs.id }}/statuses" \
+            -f state=success \
+            -f environment_url="https://starfare.zettsystems.de" \
+            -f log_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: Mark GitHub deployment failed
+        if: ${{ failure() && steps.gh_deployment.outputs.id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/deployments/${{ steps.gh_deployment.outputs.id }}/statuses" \
+            -f state=failure \
+            -f log_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  # Nach dem Deploy: appVersion auf nächstes Patch-SNAPSHOT heben, damit
   # Folge-Pushes nicht erneut releasen. [skip ci] -> kein weiterer Lauf.
   bump_version:
     runs-on: ubuntu-latest
-    needs: [ release ]
-    if: ${{ !cancelled() && needs.release.result == 'success' }}
+    needs: [ docker ]
+    if: ${{ !cancelled() && needs.docker.result == 'success' }}
     permissions:
       contents: write
     steps:
@@ -257,3 +365,66 @@ jobs:
           git config user.name "github-actions[bot]"
           git commit -am "Bump appVersion to ${NEXT} [skip ci]"
           git push origin HEAD:main
+
+  # Manueller Rollback: Image v<version> ohne Rebuild wieder als latest taggen,
+  # dann zieht Coolify es über den Webhook.
+  rollback:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      deployments: write
+    env:
+      COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+      COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+      ROLLBACK_VERSION: ${{ inputs.rollback_version }}
+    steps:
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retag v${{ inputs.rollback_version }} as latest
+        run: |
+          if ! docker buildx imagetools inspect "${IMAGE}:v${ROLLBACK_VERSION}" > /dev/null; then
+            echo "Image-Tag v${ROLLBACK_VERSION} existiert nicht in GHCR — nur releaste Versionen sind rollbar."
+            exit 1
+          fi
+          docker buildx imagetools create -t "${IMAGE}:latest" "${IMAGE}:v${ROLLBACK_VERSION}"
+
+      - name: Create GitHub deployment
+        id: gh_deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          deployment_id=$(jq -n \
+            --arg ref "v${ROLLBACK_VERSION}" \
+            '{ref: $ref, environment: "Hetzner", auto_merge: false, required_contexts: [], description: ("Rollback auf " + $ref)}' \
+            | gh api "repos/${{ github.repository }}/deployments" --input - --jq .id)
+          echo "id=$deployment_id" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Coolify deploy
+        if: env.COOLIFY_WEBHOOK_URL != ''
+        run: >-
+          curl -fsS -X POST -H "Authorization: Bearer $COOLIFY_API_TOKEN"
+          "$COOLIFY_WEBHOOK_URL"
+
+      - name: Mark GitHub deployment successful
+        if: ${{ success() && steps.gh_deployment.outputs.id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/deployments/${{ steps.gh_deployment.outputs.id }}/statuses" \
+            -f state=success \
+            -f environment_url="https://starfare.zettsystems.de" \
+            -f log_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: Mark GitHub deployment failed
+        if: ${{ failure() && steps.gh_deployment.outputs.id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/deployments/${{ steps.gh_deployment.outputs.id }}/statuses" \
+            -f state=failure \
+            -f log_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

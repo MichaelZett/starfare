@@ -6,7 +6,14 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.1.0 - 2026-10-16
+
+- Erste öffentliche Version auf hetzner-zs: Release-Pushes bauen ein Docker-Image
+  (GHCR) und stoßen den Deploy in Coolify an; ein Rollback auf eine frühere Version
+  ist per Workflow-Aufruf möglich.
+- Registrierungs- und Passwort-Mails werden tatsächlich verschickt (Mail-Starter fehlte).
+- Langsame Seiten, Bedienaktionen, Rundenauswertungen und SQL-Abfragen erscheinen
+  als Warnung im Log (Schwellen `starfare.timing.slow-page-ms`, `slow-round-ms`).
 
 - Neue Spaceward-Partieoption **KI darf Bündnisse eingehen** (Vorgabe an). Ist sie
   aus, treten KI-Imperien keinen neuen Bündnissen bei; bestehende Verträge nach

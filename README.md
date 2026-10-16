@@ -431,28 +431,38 @@ switch the fog of war on or off; spectator views never permit commands. In
 pure-AI games the round runs automatically (autoplay) until the last observer leaves or the game
 ends.
 
-## Release
+## Release and deployment
 
-`appVersion` in `gradle.properties` drives releases. It currently is
-`1.0.0-SNAPSHOT`; while a version ends in `-SNAPSHOT`, pushes to `main` only
-build and test. To release:
+`appVersion` in `gradle.properties` drives releases. While a version ends in
+`-SNAPSHOT`, pushes to `main` only build and test. To release:
 
 1. Remove the `-SNAPSHOT` suffix.
 2. Rename `## Unreleased` in `CHANGELOG.md` to `## <appVersion> - <date>`.
 3. Commit and push to `main`. The workflow tags `v<appVersion>`, creates a
-   GitHub Release with the changelog section and `starfare.jar`, then bumps
-   `appVersion` to the next patch `-SNAPSHOT` (`[skip ci]`) — run `git pull`
-   before continuing. There is no deployment step.
+   GitHub Release with the changelog section and `starfare.jar`, pushes the
+   Docker image `ghcr.io/michaelzett/starfare` (`latest`, `v<appVersion>`, commit
+   SHA) and triggers the Coolify deployment. Afterwards it bumps `appVersion` to
+   the next patch `-SNAPSHOT` (`[skip ci]`) — run `git pull` before continuing.
 
-### zs-hetzner preparation
+Rollback: run the workflow manually with `rollback_version=<x.y.z>`; it retags the
+existing image `v<x.y.z>` as `latest` and redeploys without a rebuild.
 
-The `hetzner` Spring profile disables local Docker Compose and enables forwarded
-headers for the reverse proxy. Before public operation, provide these Coolify
+### Operation on zs-hetzner
+
+Starfare runs at `https://starfare.zettsystems.de` as a Coolify resource on the
+shared Hetzner server (port 8080, health check `/actuator/health`). Activate the
+profiles `hetzner,brevo`. The `hetzner` profile disables local Docker Compose,
+listens on port 8080 and honours forwarded headers from the reverse proxy. Required
 environment variables: `STARFARE_BASE_URL`, `STARFARE_LEGAL_OPERATOR_NAME`,
-`STARFARE_LEGAL_POSTAL_ADDRESS`, and `STARFARE_LEGAL_CONTACT_EMAIL`. The
-deployment also needs PostgreSQL connection settings and the Brevo mail profile.
-Deploy only after the unused services have been removed and the host capacity has
-been checked.
+`STARFARE_LEGAL_POSTAL_ADDRESS`, `STARFARE_LEGAL_CONTACT_EMAIL`,
+`STARFARE_MAIL_USERNAME`, `STARFARE_MAIL_PASSWORD`, `STARFARE_MAIL_FROM_ADDRESS`
+and the `SPRING_DATASOURCE_*` connection settings. The GitHub secrets
+`COOLIFY_WEBHOOK_URL` and `COOLIFY_API_TOKEN` enable the deployment step.
+
+Slow page builds and UI actions (`starfare.timing.slow-page-ms`, default 500 ms),
+slow round resolutions (`starfare.timing.slow-round-ms`, default 1000 ms) and, in
+the `hetzner` profile, SQL queries over 200 ms are logged at WARN; `0` disables a
+threshold.
 
 ## Tests
 

@@ -1,11 +1,19 @@
-# Values are supplied as Coolify environment variables before the public deployment.
+# Production on hetzner-zs (Coolify). Activate together with `brevo`:
+# SPRING_PROFILES_ACTIVE=hetzner,brevo. Values come from Coolify environment variables.
 server:
+  port: 8080
   forward-headers-strategy: framework
 
 spring:
   docker:
     compose:
       enabled: false
+  jpa:
+    properties:
+      hibernate:
+        # Hibernate logs queries slower than this (ms) with their SQL,
+        # category org.hibernate.SQL_SLOW (prod-langsam.sh).
+        log_slow_query: 200
 
 zs:
   identity:
