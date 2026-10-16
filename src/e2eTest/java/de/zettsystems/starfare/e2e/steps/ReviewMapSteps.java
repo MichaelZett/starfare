@@ -238,7 +238,10 @@ public class ReviewMapSteps {
         browser.clickButtonWithText("Alle");
         awaitAmount(20);
         browser.clickButtonWithText("Verlegung speichern");
-        browser.awaitCss(".standing-order-badge");
+        awaitSendClosed();
+        // The badge of the previous step's relocation (2 ships) is already present; wait for the replacement.
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                games.viewFor(first.id(), first.hostSeat()).standingOrders().getFirst().ships() == 20);
         assertThat(games.viewFor(first.id(), first.hostSeat()).standingOrders()).singleElement()
                 .satisfies(order -> assertThat(order.ships()).isEqualTo(20));
     }

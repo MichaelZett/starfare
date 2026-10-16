@@ -1,0 +1,58 @@
+name: Bug report / Fehlerbericht
+description: Something in Starfare does not work as expected. / Etwas funktioniert nicht wie erwartet.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! German or English are both fine. Issues are public: please do not post passwords, email addresses or other personal data.
+        Danke für die Meldung! Deutsch oder Englisch sind gleichermaßen willkommen. Issues sind öffentlich: bitte keine Passwörter, E-Mail-Adressen oder andere persönliche Daten angeben.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened? / Was ist passiert?
+      description: What did you see instead of the expected behavior? / Was hast du statt des erwarteten Verhaltens gesehen?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Schritte zum Nachstellen
+      placeholder: |
+        1. Open the map of my game / Karte meiner Partie öffnen
+        2. Select a system and click "Send fleet" / System wählen, „Flotte senden“ klicken
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect? / Was hast du erwartet?
+    validations:
+      required: true
+  - type: dropdown
+    id: variant
+    attributes:
+      label: Game variant / Spielvariante
+      description: Shown in the lobby and in the new-game wizard. / Steht in der Lobby und im Assistenten für neue Spiele.
+      options:
+        - SectorForces
+        - Spaceward
+        - Not game-specific (sign-in, lobby, account …) / Nicht spielbezogen (Anmeldung, Lobby, Konto …)
+    validations:
+      required: true
+  - type: input
+    id: rules
+    attributes:
+      label: Rule version and round / Regelversion und Runde
+      placeholder: "Spaceward 1.1.0, round 12"
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device / Browser und Gerät
+      placeholder: "Firefox 140, Windows laptop"
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or additional context / Screenshots oder weitere Hinweise
+      description: Drag images into this field. / Bilder einfach in dieses Feld ziehen.

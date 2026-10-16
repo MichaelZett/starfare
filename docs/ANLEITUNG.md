@@ -4,6 +4,16 @@ Stand: 1.0.0-SNAPSHOT, 6. Oktober 2026. Die Anleitung beschreibt die
 Desktop-Oberfläche. Technische Einrichtung und Start der Anwendung stehen in
 der [README](../README.md).
 
+Gespielt wird unter **[starfare.zettsystems.de](https://starfare.zettsystems.de)**.
+Fehler, Ideen und Fragen nimmt der Bereich
+[Issues](https://github.com/MichaelZett/starfare/issues/new/choose) auf GitHub
+entgegen. Dafür brauchst du ein kostenloses GitHub-Konto. Wähle **Fehlerbericht**
+oder **Idee** und fülle das Formular aus, auf Deutsch oder Englisch. Gib dabei
+Spielvariante, Regelversion und Runde an, bei Fehlern außerdem die Schritte und
+möglichst einen Screenshot. Issues sind öffentlich, schreibe deshalb keine
+persönlichen Daten hinein. Ohne GitHub-Konto erreichst du den Betreiber über die
+Kontaktadresse im Impressum.
+
 ## Schnellstart
 
 1. Registriere dich mit E-Mail-Adresse, öffentlichem Spielernamen und Passwort.

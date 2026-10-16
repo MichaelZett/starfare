@@ -4,19 +4,61 @@
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=MichaelZett_starfare&metric=alert_status)](https://sonarcloud.io/project/overview?id=MichaelZett_starfare)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=MichaelZett_starfare&metric=coverage)](https://sonarcloud.io/component_measures?id=MichaelZett_starfare&metric=coverage)
 
-A shared browser application for game variants inspired by historical science
-fiction 4X games. **SectorForces** retains the existing Classic rules: conquer
-star systems, dispatch fleets and win by dominating the galaxy.
-
-Built as a Spring Boot / Vaadin web application. Multiple players —
-humans and AI — share a game; the turn is only resolved once every
+A multiplayer space strategy game in the browser. Humans and AI empires share a
+galaxy, conquer star systems and dispatch fleets; a round is resolved once every
 human has submitted.
 
-This repository is a personal showcase of a modern Java backend stack
-(Java 25, Spring Boot 4, Vaadin 25, Spring Modulith, Flyway,
-Testcontainers) wrapped around a small but complete game.
+**Play now: [starfare.zettsystems.de](https://starfare.zettsystems.de)** — create
+an account with your email address and start a game against the AI or invite
+friends. **Spielanleitung auf Deutsch:** [Anleitung](docs/ANLEITUNG.md).
 
-**Spielanleitung auf Deutsch:** [Anleitung](docs/ANLEITUNG.md).
+## The plan: three classics, one platform
+
+Starfare rebuilds the ideas of three science fiction strategy classics as game
+variants on a shared platform. Lobby, accounts, AI opponents, archive, statistics
+and the map are common; each variant brings its own rules. Every game keeps its
+variant and rule version, so rules can evolve without changing running games.
+
+| Variant | Inspired by | Status |
+|---|---|---|
+| **SectorForces** | *Sector Forces* (Commodore 64) | Playable, rules 1.0.0 |
+| **Spaceward** | *Spaceward Ho!* | Playable, rules 1.1.0; economy with colonies, metal and recycling (1.2.0) in acceptance |
+| *(not named yet)* | *Master of Orion II: Battle at Antares* | Planned |
+
+The steps build on each other: SectorForces is the compact core of conquest and
+fleet movement. Spaceward adds an economy, limited flight range, alliances and
+coalition combat. The Master of Orion II variant is meant to add research, ship
+design, colonies with population and diplomacy on top.
+
+Starfare is an independent hobby project. It is not affiliated with or endorsed
+by the publishers or rights holders of these games; their names only describe
+the inspiration. No original code or assets are used.
+
+## Feedback and issues
+
+Bugs, ideas and questions are welcome as
+[GitHub issues](https://github.com/MichaelZett/starfare/issues), in German or English.
+
+1. Sign in to GitHub (a free account is sufficient).
+2. Check the [open issues](https://github.com/MichaelZett/starfare/issues) for
+   the same topic; if you find it, add a comment or a 👍 instead of a new issue.
+3. Open [New issue](https://github.com/MichaelZett/starfare/issues/new/choose) and
+   choose **Bug report** or **Idea**. The form asks for everything needed:
+   - for bugs: what you did, what you expected and what happened instead;
+   - the game variant and rule version (shown in the lobby and the new-game wizard);
+   - the round, your browser and, if possible, a screenshot.
+4. Submit. You will be notified about replies on GitHub.
+
+Issues are public. Do not post passwords, email addresses or other personal data.
+Report security vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+Without a GitHub account, use the contact address in the game's imprint.
+
+## About this repository
+
+Built as a Spring Boot / Vaadin web application. This repository is also a
+personal showcase of a modern Java backend stack (Java 25, Spring Boot 4,
+Vaadin 25, Spring Modulith, Flyway, Testcontainers) wrapped around a small but
+complete game.
 
 ## Game variants and rule versions
 
@@ -29,7 +71,7 @@ Diplomacy adds unanimous alliance groups, agreed notice periods and
 automatic non-combat returns after departure. Coalition combat resolves all hostile
 sides simultaneously, including stationed support. Ships retain their empire; a conquest
 beneficiary is selected before launch.
-A possible future variant inspired by Master of Orion II is a separate project direction, not an available game.
+The planned variant inspired by Master of Orion II is not available yet.
 
 Every game keeps its variant and rule version independently of the application
 release. Existing games default to SectorForces; their Classic behavior remains

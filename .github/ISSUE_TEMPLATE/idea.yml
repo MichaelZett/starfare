@@ -1,0 +1,32 @@
+name: Idea / Idee
+description: Suggest a feature, a rule change or an improvement. / Funktion, Regeländerung oder Verbesserung vorschlagen.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        German or English are both fine. Please check the open issues first; a 👍 on an existing idea helps as well.
+        Deutsch oder Englisch sind gleichermaßen willkommen. Bitte zuerst die offenen Issues durchsehen; ein 👍 auf eine vorhandene Idee hilft ebenfalls.
+  - type: dropdown
+    id: variant
+    attributes:
+      label: Concerns / Betrifft
+      options:
+        - SectorForces
+        - Spaceward
+        - Planned Master of Orion II variant / Geplante Master-of-Orion-II-Variante
+        - All variants (lobby, map, account …) / Alle Varianten (Lobby, Karte, Konto …)
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea / Deine Idee
+      description: What should change, and how would it look in a game? / Was soll sich ändern und wie sähe das in einer Partie aus?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why? / Warum?
+      description: Which problem does it solve or what makes the game better? References to the original games are welcome. / Welches Problem löst sie oder was macht das Spiel besser? Bezüge zu den Originalspielen sind willkommen.

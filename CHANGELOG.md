@@ -14,6 +14,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - Registrierungs- und Passwort-Mails werden tatsächlich verschickt (Mail-Starter fehlte).
 - Langsame Seiten, Bedienaktionen, Rundenauswertungen und SQL-Abfragen erscheinen
   als Warnung im Log (Schwellen `starfare.timing.slow-page-ms`, `slow-round-ms`).
+- README und Anleitung nennen den Spielserver, den Plan mit SectorForces,
+  Spaceward und einer Variante nach Master of Orion II sowie den Weg zu Issues.
+  Neue Issue-Formulare für Fehlerberichte und Ideen; Sicherheitslücken werden
+  laut `SECURITY.md` vertraulich gemeldet.
 
 - Neue Spaceward-Partieoption **KI darf Bündnisse eingehen** (Vorgabe an). Ist sie
   aus, treten KI-Imperien keinen neuen Bündnissen bei; bestehende Verträge nach

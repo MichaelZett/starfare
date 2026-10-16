@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Play Starfare / Starfare spielen
+    url: https://starfare.zettsystems.de
+    about: The running game server. / Der laufende Spielserver.
+  - name: Report a security vulnerability / Sicherheitslücke melden
+    url: https://github.com/MichaelZett/starfare/security/advisories/new
+    about: Please report vulnerabilities privately, not as a public issue. / Bitte vertraulich melden, nicht als öffentliches Issue.

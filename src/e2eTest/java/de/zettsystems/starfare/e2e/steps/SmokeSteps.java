@@ -195,7 +195,9 @@ public class SmokeSteps {
                     return true;
                 });
         browser.awaitText("Ziel auf der Karte auswählen");
-        assertThat(browser.all(".sys-selected")).hasSize(1);
+        // The hint survives the cancelled send, and the map redraws completely; wait for the new selection.
+        new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
+                .until(_ -> browser.all(".sys-selected").size() == 1);
         assertThat(browser.all("vaadin-context-menu-overlay[opened]")).isEmpty();
         browser.clickCss(".sys-target:not(.sys-selected)");
         browser.awaitTextIn(".send-fleet-duration", "Ankunft Runde");
