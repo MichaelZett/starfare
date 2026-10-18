@@ -701,6 +701,10 @@ public final class UiTexts {
     public static final String MAP_FIT_EMPIRE = "map.fitEmpire";
     public static final String MAP_LEGEND = "map.legend";
     public static final String MAP_LEGEND_TEXT = "map.legendText";
+    public static final String MAP_LEGEND_TEXT_TOUCH = "map.legendTextTouch";
+    public static final String MAP_MOBILE_MAP = "map.mobile.map";
+    public static final String MAP_MOBILE_PANEL = "map.mobile.panel";
+    public static final String MAP_MOBILE_CLOSE = "map.mobile.close";
     public static final String ACCOUNT_NAVIGATION = "account.navigation";
     public static final String PRIVACY_DATA = "privacy.data";
     public static final String PRIVACY_PURPOSE_TITLE = "privacy.purposeTitle";

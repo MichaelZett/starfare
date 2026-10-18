@@ -366,6 +366,22 @@ arrival round and remaining turns.
   system inspector.
 - The initial view centres on your home system.
 
+### On a phone
+
+Phones get their own interface; tablets, laptops and desktops keep the regular
+one. The server decides once per session from the browser and builds only that
+interface. `?layout=mobile` or `?layout=desktop` on any page overrides the choice
+for the rest of the session.
+
+On the map, the phone layout shows a compact header (game, round, empire summary,
+**End round** and the menu with logistics, legend and chat), the map across the
+whole screen and a bottom bar switching between **Map** and **Overview**. The
+overview is the sidebar as a full-screen sheet, together with alliances and bulk
+orders. Swipe to pan; zoom with two fingers or the round buttons, which also fit
+the view to your empire or the whole galaxy. Tapping a system opens its details;
+**Send fleet** returns to the map with a banner until you tap the target or cancel.
+Dialogs fill the screen with their buttons fixed at the bottom.
+
 ### Send a fleet
 
 1. Right-click your source system, or select it and choose **Send fleet**.
@@ -512,7 +528,8 @@ threshold.
 Testcontainers). `./gradlew e2eTest` runs Cucumber/Selenium journeys
 against the real application in headless Chrome: registration and one round,
 lobby access, round submission, battle playback, logistics and amount selection,
-fleet details and separate map viewports. Two browser sessions verify live chat,
+fleet details and separate map viewports. An emulated iPhone checks the phone
+interface by real taps next to a desktop session. Two browser sessions verify live chat,
 draft preservation and continuation through a second game end. It is not part of
 `build`; additional journeys cover bulk reserves and fleet dispatch, editing and
 undo, saved filters after a new sign-in, rematches, keyboard interaction and
@@ -530,6 +547,7 @@ personal review. Automated checks do not replace a player's usability assessment
 ./gradlew e2eTest
 ./gradlew e2eTest "-Dcucumber.filter.tags=@ui-acceptance"
 ./gradlew e2eTest "-Dcucumber.filter.tags=@ai-strategies"
+./gradlew e2eTest "-Dcucumber.filter.tags=@mobile"
 node --test src/test/frontend/battle-replay.test.mjs
 ```
 

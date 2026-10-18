@@ -62,9 +62,11 @@ public class ArchiveView extends VerticalLayout {
         resultFilter.setItemLabelGenerator(result -> I18n.t(result.textKey()));
         resultFilter.setValue(ArchiveResult.ALL);
         resultFilter.addValueChangeListener(_ -> refresh());
-        add(new H1(I18n.t(UiTexts.ARCHIVE_TITLE)), new HorizontalLayout(search, own, resultFilter,
+        var filters = new HorizontalLayout(search, own, resultFilter,
                 new Button(I18n.t(UiTexts.MAP_ACTION_LOBBY),
-                        _ -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)))));
+                        _ -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class))));
+        filters.addClassName("archive-filters");
+        add(new H1(I18n.t(UiTexts.ARCHIVE_TITLE)), filters);
         grid.addComponentColumn(this::archiveCard).setHeader("").setFlexGrow(1);
         grid.setWidthFull();
         add(grid, empty, new de.zettsystems.starfare.legal.ui.LegalFooter());

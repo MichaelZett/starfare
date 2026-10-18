@@ -556,6 +556,25 @@ Host transfers and snapshot persistence use the session write lock. Saving an
 existing entity updates both its snapshot and current host, so a restart cannot
 restore obsolete host permissions.
 
+### Phone layout
+
+A session builds exactly one interface. `Devices` (module `style`) decides once per
+`VaadinSession` from the user agent: phones (`iPhone`, `iPod`, `Mobi`) get
+`DeviceLayout.MOBILE`; tablets and everything else keep `DESKTOP`. A `layout`
+query parameter overrides the choice for the session; `DeviceLayoutInitListener`
+reads it from the request or from the `query`/`location` of Vaadin's init request.
+For phones it adds the static stylesheet `META-INF/resources/styles/starfare-mobile.css`
+and the class `starfare-mobile` on `<html>`. The stylesheet lies outside the frontend
+bundle, so desktops never load it; all its rules are scoped to that class.
+
+Lobby, archive, statistics and dialogs share their components with the desktop
+and adapt through that stylesheet. The map does not: `MainView` builds either the
+`SplitLayout` with map and sidebar or `MobileMapLayout`, never both. The phone layout
+reuses the same `MapCanvas`, `FleetAndOrdersPanel` and controls, arranges them as
+full-screen map plus a sheet, and receives the target-selection state on every refresh.
+`MapHeaderBar` has a compact variant without title and language switcher. Game
+logic and callbacks stay in `MainView`; only the arrangement differs.
+
 ## Configuration and setup
 
 - Tunables: constants in `game.values.GameConfig`.

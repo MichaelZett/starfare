@@ -115,6 +115,27 @@ unbekannte Systeme haben eine einheitliche Größe.
 - Ein Berichtsmarker führt zur zugehörigen Meldung. Eine Meldung zentriert die Karte
   auf das betroffene System.
 
+### Auf dem Handy
+
+Handys bekommen eine eigene Oberfläche; Tablets, Laptops und Desktop-Rechner
+behalten die gewohnte. Die Wahl fällt einmal je Sitzung anhand des Browsers.
+Mit `?layout=mobile` oder `?layout=desktop` an einer beliebigen Adresse legst du
+sie für die restliche Sitzung selbst fest.
+
+Auf der Karte zeigt das Handy oben einen kompakten Kopf mit Partie, Runde,
+Reichsübersicht, **Runde abgeben** und dem Menü (Logistik, Legende, Chat, Rundenregeln,
+Verlassen, Lobby). Darunter füllt die Karte den Bildschirm; unten wechselt eine
+Leiste zwischen **Karte** und **Übersicht**. Die Übersicht ist die Seitenleiste
+als Vollbild, dazu Bündnisse und Sammelbefehle.
+
+- Wische zum Verschieben; zoome mit zwei Fingern oder den runden Knöpfen am
+  rechten Rand. Diese passen die Ansicht auch an das eigene Reich oder die ganze
+  Galaxie an.
+- Ein Tipp auf ein System öffnet seine Details in der Übersicht.
+- **Flotte senden** oder **Verlegung anlegen** führen zurück zur Karte. Ein Hinweis
+  bleibt sichtbar, bis du das Ziel antippst oder **Zielwahl abbrechen** wählst.
+- Dialoge füllen den Bildschirm; ihre Knöpfe bleiben unten erreichbar.
+
 Im Spiel und im Kartenkopf erscheinen Imperiumsnamen. Spielernamen in Klammern
 stehen nur in Übersichten und in der Diplomatie.
 
