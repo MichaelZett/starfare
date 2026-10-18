@@ -6,6 +6,24 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## 0.2.0 - 2026-10-18
+
+- **Eigene Handy-Oberfläche.** Handys erhalten eine eigene Kartenansicht: kompakter
+  Kopf, Karte im Vollbild mit Zoomknöpfen und Zwei-Finger-Zoom, die Seitenleiste als
+  Vollbild-Übersicht und eine Leiste zum Wechseln zwischen Karte und Übersicht. Die
+  Zielwahl zeigt einen Hinweis mit Abbrechen. Der Server wählt die Oberfläche je
+  Sitzung anhand des Browsers und baut nur diese; Tablets und Desktop-Rechner bleiben
+  bei der gewohnten Ansicht. `?layout=mobile` bzw. `?layout=desktop` legt sie fest.
+- Lobby, Spielassistent, Archiv, Statistik und alle Dialoge sind auf dem Handy
+  bedienbar: nichts ragt seitlich heraus, Dialoge füllen den Bildschirm, ihre Knöpfe
+  bleiben unten erreichbar, Bedienelemente sind mindestens 44 px hoch. Desktops laden
+  das Handy-Stylesheet nicht.
+- „Eigenes Reich“ zoomt bei wenigen Systemen nicht mehr übermäßig heran; die
+  Startansicht zentriert das Heimatsystem auch, wenn die Karte erst verzögert ihre
+  Größe erhält.
+- Neuer Browsertest `@mobile`: Ein emuliertes iPhone bedient Assistent und Karte per
+  Fingertipp, daneben prüft eine Desktop-Sitzung die gewohnte Ansicht.
+
 ## 0.1.1 - 2026-10-16
 
 - Die Variantenkarte von SectorForces erklärt das Spiel ohne Vorwissen und nennt

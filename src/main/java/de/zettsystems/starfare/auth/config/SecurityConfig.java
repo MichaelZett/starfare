@@ -21,7 +21,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/login", "/register", "/register/**", "/password/**", "/privacy", "/imprint", "/account/delete")
                         .permitAll()
-                        .requestMatchers("/favicon.ico", "/icons/**", "/images/**", "/styles.css",
+                        .requestMatchers("/favicon.ico", "/icons/**", "/images/**", "/styles.css", "/styles/**",
                                 "/manifest.webmanifest", "/sw.js", "/offline.html", "/robots.txt")
                         .permitAll()
                         .requestMatchers(EndpointRequest.to("health", "info"))
