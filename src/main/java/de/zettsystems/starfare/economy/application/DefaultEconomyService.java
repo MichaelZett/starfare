@@ -71,7 +71,7 @@ public class DefaultEconomyService implements EconomyService {
             if (current == null) { throw new IllegalStateException("Missing industry for system " + system.id()); }
             int shipped = routedShips.getOrDefault(system.id(), 0);
             int produced = system.productionPerTurn();
-            Industry expanded = current.expandForOneTurn();
+            Industry expanded = current.expandForOneTurn(state.ruleset());
             state.completeIndustrialProduction(system.id(), expanded, shipped);
             results.add(new IndustrialProduction(ownerId, system.id(), system.name(), produced, 0, 0,
                     expanded.capacity() - current.capacity()));

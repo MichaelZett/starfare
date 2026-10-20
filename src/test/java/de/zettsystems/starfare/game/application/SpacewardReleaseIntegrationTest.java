@@ -23,11 +23,11 @@ class SpacewardReleaseIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void newSpacewardGameStartsWithIndustryAndRangeAndResolvesRounds() {
-        GameId id = games.newGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD), HOST, "Spaceward release");
+        GameId id = games.newGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_EARLY_INDUSTRY), HOST, "Spaceward release");
         int seat = games.joinGame(id, HOST).orElseThrow();
         assertThat(games.startGame(id)).isTrue();
 
-        assertThat(games.summaryOf(id).ruleset()).isEqualTo(RulesetRef.SPACEWARD);
+        assertThat(games.summaryOf(id).ruleset()).isEqualTo(RulesetRef.SPACEWARD_EARLY_INDUSTRY);
         assertSpacewardState(id);
         int startTurn = registry.readState(id, GameState::turn);
         for (int round = 1; round <= 3 && !registry.readState(id, GameState::gameOver); round++) {
@@ -38,13 +38,13 @@ class SpacewardReleaseIntegrationTest extends AbstractIntegrationTest {
         assertThat(games.viewFor(id, seat).systems()).anyMatch(system -> system.industry() != null);
 
         GameId rematch = templates.create(id, HOST, "Spaceward rematch", true).orElseThrow();
-        assertThat(registry.readState(rematch, GameState::ruleset)).isEqualTo(RulesetRef.SPACEWARD);
+        assertThat(registry.readState(rematch, GameState::ruleset)).isEqualTo(RulesetRef.SPACEWARD_EARLY_INDUSTRY);
         assertSpacewardState(rematch);
     }
 
     private void assertSpacewardState(GameId id) {
         registry.readState(id, state -> {
-            assertThat(state.ruleset()).isEqualTo(RulesetRef.SPACEWARD);
+            assertThat(state.ruleset()).isEqualTo(RulesetRef.SPACEWARD_EARLY_INDUSTRY);
             assertThat(state.navigationSettings()).isPresent();
             Set<Integer> systemIds = state.systems().stream().map(StarSystem::id).collect(Collectors.toSet());
             assertThat(state.industries().keySet()).isEqualTo(systemIds);

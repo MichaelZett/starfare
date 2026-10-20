@@ -96,7 +96,7 @@ public class GameState {
     private @Nullable MetalEconomy metals;
     public Optional<MetalEconomy> metals() { return Optional.ofNullable(metals); }
     public MetalProduction metalPreview() {
-        return MetalProduction.forPlan(systems, industries, colonies, Objects.requireNonNull(metals), ruleset.limitsIndustryByLabor());
+        return MetalProduction.forPlan(systems, industries, colonies, Objects.requireNonNull(metals), ruleset);
     }
     public int recyclingShips(int system) {
         var metal = metals;
@@ -145,7 +145,7 @@ public class GameState {
     public void completeMetalProduction(MetalProduction production) {
         for (StarSystem system : List.copyOf(systems)) {
             if (system.ownerId() == null || system.neutral()) { continue; }
-            Industry expanded = Objects.requireNonNull(industries.get(system.id())).expandForOneTurn();
+            Industry expanded = Objects.requireNonNull(industries.get(system.id())).expandForOneTurn(ruleset);
             ColonyEconomy grown = Objects.requireNonNull(colonies.get(system.id())).grow();
             colonies.put(system.id(), grown);
             industries.put(system.id(), expanded);
@@ -244,7 +244,7 @@ public class GameState {
 
     public void completeIndustrialProduction(int systemId, Industry expanded, int routed) {
         Industry current = industries.get(systemId);
-        if (current == null || !expanded.equals(current.expandForOneTurn())) {
+        if (current == null || !expanded.equals(current.expandForOneTurn(ruleset))) {
             throw new IllegalArgumentException("Industrial growth must follow the current allocation");
         }
         int produced = shipbuilding(systemId, current);
@@ -284,7 +284,8 @@ public class GameState {
         }
         if (industries.size() != systems.size() || systems.stream().anyMatch(system -> {
             Industry industry = industries.get(system.id());
-            return industry == null || shipbuilding(system.id(), industry) < 0
+            return industry == null || industry.expansionProgress() >= industry.expansionCost(ruleset)
+                    || shipbuilding(system.id(), industry) < 0
                     || shipbuilding(system.id(), industry) != system.productionPerTurn()
                     || (system.neutral() && industry.expansionAllocation() != 0);
         })) { throw new IllegalArgumentException("System industry and ship production disagree"); }

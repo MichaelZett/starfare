@@ -14,6 +14,10 @@ public final class StrategyBenchmark {
     private StrategyBenchmark() { }
 
     public static void main(String[] args) throws IOException {
+        if (java.util.Arrays.asList(args).contains("--mode=investment")) {
+            InvestmentBenchmark.main(args);
+            return;
+        }
         if (java.util.Arrays.asList(args).contains("--mode=economy")) {
             EconomyBenchmark.main(args);
             return;

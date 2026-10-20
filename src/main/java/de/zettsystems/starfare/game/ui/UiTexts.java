@@ -141,6 +141,7 @@ public final class UiTexts {
 
     public static final String RULESET_CHOOSE = "ruleset.choose";
     public static final String RULESET_LABEL = "ruleset.label";
+    public static final String RULESET_VERSION_CHOOSE = "ruleset.version.choose";
     public static final String RULESET_VERSION = "ruleset.version";
     public static final String RULESET_PLANNED = "ruleset.planned";
     public static final String RULESET_FILTER = "ruleset.filter";

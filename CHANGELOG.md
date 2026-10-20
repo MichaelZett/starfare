@@ -48,6 +48,33 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Neue Issue-Formulare für Fehlerberichte und Ideen; Sicherheitslücken werden
   laut `SECURITY.md` vertraulich gemeldet.
 
+- Spaceward-Neuanlage auf W6 und W7 beschränkt; W7 ist die Vorgabe. Der Assistent
+  bietet eine eigene Regelfassungswahl. SectorForces bleibt als eigene Variante
+  vorausgewählt. Die Auswahl gilt auch für Vorlagen und Revanchen, ohne besonderes
+  Startprofil. Ältere Spielstände bleiben unter ihren bisherigen Regeln fortsetzbar.
+
+- Neuer interner Wirtschaftskandidat 1.2.0-w7 mit günstigen ersten Industriestufen:
+  min(2C, max(2, aufrunden(C²/10))) Punkte je Stufe, ab C=20 der bisherige Preis.
+  Mehrere Stufen pro Runde sind möglich; neue Kapazität wirkt ab der Folgerunde.
+  Vorschau und KI verwenden den gespeicherten Regelpreis. Ältere Partien behalten
+  ihre Kosten. Neue Partien bieten W7 und W6; ältere Fassungen bleiben fortsetzbar.
+
+- Gezielter Wirtschaftsvergleich mit weiteren 1.280 Partien: frühe Einzelstufen,
+  moderater und später Ausbau bei festen militärischen Heuristiken, Kosten- und
+  Eroberungsvarianten sowie unabhängige Kontrollkarten. Günstige kleine Ausbauten
+  wurden als W7 übernommen; übrige Modelle bleiben im Testprüfstand.
+
+- Strategieprüfstand für W4/W5/W6 erweitert und 2.240 Studienpartien verglichen:
+  Starker Dauerausbau verliert alle entschiedenen breiten W6-Zweikämpfe;
+  zurückhaltender und adaptiver Ausbau gewinnen viele Partien. Ergebnisse,
+  offene Verläufe und Grenzen stehen in `docs/ECONOMY-EXPERIMENTS.md`.
+
+- Neuer interner Wirtschaftskandidat 1.2.0-w6: Bei Metallknappheit erhalten
+  Werften gleiche Anteile bis zu ihrem Bedarf; übrige Anteile werden erneut
+  verteilt. Vorschau, Rundenauflösung und historische Ansichten rechnen identisch.
+  Gespeicherte W5-Partien behalten ihre proportionale Verteilung. Das Profil
+  W6 bleibt neben W7 wählbar; ältere Fassungen bleiben fortsetzbar.
+
 - Neue Spaceward-Partieoption **KI darf Bündnisse eingehen** (Vorgabe an). Ist sie
   aus, treten KI-Imperien keinen neuen Bündnissen bei; bestehende Verträge nach
   einer KI-Übernahme bleiben gültig. Ältere Partien behalten die bisherige Teilnahme.

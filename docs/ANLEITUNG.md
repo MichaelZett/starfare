@@ -32,7 +32,7 @@ Wähle zuerst die **Spielvariante**. **SectorForces** (Regelversion **1.0.0**)
 orientiert sich an Sector Forces, einem C64-Spiel der 80er-Jahre: Jedes System
 baut Schiffe, Flotten erobern fremde Systeme, und wer genug der Galaxie
 beherrscht, gewinnt. Die Variante ist vorausgewählt; die folgenden Spielregeln
-beschreiben sie. **Spaceward** (Regelversion **1.1.0**)
+beschreiben sie. **Spaceward** (Regelversion **1.2.0-w7**, alternativ **1.2.0-w6**)
 ist nach Spaceward Ho! gestaltet und ergänzt Industrieausbau, begrenzte Reichweite,
 Bündnisse und gemeinsame Schlachten. Die Abschnitte zu Spaceward weiter unten
 beschreiben, worin es von SectorForces abweicht. Weil dort alle feindlichen Seiten
@@ -329,7 +329,8 @@ und fertiger Ausbau wirken erst in der nächsten Runde. Die Systemsicht zeigt
 Bevölkerung, Wachstum, Eignung und den Engpass durch fehlende Arbeitskräfte.
 Eroberung erhält Bevölkerung und Systemeigenschaften. Metallreichtum ist hier
 eine gespeicherte Eigenschaft; Förderung und Recycling folgen später.
-Der normale Partiedialog verwendet weiterhin **1.1.0**.
+Dieser Abschnitt beschreibt den historischen W1-Stand. Neue Spaceward-Partien
+verwenden W7 oder wahlweise W6; ältere Versionen bleiben fortsetzbar.
 
 ### Interne Metallwirtschaft 1.2.0-w2
 
@@ -587,16 +588,17 @@ kein Metall zurück. Startschiffe und neutrale Garnisonen zählen zur Metallbila
 Alle acht KI-Profile nutzen Recycling bei Metallknappheit für überschüssige Schiffe
 im Hinterland; sie behalten eine Garnison und schonen Systeme mit bekannten nahen
 Gegnern. Der Wirtschaftsvergleich für W4 steht in `docs/ECONOMY-EXPERIMENTS.md`. W2-Partien erhalten
-keine Recyclingbefehle. W3 bleibt intern, die öffentliche Neuanlage bei 1.1.0.
+keine Recyclingbefehle. W3 bleibt nur fortsetzbar; neue Spaceward-Partien verwenden W6 oder W7.
 
-### Wirtschaftsstand 1.2.0-w5 erproben
+### Spaceward: W6 oder W7 wählen
 
-Das lokale Startprofil `economy-preview` schaltet den vollständigen Wirtschaftsstand
-im normalen Spielassistenten frei. „SectorForces“ bleibt vorausgewählt.
-Für die neue Wirtschaft „Spaceward“ auswählen; die Karte muss „Regeln 1.2.0-w5“
-zeigen. Ältere Partien übernehmen die neue Wirtschaft nicht.
+Im normalen Spielassistenten zunächst „Spaceward“ auswählen und dann unter
+„Regelfassung“ zwischen **1.2.0-w7** (Vorgabe) und **1.2.0-w6** wählen.
+„SectorForces“ bleibt als eigene Spielvariante vorausgewählt. Ein besonderes
+Startprofil ist dafür nicht erforderlich; bestehende Starts mit `economy-preview`
+bieten dieselbe Auswahl. Ältere Partien übernehmen keine neue Regelfassung.
 
-In 1.2.0-w5 ist die Bevölkerung vorerst Atmosphäre: Sie wächst und beschreibt die
+Seit 1.2.0-w5 ist die Bevölkerung vorerst Atmosphäre: Sie wächst und beschreibt die
 Kolonie, begrenzt aber nicht mehr die nutzbare Industrie. Die gesamte installierte
 Kapazität steht für Schiffbau, Förderung und Ausbau bereit. Gespeicherte
 W4-Partien behalten die Begrenzung durch Arbeitskräfte.
@@ -606,10 +608,29 @@ nutzbare Kapazität; Recycling gewinnt 70 Prozent zurück und speichert Zehntelr
 Die Metallwerte bleiben für diese Erprobung unverändert. Alle acht KI-Profile
 berücksichtigen die Förderung bei ihrer Industrie- und Flottenplanung.
 
-Ohne das Startprofil bleibt die Neuanlage bei Spaceward 1.1.0. Gespeicherte
-W4- und W5-Partien lassen sich trotzdem fortsetzen. Die öffentliche Freigabe von 1.2.0
-folgt nach der persönlichen Erprobung. Startbefehl und technische Prüfergebnisse
-stehen in README und `docs/ECONOMY-EXPERIMENTS.md`.
+Für neue Spaceward-Partien sind ausschließlich W6 und W7 wählbar. Das gilt
+auch für Vorlagen und Revanchen. Vorlagen aus W6 und W7 behalten ihre genaue
+Regelfassung. Gespeicherte Spaceward-Partien mit 1.0.0, 1.1.0 oder W1–W5 lassen
+sich weiterhin laden und fortsetzen; daraus können keine neuen Partien angelegt
+werden. Die persönliche Erprobung und die endgültige Freigabe als 1.2.0 stehen aus.
+
+Bei Metallknappheit erhalten die Werften seit W6 gleich große Anteile, höchstens
+bis zum geplanten Schiffbau. Nicht benötigte Anteile gehen an die übrigen Werften;
+Systeme ohne Schiffbau bekommen keinen Anteil. Einzelne Reststücke gehen nach
+Systemkennung. Beispiel: Bei Bedarf 10 und 4 sowie Vorrat 8 entstehen jeweils
+4 Schiffe. Gespeicherte W5-Partien bleiben bei der proportionalen Verteilung
+(6 und 2). Vorschau und Rundenauflösung verwenden dieselbe Berechnung.
+Metall bleibt reichsweit verfügbar; unverbrauchter Vorrat bleibt erhalten.
+In W7 sind die ersten Industriestufen günstiger: Die nächste Stufe kostet bei
+Kapazität 2 nur 2 Punkte, bei Kapazität 5 sind es 3 und bei Kapazität 10 sind es
+10 Punkte. Ab Kapazität 20 gilt wieder der bisherige Preis von zweimal der
+Kapazität. Formel je Stufe: `min(2C, max(2, aufrunden(C²/10)))`.
+Mehrere Stufen können in derselben Runde fertig werden; Restfortschritt bleibt
+erhalten. Zusätzliche Kapazität steht ab der folgenden Runde bereit, höchstens 50.
+Die Ausbauanzeige nennt den Preis und Fortschritt der jeweils nächsten Stufe.
+Gespeicherte ältere Partien behalten ihre bisherigen Kosten. Systemeigenschaften
+und Eroberung ändern den Preis nicht.
+Terraforming, aktive Bevölkerungssteuerung und Besiedlung kommen später.
 
 ### Entscheidungen in der Oberfläche
 

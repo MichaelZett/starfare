@@ -87,7 +87,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var metals = frame.metals();
         var metalForecast = metals == null ? null : MetalProduction.forPlan(
                 frame.systems(), Objects.requireNonNull(frame.industries()), Objects.requireNonNull(frame.colonies()), metals,
-                state.ruleset().limitsIndustryByLabor());
+                state.ruleset());
         List<VisibleSystem> systems = frame.systems().stream().map(system -> {
             Integer owner = system.ownerId();
             String color = owner != null ? playerById(state, owner).colorHex() : null;
@@ -279,7 +279,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var colony = saved == null ? null : new de.zettsystems.starfare.economy.values.ColonyView(
                 saved.quality(), saved.colony().population(), nextPopulation, rules.limitsIndustryByLabor());
         return new IndustryView(industry.capacity(), industry.expansionAllocation(), industry.expansionProgress(),
-                industry.expansionCost(), delivery, delivery < routed, shortfall, colony);
+                industry.expansionCost(rules), delivery, delivery < routed, shortfall, colony);
     }
 
     private static @Nullable IndustryView metalIndustry(@Nullable IndustryView base,

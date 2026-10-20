@@ -7,8 +7,8 @@ import java.util.Set;
 
 /** Immutable, extensible catalog used by creation, restoration and rule dispatch. */
 public record RulesetCatalog(List<RulesetDefinition> definitions) {
-    /** The only internal economy version that the local acceptance profile may create. */
-    public static final RulesetRef ECONOMY_CANDIDATE = RulesetRef.SPACEWARD_DIRECT_ECONOMY;
+    /** Default for new Spaceward games; W6 remains selectable for comparison. */
+    public static final RulesetRef ECONOMY_CANDIDATE = RulesetRef.SPACEWARD_EARLY_INDUSTRY;
 
     public RulesetCatalog {
         definitions = List.copyOf(definitions);
@@ -21,17 +21,16 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
     }
 
     public static RulesetCatalog builtIn() {
-        return builtIn(false);
-    }
-
-    /** Enables only the current acceptance candidate; older checkpoints remain restoration-only. */
-    public static RulesetCatalog builtIn(boolean economyPreview) {
         return new RulesetCatalog(List.of(
                 new RulesetDefinition(RulesetRef.SECTOR_FORCES, RulesetDefinition.SECTOR_FORCES_NAME,
                         RulesetDefinition.SECTOR_FORCES_DESCRIPTION, Set.of(RulesetRef.SECTOR_FORCES.version()), true),
-                new RulesetDefinition(economyPreview ? ECONOMY_CANDIDATE : RulesetRef.SPACEWARD_ALLIANCE, RulesetDefinition.SPACEWARD_NAME,
-                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.SPACEWARD.version(), RulesetRef.SPACEWARD_ALLIANCE.version(), RulesetRef.SPACEWARD_COLONIES.version(), RulesetRef.SPACEWARD_METALS.version(), RulesetRef.SPACEWARD_RECYCLING.version(), RulesetRef.SPACEWARD_ECONOMY_PREVIEW.version(), RulesetRef.SPACEWARD_DIRECT_ECONOMY.version()), true)));
+                new RulesetDefinition(ECONOMY_CANDIDATE, RulesetDefinition.SPACEWARD_NAME,
+                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.SPACEWARD.version(), RulesetRef.SPACEWARD_ALLIANCE.version(), RulesetRef.SPACEWARD_COLONIES.version(), RulesetRef.SPACEWARD_METALS.version(), RulesetRef.SPACEWARD_RECYCLING.version(), RulesetRef.SPACEWARD_ECONOMY_PREVIEW.version(), RulesetRef.SPACEWARD_DIRECT_ECONOMY.version(), RulesetRef.SPACEWARD_EQUAL_METAL.version(), RulesetRef.SPACEWARD_EARLY_INDUSTRY.version()), true,
+                        Set.of(RulesetRef.SPACEWARD_EQUAL_METAL.version(), RulesetRef.SPACEWARD_EARLY_INDUSTRY.version()))));
     }
+
+    /** Compatibility for retained launch profiles: selection is no longer gated by this switch. */
+    public static RulesetCatalog builtIn(boolean economyPreview) { return builtIn(); }
 
     public Optional<RulesetDefinition> find(String variant) {
         return definitions.stream().filter(entry -> entry.defaultRef().variant().equals(variant)).findFirst();
@@ -45,10 +44,8 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
 
     public void requireCreatable(RulesetRef ref) {
         requireSupported(ref);
-        boolean preview = ref.equals(ECONOMY_CANDIDATE) && find(ref.variant()).orElseThrow().defaultRef().equals(ref);
-        if (ref.usesColonies() && !preview) { throw new IllegalArgumentException("Colony rules are internal and not released"); }
-        if (!find(ref.variant()).orElseThrow().creationEnabled()) {
-            throw new IllegalArgumentException("Game variant is not released: " + ref.variant());
+        if (!find(ref.variant()).orElseThrow().creationChoices().contains(ref)) {
+            throw new IllegalArgumentException("Ruleset is not available for new games: " + ref.variant() + " / " + ref.version());
         }
     }
 }
