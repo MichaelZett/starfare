@@ -29,11 +29,12 @@ final class MapHeaderBar extends HorizontalLayout {
     private final Button next;
     private final @Nullable Button logistics;
     private final @Nullable MenuItem logisticsItem;
+    private final MenuItem researchItem;
     private final MenuItem leaveItem;
     private final MenuItem roundRulesItem;
 
     MapHeaderBar(Runnable onNext, Runnable onToggleLogistics, Runnable onLeave, Runnable onLobby,
-                 Runnable onChat, Runnable onEditRoundRules, boolean compact) {
+                 Runnable onChat, Runnable onEditRoundRules, Runnable onResearch, boolean compact) {
         gameNameLabel.addClassName("app-header-game");
         empireNameLabel.addClassName("app-header-empire");
         empireNameLabel.setVisible(false);
@@ -60,6 +61,8 @@ final class MapHeaderBar extends HorizontalLayout {
             logistics.addThemeVariants(ButtonVariant.TERTIARY);
         }
         menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_CHAT), _ -> onChat.run());
+        researchItem = menuRoot.getSubMenu().addItem(I18n.t(de.zettsystems.starfare.game.ui.UiTexts.RESEARCH_TITLE), _ -> onResearch.run());
+        researchItem.setVisible(false);
         roundRulesItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_ROUND_RULES),
                 _ -> onEditRoundRules.run());
         leaveItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LEAVE), _ -> onLeave.run());
@@ -107,6 +110,8 @@ final class MapHeaderBar extends HorizontalLayout {
     }
 
     void setLeaveVisible(boolean visible) { leaveItem.setVisible(visible); }
+
+    void setResearchVisible(boolean visible) { researchItem.setVisible(visible); }
 
     void setRoundRulesVisible(boolean visible) {
         roundRulesItem.setVisible(visible);

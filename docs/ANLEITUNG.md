@@ -699,3 +699,39 @@ Impressum und Datenschutz stehen im Seitenfuß und öffnen in einem neuen Tab,
 damit laufende Eingaben erhalten bleiben.
 
 Flotten lassen sich auf freien Strecken auswählen. Systeme und ihre unmittelbare Umgebung bleiben auch unter kreuzenden Linien erreichbar; fehlt Platz für eine Flottenmarke, nutze die Flottenliste. Schlacht- und Engpasszeichen öffnen ihre eigene Information. In Schlachten stehen Angreifer links und Verteidiger rechts. Die Darstellung bleibt bis zum Ergebnis neutral; kurze Mannschaftstexte beschreiben die momentane Gefechtsverfassung. Exakte Stärken stehen unter **Kampfdetails**.
+
+
+### Gemeinsame Schiffsforschung erproben
+
+Mit dem Startprofil `local,research-preview` ist im Assistenten zusätzlich die
+Spaceward-Regelfassung **1.3.0-r1** verfügbar. Normale Neuanlagen bleiben bei W6
+und W7. Bereits gespeicherte R1-Partien lassen sich auch ohne das Profil fortsetzen.
+
+Im Kartenmenü **Schiffsforschung** öffnen. Der Forschungsanteil gilt reichsweit
+und startet bei 0 Prozent. Er wird zuerst aus der gesamten Industriekapazität
+reserviert. Die Rundung erfolgt einmal für das Reich; die Verteilung auf Systeme
+richtet sich nach deren Kapazität. Reicht die verbleibende Kapazität nicht,
+werden Ausbau und danach Förderung gekürzt. Verlegungen werden an den Schiffbau
+angepasst. Die Produktionsansicht nennt die reservierten Forschungspunkte.
+
+Es gibt zunächst nur eine gemeinsame Schiffstechnologiestufe, ohne Gebiete oder
+eigene Entwürfe. Die erste Stufe kostet 100 Punkte, danach folgen 400, 900 usw.
+(Formel: 100 × Quadrat der nächsten Stufe). Restpunkte bleiben erhalten.
+Jede Stufe erhöht die Kampfstärke von Neubauten um 10 Prozent des Grundwerts.
+Ein Abschluss erscheint im Rundenbericht; die neue Technik gilt ab der folgenden
+Runde für neu gebaute Schiffe. Bestehende Schiffe behalten ihre Baustufe.
+Bei Stufe 20 ist vorerst Schluss; dann wird keine Industrie mehr für Forschung
+reserviert.
+
+Gemischte Garnisonen und Flotten behalten ihre Zusammensetzung. Versand nimmt
+zuerst neue Schiffe, Recycling zuerst alte. Kampfverluste werden proportional
+auf die vorhandenen Baustufen verteilt, ganzzahlige Reste deterministisch nach
+größtem Rest und anschließend niedrigerer Stufe. Flottenansichten zeigen die
+Baustufen und ihre gemeinsame Kampfstärke. Neue Technik ändert weder Tempo noch
+Reichweite oder Metallkosten: Ein Schiff kostet weiterhin ein Metall, Recycling
+bringt unverändert 70 Prozent zurück.
+
+KI-Imperien verwenden 10 Prozent Forschung, Rush 5 Prozent. Der erste kontrollierte
+Vergleich stützt kleine Budgets; hohe Dauerbudgets schwächen den frühen Flottenaufbau.
+Die Ergebnisse und Grenzen stehen in `RESEARCH-EXPERIMENTS.md`. Die persönliche Spielabnahme steht noch aus.
+Bevölkerung, Besiedlung und getrennte Forschungsgebiete bleiben für später.

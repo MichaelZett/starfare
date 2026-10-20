@@ -20,7 +20,9 @@ public record RulesetRef(String variant, String version) {
     public static final RulesetRef SPACEWARD_EQUAL_METAL = new RulesetRef(SPACEWARD_VARIANT, "1.2.0-w6");
     /** W6 economy with affordable first industry levels. */
     public static final RulesetRef SPACEWARD_EARLY_INDUSTRY = new RulesetRef(SPACEWARD_VARIANT, "1.2.0-w7");
-    public boolean usesCheapEarlyIndustry() { return SPACEWARD_EARLY_INDUSTRY.equals(this); }
+    public static final RulesetRef SPACEWARD_SHIP_RESEARCH = new RulesetRef(SPACEWARD_VARIANT, "1.3.0-r1");
+    public boolean usesShipResearch() { return SPACEWARD_SHIP_RESEARCH.equals(this); }
+    public boolean usesCheapEarlyIndustry() { return SPACEWARD_EARLY_INDUSTRY.equals(this) || usesShipResearch(); }
     public boolean usesRecycling() {
         return SPACEWARD_RECYCLING.equals(this) || SPACEWARD_ECONOMY_PREVIEW.equals(this)
                 || SPACEWARD_DIRECT_ECONOMY.equals(this) || SPACEWARD_EQUAL_METAL.equals(this) || usesCheapEarlyIndustry();

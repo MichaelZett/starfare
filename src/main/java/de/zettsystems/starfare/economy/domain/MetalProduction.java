@@ -13,10 +13,15 @@ import java.util.Map;
 /** Pure empire-wide forecast, shared by display and resolution. No collection order bias. */
 public record MetalProduction(MetalEconomy economy, Map<Integer, Integer> ships,
                               Map<Integer, Long> extracted, Map<Integer, Long> openingStocks,
-                              @org.jspecify.annotations.Nullable RecyclingEconomy plannedRecycling) {
+                              @org.jspecify.annotations.Nullable RecyclingEconomy plannedRecycling, Map<Integer, Integer> researchPoints) {
+    public MetalProduction(MetalEconomy economy, Map<Integer, Integer> ships, Map<Integer, Long> extracted,
+                           Map<Integer, Long> openingStocks, @org.jspecify.annotations.Nullable RecyclingEconomy plannedRecycling) {
+        this(economy, ships, extracted, openingStocks, plannedRecycling, Map.of());
+    }
     public MetalProduction(MetalEconomy economy, Map<Integer, Integer> ships, Map<Integer, Long> extracted,
                            Map<Integer, Long> openingStocks) { this(economy, ships, extracted, openingStocks, null); }
     public MetalProduction {
+        researchPoints = Map.copyOf(researchPoints);
         ships = Map.copyOf(ships);
         extracted = Map.copyOf(extracted);
         openingStocks = Map.copyOf(openingStocks);
@@ -27,9 +32,16 @@ public record MetalProduction(MetalEconomy economy, Map<Integer, Integer> ships,
     }
     public static MetalProduction forPlan(List<StarSystem> systems, Map<Integer, Industry> industries,
                                           Map<Integer, ColonyEconomy> colonies, MetalEconomy current, RulesetRef rules) {
+        var research = current.research();
+        return forPlan(systems, industries, colonies, current, rules,
+                research == null ? Map.of() : research.reservations(systems, industries));
+    }
+    public static MetalProduction forPlan(List<StarSystem> systems, Map<Integer, Industry> industries,
+                                          Map<Integer, ColonyEconomy> colonies, MetalEconomy current, RulesetRef rules,
+                                          Map<Integer, Integer> research) {
         var settled = Recycling.calculate(systems, current);
-        var forecast = calculate(systems, industries, colonies, settled.economy(), rules);
-        return new MetalProduction(forecast.economy(), forecast.ships(), forecast.extracted(), current.stocks(), current.recycling());
+        var forecast = calculate(systems, industries, colonies, settled.economy(), rules, research);
+        return new MetalProduction(forecast.economy(), forecast.ships(), forecast.extracted(), current.stocks(), current.recycling(), research);
     }
     public static MetalProduction calculate(List<StarSystem> systems, Map<Integer, Industry> industries,
                                             Map<Integer, ColonyEconomy> colonies, MetalEconomy current) {
@@ -37,6 +49,13 @@ public record MetalProduction(MetalEconomy economy, Map<Integer, Integer> ships,
     }
     public static MetalProduction calculate(List<StarSystem> systems, Map<Integer, Industry> industries,
                                             Map<Integer, ColonyEconomy> colonies, MetalEconomy current, RulesetRef rules) {
+        var research = current.research();
+        return calculate(systems, industries, colonies, current, rules,
+                research == null ? Map.of() : research.reservations(systems, industries));
+    }
+    private static MetalProduction calculate(List<StarSystem> systems, Map<Integer, Industry> industries,
+                                             Map<Integer, ColonyEconomy> colonies, MetalEconomy current, RulesetRef rules,
+                                             Map<Integer, Integer> research) {
         var deposits = new HashMap<>(current.deposits());
         var stocks = new HashMap<>(current.stocks());
         Map<Integer, Long> extracted = new HashMap<>();
@@ -46,7 +65,7 @@ public record MetalProduction(MetalEconomy economy, Map<Integer, Integer> ships,
             Integer owner = system.ownerId();
             if (owner == null || system.neutral()) { continue; }
             int mining = Objects.requireNonNull(current.mining().get(system.id()));
-            int capacity = Objects.requireNonNull(colonies.get(system.id())).shipbuilding(Objects.requireNonNull(industries.get(system.id())), rules.limitsIndustryByLabor());
+            int capacity = Objects.requireNonNull(colonies.get(system.id())).shipbuilding(Objects.requireNonNull(industries.get(system.id())), rules.limitsIndustryByLabor()) - research.getOrDefault(system.id(), 0);
             if (mining > capacity) { throw new IllegalArgumentException("Mining exceeds available capacity"); }
             long amount = Objects.requireNonNull(deposits.get(system.id())).extraction(mining);
             deposits.put(system.id(), Objects.requireNonNull(deposits.get(system.id())).extract(amount));
@@ -57,7 +76,7 @@ public record MetalProduction(MetalEconomy economy, Map<Integer, Integer> ships,
         }
         Map<Integer, Integer> ships = new HashMap<>();
         empires.forEach((owner, owned) -> distribute(owner, owned, desired, stocks, ships, rules.sharesMetalEqually()));
-        return new MetalProduction(new MetalEconomy(deposits, stocks, current.mining(), current.recycling()), ships, extracted, current.stocks());
+        return new MetalProduction(new MetalEconomy(deposits, stocks, current.mining(), current.recycling(), current.research()), ships, extracted, current.stocks(), null, research);
     }
     private static void distribute(int owner, List<StarSystem> owned, Map<Integer, Integer> desired,
                                    Map<Integer, Long> stocks, Map<Integer, Integer> ships, boolean equally) {

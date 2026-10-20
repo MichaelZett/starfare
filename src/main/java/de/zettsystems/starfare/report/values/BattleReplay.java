@@ -61,7 +61,7 @@ public record BattleReplay(String systemName, int attacking, int defending, Outc
                     new Outcome(0, held.defendersLeft(), false),
                     held.attackerStrength(), held.defenderStrength())) : Optional.empty();
             case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
-                 TurnEvent.EconomySummary _ -> Optional.empty();
+                 TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _ -> Optional.empty();
         };
     }
 

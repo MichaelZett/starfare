@@ -20,6 +20,10 @@ class EconomyIssuesTest {
         assertThat(issues.getFirst().reasons()).containsExactly(EconomyIssues.Kind.DELIVERY, EconomyIssues.Kind.METAL, EconomyIssues.Kind.DEPOSIT);
         assertThat(issues.stream().filter(issue -> issue.reasons().contains(EconomyIssues.Kind.METAL)).count()).isEqualTo(3);
     }
+    @Test void researchReservationsAreNotMissingWorkers() {
+        var research = new IndustryView(10, 0, 0, 20, 0, false, 0, null, null, 5, null);
+        assertThat(EconomyIssues.forSystems(List.of(system(1, 1, true, research)), 1, Set.of(), Set.of())).isEmpty();
+    }
     @Test void ownershipVisibilityAndPendingBattlesProtectAggregation() {
         var shortage = new IndustryView(10, 0, 0, 20, 0, false, 0, null, new MetalView(0, 3, 0, 0, 0, 10, 0));
         var systems = List.of(system(1, 1, true, shortage), system(2, 2, true, shortage), system(3, 1, false, shortage));

@@ -35,9 +35,10 @@ record EconomyBenchmarkOptions(Path output, long firstSeed, int seeds, int comba
             case "w3" -> RulesetRef.SPACEWARD_RECYCLING;
             case "w4" -> RulesetRef.SPACEWARD_ECONOMY_PREVIEW;
             case "w5" -> RulesetRef.SPACEWARD_DIRECT_ECONOMY;
+            case "r1" -> RulesetRef.SPACEWARD_SHIP_RESEARCH;
             case "w7" -> RulesetRef.SPACEWARD_EARLY_INDUSTRY;
             case "w6" -> RulesetRef.SPACEWARD_EQUAL_METAL;
-            default -> throw new IllegalArgumentException("Expected economy rules w3, w4, w5, w6 or w7");
+            default -> throw new IllegalArgumentException("Expected economy rules w3, w4, w5, w6, w7 or r1");
         };
     }
 }

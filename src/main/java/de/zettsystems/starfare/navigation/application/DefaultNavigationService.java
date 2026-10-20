@@ -17,7 +17,7 @@ public class DefaultNavigationService implements NavigationService {
         if (journey.evacuating()) {
             if (java.util.Objects.equals(state.getSystem(fleet.toSystemId()).ownerId(), fleet.ownerId())) {
                 state.fleets().remove(fleet);
-                state.updateSystem(fleet.toSystemId(), system -> system.reinforce(fleet.ships())); return;
+                state.updateSystem(fleet.toSystemId(), system -> system.reinforce(fleet.composition())); return;
             }
             launchReturn(state, fleet); return;
         }

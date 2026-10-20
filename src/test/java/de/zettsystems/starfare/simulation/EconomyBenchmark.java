@@ -169,6 +169,7 @@ final class EconomyBenchmark {
 
     private static SpacewardTurnEngine engine(RulesetRef rules, RoundPipeline pipeline, DefaultFleetService fleets, DefaultReportService reports) {
         var economy = new DefaultEconomyService();
+        if (rules.equals(RulesetRef.SPACEWARD_SHIP_RESEARCH)) { return new de.zettsystems.starfare.turn.application.ShipResearchSpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports); }
         if (rules.equals(RulesetRef.SPACEWARD_EARLY_INDUSTRY)) { return new de.zettsystems.starfare.turn.application.EarlyIndustrySpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports); }
         if (rules.equals(RulesetRef.SPACEWARD_EQUAL_METAL)) { return new EqualMetalSpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports); }
         if (rules.equals(RulesetRef.SPACEWARD_DIRECT_ECONOMY)) { return new DirectEconomySpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports); }

@@ -25,8 +25,18 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
                 new RulesetDefinition(RulesetRef.SECTOR_FORCES, RulesetDefinition.SECTOR_FORCES_NAME,
                         RulesetDefinition.SECTOR_FORCES_DESCRIPTION, Set.of(RulesetRef.SECTOR_FORCES.version()), true),
                 new RulesetDefinition(ECONOMY_CANDIDATE, RulesetDefinition.SPACEWARD_NAME,
-                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.SPACEWARD.version(), RulesetRef.SPACEWARD_ALLIANCE.version(), RulesetRef.SPACEWARD_COLONIES.version(), RulesetRef.SPACEWARD_METALS.version(), RulesetRef.SPACEWARD_RECYCLING.version(), RulesetRef.SPACEWARD_ECONOMY_PREVIEW.version(), RulesetRef.SPACEWARD_DIRECT_ECONOMY.version(), RulesetRef.SPACEWARD_EQUAL_METAL.version(), RulesetRef.SPACEWARD_EARLY_INDUSTRY.version()), true,
+                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.SPACEWARD.version(), RulesetRef.SPACEWARD_ALLIANCE.version(), RulesetRef.SPACEWARD_COLONIES.version(), RulesetRef.SPACEWARD_METALS.version(), RulesetRef.SPACEWARD_RECYCLING.version(), RulesetRef.SPACEWARD_ECONOMY_PREVIEW.version(), RulesetRef.SPACEWARD_DIRECT_ECONOMY.version(), RulesetRef.SPACEWARD_EQUAL_METAL.version(), RulesetRef.SPACEWARD_EARLY_INDUSTRY.version(), RulesetRef.SPACEWARD_SHIP_RESEARCH.version()), true,
                         Set.of(RulesetRef.SPACEWARD_EQUAL_METAL.version(), RulesetRef.SPACEWARD_EARLY_INDUSTRY.version()))));
+    }
+
+    /** Research preview is explicit; ordinary W6/W7 creation remains unchanged. */
+    public static RulesetCatalog withShipResearch() {
+        return new RulesetCatalog(builtIn().definitions().stream().map(entry -> {
+            if (!entry.defaultRef().isSpaceward()) { return entry; }
+            return new RulesetDefinition(RulesetRef.SPACEWARD_SHIP_RESEARCH, entry.nameKey(), entry.descriptionKey(),
+                    entry.supportedVersions(), true, Set.of(RulesetRef.SPACEWARD_EQUAL_METAL.version(),
+                    RulesetRef.SPACEWARD_EARLY_INDUSTRY.version(), RulesetRef.SPACEWARD_SHIP_RESEARCH.version()));
+        }).toList());
     }
 
     /** Compatibility for retained launch profiles: selection is no longer gated by this switch. */

@@ -850,3 +850,35 @@ The control family uses `--first-seed=8101` and a separate output directory.
 Definitions, 1,280 completed matches, paired comparisons and limits are recorded
 in [economy experiments](docs/ECONOMY-EXPERIMENTS.md). The accepted cheap-small-upgrade curve is now the W7 acceptance candidate;
 W6 prices remain unchanged. Other interventions remain test-only.
+
+
+### Ship research preview: 1.3.0-r1
+
+Start with `./gradlew bootRun "--args=--spring.profiles.active=local,research-preview"`
+and choose Spaceward rules **1.3.0-r1**. Ordinary creation still offers only W6
+and W7. Stored R1 games remain playable when the preview profile is disabled.
+
+Open **Ship research** in the map menu. One empire-wide percentage reserves
+industry before mining, expansion and shipbuilding. It starts at 0%; rounding
+happens once per empire, then points are apportioned to systems by capacity,
+with largest remainders and system IDs as tie breakers. Raising the budget
+reduces expansion first, then mining if necessary; outgoing relocations follow
+actual shipbuilding. The production editor shows reserved research points and
+edits only the remaining capacity.
+
+Research has one common technology level: no separate fields or manual designs.
+The next level costs `100 * (level + 1)^2` points (100, 400, 900, ...), retaining
+leftovers. Each level adds 10% of base combat strength to newly built ships;
+level 20 is the initial ceiling, where research stops reserving industry.
+Completion is reported, and the improved generation is built from the following
+round. Old ships retain their build-time level. Mixed fleets display their
+counts by level and combined strength. Launches take newest ships first;
+recycling takes oldest ships first; combat losses are apportioned by hull count
+with deterministic largest remainders. Survivors never acquire a new level.
+
+Ship speed, range, the one-metal hull cost and 70% recycling recovery are unchanged.
+Research consumes industrial capacity, not metal. Coalition strength sums the
+actual generations, including allied stationed forces. AI budgets are
+10% (5% for RUSH), calibrated with paired seeded duels; see
+[research experiments](docs/RESEARCH-EXPERIMENTS.md) for results and limits. Population management, colonization, research fields and ship-design
+editors remain later work. Desktop and phone browser checks and the initial balance study have passed; personal gameplay acceptance remains pending.

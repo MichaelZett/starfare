@@ -6,6 +6,22 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Gemeinsame Schiffsforschung als eigene Regelfassung 1.3.0-r1 (Profil
+  `research-preview`): reichsweiter Industrieanteil, steigende Stufenkosten und
+  stärkere Neubauten ab der folgenden Runde. Baustufen bleiben bei Versand,
+  Verlegung, Recycling, Rückkehr und Kampf erhalten. Gemischte Bestände werden
+  angezeigt; Abschlüsse erscheinen im Bericht. Geschwindigkeit, Reichweite,
+  Metallkosten und bestehende W6-/W7-Partien behalten ihre Regeln.
+
+- Schiffsforschung auf Desktop und Handy geprüft; Forschungsreserve wird nicht mehr
+  als Arbeitskräftemangel gemeldet. Eroberungen gleichen die Produktionspläne
+  beider Reiche vor der neuen Schiffbauvorschau ab.
+- Forschungsbudgets in 768 kontrollierten Partien verglichen; normales KI-Budget
+  auf 10 Prozent abgestimmt, Rush bleibt bei 5 Prozent. Details und Grenzen in
+  `docs/RESEARCH-EXPERIMENTS.md`.
+
 ## 0.2.0 - 2026-10-18
 
 - **Eigene Handy-Oberfläche.** Handys erhalten eine eigene Kartenansicht: kompakter
