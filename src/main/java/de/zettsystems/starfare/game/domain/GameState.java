@@ -845,28 +845,31 @@ public class GameState {
     public void updateSystem(int id, UnaryOperator<StarSystem> updater) {
         for (int i = 0; i < systems.size(); i++) {
             StarSystem current = systems.get(i);
-            if (current.id() == id) {
-                StarSystem updated = updater.apply(current);
-                if (!Objects.equals(current.ownerId(), updated.ownerId())) {
-                    Industry captured = industries.computeIfPresent(id, (_, industry) -> industry.captured());
-                    if (captured != null) {
-                        if (metals != null) { metals = metals.allocateMining(id, 0); }
-                        updated = updated.planShipbuilding(shipbuilding(id, captured));
-                    }
-                }
-                systems.set(i, updated);
-                if (ruleset.usesShipResearch() && metals != null && metals.research() != null
-                        && !Objects.equals(current.ownerId(), updated.ownerId())) {
-                    for (var player : players) {
-                        planShipResearch(player.id(), Objects.requireNonNull(Objects.requireNonNull(
-                                Objects.requireNonNull(metals).research()).empires().get(player.id())).percent());
-                    }
-                }
-                recordOwnershipChange(current, updated);
-                return;
-            }
+            if (current.id() != id) { continue; }
+            StarSystem updated = updater.apply(current);
+            boolean ownerChanged = !Objects.equals(current.ownerId(), updated.ownerId());
+            if (ownerChanged) { updated = captureIndustry(id, updated); }
+            systems.set(i, updated);
+            if (ownerChanged) { rebalanceResearchAfterCapture(); }
+            recordOwnershipChange(current, updated);
+            return;
         }
         throw new IllegalArgumentException("System not found: " + id);
+    }
+
+    private StarSystem captureIndustry(int id, StarSystem updated) {
+        Industry captured = industries.computeIfPresent(id, (_, industry) -> industry.captured());
+        if (captured == null) { return updated; }
+        if (metals != null) { metals = metals.allocateMining(id, 0); }
+        return updated.planShipbuilding(shipbuilding(id, captured));
+    }
+
+    private void rebalanceResearchAfterCapture() {
+        if (!ruleset.usesShipResearch() || metals == null || metals.research() == null) { return; }
+        for (var player : players) {
+            planShipResearch(player.id(), Objects.requireNonNull(Objects.requireNonNull(
+                    Objects.requireNonNull(metals).research()).empires().get(player.id())).percent());
+        }
     }
 
     private void recordOwnershipChange(StarSystem before, StarSystem after) {

@@ -41,7 +41,7 @@ class ResearchCombatTest {
         var forces = List.of(new CoalitionSide(1, 0, List.of(new CoalitionSide.Member(1, "A", 20, 20, 0))),
                 new CoalitionSide(2, 0, List.of(new CoalitionSide.Member(2, "B", 20, 20, 0))));
         var ordinary = CoalitionResolver.resolve(forces, 0, _ -> 0.5);
-        assertThat(ordinary).allMatch(side -> side.remaining() == 0);
+        assertThat(ordinary).isNotEmpty().allMatch(side -> side.remaining() == 0);
         var mixed = new ShipCohorts(Map.of(0, 10, 10, 10));
         var stronger = CoalitionResolver.resolve(forces, 0, _ -> 0.5, Map.of(1, mixed));
         assertThat(stronger.getFirst().strength()).isEqualTo(30);

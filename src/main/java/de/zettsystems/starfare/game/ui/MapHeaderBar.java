@@ -33,15 +33,17 @@ final class MapHeaderBar extends HorizontalLayout {
     private final MenuItem leaveItem;
     private final MenuItem roundRulesItem;
 
-    MapHeaderBar(Runnable onNext, Runnable onToggleLogistics, Runnable onLeave, Runnable onLobby,
-                 Runnable onChat, Runnable onEditRoundRules, Runnable onResearch, boolean compact) {
+    record Actions(Runnable onNext, Runnable onToggleLogistics, Runnable onLeave, Runnable onLobby,
+                   Runnable onChat, Runnable onEditRoundRules, Runnable onResearch) { }
+
+    MapHeaderBar(Actions actions, boolean compact) {
         gameNameLabel.addClassName("app-header-game");
         empireNameLabel.addClassName("app-header-empire");
         empireNameLabel.setVisible(false);
         roundLabel.addClassName("app-header-round");
         roundLabel.setText(I18n.t(UiTexts.MAP_ROUND_LABEL, 1));
 
-        next = new Button(I18n.t(UiTexts.MAP_SUBMIT_TURN), _ -> onNext.run());
+        next = new Button(I18n.t(UiTexts.MAP_SUBMIT_TURN), _ -> actions.onNext().run());
         next.addClassName("round-submit");
         next.setDisableOnClick(true);
         next.addThemeVariants(ButtonVariant.PRIMARY);
@@ -52,21 +54,21 @@ final class MapHeaderBar extends HorizontalLayout {
         menuRoot.getElement().setAttribute("aria-label", "Menü");
         if (compact) {
             logistics = null;
-            logisticsItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_LOGISTICS_MODE), _ -> onToggleLogistics.run());
+            logisticsItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_LOGISTICS_MODE), _ -> actions.onToggleLogistics().run());
             logisticsItem.setCheckable(true);
             menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_LEGEND), _ -> MapLegend.open());
         } else {
             logisticsItem = null;
-            logistics = new Button(I18n.t(UiTexts.MAP_LOGISTICS_MODE), _ -> onToggleLogistics.run());
+            logistics = new Button(I18n.t(UiTexts.MAP_LOGISTICS_MODE), _ -> actions.onToggleLogistics().run());
             logistics.addThemeVariants(ButtonVariant.TERTIARY);
         }
-        menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_CHAT), _ -> onChat.run());
-        researchItem = menuRoot.getSubMenu().addItem(I18n.t(de.zettsystems.starfare.game.ui.UiTexts.RESEARCH_TITLE), _ -> onResearch.run());
+        menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_CHAT), _ -> actions.onChat().run());
+        researchItem = menuRoot.getSubMenu().addItem(I18n.t(de.zettsystems.starfare.game.ui.UiTexts.RESEARCH_TITLE), _ -> actions.onResearch().run());
         researchItem.setVisible(false);
         roundRulesItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_ROUND_RULES),
-                _ -> onEditRoundRules.run());
-        leaveItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LEAVE), _ -> onLeave.run());
-        menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LOBBY), _ -> onLobby.run());
+                _ -> actions.onEditRoundRules().run());
+        leaveItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LEAVE), _ -> actions.onLeave().run());
+        menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LOBBY), _ -> actions.onLobby().run());
 
         var headerLeft = compact
                 ? new HorizontalLayout(gameNameLabel, roundLabel, empireStats, economyNotices)

@@ -34,7 +34,6 @@ public class ResearchSteps {
     }
     @Dann("prüfe ich Schiffsforschung auf Desktop und Handy")
     public void research() throws IOException {
-        assertThat(registry.rulesets().find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
         String host = String.valueOf(accounts.findByEmail("research@example.test").orElseThrow().id());
         var state = ColonyStates.ready(RulesetRef.SPACEWARD_SHIP_RESEARCH, original -> {
             var stocks = new java.util.HashMap<>(original.stocks()); stocks.replaceAll((_, _) -> 100L);

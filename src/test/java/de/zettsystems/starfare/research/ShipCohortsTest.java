@@ -22,8 +22,10 @@ class ShipCohortsTest {
         assertThat(mixed.minus(mixed.take(5, true)).count()).isEqualTo(7);
         assertThatThrownBy(() -> mixed.take(13, true)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> mixed.survive(13)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> mixed.minus(ShipCohorts.of(3, 1))).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new ShipCohorts(Map.of(0, Integer.MAX_VALUE, 1, 1))).isInstanceOf(IllegalArgumentException.class);
+        var foreignGeneration = ShipCohorts.of(3, 1);
+        assertThatThrownBy(() -> mixed.minus(foreignGeneration)).isInstanceOf(IllegalArgumentException.class);
+        var overflow = Map.of(0, Integer.MAX_VALUE, 1, 1);
+        assertThatThrownBy(() -> new ShipCohorts(overflow)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ShipCohorts.of(0, -1)).isInstanceOf(IllegalArgumentException.class);
     }
     @Test void immutableSystemAndFleetOperationsPreserveBuildTimeGenerations() {
@@ -36,7 +38,8 @@ class ShipCohortsTest {
         var fleet = new Fleet(1, 1, 1, 1, 2, 12, 1, 2).commissionedAs(mixed);
         assertThat(fleet.designateConquest(2).delayedByOneTurn().endJourneyAfterBattle().composition()).isEqualTo(mixed);
         assertThat(fleet.surviveBattle(6).composition()).isEqualTo(mixed.survive(6));
-        assertThatThrownBy(() -> fleet.commissionedAs(ShipCohorts.of(2, 1))).isInstanceOf(IllegalArgumentException.class);
+        var mismatched = ShipCohorts.of(2, 1);
+        assertThatThrownBy(() -> fleet.commissionedAs(mismatched)).isInstanceOf(IllegalArgumentException.class);
     }
     @Test void researchCostsRiseKeepRemaindersAndStopChargingAtTheMaximum() {
         var first = ShipResearch.INITIAL.allocate(25).advance(550);

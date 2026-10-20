@@ -122,7 +122,7 @@ public final class ResearchBenchmark {
         }
         var owned = state.systems().stream().filter(system -> Integer.valueOf(seat).equals(system.ownerId())).toList();
         var flying = state.fleets().stream().filter(fleet -> fleet.ownerId() == seat).toList();
-        long ships = owned.stream().mapToLong(system -> system.garrison()).sum() + flying.stream().mapToLong(fleet -> fleet.ships()).sum();
+        long ships = owned.stream().mapToLong(de.zettsystems.starfare.game.values.StarSystem::garrison).sum() + flying.stream().mapToLong(de.zettsystems.starfare.game.values.Fleet::ships).sum();
         double strength = owned.stream().mapToDouble(system -> system.composition().strength()).sum()
                 + flying.stream().mapToDouble(fleet -> fleet.composition().strength()).sum();
         return new Result(state.winnerId() == null ? 0 : state.winnerId(), resolved, state.shipTechnology(seat), firstTechnology,

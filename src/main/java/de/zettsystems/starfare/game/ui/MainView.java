@@ -151,8 +151,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         actionBar.add(treatyActions, planningActions);
         treatyActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.DIP_TITLE), _ -> openDiplomacy()));
         boolean phone = Devices.mobile();
-        header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
-                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, this::openShipResearch, phone);
+        header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
+                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, this::openShipResearch), phone);
 
         gameOverBanner.setVisible(false);
         gameOverBanner.getStyle().set(CssProperties.FONT_WEIGHT, "600");

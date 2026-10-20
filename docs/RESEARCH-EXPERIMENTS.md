@@ -114,7 +114,8 @@ need separate experiments. Human gameplay acceptance remains pending.
 
 Four real-browser journeys passed: research, the Spaceward creation wizard,
 existing phone navigation and direct production planning. Research acceptance
-uses a persisted two-human-seat fixture near level completion. It checks desktop
+uses a persisted two-human-seat fixture near level completion and runs with
+both the ordinary W6/W7 catalog and the opt-in research catalog. It checks desktop
 and touch-emulated phone editing, reload persistence across both sessions,
 visible and reachable phone controls without horizontal page overflow,
 read-only budget after submission, the completion report and mixed old/new hulls
