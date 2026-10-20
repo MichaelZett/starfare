@@ -11,6 +11,9 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public interface GameService {
+    default Optional<de.zettsystems.starfare.research.values.ResearchView> shipResearchFor(GameId id, String account) { return Optional.empty(); }
+    default boolean planShipResearch(GameId id, String account, int turn, int expectedPercent, int percent) { return false; }
+
     Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview> previewProduction(
             GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan);
 

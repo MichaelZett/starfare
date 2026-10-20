@@ -180,7 +180,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private static Optional<EventCategory> categoryOf(TurnEvent e) {
         return Optional.ofNullable(switch (e) {
             case TurnEvent.CoalitionBattle _ -> EventCategory.COALITION;
-            case TurnEvent.Recycling _, TurnEvent.Production _ -> EventCategory.PRODUCTION;
+            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.ResearchCompleted _ -> EventCategory.PRODUCTION;
             case TurnEvent.Reinforcement _ -> EventCategory.REINFORCEMENT;
             case TurnEvent.BattleWon _ -> EventCategory.BATTLE_WON;
             case TurnEvent.BattleLost _ -> EventCategory.BATTLE_LOST;
@@ -278,7 +278,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
             case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
             case TurnEvent.Reinforcement _ -> 3;
-            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.EconomySummary _ -> 4;
+            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _ -> 4;
         };
     }
 
@@ -323,7 +323,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
             case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponentName(held.attackerName()),
                     youName(held.defenderName()));
             case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
-                 TurnEvent.EconomySummary _ ->
+                 TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _ ->
                     new BattleReplayDialog.BattleSides("", "");
         };
     }
@@ -379,7 +379,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private static String iconFor(TurnEvent e) {
         return switch (e) {
             case TurnEvent.Recycling _ -> "♻";
-            case TurnEvent.Production _, TurnEvent.EconomySummary _ -> "⬆";
+            case TurnEvent.Production _, TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _ -> "⬆";
             case TurnEvent.Reinforcement _ -> "→";
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _ -> "⚔";
             case TurnEvent.BattleLost _ -> "✕";
@@ -393,7 +393,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
     private static String cssFor(TurnEvent e) {
         return switch (e) {
             case TurnEvent.Recycling _ -> "event-recycling";
-            case TurnEvent.Production _, TurnEvent.EconomySummary _ -> "event-production";
+            case TurnEvent.Production _, TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _ -> "event-production";
             case TurnEvent.Reinforcement _ -> "event-reinforcement";
             case TurnEvent.CoalitionBattle _ -> "event-coalition-battle";
             case TurnEvent.BattleWon _ -> "event-battle-won";
@@ -433,6 +433,7 @@ public class RoundView extends VerticalLayout implements BeforeEnterObserver {
                     : I18n.t(UiTexts.ROUND_EVENT_ALLIANCE_VICTORY, victory.allianceId(),
                             String.join(", ", victory.winnerNames()), victory.systemPercent());
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
+            case TurnEvent.ResearchCompleted research -> I18n.t(UiTexts.RESEARCH_COMPLETED, research.level(), research.level() * 10);
             case TurnEvent.EconomySummary _ -> "";
         };
     }

@@ -4,6 +4,18 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String RESEARCH_TITLE = "research.title";
+    public static final String RESEARCH_BUDGET = "research.budget";
+    public static final String RESEARCH_STATUS = "research.status";
+    public static final String RESEARCH_EXPLANATION = "research.explanation";
+    public static final String RESEARCH_SAVE = "research.save";
+    public static final String RESEARCH_CLOSE = "research.close";
+    public static final String RESEARCH_REJECTED = "research.rejected";
+    public static final String RESEARCH_RESERVED = "research.reserved";
+    public static final String RESEARCH_GENERATION = "research.generation";
+    public static final String RESEARCH_SHIPS = "research.ships";
+    public static final String RESEARCH_COMPLETED = "research.completed";
+
     public static final String BATTLE_ROLES_UNKNOWN = "battle.rolesUnknown";
     public static final String BATTLE_CONDITION_DETAILS = "battle.condition.details";
     public static final String BATTLE_CONDITION_FACTS = "battle.condition.facts";

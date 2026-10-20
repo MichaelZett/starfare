@@ -35,7 +35,13 @@ public final class IndustryPanel extends Div {
                 new Span(I18n.t(UiTexts.ECONOMY_CAPACITY, industry.capacity(), EconomyRules.MAX_CAPACITY)));
         var metal = industry.metal();
         if (metal != null) { addClassName("metal-details"); }
-        if (industry.usableCapacity() < industry.capacity()) {
+        if (industry.researchAllocation() > 0) {
+            add(new Span(I18n.t(de.zettsystems.starfare.game.ui.UiTexts.RESEARCH_RESERVED, industry.researchAllocation())));
+        }
+        var composition = industry.composition();
+        if (composition != null) { add(de.zettsystems.starfare.research.ui.ResearchDisplay.ships(composition)); }
+        var colony = industry.colony();
+        if (colony != null && colony.laborLimited() && industry.usableCapacity() < industry.capacity()) {
             add(new Span(I18n.t(UiTexts.UX_LABOR_LIMIT, industry.usableCapacity(), industry.capacity())));
         }
         if (editable) {

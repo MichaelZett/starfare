@@ -184,6 +184,18 @@ tasks.register('strategyBenchmark', JavaExec) {
     args providers.gradleProperty('strategyArgs').orElse('').map { it.tokenize() }.get()
 }
 
+// Opt-in paired research study, with independent discovery/control map families.
+tasks.register('researchBenchmark', JavaExec) {
+    group = 'verification'
+    description = 'Compares six research budgets using the production Spaceward rules.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'de.zettsystems.starfare.simulation.ResearchBenchmark'
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+    maxHeapSize = '768m'
+    args providers.gradleProperty('researchFamily').orElse('discovery').get()
+}
+
 bootRun {
     jvmArgs '-Dspring.profiles.active=local'
 }
@@ -206,6 +218,10 @@ tasks.register('e2eTest', Test) {
     // Nur zur Diagnose (-De2e.lang=en-US): Die Steps erwarten die deutsche Oberfläche.
     systemProperty 'e2e.lang', System.getProperty('e2e.lang', 'de-DE')
     systemProperty 'starfare.rules.economy-preview', providers.gradleProperty('economyPreview').orElse('false').get()
+    systemProperty 'starfare.rules.research-preview', providers.gradleProperty('researchPreview').orElse('false').get()
+    if (System.getProperty('e2e.chrome.binary') != null) {
+        systemProperty 'e2e.chrome.binary', System.getProperty('e2e.chrome.binary')
+    }
     def cucumberTags = System.getProperty('cucumber.filter.tags')
     if (cucumberTags != null) {
         systemProperty 'cucumber.filter.tags', cucumberTags

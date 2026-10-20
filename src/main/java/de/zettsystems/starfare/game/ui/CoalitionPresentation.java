@@ -29,7 +29,7 @@ final class CoalitionPresentation {
                 card.add(new Span(I18n.t(defender ? UiTexts.BATTLE_REPLAY_DEFENDERS : UiTexts.BATTLE_REPLAY_ATTACKERS)));
             }
             card.add(new Span(identity(side)));
-            BattleCondition.addTo(card, side.ships(), side.strength(), side.id(),
+            BattleCondition.addTo(card, side.ships(), side.strength(), side.baseStrength(), side.id(),
                     CombatStrengthFormat.forCoalition(side.strength(), sides.stream().map(CoalitionSide::strength).toList(),
                             com.vaadin.flow.component.UI.getCurrentOrThrow().getLocale()));
             Span count = new Span(Integer.toString(side.ships())); count.addClassName("battle-number");

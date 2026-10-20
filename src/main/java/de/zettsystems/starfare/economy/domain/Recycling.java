@@ -34,6 +34,6 @@ public final class Recycling {
             loss = Math.addExact(loss, (long) planned * RecyclingRules.LOSS_TENTHS);
         }
         var next = new RecyclingEconomy(orders, fractions, current.initialTenths(), current.combatLossTenths(), loss);
-        return new Settlement(new MetalEconomy(metal.deposits(), stocks, metal.mining(), next), ships);
+        return new Settlement(new MetalEconomy(metal.deposits(), stocks, metal.mining(), next, metal.research()), ships);
     }
 }

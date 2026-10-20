@@ -19,15 +19,18 @@ final class BattleCondition {
     private BattleCondition() { }
 
     static void addTo(Div card, int ships, double strength, int sideId, String formattedStrength) {
+        addTo(card, ships, strength, ships, sideId, formattedStrength);
+    }
+    static void addTo(Div card, int ships, double strength, double baseStrength, int sideId, String formattedStrength) {
         if (ships > 0) {
-            CombatReadiness condition = CombatReadiness.from(ships, strength, sideId);
+            CombatReadiness condition = CombatReadiness.from(ships, strength, baseStrength, sideId);
             Span text = new Span(I18n.t(CONDITIONS[condition.level()][condition.variant()]));
             text.addClassName("battle-condition");
             card.add(text);
         }
-        double deviation = ships > 0 ? (strength / ships - 1) * 100 : 0;
+        double deviation = baseStrength > 0 ? (strength / baseStrength - 1) * 100 : 0;
         String percent = String.format(com.vaadin.flow.component.UI.getCurrentOrThrow().getLocale(), "%+.2f", deviation);
-        Span facts = new Span(I18n.t(UiTexts.BATTLE_CONDITION_FACTS, ships, formattedStrength, percent));
+        Span facts = new Span(I18n.t(UiTexts.BATTLE_CONDITION_FACTS, baseStrength, formattedStrength, percent));
         facts.addClassName("battle-strength");
         card.add(new Details(I18n.t(UiTexts.BATTLE_CONDITION_DETAILS), facts));
     }

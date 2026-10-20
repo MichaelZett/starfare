@@ -88,7 +88,7 @@ final class EconomyProfiles {
 
     private static void require(boolean valid, String message) { if (!valid) { throw new IllegalStateException(message); } }
 
-    private static final class CheckedEconomy extends DefaultEconomyService {
+    static final class CheckedEconomy extends DefaultEconomyService {
         @Override public boolean allocateExpansion(GameState state, int player, int system, int points) {
             require(super.allocateExpansion(state, player, system, points), "AI submitted invalid expansion");
             return true;
@@ -99,7 +99,7 @@ final class EconomyProfiles {
         }
     }
 
-    private static final class CheckedFleets extends DefaultFleetService {
+    static final class CheckedFleets extends DefaultFleetService {
         @Override public boolean queueSend(GameState state, int player, int from, int to, int ships,
                                            @org.jspecify.annotations.Nullable Integer beneficiary) {
             require(super.queueSend(state, player, from, to, ships, beneficiary), "AI submitted invalid fleet order");

@@ -96,7 +96,7 @@ public class GameState {
     private @Nullable MetalEconomy metals;
     public Optional<MetalEconomy> metals() { return Optional.ofNullable(metals); }
     public MetalProduction metalPreview() {
-        return MetalProduction.forPlan(systems, industries, colonies, Objects.requireNonNull(metals), ruleset);
+        return MetalProduction.forPlan(systems, industries, colonies, Objects.requireNonNull(metals), ruleset, researchReservations());
     }
     public int recyclingShips(int system) {
         var metal = metals;
@@ -130,6 +130,9 @@ public class GameState {
     }
     public void establishMetals(MetalEconomy initial) {
         if (started || !ruleset.usesMetals() || metals != null) { throw new IllegalArgumentException("Metal economy is fixed at creation"); }
+        if (ruleset.usesShipResearch()) {
+            initial = initial.withResearch(de.zettsystems.starfare.research.domain.ResearchEconomy.establish(players));
+        }
         metals = ruleset.usesRecycling() ? initial.establishRecycling(totalShips()) : initial;
         validateMetals();
         systems.replaceAll(system -> system.planShipbuilding(shipbuilding(system.id(), Objects.requireNonNull(industries.get(system.id())))));
@@ -142,7 +145,37 @@ public class GameState {
         metals = Objects.requireNonNull(metals).allocateMining(systemId, points);
         updateSystem(systemId, system -> system.planShipbuilding(shipbuilding(systemId, Objects.requireNonNull(industries.get(systemId)))));
     }
+    public java.util.Map<Integer, Integer> researchReservations() {
+        var research = metals == null ? null : metals.research();
+        return research == null ? java.util.Map.of() : research.reservations(systems, industries);
+    }
+    public int shipTechnology(int owner) {
+        var research = metals == null ? null : metals.research();
+        return research == null ? 0 : Objects.requireNonNull(research.empires().get(owner)).level();
+    }
+    public void planShipResearch(int player, int percent) {
+        if (!ruleset.usesShipResearch()) { throw new IllegalArgumentException("Ship research requires R1"); }
+        var current = Objects.requireNonNull(metals);
+        metals = current.withResearch(Objects.requireNonNull(current.research()).allocate(player, percent));
+        var reserved = researchReservations();
+        for (var system : List.copyOf(systems)) {
+            // Ownership changes can shift rounding in both empires. Clamp every affected plan
+            // before refreshing any output, so no intermediate negative production escapes.
+            if (system.ownerId() == null || system.neutral()) { continue; }
+            int available = Objects.requireNonNull(industries.get(system.id())).capacity() - reserved.getOrDefault(system.id(), 0);
+            int mining = Math.min(Objects.requireNonNull(metals.mining().get(system.id())), available);
+            metals = metals.allocateMining(system.id(), mining);
+            var industry = Objects.requireNonNull(industries.get(system.id()));
+            industries.put(system.id(), industry.allocateExpansion(Math.min(industry.expansionAllocation(), available - mining)));
+        }
+        refreshResearchOutput();
+    }
+    private void refreshResearchOutput() {
+        systems.replaceAll(system -> system.planShipbuilding(shipbuilding(system.id(), Objects.requireNonNull(industries.get(system.id())))));
+    }
     public void completeMetalProduction(MetalProduction production) {
+        var researchPoints = researchReservations();
+        var openingResearch = Objects.requireNonNull(metals).research();
         for (StarSystem system : List.copyOf(systems)) {
             if (system.ownerId() == null || system.neutral()) { continue; }
             Industry expanded = Objects.requireNonNull(industries.get(system.id())).expandForOneTurn(ruleset);
@@ -150,9 +183,17 @@ public class GameState {
             colonies.put(system.id(), grown);
             industries.put(system.id(), expanded);
             int next = grown.shipbuilding(expanded, ruleset.limitsIndustryByLabor()) - Objects.requireNonNull(Objects.requireNonNull(metals).mining().get(system.id()));
-            updateSystem(system.id(), current -> current.completeShipbuilding(Objects.requireNonNull(production.ships().get(system.id())), 0, next));
+            updateSystem(system.id(), current -> current.completeShipbuilding(Objects.requireNonNull(production.ships().get(system.id())), 0, next,
+                    shipTechnology(Objects.requireNonNull(system.ownerId()))));
         }
         metals = production.economy();
+        if (openingResearch != null) {
+            metals = metals.withResearch(openingResearch.advance(systems, researchPoints));
+            // Expanded capacity can increase the next reservation. Reapply the budget and clamp local plans.
+            for (var player : players) {
+                planShipResearch(player.id(), Objects.requireNonNull(Objects.requireNonNull(metals.research()).empires().get(player.id())).percent());
+            }
+        }
     }
     private void validateMetals() {
         if (!ruleset.usesMetals()) {
@@ -162,6 +203,11 @@ public class GameState {
         var stored = metals;
         if (stored == null) { throw new IllegalArgumentException("Missing stored metal economy"); }
         de.zettsystems.starfare.economy.domain.RecyclingOrders.validate(this, stored);
+        var research = stored.research();
+        if (ruleset.usesShipResearch() != (research != null)
+                || (research != null && !research.empires().keySet().equals(players.stream().map(Player::id).collect(java.util.stream.Collectors.toSet())))) {
+            throw new IllegalArgumentException("Research must match the stored rules and empires");
+        }
         var participants = players.stream().map(Player::id).collect(java.util.stream.Collectors.toSet());
         if (!stored.deposits().keySet().equals(industries.keySet()) || !stored.stocks().keySet().equals(participants)
                 || systems.stream().anyMatch(system -> Objects.requireNonNull(stored.mining().get(system.id())) > usableIndustrialCapacity(system.id())
@@ -170,7 +216,8 @@ public class GameState {
                 || replayFrames.values().stream().anyMatch(frame -> {
                     var historical = frame.metals();
                     if (historical != null) { de.zettsystems.starfare.economy.domain.RecyclingOrders.validateReference(ruleset, historical); }
-                    return historical == null || !historical.deposits().keySet().equals(industries.keySet())
+                    return historical == null || ruleset.usesShipResearch() != (historical.research() != null)
+                            || !historical.deposits().keySet().equals(industries.keySet())
                             || !historical.stocks().keySet().equals(participants);
                 })) {
             throw new IllegalArgumentException("Incomplete stored metal economy");
@@ -197,13 +244,15 @@ public class GameState {
         Industry industry = industries.get(systemId);
         if (industry == null) { throw new IllegalArgumentException("Unknown industry"); }
         ColonyEconomy colony = colonies.get(systemId);
-        return colony == null ? industry.capacity() : colony.usableCapacity(industry, ruleset.limitsIndustryByLabor());
+        return (colony == null ? industry.capacity() : colony.usableCapacity(industry, ruleset.limitsIndustryByLabor()))
+                - researchReservations().getOrDefault(systemId, 0);
     }
 
     private int shipbuilding(int systemId, Industry industry) {
         ColonyEconomy colony = colonies.get(systemId);
         int output = colony == null ? industry.shipbuilding() : colony.shipbuilding(industry, ruleset.limitsIndustryByLabor());
-        return output - (metals == null ? 0 : Objects.requireNonNull(metals.mining().get(systemId)));
+        return output - (metals == null ? 0 : Objects.requireNonNull(metals.mining().get(systemId)))
+                - researchReservations().getOrDefault(systemId, 0);
     }
 
     private void validateColonies() {
@@ -709,6 +758,10 @@ public class GameState {
     }
 
     public int addFleet(int ownerId, int from, int to, int ships) {
+        return addFleet(ownerId, from, to, ships, de.zettsystems.starfare.research.values.ShipCohorts.of(0, ships));
+    }
+    public int addFleet(int ownerId, int from, int to, int ships,
+                        de.zettsystems.starfare.research.values.ShipCohorts composition) {
         int travelRounds = travelRounds(from, to);        // unverändert
         FlightJourney journey = null;
         int firstTarget = to;
@@ -720,7 +773,7 @@ public class GameState {
                     FlightJourney.Phase.FLYING, 0, turn + route.rounds());
         }
         int localNo = nextLocalNoFor(ownerId);
-        Fleet f = new Fleet(nextGlobalFleetId++, ownerId, localNo, from, firstTarget, ships, turn, turn + travelRounds, journey);
+        Fleet f = new Fleet(nextGlobalFleetId++, ownerId, localNo, from, firstTarget, ships, turn, turn + travelRounds, journey).commissionedAs(composition);
         fleets.add(f);
         return f.globalId();
     }
@@ -792,21 +845,31 @@ public class GameState {
     public void updateSystem(int id, UnaryOperator<StarSystem> updater) {
         for (int i = 0; i < systems.size(); i++) {
             StarSystem current = systems.get(i);
-            if (current.id() == id) {
-                StarSystem updated = updater.apply(current);
-                if (!Objects.equals(current.ownerId(), updated.ownerId())) {
-                    Industry captured = industries.computeIfPresent(id, (_, industry) -> industry.captured());
-                    if (captured != null) {
-                        if (metals != null) { metals = metals.allocateMining(id, 0); }
-                        updated = updated.planShipbuilding(shipbuilding(id, captured));
-                    }
-                }
-                systems.set(i, updated);
-                recordOwnershipChange(current, updated);
-                return;
-            }
+            if (current.id() != id) { continue; }
+            StarSystem updated = updater.apply(current);
+            boolean ownerChanged = !Objects.equals(current.ownerId(), updated.ownerId());
+            if (ownerChanged) { updated = captureIndustry(id, updated); }
+            systems.set(i, updated);
+            if (ownerChanged) { rebalanceResearchAfterCapture(); }
+            recordOwnershipChange(current, updated);
+            return;
         }
         throw new IllegalArgumentException("System not found: " + id);
+    }
+
+    private StarSystem captureIndustry(int id, StarSystem updated) {
+        Industry captured = industries.computeIfPresent(id, (_, industry) -> industry.captured());
+        if (captured == null) { return updated; }
+        if (metals != null) { metals = metals.allocateMining(id, 0); }
+        return updated.planShipbuilding(shipbuilding(id, captured));
+    }
+
+    private void rebalanceResearchAfterCapture() {
+        if (!ruleset.usesShipResearch() || metals == null || metals.research() == null) { return; }
+        for (var player : players) {
+            planShipResearch(player.id(), Objects.requireNonNull(Objects.requireNonNull(
+                    Objects.requireNonNull(metals).research()).empires().get(player.id())).percent());
+        }
     }
 
     private void recordOwnershipChange(StarSystem before, StarSystem after) {

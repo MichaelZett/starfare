@@ -40,6 +40,39 @@ import org.springframework.stereotype.Service;
 public class DefaultGameService implements GameService {
 
     @Override
+    public Optional<de.zettsystems.starfare.research.values.ResearchView> shipResearchFor(GameId id, String account) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            Integer seat = state.seatByUser().get(account);
+            if (!state.ruleset().usesShipResearch() || !state.started() || seat == null
+                    || !state.joinedHumanPlayerIds().contains(seat) || !access.visible(state, session.hostPlayerId(), account)) {
+                return Optional.empty();
+            }
+            var research = Objects.requireNonNull(state.metals().orElseThrow().research());
+            var reservations = state.researchReservations();
+            int points = state.systems().stream().filter(system -> seat.equals(system.ownerId()))
+                    .mapToInt(system -> reservations.getOrDefault(system.id(), 0)).sum();
+            return Optional.of(new de.zettsystems.starfare.research.values.ResearchView(state.turn(),
+                    canPlan(state, seat, state.turn()), Objects.requireNonNull(research.empires().get(seat)), points));
+        }));
+    }
+    @Override
+    public boolean planShipResearch(GameId id, String account, int turn, int expectedPercent, int percent) {
+        if (percent < 0 || percent > 100 || !isRunningGame(id)) { return false; }
+        boolean accepted = registry.writeState(id, state -> {
+            Integer seat = state.seatByUser().get(account);
+            if (!state.ruleset().usesShipResearch() || seat == null || !canPlan(state, seat, turn)) { return false; }
+            var research = Objects.requireNonNull(state.metals().orElseThrow().research());
+            if (Objects.requireNonNull(research.empires().get(seat)).percent() != expectedPercent) { return false; }
+            state.planShipResearch(seat, percent);
+            state.systems().stream().filter(system -> seat.equals(system.ownerId()))
+                    .forEach(system -> fleetService.trimRelocations(state, seat, system.id()));
+            return true;
+        });
+        if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
+        return accepted;
+    }
+
+    @Override
     public Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview> previewProduction(
             GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan) {
         return registry.find(id).flatMap(session -> registry.readState(id, state -> {
@@ -1006,7 +1039,7 @@ public class DefaultGameService implements GameService {
             case TurnEvent.SystemLost conquest -> conquest.systemName();
             case TurnEvent.DefenseHeld battle -> battle.systemName();
             case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
-                 TurnEvent.EconomySummary _ -> "";
+                 TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _ -> "";
         };
     }
 
@@ -1184,7 +1217,7 @@ public class DefaultGameService implements GameService {
                         destroyed += battle.destroyedBy(playerId);
                     }
                     case TurnEvent.Recycling _, TurnEvent.Reinforcement _,
-                            TurnEvent.Victory _, TurnEvent.EconomySummary _,
+                            TurnEvent.Victory _, TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _,
                             TurnEvent.Defeat _ -> { }
                 }
             }

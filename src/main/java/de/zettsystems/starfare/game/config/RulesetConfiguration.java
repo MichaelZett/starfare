@@ -9,6 +9,6 @@ import org.springframework.context.annotation.Configuration;
 public class RulesetConfiguration {
     @Bean
     RulesetCatalog rulesetCatalog(RulesetProperties properties) {
-        return RulesetCatalog.builtIn(properties.economyPreview());
+        return properties.researchPreview() ? RulesetCatalog.withShipResearch() : RulesetCatalog.builtIn();
     }
 }

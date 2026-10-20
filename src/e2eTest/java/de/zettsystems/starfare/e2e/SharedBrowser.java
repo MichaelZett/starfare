@@ -57,8 +57,13 @@ final class SharedBrowser {
     }
 
     private static ChromeOptions options(int width, int height) {
-        WebDriverManager.chromedriver().setup();
+        var manager = WebDriverManager.chromedriver();
+        String requestedBinary = System.getProperty("e2e.chrome.binary");
+        if (requestedBinary != null) { manager.browserBinary(requestedBinary); }
+        manager.setup();
         ChromeOptions options = new ChromeOptions();
+        String binary = System.getProperty("e2e.chrome.binary");
+        if (binary != null) { options.setBinary(binary); }
         if (Boolean.parseBoolean(System.getProperty("e2e.headless", "true"))) {
             options.addArguments("--headless=new");
         }

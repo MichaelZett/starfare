@@ -20,7 +20,7 @@ record Scenario(RulesetRef rules, GalaxyLayout layout, int systems, long mapSeed
     }
     Scenario {
         if (!List.of(RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD, RulesetRef.SPACEWARD_ALLIANCE, RulesetRef.SPACEWARD_RECYCLING,
-                RulesetRef.SPACEWARD_ECONOMY_PREVIEW, RulesetRef.SPACEWARD_DIRECT_ECONOMY, RulesetRef.SPACEWARD_EQUAL_METAL, RulesetRef.SPACEWARD_EARLY_INDUSTRY).contains(rules)
+                RulesetRef.SPACEWARD_ECONOMY_PREVIEW, RulesetRef.SPACEWARD_DIRECT_ECONOMY, RulesetRef.SPACEWARD_EQUAL_METAL, RulesetRef.SPACEWARD_EARLY_INDUSTRY, RulesetRef.SPACEWARD_SHIP_RESEARCH).contains(rules)
                 || systems < 8 || systems > 120 || roundLimit < 1 || roundLimit > 2000
                 || randomness < 0 || randomness > 30) {
             throw new IllegalArgumentException("Unsupported scenario settings");

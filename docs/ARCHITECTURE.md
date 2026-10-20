@@ -1082,3 +1082,61 @@ wizard and update the selected card; switching variants resets to that variant's
 default. Templates and rematches retain W6/W7 exactly. Older stored games still
 load and continue, but `DefaultGameTemplateService` excludes their setups from
 new templates. No snapshot migration or stored-rule rewrite is performed.
+
+
+## Shared ship research: Spaceward 1.3.0-r1
+
+R1 inherits W7 economics and navigation under its own stored rule reference and
+round provider. `research-preview` enables creation via `RulesetCatalog.withShipResearch`;
+normal W6/W7 creation is unchanged. The ordinary catalog still supports R1 for
+restoration and round dispatch. No saved W6/W7 reference is migrated.
+
+`ResearchEconomy` is an immutable optional component of `MetalEconomy`, which
+already travels through snapshots, copies and replay frames. R1 requires exactly
+one research record per player. Older rules require no research component.
+`ShipResearch` stores a percentage, completed level and long progress, validates
+cost bounds, carries remainders and stops at the initial level-20 cap. The square
+cost curve is versioned in R1. Reservation is computed from installed industry,
+rounded once per empire and allocated by largest remainder then system ID.
+Reservations reduce the industry's usable capacity; `MetalProduction` exposes
+the exact same reservation map for authorized live and historical forecasts.
+
+`GameState.planShipResearch` clamps expansion before mining and updates planned
+ship output. The application command identifies the seat from the account,
+checks round/submission state and compares the expected previous percentage
+under the game lock. Accepted changes publish `ProductionAllocationChanged`.
+Relocations are trimmed after a budget change. Research advancement uses opening
+industry and follows ship production: that round's ships keep the old level.
+Expanded industry, new levels and changed ownership recompute next-round budgets.
+`ResearchCompleted` is a stored, localized report event without a battle marker.
+
+`ShipCohorts` stores immutable per-level hull counts in both `StarSystem` and
+`Fleet`. Constructors check counts; missing legacy JSON defaults to level zero.
+All navigation, return, dispatch, cancellation, docking, reinforcement, recycling
+and survivor operations retain generations. Standing orders partition the same
+newest-first selection without duplicating cohorts. Only research production can
+add newly commissioned higher-level hulls. Recycling removes oldest hulls first;
+casualties use proportional largest remainders. No material conversion uses
+combat strength: hull counts, metal cost and recycling remain unchanged.
+
+R1 coalition resolution uses summed generation strength per volley and each
+side's actual surviving cohort mix; rolls and physical casualty limits remain
+unchanged. The legacy resolver path receives no cohorts and keeps historical
+math. Survivors are assigned to members and contingents by hull count, then to
+generations by largest remainder. The UI projects composition only through fully
+visible industry and own fleets; research progress and budgets are own-empire
+views behind the account authorization boundary. Reviews use saved research and
+ship generations, never the empire's later technology.
+
+The map menu opens an ordinary Vaadin dialog; no frontend bundle, JavaScript,
+CSS or tracked dependency manifests are changed. AI budgets use 10%, 5% for
+RUSH, following the paired study in `RESEARCH-EXPERIMENTS.md`, through the same domain budget operation. Focused regression cases cover
+completion timing, material conservation, coalition outcomes, multiple standing
+routes, conquest budget changes, old JSON, account/stale-write rejection,
+database reload and all AI profiles. These checks do not establish optimal balance.
+
+Coalition reports store opening base strength separately from rolled strength.
+Legacy reports default base strength to hull count; crew-condition text compares
+against the technology-weighted base, so technology does not masquerade as crew
+readiness. Per-volley strength uses the same member/contingent rounding as final
+survivor allocation; generation strength is summed in integer tenths.

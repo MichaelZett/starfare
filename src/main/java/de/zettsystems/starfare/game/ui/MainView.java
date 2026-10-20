@@ -151,8 +151,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         actionBar.add(treatyActions, planningActions);
         treatyActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.DIP_TITLE), _ -> openDiplomacy()));
         boolean phone = Devices.mobile();
-        header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
-                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, phone);
+        header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
+                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, this::openShipResearch), phone);
 
         gameOverBanner.setVisible(false);
         gameOverBanner.getStyle().set(CssProperties.FONT_WEIGHT, "600");
@@ -618,6 +618,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 .flatMap(account -> game.hostPlayerIdOf(gameId).filter(account::equals)).isPresent());
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer && pendingBattleSystemIds(view).isEmpty());
+        header.setResearchVisible(!reviewing && !observer && pendingBattleSystemIds(view).isEmpty() && game.shipResearchFor(gameId,
+                UserContext.currentPlayerId().orElse("")).isPresent());
         header.setRound(view.turn());
         RoundStatus status = reviewing ? RoundStatus.NONE : view.roundStatus();
         roundStatus.update(status, playerId);
@@ -649,6 +651,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         chatDialog = null;
         if (current != null) {
             current.close();
+        }
+    }
+
+    private void openShipResearch() {
+        if (!reviewing) {
+            de.zettsystems.starfare.research.ui.ResearchDialog.open(game, gameId, UserContext.currentPlayerId().orElse(""));
         }
     }
 

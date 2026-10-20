@@ -1,13 +1,22 @@
 package de.zettsystems.starfare.economy.domain;
 
 import de.zettsystems.starfare.economy.values.RecyclingRules;
+import de.zettsystems.starfare.research.domain.ResearchEconomy;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /** Immutable resource state, including the next round's local mining assignments. */
 public record MetalEconomy(Map<Integer, MetalDeposit> deposits, Map<Integer, Long> stocks,
-                           Map<Integer, Integer> mining, @org.jspecify.annotations.Nullable RecyclingEconomy recycling) {
+                           Map<Integer, Integer> mining, @org.jspecify.annotations.Nullable RecyclingEconomy recycling,
+                           @org.jspecify.annotations.Nullable ResearchEconomy research) {
+    public MetalEconomy(Map<Integer, MetalDeposit> deposits, Map<Integer, Long> stocks, Map<Integer, Integer> mining,
+                        @org.jspecify.annotations.Nullable RecyclingEconomy recycling) {
+        this(deposits, stocks, mining, recycling, null);
+    }
+    public MetalEconomy withResearch(ResearchEconomy next) {
+        return new MetalEconomy(deposits, stocks, mining, recycling, next);
+    }
     public MetalEconomy(Map<Integer, MetalDeposit> deposits, Map<Integer, Long> stocks, Map<Integer, Integer> mining) {
         this(deposits, stocks, mining, null);
     }
@@ -24,7 +33,7 @@ public record MetalEconomy(Map<Integer, MetalDeposit> deposits, Map<Integer, Lon
         if (!deposits.containsKey(system) || points < 0) { throw new IllegalArgumentException("Invalid mining assignment"); }
         var next = new HashMap<>(mining);
         next.put(system, points);
-        return new MetalEconomy(deposits, stocks, next, recycling);
+        return new MetalEconomy(deposits, stocks, next, recycling, research);
     }
     public MetalEconomy establishRecycling(long ships) {
         if (recycling != null) { throw new IllegalArgumentException("Recycling is fixed at creation"); }
@@ -33,12 +42,12 @@ public record MetalEconomy(Map<Integer, MetalDeposit> deposits, Map<Integer, Lon
         var orders = new HashMap<Integer, Integer>(); deposits.keySet().forEach(id -> orders.put(id, 0));
         var fractions = new HashMap<Integer, Integer>(); stocks.keySet().forEach(id -> fractions.put(id, 0));
         return new MetalEconomy(deposits, stocks, mining, new RecyclingEconomy(orders, fractions,
-                Math.multiplyExact(total, RecyclingRules.METAL_SCALE), 0, 0));
+                Math.multiplyExact(total, RecyclingRules.METAL_SCALE), 0, 0), research);
     }
     public MetalEconomy planRecycling(int system, int ships) {
-        return new MetalEconomy(deposits, stocks, mining, java.util.Objects.requireNonNull(recycling).plan(system, ships));
+        return new MetalEconomy(deposits, stocks, mining, java.util.Objects.requireNonNull(recycling).plan(system, ships), research);
     }
     public MetalEconomy recordCombatLoss(long ships) {
-        return new MetalEconomy(deposits, stocks, mining, java.util.Objects.requireNonNull(recycling).recordCombatLoss(ships));
+        return new MetalEconomy(deposits, stocks, mining, java.util.Objects.requireNonNull(recycling).recordCombatLoss(ships), research);
     }
 }
