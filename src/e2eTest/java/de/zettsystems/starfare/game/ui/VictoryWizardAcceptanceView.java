@@ -15,7 +15,7 @@ public class VictoryWizardAcceptanceView extends VerticalLayout {
     public VictoryWizardAcceptanceView(GameService game, PlayerDirectory directory) {
         var catalog = new RulesetCatalog(game.rulesets().definitions().stream().map(entry ->
                 new RulesetDefinition(entry.defaultRef(), entry.nameKey(), entry.descriptionKey(),
-                        entry.supportedVersions(), true)).toList());
+                        entry.supportedVersions(), true, entry.creatableVersions())).toList());
         add(new Button("Wizard", _ -> CreateGameWizardDialog.open(game, directory, () -> { }, catalog)));
     }
 }

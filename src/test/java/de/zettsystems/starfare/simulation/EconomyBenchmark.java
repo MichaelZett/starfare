@@ -16,6 +16,10 @@ import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.navigation.application.DefaultNavigationService;
 import de.zettsystems.starfare.report.application.DefaultReportService;
 import de.zettsystems.starfare.turn.application.RecyclingSpacewardTurnEngine;
+import de.zettsystems.starfare.turn.application.DirectEconomySpacewardTurnEngine;
+import de.zettsystems.starfare.turn.application.EconomyPreviewSpacewardTurnEngine;
+import de.zettsystems.starfare.turn.application.EqualMetalSpacewardTurnEngine;
+import de.zettsystems.starfare.turn.application.SpacewardTurnEngine;
 import de.zettsystems.starfare.turn.application.RoundPipeline;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,46 +29,29 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-/** Silent W4 experiments using real AI, commands, resolution and round-by-round conservation checks. */
+/** Silent versioned experiments using real AI, commands, resolution and conservation checks. */
 final class EconomyBenchmark {
-    record Options(Path output, long firstSeed, int seeds, int combatSeeds, int rounds, String suite) {
-        static Options parse(String[] args) {
-            var values = new HashMap<String, String>();
-            for (String arg : args) {
-                String[] pair = arg.split("=", 2);
-                if (pair.length != 2 || !Set.of("--mode", "--output", "--first-seed", "--seeds", "--combat-seeds", "--rounds", "--suite").contains(pair[0])
-                        || values.putIfAbsent(pair[0], pair[1]) != null) { throw new IllegalArgumentException("Invalid economy option: " + arg); }
-            }
-            var options = new Options(Path.of(values.getOrDefault("--output", "build/economy")),
-                    Long.parseLong(values.getOrDefault("--first-seed", "1")), Integer.parseInt(values.getOrDefault("--seeds", "2")),
-                    Integer.parseInt(values.getOrDefault("--combat-seeds", "2")), Integer.parseInt(values.getOrDefault("--rounds", "150")),
-                    values.getOrDefault("--suite", "comparison"));
-            if (options.seeds < 1 || options.seeds > 100 || options.combatSeeds < 1 || options.combatSeeds > 10
-                    || options.rounds < 1 || options.rounds > 2000 || !Set.of("comparison", "profiles").contains(options.suite)) {
-                throw new IllegalArgumentException("Invalid economy dimensions");
-            }
-            return options;
-        }
-    }
     record Result(String outcome, String winners, int rounds, String digest, long combatLoss, long recyclingLoss, long initialMetal) { }
     private EconomyBenchmark() { }
 
     public static void main(String[] args) throws IOException {
-        var options = Options.parse(args);
+        var options = EconomyBenchmarkOptions.parse(args);
         Files.createDirectories(options.output());
         Files.writeString(options.output().resolve("invocation.txt"), "economy-harness-v1\nsource-sha256=" + SourceFingerprint.current()
-                + "\njava=" + System.getProperty("java.version") + "\n" + String.join(" ", args) + "\n");
+                + "\njava=" + System.getProperty("java.version") + "\n" + String.join(" ", args) + "\nrules=" + options.rules() + "\n");
         var matches = new StringBuilder("match,suite,map_seed,combat_seed,layout,systems,environment,profiles,outcome,winners,rounds,sha256,combat_loss_tenths,recycling_loss_tenths,initial_metal_tenths\n");
         var metrics = new StringBuilder("match,round,player,profile,systems,ships,capacity,unused_labor_capacity,stock,deposit_remaining,mining,extracted,planned,built,shortage,recycled,combat_loss_tenths,recycling_loss_tenths,balance_tenths\n");
         var orders = new StringBuilder("match,round,player,action,source,target,amount\n");
+        Files.writeString(options.output().resolve("rounds.csv"), "");
+        Files.writeString(options.output().resolve("orders.csv"), "");
         int match = 0;
         for (long seed = options.firstSeed(); seed < options.firstSeed() + options.seeds(); seed++) {
             for (int combat = 0; combat < options.combatSeeds(); combat++) {
                 for (var layout : List.of(GalaxyLayout.RANDOM, GalaxyLayout.EVEN)) {
                     for (int size : List.of(16, 32)) {
-                        for (var environment : EconomyMaps.Environment.values()) {
+                        for (var environment : options.environments()) {
                             for (var profiles : lineups(options.suite())) {
-                                var scenario = new Scenario(RulesetRef.SPACEWARD_RECYCLING, layout, size, seed, 314159L + combat, options.rounds(), 10);
+                                var scenario = new Scenario(options.rules(), layout, size, seed, 314159L + combat, options.rounds(), 10);
                                 int id = ++match;
                                 var result = play(scenario, environment, profiles, id, metrics, orders);
                                 matches.append(id).append(',').append(options.suite()).append(',').append(seed).append(',').append(scenario.combatSeed())
@@ -74,6 +61,10 @@ final class EconomyBenchmark {
                                         .append(',').append(result.digest()).append(',').append(result.combatLoss()).append(',').append(result.recyclingLoss())
                                         .append(',').append(result.initialMetal()).append('\n');
                             }
+                            Files.writeString(options.output().resolve("rounds.csv"), metrics, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+                            Files.writeString(options.output().resolve("orders.csv"), orders, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+                            metrics.setLength(0);
+                            orders.setLength(0);
                             System.out.printf("Economy %s %d %s: %d matches completed%n", layout, size, environment, match);
                         }
                     }
@@ -82,14 +73,13 @@ final class EconomyBenchmark {
             }
         }
         Files.writeString(options.output().resolve("matches.csv"), matches);
-        Files.writeString(options.output().resolve("rounds.csv"), metrics);
-        Files.writeString(options.output().resolve("orders.csv"), orders);
         System.out.println("Economy reports: " + options.output().toAbsolutePath());
     }
 
     static List<List<EconomyProfiles.Profile>> lineups(String suite) {
         var result = new ArrayList<List<EconomyProfiles.Profile>>();
         var standard = new EconomyProfiles.Profile(AiStrategy.CONCENTRATION, EconomyProfiles.Policy.STANDARD);
+        if (suite.equals("strategies")) { return strategyLineups(); }
         if (suite.equals("profiles")) {
             for (var strategy : AiStrategy.values()) {
                 var profile = new EconomyProfiles.Profile(strategy, EconomyProfiles.Policy.STANDARD);
@@ -116,6 +106,28 @@ final class EconomyBenchmark {
         return List.copyOf(result);
     }
 
+    /** Every selectable pair in both seats, plus two rotating four-player groups. */
+    private static List<List<EconomyProfiles.Profile>> strategyLineups() {
+        var profiles = Arrays.stream(AiStrategy.values()).map(strategy ->
+                new EconomyProfiles.Profile(strategy, EconomyProfiles.Policy.STANDARD)).toList();
+        var result = new ArrayList<List<EconomyProfiles.Profile>>();
+        for (int left = 0; left < profiles.size(); left++) {
+            for (int right = left + 1; right < profiles.size(); right++) {
+                result.add(List.of(profiles.get(left), profiles.get(right)));
+                result.add(List.of(profiles.get(right), profiles.get(left)));
+            }
+        }
+        for (var group : List.of(List.of(AiStrategy.RUSH, AiStrategy.CONCENTRATION, AiStrategy.INDUSTRY, AiStrategy.INDUSTRY_ADAPTIVE),
+                List.of(AiStrategy.BASELINE, AiStrategy.EXPANSION, AiStrategy.DEFENSE, AiStrategy.INDUSTRY_LIGHT))) {
+            var seats = new ArrayList<>(group.stream().map(strategy -> new EconomyProfiles.Profile(strategy, EconomyProfiles.Policy.STANDARD)).toList());
+            for (int rotation = 0; rotation < seats.size(); rotation++) {
+                result.add(List.copyOf(seats));
+                Collections.rotate(seats, 1);
+            }
+        }
+        return List.copyOf(result);
+    }
+
     static Result play(Scenario scenario, EconomyMaps.Environment environment, List<EconomyProfiles.Profile> profiles,
                        int match, StringBuilder metrics, StringBuilder orders) {
         var state = scenario.create(profiles.size(), environment);
@@ -126,7 +138,7 @@ final class EconomyBenchmark {
         var navigation = new DefaultNavigationService();
         var pipeline = new RoundPipeline(new DefaultCombatService(reports, combat::nextDouble), reports, fleets, navigation,
                 new DefaultDiplomacyService(), new DefaultCoalitionCombatService(reports, navigation, _ -> combat.nextDouble()), () -> ordering);
-        var engine = new RecyclingSpacewardTurnEngine(pipeline, new DefaultEconomyService(), (_, _) -> { }, fleets, reports);
+        var engine = engine(scenario.rules(), pipeline, fleets, reports);
         var planning = new EconomyProfiles();
         var digest = digest();
         int resolved = 0;
@@ -153,6 +165,15 @@ final class EconomyBenchmark {
         var recycle = Objects.requireNonNull(state.metals().orElseThrow().recycling());
         return new Result(outcome, winners, resolved, HexFormat.of().formatHex(digest.digest()),
                 recycle.combatLossTenths(), recycle.recyclingLossTenths(), recycle.initialTenths());
+    }
+
+    private static SpacewardTurnEngine engine(RulesetRef rules, RoundPipeline pipeline, DefaultFleetService fleets, DefaultReportService reports) {
+        var economy = new DefaultEconomyService();
+        if (rules.equals(RulesetRef.SPACEWARD_EARLY_INDUSTRY)) { return new de.zettsystems.starfare.turn.application.EarlyIndustrySpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports); }
+        if (rules.equals(RulesetRef.SPACEWARD_EQUAL_METAL)) { return new EqualMetalSpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports); }
+        if (rules.equals(RulesetRef.SPACEWARD_DIRECT_ECONOMY)) { return new DirectEconomySpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports); }
+        if (rules.equals(RulesetRef.SPACEWARD_ECONOMY_PREVIEW)) { return new EconomyPreviewSpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports); }
+        return new RecyclingSpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports);
     }
 
     private static void recordMetrics(GameState state, List<EconomyProfiles.Profile> profiles, int match, StringBuilder metrics, StringBuilder orders) {

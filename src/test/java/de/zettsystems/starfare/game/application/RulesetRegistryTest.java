@@ -11,7 +11,7 @@ class RulesetRegistryTest {
     @Test void acceptanceGamesAreCreatedWithCompleteSavedEconomicsBeforeTheirFirstRound() {
         var store = new InMemoryGameSessionStore();
         GameRegistry preview = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(), RulesetCatalog.builtIn(true));
-        var id = preview.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_DIRECT_ECONOMY));
+        var id = preview.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_EARLY_INDUSTRY));
         var original = preview.readState(id, GameState::toSnapshot);
         assertThat(original.colonies()).hasSameSizeAs(original.systems());
         assertThat(original.metals()).isNotNull();
@@ -19,8 +19,8 @@ class RulesetRegistryTest {
         restored.start();
         assertThat(de.zettsystems.starfare.economy.domain.RecyclingOrders.balanceTenths(restored))
                 .isEqualTo(restored.metals().orElseThrow().recycling().initialTenths());
-        assertThat(restored.ruleset()).isEqualTo(RulesetRef.SPACEWARD_DIRECT_ECONOMY);
-        assertThat(RulesetCatalog.builtIn().find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.SPACEWARD_ALLIANCE);
+        assertThat(restored.ruleset()).isEqualTo(RulesetRef.SPACEWARD_EARLY_INDUSTRY);
+        assertThat(RulesetCatalog.builtIn().find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.SPACEWARD_EARLY_INDUSTRY);
     }
     @Test
     void unavailableVariantsAreRejectedBeforeAnyGameIsSaved() {
@@ -37,12 +37,25 @@ class RulesetRegistryTest {
     }
 
     @Test
+    void oldSpacewardVersionsAreRejectedBeforeAnyStateIsSaved() {
+        var store = mock(GameSessionStore.class);
+        var registry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
+        for (var version : RulesetCatalog.builtIn().find("spaceward").orElseThrow().supportedVersions()) {
+            var rules = new RulesetRef("spaceward", version);
+            if (rules.equals(RulesetRef.SPACEWARD_EQUAL_METAL) || rules.equals(RulesetRef.SPACEWARD_EARLY_INDUSTRY)) { continue; }
+            assertThatThrownBy(() -> registry.createGame(GameSetup.defaults().selectRuleset(rules)))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+        verifyNoInteractions(store);
+    }
+
+    @Test
     void releasedSpacewardGamesStartWithIndustryAndFixedRange() {
         GameSessionStore store = new InMemoryGameSessionStore();
         GameRegistry registry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
-        GameId id = registry.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
+        GameId id = registry.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_EQUAL_METAL));
         registry.readState(id, state -> {
-            assertThat(state.ruleset()).isEqualTo(RulesetRef.SPACEWARD);
+            assertThat(state.ruleset()).isEqualTo(RulesetRef.SPACEWARD_EQUAL_METAL);
             assertThat(state.industries()).hasSameSizeAs(state.systems());
             assertThat(state.navigationSettings()).isPresent();
             return null;

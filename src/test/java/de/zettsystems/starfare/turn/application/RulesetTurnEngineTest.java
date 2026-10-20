@@ -35,6 +35,16 @@ class RulesetTurnEngineTest {
         when(provider.ruleset()).thenReturn(RulesetRef.SPACEWARD_DIRECT_ECONOMY);
         return provider;
     }
+    private static RulesetRoundImplementation earlyIndustryProvider() {
+        var provider = mock(RulesetRoundImplementation.class);
+        when(provider.ruleset()).thenReturn(RulesetRef.SPACEWARD_EARLY_INDUSTRY);
+        return provider;
+    }
+    private static RulesetRoundImplementation equalMetalProvider() {
+        var provider = mock(RulesetRoundImplementation.class);
+        when(provider.ruleset()).thenReturn(RulesetRef.SPACEWARD_EQUAL_METAL);
+        return provider;
+    }
     private static RulesetRoundImplementation economyPreviewProvider() {
         var provider = mock(RulesetRoundImplementation.class);
         when(provider.ruleset()).thenReturn(RulesetRef.SPACEWARD_ECONOMY_PREVIEW);
@@ -48,7 +58,7 @@ class RulesetTurnEngineTest {
         TurnEngine classic = mock(TurnEngine.class);
         TurnEngine other = mock(TurnEngine.class);
         var engine = new RulesetTurnEngine(new RulesetCatalog(entries),
-                Map.of(RulesetRef.SECTOR_FORCES, classic, RulesetRef.SPACEWARD, mock(TurnEngine.class), RulesetRef.SPACEWARD_ALLIANCE, mock(TurnEngine.class), RulesetRef.SPACEWARD_COLONIES, mock(TurnEngine.class), RulesetRef.SPACEWARD_METALS, mock(TurnEngine.class), RulesetRef.SPACEWARD_RECYCLING, mock(TurnEngine.class), RulesetRef.SPACEWARD_ECONOMY_PREVIEW, mock(TurnEngine.class), RulesetRef.SPACEWARD_DIRECT_ECONOMY, mock(TurnEngine.class), third, other));
+                Map.ofEntries(Map.entry(RulesetRef.SECTOR_FORCES, classic), Map.entry(RulesetRef.SPACEWARD, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_ALLIANCE, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_COLONIES, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_METALS, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_RECYCLING, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_ECONOMY_PREVIEW, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_DIRECT_ECONOMY, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_EQUAL_METAL, mock(TurnEngine.class)), Map.entry(third, other), Map.entry(RulesetRef.SPACEWARD_EARLY_INDUSTRY, mock(TurnEngine.class))));
         GameState state = new GameState();
         state.rememberSetup(GameSetup.defaults().selectRuleset(third));
         assertThatCode(() -> engine.advanceTurn(state)).doesNotThrowAnyException();
@@ -59,7 +69,7 @@ class RulesetTurnEngineTest {
     @Test
     void unsupportedRulesCannotInvokeAnyEngineOrMutateState() {
         TurnEngine classic = mock(TurnEngine.class);
-        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), Map.of(RulesetRef.SECTOR_FORCES, classic, RulesetRef.SPACEWARD, mock(TurnEngine.class), RulesetRef.SPACEWARD_ALLIANCE, mock(TurnEngine.class), RulesetRef.SPACEWARD_COLONIES, mock(TurnEngine.class), RulesetRef.SPACEWARD_METALS, mock(TurnEngine.class), RulesetRef.SPACEWARD_RECYCLING, mock(TurnEngine.class), RulesetRef.SPACEWARD_ECONOMY_PREVIEW, mock(TurnEngine.class), RulesetRef.SPACEWARD_DIRECT_ECONOMY, mock(TurnEngine.class)));
+        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), Map.ofEntries(Map.entry(RulesetRef.SECTOR_FORCES, classic), Map.entry(RulesetRef.SPACEWARD, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_ALLIANCE, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_COLONIES, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_METALS, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_RECYCLING, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_ECONOMY_PREVIEW, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_DIRECT_ECONOMY, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_EQUAL_METAL, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_EARLY_INDUSTRY, mock(TurnEngine.class))));
         GameState state = new GameState();
         state.rememberSetup(GameSetup.defaults().selectRuleset(new RulesetRef("classic", "9.0.0")));
         var before = GameState.toSnapshot(state);
@@ -74,7 +84,7 @@ class RulesetTurnEngineTest {
         when(provider.ruleset()).thenReturn(RulesetRef.SECTOR_FORCES);
         RulesetRoundImplementation spaceward = mock(RulesetRoundImplementation.class);
         when(spaceward.ruleset()).thenReturn(RulesetRef.SPACEWARD);
-        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), List.of(provider, spaceward, allianceProvider(), colonyProvider(), metalProvider(), recyclingProvider(), economyPreviewProvider(), directEconomyProvider()));
+        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), List.of(provider, spaceward, allianceProvider(), colonyProvider(), metalProvider(), recyclingProvider(), economyPreviewProvider(), directEconomyProvider(), equalMetalProvider(), earlyIndustryProvider()));
         GameState state = new GameState();
         assertThatCode(() -> engine.advanceTurn(state)).doesNotThrowAnyException();
         verify(provider).advanceTurn(state);

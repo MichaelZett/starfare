@@ -38,6 +38,32 @@ class GameTemplateServiceTest {
     }
 
     @Test
+    void w6AndW7TemplatesRetainTheirOwnRules() {
+        for (var rules : List.of(RulesetRef.SPACEWARD_EQUAL_METAL, RulesetRef.SPACEWARD_EARLY_INDUSTRY)) {
+            var source = registry.createGame(GameSetup.defaults().selectRuleset(rules), "host", "Original");
+            var copy = templates.create(source, "host", "Copy", true).orElseThrow();
+            assertThat(registry.readState(copy, GameState::ruleset)).isEqualTo(rules);
+        }
+    }
+
+    @Test
+    void storedLegacyGamesRemainReadableButCannotBeUsedForNewTemplates() {
+        var store = new InMemoryGameSessionStore();
+        var legacyRules = new RulesetDefinition(RulesetRef.SPACEWARD_ALLIANCE, "test.name", "test.description",
+                java.util.Set.of(RulesetRef.SPACEWARD_ALLIANCE.version()), true);
+        var oldRegistry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(), new RulesetCatalog(List.of(legacyRules)));
+        var source = oldRegistry.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE), "host", "Stored");
+        var current = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
+        var currentTemplates = new DefaultGameTemplateService(current, mock(GameArchiveStore.class),
+                new DefaultGameAccessPolicy(), mock(Broadcaster.class));
+        var before = current.readState(source, GameState::toSnapshot);
+        assertThat(currentTemplates.template(source, "host")).isEmpty();
+        assertThat(currentTemplates.create(source, "host", "Copy", false)).isEmpty();
+        assertThat(current.readState(source, GameState::toSnapshot)).isEqualTo(before);
+        assertThat(GameState.fromSnapshot(before).ruleset()).isEqualTo(RulesetRef.SPACEWARD_ALLIANCE);
+    }
+
+    @Test
     void templateWithoutParticipantsIsPrivateAndOutsidersCannotCopy() {
         GameId source = registry.createGame(GameSetup.defaults(), "host", "Original");
         assertThat(templates.create(source, "outsider", "Stolen", true)).isEmpty();
