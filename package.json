@@ -41,7 +41,7 @@
     "strip-css-comments": "5.0.0",
     "transform-ast": "2.4.4",
     "typescript": "npm:@typescript/typescript6@6.0.2",
-    "vite": "8.3.4",
+    "vite": "8.3.5",
     "vite-plugin-checker": "0.14.5"
   },
   "overrides": {
@@ -157,9 +157,9 @@
       "strip-css-comments": "5.0.0",
       "transform-ast": "2.4.4",
       "typescript": "npm:@typescript/typescript6@6.0.2",
-      "vite": "8.3.4",
+      "vite": "8.3.1",
       "vite-plugin-checker": "0.14.5"
     },
-    "hash": "764e0cf06312772322a79a1f848542295f960cd50d739082235366c0804657ac"
+    "hash": "6dc3e7f3545a6541ca99d4337c05e4c9e29862b858b48896ca3419ca0d483bd1"
   }
 }
