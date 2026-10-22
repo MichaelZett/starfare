@@ -106,7 +106,7 @@ final class MapCanvas extends Div {
         double maxX = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::x).max().orElse(MAX_X);
         double maxY = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::y).max().orElse(MAX_Y);
         getElement().executeJs("""
-                const zoom = Math.max(0.1, Math.min(2.5,
+                const zoom = Math.max(0.1, Math.min(1.5,
                     Math.min(this.clientWidth / ($2 - $0 + 180), this.clientHeight / ($3 - $1 + 180))));
                 this.querySelector('#map').style.zoom = zoom;
                 this.scrollLeft = ($0 + $2) / 2 * zoom - this.clientWidth / 2;
@@ -130,13 +130,20 @@ final class MapCanvas extends Div {
                         + "const map = el.querySelector('#map');"
                         + "let saved = null;"
                         + "try { saved = JSON.parse(sessionStorage.getItem($0) || 'null'); } catch (e) { saved = null; }"
-                        + "if (saved && map) {"
-                        + "  map.style.zoom = saved.zoom;"
-                        + "  requestAnimationFrame(() => { el.scrollLeft = saved.left; el.scrollTop = saved.top; });"
-                        + "  return;"
-                        + "}"
-                        + "if (map) map.style.zoom = '1';"
-                        + "el.scrollTo({left: $1 - el.clientWidth / 2, top: $2 - el.clientHeight / 2});",
+                        // Der Bildausschnitt braucht die endgueltige Groesse; das Handy-Stylesheet
+                        // kann beim ersten Aufbau noch laden.
+                        + "let tries = 0;"
+                        + "const apply = () => {"
+                        + "  if (!el.clientHeight && tries++ < 30) { setTimeout(apply, 100); return; }"
+                        + "  if (saved && map) {"
+                        + "    map.style.zoom = saved.zoom;"
+                        + "    requestAnimationFrame(() => { el.scrollLeft = saved.left; el.scrollTop = saved.top; });"
+                        + "    return;"
+                        + "  }"
+                        + "  if (map) map.style.zoom = '1';"
+                        + "  el.scrollTo({left: $1 - el.clientWidth / 2, top: $2 - el.clientHeight / 2});"
+                        + "};"
+                        + "apply();",
                 viewportKey, homeX, homeY);
     }
 
@@ -199,6 +206,31 @@ final class MapCanvas extends Div {
                         + "    el.scrollTop = cy * ratio - py;"
                         + "    store();"
                         + "  }, { passive: false });"
+                        // Two-finger pinch zooms the map like the wheel; one finger keeps
+                        // the native scrolling, so the page itself never scales.
+                        + "  el.style.touchAction = 'pan-x pan-y';"
+                        + "  let pinch = null;"
+                        + "  const spread = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);"
+                        + "  el.addEventListener('touchstart', e => {"
+                        + "    if (e.touches.length === 2) pinch = { spread: spread(e.touches), zoom: parseFloat(map.style.zoom || '1') };"
+                        + "  }, { passive: true });"
+                        + "  el.addEventListener('touchmove', e => {"
+                        + "    if (!pinch || e.touches.length !== 2) return;"
+                        + "    e.preventDefault();"
+                        + "    const oldZoom = parseFloat(map.style.zoom || '1');"
+                        + "    const newZoom = Math.max(0.4, Math.min(2.5, pinch.zoom * spread(e.touches) / pinch.spread));"
+                        + "    if (newZoom === oldZoom) return;"
+                        + "    const rect = el.getBoundingClientRect();"
+                        + "    const px = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;"
+                        + "    const py = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;"
+                        + "    const cx = el.scrollLeft + px;"
+                        + "    const cy = el.scrollTop + py;"
+                        + "    map.style.zoom = newZoom;"
+                        + "    el.scrollLeft = cx * newZoom / oldZoom - px;"
+                        + "    el.scrollTop = cy * newZoom / oldZoom - py;"
+                        + "    store();"
+                        + "  }, { passive: false });"
+                        + "  el.addEventListener('touchend', e => { if (e.touches.length < 2) pinch = null; }, { passive: true });"
                         + "}"
                         // Zoom und Ausschnitt festhalten, damit der naechste Aufbau der
                         // Ansicht dort weitermacht, wo der Spieler aufgehoert hat.

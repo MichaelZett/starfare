@@ -93,7 +93,7 @@ public class DefaultFleetService implements FleetService {
             return false;
         }
         state.updateSystem(fromId, current -> current.launchFleet(ships));
-        int fleetId = state.addFleet(playerId, fromId, toId, ships);
+        int fleetId = state.addFleet(playerId, fromId, toId, ships, from.composition().take(ships, true));
         if (claim != null) {
             Fleet launched = state.fleets().stream().filter(fleet -> fleet.globalId() == fleetId).findFirst().orElseThrow();
             state.replaceFleet(launched.designateConquest(claim));
@@ -121,7 +121,7 @@ public class DefaultFleetService implements FleetService {
             if (f.globalId() == fleetId && f.ownerId() == playerId && canDisband(state, f)) {
                 it.remove();
                 state.waitThisTurn().remove(fleetId);
-                state.updateSystem(f.inFlight() ? f.fromSystemId() : f.toSystemId(), current -> current.reinforce(f.ships()));
+                state.updateSystem(f.inFlight() ? f.fromSystemId() : f.toSystemId(), current -> current.reinforce(f.composition()));
                 return true;
             }
         }
@@ -260,7 +260,10 @@ public class DefaultFleetService implements FleetService {
             return;
         }
         routed.merge(o.fromSystemId(), ships, Integer::sum);
-        state.addFleet(playerId, o.fromSystemId(), o.toSystemId(), ships);
+        if (state.ruleset().usesShipResearch()) {
+            var remaining = from.composition().minus(from.composition().take(alreadyRouted, true));
+            state.addFleet(playerId, o.fromSystemId(), o.toSystemId(), ships, remaining.take(ships, true));
+        } else { state.addFleet(playerId, o.fromSystemId(), o.toSystemId(), ships); }
     }
 
     private static boolean canDisband(GameState state, Fleet fleet) {

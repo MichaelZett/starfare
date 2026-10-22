@@ -26,6 +26,7 @@ import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.report.values.TurnReport;
 import de.zettsystems.starfare.style.CssProperties;
+import de.zettsystems.starfare.style.ui.Devices;
 import jakarta.annotation.security.PermitAll;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +67,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private final Div treatyActions = new Div();
     private final Div actionBar = new Div();
     private @Nullable DiplomacyDialog diplomacyDialog;
+    /** Present only on phones; desktops get the split layout instead, never both. */
+    private final @Nullable MobileMapLayout mobile;
 
     @SuppressWarnings("NullAway.Init")
     private GameId gameId;
@@ -147,8 +150,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         actionBar.addClassName("map-controls");
         actionBar.add(treatyActions, planningActions);
         treatyActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.DIP_TITLE), _ -> openDiplomacy()));
-        header = new MapHeaderBar(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
-                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules);
+        boolean phone = Devices.mobile();
+        header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
+                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, this::openShipResearch), phone);
 
         gameOverBanner.setVisible(false);
         gameOverBanner.getStyle().set(CssProperties.FONT_WEIGHT, "600");
@@ -174,8 +178,26 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             badgesShowingFleetNo.clear();
             refresh();
         });
-        add(header, roundStatus, actionBar, spectatorControls, reviewControls, buildContent(),
-                new de.zettsystems.starfare.legal.ui.LegalFooter());
+        if (phone) {
+            mobile = new MobileMapLayout(List.of(header, roundStatus, spectatorControls, reviewControls), gameOverBanner,
+                    mapCanvas, actionBar, fleetsPanel, this::cancelTargetSelectionAndRefresh);
+            addClassName("map-root-mobile");
+            add(mobile);
+        } else {
+            mobile = null;
+            add(header, roundStatus, actionBar, spectatorControls, reviewControls, buildContent(),
+                    new de.zettsystems.starfare.legal.ui.LegalFooter());
+        }
+    }
+
+    /** Brings the sidebar into view; on phones it lies as a sheet over the map. */
+    private void revealPanel() {
+        if (mobile != null) { mobile.showPanel(); }
+    }
+
+    /** On phones the sheet covers the map, so anything that points at the map closes it. */
+    private void revealMap() {
+        if (mobile != null) { mobile.showMap(); }
     }
 
     private void openDiplomacy() {
@@ -243,10 +265,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (view == null) { return; }
         var issues = de.zettsystems.starfare.economy.values.EconomyIssues.forView(view, currentSeat(), pendingBattleSystemIds(view));
         boolean hidden = isObserver() || reviewing || !pendingBattleSystemIds(view).isEmpty();
-        header.economyNotices().show(hidden ? List.of() : issues, fleetsPanel::showEconomy);
+        header.economyNotices().show(hidden ? List.of() : issues, kind -> { fleetsPanel.showEconomy(kind); revealPanel(); });
         mapCanvas.economyMarkers(hidden ? List.of() : issues, reportedSystemIds(view), id -> {
             issues.stream().filter(issue -> issue.system().id() == id).findFirst()
-                    .ifPresent(issue -> fleetsPanel.showEconomy(issue.reasons().getFirst()));
+                    .ifPresent(issue -> { fleetsPanel.showEconomy(issue.reasons().getFirst()); revealPanel(); });
         });
     }
 
@@ -272,6 +294,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         logisticsMode = !logisticsMode;
         if (logisticsMode) {
             fleetsPanel.showLogistics();
+            revealPanel();
         }
         refresh();
     }
@@ -312,6 +335,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             selectedSystem = null;
             cancelTargetSelection();
             fleetsPanel.showDetails();
+            revealPanel();
         }
     }
 
@@ -521,6 +545,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         renderMapAndSidebar(view, playerId, observer);
         if (advancedTurn) {
             fleetsPanel.showReport();
+            revealPanel();
         }
         showOutcomeWhenDue(view);
     }
@@ -593,6 +618,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 .flatMap(account -> game.hostPlayerIdOf(gameId).filter(account::equals)).isPresent());
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer && pendingBattleSystemIds(view).isEmpty());
+        header.setResearchVisible(!reviewing && !observer && pendingBattleSystemIds(view).isEmpty() && game.shipResearchFor(gameId,
+                UserContext.currentPlayerId().orElse("")).isPresent());
         header.setRound(view.turn());
         RoundStatus status = reviewing ? RoundStatus.NONE : view.roundStatus();
         roundStatus.update(status, playerId);
@@ -624,6 +651,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         chatDialog = null;
         if (current != null) {
             current.close();
+        }
+    }
+
+    private void openShipResearch() {
+        if (!reviewing) {
+            de.zettsystems.starfare.research.ui.ResearchDialog.open(game, gameId, UserContext.currentPlayerId().orElse(""));
         }
     }
 
@@ -709,6 +742,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 rangeForSelection(playerId, observer)));
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
+        if (mobile != null) { mobile.targetSelection(targetSelection != TargetSelection.NONE); }
         economicView = view;
         updateEconomyNotices();
     }
@@ -724,6 +758,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         cancelTargetSelection();
         highlightedFleetId = null;
         fleetsPanel.showDetails();
+        revealPanel();
         refresh();
     }
 
@@ -788,12 +823,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                     .ifPresent(system -> mapCanvas.centerOn(system.x(), system.y()));
         }
         fleetsPanel.selectReportSystem(systemId);
+        revealMap();
         refresh();
     }
 
     private void onReportMarkerSelected(int systemId) {
         highlightedReportSystemId = systemId;
         fleetsPanel.selectReportSystem(systemId);
+        revealPanel();
         refresh();
     }
 

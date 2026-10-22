@@ -32,7 +32,7 @@ Wähle zuerst die **Spielvariante**. **SectorForces** (Regelversion **1.0.0**)
 orientiert sich an Sector Forces, einem C64-Spiel der 80er-Jahre: Jedes System
 baut Schiffe, Flotten erobern fremde Systeme, und wer genug der Galaxie
 beherrscht, gewinnt. Die Variante ist vorausgewählt; die folgenden Spielregeln
-beschreiben sie. **Spaceward** (Regelversion **1.1.0**)
+beschreiben sie. **Spaceward** (Regelversion **1.2.0-w7**, alternativ **1.2.0-w6**)
 ist nach Spaceward Ho! gestaltet und ergänzt Industrieausbau, begrenzte Reichweite,
 Bündnisse und gemeinsame Schlachten. Die Abschnitte zu Spaceward weiter unten
 beschreiben, worin es von SectorForces abweicht. Weil dort alle feindlichen Seiten
@@ -114,6 +114,27 @@ unbekannte Systeme haben eine einheitliche Größe.
 - Verschiebe die Trennlinie zwischen Karte und Seitenleiste, um die Breite anzupassen.
 - Ein Berichtsmarker führt zur zugehörigen Meldung. Eine Meldung zentriert die Karte
   auf das betroffene System.
+
+### Auf dem Handy
+
+Handys bekommen eine eigene Oberfläche; Tablets, Laptops und Desktop-Rechner
+behalten die gewohnte. Die Wahl fällt einmal je Sitzung anhand des Browsers.
+Mit `?layout=mobile` oder `?layout=desktop` an einer beliebigen Adresse legst du
+sie für die restliche Sitzung selbst fest.
+
+Auf der Karte zeigt das Handy oben einen kompakten Kopf mit Partie, Runde,
+Reichsübersicht, **Runde abgeben** und dem Menü (Logistik, Legende, Chat, Rundenregeln,
+Verlassen, Lobby). Darunter füllt die Karte den Bildschirm; unten wechselt eine
+Leiste zwischen **Karte** und **Übersicht**. Die Übersicht ist die Seitenleiste
+als Vollbild, dazu Bündnisse und Sammelbefehle.
+
+- Wische zum Verschieben; zoome mit zwei Fingern oder den runden Knöpfen am
+  rechten Rand. Diese passen die Ansicht auch an das eigene Reich oder die ganze
+  Galaxie an.
+- Ein Tipp auf ein System öffnet seine Details in der Übersicht.
+- **Flotte senden** oder **Verlegung anlegen** führen zurück zur Karte. Ein Hinweis
+  bleibt sichtbar, bis du das Ziel antippst oder **Zielwahl abbrechen** wählst.
+- Dialoge füllen den Bildschirm; ihre Knöpfe bleiben unten erreichbar.
 
 Im Spiel und im Kartenkopf erscheinen Imperiumsnamen. Spielernamen in Klammern
 stehen nur in Übersichten und in der Diplomatie.
@@ -308,7 +329,8 @@ und fertiger Ausbau wirken erst in der nächsten Runde. Die Systemsicht zeigt
 Bevölkerung, Wachstum, Eignung und den Engpass durch fehlende Arbeitskräfte.
 Eroberung erhält Bevölkerung und Systemeigenschaften. Metallreichtum ist hier
 eine gespeicherte Eigenschaft; Förderung und Recycling folgen später.
-Der normale Partiedialog verwendet weiterhin **1.1.0**.
+Dieser Abschnitt beschreibt den historischen W1-Stand. Neue Spaceward-Partien
+verwenden W7 oder wahlweise W6; ältere Versionen bleiben fortsetzbar.
 
 ### Interne Metallwirtschaft 1.2.0-w2
 
@@ -566,16 +588,17 @@ kein Metall zurück. Startschiffe und neutrale Garnisonen zählen zur Metallbila
 Alle acht KI-Profile nutzen Recycling bei Metallknappheit für überschüssige Schiffe
 im Hinterland; sie behalten eine Garnison und schonen Systeme mit bekannten nahen
 Gegnern. Der Wirtschaftsvergleich für W4 steht in `docs/ECONOMY-EXPERIMENTS.md`. W2-Partien erhalten
-keine Recyclingbefehle. W3 bleibt intern, die öffentliche Neuanlage bei 1.1.0.
+keine Recyclingbefehle. W3 bleibt nur fortsetzbar; neue Spaceward-Partien verwenden W6 oder W7.
 
-### Wirtschaftsstand 1.2.0-w5 erproben
+### Spaceward: W6 oder W7 wählen
 
-Das lokale Startprofil `economy-preview` schaltet den vollständigen Wirtschaftsstand
-im normalen Spielassistenten frei. „SectorForces“ bleibt vorausgewählt.
-Für die neue Wirtschaft „Spaceward“ auswählen; die Karte muss „Regeln 1.2.0-w5“
-zeigen. Ältere Partien übernehmen die neue Wirtschaft nicht.
+Im normalen Spielassistenten zunächst „Spaceward“ auswählen und dann unter
+„Regelfassung“ zwischen **1.2.0-w7** (Vorgabe) und **1.2.0-w6** wählen.
+„SectorForces“ bleibt als eigene Spielvariante vorausgewählt. Ein besonderes
+Startprofil ist dafür nicht erforderlich; bestehende Starts mit `economy-preview`
+bieten dieselbe Auswahl. Ältere Partien übernehmen keine neue Regelfassung.
 
-In 1.2.0-w5 ist die Bevölkerung vorerst Atmosphäre: Sie wächst und beschreibt die
+Seit 1.2.0-w5 ist die Bevölkerung vorerst Atmosphäre: Sie wächst und beschreibt die
 Kolonie, begrenzt aber nicht mehr die nutzbare Industrie. Die gesamte installierte
 Kapazität steht für Schiffbau, Förderung und Ausbau bereit. Gespeicherte
 W4-Partien behalten die Begrenzung durch Arbeitskräfte.
@@ -585,10 +608,29 @@ nutzbare Kapazität; Recycling gewinnt 70 Prozent zurück und speichert Zehntelr
 Die Metallwerte bleiben für diese Erprobung unverändert. Alle acht KI-Profile
 berücksichtigen die Förderung bei ihrer Industrie- und Flottenplanung.
 
-Ohne das Startprofil bleibt die Neuanlage bei Spaceward 1.1.0. Gespeicherte
-W4- und W5-Partien lassen sich trotzdem fortsetzen. Die öffentliche Freigabe von 1.2.0
-folgt nach der persönlichen Erprobung. Startbefehl und technische Prüfergebnisse
-stehen in README und `docs/ECONOMY-EXPERIMENTS.md`.
+Für neue Spaceward-Partien sind ausschließlich W6 und W7 wählbar. Das gilt
+auch für Vorlagen und Revanchen. Vorlagen aus W6 und W7 behalten ihre genaue
+Regelfassung. Gespeicherte Spaceward-Partien mit 1.0.0, 1.1.0 oder W1–W5 lassen
+sich weiterhin laden und fortsetzen; daraus können keine neuen Partien angelegt
+werden. Die persönliche Erprobung und die endgültige Freigabe als 1.2.0 stehen aus.
+
+Bei Metallknappheit erhalten die Werften seit W6 gleich große Anteile, höchstens
+bis zum geplanten Schiffbau. Nicht benötigte Anteile gehen an die übrigen Werften;
+Systeme ohne Schiffbau bekommen keinen Anteil. Einzelne Reststücke gehen nach
+Systemkennung. Beispiel: Bei Bedarf 10 und 4 sowie Vorrat 8 entstehen jeweils
+4 Schiffe. Gespeicherte W5-Partien bleiben bei der proportionalen Verteilung
+(6 und 2). Vorschau und Rundenauflösung verwenden dieselbe Berechnung.
+Metall bleibt reichsweit verfügbar; unverbrauchter Vorrat bleibt erhalten.
+In W7 sind die ersten Industriestufen günstiger: Die nächste Stufe kostet bei
+Kapazität 2 nur 2 Punkte, bei Kapazität 5 sind es 3 und bei Kapazität 10 sind es
+10 Punkte. Ab Kapazität 20 gilt wieder der bisherige Preis von zweimal der
+Kapazität. Formel je Stufe: `min(2C, max(2, aufrunden(C²/10)))`.
+Mehrere Stufen können in derselben Runde fertig werden; Restfortschritt bleibt
+erhalten. Zusätzliche Kapazität steht ab der folgenden Runde bereit, höchstens 50.
+Die Ausbauanzeige nennt den Preis und Fortschritt der jeweils nächsten Stufe.
+Gespeicherte ältere Partien behalten ihre bisherigen Kosten. Systemeigenschaften
+und Eroberung ändern den Preis nicht.
+Terraforming, aktive Bevölkerungssteuerung und Besiedlung kommen später.
 
 ### Entscheidungen in der Oberfläche
 
@@ -657,3 +699,39 @@ Impressum und Datenschutz stehen im Seitenfuß und öffnen in einem neuen Tab,
 damit laufende Eingaben erhalten bleiben.
 
 Flotten lassen sich auf freien Strecken auswählen. Systeme und ihre unmittelbare Umgebung bleiben auch unter kreuzenden Linien erreichbar; fehlt Platz für eine Flottenmarke, nutze die Flottenliste. Schlacht- und Engpasszeichen öffnen ihre eigene Information. In Schlachten stehen Angreifer links und Verteidiger rechts. Die Darstellung bleibt bis zum Ergebnis neutral; kurze Mannschaftstexte beschreiben die momentane Gefechtsverfassung. Exakte Stärken stehen unter **Kampfdetails**.
+
+
+### Gemeinsame Schiffsforschung erproben
+
+Mit dem Startprofil `local,research-preview` ist im Assistenten zusätzlich die
+Spaceward-Regelfassung **1.3.0-r1** verfügbar. Normale Neuanlagen bleiben bei W6
+und W7. Bereits gespeicherte R1-Partien lassen sich auch ohne das Profil fortsetzen.
+
+Im Kartenmenü **Schiffsforschung** öffnen. Der Forschungsanteil gilt reichsweit
+und startet bei 0 Prozent. Er wird zuerst aus der gesamten Industriekapazität
+reserviert. Die Rundung erfolgt einmal für das Reich; die Verteilung auf Systeme
+richtet sich nach deren Kapazität. Reicht die verbleibende Kapazität nicht,
+werden Ausbau und danach Förderung gekürzt. Verlegungen werden an den Schiffbau
+angepasst. Die Produktionsansicht nennt die reservierten Forschungspunkte.
+
+Es gibt zunächst nur eine gemeinsame Schiffstechnologiestufe, ohne Gebiete oder
+eigene Entwürfe. Die erste Stufe kostet 100 Punkte, danach folgen 400, 900 usw.
+(Formel: 100 × Quadrat der nächsten Stufe). Restpunkte bleiben erhalten.
+Jede Stufe erhöht die Kampfstärke von Neubauten um 10 Prozent des Grundwerts.
+Ein Abschluss erscheint im Rundenbericht; die neue Technik gilt ab der folgenden
+Runde für neu gebaute Schiffe. Bestehende Schiffe behalten ihre Baustufe.
+Bei Stufe 20 ist vorerst Schluss; dann wird keine Industrie mehr für Forschung
+reserviert.
+
+Gemischte Garnisonen und Flotten behalten ihre Zusammensetzung. Versand nimmt
+zuerst neue Schiffe, Recycling zuerst alte. Kampfverluste werden proportional
+auf die vorhandenen Baustufen verteilt, ganzzahlige Reste deterministisch nach
+größtem Rest und anschließend niedrigerer Stufe. Flottenansichten zeigen die
+Baustufen und ihre gemeinsame Kampfstärke. Neue Technik ändert weder Tempo noch
+Reichweite oder Metallkosten: Ein Schiff kostet weiterhin ein Metall, Recycling
+bringt unverändert 70 Prozent zurück.
+
+KI-Imperien verwenden 10 Prozent Forschung, Rush 5 Prozent. Der erste kontrollierte
+Vergleich stützt kleine Budgets; hohe Dauerbudgets schwächen den frühen Flottenaufbau.
+Die Ergebnisse und Grenzen stehen in `RESEARCH-EXPERIMENTS.md`. Die persönliche Spielabnahme steht noch aus.
+Bevölkerung, Besiedlung und getrennte Forschungsgebiete bleiben für später.

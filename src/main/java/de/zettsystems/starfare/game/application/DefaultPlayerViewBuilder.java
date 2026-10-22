@@ -87,7 +87,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var metals = frame.metals();
         var metalForecast = metals == null ? null : MetalProduction.forPlan(
                 frame.systems(), Objects.requireNonNull(frame.industries()), Objects.requireNonNull(frame.colonies()), metals,
-                state.ruleset().limitsIndustryByLabor());
+                state.ruleset());
         List<VisibleSystem> systems = frame.systems().stream().map(system -> {
             Integer owner = system.ownerId();
             String color = owner != null ? playerById(state, owner).colorHex() : null;
@@ -279,7 +279,8 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var colony = saved == null ? null : new de.zettsystems.starfare.economy.values.ColonyView(
                 saved.quality(), saved.colony().population(), nextPopulation, rules.limitsIndustryByLabor());
         return new IndustryView(industry.capacity(), industry.expansionAllocation(), industry.expansionProgress(),
-                industry.expansionCost(), delivery, delivery < routed, shortfall, colony);
+                industry.expansionCost(rules), delivery, delivery < routed, shortfall, colony, null, 0,
+                rules.usesShipResearch() ? system.composition() : null);
     }
 
     private static @Nullable IndustryView metalIndustry(@Nullable IndustryView base,
@@ -293,7 +294,8 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         Integer owner = system.ownerId();
         long stock = owner == null ? 0 : Objects.requireNonNull(forecast.openingStocks().get(owner));
         int mining = Objects.requireNonNull(resources.mining().get(system.id()));
-        int planned = base.usableCapacity() - base.expansionAllocation() - mining;
+        int reserved = forecast.researchPoints().getOrDefault(system.id(), 0);
+        int planned = base.usableCapacity() - reserved - base.expansionAllocation() - mining;
         var recycling = forecast.plannedRecycling();
         int recyclingShips = recycling == null ? 0 : recycling.orders().getOrDefault(system.id(), 0);
         int fraction = 0;
@@ -304,7 +306,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 deposit.yieldPerPoint(), mining, stock, extracted, planned, actual, recycleView);
         int delivery = Math.clamp(available + (long) actual - base.reserveShortfall(), 0, routed);
         return new IndustryView(base.capacity(), base.expansionAllocation(), base.expansionProgress(), base.expansionCost(),
-                delivery, delivery < expectedDelivery, base.reserveShortfall(), base.colony(), metal);
+                delivery, delivery < expectedDelivery, base.reserveShortfall(), base.colony(), metal, reserved, base.composition());
     }
 
     private static List<SystemOwnership> ownershipHistory(GameState state, int systemId) {

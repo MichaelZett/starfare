@@ -12,6 +12,15 @@ public final class CoalitionResolver {
     private CoalitionResolver() { }
 
     public static List<CoalitionSide> resolve(List<CoalitionSide> forces, int percent, IntToDoubleFunction roll) {
+        return resolve(forces, percent, roll, Map.of());
+    }
+    public static List<CoalitionSide> resolve(List<CoalitionSide> forces, int percent, IntToDoubleFunction roll,
+            Map<Integer, de.zettsystems.starfare.research.values.ShipCohorts> generations) {
+        return resolve(forces, percent, roll, (id, remaining) -> generations.containsKey(id)
+                ? java.util.Objects.requireNonNull(generations.get(id)).survive(remaining).strength() : remaining);
+    }
+    public static List<CoalitionSide> resolve(List<CoalitionSide> forces, int percent, IntToDoubleFunction roll,
+            java.util.function.ToDoubleBiFunction<Integer, Integer> strength) {
         var sorted = forces.stream().sorted(java.util.Comparator.comparingInt(CoalitionSide::id))
                 .map(side -> new CoalitionSide(side.id(), side.strength(), side.members().stream()
                         .sorted(java.util.Comparator.comparingInt(CoalitionSide.Member::playerId)).toList())).toList();
@@ -28,7 +37,7 @@ public final class CoalitionResolver {
             damage.put(side.id(), new LinkedHashMap<>());
         }
         while (remaining.values().stream().filter(ships -> ships > 0).count() > 1) {
-            remaining = volley(remaining, factors, damage);
+            remaining = volley(remaining, factors, damage, strength);
         }
         Map<Integer, Integer> destroyed = destroyed(sorted, remaining, damage);
         List<CoalitionSide> result = new ArrayList<>();
@@ -36,9 +45,10 @@ public final class CoalitionResolver {
             var weights = memberWeights(side);
             var survivors = ProportionalAllocation.distribute(java.util.Objects.requireNonNull(remaining.get(side.id())), weights);
             var kills = ProportionalAllocation.distribute(destroyed.getOrDefault(side.id(), 0), weights);
-            result.add(new CoalitionSide(side.id(), side.ships() * java.util.Objects.requireNonNull(factors.get(side.id())), side.members().stream()
+            result.add(new CoalitionSide(side.id(), strength.applyAsDouble(side.id(), side.ships()) * java.util.Objects.requireNonNull(factors.get(side.id())), side.members().stream()
                     .map(member -> new CoalitionSide.Member(member.playerId(), member.name(), member.ships(),
-                            java.util.Objects.requireNonNull(survivors.get(member.playerId())), java.util.Objects.requireNonNull(kills.get(member.playerId())))).toList()));
+                            java.util.Objects.requireNonNull(survivors.get(member.playerId())), java.util.Objects.requireNonNull(kills.get(member.playerId())))).toList(),
+                    strength.applyAsDouble(side.id(), side.ships())));
         }
         return List.copyOf(result);
     }
@@ -52,9 +62,10 @@ public final class CoalitionResolver {
     }
 
     private static Map<Integer, Integer> volley(Map<Integer, Integer> ships, Map<Integer, Double> factors,
-                                               Map<Integer, Map<Integer, Double>> damage) {
+                                               Map<Integer, Map<Integer, Double>> damage,
+            java.util.function.ToDoubleBiFunction<Integer, Integer> strength) {
         Map<Integer, Double> strengths = new LinkedHashMap<>();
-        ships.forEach((id, count) -> strengths.put(id, count * java.util.Objects.requireNonNull(factors.get(id))));
+        ships.forEach((id, count) -> strengths.put(id, strength.applyAsDouble(id, count) * java.util.Objects.requireNonNull(factors.get(id))));
         double total = strengths.values().stream().mapToDouble(Double::doubleValue).sum();
         Map<Integer, Integer> next = new LinkedHashMap<>();
         for (var target : strengths.entrySet()) {

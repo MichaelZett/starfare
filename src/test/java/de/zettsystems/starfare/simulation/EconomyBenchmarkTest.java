@@ -44,6 +44,16 @@ class EconomyBenchmarkTest {
         assertThat(repeatedOrders).hasToString(orders.toString());
     }
 
+    @ParameterizedTest @EnumSource(AiStrategy.class)
+    void w7ProfilesRemainLegalAndPreserveTheMaterialLedger(AiStrategy strategy) {
+        var scenario = new Scenario(RulesetRef.SPACEWARD_EARLY_INDUSTRY, GalaxyLayout.EVEN, 8, 42, 314159, 30, 10);
+        var result = EconomyBenchmark.play(scenario, EconomyMaps.Environment.NATURAL, List.of(
+                new EconomyProfiles.Profile(strategy, EconomyProfiles.Policy.STANDARD),
+                new EconomyProfiles.Profile(AiStrategy.CONCENTRATION, EconomyProfiles.Policy.STANDARD)),
+                1, new StringBuilder(), new StringBuilder());
+        assertThat(result.rounds()).isBetween(1, 30);
+    }
+
     @Test void pairedMapsIsolateResourcesAndGrowth() {
         var poor = scenario().create(2, EconomyMaps.Environment.POOR);
         var rich = scenario().create(2, EconomyMaps.Environment.RICH);
@@ -73,10 +83,46 @@ class EconomyBenchmarkTest {
     }
 
     @Test void rejectsUnknownDuplicateAndUnboundedExperimentOptions() {
-        assertThatThrownBy(() -> EconomyBenchmark.Options.parse(new String[]{"--seeds=0"})).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> EconomyBenchmark.Options.parse(new String[]{"--seeds=1", "--seeds=2"})).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> EconomyBenchmark.Options.parse(new String[]{"--secret=3"})).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> EconomyBenchmarkOptions.parse(new String[]{"--seeds=0"})).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> EconomyBenchmarkOptions.parse(new String[]{"--seeds=1", "--seeds=2"})).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> EconomyBenchmarkOptions.parse(new String[]{"--secret=3"})).isInstanceOf(IllegalArgumentException.class);
         assertThat(EconomyBenchmark.lineups("comparison")).hasSize(16);
         assertThat(EconomyBenchmark.lineups("profiles")).hasSize(16);
+        assertThatThrownBy(() -> EconomyBenchmarkOptions.parse(new String[]{"--rules=w99"})).isInstanceOf(IllegalArgumentException.class);
+        assertThat(EconomyBenchmarkOptions.parse(new String[]{"--rules=w6", "--environments=NATURAL,POOR"}).rules())
+                .isEqualTo(RulesetRef.SPACEWARD_EQUAL_METAL);
+    }
+
+    @Test void strategySuiteBalancesEveryPairAndRotatesEveryMultiplayerSeat() {
+        var lineups = EconomyBenchmark.lineups("strategies");
+        assertThat(lineups).hasSize(64);
+        for (var strategy : AiStrategy.values()) {
+            for (var opponent : AiStrategy.values()) {
+                if (strategy == opponent) { continue; }
+                assertThat(lineups.stream().filter(seats -> seats.size() == 2
+                        && seats.getFirst().strategy() == strategy && seats.getLast().strategy() == opponent)).hasSize(1);
+            }
+            for (int index = 0; index < 4; index++) {
+                int seat = index;
+                assertThat(lineups.stream().filter(seats -> seats.size() == 4 && seats.get(seat).strategy() == strategy)).hasSize(1);
+            }
+        }
+    }
+
+    @Test void versionedExperimentsUseTheirOwnEngineAndRepeatAfterSnapshotRestoration() {
+        var profiles = List.of(new EconomyProfiles.Profile(AiStrategy.INDUSTRY, EconomyProfiles.Policy.STANDARD),
+                new EconomyProfiles.Profile(AiStrategy.RUSH, EconomyProfiles.Policy.STANDARD));
+        for (var rules : List.of(RulesetRef.SPACEWARD_ECONOMY_PREVIEW, RulesetRef.SPACEWARD_DIRECT_ECONOMY, RulesetRef.SPACEWARD_EQUAL_METAL, RulesetRef.SPACEWARD_EARLY_INDUSTRY)) {
+            var scenario = new Scenario(rules, GalaxyLayout.EVEN, 8, 42, 314159, 30, 10);
+            var metrics = new StringBuilder();
+            var orders = new StringBuilder();
+            var first = EconomyBenchmark.play(scenario, EconomyMaps.Environment.NATURAL, profiles, 1, metrics, orders);
+            var repeatedMetrics = new StringBuilder();
+            var repeatedOrders = new StringBuilder();
+            assertThat(EconomyBenchmark.play(scenario, EconomyMaps.Environment.NATURAL, profiles, 1, repeatedMetrics, repeatedOrders)).isEqualTo(first);
+            assertThat(repeatedMetrics).hasToString(metrics.toString());
+            assertThat(repeatedOrders).hasToString(orders.toString());
+            assertThat(first.rounds()).isGreaterThanOrEqualTo(25);
+        }
     }
 }

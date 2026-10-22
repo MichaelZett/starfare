@@ -63,7 +63,7 @@ complete game.
 ## Game variants and rule versions
 
 Choose a game variant before its settings in the new-game dialog. SectorForces
-(rules **1.0.0**) is preselected. **Spaceward** (rules **1.1.0**), inspired by
+(rules **1.0.0**) is preselected. **Spaceward** (rules **1.2.0-w7**, with **1.2.0-w6** also selectable), inspired by
 Spaceward Ho!, is available for new games as well. It adds
 production allocation between ships and industrial expansion, plus limited flight range,
 automatically planned routes through owned or allied systems and refuelling stops.
@@ -366,6 +366,22 @@ arrival round and remaining turns.
   system inspector.
 - The initial view centres on your home system.
 
+### On a phone
+
+Phones get their own interface; tablets, laptops and desktops keep the regular
+one. The server decides once per session from the browser and builds only that
+interface. `?layout=mobile` or `?layout=desktop` on any page overrides the choice
+for the rest of the session.
+
+On the map, the phone layout shows a compact header (game, round, empire summary,
+**End round** and the menu with logistics, legend and chat), the map across the
+whole screen and a bottom bar switching between **Map** and **Overview**. The
+overview is the sidebar as a full-screen sheet, together with alliances and bulk
+orders. Swipe to pan; zoom with two fingers or the round buttons, which also fit
+the view to your empire or the whole galaxy. Tapping a system opens its details;
+**Send fleet** returns to the map with a banner until you tap the target or cancel.
+Dialogs fill the screen with their buttons fixed at the bottom.
+
 ### Send a fleet
 
 1. Right-click your source system, or select it and choose **Send fleet**.
@@ -512,7 +528,8 @@ threshold.
 Testcontainers). `./gradlew e2eTest` runs Cucumber/Selenium journeys
 against the real application in headless Chrome: registration and one round,
 lobby access, round submission, battle playback, logistics and amount selection,
-fleet details and separate map viewports. Two browser sessions verify live chat,
+fleet details and separate map viewports. An emulated iPhone checks the phone
+interface by real taps next to a desktop session. Two browser sessions verify live chat,
 draft preservation and continuation through a second game end. It is not part of
 `build`; additional journeys cover bulk reserves and fleet dispatch, editing and
 undo, saved filters after a new sign-in, rematches, keyboard interaction and
@@ -530,6 +547,7 @@ personal review. Automated checks do not replace a player's usability assessment
 ./gradlew e2eTest
 ./gradlew e2eTest "-Dcucumber.filter.tags=@ui-acceptance"
 ./gradlew e2eTest "-Dcucumber.filter.tags=@ai-strategies"
+./gradlew e2eTest "-Dcucumber.filter.tags=@mobile"
 node --test src/test/frontend/battle-replay.test.mjs
 ```
 
@@ -541,7 +559,7 @@ Testcontainers; Docker must be running.
 The next economy step is available for internal acceptance as **Spaceward
 1.2.0-w1**: saved colony environments and population limit usable industry,
 with growth taking effect on the following turn. The public wizard continues
-to create **1.1.0** games. Existing rules and saved games retain their behavior.
+to create **W7** games by default, with **W6** also selectable. Existing rules and saved games retain their behavior.
 W1 retains its original behavior without mining. The separate internal **1.2.0-w2** checkpoint adds finite metal; the separate internal **1.2.0-w3** checkpoint adds recycling.
 Run the saved-party browser journey with:
 
@@ -583,7 +601,7 @@ Run the test-only saved-party browser journey silently:
 
 W2 is supported for saved-game restoration and round resolution. Public creation,
 templates and rematches cannot create unreleased checkpoints. W1 and all released
-rules retain their behavior; the public wizard still uses 1.1.0.
+rules retain their behavior; new Spaceward games offer W6 and W7; older versions remain restorable.
 
 ## Strategy experiments
 
@@ -592,7 +610,7 @@ The first verified pilot results and their limitations are documented in
 
 The opt-in `strategyBenchmark` task runs SectorForces and Spaceward games
 through the real turn engines without Spring, PostgreSQL, a browser or audio.
-Running the tooling does not alter stored games or their AI selections. Spaceward 1.1.0 is
+Running the tooling does not alter stored games or their AI selections. Spaceward W6 and W7 are
 available in the lobby; `--rules=spaceward` deliberately selects the historical 1.0.0 rules.
 
 ```powershell
@@ -724,7 +742,7 @@ no salvage. Reloading or replaying does not apply a recycling order again.
 All eight AI profiles can recycle surplus rear-area ships when metal constrains
 construction, preserving a reserve and excluding known nearby enemies. The W4
 comparison is documented in `docs/ECONOMY-EXPERIMENTS.md`. W2 and older references retain their
-behavior. W3 remains internal; public creation still uses 1.1.0.
+behavior. W3 remains restoration-only; new Spaceward games offer W6 and W7.
 
 Run the silent saved-game acceptance journey with:
 
@@ -732,29 +750,38 @@ Run the silent saved-game acceptance journey with:
 .\gradlew.bat e2eTest "-Dcucumber.filter.tags=@recycling"
 ```
 
-### Economy acceptance candidate: 1.2.0-w5
+### Spaceward rules: W6 and W7
 
-The complete economy can now be created through the ordinary wizard in a local,
-opt-in acceptance profile. SectorForces remains initially selected. Choose
-Spaceward and check that its card says **1.2.0-w5**. W5 equals W4 except that
-population no longer limits usable industry; colonies still grow as atmosphere.
+Choose Spaceward in the ordinary new-game wizard, then choose **1.2.0-w7**
+(default) or **1.2.0-w6** under **Rules version**. SectorForces remains initially
+selected as its own game variant. No acceptance profile is required; existing
+`economy-preview` launch commands remain compatible and offer the same choices.
 
-```powershell
-.\gradlew.bat bootRun "--args=--spring.profiles.active=local,economy-preview"
-```
+Both versions use installed industry without a labor limit. They share scarce
+empire metal equally between active yards, capped at each yard's demand; leftovers
+are redistributed and integer remainders go by system ID. For demand 10 and 4
+and stock 8, both yards receive 4. Surplus metal stays in stock.
 
-Without `economy-preview`, ordinary Spaceward creation stays at **1.1.0**.
-The switch affects creation only: saved W4 and W5 games remain supported when the
-profile is disabled. W1, W2, W3 and W4 stay restoration-only. Colony properties,
-finite deposits, stock, fractions and initial material are established once
-when the new game is saved, including before its first round.
+Only W6 and W7 can create new Spaceward games, including templates and rematches.
+Spaceward 1.0.0, 1.1.0 and W1–W5 remain supported for loading and continuation;
+they retain their stored rules and cannot create new templates or rematches.
+Colony properties, deposits, stock and initial material are established before
+the first save. A template from W6 or W7 preserves that exact version.
 
-W4 keeps the checkpoint's values: **1 metal per ship**, 10 starting metal,
+W7 keeps the checkpoint's resource values: **1 metal per ship**, 10 starting metal,
 200 deposit metal per richness level, richness yield per mining point, and
 70% recycling recovery. All eight selectable AI profiles account for mining
 when allocating industry and retaining ships. Experimental economic policies
 remain test-only. Evidence and its limits: [economy experiments](docs/ECONOMY-EXPERIMENTS.md).
-Public 1.2.0 release follows personal acceptance of this candidate.
+W7 charges `min(2*C, max(2, ceil(C*C/10)))` expansion points per added
+capacity, using the current capacity C. Examples: C=2 costs 2, C=5 costs 3,
+C=10 costs 10; from C=20 the old 2*C price applies. Multiple levels may
+complete in one round, with progress carried over. Added capacity becomes
+usable next round; the cap remains 50. Earlier saved versions keep 2*C.
+System properties and capture retention do not change the price.
+Terraforming, active population management and colonization remain deferred.
+The current economy scope adds no further mechanics before acceptance.
+Personal acceptance and a final, unqualified 1.2.0 release remain pending.
 
 ```powershell
 .\gradlew.bat e2eTest -PeconomyPreview=true "-Dcucumber.filter.tags=@economy-launch"
@@ -783,7 +810,7 @@ preview uses the actual economy calculation, including reserved recycling, metal
 shortages and relocation capacity. There is no apply step: numbers, step buttons and
 presets save at once, a slider saves when released; dragging only previews. Each save
 compares the shown plan with the stored one under the game write lock, and a rejected
-change shows the stored plan again. In 1.2.0-w5, lowering a system's shipbuilding
+change shows the stored plan again. In 1.2.0-w5 and later candidates, lowering a system's shipbuilding
 proportionally shortens its outgoing relocations that no longer fit, and the panel
 names each change. The header shows a metal bar, stock and next-round change, such as
 "24 (−3)", with an accessible breakdown. Logistics lists mining yield per point and
@@ -803,3 +830,55 @@ when meaningful; SectorForces shares the simpler setup, overview and sending UI.
 Legal links in the footer open in a new tab to preserve ongoing edits.
 
 Fleet selection areas occupy only free route segments, protecting source, destination and crossing systems at every zoom. Warning markers are separate prominent targets. Combat playback keeps attackers left and defenders right, with neutral colors until the result. Crew-condition text describes stored combat variation; optional combat details retain exact strengths.
+
+
+### Isolated investment experiments
+
+The test-only investment benchmark compares fixed economic interventions with
+one CONCENTRATION military heuristic against CONCENTRATION and RUSH. Prices and
+captured industry are varied independently against the fixed W6 reference.
+The accepted EARLY_COST curve is now playable separately as W7. Early one-step, moderate and round-40 investment are
+compared with a matched no-expansion reference. A no-expansion reference must
+retain the same trajectory under every price-only model.
+
+```sh
+./gradlew strategyBenchmark '-PstrategyArgs=--mode=investment --model=EARLY_COST --first-seed=7101 --seeds=1 --combat-seeds=2 --rounds=150 --output=build/investment/calibration-EARLY_COST'
+```
+
+Models: `BASELINE`, `HALF_COST`, `EARLY_COST`, `QUALITY_COST`, `HALF_CAPTURE`.
+The control family uses `--first-seed=8101` and a separate output directory.
+Definitions, 1,280 completed matches, paired comparisons and limits are recorded
+in [economy experiments](docs/ECONOMY-EXPERIMENTS.md). The accepted cheap-small-upgrade curve is now the W7 acceptance candidate;
+W6 prices remain unchanged. Other interventions remain test-only.
+
+
+### Ship research preview: 1.3.0-r1
+
+Start with `./gradlew bootRun "--args=--spring.profiles.active=local,research-preview"`
+and choose Spaceward rules **1.3.0-r1**. Ordinary creation still offers only W6
+and W7. Stored R1 games remain playable when the preview profile is disabled.
+
+Open **Ship research** in the map menu. One empire-wide percentage reserves
+industry before mining, expansion and shipbuilding. It starts at 0%; rounding
+happens once per empire, then points are apportioned to systems by capacity,
+with largest remainders and system IDs as tie breakers. Raising the budget
+reduces expansion first, then mining if necessary; outgoing relocations follow
+actual shipbuilding. The production editor shows reserved research points and
+edits only the remaining capacity.
+
+Research has one common technology level: no separate fields or manual designs.
+The next level costs `100 * (level + 1)^2` points (100, 400, 900, ...), retaining
+leftovers. Each level adds 10% of base combat strength to newly built ships;
+level 20 is the initial ceiling, where research stops reserving industry.
+Completion is reported, and the improved generation is built from the following
+round. Old ships retain their build-time level. Mixed fleets display their
+counts by level and combined strength. Launches take newest ships first;
+recycling takes oldest ships first; combat losses are apportioned by hull count
+with deterministic largest remainders. Survivors never acquire a new level.
+
+Ship speed, range, the one-metal hull cost and 70% recycling recovery are unchanged.
+Research consumes industrial capacity, not metal. Coalition strength sums the
+actual generations, including allied stationed forces. AI budgets are
+10% (5% for RUSH), calibrated with paired seeded duels; see
+[research experiments](docs/RESEARCH-EXPERIMENTS.md) for results and limits. Population management, colonization, research fields and ship-design
+editors remain later work. Desktop and phone browser checks and the initial balance study have passed; personal gameplay acceptance remains pending.

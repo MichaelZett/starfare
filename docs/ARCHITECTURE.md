@@ -27,9 +27,10 @@ simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md
 application release. SectorForces uses `classic / 1.0.0`; the display name does
 not change its stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
-Spaceward supports stored version `spaceward / 1.0.0`; new games use
-`spaceward / 1.1.0` with configurable diplomacy and group victory. Both versions
-share the economy, navigation, diplomacy and coalition combat implementations;
+Spaceward supports stored versions 1.0.0, 1.1.0 and W1–W7. New games offer
+`spaceward / 1.2.0-w7` by default and W6 as an alternative. Older versions remain
+restoration-only. Versioned implementations share economy, navigation, diplomacy
+and coalition combat services;
 Spaceward is enabled for new games since M7. Orion has
 no implementation or selectable entry.
 
@@ -83,7 +84,7 @@ legacy individual winners. Participants, AI names and winners are fetched with
 three separate collection queries, avoiding a Cartesian product.
 
 The internal browser acceptance route exists only in e2e sources. It previews
-the wizard's Spaceward choices without modifying the production catalog, which already enables Spaceward 1.1.0 since M7. The muted
+the wizard's Spaceward choices without modifying the production catalog, which enables W6 and W7 for new Spaceward games. The muted
 `alliance_victory.feature` covers option dependencies, both winners, reload and
 archive. The strategy harness can pair 1.1.0 scenarios with group victory on/off;
 each member receives its own win in the report.
@@ -241,7 +242,7 @@ new mining or recycling strategy comparisons remain a W4 task.
 
 `RulesetRef.SPACEWARD_COLONIES` is a separate, frozen internal rule reference.
 The catalog supports restoration and `ColonySpacewardTurnEngine` dispatch, but
-`requireCreatable` rejects public creation. The wizard still defaults to 1.1.0.
+`requireCreatable` rejects public creation. The current wizard offers W6 and W7.
 Subsequent metal rules must use a different reference rather than change W1.
 
 `SystemQuality` saves stellar luminosity, orbital distance in AU, host body,
@@ -555,6 +556,25 @@ changes the persisted game state.
 Host transfers and snapshot persistence use the session write lock. Saving an
 existing entity updates both its snapshot and current host, so a restart cannot
 restore obsolete host permissions.
+
+### Phone layout
+
+A session builds exactly one interface. `Devices` (module `style`) decides once per
+`VaadinSession` from the user agent: phones (`iPhone`, `iPod`, `Mobi`) get
+`DeviceLayout.MOBILE`; tablets and everything else keep `DESKTOP`. A `layout`
+query parameter overrides the choice for the session; `DeviceLayoutInitListener`
+reads it from the request or from the `query`/`location` of Vaadin's init request.
+For phones it adds the static stylesheet `META-INF/resources/styles/starfare-mobile.css`
+and the class `starfare-mobile` on `<html>`. The stylesheet lies outside the frontend
+bundle, so desktops never load it; all its rules are scoped to that class.
+
+Lobby, archive, statistics and dialogs share their components with the desktop
+and adapt through that stylesheet. The map does not: `MainView` builds either the
+`SplitLayout` with map and sidebar or `MobileMapLayout`, never both. The phone layout
+reuses the same `MapCanvas`, `FleetAndOrdersPanel` and controls, arranges them as
+full-screen map plus a sheet, and receives the target-selection state on every refresh.
+`MapHeaderBar` has a compact variant without title and language switcher. Game
+logic and callbacks stay in `MainView`; only the arrangement differs.
 
 ## Configuration and setup
 
@@ -1000,3 +1020,123 @@ ownership transition. Missing roles in historical data remain explicitly unknown
 stored opening strength, never from survivors or the winner.
 `ProductionFlow` also supplies the net retained production amount used by the
 send dialog, on top of its already reserve-adjusted mode maximum.
+
+## Equal metal candidate: Spaceward 1.2.0-w6
+
+`SPACEWARD_EQUAL_METAL` is the new `RulesetCatalog.ECONOMY_CANDIDATE`.
+W5 remains supported for restoration with proportional scarcity allocation;
+W6 inherits its unrestricted installed industry and relocation shortening.
+`MetalProduction` receives the complete stored rule reference for both live
+and replay forecasts. Under W6, active yards receive equal shares, capped at
+each yard's requested ships. Satisfied yards leave their share to the others.
+Integer leftovers use system ID order. Mining is settled empire-wide first;
+unused stock is retained, and separate empires never share stock.
+`EqualMetalSpacewardTurnEngine` registers W6 in the ordinary round dispatcher.
+No snapshot schema change or retroactive game conversion is needed.
+
+The economy benchmark accepts `--rules=w3|w4|w5|w6|w7` and an optional
+`--environments` list. `--suite=strategies` runs all eight production AI
+profiles against every other profile with both seat assignments, plus two
+rotating four-player groups. It uses the matching production round engine,
+checks metal conservation every round and restores a snapshot every 25 rounds.
+The legacy default remains W3. Raw evidence is flushed between environments
+to bound memory use; commands and exact rule reference are saved with each run.
+
+
+## Early industry candidate: Spaceward 1.2.0-w7
+
+`SPACEWARD_EARLY_INDUSTRY` inherits W6 equal metal sharing, unrestricted installed
+industry and relocation shortening. It is the default for new Spaceward games; W6 is also selectable.
+All earlier stored versions remain restorable.
+`EarlyIndustrySpacewardTurnEngine` registers its independent stored identity.
+
+`EconomyRules.expansionCost(capacity, rules)` charges
+`min(2*C, max(2, ceil(C*C/10)))` only for W7. The no-reference overload retains
+the historical 2*C curve. `Industry.expandForOneTurn(rules)` spends accumulated
+progress level by level, allowing multiple cheap levels. Capacity caps at 50;
+new capacity contributes only next round. Capture retains progress as before.
+`GameState.validateIndustry` checks saved progress against its stored rule price,
+without changing snapshot shape. Live and replay `IndustryView` prices use the
+same reference; AI reads those authorized prices. The editor's progress display
+continues to describe the next level. No system-property multiplier is introduced.
+
+Regression tests compare every valid capacity/allocation/progress combination
+against the studied EARLY_COST model, check restored rules, historical prices,
+multiple completions, capacity cap, next-round output and material conservation.
+
+
+## Separate creation and restoration versions
+
+`RulesetDefinition.creatableVersions` explicitly limits new-game references,
+independently of `supportedVersions`. The built-in Spaceward entry permits only
+W6 and W7, defaulting to W7; SectorForces keeps its existing entry and default.
+`creationChoices()` returns the default first with stable ordering. Catalog
+validation rejects unsupported choices and a non-creatable enabled default.
+`requireCreatable` applies the same choices to registry creation. The retained
+`economy-preview` profile and `builtIn(boolean)` compatibility overload no longer
+gate availability. Earlier opt-in-profile descriptions above record past stages.
+
+`RulesetSelector` keeps variant selection separate from a version radio group,
+shown only when multiple versions can be created. Version changes notify the
+wizard and update the selected card; switching variants resets to that variant's
+default. Templates and rematches retain W6/W7 exactly. Older stored games still
+load and continue, but `DefaultGameTemplateService` excludes their setups from
+new templates. No snapshot migration or stored-rule rewrite is performed.
+
+
+## Shared ship research: Spaceward 1.3.0-r1
+
+R1 inherits W7 economics and navigation under its own stored rule reference and
+round provider. `research-preview` enables creation via `RulesetCatalog.withShipResearch`;
+normal W6/W7 creation is unchanged. The ordinary catalog still supports R1 for
+restoration and round dispatch. No saved W6/W7 reference is migrated.
+
+`ResearchEconomy` is an immutable optional component of `MetalEconomy`, which
+already travels through snapshots, copies and replay frames. R1 requires exactly
+one research record per player. Older rules require no research component.
+`ShipResearch` stores a percentage, completed level and long progress, validates
+cost bounds, carries remainders and stops at the initial level-20 cap. The square
+cost curve is versioned in R1. Reservation is computed from installed industry,
+rounded once per empire and allocated by largest remainder then system ID.
+Reservations reduce the industry's usable capacity; `MetalProduction` exposes
+the exact same reservation map for authorized live and historical forecasts.
+
+`GameState.planShipResearch` clamps expansion before mining and updates planned
+ship output. The application command identifies the seat from the account,
+checks round/submission state and compares the expected previous percentage
+under the game lock. Accepted changes publish `ProductionAllocationChanged`.
+Relocations are trimmed after a budget change. Research advancement uses opening
+industry and follows ship production: that round's ships keep the old level.
+Expanded industry, new levels and changed ownership recompute next-round budgets.
+`ResearchCompleted` is a stored, localized report event without a battle marker.
+
+`ShipCohorts` stores immutable per-level hull counts in both `StarSystem` and
+`Fleet`. Constructors check counts; missing legacy JSON defaults to level zero.
+All navigation, return, dispatch, cancellation, docking, reinforcement, recycling
+and survivor operations retain generations. Standing orders partition the same
+newest-first selection without duplicating cohorts. Only research production can
+add newly commissioned higher-level hulls. Recycling removes oldest hulls first;
+casualties use proportional largest remainders. No material conversion uses
+combat strength: hull counts, metal cost and recycling remain unchanged.
+
+R1 coalition resolution uses summed generation strength per volley and each
+side's actual surviving cohort mix; rolls and physical casualty limits remain
+unchanged. The legacy resolver path receives no cohorts and keeps historical
+math. Survivors are assigned to members and contingents by hull count, then to
+generations by largest remainder. The UI projects composition only through fully
+visible industry and own fleets; research progress and budgets are own-empire
+views behind the account authorization boundary. Reviews use saved research and
+ship generations, never the empire's later technology.
+
+The map menu opens an ordinary Vaadin dialog; no frontend bundle, JavaScript,
+CSS or tracked dependency manifests are changed. AI budgets use 10%, 5% for
+RUSH, following the paired study in `RESEARCH-EXPERIMENTS.md`, through the same domain budget operation. Focused regression cases cover
+completion timing, material conservation, coalition outcomes, multiple standing
+routes, conquest budget changes, old JSON, account/stale-write rejection,
+database reload and all AI profiles. These checks do not establish optimal balance.
+
+Coalition reports store opening base strength separately from rolled strength.
+Legacy reports default base strength to hull count; crew-condition text compares
+against the technology-weighted base, so technology does not masquerade as crew
+readiness. Per-volley strength uses the same member/contingent rounding as final
+survivor allocation; generation strength is summed in integer tenths.

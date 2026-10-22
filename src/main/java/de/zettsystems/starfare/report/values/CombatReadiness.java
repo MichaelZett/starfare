@@ -2,6 +2,10 @@ package de.zettsystems.starfare.report.values;
 
 /** Momentary crew condition derived only from stored opening combat facts. */
 public record CombatReadiness(int level, int variant) {
+    public static CombatReadiness from(int ships, double strength, double baseStrength, int sideId) {
+        double crewStrength = baseStrength > 0 && Double.compare(baseStrength, ships) != 0 ? strength * ships / baseStrength : strength;
+        return from(ships, crewStrength, sideId);
+    }
     public static CombatReadiness from(int ships, double strength, int sideId) {
         double deviation = ships > 0 && Double.isFinite(strength) ? strength / ships - 1 : 0;
         int level;

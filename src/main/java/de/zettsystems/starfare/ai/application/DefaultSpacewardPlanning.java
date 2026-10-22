@@ -43,6 +43,13 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
         state.players().stream().filter(Player::ai).forEach(player -> planPlayer(state, fleets, player));
     }
     private void planPlayer(GameState state, FleetService fleets, Player player) {
+        if (state.ruleset().usesShipResearch()) {
+            // Small budgets retained more fleet capacity in the paired research study.
+            int percent = researchPercent(player);
+            state.planShipResearch(player.id(), percent);
+            state.systems().stream().filter(system -> Integer.valueOf(player.id()).equals(system.ownerId()))
+                    .forEach(system -> fleets.trimRelocations(state, player.id(), system.id()));
+        }
         planMining(state, player);
         if (state.ruleset().usesRecycling()) { planRecycling(state, player); }
         if (player.aiStrategy() != de.zettsystems.starfare.ai.values.AiStrategy.BASELINE) {
@@ -63,6 +70,10 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
         owned.stream().max(Comparator.comparingInt(DefaultSpacewardPlanning::knownGarrison))
                 .ifPresent(base -> sendFrom(state, fleets, player, base, view));
     }
+    /** Baseline policy, overridable by the controlled research experiment. */
+    protected int researchPercent(Player player) {
+        return player.aiStrategy() == de.zettsystems.starfare.ai.values.AiStrategy.RUSH ? 5 : 10;
+    }
     private void planMining(GameState state, Player player) {
         if (state.ruleset().usesMetals()) {
             views.forPlayer(state, player.id()).systems().stream()
@@ -71,7 +82,7 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
                         var industry = system.industry();
                         var metal = industry == null ? null : industry.metal();
                         if (industry != null && metal != null) {
-                            int mining = metal.remaining() == 0 ? 0 : Math.max(1, industry.usableCapacity() / 3);
+                            int mining = metal.remaining() == 0 || industry.usableCapacity() == 0 ? 0 : Math.max(1, industry.usableCapacity() / 3);
                             int expansion = Math.min(industry.expansionAllocation(), industry.usableCapacity() - mining);
                             economy.allocateProduction(state, player.id(), system.id(), expansion, mining);
                         }

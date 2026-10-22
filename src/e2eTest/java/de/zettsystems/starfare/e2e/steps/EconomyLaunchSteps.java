@@ -12,7 +12,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** The same launch journey checks the released default and the opt-in acceptance profile. */
+/** Launch journey checks the default W7 economy through the ordinary wizard. */
 public class EconomyLaunchSteps {
     private final Browser browser;
     private final GameRegistry registry;

@@ -55,6 +55,11 @@ public class Browser {
         return new Browser(environment, SharedBrowser.createDriver());
     }
 
+    /** Eigene Sitzung in einem emulierten Handy. */
+    public Browser newPhoneSession() {
+        return new Browser(environment, SharedBrowser.createPhoneDriver());
+    }
+
     public void closeSession() {
         if (ownedDriver != null) {
             ownedDriver.quit();

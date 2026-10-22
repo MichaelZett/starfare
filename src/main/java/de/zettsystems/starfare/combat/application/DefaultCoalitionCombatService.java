@@ -64,7 +64,18 @@ public class DefaultCoalitionCombatService implements CoalitionCombatService {
             });
             return;
         }
-        var result = CoalitionResolver.resolve(forces, state.combatRandomnessPercent(), roll);
+        var generations = new ArrayList<de.zettsystems.starfare.combat.domain.CombatCohorts.Force>();
+        if (state.ruleset().usesShipResearch()) {
+            Integer defendingOwner = target.ownerId();
+            int ownerId = defendingOwner == null ? 0 : defendingOwner;
+            generations.add(new de.zettsystems.starfare.combat.domain.CombatCohorts.Force(
+                    sideId(state, ownerId), ownerId, 0, target.composition()));
+            fleets.forEach(fleet -> generations.add(new de.zettsystems.starfare.combat.domain.CombatCohorts.Force(
+                    sideId(state, fleet.ownerId()), fleet.ownerId(), fleet.globalId(), fleet.composition())));
+        }
+        var result = generations.isEmpty() ? CoalitionResolver.resolve(forces, state.combatRandomnessPercent(), roll)
+                : CoalitionResolver.resolve(forces, state.combatRandomnessPercent(), roll,
+                    new de.zettsystems.starfare.combat.domain.CombatCohorts(generations)::strength);
         var winning = result.stream().filter(side -> side.remaining() > 0).findFirst().orElse(null);
         Map<Integer, Integer> survivors = allocateContingents(target, fleets, result);
         Integer owner = ownerAfter(state, target, fleets, winning, survivors);
@@ -157,7 +168,7 @@ public class DefaultCoalitionCombatService implements CoalitionCombatService {
             state.replaceFleet(fleet.dockAtPartner()); return;
         }
         state.fleets().remove(fleet);
-        state.updateSystem(fleet.toSystemId(), system -> system.reinforce(fleet.ships()));
+        state.updateSystem(fleet.toSystemId(), system -> system.reinforce(fleet.composition()));
         var target = state.getSystem(fleet.toSystemId());
         if (report) { reports.appendEvent(state, fleet.ownerId(), new TurnEvent.Reinforcement(fleet.ownerId(), target.id(), target.name(),
                 fleet.ships(), target.garrison(), "F" + fleet.localNo())); }

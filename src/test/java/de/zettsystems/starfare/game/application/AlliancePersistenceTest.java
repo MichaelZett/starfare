@@ -90,7 +90,9 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
         assertThat(statistics.statisticsFor("ally-two").wins()).isEqualTo(1);
         assertThat(statistics.statisticsFor("loser").losses()).isEqualTo(1);
         assertThat(games.summaryFor(id, "ally-two").orElseThrow().outcome().wonBy(2)).isTrue();
-        assertThat(templates.template(id, "ally-two").orElseThrow().setup().victoryRules()).isEqualTo(state.victoryRules());
+        assertThat(templates.template(id, "ally-two")).isEmpty();
+        var storedVictory = registry.readState(id, s -> s.originalSetup().orElseThrow().victoryRules());
+        assertThat(storedVictory).isEqualTo(state.victoryRules());
         assertThat(games.reviewFor(id, "ally-two", 2, true).orElseThrow().wonBy(2)).isTrue();
         assertThat(games.continueAfterVictory(id, "loser")).isFalse();
         assertThat(games.continueAfterVictory(id, "ally-two")).isTrue();

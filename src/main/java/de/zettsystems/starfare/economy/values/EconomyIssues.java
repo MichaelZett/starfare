@@ -39,7 +39,8 @@ public final class EconomyIssues {
             if (metal.actualShips() < metal.plannedShips()) { result.add(Kind.METAL); }
             if (metal.miningPoints() > 0 && metal.remaining() < (long) metal.miningPoints() * metal.yieldPerPoint()) { result.add(Kind.DEPOSIT); }
         }
-        if (industry.usableCapacity() < industry.capacity()) { result.add(Kind.LABOR); }
+        ColonyView colony = industry.colony();
+        if (colony != null && colony.laborLimited() && colony.labor() < industry.capacity()) { result.add(Kind.LABOR); }
         return result;
     }
 }

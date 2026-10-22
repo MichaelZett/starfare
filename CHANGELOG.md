@@ -6,6 +6,40 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Gemeinsame Schiffsforschung als eigene Regelfassung 1.3.0-r1 (Profil
+  `research-preview`): reichsweiter Industrieanteil, steigende Stufenkosten und
+  stärkere Neubauten ab der folgenden Runde. Baustufen bleiben bei Versand,
+  Verlegung, Recycling, Rückkehr und Kampf erhalten. Gemischte Bestände werden
+  angezeigt; Abschlüsse erscheinen im Bericht. Geschwindigkeit, Reichweite,
+  Metallkosten und bestehende W6-/W7-Partien behalten ihre Regeln.
+
+- Schiffsforschung auf Desktop und Handy geprüft; Forschungsreserve wird nicht mehr
+  als Arbeitskräftemangel gemeldet. Eroberungen gleichen die Produktionspläne
+  beider Reiche vor der neuen Schiffbauvorschau ab.
+- Forschungsbudgets in 768 kontrollierten Partien verglichen; normales KI-Budget
+  auf 10 Prozent abgestimmt, Rush bleibt bei 5 Prozent. Details und Grenzen in
+  `docs/RESEARCH-EXPERIMENTS.md`.
+
+## 0.2.0 - 2026-10-18
+
+- **Eigene Handy-Oberfläche.** Handys erhalten eine eigene Kartenansicht: kompakter
+  Kopf, Karte im Vollbild mit Zoomknöpfen und Zwei-Finger-Zoom, die Seitenleiste als
+  Vollbild-Übersicht und eine Leiste zum Wechseln zwischen Karte und Übersicht. Die
+  Zielwahl zeigt einen Hinweis mit Abbrechen. Der Server wählt die Oberfläche je
+  Sitzung anhand des Browsers und baut nur diese; Tablets und Desktop-Rechner bleiben
+  bei der gewohnten Ansicht. `?layout=mobile` bzw. `?layout=desktop` legt sie fest.
+- Lobby, Spielassistent, Archiv, Statistik und alle Dialoge sind auf dem Handy
+  bedienbar: nichts ragt seitlich heraus, Dialoge füllen den Bildschirm, ihre Knöpfe
+  bleiben unten erreichbar, Bedienelemente sind mindestens 44 px hoch. Desktops laden
+  das Handy-Stylesheet nicht.
+- „Eigenes Reich“ zoomt bei wenigen Systemen nicht mehr übermäßig heran; die
+  Startansicht zentriert das Heimatsystem auch, wenn die Karte erst verzögert ihre
+  Größe erhält.
+- Neuer Browsertest `@mobile`: Ein emuliertes iPhone bedient Assistent und Karte per
+  Fingertipp, daneben prüft eine Desktop-Sitzung die gewohnte Ansicht.
+
 ## 0.1.1 - 2026-10-16
 
 - Die Variantenkarte von SectorForces erklärt das Spiel ohne Vorwissen und nennt
@@ -29,6 +63,33 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Spaceward und einer Variante nach Master of Orion II sowie den Weg zu Issues.
   Neue Issue-Formulare für Fehlerberichte und Ideen; Sicherheitslücken werden
   laut `SECURITY.md` vertraulich gemeldet.
+
+- Spaceward-Neuanlage auf W6 und W7 beschränkt; W7 ist die Vorgabe. Der Assistent
+  bietet eine eigene Regelfassungswahl. SectorForces bleibt als eigene Variante
+  vorausgewählt. Die Auswahl gilt auch für Vorlagen und Revanchen, ohne besonderes
+  Startprofil. Ältere Spielstände bleiben unter ihren bisherigen Regeln fortsetzbar.
+
+- Neuer interner Wirtschaftskandidat 1.2.0-w7 mit günstigen ersten Industriestufen:
+  min(2C, max(2, aufrunden(C²/10))) Punkte je Stufe, ab C=20 der bisherige Preis.
+  Mehrere Stufen pro Runde sind möglich; neue Kapazität wirkt ab der Folgerunde.
+  Vorschau und KI verwenden den gespeicherten Regelpreis. Ältere Partien behalten
+  ihre Kosten. Neue Partien bieten W7 und W6; ältere Fassungen bleiben fortsetzbar.
+
+- Gezielter Wirtschaftsvergleich mit weiteren 1.280 Partien: frühe Einzelstufen,
+  moderater und später Ausbau bei festen militärischen Heuristiken, Kosten- und
+  Eroberungsvarianten sowie unabhängige Kontrollkarten. Günstige kleine Ausbauten
+  wurden als W7 übernommen; übrige Modelle bleiben im Testprüfstand.
+
+- Strategieprüfstand für W4/W5/W6 erweitert und 2.240 Studienpartien verglichen:
+  Starker Dauerausbau verliert alle entschiedenen breiten W6-Zweikämpfe;
+  zurückhaltender und adaptiver Ausbau gewinnen viele Partien. Ergebnisse,
+  offene Verläufe und Grenzen stehen in `docs/ECONOMY-EXPERIMENTS.md`.
+
+- Neuer interner Wirtschaftskandidat 1.2.0-w6: Bei Metallknappheit erhalten
+  Werften gleiche Anteile bis zu ihrem Bedarf; übrige Anteile werden erneut
+  verteilt. Vorschau, Rundenauflösung und historische Ansichten rechnen identisch.
+  Gespeicherte W5-Partien behalten ihre proportionale Verteilung. Das Profil
+  W6 bleibt neben W7 wählbar; ältere Fassungen bleiben fortsetzbar.
 
 - Neue Spaceward-Partieoption **KI darf Bündnisse eingehen** (Vorgabe an). Ist sie
   aus, treten KI-Imperien keinen neuen Bündnissen bei; bestehende Verträge nach

@@ -66,6 +66,7 @@ public class DefaultReportService implements ReportService {
                     : "Bündnissieg %d: %s, mindestens %d%% Systeme unter Kontrolle."
                             .formatted(victory.allianceId(), String.join(", ", victory.winnerNames()), victory.systemPercent());
             case TurnEvent.Defeat defeat -> "Niederlage: %s gewinnt die Partie.".formatted(defeat.winnerName());
+            case TurnEvent.ResearchCompleted research -> "Schiffsforschung: Technikstufe %d erreicht.".formatted(research.level());
             case TurnEvent.EconomySummary _ -> null;
         };
     }

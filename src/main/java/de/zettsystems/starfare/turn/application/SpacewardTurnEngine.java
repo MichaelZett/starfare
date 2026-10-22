@@ -28,7 +28,17 @@ public class SpacewardTurnEngine implements RulesetRoundImplementation {
     @Override public void advanceTurn(GameState state) {
         if (!ruleset().equals(state.ruleset())) { throw new IllegalArgumentException("Spaceward cannot resolve " + state.ruleset()); }
         pipeline.advanceTurn(state, () -> ai.plan(state, fleets), routed -> {
+            var previousTechnology = state.players().stream().collect(java.util.stream.Collectors.toMap(
+                    de.zettsystems.starfare.game.values.Player::id, player -> state.shipTechnology(player.id())));
             var results = economy.produce(state, routed);
+            if (state.ruleset().usesShipResearch()) {
+                state.players().forEach(player -> {
+                    int level = state.shipTechnology(player.id());
+                    if (level > java.util.Objects.requireNonNull(previousTechnology.get(player.id()))) {
+                        reports.appendEvent(state, player.id(), new TurnEvent.ResearchCompleted(player.id(), level));
+                    }
+                });
+            }
             results.forEach(result -> reports.appendEvent(state, result.ownerId(),
                     new TurnEvent.Production(result.ownerId(), result.systemId(), result.systemName(), result.ships())));
             recordEconomy(state, results);

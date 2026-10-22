@@ -17,6 +17,7 @@ import java.util.OptionalInt;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
+        @JsonSubTypes.Type(value = TurnEvent.ResearchCompleted.class, name = "researchCompleted"),
         @JsonSubTypes.Type(value = TurnEvent.Recycling.class, name = "recycling"),
         @JsonSubTypes.Type(value = TurnEvent.Production.class, name = "production"),
         @JsonSubTypes.Type(value = TurnEvent.EconomySummary.class, name = "economySummary"),
@@ -42,7 +43,7 @@ public sealed interface TurnEvent {
             case SystemLost event -> OptionalInt.of(event.systemId());
             case DefenseHeld event -> OptionalInt.of(event.systemId());
             case CoalitionBattle event -> OptionalInt.of(event.systemId());
-            case Victory _, Defeat _, EconomySummary _ -> OptionalInt.empty();
+            case Victory _, Defeat _, EconomySummary _, ResearchCompleted _ -> OptionalInt.empty();
         };
     }
 
@@ -54,9 +55,11 @@ public sealed interface TurnEvent {
             case SystemLost event -> OptionalInt.of(event.systemId());
             case DefenseHeld event -> OptionalInt.of(event.systemId());
             case CoalitionBattle event -> OptionalInt.of(event.systemId());
-            case Recycling _, Production _, Reinforcement _, Victory _, Defeat _, EconomySummary _ -> OptionalInt.empty();
+            case Recycling _, Production _, Reinforcement _, Victory _, Defeat _, EconomySummary _, ResearchCompleted _ -> OptionalInt.empty();
         };
     }
+
+    record ResearchCompleted(int playerId, int level) implements TurnEvent { }
 
     record Production(int playerId, int systemId, String systemName, int amount)
             implements TurnEvent {}

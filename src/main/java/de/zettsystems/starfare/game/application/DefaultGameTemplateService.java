@@ -32,7 +32,8 @@ public class DefaultGameTemplateService implements GameTemplateService {
 
     private Optional<GameTemplate> template(GameState state, @Nullable String host, String account) {
         if (account.isBlank() || !access.related(state, host, account)) { return Optional.empty(); }
-        return state.originalSetup().map(setup -> new GameTemplate(setup, state.seatByUser()));
+        return state.originalSetup().filter(setup -> registry.rulesets().find(setup.ruleset().variant())
+                .map(entry -> entry.creationChoices().contains(setup.ruleset())).orElse(false)).map(setup -> new GameTemplate(setup, state.seatByUser()));
     }
 
     @Override

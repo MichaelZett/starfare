@@ -4,6 +4,18 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String RESEARCH_TITLE = "research.title";
+    public static final String RESEARCH_BUDGET = "research.budget";
+    public static final String RESEARCH_STATUS = "research.status";
+    public static final String RESEARCH_EXPLANATION = "research.explanation";
+    public static final String RESEARCH_SAVE = "research.save";
+    public static final String RESEARCH_CLOSE = "research.close";
+    public static final String RESEARCH_REJECTED = "research.rejected";
+    public static final String RESEARCH_RESERVED = "research.reserved";
+    public static final String RESEARCH_GENERATION = "research.generation";
+    public static final String RESEARCH_SHIPS = "research.ships";
+    public static final String RESEARCH_COMPLETED = "research.completed";
+
     public static final String BATTLE_ROLES_UNKNOWN = "battle.rolesUnknown";
     public static final String BATTLE_CONDITION_DETAILS = "battle.condition.details";
     public static final String BATTLE_CONDITION_FACTS = "battle.condition.facts";
@@ -141,6 +153,7 @@ public final class UiTexts {
 
     public static final String RULESET_CHOOSE = "ruleset.choose";
     public static final String RULESET_LABEL = "ruleset.label";
+    public static final String RULESET_VERSION_CHOOSE = "ruleset.version.choose";
     public static final String RULESET_VERSION = "ruleset.version";
     public static final String RULESET_PLANNED = "ruleset.planned";
     public static final String RULESET_FILTER = "ruleset.filter";
@@ -701,6 +714,10 @@ public final class UiTexts {
     public static final String MAP_FIT_EMPIRE = "map.fitEmpire";
     public static final String MAP_LEGEND = "map.legend";
     public static final String MAP_LEGEND_TEXT = "map.legendText";
+    public static final String MAP_LEGEND_TEXT_TOUCH = "map.legendTextTouch";
+    public static final String MAP_MOBILE_MAP = "map.mobile.map";
+    public static final String MAP_MOBILE_PANEL = "map.mobile.panel";
+    public static final String MAP_MOBILE_CLOSE = "map.mobile.close";
     public static final String ACCOUNT_NAVIGATION = "account.navigation";
     public static final String PRIVACY_DATA = "privacy.data";
     public static final String PRIVACY_PURPOSE_TITLE = "privacy.purposeTitle";
