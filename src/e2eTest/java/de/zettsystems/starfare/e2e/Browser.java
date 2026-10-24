@@ -223,7 +223,7 @@ public class Browser {
         try {
             return driver().findElements(By.tagName("vaadin-button")).stream()
                     .filter(WebElement::isDisplayed)
-                    .filter(button -> label.equals(button.getText().strip()))
+                    .filter(button -> label.equals(button.getText().strip()) || label.equals(button.getDomAttribute("aria-label")))
                     .findFirst()
                     .orElse(null);
         } catch (StaleElementReferenceException _) {

@@ -147,13 +147,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             }
         });
         planningActions.addClassName("planning-actions");
-        planningActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_UNDO), _ -> {
+        planningActions.add(planningButton(UiTexts.PLAN_UNDO_SHORT, UiTexts.PLAN_UNDO, () -> {
             if (!game.undoOrders(gameId, currentSeat(), Objects.requireNonNull(displayedTurn))) {
                 Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
             }
             refresh();
-        }), new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_DISPATCH), _ -> planningDialogs().dispatch()),
-                new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_RESERVES), _ -> planningDialogs().reserves()));
+        }), planningButton(UiTexts.PLAN_DISPATCH_SHORT, UiTexts.PLAN_DISPATCH, () -> planningDialogs().dispatch()),
+                planningButton(UiTexts.PLAN_RESERVES_SHORT, UiTexts.PLAN_RESERVES, () -> planningDialogs().reserves()));
         actionBar.addClassName("map-controls");
         actionBar.add(treatyActions, planningActions);
         fleetsPanel.setActions(actionBar);
@@ -203,6 +203,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     /** Brings the sidebar into view; on phones it lies as a sheet over the map. */
     private void revealPanel() {
         if (mobile != null) { mobile.showPanel(); }
+    }
+
+    private static com.vaadin.flow.component.button.Button planningButton(String shortKey, String fullKey, Runnable action) {
+        var button = new com.vaadin.flow.component.button.Button(I18n.t(shortKey), _ -> action.run());
+        button.setAriaLabel(I18n.t(fullKey));
+        button.setTooltipText(I18n.t(fullKey));
+        return button;
     }
 
     /** On phones the sheet covers the map, so anything that points at the map closes it. */

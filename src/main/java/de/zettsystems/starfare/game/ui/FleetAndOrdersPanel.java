@@ -221,7 +221,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         tabs.setWidthFull();
         tabs.addClassName("map-sidebar-tabs");
         tabs.addSelectedChangeListener(event -> showSection(sectionOf(event.getSelectedTab())));
-        compactNavigation.setLabel(I18n.t(UiTexts.MAP_VIEW));
+        compactNavigation.setAriaLabel(I18n.t(UiTexts.MAP_VIEW));
         compactNavigation.setItems(Section.values());
         compactNavigation.setItemLabelGenerator(section -> tabFor(section).getElement().getText());
         compactNavigation.setAllowCustomValue(false);
@@ -232,7 +232,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         });
         navigation.addClassName("map-sidebar-navigation");
         navigation.setWidthFull();
-        navigation.add(tabs, compactNavigation);
+        Div compactRow = new Div(new Span(I18n.t(UiTexts.MAP_VIEW)), compactNavigation);
+        compactRow.addClassName("map-sidebar-compact");
+        navigation.add(tabs, compactRow);
         add(navigation, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, logisticsPage, reportPage);
         showSection(Section.CONTACTS);
         fleetsPage.add(header(UiTexts.MAP_OWN_FLEETS), routeFilter(), fleetCards);

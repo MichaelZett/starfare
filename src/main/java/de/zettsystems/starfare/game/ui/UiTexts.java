@@ -4,6 +4,9 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String PLAN_UNDO_SHORT = "plan.undo.short";
+    public static final String PLAN_DISPATCH_SHORT = "plan.dispatch.short";
+    public static final String PLAN_RESERVES_SHORT = "plan.reserves.short";
     public static final String MINING_TITLE = "mining.automation.title";
     public static final String MINING_ENABLED = "mining.automation.enabled";
     public static final String MINING_ROUNDS = "mining.automation.rounds";

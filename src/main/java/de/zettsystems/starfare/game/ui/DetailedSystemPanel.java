@@ -90,6 +90,7 @@ final class DetailedSystemPanel extends Div {
         star.getElement().setAttribute(HtmlAttributes.TITLE, star.getAriaLabel().orElse(""));
         position(star, 0, 50);
         int radius = PhysicalSystemSize.starRadius(game, system, type, index);
+        star.getElement().setAttribute("data-model-radius-km", String.valueOf(radius));
         String diameter = PhysicalSystemSize.starDiameter(radius) + "px";
         star.getStyle().set(CssProperties.WIDTH, diameter).set(CssProperties.HEIGHT, diameter);
         star.getElement().setAttribute(HtmlAttributes.TITLE, star.getAriaLabel().orElse("") + " · " + radiusText(radius));
@@ -136,6 +137,7 @@ final class DetailedSystemPanel extends Div {
         Button moon = new Button();
         moon.addClassNames("system-body-target", "system-world", "system-colony-moon", "system-colony-target");
         int radius = PhysicalSystemSize.moonRadius(game, system, 1, 0);
+        moon.getElement().setAttribute("data-model-radius-km", String.valueOf(radius));
         moon.getStyle().set(CssProperties.BODY_DIAMETER, PhysicalSystemSize.bodyDiameter(radius) + "px");
         Span sphere = new Span();
         sphere.addClassNames("system-body-sphere", "system-world-rocky");
@@ -175,6 +177,7 @@ final class DetailedSystemPanel extends Div {
         target.setAriaLabel(name + ": " + I18n.t(bodyKey(body)));
         target.getElement().setAttribute(HtmlAttributes.TITLE, target.getAriaLabel().orElse(""));
         if (body.type() != SystemComposition.BodyType.ASTEROIDS) {
+            target.getElement().setAttribute("data-model-radius-km", String.valueOf(PhysicalSystemSize.bodyRadius(game, system, body)));
             target.getElement().setAttribute(HtmlAttributes.TITLE, target.getAriaLabel().orElse("") + " · "
                     + radiusText(PhysicalSystemSize.bodyRadius(game, system, body)));
         }

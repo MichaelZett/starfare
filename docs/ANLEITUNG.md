@@ -141,8 +141,8 @@ stehen nur in Übersichten und in der Diplomatie.
 
 Die Seitenleiste enthält **Kontakte, Details, Flotten, Befehle, Verlegungen,
 Logistik und Bericht**. Bei wenig Platz ersetzt das Auswahlfeld **Ansicht** die
-Reiter; es bietet dieselben Bereiche. Sammelversand, Sammelreserve und **Letzten
-Befehlschritt zurücknehmen** stehen direkt am Kopf der Seitenleiste. Einzelversand und Verlegungen behalten den aktuellen
+Reiter; es bietet dieselben Bereiche. Sammelversand, Sammelreserve und **Rückgängig** stehen direkt am Kopf der Seitenleiste. Die kurzen Knopfbeschriftungen
+zeigen den vollständigen Aktionsnamen als Hilfetext. Einzelversand und Verlegungen behalten den aktuellen
 Reiter; Sammelbefehle öffnen den Befehlsreiter, eine ausgewertete Runde den Bericht. Aktualisierungen unveränderter Inhalte erhalten Eingaben und
 Fokus; neue Chat-Nachrichten löschen keinen begonnenen Nachrichtenentwurf.
 
