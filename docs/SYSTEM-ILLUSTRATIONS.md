@@ -56,3 +56,28 @@ body selection and the expanded catalogue across normal refreshes.
 
 Future V2 systems can replace decorative descriptions with persisted physical
 data and add industry graphics; that requires a separate rules implementation.
+
+
+## Fictional individual radius model (v1)
+
+Individual radii now come from a separate frozen hash of game, system and body
+identities. It does not consume the illustration generator's random sequence,
+so existing types, rings, orbit order and moon counts remain unchanged. Star,
+planet and moon identities are distinct. This is an artistic model, not a
+measurement or an astrophysical inference from a colony's suitability.
+
+| Category | Radius range in km |
+| --- | --- |
+| Red / orange / yellow stars | 100,000–400,000 / 400,000–600,000 / 600,000–850,000 |
+| Yellow-white / white stars | 850,000–1,200,000 / 1,200,000–1,800,000 |
+| Rocky / super-Earth | 2,500–8,000 / 8,000–15,000 |
+| Ice giant / gas giant | 18,000–35,000 / 35,000–80,000 |
+| Dwarf planet / major moon | 200–2,000 / 300–3,500 |
+
+Values are rounded to 100 km and explicitly labelled fictional model values.
+Asteroid belts have no single-body radius. Planets and moons use the same fixed
+logarithmic compression across all systems; stars have their own separate scale.
+Pixel rounding can make nearby radii appear equal. No per-system normalisation
+is used. Colony moons retain their own size and environment rather than borrowing
+those of the parent gas giant. No measured radii, mass, orbital physics or new
+economic effects are implied. The version-1 mapping is frozen for old games.

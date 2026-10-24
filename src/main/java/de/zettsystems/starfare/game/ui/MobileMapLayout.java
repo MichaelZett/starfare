@@ -22,8 +22,8 @@ final class MobileMapLayout extends Div {
     private final Button mapTab;
     private final Button panelTab;
 
-    MobileMapLayout(List<Component> top, Component gameOverBanner, MapCanvas canvas, Component actionBar,
-                    FleetAndOrdersPanel panel, Runnable onCancelTarget) {
+    MobileMapLayout(List<Component> top, Component gameOverBanner, MapCanvas canvas,
+                    FleetAndOrdersPanel panel, Component chat, Runnable onCancelTarget, Runnable onCloseChat) {
         addClassName("mobile-map");
         var head = new Div(top.toArray(Component[]::new));
         head.addClassName("mobile-map-top");
@@ -42,15 +42,15 @@ final class MobileMapLayout extends Div {
         targetBanner.addClassName("mobile-map-target");
         targetBanner.setVisible(false);
 
-        sheet.add(actionBar, panel, new LegalFooter());
+        sheet.add(panel, new LegalFooter());
         sheet.addClassName("mobile-map-sheet");
 
         gameOverBanner.getElement().getClassList().add("mobile-map-banner");
-        var stage = new Div(gameOverBanner, canvas, zoom, targetBanner, sheet);
+        var stage = new Div(gameOverBanner, canvas, zoom, targetBanner, sheet, chat);
         stage.addClassName("mobile-map-stage");
 
-        mapTab = tab(VaadinIcon.MAP_MARKER, UiTexts.MAP_MOBILE_MAP, this::showMap);
-        panelTab = tab(VaadinIcon.LIST, UiTexts.MAP_MOBILE_PANEL, this::showPanel);
+        mapTab = tab(VaadinIcon.MAP_MARKER, UiTexts.MAP_MOBILE_MAP, () -> { onCloseChat.run(); showMap(); });
+        panelTab = tab(VaadinIcon.LIST, UiTexts.MAP_MOBILE_PANEL, () -> { onCloseChat.run(); showPanel(); });
         var nav = new Div(mapTab, panelTab);
         nav.addClassName("mobile-map-nav");
 

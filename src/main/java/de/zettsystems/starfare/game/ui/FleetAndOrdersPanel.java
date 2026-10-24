@@ -53,10 +53,24 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final List<VerticalLayout> pages = List.of(contactsPage, detailsPage, fleetsPage, ordersPage,
             relocationsPage, logisticsPage, reportPage);
     private final Tabs tabs;
+    private final Div navigation = new Div();
+    private final ComboBox<Section> compactNavigation = new ComboBox<>();
     private final List<Tab> sectionTabs;
     private final Tab reportTab;
+    private boolean reportAvailable = true;
 
     private boolean readOnly;
+    private Runnable onMining = () -> { };
+    private BiConsumer<Integer, Boolean> onMiningProtection = (_, _) -> { };
+    private java.util.Set<Integer> automatedSystems = java.util.Set.of();
+    private java.util.Set<Integer> protectedSystems = java.util.Set.of();
+    void onMining(Runnable action) { onMining = action; }
+    void onMiningProtection(BiConsumer<Integer, Boolean> action) { onMiningProtection = action; }
+    java.util.Set<Integer> protectedProductionSystems() { return productionInputs.protectedSystems(); }
+    void miningPolicy(de.zettsystems.starfare.economy.values.@Nullable MiningAutomation policy) {
+        automatedSystems = policy != null && policy.enabled() ? policy.systems() : java.util.Set.of();
+        protectedSystems = policy != null && policy.enabled() ? policy.protectedSystems() : java.util.Set.of();
+    }
     private final de.zettsystems.starfare.economy.values.ProductionInputs productionInputs = new de.zettsystems.starfare.economy.values.ProductionInputs();
     private @Nullable IndustryPanel industryPanel;
     private EconomyIssues.@Nullable Kind economyFilter;
@@ -207,8 +221,19 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         tabs.setWidthFull();
         tabs.addClassName("map-sidebar-tabs");
         tabs.addSelectedChangeListener(event -> showSection(sectionOf(event.getSelectedTab())));
-
-        add(tabs, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, logisticsPage, reportPage);
+        compactNavigation.setLabel(I18n.t(UiTexts.MAP_VIEW));
+        compactNavigation.setItems(Section.values());
+        compactNavigation.setItemLabelGenerator(section -> tabFor(section).getElement().getText());
+        compactNavigation.setAllowCustomValue(false);
+        compactNavigation.setWidthFull();
+        compactNavigation.addClassName("map-sidebar-select");
+        compactNavigation.addValueChangeListener(event -> {
+            if (event.getValue() != null) { select(event.getValue()); }
+        });
+        navigation.addClassName("map-sidebar-navigation");
+        navigation.setWidthFull();
+        navigation.add(tabs, compactNavigation);
+        add(navigation, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, logisticsPage, reportPage);
         showSection(Section.CONTACTS);
         fleetsPage.add(header(UiTexts.MAP_OWN_FLEETS), routeFilter(), fleetCards);
         ordersPage.add(header(UiTexts.MAP_PLANNED_ORDERS), routeFilter(), orderCards);
@@ -244,11 +269,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         Integer detailOwner = selectedSystem == null ? null : selectedSystem.ownerId();
         boolean industryLocked = detailOwner != null && view.roundStatus().hasSubmitted(detailOwner);
         Object details = java.util.Arrays.asList(gameId, selectedSystem, fleetId, view.ownFleets(), view.plannedOrders(),
-                view.empire(),
+                view.empire(), automatedSystems, protectedSystems,
                 view.waitingFleetIds(), view.standingOrders(), view.turn(), industryLocked, view.roundStatus(), readOnly, targetSelectionActive,
                 selectedSystem != null && isBattlePending(selectedSystem.id()));
         if (!details.equals(lastDetails)) { renderDetails(view, targetSelectionActive); lastDetails = details; }
-        Object logistics = List.of(view.systems(), view.standingOrders(), readOnly);
+        Object logistics = List.of(view.systems(), view.standingOrders(), readOnly, automatedSystems, protectedSystems);
         if (!logistics.equals(lastLogistics)) { renderLogistics(view); lastLogistics = logistics; }
         Object reportState = java.util.Arrays.asList(report, battlePresentationEnabled,
                 report == null ? List.of() : pendingBattleIndices(report.events()));
@@ -256,7 +281,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     void setViewsVisible(boolean visible) {
-        tabs.setVisible(visible);
+        navigation.setVisible(visible);
         if (!visible) {
             pages.forEach(page -> page.setVisible(false));
         } else {
@@ -265,10 +290,20 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     void setReportAvailable(boolean available) {
+        if (reportAvailable == available) { return; }
+        reportAvailable = available;
         reportTab.setVisible(available);
         if (!available && Objects.equals(tabs.getSelectedTab(), reportTab)) {
             tabs.setSelectedTab(sectionTabs.getFirst());
         }
+        Section selected = sectionOf(tabs.getSelectedTab());
+        compactNavigation.setItems(java.util.Arrays.stream(Section.values())
+                .filter(section -> available || section != Section.REPORT).toList());
+        compactNavigation.setValue(selected);
+    }
+
+    void setActions(com.vaadin.flow.component.Component actions) {
+        addComponentAsFirst(actions);
     }
 
     void showOrders() {
@@ -300,6 +335,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 view.standingOrders());
         addLogisticsFilters();
         boolean mining = view.systems().stream().anyMatch(system -> metalOf(system) != null);
+        if (mining && !readOnly) {
+            logisticsPage.add(new Button(I18n.t(UiTexts.MINING_TITLE), _ -> onMining.run()));
+        }
         if (mining) { addYieldSort(); }
         java.util.Comparator<VisibleSystem> ranking = (left, right) -> Integer.compare(logisticsPriority(right, summaries),
                 logisticsPriority(left, summaries));
@@ -698,7 +736,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             Object identity = List.of(currentGame, system.id(), shipyard, composition);
             DetailedSystemPanel panel = detailedSystem;
             if (panel == null || !identity.equals(detailedSystemKey)) {
-                panel = new DetailedSystemPanel(composition, shipyard);
+                panel = new DetailedSystemPanel(composition, shipyard, currentGame, system.id());
                 detailedSystem = panel;
                 detailedSystemKey = identity;
             }
@@ -742,8 +780,12 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 ships -> onRecycling.accept(new de.zettsystems.starfare.economy.values.RecyclingOrder(system.id(), view.turn(), ships)),
                 split -> onPreview.apply(new de.zettsystems.starfare.economy.values.ProductionAllocation(system.id(), view.turn(), split.expansion(), split.mining())),
                 split -> onProductionAllocation.apply(new de.zettsystems.starfare.economy.values.ProductionAllocation(system.id(), view.turn(), split.expansion(),
-                        industry.metal() == null ? -1 : split.mining(), input.saved()))), input);
+                        industry.metal() == null ? -1 : split.mining(), input.saved()))), input,
+                protect -> onMiningProtection.accept(system.id(), protect));
         industryPanel = panel;
+        if (automatedSystems.contains(system.id())) {
+            detailsPage.add(new Span(I18n.t(protectedSystems.contains(system.id()) ? UiTexts.MINING_SYSTEM_PROTECTED : UiTexts.MINING_SYSTEM_ACTIVE)));
+        } else if (editable && industry.metal() != null) { detailsPage.add(new Span(I18n.t(UiTexts.MINING_SYSTEM_MANUAL))); }
         detailsPage.add(panel);
         if (industry.colony() != null) { operations.add(panel.colonyDetails()); }
         background.add(panel.background());
@@ -1421,6 +1463,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     private void showSection(Section section) {
+        if (compactNavigation.getValue() != section) { compactNavigation.setValue(section); }
         contactsPage.setVisible(section == Section.CONTACTS);
         detailsPage.setVisible(section == Section.DETAILS);
         fleetsPage.setVisible(section == Section.FLEETS);

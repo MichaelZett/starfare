@@ -30,6 +30,12 @@ public final class IndustryPanel extends Div {
 
     public IndustryPanel(IndustryView industry, boolean editable, Actions actions,
                          de.zettsystems.starfare.economy.values.ProductionInputs.Input input) {
+        this(industry, editable, actions, input, _ -> { });
+    }
+
+    public IndustryPanel(IndustryView industry, boolean editable, Actions actions,
+                         de.zettsystems.starfare.economy.values.ProductionInputs.Input input,
+                         java.util.function.Consumer<Boolean> onProtection) {
         addClassName("industry-panel");
         add(new H3(I18n.t(UiTexts.ECONOMY_TITLE)),
                 new Span(I18n.t(UiTexts.ECONOMY_CAPACITY, industry.capacity(), EconomyRules.MAX_CAPACITY)));
@@ -45,7 +51,7 @@ public final class IndustryPanel extends Div {
             add(new Span(I18n.t(UiTexts.UX_LABOR_LIMIT, industry.usableCapacity(), industry.capacity())));
         }
         if (editable) {
-            editor = new ProductionEditor(input, actions.preview(), actions.commit());
+            editor = new ProductionEditor(input, actions.preview(), actions.commit(), onProtection);
             add(editor);
         } else {
             var functions = new ProductionFunctions(de.zettsystems.starfare.economy.values.ProductionOutcome.of(

@@ -36,11 +36,19 @@ public final class ProductionEditor extends Div {
     private final List<Input> sliders = new ArrayList<>();
     private final List<Checkbox> locks = new ArrayList<>();
     private boolean updating;
+    private final java.util.function.Consumer<Boolean> onProtection;
 
     public ProductionEditor(ProductionInputs.Input input,
                             Function<AllocationSplit, Optional<ProductionPlanPreview>> preview,
                             Function<AllocationSplit, ProductionCommit> commit) {
+        this(input, preview, commit, _ -> { });
+    }
+
+    public ProductionEditor(ProductionInputs.Input input,
+                            Function<AllocationSplit, Optional<ProductionPlanPreview>> preview,
+                            Function<AllocationSplit, ProductionCommit> commit, java.util.function.Consumer<Boolean> onProtection) {
         this.input = input; this.preview = preview; this.commit = commit;
+        this.onProtection = onProtection;
         addClassName("production-editor");
         editor.addClassName("production-inline-fields");
         presets.addClassName("production-presets");
@@ -93,7 +101,15 @@ public final class ProductionEditor extends Div {
         slider.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, I18n.t(LABELS[index]));
         Checkbox pin = new Checkbox(I18n.t(UiTexts.UX_PIN), input.locks().contains(index));
         pin.setId(IDS[index] + "-pin");
-        pin.addValueChangeListener(event -> { if (!updating) { input.pin(index, event.getValue()); sync(); } });
+        pin.addValueChangeListener(event -> {
+            if (!updating) {
+                input.pin(index, event.getValue());
+                if (index < 2 && input.industry().metal() != null) {
+                    onProtection.accept(input.locks().contains(0) || input.locks().contains(1));
+                }
+                sync();
+            }
+        });
         amount.addValueChangeListener(event -> {
             if (!updating && event.isFromClient() && event.getValue() != null) { input.adjust(index, event.getValue()); save(); }
         });

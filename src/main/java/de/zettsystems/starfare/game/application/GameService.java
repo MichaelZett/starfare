@@ -11,6 +11,11 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public interface GameService {
+    default Optional<de.zettsystems.starfare.economy.values.MiningAutomationView> miningAutomationFor(GameId id, String account) { return Optional.empty(); }
+    default Optional<de.zettsystems.starfare.economy.values.MiningPlan> previewMining(GameId id, String account,
+            de.zettsystems.starfare.economy.values.MiningRequest request) { return Optional.empty(); }
+    default boolean configureMining(GameId id, String account, de.zettsystems.starfare.economy.values.MiningRequest request) { return false; }
+    default boolean protectMiningSystem(GameId id, String account, int turn, int system, boolean protect) { return false; }
     default Optional<de.zettsystems.starfare.research.values.ResearchView> shipResearchFor(GameId id, String account) { return Optional.empty(); }
     default boolean planShipResearch(GameId id, String account, int turn, int expectedPercent, int percent) { return false; }
 

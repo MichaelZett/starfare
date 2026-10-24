@@ -93,6 +93,8 @@ public class GameState {
     private RulesetRef ruleset = RulesetRef.SECTOR_FORCES;
     private final Map<Integer, Industry> industries = new HashMap<>();
     private final Map<Integer, ColonyEconomy> colonies = new HashMap<>();
+    private final Map<Integer, de.zettsystems.starfare.economy.values.MiningAutomation> miningAutomation = new HashMap<>();
+    public Map<Integer, de.zettsystems.starfare.economy.values.MiningAutomation> miningAutomation() { return miningAutomation; }
     private @Nullable MetalEconomy metals;
     public Optional<MetalEconomy> metals() { return Optional.ofNullable(metals); }
     public MetalProduction metalPreview() {
@@ -894,6 +896,7 @@ public class GameState {
     public void nextTurn() {
         previousOrders.clear();
         this.turn++;
+        de.zettsystems.starfare.economy.domain.MiningPlanner.applyNewRound(this);
         this.turnStartedAt = Instant.now();
         this.stragglerSince = null;
     }
@@ -938,7 +941,7 @@ public class GameState {
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
-                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome(), new HashMap<>(s.colonies), s.metals);
+                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome(), new HashMap<>(s.colonies), s.metals, Map.copyOf(s.miningAutomation));
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -953,6 +956,8 @@ public class GameState {
         s.intel().forEach((pid, inner) -> c.intel.put(pid, new HashMap<>(inner)));
         restoreOwnership(c, s);
         restoreEconomy(c, s);
+        var automation = s.miningAutomation();
+        if (automation != null) { c.miningAutomation.putAll(automation); }
         restoreTravel(c, s);
         restoreOrders(c, s);
         restoreSettings(c, s);
@@ -1144,6 +1149,7 @@ public class GameState {
         c.industries.putAll(s.industries);
         c.colonies.putAll(s.colonies);
         c.metals = s.metals;
+        c.miningAutomation.putAll(s.miningAutomation);
         c.navigation = s.navigation;
         c.diplomacy = s.diplomacy;
         c.originalSetup = s.originalSetup;

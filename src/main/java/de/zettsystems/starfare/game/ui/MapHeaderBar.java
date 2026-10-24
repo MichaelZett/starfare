@@ -27,6 +27,7 @@ final class MapHeaderBar extends HorizontalLayout {
     private final de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices = new de.zettsystems.starfare.economy.ui.EconomyNoticeBar();
     de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices() { return economyNotices; }
     private final Button next;
+    private final Button chat;
     private final @Nullable Button logistics;
     private final @Nullable MenuItem logisticsItem;
     private final MenuItem researchItem;
@@ -62,7 +63,10 @@ final class MapHeaderBar extends HorizontalLayout {
             logistics = new Button(I18n.t(UiTexts.MAP_LOGISTICS_MODE), _ -> actions.onToggleLogistics().run());
             logistics.addThemeVariants(ButtonVariant.TERTIARY);
         }
-        menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_CHAT), _ -> actions.onChat().run());
+        chat = new Button(I18n.t(UiTexts.GAME_CHAT_TITLE), VaadinIcon.CHAT.create(), _ -> actions.onChat().run());
+        chat.addThemeVariants(ButtonVariant.TERTIARY);
+        chat.addClassName("map-chat-toggle");
+        chat.setAriaLabel(I18n.t(UiTexts.GAME_CHAT_TITLE));
         researchItem = menuRoot.getSubMenu().addItem(I18n.t(de.zettsystems.starfare.game.ui.UiTexts.RESEARCH_TITLE), _ -> actions.onResearch().run());
         researchItem.setVisible(false);
         roundRulesItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_ROUND_RULES),
@@ -78,8 +82,8 @@ final class MapHeaderBar extends HorizontalLayout {
         headerLeft.addClassName("app-header-left");
 
         var headerRight = logistics == null
-                ? new HorizontalLayout(next, headerMenu)
-                : new HorizontalLayout(new LanguageSwitcher(), logistics, next, headerMenu);
+                ? new HorizontalLayout(chat, next, headerMenu)
+                : new HorizontalLayout(new LanguageSwitcher(), logistics, chat, next, headerMenu);
         headerRight.setAlignItems(Alignment.CENTER);
         headerRight.setSpacing(true);
         headerRight.addClassName("app-header-right");
@@ -100,6 +104,12 @@ final class MapHeaderBar extends HorizontalLayout {
 
     void setGameName(String name) {
         gameNameLabel.setText(name);
+    }
+
+    void setChatAvailable(boolean permitted, boolean targetSelection) {
+        chat.setVisible(permitted);
+        chat.setEnabled(permitted && !targetSelection);
+        chat.setTooltipText(I18n.t(targetSelection ? UiTexts.CHAT_FINISH_TARGET : UiTexts.GAME_CHAT_TITLE));
     }
 
     void setEmpireName(String name) {
