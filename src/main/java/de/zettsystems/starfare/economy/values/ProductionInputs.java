@@ -17,6 +17,11 @@ public final class ProductionInputs {
     private final Map<Integer, Input> inputs = new HashMap<>();
     private String game = "";
 
+    public Set<Integer> protectedSystems() {
+        return inputs.entrySet().stream().filter(entry -> entry.getValue().locks.contains(0) || entry.getValue().locks.contains(1))
+                .map(Map.Entry::getKey).collect(java.util.stream.Collectors.toSet());
+    }
+
     public void reconcile(String gameId, int turn, Map<Integer, IndustryView> allowed) {
         if (!game.equals(gameId)) { inputs.clear(); game = gameId; }
         inputs.keySet().retainAll(allowed.keySet());

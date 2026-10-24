@@ -22,6 +22,7 @@ public class DeviceLayoutInitListener implements VaadinServiceInitListener {
     @Override
     public void serviceInit(ServiceInitEvent event) {
         event.getSource().addUIInitListener(uiEvent -> {
+            uiEvent.getUI().getPage().addStyleSheet("styles/starfare-navigation.css");
             requested(VaadinRequest.getCurrent()).ifPresent(Devices::choose);
             if (Devices.mobile()) {
                 var ui = uiEvent.getUI();

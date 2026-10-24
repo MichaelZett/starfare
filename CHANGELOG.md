@@ -8,6 +8,21 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Individuelle, reproduzierbare Modellradien im Systembild, ausdrücklich als
+  fiktive Werte gekennzeichnet; gemeinsame Planet-/Mondskala und separate Sternskala.
+- Freiwillige dauerhafte Förderautomatik mit globaler Vorschau und einstellbarem
+  Zielvorrat. Einstellungen und Schutzvorgaben bleiben über Neustarts erhalten;
+  manuelle Produktionsänderungen nehmen ein System aus der Automatik. Bestehende
+  Wirtschaftsregeln, Forschungsbudgets und geschützte Verlegungen bleiben erhalten.
+
+- Karten-Navigation mit denselben sieben Ansichten auch bei schmaler Seitenleiste;
+  Sammelbefehle und Rücknahme direkt an der Seitenleiste. Partiechat direkt im
+  Kartenkopf, mit erhaltenem Nachrichtenentwurf beim Schließen und ohne
+  automatisches Ans-Ende-Springen beim Lesen älterer Nachrichten.
+- Archiv mit hervorgehobenem Ansehen und nachgeordneter Vorlage/Revanche;
+  Suchfilter und zuletzt angesehene Partie bleiben bei Rückkehr erhalten.
+  Zehn-Sitz-Zusammenfassungen bieten zunächst offene, einklappbare Sitzdetails.
+
 - Gemeinsame Schiffsforschung als eigene Regelfassung 1.3.0-r1 (Profil
   `research-preview`): reichsweiter Industrieanteil, steigende Stufenkosten und
   stärkere Neubauten ab der folgenden Runde. Baustufen bleiben bei Versand,

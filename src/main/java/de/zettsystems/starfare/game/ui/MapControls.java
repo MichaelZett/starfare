@@ -11,10 +11,11 @@ final class MapControls extends Div {
         addClassName("map-controls");
         add(action(UiTexts.MAP_ZOOM_IN, () -> canvas.zoom(1.2)),
                 action(UiTexts.MAP_ZOOM_OUT, () -> canvas.zoom(1 / 1.2)),
-                action(UiTexts.MAP_RESET, canvas::resetViewport),
                 action(UiTexts.MAP_FIT_GALAXY, () -> canvas.fit(false)),
                 action(UiTexts.MAP_FIT_EMPIRE, () -> canvas.fit(true)),
-                new Details(I18n.t(UiTexts.MAP_LEGEND), new Paragraph(I18n.t(UiTexts.MAP_LEGEND_TEXT))));
+                new Details(I18n.t(UiTexts.MAP_HELP), new Div(
+                        action(UiTexts.MAP_RESET, canvas::resetViewport),
+                        new Paragraph(I18n.t(UiTexts.MAP_LEGEND_TEXT)))));
     }
 
     private static Button action(String key, Runnable action) {

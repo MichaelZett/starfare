@@ -106,8 +106,8 @@ Die Größe eines Systemzeichens richtet sich nach der sichtbaren Produktion;
 unbekannte Systeme haben eine einheitliche Größe.
 
 - Ziehe den Kartenhintergrund mit gedrückter linker Maustaste zum Verschieben.
-- Nutze die sichtbaren Kartenknöpfe für Zoom, Zurücksetzen, die ganze Galaxie
-  oder das eigene Reich. Die **Legende** erklärt Farben und Verbindungslinien.
+- Nutze die sichtbaren Kartenknöpfe für Zoom, die ganze Galaxie oder das eigene
+  Reich. **Kartenhilfe** enthält Zurücksetzen und die Erklärung der Verbindungslinien.
 - Klicke auf ein System oder eine Flotte, um **Details** zu öffnen.
 - Fokussierbare Kartenpunkte und Aktionskacheln lassen sich mit **Enter** oder
   **Leertaste** auslösen. Mit **Tab** wechselst du den Fokus.
@@ -123,7 +123,7 @@ Mit `?layout=mobile` oder `?layout=desktop` an einer beliebigen Adresse legst du
 sie für die restliche Sitzung selbst fest.
 
 Auf der Karte zeigt das Handy oben einen kompakten Kopf mit Partie, Runde,
-Reichsübersicht, **Runde abgeben** und dem Menü (Logistik, Legende, Chat, Rundenregeln,
+Reichsübersicht, **Runde abgeben**, dem direkten Chatknopf und dem Menü (Logistik, Legende, Rundenregeln,
 Verlassen, Lobby). Darunter füllt die Karte den Bildschirm; unten wechselt eine
 Leiste zwischen **Karte** und **Übersicht**. Die Übersicht ist die Seitenleiste
 als Vollbild, dazu Bündnisse und Sammelbefehle.
@@ -140,7 +140,9 @@ Im Spiel und im Kartenkopf erscheinen Imperiumsnamen. Spielernamen in Klammern
 stehen nur in Übersichten und in der Diplomatie.
 
 Die Seitenleiste enthält **Kontakte, Details, Flotten, Befehle, Verlegungen,
-Logistik und Bericht**. Einzelversand und Verlegungen behalten den aktuellen
+Logistik und Bericht**. Bei wenig Platz ersetzt das Auswahlfeld **Ansicht** die
+Reiter; es bietet dieselben Bereiche. Sammelversand, Sammelreserve und **Rückgängig** stehen direkt am Kopf der Seitenleiste. Die kurzen Knopfbeschriftungen
+zeigen den vollständigen Aktionsnamen als Hilfetext. Einzelversand und Verlegungen behalten den aktuellen
 Reiter; Sammelbefehle öffnen den Befehlsreiter, eine ausgewertete Runde den Bericht. Aktualisierungen unveränderter Inhalte erhalten Eingaben und
 Fokus; neue Chat-Nachrichten löschen keinen begonnenen Nachrichtenentwurf.
 
@@ -251,9 +253,25 @@ ihren vorhandenen Befehlen; nach drei versäumten Abgaben in Folge übernimmt di
 Der Gastgeber kann über das Kartenmenü die **Rundenfristen** anpassen.
 Eine Partie mit nur einem Menschen hat keine automatische Rundenfrist.
 
-Über das Kartenmenü erreichst du den **Partie-Chat**. **Zur Lobby** verlässt nur die
+**Partie-Chat** öffnest du direkt im Kartenkopf. Auf breiten Ansichten bleibt die
+Karte daneben bedienbar, auf schmalen Ansichten und dem Handy öffnet sich der Chat
+als eigener Bereich. **Schließen** oder Escape führt zurück. Ein ungesendeter
+Entwurf bleibt beim Schließen und Wiederöffnen derselben Kartenansicht erhalten;
+ein Seitenwechsel oder Neuladen verwirft ihn. Beim Lesen älterer Nachrichten bleibt
+die Position erhalten; **Neue Nachrichten** führt ans Ende. Eine laufende Zielwahl
+musst du vor dem Öffnen abschließen oder abbrechen. Der Chat ist nur für
+Sitzinhaber aktiver gestarteter Partien verfügbar. **Zur Lobby** verlässt nur die
 Kartenansicht. **Partie verlassen** übergibt deinen Sitz an die KI. Erlaubt die Partie
 den Wiedereinstieg, kannst du später zurückkehren.
+
+### Individuelle Größen im Systembild
+
+Sterne, Planeten und Monde besitzen reproduzierbare **fiktive Modellradien**.
+Sie stehen in den Körperdetails mit der Einheit km und Herkunftshinweis; ein
+Asteroidengürtel hat keinen erfundenen Einzelradius. Derselbe Körper behält
+seinen Wert nach Neuladen und Neustart. Planeten und Monde verwenden überall
+dieselbe komprimierte Größenskala; Sterne eine eigene. Größen sind keine
+Messungen und ändern weder Produktion noch Umwelt oder Reichweite.
 
 ## Schlachten ansehen oder sofort auswerten
 
@@ -298,6 +316,12 @@ Der Sieger darf **Bis zur vollständigen Eroberung weiterspielen** wählen. Das 
 steigt dann auf 100 %, die Abgaben werden zurückgesetzt und die Fristen starten neu.
 Die anderen Teilnehmer werden automatisch informiert. Das zuerst gespeicherte
 Ergebnis bleibt in der Statistik bestehen.
+
+Im **Archiv** ist **Ansehen** die Hauptaktion; **Als Vorlage / Revanche** steht
+nachgeordnet daneben. Such- und Ergebnisfilter bleiben bei Rückkehr innerhalb
+derselben Sitzung erhalten; die Liste führt zur zuletzt angesehenen Partie.
+Bei zehn Sitzen im Spielassistenten lassen sich die zunächst offenen Sitzdetails
+in der Zusammenfassung einklappen; **Ändern** bleibt am Gruppenkopf erreichbar.
 
 Im **Archiv** kannst du die beendete Karte lesend öffnen, eine Teilnehmerperspektive
 wählen und den Kriegsnebel umschalten. Die Zeitleiste zeigt gespeicherte Runden ohne
@@ -661,7 +685,11 @@ Es gibt keinen Übernehmen-Knopf: Zahlenfeld, Plus/Minus und Vorgaben speichern
 sofort, der Schieberegler beim Loslassen. Während des Ziehens zeigt die Ansicht nur
 eine Vorschau. „Gespeichert“ bestätigt die Änderung; wird sie abgelehnt, etwa nach
 Rundenabgabe, erscheint „Änderung nicht gespeichert“ mit dem gespeicherten Plan.
-Fixierungen gelten nur in der geöffneten Karte und speichern nichts.
+Die Bedien-Fixierungen gelten zunächst in der geöffneten Karte. Bei eingeschalteter
+Förderautomatik schützt eine Fixierung für Schiffbau oder Förderung das ganze
+System zusätzlich dauerhaft vor automatischem Umverteilen. Diesen gespeicherten
+Schutz siehst du im Automatikdialog; dort kann er auch nach einem Neuladen
+aufgehoben werden. Eine noch sichtbare lokale Fixierung löst du am Produktionsfeld.
 Die Vorschau zeigt Verlegung und die Metallbilanz für das gesamte Imperium.
 Oben in der Spielleiste stehen Metallbarren, Vorrat und Änderung zur nächsten Runde,
 etwa „24 (−3)“: Förderung plus Recycling minus Verbrauch. Die Aufschlüsselung
@@ -735,3 +763,40 @@ KI-Imperien verwenden 10 Prozent Forschung, Rush 5 Prozent. Der erste kontrollie
 Vergleich stützt kleine Budgets; hohe Dauerbudgets schwächen den frühen Flottenaufbau.
 Die Ergebnisse und Grenzen stehen in `RESEARCH-EXPERIMENTS.md`. Die persönliche Spielabnahme steht noch aus.
 Bevölkerung, Besiedlung und getrennte Forschungsgebiete bleiben für später.
+
+
+## Dauerhafte Förderautomatik
+
+In **Logistik → Förderautomatik** kannst du eine freiwillige, reichsweite
+Planung einschalten. Voreingestellt ist **aus**. Wähle die teilnehmenden Systeme,
+geschützte Systeme und den Zielvorrat in Verbrauchsrunden (0 bis 10, Vorgabe 1).
+**Globale Vorschau** zeigt den geplanten Metallverbrauch, Zielvorrat, prognostizierten
+Restvorrat, Unterdeckung und konkrete Änderungen. Erst **Einstellungen übernehmen**
+aktiviert oder ändert die Automatik. Bei einer veralteten Runde oder inzwischen
+geänderten Produktion musst du den Dialog neu öffnen.
+
+Eine Verbrauchsrunde bezieht sich auf den vollen geplanten Schiffbau **nach** der
+Umverteilung, auch wenn Metallmangel den tatsächlichen Bau begrenzen würde.
+Ziel 0 deckt den laufenden Bedarf ohne zusätzlichen Reservenvorrat. Die Automatik
+bevorzugt ergiebige freie Fördersysteme; sie ist keine Zusage einer optimalen
+Strategie. Sie nutzt die normale Prognose einschließlich Forschung, Recycling,
+Restvorkommen und gemeinsamer Metallverteilung.
+
+Ausbau und Forschungsbudget bleiben stehen. Verlegungsquellen und geschützte
+Systeme werden nicht umgestellt; bestehende Routen werden nicht gestrichen.
+Ist das Ziel deshalb oder wegen fehlender Kapazität/Vorkommen nicht erreichbar,
+zeigt die Vorschau die Unterdeckung. Die Runde bleibt abgebbar.
+
+Die Einstellungen überleben Neuladen und Serverneustart. Nach jeder Runde wird
+der Plan für die nächste Runde neu berechnet, ebenso nach eigenen Änderungen
+an Forschung, Recycling oder Schutzvorgaben. In den Systemdetails steht
+**automatisch**, **geschützt** oder **manuell**. Die zuletzt berechneten
+Förderänderungen stehen mit Rundennummer im Dialog. Eine manuelle Änderung der
+Produktion nimmt das betreffende System aus der Automatik; aktiviere es bei Bedarf
+erneut. Neue Eroberungen werden nicht ungefragt aufgenommen. Bei Verlust oder
+Sitzwechsel wird die Zuordnung entfernt. Abschalten beendet weitere Eingriffe
+und lässt den zuletzt gültigen Produktionsplan stehen.
+
+**Autarker Schiffbau** bleibt eine einmalige 50/50-Vorgabe und wird dadurch
+nicht selbst zur dauerhaften Automatik. Bestehende Wirtschaftsregeln und
+Regelversionen ändern sich nicht.

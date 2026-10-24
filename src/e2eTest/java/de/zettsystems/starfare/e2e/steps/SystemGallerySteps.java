@@ -33,7 +33,7 @@ public class SystemGallerySteps {
                         gallery.style.cssText = 'display:grid;grid-template-columns:repeat(3,300px);gap:16px;padding:16px;background:#101923';
                         gallery.querySelectorAll('h2').forEach(title => title.style.cssText = 'font-size:14px;margin:8px 0;height:24px');
                         """);
-                assertThat(js.executeScript("""
+                assertThat((java.util.Map<?, ?>) js.executeScript("""
                         const q = selector => document.querySelector(selector);
                         const box = selector => q(selector).getBoundingClientRect();
                         const near = box('#gallery-near .system-world');
@@ -45,12 +45,21 @@ public class SystemGallerySteps {
                         const stars = [...document.querySelectorAll('#system-gallery .system-star')];
                         const colors = stars.slice(0,5).map(star => getComputedStyle(star).backgroundImage);
                         const worlds = [...document.querySelectorAll('#system-gallery .system-world')];
-                        return fx > nx + 20 && giant.width > small.width * 2
-                            && new Set(colors).size === 5
-                            && worlds.every(world => world.getBoundingClientRect().width >= 44)
-                            && box('#gallery-WHITE .system-star').width > box('#gallery-RED .system-star').width
-                            && [...document.querySelectorAll('.system-schematic-caption')].every(label => !label.textContent.includes('//'));
-                        """)).isEqualTo(true);
+                        const measured = worlds.filter(world => world.hasAttribute('data-model-radius-km'))
+                            .map(world => ({radius: Number(world.dataset.modelRadiusKm),
+                                width: parseFloat(getComputedStyle(world.querySelector('.system-body-sphere')).width)}))
+                            .sort((a, b) => a.radius - b.radius);
+                        return {
+                            orbits: fx > nx + 20,
+                            sizeOrder: giant.width > small.width,
+                            modelScale: measured.length >= 10 && measured.every((body, index) => body.radius > 0
+                                && (index === 0 || body.width >= measured[index - 1].width - 0.1)),
+                            colors: new Set(colors).size === 5,
+                            targets: worlds.every(world => world.getBoundingClientRect().width >= 44),
+                            stars: box('#gallery-WHITE .system-star').width > box('#gallery-RED .system-star').width,
+                            captions: [...document.querySelectorAll('.system-schematic-caption')].every(label => !label.textContent.includes('//'))
+                        };
+                        """)).allSatisfy((name, passed) -> assertThat(passed).as(String.valueOf(name)).isEqualTo(true));
                 browser.captureUiAcceptance("system-gallery-" + language + "-" + width);
             }
         }
@@ -71,7 +80,7 @@ public class SystemGallerySteps {
                 <!doctype html><html lang="de"><meta charset="utf-8"><title>Systemvergleich N6</title>
                 <style>body{background:#101923;color:#edf3fa;font:16px system-ui;margin:24px}img{max-width:100%;height:auto}a{color:#8bc7ff}</style>
                 <h1>Systemvergleich N6</h1><p>Produktiver Renderer: Sternarten, Körpertypen, feste Bahnskala, Koloniemond und Atmosphären.
-                Größen sind Typklassen; Sterne und Planeten verwenden getrennte Maßstäbe.</p>
+                Individuelle Größen stammen aus fiktiven Modellradien; Sterne und Planeten verwenden getrennte Maßstäbe.</p>
                 <p><a href="system-gallery-de-1024.png">1024 Pixel</a> · <a href="system-gallery-en-1366.png">Englische Aufnahme</a></p>
                 <img src="system-gallery-de-1366.png" alt="Vergleich bei gleichen Kartenbreiten">
                 </html>

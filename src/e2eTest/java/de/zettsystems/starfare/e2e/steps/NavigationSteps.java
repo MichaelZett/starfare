@@ -169,12 +169,7 @@ public class NavigationSteps {
     }
     private void showFleets() { clickTab("Flotten"); }
     private void showRelocations() { clickTab("Verlegungen"); }
-    private void clickTab(String text) {
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> Boolean.TRUE.equals(((JavascriptExecutor) browser.driver()).executeScript("""
-                const tab = [...document.querySelectorAll('vaadin-tab')].find(element => element.textContent.trim() === arguments[0]);
-                if (!tab) return false; tab.click(); return true;
-                """, text)));
-    }
+    private void clickTab(String text) { browser.clickTabWithText(text); }
     private void advance() { assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue(); }
     private void screenshot(String name) throws IOException {
         if (name.startsWith("refuel") || name.equals("blocked")) {

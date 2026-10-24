@@ -12,7 +12,6 @@ import de.zettsystems.starfare.report.values.TurnReport;
 import io.cucumber.java.After;
 import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -26,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** Two browser sessions exercise push delivery and outcome continuation. */
 public class ReviewMultiplayerSteps {
     private static final String OUTCOME = ".game-outcome-dialog[opened]";
-    private static final String CHAT_INPUT = "vaadin-dialog[opened] vaadin-text-area textarea";
+    private static final String CHAT_INPUT = ".game-chat-panel vaadin-text-area textarea";
     private final Browser browser;
     private final ReviewGameFixture fixture;
     private final GameRegistry registry;
@@ -75,18 +74,7 @@ public class ReviewMultiplayerSteps {
     }
 
     private void openChat(Browser session) {
-        ((JavascriptExecutor) session.driver()).executeScript("""
-                const menu = document.querySelector('.app-header-menu');
-                const button = menu.querySelector('vaadin-menu-bar-button')
-                    || menu.shadowRoot.querySelector('vaadin-menu-bar-button');
-                button.click();
-                """);
-        WebElement item = new WebDriverWait(session.driver(), Duration.ofSeconds(10)).until(_ ->
-                session.all("vaadin-menu-bar-item").stream()
-                        .filter(WebElement::isDisplayed)
-                        .filter(candidate -> candidate.getText().strip().equals("Partie-Chat"))
-                        .findFirst().orElse(null));
-        ((JavascriptExecutor) session.driver()).executeScript("arguments[0].click();", item);
+        session.clickButtonWithText("Partie-Chat");
         session.awaitCss(CHAT_INPUT);
     }
 

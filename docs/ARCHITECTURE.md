@@ -1140,3 +1140,29 @@ Legacy reports default base strength to hull count; crew-condition text compares
 against the technology-weighted base, so technology does not masquerade as crew
 readiness. Per-volley strength uses the same member/contingent rounding as final
 survivor allocation; generation strength is summed in integer tenths.
+
+
+## Optional mining order assistance and model radii
+
+`PhysicalSystemSize` is a frozen presentation model keyed by game, system and
+body identities. It supplies explicitly fictional radii without changing
+`SystemComposition` generation, colony environment, production or rule references.
+Planetary bodies share one compressed scale; stars have a separate scale.
+
+`MiningAutomation` contains opt-in human order preferences, separate from economic
+rules. Its optional map in `GameStateSnapshot` defaults to no automation for old
+JSON and is copied with the aggregate. Settings are tied to the owning account;
+seat reassignment and lost systems do not transfer consent. `MiningPlanner` uses
+the shared exact `MetalProduction` forecast, including research and recycling.
+It protects expansion, pinned systems and relocation sources and reports unmet
+reserves instead of changing economic formulas or blocking round submission.
+
+Planning runs after a round transition and after relevant own planning commands,
+inside the existing aggregate lock. Rendering never writes plans. The dialog
+requires a global preview; save checks actor, round, expected settings, production
+bases and equality with the reviewed proposal before applying it. This also rejects
+an outdated preview when new routes or resource changes would alter the result.
+Manual production edits remove the world from automatic participation. The latest
+plan and its assignment changes are retained with the preferences; old replay
+frames are not rewritten. Economic resolution, rule versions and AI defaults are
+unchanged while the feature is off.

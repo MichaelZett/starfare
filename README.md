@@ -115,6 +115,10 @@ once the game starts.
 
 Finished games move from the lobby to **Archive**. Search by game or player name,
 filter your games and open a completed map without issuing further orders.
+**View** is the primary action; template/rematch remains secondary. Returning to
+the archive within the same account session restores filters and scrolls to the
+last viewed game. Ten-seat wizard summaries offer collapsible seat details,
+initially expanded, with **Change** always accessible at the group heading.
 When the final round contains a battle, the normal round report remains open first.
 Resolve every battle from that report, individually or together in **Instant** mode;
 only then does the victory or defeat dialog appear,
@@ -133,7 +137,14 @@ is disabled by default and retains archive replay and statistics.
 
 ## Map sidebar
 
-Map controls provide zoom, reset, whole-galaxy and own-empire views plus a legend.
+Map controls provide zoom, whole-galaxy and own-empire views. **Map help** contains
+reset and the legend. Narrow sidebars use a labelled **View** selector for the same
+seven sections. Bulk send, bulk reserves and undo remain directly available at
+the top of the sidebar. **Game chat** opens directly from the header: beside the
+map on wide screens and in a separate panel on narrow screens and phones. Closing
+and reopening it preserves the draft within the same map view; navigation or a
+reload discards it. Reading older messages no longer jumps to the latest message.
+Complete or cancel target selection before opening chat.
 Focusable map objects and action cards accept Enter and Space. Background updates
 preserve unchanged input controls and focus. **My account** groups statistics,
 archive and account actions; imprint and privacy share a footer.
@@ -374,7 +385,7 @@ interface. `?layout=mobile` or `?layout=desktop` on any page overrides the choic
 for the rest of the session.
 
 On the map, the phone layout shows a compact header (game, round, empire summary,
-**End round** and the menu with logistics, legend and chat), the map across the
+**End round**, a direct chat button and the menu with logistics and legend), the map across the
 whole screen and a bottom bar switching between **Map** and **Overview**. The
 overview is the sidebar as a full-screen sheet, together with alliances and bulk
 orders. Swipe to pan; zoom with two fingers or the round buttons, which also fit
@@ -882,3 +893,31 @@ actual generations, including allied stationed forces. AI budgets are
 10% (5% for RUSH), calibrated with paired seeded duels; see
 [research experiments](docs/RESEARCH-EXPERIMENTS.md) for results and limits. Population management, colonization, research fields and ship-design
 editors remain later work. Desktop and phone browser checks and the initial balance study have passed; personal gameplay acceptance remains pending.
+
+
+## Individual model sizes and mining automation
+
+System inspectors show stable, fictional radii in kilometres for stars, planets
+and moons. These are explicitly labelled model values, not catalogue measurements.
+All planetary bodies share one compressed scale; stars use a separate scale.
+Asteroid belts have no single radius. Production, environment and visibility
+rules are unchanged; model sizes are shown only with the existing full visibility.
+See [System illustrations](docs/SYSTEM-ILLUSTRATIONS.md).
+
+**Logistics → Mining automation** enables optional, persistent empire-wide mining
+orders. It defaults to off. Select systems, protected systems and a reserve target
+of 0–10 consumption rounds (default 1), review the global preview, then apply.
+The reserve uses full planned shipbuilding after reallocation, including demand
+that cannot currently be built because of a shortage. Zero rounds still covers
+current demand. Expansion and research allocations stay unchanged; relocation
+sources and protected plans are preserved. Unreachable targets show a shortfall
+without blocking round submission. Efficient deposits are preferred with stable
+tie breaking; this is an order assistant, not a guarantee of optimal play.
+
+Settings and protection survive reloads and server restarts. The next plan is
+calculated after each round and after own changes to research, recycling or
+protection. Manual production edits remove that system from automation. Lost
+systems and reassigned seats do not carry orders to a new owner, and new conquests
+are not enrolled automatically. Disabling keeps the last production plan.
+The existing autark preset remains a one-time allocation. No economic formulas,
+rule versions or dependency versions change.

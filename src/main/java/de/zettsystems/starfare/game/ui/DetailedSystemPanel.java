@@ -9,6 +9,8 @@ import de.zettsystems.starfare.game.values.SystemComposition;
 import de.zettsystems.starfare.game.values.SystemComposition.Body;
 import de.zettsystems.starfare.game.values.SystemComposition.StarType;
 import de.zettsystems.starfare.game.values.SystemDiagramLayout;
+import de.zettsystems.starfare.game.values.PhysicalSystemSize;
+import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.economy.values.SystemQuality;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
@@ -25,8 +27,12 @@ final class DetailedSystemPanel extends Div {
     private Runnable onInspect = () -> { };
     private Runnable onColonyInspect = () -> { };
     private final List<Button> targets = new ArrayList<>();
+    private final GameId game;
+    private final int system;
 
-    DetailedSystemPanel(SystemComposition composition, boolean shipyard) {
+    DetailedSystemPanel(SystemComposition composition, boolean shipyard, GameId game, int system) {
+        this.game = game;
+        this.system = system;
         addClassName("detailed-system");
         Div diagram = new Div();
         diagram.addClassName("system-orrery");
@@ -83,8 +89,11 @@ final class DetailedSystemPanel extends Div {
                 + ": " + I18n.t(starKey(type)));
         star.getElement().setAttribute(HtmlAttributes.TITLE, star.getAriaLabel().orElse(""));
         position(star, 0, 50);
-        String diameter = SystemDiagramLayout.starDiameter(type) + "px";
+        int radius = PhysicalSystemSize.starRadius(game, system, type, index);
+        star.getElement().setAttribute("data-model-radius-km", String.valueOf(radius));
+        String diameter = PhysicalSystemSize.starDiameter(radius) + "px";
         star.getStyle().set(CssProperties.WIDTH, diameter).set(CssProperties.HEIGHT, diameter);
+        star.getElement().setAttribute(HtmlAttributes.TITLE, star.getAriaLabel().orElse("") + " · " + radiusText(radius));
         star.addClickListener(_ -> selectStar(type, index));
         targets.add(star);
         Span name = new Span(star.getAriaLabel().orElse(""));
@@ -112,6 +121,10 @@ final class DetailedSystemPanel extends Div {
         for (int index = 0; index < (quality == null ? body.majorMoons() : 0); index++) {
             Span moon = new Span();
             moon.addClassNames("system-moon", "system-moon-" + index);
+            int radius = PhysicalSystemSize.moonRadius(game, system, body.orbit(), index);
+            String diameter = PhysicalSystemSize.bodyDiameter(radius) + "px";
+            moon.getStyle().set(CssProperties.WIDTH, diameter).set(CssProperties.HEIGHT, diameter);
+            moon.getElement().setAttribute(HtmlAttributes.TITLE, radiusText(radius));
             target.getElement().appendChild(moon.getElement());
         }
         double x = SystemDiagramLayout.orbitPosition(composition, body);
@@ -123,18 +136,22 @@ final class DetailedSystemPanel extends Div {
     private void addColonyMoon(Div diagram, SystemQuality quality, double planetX) {
         Button moon = new Button();
         moon.addClassNames("system-body-target", "system-world", "system-colony-moon", "system-colony-target");
-        moon.getStyle().set(CssProperties.BODY_DIAMETER, "14px");
+        int radius = PhysicalSystemSize.moonRadius(game, system, 1, 0);
+        moon.getElement().setAttribute("data-model-radius-km", String.valueOf(radius));
+        moon.getStyle().set(CssProperties.BODY_DIAMETER, PhysicalSystemSize.bodyDiameter(radius) + "px");
         Span sphere = new Span();
         sphere.addClassNames("system-body-sphere", "system-world-rocky");
         Span label = new Span(I18n.t(UiTexts.SYSTEM_COLONY_TARGET));
         label.addClassName("system-body-label");
         moon.getElement().appendChild(sphere.getElement(), label.getElement());
         moon.setAriaLabel(I18n.t(UiTexts.SYSTEM_COLONY_MOON));
-        moon.getElement().setAttribute(HtmlAttributes.TITLE, I18n.t(UiTexts.SYSTEM_COLONY_MOON));
+        moon.getElement().setAttribute(HtmlAttributes.TITLE, I18n.t(UiTexts.SYSTEM_COLONY_MOON) + " · " + radiusText(radius));
         applyEnvironment(moon, quality);
         position(moon, Math.min(planetX + 8, 87), 76);
         moon.addClickListener(_ -> {
             highlight(targets.indexOf(moon));
+            description.removeAll();
+            description.add(new Span(I18n.t(UiTexts.SYSTEM_COLONY_MOON)), new Span(radiusText(radius)));
             onColonyInspect.run();
         });
         targets.add(moon);
@@ -149,7 +166,9 @@ final class DetailedSystemPanel extends Div {
     private Button bodyButton(Body body) {
         Button target = new Button();
         target.addClassNames("system-world", "system-surface-" + body.appearance());
-        target.getStyle().set(CssProperties.BODY_DIAMETER, SystemDiagramLayout.bodyDiameter(body.type()) + "px");
+        int diameter = body.type() == SystemComposition.BodyType.ASTEROIDS ? SystemDiagramLayout.bodyDiameter(body.type())
+                : PhysicalSystemSize.bodyDiameter(PhysicalSystemSize.bodyRadius(game, system, body));
+        target.getStyle().set(CssProperties.BODY_DIAMETER, diameter + "px");
         Span sphere = new Span();
         sphere.addClassNames("system-body-sphere", "system-world-" + body.type().name().toLowerCase(Locale.ROOT));
         if (body.rings()) { sphere.addClassName("system-world-ringed"); }
@@ -157,9 +176,16 @@ final class DetailedSystemPanel extends Div {
         String name = I18n.t(UiTexts.SYSTEM_ORBIT, body.orbit());
         target.setAriaLabel(name + ": " + I18n.t(bodyKey(body)));
         target.getElement().setAttribute(HtmlAttributes.TITLE, target.getAriaLabel().orElse(""));
+        if (body.type() != SystemComposition.BodyType.ASTEROIDS) {
+            target.getElement().setAttribute("data-model-radius-km", String.valueOf(PhysicalSystemSize.bodyRadius(game, system, body)));
+            target.getElement().setAttribute(HtmlAttributes.TITLE, target.getAriaLabel().orElse("") + " · "
+                    + radiusText(PhysicalSystemSize.bodyRadius(game, system, body)));
+        }
         target.addClickListener(_ -> {
             if (target.hasClassName("system-colony-target")) {
                 highlight(targets.indexOf(target));
+                description.removeAll();
+                description.add(new Span(radiusText(PhysicalSystemSize.bodyRadius(game, system, body))));
                 onColonyInspect.run();
             } else { selectBody(body); }
         });
@@ -179,6 +205,7 @@ final class DetailedSystemPanel extends Div {
         highlight(index);
         description.removeAll();
         description.add(new Span(I18n.t(starKey(type))), new Paragraph(I18n.t(starDescriptionKey(type))));
+        description.add(new Span(radiusText(PhysicalSystemSize.starRadius(game, system, type, index))));
         onInspect.run();
     }
 
@@ -191,7 +218,12 @@ final class DetailedSystemPanel extends Div {
         description.add(new Span(I18n.t(UiTexts.SYSTEM_ORBIT, body.orbit()) + " · " + I18n.t(bodyKey(body))),
                 new Paragraph(I18n.t(bodyDescriptionKey(body))));
         if (body.type() != SystemComposition.BodyType.ASTEROIDS) {
+            description.add(new Span(radiusText(PhysicalSystemSize.bodyRadius(game, system, body))));
             description.add(new Span(I18n.t(UiTexts.SYSTEM_MOONS, body.majorMoons())));
+            for (int index = 0; index < body.majorMoons(); index++) {
+                description.add(new Span(I18n.t(UiTexts.SYSTEM_MODEL_MOON_RADIUS, index + 1,
+                        PhysicalSystemSize.moonRadius(game, system, body.orbit(), index))));
+            }
         }
         onInspect.run();
     }
@@ -202,6 +234,8 @@ final class DetailedSystemPanel extends Div {
             target.getElement().setAttribute(HtmlAttributes.ARIA_PRESSED, index == selected ? "true" : "false");
         }
     }
+
+    private static String radiusText(int radius) { return I18n.t(UiTexts.SYSTEM_MODEL_RADIUS, radius); }
 
     private static String percent(double value) { return String.format(Locale.ROOT, "%.3f%%", value); }
     private static void position(Button button, double x, double y) {

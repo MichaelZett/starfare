@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.ui;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
@@ -27,7 +28,14 @@ final class WizardSummary extends Div {
                         ? UiTexts.LOBBY_PRODUCTION_DISTRIBUTION_UNIFORM : UiTexts.LOBBY_PRODUCTION_DISTRIBUTION_GAUSSIAN))));
         Div participants = group(UiTexts.UX_PARTICIPANTS, edit,
                 line(UiTexts.LOBBY_SUMMARY_PLAYERS, setup.humanPlayers(), setup.aiPlayers()));
-        for (int index = 0; index < setup.totalPlayers(); index++) { participants.add(seat(setup, index)); }
+        Div seats = new Div();
+        for (int index = 0; index < setup.totalPlayers(); index++) { seats.add(seat(setup, index)); }
+        if (setup.totalPlayers() == 10) {
+            Details details = new Details(I18n.t(UiTexts.UX_SEAT_DETAILS, setup.totalPlayers()), seats);
+            // Keep all choices visible until a real ten-seat review establishes a better default.
+            details.setOpened(true);
+            participants.add(details);
+        } else { participants.add(seats); }
         groups.add(participants, victory(setup, edit), access(setup, edit));
         add(groups);
     }

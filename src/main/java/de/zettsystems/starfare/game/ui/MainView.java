@@ -66,6 +66,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private final Div planningActions = new Div();
     private final Div treatyActions = new Div();
     private final Div actionBar = new Div();
+    private final Div chatHost = new Div();
     private @Nullable DiplomacyDialog diplomacyDialog;
     /** Present only on phones; desktops get the split layout instead, never both. */
     private final @Nullable MobileMapLayout mobile;
@@ -86,7 +87,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private boolean outcomeAcknowledged;
     private boolean outcomeDialogOpen;
     private @Nullable Dialog outcomeDialog;
-    private @Nullable GameChatDialog chatDialog;
+    private @Nullable GameChatPanel chatPanel;
     private boolean logisticsMode;
     private @Nullable PlayerViewState economicView;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
@@ -118,6 +119,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 this::selectRelocationTarget,
                 this::cancelTargetSelectionAndRefresh);
         mapCanvas = new MapCanvas(this::onMapBackgroundClick);
+        fleetsPanel.onMining(() -> de.zettsystems.starfare.economy.ui.MiningAutomationDialog.open(game, gameId,
+                UserContext.currentPlayerId().orElse(""), fleetsPanel.protectedProductionSystems()));
+        fleetsPanel.onMiningProtection((system, protect) -> {
+            if (displayedTurn != null && !game.protectMiningSystem(gameId, UserContext.currentPlayerId().orElse(""),
+                    displayedTurn, system, protect)) { Notification.show(I18n.t(UiTexts.MINING_REJECTED)); }
+        });
         fleetsPanel.onEditOrder(order -> planningDialogs().edit(order));
         fleetsPanel.onFleetWait(id -> executeFleetAction(id, false));
         fleetsPanel.onFleetDisband(id -> executeFleetAction(id, true));
@@ -140,15 +147,18 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             }
         });
         planningActions.addClassName("planning-actions");
-        planningActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_UNDO), _ -> {
+        planningActions.add(planningButton(UiTexts.PLAN_UNDO_SHORT, UiTexts.PLAN_UNDO, () -> {
             if (!game.undoOrders(gameId, currentSeat(), Objects.requireNonNull(displayedTurn))) {
                 Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
             }
             refresh();
-        }), new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_DISPATCH), _ -> planningDialogs().dispatch()),
-                new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.PLAN_RESERVES), _ -> planningDialogs().reserves()));
+        }), planningButton(UiTexts.PLAN_DISPATCH_SHORT, UiTexts.PLAN_DISPATCH, () -> planningDialogs().dispatch()),
+                planningButton(UiTexts.PLAN_RESERVES_SHORT, UiTexts.PLAN_RESERVES, () -> planningDialogs().reserves()));
         actionBar.addClassName("map-controls");
         actionBar.add(treatyActions, planningActions);
+        fleetsPanel.setActions(actionBar);
+        chatHost.addClassName("map-chat-host");
+        chatHost.setVisible(false);
         treatyActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.DIP_TITLE), _ -> openDiplomacy()));
         boolean phone = Devices.mobile();
         header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
@@ -180,12 +190,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         });
         if (phone) {
             mobile = new MobileMapLayout(List.of(header, roundStatus, spectatorControls, reviewControls), gameOverBanner,
-                    mapCanvas, actionBar, fleetsPanel, this::cancelTargetSelectionAndRefresh);
+                    mapCanvas, fleetsPanel, chatHost, this::cancelTargetSelectionAndRefresh, this::hideGameChat);
             addClassName("map-root-mobile");
             add(mobile);
         } else {
             mobile = null;
-            add(header, roundStatus, actionBar, spectatorControls, reviewControls, buildContent(),
+            add(header, roundStatus, spectatorControls, reviewControls, buildContent(),
                     new de.zettsystems.starfare.legal.ui.LegalFooter());
         }
     }
@@ -193,6 +203,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     /** Brings the sidebar into view; on phones it lies as a sheet over the map. */
     private void revealPanel() {
         if (mobile != null) { mobile.showPanel(); }
+    }
+
+    private static com.vaadin.flow.component.button.Button planningButton(String shortKey, String fullKey, Runnable action) {
+        var button = new com.vaadin.flow.component.button.Button(I18n.t(shortKey), _ -> action.run());
+        button.setAriaLabel(I18n.t(fullKey));
+        button.setTooltipText(I18n.t(fullKey));
+        return button;
     }
 
     /** On phones the sheet covers the map, so anything that points at the map closes it. */
@@ -218,7 +235,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         return CoalitionConcealment.hide(view, pendingBattleSystemIds(view));
     }
 
-    private SplitLayout buildContent() {
+    private com.vaadin.flow.component.orderedlayout.HorizontalLayout buildContent() {
         var left = new VerticalLayout();
         left.setPadding(false);
         left.setSpacing(true);
@@ -235,7 +252,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         content.addSplitterDragEndListener(_ -> DisplayPreferences.choose(
                 de.zettsystems.starfare.social.values.DisplaySetting.SIDEBAR, String.valueOf(content.getSplitterPosition())));
         content.addClassName("map-content");
-        return content;
+        var workspace = new com.vaadin.flow.component.orderedlayout.HorizontalLayout(content, chatHost);
+        workspace.setPadding(false);
+        workspace.setSpacing(false);
+        workspace.setSizeFull();
+        workspace.setFlexGrow(1, content);
+        workspace.addClassName("map-workspace");
+        return workspace;
     }
 
     private void onNextRound() {
@@ -529,6 +552,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         boolean advancedTurn = displayedTurn != null && view.turn() > displayedTurn;
         displayedTurn = view.turn();
         boolean observer = isObserver() || reviewing;
+        fleetsPanel.miningPolicy(observer ? null : game.miningAutomationFor(gameId, UserContext.currentPlayerId().orElse(""))
+                .map(de.zettsystems.starfare.economy.values.MiningAutomationView::policy).orElse(null));
         int playerId = observer ? -1 : currentSeat();
         var diplomacy = observer ? java.util.Optional.<de.zettsystems.starfare.diplomacy.values.DiplomacyView>empty()
                 : game.diplomacyFor(gameId, UserContext.currentPlayerId().orElse(""));
@@ -638,20 +663,33 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void openGameChat() {
-        GameChatDialog current = chatDialog;
+        if (targetSelection != TargetSelection.NONE || reviewing || isObserver() || !game.hasActiveGame(gameId)) { return; }
+        GameChatPanel current = chatPanel;
         if (current == null) {
-            current = new GameChatDialog(gameChat, players, gameId, broadcaster);
-            chatDialog = current;
+            current = new GameChatPanel(gameChat, players, gameId, broadcaster, () -> {
+                chatHost.setVisible(false);
+                header.getElement().executeJs("this.querySelector('.map-chat-toggle')?.focus()");
+            });
+            chatPanel = current;
+            chatHost.add(current);
         }
+        chatHost.setVisible(true);
         current.open();
     }
 
     private void closeGameChat() {
-        GameChatDialog current = chatDialog;
-        chatDialog = null;
+        GameChatPanel current = chatPanel;
+        chatPanel = null;
         if (current != null) {
             current.close();
         }
+        chatHost.removeAll();
+        chatHost.setVisible(false);
+    }
+
+    private void hideGameChat() {
+        GameChatPanel current = chatPanel;
+        if (current != null) { current.close(); }
     }
 
     private void openShipResearch() {
@@ -743,6 +781,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
         if (mobile != null) { mobile.targetSelection(targetSelection != TargetSelection.NONE); }
+        boolean chatPermitted = !observer && !view.gameOver();
+        header.setChatAvailable(chatPermitted, targetSelection != TargetSelection.NONE);
+        if ((!chatPermitted || targetSelection != TargetSelection.NONE) && chatPanel != null) { chatPanel.close(); }
         economicView = view;
         updateEconomyNotices();
     }

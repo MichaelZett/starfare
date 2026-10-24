@@ -4,6 +4,35 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
+    public static final String PLAN_UNDO_SHORT = "plan.undo.short";
+    public static final String PLAN_DISPATCH_SHORT = "plan.dispatch.short";
+    public static final String PLAN_RESERVES_SHORT = "plan.reserves.short";
+    public static final String MINING_TITLE = "mining.automation.title";
+    public static final String MINING_ENABLED = "mining.automation.enabled";
+    public static final String MINING_ROUNDS = "mining.automation.rounds";
+    public static final String MINING_SYSTEMS = "mining.automation.systems";
+    public static final String MINING_PROTECTED_SYSTEMS = "mining.automation.protected";
+    public static final String MINING_EXPLANATION = "mining.automation.explanation";
+    public static final String MINING_MANUAL_HINT = "mining.automation.manualHint";
+    public static final String MINING_LAST_PLAN = "mining.automation.lastPlan";
+    public static final String MINING_PREVIEW = "mining.automation.preview";
+    public static final String MINING_SAVE = "mining.automation.save";
+    public static final String MINING_REJECTED = "mining.automation.rejected";
+    public static final String MINING_FORECAST = "mining.automation.forecast";
+    public static final String MINING_CHANGE = "mining.automation.change";
+    public static final String MINING_SHORTFALL = "mining.automation.shortfall";
+    public static final String MINING_SYSTEM_ACTIVE = "mining.automation.systemActive";
+    public static final String MINING_SYSTEM_PROTECTED = "mining.automation.systemProtected";
+    public static final String MINING_SYSTEM_MANUAL = "mining.automation.systemManual";
+    public static final String SYSTEM_MODEL_RADIUS = "system.modelRadius";
+    public static final String SYSTEM_MODEL_MOON_RADIUS = "system.modelMoonRadius";
+    public static final String MAP_VIEW = "map.navigation.view";
+    public static final String MAP_HELP = "map.navigation.help";
+    public static final String CHAT_FINISH_TARGET = "chat.finishTarget";
+    public static final String CHAT_NEW_MESSAGES = "chat.newMessages";
+    public static final String CHAT_SEND_FAILED = "chat.sendFailed";
+    public static final String ARCHIVE_VIEW_BLOCKED = "archive.viewBlocked";
+    public static final String UX_SEAT_DETAILS = "ux.seatDetails";
     public static final String RESEARCH_TITLE = "research.title";
     public static final String RESEARCH_BUDGET = "research.budget";
     public static final String RESEARCH_STATUS = "research.status";

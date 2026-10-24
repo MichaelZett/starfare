@@ -40,7 +40,8 @@ public class SystemGalleryAcceptanceView extends Div {
         addCard(label, id, new SystemComposition(List.of(quality.star()), List.of(body(1, quality.body())), quality));
     }
     private void addCard(String label, String id, SystemComposition composition) {
-        var panel = new DetailedSystemPanel(composition, false);
+        var panel = new DetailedSystemPanel(composition, false,
+                de.zettsystems.starfare.game.values.GameId.of("system-gallery-" + id), 1);
         Div card = new Div(new H2(label), panel);
         card.setId("gallery-" + id);
         card.addClassName("system-gallery-card");

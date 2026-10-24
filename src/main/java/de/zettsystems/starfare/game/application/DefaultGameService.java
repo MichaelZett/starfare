@@ -7,6 +7,12 @@ import de.zettsystems.starfare.diplomacy.values.DiplomacyOrder;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyState;
 import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.economy.application.EconomyService;
+import de.zettsystems.starfare.economy.domain.MiningPlanner;
+import de.zettsystems.starfare.economy.values.MiningAutomation;
+import de.zettsystems.starfare.economy.values.MiningAutomationView;
+import de.zettsystems.starfare.economy.values.MiningRequest;
+import de.zettsystems.starfare.economy.values.MiningPlan;
+import de.zettsystems.starfare.economy.values.AllocationSplit;
 import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.config.GameTimingProperties;
@@ -40,6 +46,101 @@ import org.springframework.stereotype.Service;
 public class DefaultGameService implements GameService {
 
     @Override
+    public Optional<MiningAutomationView> miningAutomationFor(GameId id, String account) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            Integer player = state.seatByUser().get(account);
+            if (player == null || !state.started() || !state.ruleset().usesMetals()
+                    || !state.joinedHumanPlayerIds().contains(player)
+                    || !access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
+            Map<Integer, String> systems = state.systems().stream().filter(system -> Objects.equals(system.ownerId(), player))
+                    .collect(Collectors.toMap(StarSystem::id, StarSystem::name));
+            return Optional.of(new MiningAutomationView(state.turn(), canPlan(state, player, state.turn()),
+                    miningPolicy(state, player, account), systems, miningBases(state, player)));
+        }));
+    }
+
+    private static MiningAutomation miningPolicy(GameState state, int player, String account) {
+        MiningAutomation saved = state.miningAutomation().get(player);
+        return saved != null && saved.account().equals(account) ? saved : MiningAutomation.off(account);
+    }
+
+    private static Map<Integer, AllocationSplit> miningBases(GameState state, int player) {
+        return state.systems().stream().filter(system -> Objects.equals(system.ownerId(), player))
+                .collect(Collectors.toMap(StarSystem::id, system -> new AllocationSplit(system.productionPerTurn(),
+                        Objects.requireNonNull(state.metals().orElseThrow().mining().get(system.id())),
+                        Objects.requireNonNull(state.industries().get(system.id())).expansionAllocation())));
+    }
+
+    private static Optional<MiningAutomation> miningConfiguration(GameState state, String account, MiningRequest request) {
+        Integer player = state.seatByUser().get(account);
+        if (player == null || !state.ruleset().usesMetals() || !canPlan(state, player, request.turn())
+                || request.reserveRounds() < 0 || request.reserveRounds() > 10
+                || !request.expected().equals(miningPolicy(state, player, account))
+                || !request.plans().equals(miningBases(state, player))
+                || !request.plans().keySet().containsAll(request.systems())
+                || !request.systems().containsAll(request.protectedSystems())
+                || (request.enabled() && request.systems().isEmpty())) { return Optional.empty(); }
+        return Optional.of(request.expected().configure(request.enabled(), request.reserveRounds(),
+                request.systems(), request.protectedSystems()));
+    }
+
+    @Override
+    public Optional<MiningPlan> previewMining(GameId id, String account, MiningRequest request) {
+        return registry.find(id).flatMap(session -> registry.readState(id, state -> {
+            if (!access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
+            return miningConfiguration(state, account, request)
+                    .map(policy -> MiningPlanner.plan(state, Objects.requireNonNull(state.seatByUser().get(account)), policy));
+        }));
+    }
+
+    @Override
+    public boolean configureMining(GameId id, String account, MiningRequest request) {
+        if (!isRunningGame(id)) { return false; }
+        boolean accepted = registry.writeState(id, state -> {
+            var policy = miningConfiguration(state, account, request);
+            if (policy.isEmpty() || request.reviewed() == null) { return false; }
+            int player = Objects.requireNonNull(state.seatByUser().get(account));
+            MiningAutomation configuration = policy.orElseThrow();
+            MiningPlan plan = MiningPlanner.plan(state, player, configuration);
+            if (!plan.equals(request.reviewed())) { return false; }
+            if (configuration.enabled()) {
+                plan.allocations().forEach(state::planMining);
+                configuration = configuration.planned(state.turn(), plan);
+            }
+            state.miningAutomation().put(player, configuration);
+            return true;
+        });
+        if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
+        return accepted;
+    }
+
+    @Override
+    public boolean protectMiningSystem(GameId id, String account, int turn, int system, boolean protect) {
+        if (!isRunningGame(id)) { return false; }
+        boolean accepted = registry.writeState(id, state -> {
+            Integer player = state.seatByUser().get(account);
+            if (player == null || !state.ruleset().usesMetals() || !canPlan(state, player, turn)
+                    || state.systems().stream().noneMatch(candidate -> candidate.id() == system && Objects.equals(candidate.ownerId(), player))) { return false; }
+            var policy = miningPolicy(state, player, account);
+            if (policy.enabled()) {
+                state.miningAutomation().put(player, policy.protect(system, protect));
+                MiningPlanner.applyFor(state, player);
+            }
+            return true;
+        });
+        if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
+        return accepted;
+    }
+
+    private static void manualMining(GameState state, int player, int system) {
+        var policy = state.miningAutomation().get(player);
+        if (policy != null) {
+            state.miningAutomation().put(player, policy.manual(system));
+            MiningPlanner.applyFor(state, player);
+        }
+    }
+
+    @Override
     public Optional<de.zettsystems.starfare.research.values.ResearchView> shipResearchFor(GameId id, String account) {
         return registry.find(id).flatMap(session -> registry.readState(id, state -> {
             Integer seat = state.seatByUser().get(account);
@@ -66,6 +167,7 @@ public class DefaultGameService implements GameService {
             state.planShipResearch(seat, percent);
             state.systems().stream().filter(system -> seat.equals(system.ownerId()))
                     .forEach(system -> fleetService.trimRelocations(state, seat, system.id()));
+            MiningPlanner.applyFor(state, seat);
             return true;
         });
         if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
@@ -82,6 +184,7 @@ public class DefaultGameService implements GameService {
             GameState draft = GameState.copyOf(state);
             var relocations = allocate(draft, player, plan);
             if (relocations == null) { return Optional.empty(); }
+            manualMining(draft, player, plan.systemId());
             PlayerViewState view = playerViewBuilder.forPlayer(draft, player);
             return view.systems().stream().filter(system -> system.id() == plan.systemId())
                     .map(VisibleSystem::industry).filter(Objects::nonNull)
@@ -104,6 +207,7 @@ public class DefaultGameService implements GameService {
                 return rejected;
             }
             var relocations = allocate(state, player, plan);
+            if (relocations != null) { manualMining(state, player, plan.systemId()); }
             return relocations == null ? rejected : new de.zettsystems.starfare.economy.values.ProductionCommit(true, relocations);
         });
         if (result.accepted()) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
@@ -135,8 +239,11 @@ public class DefaultGameService implements GameService {
     @Override
     public boolean allocateProduction(GameId id, int playerId, int expectedTurn, int systemId, int expansion, int mining) {
         if (!isRunningGame(id)) { return false; }
-        boolean accepted = registry.writeState(id, state -> canPlan(state, playerId, expectedTurn)
-                && economy.allocateProduction(state, playerId, systemId, expansion, mining));
+        boolean accepted = registry.writeState(id, state -> {
+            if (!canPlan(state, playerId, expectedTurn) || !economy.allocateProduction(state, playerId, systemId, expansion, mining)) { return false; }
+            manualMining(state, playerId, systemId);
+            return true;
+        });
         if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
         return accepted;
     }
@@ -144,8 +251,12 @@ public class DefaultGameService implements GameService {
     @Override
     public boolean planRecycling(GameId id, int player, int turn, int system, int ships) {
         if (!isRunningGame(id)) { return false; }
-        boolean accepted = registry.writeState(id, state -> canPlan(state, player, turn)
-                && de.zettsystems.starfare.economy.domain.RecyclingOrders.plan(state, player, system, ships));
+        boolean accepted = registry.writeState(id, state -> {
+            if (!canPlan(state, player, turn)
+                    || !de.zettsystems.starfare.economy.domain.RecyclingOrders.plan(state, player, system, ships)) { return false; }
+            MiningPlanner.applyFor(state, player);
+            return true;
+        });
         if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
         return accepted;
     }
@@ -153,8 +264,11 @@ public class DefaultGameService implements GameService {
     @Override
     public boolean allocateExpansion(GameId id, int playerId, int expectedTurn, int systemId, int points) {
         if (!isRunningGame(id)) { return false; }
-        boolean accepted = registry.writeState(id, state -> canPlan(state, playerId, expectedTurn)
-                && economy.allocateExpansion(state, playerId, systemId, points));
+        boolean accepted = registry.writeState(id, state -> {
+            if (!canPlan(state, playerId, expectedTurn) || !economy.allocateExpansion(state, playerId, systemId, points)) { return false; }
+            manualMining(state, playerId, systemId);
+            return true;
+        });
         if (accepted) { broadcaster.publish(new GameEvent.ProductionAllocationChanged(id)); }
         return accepted;
     }
@@ -700,6 +814,7 @@ public class DefaultGameService implements GameService {
             handedOver.forEach(id -> {
                 state.updatePlayer(id, Player::asAi);
                 state.joinedHumanPlayerIds().remove(id);
+            state.miningAutomation().remove(id);
                 state.pendingOrders().remove(id);
                 state.missedRounds().remove(id);
                 // seatByUser bleibt bewusst stehen: nur so greift tryReclaimExistingSeat
@@ -767,6 +882,7 @@ public class DefaultGameService implements GameService {
             }
             state.updatePlayer(playerId, Player::asAi);
             state.joinedHumanPlayerIds().remove(playerId);
+            state.miningAutomation().remove(playerId);
             state.submittedThisTurn().remove(playerId);
             state.pendingOrders().remove(playerId);
             TurnResult turn = maybeAdvance(state);
@@ -826,6 +942,7 @@ public class DefaultGameService implements GameService {
     private KickResult kickBeforeStart(GameState state, int seatId, @Nullable String kickedPlayerId) {
         state.updatePlayer(seatId, Player::asAi);
         state.joinedHumanPlayerIds().remove(seatId);
+            state.miningAutomation().remove(seatId);
         if (kickedPlayerId != null) {
             state.seatByUser().remove(kickedPlayerId);
         }
@@ -838,6 +955,7 @@ public class DefaultGameService implements GameService {
         }
         state.updatePlayer(seatId, Player::asAi);
         state.joinedHumanPlayerIds().remove(seatId);
+            state.miningAutomation().remove(seatId);
         state.submittedThisTurn().remove(seatId);
         state.pendingOrders().remove(seatId);
         if (kickedPlayerId != null) {

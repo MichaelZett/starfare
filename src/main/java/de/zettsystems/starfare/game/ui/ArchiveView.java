@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.ui;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
@@ -15,6 +16,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
+import com.vaadin.flow.server.VaadinSession;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
@@ -38,12 +40,16 @@ public class ArchiveView extends VerticalLayout {
     private final GameService games;
     private final de.zettsystems.starfare.game.application.GameTemplateService templates;
     private final Broadcaster broadcaster;
+    private final String positionAccount = UserContext.currentPlayerId().orElse("");
     private final Grid<GameSummary> grid = new Grid<>(GameSummary.class, false);
     private final TextField search = new TextField();
     private final Checkbox own = new Checkbox();
     private final ComboBox<ArchiveResult> resultFilter = new ComboBox<>();
     private final Span empty = new Span(I18n.t(UiTexts.ARCHIVE_EMPTY));
     private @Nullable Subscription subscription;
+    private @Nullable GameId lastViewed;
+
+    private record Position(String account, String search, boolean own, ArchiveResult result, @Nullable GameId lastViewed) { }
 
     public ArchiveView(GameService games, Broadcaster broadcaster,
                        de.zettsystems.starfare.game.application.GameTemplateService templates) {
@@ -54,14 +60,21 @@ public class ArchiveView extends VerticalLayout {
         add(new AccountNavigation());
         search.setPlaceholder(I18n.t(UiTexts.LOBBY_SEARCH));
         search.setClearButtonVisible(true);
-        search.addValueChangeListener(_ -> refresh());
         own.setLabel(I18n.t(UiTexts.LOBBY_FILTER_OWN));
-        own.addValueChangeListener(_ -> refresh());
         resultFilter.setLabel(I18n.t(UiTexts.ARCHIVE_RESULT_FILTER));
         resultFilter.setItems(ArchiveResult.values());
         resultFilter.setItemLabelGenerator(result -> I18n.t(result.textKey()));
         resultFilter.setValue(ArchiveResult.ALL);
-        resultFilter.addValueChangeListener(_ -> refresh());
+        Position saved = VaadinSession.getCurrent().getAttribute(Position.class);
+        if (saved != null && saved.account().equals(account())) {
+            search.setValue(saved.search());
+            own.setValue(saved.own());
+            resultFilter.setValue(saved.result());
+            lastViewed = saved.lastViewed();
+        }
+        search.addValueChangeListener(_ -> filtersChanged());
+        own.addValueChangeListener(_ -> filtersChanged());
+        resultFilter.addValueChangeListener(_ -> filtersChanged());
         var filters = new HorizontalLayout(search, own, resultFilter,
                 new Button(I18n.t(UiTexts.MAP_ACTION_LOBBY),
                         _ -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class))));
@@ -92,16 +105,28 @@ public class ArchiveView extends VerticalLayout {
         Div details = new Div(new Span(RulesetLabels.label(games.rulesets(), summary.ruleset())),
                 personalResult, winner, meta, participants);
         details.addClassName("archive-game-card-details");
-        card.add(name, details, viewButton(summary));
+        Div actions = new Div(viewButton(summary));
+        actions.addClassName("archive-game-actions");
         if (summary.belongsTo(UserContext.currentPlayerId().orElse(""))) {
-            card.add(GameTemplateDialog.button(templates, summary.gameId(), summary.name(), this::refresh));
+            Button template = GameTemplateDialog.button(templates, summary.gameId(), summary.name(), this::refresh);
+            template.addThemeVariants(ButtonVariant.TERTIARY);
+            actions.add(template);
+            if (!template.isEnabled()) { actions.add(new Span(I18n.t(UiTexts.PLAN_TEMPLATE_MISSING))); }
         }
+        if (!summary.belongsTo(account()) && !summary.observersAllowed()) {
+            actions.add(new Span(I18n.t(UiTexts.ARCHIVE_VIEW_BLOCKED)));
+        }
+        card.add(name, details, actions);
         return card;
     }
 
     private Button viewButton(GameSummary summary) {
-        Button button = new Button(I18n.t(UiTexts.ARCHIVE_VIEW), _ -> getUI().ifPresent(ui ->
-                ui.navigate(MainView.class, new RouteParameters("gameId", summary.gameId().value()))));
+        Button button = new Button(I18n.t(UiTexts.ARCHIVE_VIEW), _ -> {
+            lastViewed = summary.gameId();
+            rememberPosition();
+            getUI().ifPresent(ui -> ui.navigate(MainView.class, new RouteParameters("gameId", summary.gameId().value())));
+        });
+        button.addThemeVariants(ButtonVariant.PRIMARY);
         button.setEnabled(summary.belongsTo(account()) || summary.observersAllowed());
         return button;
     }
@@ -205,10 +230,29 @@ public class ArchiveView extends VerticalLayout {
     protected void onAttach(AttachEvent event) {
         subscription = broadcaster.subscribeAll(_ -> event.getUI().access(this::refresh));
         refresh();
+        GameId previous = lastViewed;
+        if (previous != null) {
+            grid.getListDataView().getItems().filter(summary -> summary.gameId().equals(previous)).findFirst()
+                    .ifPresent(summary -> event.getUI().beforeClientResponse(grid, _ -> grid.scrollToItem(summary)));
+        }
     }
 
     @Override
     protected void onDetach(DetachEvent event) {
+        rememberPosition();
         if (subscription != null) { subscription.remove(); subscription = null; }
+    }
+
+    private void filtersChanged() {
+        lastViewed = null;
+        rememberPosition();
+        refresh();
+    }
+
+    private void rememberPosition() {
+        if (!positionAccount.equals(account())) { return; }
+        ArchiveResult selected = resultFilter.getValue();
+        VaadinSession.getCurrent().setAttribute(Position.class, new Position(positionAccount, search.getValue(),
+                own.getValue(), selected == null ? ArchiveResult.ALL : selected, lastViewed));
     }
 }

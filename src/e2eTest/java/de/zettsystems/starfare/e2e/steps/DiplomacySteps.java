@@ -131,9 +131,7 @@ public class DiplomacySteps {
     private static void openTreaties(Browser target) { target.clickButtonWithText("Bündnisse"); target.awaitCss(".diplomacy-content"); }
     private void advance() { assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue(); }
     private void waitFor(java.util.function.BooleanSupplier condition) { new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> condition.getAsBoolean()); }
-    private void clickFleets() {
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> Boolean.TRUE.equals(((JavascriptExecutor) browser.driver()).executeScript("const t=[...document.querySelectorAll('vaadin-tab')].find(t=>t.textContent.trim()==='Flotten');if(!t)return false;t.click();return true;")));
-    }
+    private void clickFleets() { browser.clickTabWithText("Flotten"); }
     private void screenshot(String name) throws IOException {
         if (name.equals("return")) { ((JavascriptExecutor) browser.driver()).executeScript("document.querySelector('.fleet-travel-card')?.scrollIntoView({block:'center'});"); }
         Path target = Path.of("build", "diplomacy", name + ".png"); Files.createDirectories(target.getParent());
