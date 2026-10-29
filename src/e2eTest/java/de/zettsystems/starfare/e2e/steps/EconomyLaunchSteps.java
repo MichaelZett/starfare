@@ -12,7 +12,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Launch journey checks the default W7 economy through the ordinary wizard. */
+/** Launch journey checks the current economy and research rules through the ordinary wizard. */
 public class EconomyLaunchSteps {
     private final Browser browser;
     private final GameRegistry registry;
@@ -30,6 +30,8 @@ public class EconomyLaunchSteps {
         var choices = browser.all("#ruleset-selection vaadin-radio-button");
         assertThat(choices.getFirst().getDomAttribute("checked")).isNotNull();
         ((JavascriptExecutor) browser.driver()).executeScript("arguments[0].click();", choices.get(1));
+        assertThat(browser.all("#ruleset-version-selection")).isEmpty();
+        assertThat(rules).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
         browser.clickButtonWithText("Zusammenfassung prüfen");
         browser.awaitText("Spaceward · Regeln " + rules.version());
         browser.clickButtonWithText("Spiel anlegen");

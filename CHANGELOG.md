@@ -6,7 +6,13 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.1 - 2026-10-29
+
+- Neue Partien verwenden ausschließlich die aktuelle Regelfassung ihrer Variante:
+  Spaceward 1.3.0-r1 mit Metallförderung, Recycling, Industrieausbau und
+  Schiffsforschung, ohne Vorschauprofil oder Versionsauswahl. Vorlagen und
+  Revanchen übernehmen die aktuelle Fassung; gespeicherte Partien behalten
+  ihre bisherigen Regeln.
 
 - Individuelle, reproduzierbare Modellradien im Systembild, ausdrücklich als
   fiktive Werte gekennzeichnet; gemeinsame Planet-/Mondskala und separate Sternskala.
@@ -23,8 +29,7 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Suchfilter und zuletzt angesehene Partie bleiben bei Rückkehr erhalten.
   Zehn-Sitz-Zusammenfassungen bieten zunächst offene, einklappbare Sitzdetails.
 
-- Gemeinsame Schiffsforschung als eigene Regelfassung 1.3.0-r1 (Profil
-  `research-preview`): reichsweiter Industrieanteil, steigende Stufenkosten und
+- Gemeinsame Schiffsforschung in der aktuellen Regelfassung 1.3.0-r1: reichsweiter Industrieanteil, steigende Stufenkosten und
   stärkere Neubauten ab der folgenden Runde. Baustufen bleiben bei Versand,
   Verlegung, Recycling, Rückkehr und Kampf erhalten. Gemischte Bestände werden
   angezeigt; Abschlüsse erscheinen im Bericht. Geschwindigkeit, Reichweite,

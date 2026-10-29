@@ -8,10 +8,10 @@ import static org.assertj.core.api.Assertions.*;
 class RulesetCatalogTest {
     private final RulesetCatalog catalog = RulesetCatalog.builtIn();
 
-    @Test void onlyW6AndW7AreCreatableWhileAllOlderSpacewardVersionsRemainSupported() {
+    @Test void onlyCurrentRulesAreCreatableWhileAllOlderSpacewardVersionsRemainSupported() {
         var entry = catalog.find("spaceward").orElseThrow();
-        assertThat(entry.defaultRef()).isEqualTo(RulesetRef.SPACEWARD_EARLY_INDUSTRY);
-        assertThat(entry.creationChoices()).containsExactly(RulesetRef.SPACEWARD_EARLY_INDUSTRY, RulesetRef.SPACEWARD_EQUAL_METAL);
+        assertThat(entry.defaultRef()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+        assertThat(entry.creationChoices()).containsExactly(RulesetRef.SPACEWARD_SHIP_RESEARCH);
         for (var version : entry.supportedVersions()) {
             var rules = new RulesetRef("spaceward", version);
             assertThatCode(() -> catalog.requireSupported(rules)).doesNotThrowAnyException();
@@ -52,9 +52,9 @@ class RulesetCatalogTest {
         assertThatCode(() -> catalog.requireCreatable(RulesetRef.SECTOR_FORCES)).doesNotThrowAnyException();
         assertThat(catalog.find(RulesetRef.SPACEWARD.variant()).orElseThrow().creationEnabled()).isTrue();
         assertThat(catalog.find(RulesetRef.SPACEWARD.variant()).orElseThrow().defaultRef())
-                .isEqualTo(RulesetRef.SPACEWARD_EARLY_INDUSTRY);
-        assertThatCode(() -> catalog.requireCreatable(RulesetRef.SPACEWARD_EQUAL_METAL)).doesNotThrowAnyException();
-        assertThatCode(() -> catalog.requireCreatable(RulesetRef.SPACEWARD_EARLY_INDUSTRY)).doesNotThrowAnyException();
+                .isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+        assertThatThrownBy(() -> catalog.requireCreatable(RulesetRef.SPACEWARD_EQUAL_METAL)).isInstanceOf(IllegalArgumentException.class);
+        assertThatCode(() -> catalog.requireCreatable(RulesetRef.SPACEWARD_SHIP_RESEARCH)).doesNotThrowAnyException();
         var input1 = new RulesetRef("spaceward", "2.0.0");
         assertThatThrownBy(() -> catalog.requireCreatable(input1)).isInstanceOf(IllegalArgumentException.class);
     }

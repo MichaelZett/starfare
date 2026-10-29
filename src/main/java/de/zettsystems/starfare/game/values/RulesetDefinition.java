@@ -16,7 +16,7 @@ public record RulesetDefinition(RulesetRef defaultRef, String nameKey, String de
     public RulesetDefinition(RulesetRef defaultRef, String nameKey, String descriptionKey,
                              Set<String> supportedVersions, boolean creationEnabled) {
         this(defaultRef, nameKey, descriptionKey, supportedVersions, creationEnabled,
-                creationEnabled ? supportedVersions : Set.of());
+                creationEnabled ? Set.of(defaultRef.version()) : Set.of());
     }
 
     public RulesetDefinition {

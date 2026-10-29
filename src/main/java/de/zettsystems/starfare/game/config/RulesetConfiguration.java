@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @org.springframework.boot.context.properties.EnableConfigurationProperties(RulesetProperties.class)
 public class RulesetConfiguration {
     @Bean
-    RulesetCatalog rulesetCatalog(RulesetProperties properties) {
-        return properties.researchPreview() ? RulesetCatalog.withShipResearch() : RulesetCatalog.builtIn();
+    RulesetCatalog rulesetCatalog() {
+        return RulesetCatalog.builtIn();
     }
 }

@@ -38,29 +38,49 @@ class GameTemplateServiceTest {
     }
 
     @Test
-    void w6AndW7TemplatesRetainTheirOwnRules() {
-        for (var rules : List.of(RulesetRef.SPACEWARD_EQUAL_METAL, RulesetRef.SPACEWARD_EARLY_INDUSTRY)) {
-            var source = registry.createGame(GameSetup.defaults().selectRuleset(rules), "host", "Original");
-            var copy = templates.create(source, "host", "Copy", true).orElseThrow();
-            assertThat(registry.readState(copy, GameState::ruleset)).isEqualTo(rules);
+    void historicalTemplatesAndRematchesUseCurrentRulesWithoutChangingTheirSource() {
+        for (var version : registry.rulesets().find("spaceward").orElseThrow().supportedVersions()) {
+            var rules = new RulesetRef("spaceward", version);
+            var store = new InMemoryGameSessionStore();
+            var historical = new RulesetDefinition(rules, "test.name", "test.description",
+                    java.util.Set.of(version), true);
+            var oldRegistry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(),
+                    new RulesetCatalog(List.of(historical)));
+            var setup = GameSetup.defaults().selectRuleset(rules);
+            if (rules.usesConfigurableVictory() && !rules.equals(RulesetRef.SPACEWARD_COLONIES)) {
+                setup = setup.chooseVictoryRules(new VictoryRules(75, true, true, 85, false));
+            }
+            GameId source;
+            if (rules.equals(RulesetRef.SPACEWARD_COLONIES)) {
+                var historicalState = de.zettsystems.starfare.testsupport.ColonyStates.ready(rules);
+                source = GameId.newId();
+                store.save(new de.zettsystems.starfare.game.domain.GameSession(source, "Stored", "host",
+                        java.time.Instant.now(), historicalState));
+            } else {
+                source = oldRegistry.createGame(setup, "host", "Stored");
+            }
+            oldRegistry.writeState(source, state -> {
+                state.seatByUser().put("host", 1);
+                return null;
+            });
+            var current = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
+            var currentTemplates = new DefaultGameTemplateService(current, mock(GameArchiveStore.class),
+                    new DefaultGameAccessPolicy(), mock(Broadcaster.class));
+            var before = current.readState(source, GameState::toSnapshot);
+            var sourceVictory = setup.victoryRules();
+            assertThat(currentTemplates.template(source, "host").orElseThrow().setup().ruleset())
+                    .isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+            for (boolean rematch : new boolean[] {false, true}) {
+                var copy = currentTemplates.create(source, "host", "Copy", rematch).orElseThrow();
+                assertThat(current.readState(copy, GameState::ruleset)).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+                var copiedVictory = current.readState(copy, state -> state.originalSetup().orElseThrow().victoryRules());
+                assertThat(copiedVictory).isEqualTo(sourceVictory);
+                assertThat(current.readState(copy, state -> state.invitedSeats().containsKey("host")).booleanValue())
+                        .isEqualTo(rematch);
+            }
+            assertThat(current.readState(source, GameState::toSnapshot)).isEqualTo(before);
+            assertThat(GameState.fromSnapshot(before).ruleset()).isEqualTo(rules);
         }
-    }
-
-    @Test
-    void storedLegacyGamesRemainReadableButCannotBeUsedForNewTemplates() {
-        var store = new InMemoryGameSessionStore();
-        var legacyRules = new RulesetDefinition(RulesetRef.SPACEWARD_ALLIANCE, "test.name", "test.description",
-                java.util.Set.of(RulesetRef.SPACEWARD_ALLIANCE.version()), true);
-        var oldRegistry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(), new RulesetCatalog(List.of(legacyRules)));
-        var source = oldRegistry.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE), "host", "Stored");
-        var current = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
-        var currentTemplates = new DefaultGameTemplateService(current, mock(GameArchiveStore.class),
-                new DefaultGameAccessPolicy(), mock(Broadcaster.class));
-        var before = current.readState(source, GameState::toSnapshot);
-        assertThat(currentTemplates.template(source, "host")).isEmpty();
-        assertThat(currentTemplates.create(source, "host", "Copy", false)).isEmpty();
-        assertThat(current.readState(source, GameState::toSnapshot)).isEqualTo(before);
-        assertThat(GameState.fromSnapshot(before).ruleset()).isEqualTo(RulesetRef.SPACEWARD_ALLIANCE);
     }
 
     @Test

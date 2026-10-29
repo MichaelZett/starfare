@@ -9,29 +9,23 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class RulesetSelectorTest {
-    @Test void versionChoiceNotifiesTheWizardAndResetsWhenChangingVariants() {
+    @Test void variantChangesUseOnlyCurrentRulesAndNotifyTheWizard() {
         var catalog = RulesetCatalog.builtIn();
         var selector = new RulesetSelector(catalog);
         var seen = new ArrayList<RulesetRef>();
         selector.onRulesetChange(seen::add);
         RadioButtonGroup<RulesetDefinition> variants = field(selector, "ruleset-selection");
-        RadioButtonGroup<RulesetRef> versions = field(selector, "ruleset-version-selection");
+        assertThat(selector.getChildren().filter(component ->
+                component.getId().orElse("").equals("ruleset-version-selection"))).isEmpty();
         assertThat(selector.selectedRuleset()).isEqualTo(RulesetRef.SECTOR_FORCES);
-        assertThat(versions.isVisible()).isFalse();
         variants.setValue(catalog.find("spaceward").orElseThrow());
-        assertThat(versions.isVisible()).isTrue();
-        assertThat(versions.getListDataView().getItems()).containsExactly(
-                RulesetRef.SPACEWARD_EARLY_INDUSTRY, RulesetRef.SPACEWARD_EQUAL_METAL);
-        assertThat(selector.selectedRuleset()).isEqualTo(RulesetRef.SPACEWARD_EARLY_INDUSTRY);
-        versions.setValue(RulesetRef.SPACEWARD_EQUAL_METAL);
-        assertThat(selector.selectedRuleset()).isEqualTo(RulesetRef.SPACEWARD_EQUAL_METAL);
+        assertThat(selector.selectedRuleset()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
         variants.setValue(catalog.find("classic").orElseThrow());
         assertThat(selector.selectedRuleset()).isEqualTo(RulesetRef.SECTOR_FORCES);
-        assertThat(versions.isVisible()).isFalse();
         variants.setValue(catalog.find("spaceward").orElseThrow());
-        assertThat(selector.selectedRuleset()).isEqualTo(RulesetRef.SPACEWARD_EARLY_INDUSTRY);
-        assertThat(seen).containsExactly(RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD_EARLY_INDUSTRY,
-                RulesetRef.SPACEWARD_EQUAL_METAL, RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD_EARLY_INDUSTRY);
+        assertThat(selector.selectedRuleset()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+        assertThat(seen).containsExactly(RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD_SHIP_RESEARCH,
+                RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD_SHIP_RESEARCH);
     }
 
     @SuppressWarnings("unchecked")

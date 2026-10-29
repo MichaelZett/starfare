@@ -570,7 +570,7 @@ Testcontainers; Docker must be running.
 The next economy step is available for internal acceptance as **Spaceward
 1.2.0-w1**: saved colony environments and population limit usable industry,
 with growth taking effect on the following turn. The public wizard continues
-to create **W7** games by default, with **W6** also selectable. Existing rules and saved games retain their behavior.
+to create games with the current **1.3.0-r1** rules. Existing rules and saved games retain their behavior.
 W1 retains its original behavior without mining. The separate internal **1.2.0-w2** checkpoint adds finite metal; the separate internal **1.2.0-w3** checkpoint adds recycling.
 Run the saved-party browser journey with:
 
@@ -612,7 +612,7 @@ Run the test-only saved-party browser journey silently:
 
 W2 is supported for saved-game restoration and round resolution. Public creation,
 templates and rematches cannot create unreleased checkpoints. W1 and all released
-rules retain their behavior; new Spaceward games offer W6 and W7; older versions remain restorable.
+rules retain their behavior; new Spaceward games use the current 1.3.0-r1 rules; older versions remain restorable.
 
 ## Strategy experiments
 
@@ -621,7 +621,7 @@ The first verified pilot results and their limitations are documented in
 
 The opt-in `strategyBenchmark` task runs SectorForces and Spaceward games
 through the real turn engines without Spring, PostgreSQL, a browser or audio.
-Running the tooling does not alter stored games or their AI selections. Spaceward W6 and W7 are
+Running the tooling does not alter stored games or their AI selections. Historical Spaceward W6 and W7 are
 available in the lobby; `--rules=spaceward` deliberately selects the historical 1.0.0 rules.
 
 ```powershell
@@ -753,7 +753,7 @@ no salvage. Reloading or replaying does not apply a recycling order again.
 All eight AI profiles can recycle surplus rear-area ships when metal constrains
 construction, preserving a reserve and excluding known nearby enemies. The W4
 comparison is documented in `docs/ECONOMY-EXPERIMENTS.md`. W2 and older references retain their
-behavior. W3 remains restoration-only; new Spaceward games offer W6 and W7.
+behavior. W3 remains restoration-only; new Spaceward games use the current 1.3.0-r1 rules.
 
 Run the silent saved-game acceptance journey with:
 
@@ -761,23 +761,22 @@ Run the silent saved-game acceptance journey with:
 .\gradlew.bat e2eTest "-Dcucumber.filter.tags=@recycling"
 ```
 
-### Spaceward rules: W6 and W7
+### Spaceward rules: current version only
 
-Choose Spaceward in the ordinary new-game wizard, then choose **1.2.0-w7**
-(default) or **1.2.0-w6** under **Rules version**. SectorForces remains initially
-selected as its own game variant. No acceptance profile is required; existing
-`economy-preview` launch commands remain compatible and offer the same choices.
+Choose Spaceward in the ordinary new-game wizard. Every new game uses the current
+**1.3.0-r1** rules, including mining, recycling, industry expansion and ship
+research. There is no version selector and no preview profile is required.
+SectorForces remains a separate variant using its own current rules.
 
-Both versions use installed industry without a labor limit. They share scarce
+The current rules use installed industry without a labor limit. They share scarce
 empire metal equally between active yards, capped at each yard's demand; leftovers
 are redistributed and integer remainders go by system ID. For demand 10 and 4
 and stock 8, both yards receive 4. Surplus metal stays in stock.
 
-Only W6 and W7 can create new Spaceward games, including templates and rematches.
-Spaceward 1.0.0, 1.1.0 and W1–W5 remain supported for loading and continuation;
-they retain their stored rules and cannot create new templates or rematches.
-Colony properties, deposits, stock and initial material are established before
-the first save. A template from W6 or W7 preserves that exact version.
+Templates and rematches always use the current rules of their variant, including
+when copied from an older game. Source games and other stored games retain their
+original rules and remain playable. Colony properties, deposits, stock and initial
+material are established before the first save.
 
 W7 keeps the checkpoint's resource values: **1 metal per ship**, 10 starting metal,
 200 deposit metal per richness level, richness yield per mining point, and
@@ -848,7 +847,7 @@ Fleet selection areas occupy only free route segments, protecting source, destin
 The test-only investment benchmark compares fixed economic interventions with
 one CONCENTRATION military heuristic against CONCENTRATION and RUSH. Prices and
 captured industry are varied independently against the fixed W6 reference.
-The accepted EARLY_COST curve is now playable separately as W7. Early one-step, moderate and round-40 investment are
+The accepted EARLY_COST curve was introduced in W7 and is included in the current rules. Early one-step, moderate and round-40 investment are
 compared with a matched no-expansion reference. A no-expansion reference must
 retain the same trajectory under every price-only model.
 
@@ -859,15 +858,15 @@ retain the same trajectory under every price-only model.
 Models: `BASELINE`, `HALF_COST`, `EARLY_COST`, `QUALITY_COST`, `HALF_CAPTURE`.
 The control family uses `--first-seed=8101` and a separate output directory.
 Definitions, 1,280 completed matches, paired comparisons and limits are recorded
-in [economy experiments](docs/ECONOMY-EXPERIMENTS.md). The accepted cheap-small-upgrade curve is now the W7 acceptance candidate;
+in [economy experiments](docs/ECONOMY-EXPERIMENTS.md). The accepted cheap-small-upgrade curve is included in the current rules;
 W6 prices remain unchanged. Other interventions remain test-only.
 
 
-### Ship research preview: 1.3.0-r1
+### Ship research: 1.3.0-r1
 
-Start with `./gradlew bootRun "--args=--spring.profiles.active=local,research-preview"`
-and choose Spaceward rules **1.3.0-r1**. Ordinary creation still offers only W6
-and W7. Stored R1 games remain playable when the preview profile is disabled.
+Ship research is included in the current Spaceward rules for every new game.
+The retained `research-preview` profile no longer changes creation availability.
+Older saved games retain their original rules.
 
 Open **Ship research** in the map menu. One empire-wide percentage reserves
 industry before mining, expansion and shipbuilding. It starts at 0%; rounding
