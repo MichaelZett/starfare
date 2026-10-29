@@ -7,18 +7,27 @@ import com.vaadin.flow.server.VaadinSession;
 import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 class SidebarNavigationTest {
+    // Vaadin keeps only a weak reference to the current session.
+    private final VaadinSession session = mock(VaadinSession.class);
+
+    @BeforeEach
+    void setSession() { VaadinSession.setCurrent(session); }
+
     @AfterEach
-    void clearSession() { VaadinSession.setCurrent(null); }
+    void clearSession() {
+        VaadinSession.setCurrent(null);
+        java.lang.ref.Reference.reachabilityFence(session);
+    }
 
     @Test
     void compactAndWideNavigationStayInSyncWhenTheReportBecomesUnavailable() {
-        VaadinSession.setCurrent(mock(VaadinSession.class));
         var panel = new FleetAndOrdersPanel(new BattleAcknowledgements(mock(BattleAcknowledgementService.class)),
                 _ -> { }, _ -> { }, _ -> { }, () -> { }, _ -> { }, _ -> { }, _ -> { }, _ -> { },
                 (_, _) -> { }, _ -> { }, _ -> { }, () -> { });
