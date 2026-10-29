@@ -32,7 +32,7 @@ Wähle zuerst die **Spielvariante**. **SectorForces** (Regelversion **1.0.0**)
 orientiert sich an Sector Forces, einem C64-Spiel der 80er-Jahre: Jedes System
 baut Schiffe, Flotten erobern fremde Systeme, und wer genug der Galaxie
 beherrscht, gewinnt. Die Variante ist vorausgewählt; die folgenden Spielregeln
-beschreiben sie. **Spaceward** (Regelversion **1.2.0-w7**, alternativ **1.2.0-w6**)
+beschreiben sie. **Spaceward** (Regelversion **1.3.0-r1**)
 ist nach Spaceward Ho! gestaltet und ergänzt Industrieausbau, begrenzte Reichweite,
 Bündnisse und gemeinsame Schlachten. Die Abschnitte zu Spaceward weiter unten
 beschreiben, worin es von SectorForces abweicht. Weil dort alle feindlichen Seiten
@@ -354,7 +354,7 @@ Bevölkerung, Wachstum, Eignung und den Engpass durch fehlende Arbeitskräfte.
 Eroberung erhält Bevölkerung und Systemeigenschaften. Metallreichtum ist hier
 eine gespeicherte Eigenschaft; Förderung und Recycling folgen später.
 Dieser Abschnitt beschreibt den historischen W1-Stand. Neue Spaceward-Partien
-verwenden W7 oder wahlweise W6; ältere Versionen bleiben fortsetzbar.
+verwenden die aktuelle Regelfassung 1.3.0-r1; ältere Versionen bleiben fortsetzbar.
 
 ### Interne Metallwirtschaft 1.2.0-w2
 
@@ -612,15 +612,15 @@ kein Metall zurück. Startschiffe und neutrale Garnisonen zählen zur Metallbila
 Alle acht KI-Profile nutzen Recycling bei Metallknappheit für überschüssige Schiffe
 im Hinterland; sie behalten eine Garnison und schonen Systeme mit bekannten nahen
 Gegnern. Der Wirtschaftsvergleich für W4 steht in `docs/ECONOMY-EXPERIMENTS.md`. W2-Partien erhalten
-keine Recyclingbefehle. W3 bleibt nur fortsetzbar; neue Spaceward-Partien verwenden W6 oder W7.
+keine Recyclingbefehle. W3 bleibt nur fortsetzbar; neue Spaceward-Partien verwenden die aktuelle Regelfassung 1.3.0-r1.
 
-### Spaceward: W6 oder W7 wählen
+### Spaceward: immer die aktuelle Regelfassung
 
-Im normalen Spielassistenten zunächst „Spaceward“ auswählen und dann unter
-„Regelfassung“ zwischen **1.2.0-w7** (Vorgabe) und **1.2.0-w6** wählen.
-„SectorForces“ bleibt als eigene Spielvariante vorausgewählt. Ein besonderes
-Startprofil ist dafür nicht erforderlich; bestehende Starts mit `economy-preview`
-bieten dieselbe Auswahl. Ältere Partien übernehmen keine neue Regelfassung.
+Im normalen Spielassistenten „Spaceward“ auswählen. Neue Partien verwenden
+stets die aktuelle Regelfassung **1.3.0-r1**, einschließlich Metallförderung,
+Recycling, Industrieausbau und Schiffsforschung. Eine Versionsauswahl oder ein
+besonderes Startprofil ist nicht erforderlich. „SectorForces“ bleibt eine eigene
+Spielvariante und verwendet ebenfalls ihre aktuelle Fassung.
 
 Seit 1.2.0-w5 ist die Bevölkerung vorerst Atmosphäre: Sie wächst und beschreibt die
 Kolonie, begrenzt aber nicht mehr die nutzbare Industrie. Die gesamte installierte
@@ -632,11 +632,9 @@ nutzbare Kapazität; Recycling gewinnt 70 Prozent zurück und speichert Zehntelr
 Die Metallwerte bleiben für diese Erprobung unverändert. Alle acht KI-Profile
 berücksichtigen die Förderung bei ihrer Industrie- und Flottenplanung.
 
-Für neue Spaceward-Partien sind ausschließlich W6 und W7 wählbar. Das gilt
-auch für Vorlagen und Revanchen. Vorlagen aus W6 und W7 behalten ihre genaue
-Regelfassung. Gespeicherte Spaceward-Partien mit 1.0.0, 1.1.0 oder W1–W5 lassen
-sich weiterhin laden und fortsetzen; daraus können keine neuen Partien angelegt
-werden. Die persönliche Erprobung und die endgültige Freigabe als 1.2.0 stehen aus.
+Auch Vorlagen und Revanchen verwenden immer die aktuelle Fassung ihrer Variante.
+Die ursprüngliche Partie wird dabei nicht verändert. Gespeicherte Partien mit
+älteren Regeln lassen sich weiterhin laden und mit ihren bisherigen Regeln fortsetzen.
 
 Bei Metallknappheit erhalten die Werften seit W6 gleich große Anteile, höchstens
 bis zum geplanten Schiffbau. Nicht benötigte Anteile gehen an die übrigen Werften;
@@ -731,9 +729,9 @@ Flotten lassen sich auf freien Strecken auswählen. Systeme und ihre unmittelbar
 
 ### Gemeinsame Schiffsforschung erproben
 
-Mit dem Startprofil `local,research-preview` ist im Assistenten zusätzlich die
-Spaceward-Regelfassung **1.3.0-r1** verfügbar. Normale Neuanlagen bleiben bei W6
-und W7. Bereits gespeicherte R1-Partien lassen sich auch ohne das Profil fortsetzen.
+Schiffsforschung gehört zur aktuellen Spaceward-Regelfassung **1.3.0-r1**
+und steht bei jeder neuen Spaceward-Partie ohne besonderes Startprofil bereit.
+Gespeicherte ältere Partien behalten ihre bisherigen Regeln.
 
 Im Kartenmenü **Schiffsforschung** öffnen. Der Forschungsanteil gilt reichsweit
 und startet bei 0 Prozent. Er wird zuerst aus der gesamten Industriekapazität
