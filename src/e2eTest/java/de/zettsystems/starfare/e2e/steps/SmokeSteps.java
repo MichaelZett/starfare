@@ -44,6 +44,12 @@ public class SmokeSteps {
     @Before
     public void startLoggedOut() {
         browser.resetSession();
+        browser.driver().manage().logs().get(org.openqa.selenium.logging.LogType.BROWSER);
+    }
+
+    @Dann("meldet die Browser-Konsole keine Fehler")
+    public void browserHasNoErrors() {
+        browser.assertNoBrowserErrors();
     }
 
     /** HD-Zusicherung: Keine besuchte Ansicht scrollt seitwärts (CI-Lauf vom 2026-08-28: Lobby tat es). */
@@ -195,6 +201,11 @@ public class SmokeSteps {
         browser.clickCss(".sys-target:not(.sys-selected)");
         browser.awaitTextIn(".send-fleet-duration", "Ankunft Runde");
         browser.clickButtonWithText("Abbrechen");
+        browser.awaitNoneDisplayed("vaadin-dialog[opened]");
+        // Cancelling the dialog deliberately preserves target selection. Reset it before testing
+        // the right-click shortcut, which toggles the selected source.
+        browser.clickButtonWithText("Zielwahl abbrechen");
+        browser.awaitNoneDisplayed(".sys-selected");
         new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
                 .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
                 .until(_ -> {
@@ -203,7 +214,7 @@ public class SmokeSteps {
                     return true;
                 });
         browser.awaitText("Ziel auf der Karte auswählen");
-        // The hint survives the cancelled send, and the map redraws completely; wait for the new selection.
+        // Wait for the server-side selection before clicking the newly rendered target.
         new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
                 .until(_ -> browser.all(".sys-selected").size() == 1);
         assertThat(browser.all("vaadin-context-menu-overlay[opened]")).isEmpty();

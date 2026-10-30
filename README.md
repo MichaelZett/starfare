@@ -536,7 +536,10 @@ threshold.
 ## Tests
 
 `./gradlew test` runs the unit and integration tests (PostgreSQL via
-Testcontainers). `./gradlew e2eTest` runs Cucumber/Selenium journeys
+Testcontainers), including Vaadin Browserless checks of real views with actual
+identity accounts. These cover map dispatch and round broadcasts, switching
+accounts in the private lobby, and automatic navigation after wizard creation.
+They need neither Chrome nor a running HTTP server. `./gradlew e2eTest` runs Cucumber/Selenium journeys
 against the real application in headless Chrome: registration and one round,
 lobby access, round submission, battle playback, logistics and amount selection,
 fleet details and separate map viewports. An emulated iPhone checks the phone
@@ -552,6 +555,11 @@ The `@ui-acceptance` journeys cover summary corrections, lobby invitations and
 archive access, two-player deadlines, final battles and coalition dispatch.
 They save current screenshots and visible text in `build/ui-acceptance/` for
 personal review. Automated checks do not replace a player's usability assessment.
+The `@layout` journey preserves layout checks while functional journeys move to
+Browserless: lobby, wizard and summary, system details, archive and review at
+1366 and 1024 pixels. Screenshots and text are saved as `build/ui-acceptance/layout-*`.
+Both this journey and the smoke test reject severe browser-console errors and
+visible Vaadin system errors.
 
 ```bash
 ./gradlew test
@@ -559,6 +567,7 @@ personal review. Automated checks do not replace a player's usability assessment
 ./gradlew e2eTest "-Dcucumber.filter.tags=@ui-acceptance"
 ./gradlew e2eTest "-Dcucumber.filter.tags=@ai-strategies"
 ./gradlew e2eTest "-Dcucumber.filter.tags=@mobile"
+./gradlew e2eTest "-Dcucumber.filter.tags=@layout"
 node --test "src/test/frontend/*.test.mjs"
 ```
 

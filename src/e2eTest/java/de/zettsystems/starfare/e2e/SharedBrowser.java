@@ -4,8 +4,11 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.LoggingPreferences;
 
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * Ein Browser für die ganze Suite — der Start kostet Sekunden. Szenarien
@@ -62,6 +65,9 @@ final class SharedBrowser {
         if (requestedBinary != null) { manager.browserBinary(requestedBinary); }
         manager.setup();
         ChromeOptions options = new ChromeOptions();
+        LoggingPreferences logging = new LoggingPreferences();
+        logging.enable(LogType.BROWSER, Level.ALL);
+        options.setCapability("goog:loggingPrefs", logging);
         String binary = System.getProperty("e2e.chrome.binary");
         if (binary != null) { options.setBinary(binary); }
         if (Boolean.parseBoolean(System.getProperty("e2e.headless", "true"))) {

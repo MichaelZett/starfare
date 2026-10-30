@@ -312,6 +312,16 @@ public class Browser {
                 .isLessThanOrEqualTo(clientWidth + 1);
     }
 
+    /** Reading browser logs drains them; call after each visited view to retain attribution. */
+    public void assertNoBrowserErrors() {
+        var errors = driver().manage().logs().get(org.openqa.selenium.logging.LogType.BROWSER).getAll()
+                .stream().filter(entry -> entry.getLevel().intValue() >= java.util.logging.Level.SEVERE.intValue())
+                .toList();
+        assertThat(errors).as("Browser console at %s", driver().getCurrentUrl()).isEmpty();
+        assertThat(all(".v-system-error").stream().filter(WebElement::isDisplayed).toList())
+                .as("Vaadin system errors at %s", driver().getCurrentUrl()).isEmpty();
+    }
+
     /** Der gerade gerenderte Seitentext — für Fehler-Dumps. */
     public String pageText() {
         return driver().findElement(By.tagName("body")).getText();

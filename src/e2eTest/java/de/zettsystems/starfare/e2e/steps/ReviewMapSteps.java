@@ -2,7 +2,7 @@ package de.zettsystems.starfare.e2e.steps;
 
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.e2e.Browser;
-import de.zettsystems.starfare.e2e.ReviewGameFixture;
+import de.zettsystems.starfare.testsupport.ReviewGameFixture;
 import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameService;
 import io.cucumber.java.After;

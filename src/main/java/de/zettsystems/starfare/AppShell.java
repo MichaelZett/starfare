@@ -3,6 +3,7 @@ package de.zettsystems.starfare;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
+import com.vaadin.flow.server.AppShellSettings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
@@ -14,4 +15,10 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID",
         justification = "Vaadin AppShell singleton; never crosses JVM boundaries, so serialVersionUID is irrelevant.")
 public class AppShell implements AppShellConfigurator {
+    private static final String FAVICON_PATH = "icons/starfare.svg";
+
+    @Override
+    public void configurePage(AppShellSettings settings) {
+        settings.addFavIcon("icon", FAVICON_PATH, "any");
+    }
 }

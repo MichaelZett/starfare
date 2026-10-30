@@ -18,3 +18,4 @@ Funktionalität: Smoke — vom Konto bis zur ersten Runde
     Dann kann ich im Systeminspektor eine Flotte oder Verlegung vorbereiten und abbrechen
     Wenn ich die nächste Runde auslöse
     Dann sehe ich den Rundenbericht für Runde 1
+    Und meldet die Browser-Konsole keine Fehler

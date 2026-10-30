@@ -1,7 +1,7 @@
 package de.zettsystems.starfare.e2e.steps;
 
 import de.zettsystems.starfare.e2e.Browser;
-import de.zettsystems.starfare.e2e.ReviewGameFixture;
+import de.zettsystems.starfare.testsupport.ReviewGameFixture;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameEvent;
 import de.zettsystems.starfare.game.application.GameRegistry;

@@ -296,10 +296,11 @@ final class CreateGameWizardDialog {
                 Boolean.TRUE.equals(context.joinAfterCreate().getValue()));
         boolean started = joined && setup.humanPlayers() == 1 && setup.aiPlayers() > 0
                 && context.game().startGame(gameId);
+        var currentUi = context.dialog().getUI();
         context.onCreated().run();
         context.dialog().close();
         if (started) {
-            context.dialog().getUI().ifPresent(ui -> ui.navigate(MainView.class,
+            currentUi.ifPresent(ui -> ui.navigate(MainView.class,
                     new RouteParameters("gameId", gameId.value())));
         }
     }

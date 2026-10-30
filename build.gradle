@@ -94,6 +94,7 @@ dependencies {
     compileOnly "com.github.spotbugs:spotbugs-annotations:${spotbugsVersion}"
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "com.vaadin:browserless-test-spring:${browserlessTestVersion}"
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
@@ -166,6 +167,7 @@ rewrite {
 
 test {
     useJUnitPlatform()
+    maxHeapSize = '2g'
     jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}"
     systemProperty 'user.language', 'en'
     systemProperty 'user.country', 'US'

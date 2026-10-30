@@ -1,4 +1,4 @@
-package de.zettsystems.starfare.e2e;
+package de.zettsystems.starfare.testsupport;
 
 import de.zettsystems.identity.application.UserAccountService;
 import de.zettsystems.starfare.game.application.GameRegistry;

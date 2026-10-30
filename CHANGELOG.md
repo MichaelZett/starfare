@@ -8,6 +8,14 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Nach dem Anlegen einer Einzelspielerpartie öffnet sich die Karte zuverlässig,
+  auch wenn sich der Wizard beim Schließen sofort von der Oberfläche löst.
+- Browserless-Grundlage im normalen Testlauf: Kartenversand, Rundenaktualisierung,
+  Kontowechsel und Wizard-Weiterleitung. Ein separater Browser-Rundgang sichert
+  Layout und Prüfbilder bei 1366/1024 Pixeln; Smoke und Rundgang prüfen Konsolenfehler.
+- Ein SVG-Favicon verhindert die bisherige fehlgeschlagene Browseranfrage nach
+  einem nicht vorhandenen Symbol.
+
 - Die eigenständige Rundenansicht unter der Adresse `round/<Spiel>` entfällt,
   sie war in der Oberfläche nirgends mehr verlinkt. Rundenbericht und
   Schlachtwiedergabe bleiben in der Kartenansicht verfügbar.
