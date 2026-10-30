@@ -319,7 +319,7 @@ JSON and version, and cannot continue an archived game or invent a rematch.
 Run the focused contract with `./gradlew test --tests '*ClassicTurnContractTest'
 --tests '*ClassicSnapshotCompatibilityTest'`. Before changing Classic or
 persistence, also run `./gradlew build`,
-`node --test src/test/frontend/battle-replay.test.mjs` and `./gradlew e2eTest`.
+`node --test "src/test/frontend/*.test.mjs"` and `./gradlew e2eTest`.
 The browser suite is muted. Future rule implementations must retain these
 Classic outcomes; deliberate behavior changes require an explicit rule/version
 decision, not replacement of the old expected values.
@@ -333,8 +333,8 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
   `domain` (`GameState`), `values` (records for setup/views:
   `StarSystem`, `Fleet`, `PlayerViewState`, `VisibleSystem`, `FleetView`,
   `GameSetup`, `GameConfig`, `PlannedOrder`, `StandingOrderView`, …),
-  `ui` (Vaadin views: `LobbyView`, `MainView`, `RoundView`, panels,
-  dialogs, `UiMapper`, `UiTexts`).
+  `ui` (Vaadin views: `LobbyView`, `MainView`, panels, dialogs,
+  `UiMapper`, `UiTexts`).
 - `turn` — Ruleset dispatch and shared `RoundPipeline`.
 - `combat` — Combat resolution (`CombatService`, `CombatResolver`).
 - `fleet` — Fleet commands and validation (`FleetService`,

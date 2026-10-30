@@ -6,6 +6,12 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Die eigenständige Rundenansicht unter der Adresse `round/<Spiel>` entfällt,
+  sie war in der Oberfläche nirgends mehr verlinkt. Rundenbericht und
+  Schlachtwiedergabe bleiben in der Kartenansicht verfügbar.
+
 ## 0.2.1 - 2026-10-29
 
 - Neue Partien verwenden ausschließlich die aktuelle Regelfassung ihrer Variante:

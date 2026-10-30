@@ -17,14 +17,6 @@ final class BattleReplayDialog {
     private BattleReplayDialog() {
     }
 
-    static void open(BattleReplay replay) {
-        open(replay, new BattleSides("", ""), () -> { });
-    }
-
-    static void open(BattleReplay replay, Runnable onAcknowledge) {
-        open(replay, new BattleSides("", ""), onAcknowledge);
-    }
-
     static void open(BattleReplay replay, BattleSides sides, Runnable onAcknowledge) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(I18n.t(UiTexts.BATTLE_REPLAY_TITLE, replay.systemName()));

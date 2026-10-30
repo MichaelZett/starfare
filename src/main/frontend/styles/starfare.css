@@ -916,14 +916,6 @@ html, body, #outlet {
 }
 
 /* â”€â”€ Round report â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-.round-root {
-    min-height: 100%;
-    padding: 0 var(--sf-page-pad) 32px var(--sf-page-pad);
-    background: var(--sf-bg);
-    font-family: "Space Grotesk", "IBM Plex Sans", "Segoe UI", sans-serif;
-    color: var(--sf-text);
-}
-
 .report-filter-bar {
     display: flex;
     flex-wrap: wrap;
@@ -937,22 +929,8 @@ html, body, #outlet {
     max-width: 760px;
 }
 
-.report-filter-label {
-    font-weight: 600;
-    color: var(--sf-text);
-    margin-right: 4px;
-}
-
 .report-filter-item {
     font-size: 0.9rem;
-}
-
-.report-timeline {
-    max-width: 760px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-bottom: 24px;
 }
 
 @keyframes slideIn {
@@ -1209,19 +1187,6 @@ html, body, #outlet {
 
 .event-map-selected {
     box-shadow: inset 4px 0 0 #ffc14f, 0 0 0 1px rgba(255, 193, 79, .7), 0 2px 12px rgba(0, 0, 0, .4);
-}
-
-.event-icon {
-    text-align: center;
-    margin-top: 1px;
-    display: grid;
-    place-items: center;
-    width: 2.2rem;
-    height: 2.2rem;
-    flex: 0 0 2.2rem;
-    border-radius: 50%;
-    background: color-mix(in srgb, currentColor 18%, transparent);
-    font-size: 1.35rem;
 }
 
 .event-production {

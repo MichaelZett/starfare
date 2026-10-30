@@ -79,6 +79,11 @@ jobs:
           java-version: '25'
           cache: gradle
 
+      # Node bringt der Runner mit, die Tests brauchen keine npm-Pakete. Das
+      # Muster löst die Shell auf, neue Testdateien laufen dadurch automatisch mit.
+      - name: Frontend unit tests
+        run: node --test src/test/frontend/*.test.mjs
+
       - name: Build and test
         run: ./gradlew --no-daemon build
 

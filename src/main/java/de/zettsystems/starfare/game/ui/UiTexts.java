@@ -72,12 +72,9 @@ public final class UiTexts {
     public static final String SYSTEM_COLONY_PLANET = "system.colony.planet";
     public static final String SYSTEM_COLONY_MOON = "system.colony.moon";
     public static final String SYSTEM_PRODUCTION_INCOMING = "system.production.incoming";
-    public static final String SYSTEM_TRANSFER_ROUTE = "system.transfer.route";
     public static final String SYSTEM_CANCEL_TRANSFER = "system.transfer.cancel";
 
     public static final String UX_CONQUEST_RESULT = "ux.conquest.result";
-    public static final String UX_STOP_WAIT = "ux.stop.wait";
-    public static final String UX_FIXED_REST = "ux.fixed.rest";
 
     public static final String UX_NEUTRAL_DISTRIBUTION = "ux.neutral.distribution";
     public static final String UX_GALAXY = "ux.galaxy";
@@ -95,9 +92,6 @@ public final class UiTexts {
     public static final String UX_MINE_METAL = "ux.mine.metal";
     public static final String UX_EXPAND_INDUSTRY = "ux.expand.industry";
     public static final String UX_PIN = "ux.pin";
-    public static final String UX_STALE_PLAN = "ux.stale.plan";
-    public static final String UX_DISCARD_QUESTION = "ux.discard.question";
-    public static final String UX_NEXT_PREVIEW = "ux.next.preview";
     public static final String UX_DELIVERY_RESULT = "ux.delivery.result";
     public static final String UX_DELIVERY_SHORTAGE = "ux.delivery.shortage";
     public static final String UX_LABOR_LIMIT = "ux.labor.limit";
@@ -112,12 +106,9 @@ public final class UiTexts {
     public static final String UX_CONQUEST_HINT = "ux.conquest.hint";
     public static final String UX_CONQUEST_PARTNER = "ux.conquest.partner";
     public static final String UX_ROUTE_BLOCKED = "ux.route.blocked";
-    public static final String UX_ROUTE_DIRECT = "ux.route.direct";
-    public static final String UX_ROUTE_STOPS = "ux.route.stops";
     public static final String UX_TRAVEL_DETAILS = "ux.travel.details";
     public static final String UX_NEW_TAB = "ux.new.tab";
     public static final String METAL_DEPOSIT = "metal.deposit";
-    public static final String METAL_DELIVERY = "metal.delivery";
     public static final String COLONY_LOCATION = "colony.location";
     public static final String COLONY_PLANET = "colony.planet";
     public static final String COLONY_MOON = "colony.moon";
@@ -147,7 +138,6 @@ public final class UiTexts {
     public static final String DIP_CLOSE = "diplomacy.close";
     public static final String DIP_RULES = "diplomacy.rules";
     public static final String DIP_LOCKED = "diplomacy.locked";
-    public static final String DIP_GROUP = "diplomacy.group";
     public static final String DIP_DEPARTURE = "diplomacy.departure";
     public static final String DIP_LEAVE = "diplomacy.leave";
     public static final String DIP_CHANGE = "diplomacy.change";
@@ -158,7 +148,6 @@ public final class UiTexts {
     public static final String DIP_PENDING = "diplomacy.pending";
     public static final String DIP_APPROVE = "diplomacy.approve";
     public static final String DIP_REJECT = "diplomacy.reject";
-    public static final String DIP_PARTNER = "diplomacy.partner";
     public static final String DIP_FOUND = "diplomacy.found";
     public static final String DIP_NOTICE = "diplomacy.notice";
     public static final String DIP_REJECTED = "diplomacy.rejected";
@@ -168,29 +157,15 @@ public final class UiTexts {
 
     public static final String ECONOMY_TITLE = "economy.title";
     public static final String ECONOMY_CAPACITY = "economy.capacity";
-    public static final String ECONOMY_DISTRIBUTION = "economy.distribution";
     public static final String ECONOMY_PROGRESS = "economy.progress";
-    public static final String ECONOMY_ESTIMATE = "economy.estimate";
-    public static final String ECONOMY_PAUSED = "economy.paused";
     public static final String ECONOMY_MAXIMUM = "economy.maximum";
-    public static final String ECONOMY_NEXT_ROUND = "economy.nextRound";
-    public static final String ECONOMY_DELIVERY = "economy.delivery";
-    public static final String ECONOMY_ALL_SHIPS = "economy.allShips";
-    public static final String ECONOMY_HALF = "economy.half";
-    public static final String ECONOMY_ALL_EXPANSION = "economy.allExpansion";
-    public static final String ECONOMY_BUILDINGS = "economy.buildings";
 
     public static final String RULESET_CHOOSE = "ruleset.choose";
     public static final String RULESET_LABEL = "ruleset.label";
-    public static final String RULESET_VERSION_CHOOSE = "ruleset.version.choose";
     public static final String RULESET_VERSION = "ruleset.version";
     public static final String RULESET_PLANNED = "ruleset.planned";
     public static final String RULESET_FILTER = "ruleset.filter";
     public static final String RULESET_ALL = "ruleset.all";
-    public static final String RULESET_SECTOR_FORCES_NAME = de.zettsystems.starfare.game.values.RulesetDefinition.SECTOR_FORCES_NAME;
-    public static final String RULESET_SECTOR_FORCES_DESCRIPTION = de.zettsystems.starfare.game.values.RulesetDefinition.SECTOR_FORCES_DESCRIPTION;
-    public static final String RULESET_SPACEWARD_NAME = de.zettsystems.starfare.game.values.RulesetDefinition.SPACEWARD_NAME;
-    public static final String RULESET_SPACEWARD_DESCRIPTION = de.zettsystems.starfare.game.values.RulesetDefinition.SPACEWARD_DESCRIPTION;
     public static final String SYSTEM_SCHEMATIC = "system.schematic";
     public static final String SYSTEM_CATALOG = "system.catalog";
     public static final String SYSTEM_ORBIT = "system.orbit";
@@ -239,13 +214,8 @@ public final class UiTexts {
     public static final String MAP_LOGISTICS_RESERVE_AVAILABLE = "map.logistics.reserveAvailable";
     public static final String MAP_LOGISTICS_PER_TURN = "map.logistics.perTurn";
     public static final String MAP_SIDEBAR_REPORT = "map.sidebar.report";
-    public static final String MAP_SIDEBAR_OPEN_REPORT = "map.sidebar.openReport";
-    public static final String MAP_SIDEBAR_REPORT_HINT = "map.sidebar.reportHint";
     public static final String MAP_SIDEBAR_DETAILS_EMPTY = "map.sidebar.detailsEmpty";
-    public static final String MAP_SIDEBAR_SYSTEMS = "map.sidebar.systems";
     public static final String MAP_SIDEBAR_PRODUCTION = "map.sidebar.production";
-    public static final String MAP_SIDEBAR_SHIPS = "map.sidebar.ships";
-    public static final String MAP_SIDEBAR_FLEET_COUNT = "map.sidebar.fleetCount";
     public static final String MAP_SIDEBAR_SYSTEM = "map.sidebar.system";
     public static final String MAP_SIDEBAR_FLEET = "map.sidebar.fleet";
     public static final String MAP_SIDEBAR_GARRISON = "map.sidebar.garrison";
@@ -287,11 +257,6 @@ public final class UiTexts {
     public static final String LOBBY_START_FAILED = "lobby.startFailed";
 
     // Lobby — grid
-    public static final String LOBBY_COLUMN_GAME = "lobby.column.game";
-    public static final String LOBBY_COLUMN_TURN = "lobby.column.turn";
-    public static final String LOBBY_COLUMN_PLAYERS = "lobby.column.players";
-    public static final String LOBBY_COLUMN_STATUS = "lobby.column.status";
-    public static final String LOBBY_COLUMN_ACTIONS = "lobby.column.actions";
     public static final String LOBBY_TURN_LABEL = "lobby.turnLabel";
     public static final String LOBBY_SEARCH = "lobby.search";
     public static final String LOBBY_FILTER = "lobby.filter";
@@ -299,7 +264,6 @@ public final class UiTexts {
     public static final String LOBBY_FILTER_OWN = "lobby.filter.own";
     public static final String LOBBY_FILTER_OPEN = "lobby.filter.open";
     public static final String LOBBY_FILTER_RUNNING = "lobby.filter.running";
-    public static final String LOBBY_FILTER_FINISHED = "lobby.filter.finished";
 
     // Lobby — row actions
     public static final String LOBBY_ACTION_JOIN = "lobby.action.join";
@@ -382,7 +346,6 @@ public final class UiTexts {
     public static final String MAP_ACTION_LOBBY = "map.action.lobby";
     public static final String MAP_ACTION_LEAVE = "map.action.leave";
     public static final String MAP_ACTION_LEAVE_OBSERVE = "map.action.leaveObserve";
-    public static final String MAP_ACTION_CHAT = "map.action.chat";
     public static final String MAP_ACTION_ROUND_RULES = "map.action.roundRules";
     public static final String MAP_LEAVE_FAILED = "map.leaveFailed";
     public static final String MAP_LEFT = "map.left";
@@ -393,8 +356,6 @@ public final class UiTexts {
     public static final String MAP_TARGET_SELECTION_HINT = "map.targetSelection.hint";
     public static final String MAP_TARGET_SELECTION_CANCEL = "map.targetSelection.cancel";
     public static final String MAP_SHIPS_LABEL = "map.ships";
-    public static final String MAP_DURATION_SINGULAR = "map.duration.singular";
-    public static final String MAP_DURATION_PLURAL = "map.duration.plural";
     public static final String MAP_AVAILABLE = "map.available";
     public static final String MAP_SEND_QUICK_ALL = "map.send.quick.all";
     public static final String MAP_SEND_QUICK_HALF = "map.send.quick.half";
@@ -411,7 +372,6 @@ public final class UiTexts {
 
     // Map — fleets grid
     public static final String MAP_OWN_FLEETS = "map.ownFleets";
-    public static final String MAP_COLUMN_NO = "map.column.no";
     public static final String MAP_COLUMN_FROM = "map.column.from";
     public static final String MAP_COLUMN_TO = "map.column.to";
     public static final String MAP_COLUMN_SHIPS = "map.column.ships";
@@ -441,7 +401,6 @@ public final class UiTexts {
     public static final String LOBBY_GAME_NAME_REQUIRED = "lobby.gameName.required";
     public static final String LOBBY_WIZARD_REVIEW = "lobby.wizard.review";
     public static final String LOBBY_WIZARD_BACK = "lobby.wizard.back";
-    public static final String LOBBY_SUMMARY_NAME = "lobby.summary.name";
     public static final String LOBBY_SUMMARY_VISIBILITY = "lobby.summary.visibility";
     public static final String LOBBY_SUMMARY_SYSTEMS = "lobby.summary.systems";
     public static final String LOBBY_SUMMARY_PLAYERS = "lobby.summary.players";
@@ -492,30 +451,15 @@ public final class UiTexts {
 
     // Map — planned orders grid
     public static final String MAP_PLANNED_ORDERS = "map.plannedOrders";
-    public static final String MAP_COLUMN_ORDER_TYPE = "map.column.order.type";
-    public static final String MAP_COLUMN_ORDER_FROM = "map.column.order.from";
-    public static final String MAP_COLUMN_ORDER_TO = "map.column.order.to";
-    public static final String MAP_COLUMN_ORDER_SHIPS = "map.column.order.ships";
     public static final String MAP_ACTION_CANCEL_ORDER = "map.action.cancelOrder";
     public static final String MAP_CANCEL_ORDER_FAILED = "map.cancelOrder.failed";
 
     // Map — standing orders
     public static final String MAP_STANDING_ORDERS_HEADER = "map.standingOrders.header";
-    public static final String MAP_STANDING_ORDERS_MANAGE = "map.standingOrders.manage";
-    public static final String MAP_STANDING_ORDERS_EMPTY = "map.standingOrders.empty";
-    public static final String MAP_STANDING_ORDERS_HEADER_COUNT = "map.standingOrders.headerCount";
-    public static final String MAP_STANDING_ORDERS_DIALOG_TITLE = "map.standingOrders.dialog.title";
-    public static final String MAP_STANDING_ORDERS_DIALOG_CLOSE = "map.standingOrders.dialog.close";
-    public static final String MAP_COLUMN_STANDING_FROM = "map.column.standing.from";
-    public static final String MAP_COLUMN_STANDING_TO = "map.column.standing.to";
-    public static final String MAP_COLUMN_STANDING_PRODUCTION = "map.column.standing.production";
     public static final String MAP_COLUMN_STANDING_SHIPS = "map.column.standing.ships";
-    public static final String MAP_ACTION_DELETE_STANDING = "map.action.deleteStanding";
     public static final String MAP_ACTION_EDIT_STANDING = "map.action.editStanding";
     public static final String MAP_REMOVE_STANDING_ORDER_FAILED = "map.removeStandingOrder.failed";
-    public static final String MAP_SHOW_STANDING_TOGGLE = "map.showStanding.toggle";
     public static final String MAP_ORDER_TYPE_STANDING = "map.orderType.standing";
-    public static final String MAP_HINT_PICK_SOURCE = "map.hint.pickSource";
     public static final String MAP_HINT_INSPECT_SYSTEM = "map.hint.inspectSystem";
     public static final String MAP_HINT_PICK_TARGET = "map.hint.pickTarget";
     public static final String MAP_HINT_FLEET_LANE = "map.hint.fleetLane";
@@ -541,13 +485,8 @@ public final class UiTexts {
     public static final String MAP_TOOLTIP_NO_SIGHT = "map.tooltip.noSight";
 
     // Round view
-    public static final String ROUND_HEADER_TITLE = "round.header.title";
     public static final String ROUND_NO_EVENTS = "round.noEvents";
     public static final String ROUND_NO_EVENTS_FILTERED = "round.noEventsFiltered";
-    public static final String ROUND_REPORT_TITLE = "round.reportTitle";
-    public static final String ROUND_BACK_TO_MAP = "round.backToMap";
-    public static final String ROUND_GAME_OVER = "round.gameOver";
-    public static final String ROUND_FILTER_LABEL = "round.filter.label";
     public static final String ROUND_FILTER_PRODUCTION = "round.filter.production";
     public static final String ROUND_FILTER_REINFORCEMENT = "round.filter.reinforcement";
     public static final String ROUND_FILTER_BATTLE_WON = "round.filter.battleWon";
@@ -565,7 +504,6 @@ public final class UiTexts {
     public static final String ROUND_EVENT_DEFENSE_HELD = "round.event.defenseHeld";
     public static final String ROUND_EVENT_VICTORY = "round.event.victory";
     public static final String ROUND_EVENT_DEFEAT = "round.event.defeat";
-    public static final String ROUND_EVENT_OPEN_MAP = "round.event.openMap";
     public static final String ROUND_EVENT_BATTLE_READY = "round.event.battleReady";
     public static final String ROUND_NEXT_OPEN_BATTLE = "round.nextOpenBattle";
     public static final String ROUND_OPEN_BATTLES = "round.openBattles";
@@ -575,15 +513,12 @@ public final class UiTexts {
     public static final String BATTLE_REPLAY_YOU = "battleReplay.you";
     public static final String BATTLE_REPLAY_OPPONENT = "battleReplay.opponent";
     public static final String BATTLE_REPLAY_NEUTRAL = "battleReplay.neutral";
-    public static final String BATTLE_REPLAY_STRENGTH = "battleReplay.strength";
     public static final String BATTLE_REPLAY_RESULT = "battleReplay.result";
     public static final String BATTLE_REPLAY_SOUND = "battleReplay.sound";
     public static final String BATTLE_REPLAY_SOUND_TEST = "battleReplay.soundTest";
     public static final String BATTLE_REPLAY_SPEED = "battleReplay.speed";
     public static final String BATTLE_REPLAY_OFF = "battleReplay.off";
-    public static final String BATTLE_REPLAY_CLOSE = "battleReplay.close";
     public static final String BATTLE_REPLAY_ACKNOWLEDGE = "battleReplay.acknowledge";
-    public static final String BATTLE_PRESENTATION_TOGGLE = "battlePresentation.toggle";
     public static final String GAME_OUTCOME_VICTORY = "gameOutcome.victory";
     public static final String GAME_OUTCOME_DEFEAT = "gameOutcome.defeat";
     public static final String GAME_OUTCOME_CONTINUE = "gameOutcome.continue";
@@ -686,7 +621,6 @@ public final class UiTexts {
     public static final String LEGAL_IMPRINT_ADDRESS_MISSING = "legal.imprint.addressMissing";
     public static final String LEGAL_PRIVACY_CONTACT = "legal.privacy.contact";
 
-    public static final String NAV_ROUTE = "navigation.route";
     public static final String NAV_UNREACHABLE = "navigation.unreachable";
     public static final String NAV_UNKNOWN = "navigation.unknown";
     public static final String NAV_FLYING = "navigation.flying";
@@ -703,7 +637,6 @@ public final class UiTexts {
     public static final String ARCHIVE_VIEW = "archive.view";
     public static final String ARCHIVE_WINNER = "archive.winner";
     public static final String ARCHIVE_NO_WINNER = "archive.noWinner";
-    public static final String ARCHIVE_FINISHED = "archive.finished";
     public static final String ARCHIVE_UNKNOWN_TIME = "archive.unknownTime";
     public static final String ARCHIVE_EMPTY = "archive.empty";
     public static final String ARCHIVE_RESULT_FILTER = "archive.result.filter";
@@ -723,15 +656,11 @@ public final class UiTexts {
     public static final String MAP_SIDEBAR_GARRISON_RESERVE_SAVE = "map.sidebar.garrisonReserve.save";
     public static final String STATISTICS_TITLE = "statistics.title";
     public static final String STATISTICS_TOTALS = "statistics.totals";
-    public static final String STATISTICS_OPPONENT = "statistics.opponent";
     public static final String STATISTICS_GAMES = "statistics.games";
     public static final String STATISTICS_WINS = "statistics.wins";
     public static final String STATISTICS_LOSSES = "statistics.losses";
     public static final String STATISTICS_EMPTY = "statistics.empty";
     public static final String STATISTICS_HISTORY = "statistics.history";
-    public static final String STATISTICS_GAME = "statistics.game";
-    public static final String STATISTICS_RESULT = "statistics.result";
-    public static final String STATISTICS_FINISHED = "statistics.finished";
     public static final String STATISTICS_NO_OPPONENTS = "statistics.noOpponents";
     public static final String STATISTICS_WIN = "statistics.win";
     public static final String STATISTICS_LOSS = "statistics.loss";
@@ -784,7 +713,6 @@ public final class UiTexts {
     public static final String COALITION_SIDE_RESULT = "coalition.side.result";
     public static final String COALITION_REPORT = "coalition.report";
     public static final String CONQUEST_BENEFICIARY = "conquest.beneficiary";
-    public static final String CONQUEST_HINT = "conquest.hint";
     public static final String CONQUEST_ORDER = "conquest.order";
     public static final String CONQUEST_SELF = "conquest.self";
     public static final String ALLIANCES_ALLOWED = "victory.alliancesAllowed";

@@ -559,7 +559,7 @@ personal review. Automated checks do not replace a player's usability assessment
 ./gradlew e2eTest "-Dcucumber.filter.tags=@ui-acceptance"
 ./gradlew e2eTest "-Dcucumber.filter.tags=@ai-strategies"
 ./gradlew e2eTest "-Dcucumber.filter.tags=@mobile"
-node --test src/test/frontend/battle-replay.test.mjs
+node --test "src/test/frontend/*.test.mjs"
 ```
 
 Integration tests start a single PostgreSQL container via
