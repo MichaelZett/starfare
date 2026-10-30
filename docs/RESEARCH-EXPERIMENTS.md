@@ -134,11 +134,13 @@ The final Java suite has 939 tests, with no failures or skips. The full build,
 Error Prone/NullAway, SpotBugs (zero findings), coverage gates and both frontend
 check files pass.
 
-Screenshots are generated at `build/ui-acceptance/research-desktop.png`,
-`build/ui-acceptance/research-phone.png` and
-`build/ui-acceptance/research-mixed-desktop.png`. Run the focused journeys with:
+Desktop workflows now run as `ResearchJourneyTest` and `EconomyLaunchJourneyTest`
+in the regular test task. Browser layout checks generate
+`build/ui-acceptance/layout-economy-research-mixed-<width>.png` and
+`layout-economy-research-dialog-<width>.png`; the phone check retains
+`build/ui-acceptance/research-phone.png`. Run the focused checks with:
 
 ```sh
-./gradlew e2eTest -PresearchPreview=true \
-  '-Dcucumber.filter.tags=@research or @economy-launch or @mobile or @production-planning'
+./gradlew test --tests '*.ResearchJourneyTest' --tests '*.EconomyLaunchJourneyTest' --tests '*.ProductionPlanningJourneyTest'
+./gradlew e2eTest '-Dcucumber.filter.tags=@research or @economy-layout'
 ```

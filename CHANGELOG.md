@@ -8,6 +8,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Sieben Wirtschaftsabläufe laufen jetzt mit Vaadin Browserless bei jedem Build:
+  Ausbau, Kolonien, Metall, Recycling, Produktionsplanung, Neuanlage und Forschung.
+  Sechs vollständige Selenium-Szenarien entfallen. Handy-Forschung sowie Prüfungen
+  von Wirtschaftslayout, Mond-Trefferfläche und Tastaturbedienung bleiben im Browser.
+
 - Nach dem Anlegen einer Einzelspielerpartie öffnet sich die Karte zuverlässig,
   auch wenn sich der Wizard beim Schließen sofort von der Oberfläche löst.
 - Browserless-Grundlage im normalen Testlauf: Kartenversand, Rundenaktualisierung,

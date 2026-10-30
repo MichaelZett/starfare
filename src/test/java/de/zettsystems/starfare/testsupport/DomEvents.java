@@ -19,10 +19,18 @@ public final class DomEvents extends ComponentTester<Component> {
     }
 
     public static void changeRange(Input input, int value) {
+        rangeEvent(input, value, "change");
+    }
+
+    public static void previewRange(Input input, int value) {
+        rangeEvent(input, value, "input");
+    }
+
+    private static void rangeEvent(Input input, int value, String type) {
         DomEvents events = new DomEvents(input);
         events.ensureComponentIsUsable();
         events.setPropertyAsUser("value", String.valueOf(value));
-        events.fireDomEvent("change", JsonNodeFactory.instance.objectNode()
+        events.fireDomEvent(type, JsonNodeFactory.instance.objectNode()
                 .put("element.value", String.valueOf(value)));
         events.roundTrip();
     }

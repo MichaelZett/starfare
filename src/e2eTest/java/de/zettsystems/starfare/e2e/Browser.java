@@ -101,18 +101,6 @@ public class Browser {
         });
     }
 
-    /**
-     * Runs a directly saved input and waits until the server stored it and replaced the given
-     * panel. Interactions with the old panel would otherwise be lost while it is rebuilt.
-     */
-    public void saveAndAwaitRebuild(String panelCss, Runnable input, java.util.function.BooleanSupplier stored) {
-        WebElement panel = awaitCss(panelCss);
-        input.run();
-        new WebDriverWait(driver(), LOAD).until(_ -> stored.getAsBoolean());
-        new WebDriverWait(driver(), LOAD).until(ExpectedConditions.stalenessOf(panel));
-        awaitCss(panelCss);
-    }
-
     public List<WebElement> all(String css) {
         return driver().findElements(By.cssSelector(css));
     }

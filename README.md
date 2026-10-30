@@ -539,6 +539,9 @@ threshold.
 Testcontainers), including Vaadin Browserless checks of real views with actual
 identity accounts. These cover map dispatch and round broadcasts, switching
 accounts in the private lobby, and automatic navigation after wizard creation.
+Economy journeys also cover colony growth, mining and shortages, recycling,
+production presets and relocation trimming, the Spaceward wizard and ship research,
+including saved allocations and historical review.
 They need neither Chrome nor a running HTTP server. `./gradlew e2eTest` runs Cucumber/Selenium journeys
 against the real application in headless Chrome: registration and one round,
 lobby access, round submission, battle playback, logistics and amount selection,
@@ -557,7 +560,10 @@ They save current screenshots and visible text in `build/ui-acceptance/` for
 personal review. Automated checks do not replace a player's usability assessment.
 The `@layout` journey preserves layout checks while functional journeys move to
 Browserless: lobby, wizard and summary, system details, archive and review at
-1366 and 1024 pixels. Screenshots and text are saved as `build/ui-acceptance/layout-*`.
+1366 and 1024 pixels. The economy layout journey retains moon keyboard activation,
+the 44-pixel moon target, production controls and mixed-technology/research views.
+Phone research input and hit testing remain in `mobile.feature` (`@research`).
+Screenshots and text are saved as `build/ui-acceptance/layout-*`.
 Both this journey and the smoke test reject severe browser-console errors and
 visible Vaadin system errors.
 
@@ -581,10 +587,10 @@ The next economy step is available for internal acceptance as **Spaceward
 with growth taking effect on the following turn. The public wizard continues
 to create games with the current **1.3.0-r1** rules. Existing rules and saved games retain their behavior.
 W1 retains its original behavior without mining. The separate internal **1.2.0-w2** checkpoint adds finite metal; the separate internal **1.2.0-w3** checkpoint adds recycling.
-Run the saved-party browser journey with:
+Run the saved-party Browserless journey with:
 
 ```powershell
-.\gradlew.bat e2eTest "-Dcucumber.filter.tags=@colonies"
+.\gradlew.bat test --tests "*.ColonyJourneyTest"
 ```
 
 The fixture is test-only; loading and resolving stored W1 parties is supported,
@@ -613,10 +619,10 @@ extraction on load. Internal trial values are 10 starting metal per player,
 200 deposit metal per richness level, and 1 extraction per richness level and
 mining point. These are fixed W2 test values, pending W4 balance acceptance.
 
-Run the test-only saved-party browser journey silently:
+Run the test-only saved-party Browserless journey:
 
 ```powershell
-.\gradlew.bat e2eTest "-Dcucumber.filter.tags=@metals"
+.\gradlew.bat test --tests "*.MetalJourneyTest"
 ```
 
 W2 is supported for saved-game restoration and round resolution. Public creation,
@@ -764,10 +770,10 @@ construction, preserving a reserve and excluding known nearby enemies. The W4
 comparison is documented in `docs/ECONOMY-EXPERIMENTS.md`. W2 and older references retain their
 behavior. W3 remains restoration-only; new Spaceward games use the current 1.3.0-r1 rules.
 
-Run the silent saved-game acceptance journey with:
+Run the saved-game Browserless journey with:
 
 ```powershell
-.\gradlew.bat e2eTest "-Dcucumber.filter.tags=@recycling"
+.\gradlew.bat test --tests "*.RecyclingJourneyTest"
 ```
 
 ### Spaceward rules: current version only
@@ -803,12 +809,12 @@ The current economy scope adds no further mechanics before acceptance.
 Personal acceptance and a final, unqualified 1.2.0 release remain pending.
 
 ```powershell
-.\gradlew.bat e2eTest -PeconomyPreview=true "-Dcucumber.filter.tags=@economy-launch"
+.\gradlew.bat test --tests "*.EconomyLaunchJourneyTest"
 ```
 
-The same journey without `-PeconomyPreview=true` verifies the released default.
-The `@metals` and `@recycling` journeys cover shortages, reload, exact fractional
-recovery and historical views. These browser runs are silent.
+This checks the released default through the ordinary wizard. `MetalJourneyTest`
+and `RecyclingJourneyTest` cover shortages, reload, exact fractional recovery and
+historical views. All economy journeys run in the regular `test` task.
 
 ### Decision-oriented game interface
 

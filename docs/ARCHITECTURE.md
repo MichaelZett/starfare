@@ -274,7 +274,7 @@ consume the same usable capacity. The original versions retain their outputs.
 Only fully visible industry views contain `ColonyView`; sensor contacts receive
 no population or environment details. Replay views use their frame's saved values.
 `ColonySnapshotTest` exercises JSON and a new store instance restoring a database
-party before resolving another round. The test-only `colonies.feature` journey
+party before resolving another round. The Browserless `ColonyJourneyTest` journey
 checks allocation, growth, reload and historical review. This checkpoint adds no
 mining, resource spending, recycling, ship designs or research.
 
