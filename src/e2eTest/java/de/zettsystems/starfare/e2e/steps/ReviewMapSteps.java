@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.testsupport.ReviewGameFixture;
 import de.zettsystems.starfare.game.application.GameRegistry;
@@ -17,7 +16,7 @@ import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** View regression journey for logistics, amount synchronization and map selection. */
+/** Browser checks for map geometry, native dragging, keyboard actions and preserved inputs. */
 public class ReviewMapSteps {
     private final Browser browser;
     private final ReviewGameFixture fixture;
@@ -26,10 +25,20 @@ public class ReviewMapSteps {
     private final de.zettsystems.starfare.game.application.Broadcaster broadcaster;
     private ReviewGameFixture.Game first;
     private ReviewGameFixture.Game second;
-    private de.zettsystems.starfare.game.values.GameId copiedGame;
+
 
     @Dann("bleiben Systeme zwischen dreißig Flotten bei verschiedenen Zoomstufen erreichbar")
     public void crowdedMap() throws java.io.IOException {
+        prepareCrowdedMap();
+        assertSystemHitTargets();
+        selectCrowdedFleetLane();
+        WebElement beta = mapSystem("Beta");
+        new org.openqa.selenium.interactions.Actions(browser.driver()).contextClick(beta).perform();
+        browser.awaitCss(".sys-selected");
+        assertThat(browser.all("vaadin-context-menu-overlay[opened]")).isEmpty();
+    }
+
+    private void prepareCrowdedMap() {
         registry.writeState(first.id(), state -> {
             state.updateSystem(3, system -> system.relocateTo(600, 350));
             for (int system = 9; system <= 120; system++) {
@@ -45,6 +54,9 @@ public class ReviewMapSteps {
         browser.awaitCss("#map .fleet-lane");
         assertThat(games.viewFor(first.id(), first.hostSeat()).systems()).hasSize(120);
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> browser.all("#map .fleet-lane-hit").size() >= 30);
+    }
+
+    private void assertSystemHitTargets() {
         for (int width : new int[]{1366, 1024}) {
             browser.driver().manage().window().setSize(new org.openqa.selenium.Dimension(width, 768));
             for (double zoom : new double[]{0.4, 1, 2.5}) {
@@ -70,6 +82,9 @@ public class ReviewMapSteps {
                         """)).as("system centers at width %s and zoom %s", width, zoom).isEqualTo(true);
             }
         }
+    }
+
+    private void selectCrowdedFleetLane() throws java.io.IOException {
         js().executeScript("document.querySelector('#map').style.zoom='1';");
         browser.clickButtonWithText("Eigenes Reich");
         browser.captureUiAcceptance("crowded-map");
@@ -94,107 +109,6 @@ public class ReviewMapSteps {
                 ((Number) freePoint.get(0)).intValue(), ((Number) freePoint.get(1)).intValue()).click().perform();
         browser.awaitCss(".fleet-lane-highlighted");
         browser.awaitSelectedTabWithText("Details");
-        WebElement beta = mapSystem("Beta");
-        new org.openqa.selenium.interactions.Actions(browser.driver()).contextClick(beta).perform();
-        browser.awaitCss(".sys-selected");
-        assertThat(browser.all("vaadin-context-menu-overlay[opened]")).isEmpty();
-    }
-
-    @Dann("kann ich Reserven und Flotten gesammelt planen und Befehle bearbeiten")
-    public void bulkPlanning() {
-        browser.clickButtonWithText("Reserven gesammelt setzen");
-        selectSources();
-        browser.type(".planning-dialog vaadin-integer-field input", Keys.chord(Keys.CONTROL, "a"), "1", Keys.TAB);
-        browser.clickButtonWithText("Speichern");
-        awaitPlanningClosed();
-        assertThat(games.viewFor(first.id(), first.hostSeat()).systems().stream()
-                .filter(s -> s.id() == 1 || s.id() == 2)).allMatch(s -> Integer.valueOf(1).equals(s.garrisonReserve()));
-        browser.clickButtonWithText("Flotten gesammelt senden");
-        selectSources();
-        selectTarget("Gamma");
-        browser.awaitTextIn(".planning-dialog", "Schiffe");
-        browser.clickMatching(".planning-dialog vaadin-button", button -> button.getText().equals("Flotten gesammelt senden"),
-                "Flotten gesammelt senden im Planungsdialog");
-        awaitPlanningClosed();
-        browser.awaitSelectedTabWithText("Befehle");
-        assertThat(games.viewFor(first.id(), first.hostSeat()).plannedOrders()).hasSize(2);
-        browser.clickMatching(".fleet-travel-card-planned vaadin-button", button -> button.getText().equals("Befehl bearbeiten")
-                        && button.findElement(org.openqa.selenium.By.xpath(
-                                "ancestor::*[contains(concat(' ', @class, ' '), ' fleet-travel-card-planned ')]"))
-                        .getText().contains("Alpha → Gamma"),
-                "Befehl bearbeiten an Alpha → Gamma");
-        selectTarget("Beta");
-        browser.type(".planning-dialog vaadin-integer-field input", Keys.chord(Keys.CONTROL, "a"), "2", Keys.TAB);
-        browser.clickButtonWithText("Speichern");
-        awaitPlanningClosed();
-        // "Beta" already appears on the Beta → Gamma card; the stored amount is the real signal.
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                Integer.valueOf(2).equals(games.viewFor(first.id(), first.hostSeat()).plannedOrders().getFirst().ships()));
-        browser.awaitTextIn(".fleet-travel-card-planned", "Alpha → Beta");
-        browser.clickButtonWithText("Letzten Befehlschritt zurücknehmen");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                Integer.valueOf(4).equals(games.viewFor(first.id(), first.hostSeat()).plannedOrders().getFirst().ships()));
-        browser.awaitTextIn(".fleet-travel-card-planned", "Gamma");
-        assertThat(games.viewFor(first.id(), first.hostSeat()).plannedOrders().getFirst().ships()).isEqualTo(4);
-        browser.clickTabWithText("Flotten");
-        browser.awaitTextIn(".map-right", "Gemeinsame Ankünfte");
-    }
-
-    @Dann("bleibt mein Routenfilter nach einer neuen Anmeldung erhalten und kann ich eine Revanche anlegen")
-    public void persistentFilterAndTemplate() {
-        WebElement filter = visibleRouteFilter();
-        filter.sendKeys("Gamma", Keys.TAB);
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ ->
-                        browser.all(".fleet-travel-card").stream().noneMatch(WebElement::isDisplayed));
-        browser.resetSession();
-        browser.logIn("comfort@example.test");
-        open(first);
-        browser.clickTabWithText("Flotten");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
-                .until(_ -> "Gamma".equals(visibleRouteFilter().getDomProperty("value")));
-        var before = registry.listIds();
-        browser.open("/");
-        browser.clickButtonWithText("Als Vorlage / Revanche");
-        browser.clickCss("vaadin-dialog[opened] vaadin-checkbox");
-        browser.clickMatching("vaadin-dialog[opened] vaadin-button", button -> button.getText().equals("Neues Spiel"),
-                "Neues Spiel im Vorlagendialog");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> registry.listIds().size() > before.size());
-        copiedGame = registry.listIds().stream().filter(id -> !before.contains(id)).findFirst().orElseThrow();
-        assertThat(registry.readState(copiedGame, state -> state.invitedSeats().size()).intValue()).isEqualTo(1);
-        assertThat(registry.readState(copiedGame, GameState::started).booleanValue()).isFalse();
-    }
-
-    private WebElement visibleRouteFilter() {
-        return new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                browser.all(".map-right vaadin-text-field input").stream().filter(WebElement::isDisplayed)
-                        .findFirst().orElse(null));
-    }
-
-    private void selectSources() {
-        String sources = ".planning-dialog vaadin-multi-select-combo-box input";
-        browser.type(sources, "Alpha");
-        selectComboItem("vaadin-multi-select-combo-box-item", "Alpha");
-        browser.type(sources, Keys.chord(Keys.CONTROL, "a"), "Beta");
-        selectComboItem("vaadin-multi-select-combo-box-item", "Beta");
-        browser.type(sources, Keys.TAB);
-    }
-
-    private void selectTarget(String name) {
-        String target = ".planning-dialog vaadin-combo-box input";
-        browser.type(target, Keys.chord(Keys.CONTROL, "a"), name);
-        selectComboItem("vaadin-combo-box-item", name);
-        browser.type(target, Keys.TAB);
-    }
-
-    private void selectComboItem(String selector, String name) {
-        browser.clickMatching(selector, item -> item.getText().strip().equals(name), "Auswahleintrag " + name);
-    }
-
-    private void awaitPlanningClosed() {
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                browser.all(".planning-dialog[opened]").isEmpty());
     }
 
     public ReviewMapSteps(Browser browser, ReviewGameFixture fixture, GameRegistry registry, GameService games,
@@ -214,141 +128,17 @@ public class ReviewMapSteps {
         open(first);
     }
 
-    @Dann("kann ich Verlegungen über der Garnison planen und den Mengenmodus wechseln")
-    public void relocationAmount() {
-        clickSystem("Alpha");
-        browser.clickButtonWithText("Verlegung anlegen");
-        browser.awaitText("Ziel auf der Karte auswählen");
-        clickSystem("Beta");
-        browser.awaitCss(".send-fleet-dialog[opened]");
-        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.chord(Keys.CONTROL, "a"), "20", Keys.TAB);
-        awaitAmount(20);
-        assertMax(20);
-        browser.clickButtonWithText("Hälfte");
-        awaitAmount(10);
-        browser.clickButtonWithText("Doppelt");
-        awaitAmount(20);
-        browser.clickCss(".send-fleet-dialog vaadin-checkbox");
-        awaitAmount(5);
-        assertMax(5);
-        browser.clickButtonWithText("Alle");
-        awaitAmount(5);
-        browser.clickCss(".send-fleet-dialog vaadin-checkbox");
-        assertMax(20);
-        browser.clickButtonWithText("Alle");
-        awaitAmount(20);
-        browser.clickButtonWithText("Verlegung speichern");
-        awaitSendClosed();
-        // The badge of the previous step's relocation (2 ships) is already present; wait for the replacement.
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                games.viewFor(first.id(), first.hostSeat()).standingOrders().getFirst().ships() == 20);
-        assertThat(games.viewFor(first.id(), first.hostSeat()).standingOrders()).singleElement()
-                .satisfies(order -> assertThat(order.ships()).isEqualTo(20));
-    }
-
-    @Dann("bleibt der Sendekontext bei Abbruch und Erfolg erhalten und sind Flottenaktionen direkt bedienbar")
-    public void fleetContext() {
-        clickSystem("Alpha");
-        browser.clickButtonWithText("Flotte senden");
-        browser.awaitText("Ziel auf der Karte ausw\u00e4hlen");
-        browser.awaitCss(".sys-selected");
-        clickSystem("Beta");
-        browser.awaitCss(".send-fleet-dialog[opened]");
-        browser.clickButtonWithText("Abbrechen");
-        awaitSendClosed();
-        assertSourceSelected();
-        assertThat(games.viewFor(first.id(), first.hostSeat()).plannedOrders()).isEmpty();
-        clickSystem("Beta");
-        browser.awaitCss(".send-fleet-dialog[opened]");
-        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.ESCAPE);
-        awaitSendClosed();
-        assertSourceSelected();
-        clickSystem("Beta");
-        browser.awaitCss(".send-fleet-dialog[opened]");
-        new org.openqa.selenium.interactions.Actions(browser.driver()).moveToLocation(10, 100).click().perform();
-        awaitSendClosed();
-        assertSourceSelected();
-        clickSystem("Beta");
-        browser.awaitCss(".send-fleet-dialog[opened]");
-        clickSendInDialog();
-        awaitSendClosed();
-        browser.awaitSelectedTabWithText("Details");
-        browser.awaitTextIn(".system-details-heading", "Alpha");
-        browser.clickButtonWithText("Flotte senden");
-        browser.awaitText("Ziel auf der Karte ausw\u00e4hlen");
-        browser.awaitCss(".sys-selected");
-        clickSystem("Beta");
-        browser.awaitCss(".send-fleet-dialog[opened]");
-        clickSendInDialog();
-        awaitSendClosed();
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                games.viewFor(first.id(), first.hostSeat()).plannedOrders().size() == 2);
-        browser.awaitSelectedTabWithText("Details");
-        assertThat(games.viewFor(first.id(), first.hostSeat()).plannedOrders()).hasSize(2);
-        checkQueuedAndFleetActions();
-    }
-
-    private void checkQueuedAndFleetActions() {
-        browser.clickTabWithText("Befehle");
-        browser.clickButtonWithText("Stornieren");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                games.viewFor(first.id(), first.hostSeat()).plannedOrders().size() == 1);
-        browser.clickButtonWithText("Letzten Befehlschritt zur\u00fccknehmen");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                games.viewFor(first.id(), first.hostSeat()).plannedOrders().size() == 2);
-        browser.clickTabWithText("Flotten");
-        browser.clickCss(".fleet-direct-actions vaadin-button");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                !games.viewFor(first.id(), first.hostSeat()).waitingFleetIds().isEmpty());
-        browser.awaitSelectedTabWithText("Flotten");
-        assertThat(games.viewFor(first.id(), first.hostSeat()).waitingFleetIds()).hasSize(1);
-        browser.clickCss(".fleet-travel-card");
-        browser.awaitSelectedTabWithText("Details");
-        browser.awaitTextIn(".fleet-direct-actions", "Wartet");
-        assertThat(browser.awaitCss(".fleet-direct-actions vaadin-button").getDomAttribute("disabled")).isNotNull();
-        browser.clickButtonWithText("Aufl\u00f6sen");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                games.viewFor(first.id(), first.hostSeat()).plannedOrders().size() == 4);
-        browser.awaitSelectedTabWithText("Details");
-        assertThat(games.viewFor(first.id(), first.hostSeat()).ownFleets()).hasSize(1);
-        browser.clickButtonWithText("Letzten Befehlschritt zur\u00fccknehmen");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                games.viewFor(first.id(), first.hostSeat()).plannedOrders().size() == 3);
-    }
-
-    private void awaitSendClosed() {
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                browser.all(".send-fleet-dialog[opened]").isEmpty());
-    }
-
-    private void clickSendInDialog() {
-        browser.clickMatching(".send-fleet-dialog[opened] vaadin-button", button -> button.getText().equals("Flotte senden"),
-                "Flotte senden im Sendedialog");
-    }
-
-    private void assertSourceSelected() {
-        browser.awaitSelectedTabWithText("Details");
-        browser.awaitTextIn(".system-details-heading", "Alpha");
-        // The map redraws completely; wait for the new selection marker instead of reading a stale one.
-        browser.awaitTextIn(".sys-selected", "Alpha");
-    }
-
-    @Dann("kann ich eine Verlegung per Ziehen erstellen und an ihrer Reisekarte bearbeiten")
+    @Dann("kann ich eine Verlegung per Ziehen erstellen")
     public void relocationDrop() {
         browser.clickButtonWithText("Eigenes Reich");
         dragRelocation();
         browser.clickButtonWithText("Verlegung speichern");
         awaitSendClosed();
-        browser.clickTabWithText("Verlegungen");
-        browser.clickButtonWithText("Bearbeiten");
-        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.chord(Keys.CONTROL, "a"), "2", Keys.TAB);
-        browser.clickButtonWithText("Verlegung speichern");
-        awaitSendClosed();
-        browser.awaitSelectedTabWithText("Verlegungen");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                games.viewFor(first.id(), first.hostSeat()).standingOrders().getFirst().ships() == 2);
         assertThat(games.viewFor(first.id(), first.hostSeat()).standingOrders()).singleElement()
-                .satisfies(order -> assertThat(order.ships()).isEqualTo(2));
+                .satisfies(order -> {
+                    assertThat(order.fromSystemId()).isEqualTo(1);
+                    assertThat(order.toSystemId()).isEqualTo(2);
+                });
     }
 
     private void dragRelocation() {
@@ -390,96 +180,14 @@ public class ReviewMapSteps {
                         .findFirst().orElse(null));
     }
 
-    @Dann("zeigt die Logistik die gespeicherte Verlegung")
-    public void logisticsVisible() {
-        browser.clickTabWithText("Logistik");
-        browser.awaitCss(".logistics-system-card");
-        browser.awaitTextIn(".logistics-route-card", "20");
-        assertThat(browser.all(".logistics-route-card")).anyMatch(WebElement::isDisplayed);
-    }
-
-    @Dann("zeigt die Systemsicht direkte Aktionen und behält die geöffneten Detailbereiche")
+    @Dann("zeigt die Systemsicht direkte Aktionen in beiden Sprachen auf Desktopbreiten")
     public void systemDetails() throws java.io.IOException {
         assertThat(browser.awaitCss(".app-header-empire").getText()).isEqualTo("Host Empire");
         checkSystemActions("de", "Versendbare Schiffe");
         switchLanguage("Englisch", "English");
         checkSystemActions("en", "Sendable ships");
         switchLanguage("German", "Deutsch");
-        clickSystem("Alpha");
-        browser.awaitCss(".system-metric-sendable");
-        assertThat(js().executeScript("return document.querySelector('.system-operations').opened")).isEqualTo(false);
-        assertThat(js().executeScript("return document.querySelector('.system-background').opened")).isEqualTo(false);
-        openSystemDetails(".system-operations");
-        openSystemDetails(".system-background");
-        clickSystem("Beta");
-        browser.awaitTextIn(".system-details-heading", "Beta");
-        assertThat(js().executeScript("return document.querySelector('.system-operations').opened")).isEqualTo(true);
-        assertThat(js().executeScript("return document.querySelector('.system-background').opened")).isEqualTo(true);
-        assertThat(browser.awaitCss(".system-operations vaadin-integer-field input").getDomProperty("value"))
-                .isEqualTo("0");
-        WebElement reserve = browser.type(".system-operations vaadin-integer-field input",
-                Keys.chord(Keys.CONTROL, "a"), "1", Keys.TAB);
-        browser.clickButtonWithText("Reserve speichern");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                Integer.valueOf(1).equals(games.viewFor(first.id(), first.hostSeat()).systems().stream()
-                        .filter(system -> system.id() == 2).findFirst().orElseThrow().garrisonReserve()));
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .until(org.openqa.selenium.support.ui.ExpectedConditions.stalenessOf(reserve));
-        assertThat(js().executeScript("return document.querySelector('.system-operations').opened")).isEqualTo(true);
-        browser.type(".system-operations vaadin-integer-field input", Keys.chord(Keys.CONTROL, "a"), "0", Keys.TAB);
-        browser.clickButtonWithText("Reserve speichern");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                Integer.valueOf(0).equals(games.viewFor(first.id(), first.hostSeat()).systems().stream()
-                        .filter(system -> system.id() == 2).findFirst().orElseThrow().garrisonReserve()));
-        js().executeScript("document.querySelector('.system-operations').opened = false; document.querySelector('.system-background').opened = false;");
         browser.driver().manage().window().setSize(new org.openqa.selenium.Dimension(1366, 768));
-    }
-
-    @Dann("kann ich den Zufluss weiterverlegen und die Verlegung direkt am Ziel zurücknehmen")
-    public void incomingTransferAndCancellation() throws java.io.IOException {
-        clickSystem("Beta");
-        browser.awaitTextIn(".system-metric-rate", "2 (+20/Runde)");
-        browser.awaitTextIn(".system-details-owner", "Host Empire");
-        assertThat(browser.textsOf(".system-details-owner")).noneMatch(owner -> owner.contains("Review Host"));
-        browser.clickButtonWithText("Verlegung anlegen");
-        browser.awaitText("Ziel auf der Karte auswählen");
-        clickSystem("Alpha");
-        browser.awaitTextIn(".send-fleet-production", "2 (+20/Runde)");
-        assertMax(22);
-        WebElement input = browser.type(".send-fleet-dialog[opened] .send-fleet-amount input",
-                Keys.chord(Keys.CONTROL, "a"), "22", Keys.TAB);
-        assertThat(input.getDomProperty("value")).isEqualTo("22");
-        browser.clickButtonWithText("Abbrechen");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                browser.all(".send-fleet-dialog[opened]").isEmpty());
-        clickSystem("Beta");
-        int fleets = games.viewFor(first.id(), first.hostSeat()).ownFleets().size();
-        browser.awaitTextIn(".system-transfer-row", "Alpha → Beta");
-        browser.clickCss(".system-transfer-row vaadin-button");
-        browser.awaitTextIn(".send-fleet-route", "Alpha");
-        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.chord(Keys.CONTROL, "a"), "19", Keys.TAB);
-        browser.clickButtonWithText("Abbrechen");
-        awaitSendClosed();
-        assertThat(games.viewFor(first.id(), first.hostSeat()).standingOrders()).singleElement()
-                .satisfies(order -> assertThat(order.ships()).isEqualTo(20));
-        browser.clickCss(".system-transfer-row vaadin-button");
-        browser.type(".send-fleet-dialog[opened] .send-fleet-amount input", Keys.chord(Keys.CONTROL, "a"), "19", Keys.TAB);
-        browser.clickButtonWithText("Verlegung speichern");
-        awaitSendClosed();
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                games.viewFor(first.id(), first.hostSeat()).standingOrders().getFirst().ships() == 19);
-        assertThat(games.viewFor(first.id(), first.hostSeat()).standingOrders()).singleElement()
-                .satisfies(order -> assertThat(order.ships()).isEqualTo(19));
-        clickSystem("Beta");
-        browser.awaitTextIn(".system-transfer-row", "19");
-        browser.captureUiAcceptance("system-transfer-feedback");
-        browser.clickMatching(".system-transfer-row vaadin-button", button -> button.getText().equals("Aufheben"),
-                "Aufheben an der Verlegung");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
-                games.viewFor(first.id(), first.hostSeat()).standingOrders().isEmpty());
-        browser.awaitTextIn(".system-metric-rate", "2 (+0/Runde)");
-        browser.awaitSelectedTabWithText("Details");
-        assertThat(games.viewFor(first.id(), first.hostSeat()).ownFleets()).hasSize(fleets);
     }
 
     private void openSystemDetails(String selector) {
@@ -520,22 +228,6 @@ public class ReviewMapSteps {
         }
     }
 
-    @Dann("zeigt eine Flottenauswahl nach einer Systemauswahl die Flottendetails")
-    public void fleetSelectionReplacesSystemDetails() {
-        clickSystem("Alpha");
-        browser.awaitCss(".system-metric");
-        browser.clickTabWithText("Flotten");
-        browser.clickCss(".fleet-travel-card");
-        browser.awaitSelectedTabWithText("Details");
-        browser.awaitTextIn(".map-right", "Reisedetails");
-        browser.awaitNoneDisplayed(".system-metric");
-        clickSystem("Alpha");
-        browser.awaitCss(".system-metric");
-        browser.clickCss(".fleet-badge");
-        browser.awaitTextIn(".map-right", "Reisedetails");
-        browser.awaitNoneDisplayed(".system-metric");
-    }
-
     @Dann("bleiben Zoom und Kartenposition für beide Partien getrennt")
     public void independentViewports() {
         storeViewport(first, 1.4, 1100);
@@ -570,13 +262,17 @@ public class ReviewMapSteps {
                 js().executeScript("""
                         return [...document.querySelectorAll('.map-right vaadin-text-field')]
                             .every(field => field.value === 'Alpha')
-                            && document.querySelector('.fleet-travel-card')?.__keyboardAction === true;
+                            && [...document.querySelectorAll('.fleet-travel-card')]
+                                .some(card => card.checkVisibility() && card.__keyboardAction === true);
                         """)));
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                 .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
                 .ignoring(org.openqa.selenium.ElementNotInteractableException.class).until(_ -> {
                     if (fleetDetailsSelected()) { return true; }
-                    browser.awaitCss(".fleet-travel-card").sendKeys(Keys.SPACE);
+                    WebElement card = browser.all(".fleet-travel-card").stream().filter(WebElement::isDisplayed)
+                            .findFirst().orElse(null);
+                    if (card == null) { return false; }
+                    card.sendKeys(Keys.SPACE);
                     return fleetDetailsSelected();
                 });
         browser.awaitSelectedTabWithText("Details");
@@ -588,7 +284,8 @@ public class ReviewMapSteps {
     private boolean fleetDetailsSelected() {
         return Boolean.TRUE.equals(js().executeScript("""
                 return [...document.querySelectorAll('vaadin-tab[selected]')]
-                    .some(tab => tab.textContent.trim() === 'Details');
+                    .some(tab => tab.textContent.trim() === 'Details')
+                    || document.querySelector('.map-sidebar-select input')?.value === 'Details';
                 """));
     }
 
@@ -636,28 +333,30 @@ public class ReviewMapSteps {
                         """, name)));
     }
 
-    /** A typed amount is in the field at once, the slider only after the server's answer; wait for both. */
-    private void awaitAmount(int value) {
-        String expected = String.valueOf(value);
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ ->
-                        expected.equals(browser.awaitCss(".send-fleet-amount input").getDomProperty("value"))
-                                && expected.equals(browser.awaitCss(".send-fleet-slider").getDomProperty("value")));
+    private WebElement visibleRouteFilter() {
+        return new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
+                browser.all(".map-right vaadin-text-field input").stream().filter(WebElement::isDisplayed)
+                        .findFirst().orElse(null));
     }
 
-    private void assertMax(int max) {
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class).until(_ ->
-                        String.valueOf(max).equals(browser.awaitCss(".send-fleet-slider").getDomAttribute("max")));
+    private void selectComboItem(String selector, String name) {
+        browser.clickMatching(selector, item -> item.getText().strip().equals(name), "Option " + name);
+    }
+
+    private void awaitSendClosed() {
+        browser.awaitNoneDisplayed(".send-fleet-dialog[opened]");
     }
 
     private JavascriptExecutor js() {
-        return (JavascriptExecutor) browser.driver();
+        if (browser.driver() instanceof JavascriptExecutor executor) {
+            return executor;
+        }
+        throw new IllegalStateException("Browser does not support JavaScript");
     }
 
     @After
     public void cleanupGames() {
-        if (copiedGame != null) { games.abortGame(copiedGame); }
+
         if (first != null) { games.abortGame(first.id()); }
         if (second != null) { games.abortGame(second.id()); }
     }

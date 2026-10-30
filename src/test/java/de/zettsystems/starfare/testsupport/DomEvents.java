@@ -18,6 +18,13 @@ public final class DomEvents extends ComponentTester<Component> {
         events.roundTrip();
     }
 
+    /** Flow receives the evaluated filter as an event-data key, not the JavaScript expression alone. */
+    public static void fireFiltered(Component component, String type, String filter) {
+        DomEvents events = new DomEvents(component);
+        events.fireDomEvent(type, JsonNodeFactory.instance.objectNode().put(filter, true));
+        events.roundTrip();
+    }
+
     public static void changeRange(Input input, int value) {
         rangeEvent(input, value, "change");
     }

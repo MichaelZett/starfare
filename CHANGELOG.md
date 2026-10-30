@@ -8,6 +8,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Neun Karten- und Flottentests laufen jetzt mit Vaadin Browserless bei jedem
+  Build: Versand, Sammelbefehle, Revanche, Logistik, Stationsreisen und Bündniskämpfe.
+  Zwei vollständige Selenium-Szenarien entfallen; Navigation und Bündniskämpfe
+  behalten gezielte Browserprüfungen für Geometrie und JavaScript-Wiedergabe.
 - Sieben Wirtschaftsabläufe laufen jetzt mit Vaadin Browserless bei jedem Build:
   Ausbau, Kolonien, Metall, Recycling, Produktionsplanung, Neuanlage und Forschung.
   Sechs vollständige Selenium-Szenarien entfallen. Handy-Forschung sowie Prüfungen

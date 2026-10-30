@@ -542,15 +542,17 @@ accounts in the private lobby, and automatic navigation after wizard creation.
 Economy journeys also cover colony growth, mining and shortages, recycling,
 production presets and relocation trimming, the Spaceward wizard and ship research,
 including saved allocations and historical review.
+Map journeys cover fleet actions, bulk dispatch and reserves, editing and undo,
+saved filters after a new sign-in, rematches, relocation limits, station routes
+and coalition ownership, concealed results and persistent battle acknowledgements.
 They need neither Chrome nor a running HTTP server. `./gradlew e2eTest` runs Cucumber/Selenium journeys
 against the real application in headless Chrome: registration and one round,
-lobby access, round submission, battle playback, logistics and amount selection,
-fleet details and separate map viewports. An emulated iPhone checks the phone
+lobby access, round submission, battle playback, native relocation dragging,
+route geometry and separate map viewports. An emulated iPhone checks the phone
 interface by real taps next to a desktop session. Two browser sessions verify live chat,
 draft preservation and continuation through a second game end. It is not part of
-`build`; additional journeys cover bulk reserves and fleet dispatch, editing and
-undo, saved filters after a new sign-in, rematches, keyboard interaction and
-preserved inputs during external updates. CI runs it as a separate job
+`build`; keyboard interaction and preserved inputs during external updates also
+remain in the browser. CI runs it as a separate job
 (`[skip e2e]` in the commit message skips it). Failures leave page text in the
 test output and a screenshot in `build/e2e-failures/`.
 
@@ -563,6 +565,9 @@ Browserless: lobby, wizard and summary, system details, archive and review at
 1366 and 1024 pixels. The economy layout journey retains moon keyboard activation,
 the 44-pixel moon target, production controls and mixed-technology/research views.
 Phone research input and hit testing remain in `mobile.feature` (`@research`).
+Navigation checks retain the range circle, route preview and refuelling card layout;
+coalition checks retain neutral start colors, side placement and animated end counts.
+Their screenshots use the `navigation-*` and `coalition-*` prefixes in `build/ui-acceptance/`.
 Screenshots and text are saved as `build/ui-acceptance/layout-*`.
 Both this journey and the smoke test reject severe browser-console errors and
 visible Vaadin system errors.
