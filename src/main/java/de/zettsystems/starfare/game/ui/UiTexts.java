@@ -30,6 +30,9 @@ public final class UiTexts {
     public static final String CHAT_SEND_FAILED = "chat.sendFailed";
     public static final String ARCHIVE_VIEW_BLOCKED = "archive.viewBlocked";
     public static final String RESEARCH_TITLE = "research.title";
+    public static final String RESEARCH_HEADER_LABEL = "research.header.label";
+    public static final String RESEARCH_HEADER_VALUE = "research.header.value";
+    public static final String RESEARCH_HEADER_TOOLTIP = "research.header.tooltip";
     public static final String RESEARCH_BUDGET = "research.budget";
     public static final String RESEARCH_STATUS = "research.status";
     public static final String RESEARCH_EXPLANATION = "research.explanation";
@@ -469,6 +472,7 @@ public final class UiTexts {
     public static final String MAP_STANDING_LANE_TOOLTIP = "map.standingLane.tooltip";
     public static final String MAP_HINT_DRAG_RELOCATION = "map.hint.dragRelocation";
     public static final String MAP_REPORT_MARKER_HINT = "map.reportMarker.hint";
+    public static final String MAP_IDLE_SHIPS_HINT = "map.idleShips.hint";
 
     // Map — fleet badge
     public static final String MAP_FLEET_BADGE_BASE = "map.fleetBadge.base";

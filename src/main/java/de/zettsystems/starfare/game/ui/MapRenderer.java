@@ -199,12 +199,19 @@ final class MapRenderer {
         dot.getStyle().set(CssProperties.WIDTH, size + "px");
         dot.getStyle().set(CssProperties.HEIGHT, size + "px");
 
-        if (in.reportedSystemIds().contains(sys.id())) {
+        boolean selectedFromReport = in.reportedSystemIds().contains(sys.id())
+                && Objects.equals(in.highlightedReportSystemId(), sys.id());
+        if (pendingBattle || selectedFromReport) {
             dot.addClassName("sys-report-event");
-            if (Objects.equals(in.highlightedReportSystemId(), sys.id())) {
-                dot.addClassName("sys-report-event-active");
-            }
-            dot.add(buildReportMarker(sys, in));
+        }
+        if (selectedFromReport) {
+            dot.addClassName("sys-report-event-active");
+        }
+        if (pendingBattle) {
+            dot.add(buildBattleMarker(sys, in));
+        }
+        if (showsIdleShips(in)) {
+            IdleShips.of(sys).ifPresent(ships -> dot.add(buildIdleShipsHint(ships)));
         }
 
         if (!pendingBattle) {
@@ -241,10 +248,26 @@ final class MapRenderer {
                 .ifPresent(source -> in.onOpenRelocation().accept(source, target)));
     }
 
-    private static Div buildReportMarker(VisibleSystem sys, Inputs in) {
+    /** The hint needs a plan to act on and must not reveal anything before battles are viewed. */
+    private static boolean showsIdleShips(Inputs in) {
+        return !in.observer() && !in.view().gameOver() && !in.logisticsMode() && in.pendingBattleSystemIds().isEmpty();
+    }
+
+    /** Looks like a fleet badge on purpose: it says a fleet is here, not that something is wrong. */
+    private static Div buildIdleShipsHint(int ships) {
+        Div hint = new Div();
+        hint.addClassName("sys-idle-ships");
+        hint.setText(String.valueOf(ships));
+        hint.getElement().setAttribute("aria-hidden", "true");
+        hint.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.MAP_IDLE_SHIPS_HINT, ships));
+        return hint;
+    }
+
+    /** Only unseen battles earn a marker; seen ones stay in the report list for rewatching. */
+    private static Div buildBattleMarker(VisibleSystem sys, Inputs in) {
         Div marker = new Div();
         marker.addClassName("sys-report-marker");
-        marker.setText(in.pendingBattleSystemIds().contains(sys.id()) ? "⚔" : "!");
+        marker.setText("⚔");
         marker.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, sys.name() + ": " + I18n.t(UiTexts.MAP_REPORT_MARKER_HINT));
         KeyboardActions.enable(marker);
         marker.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.MAP_REPORT_MARKER_HINT));

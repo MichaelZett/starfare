@@ -11,6 +11,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.game.values.RoundStatus;
 import de.zettsystems.starfare.i18n.I18n;
+import de.zettsystems.starfare.research.values.ResearchView;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -23,7 +24,7 @@ final class MapHeaderBar extends HorizontalLayout {
     private final Span gameNameLabel = new Span();
     private final Span empireNameLabel = new Span();
     private final Span roundLabel = new Span();
-    private final EmpireStatsBar empireStats = new EmpireStatsBar();
+    private final EmpireStatsBar empireStats;
     private final de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices = new de.zettsystems.starfare.economy.ui.EconomyNoticeBar();
     de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices() { return economyNotices; }
     private final Button next;
@@ -38,6 +39,7 @@ final class MapHeaderBar extends HorizontalLayout {
                    Runnable onChat, Runnable onEditRoundRules, Runnable onResearch) { }
 
     MapHeaderBar(Actions actions, boolean compact) {
+        empireStats = new EmpireStatsBar(actions.onResearch());
         gameNameLabel.addClassName("app-header-game");
         empireNameLabel.addClassName("app-header-empire");
         empireNameLabel.setVisible(false);
@@ -123,7 +125,11 @@ final class MapHeaderBar extends HorizontalLayout {
 
     void setLeaveVisible(boolean visible) { leaveItem.setVisible(visible); }
 
-    void setResearchVisible(boolean visible) { researchItem.setVisible(visible); }
+    /** Without research there is neither the header button nor the menu entry. */
+    void setResearch(@Nullable ResearchView research) {
+        researchItem.setVisible(research != null);
+        empireStats.showResearch(research);
+    }
 
     void setRoundRulesVisible(boolean visible) {
         roundRulesItem.setVisible(visible);

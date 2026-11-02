@@ -295,7 +295,7 @@ html.starfare-mobile .app-header-compact .app-header-round {
 }
 
 html.starfare-mobile .app-header-compact .app-header-stats {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 6px;
     margin: 0;
 }
@@ -304,6 +304,8 @@ html.starfare-mobile .app-header-compact .app-header-stat {
     padding: 1px 8px;
     font-size: .85rem;
 }
+
+html.starfare-mobile .app-header-compact .app-header-research::part(label) { display: none; }
 
 html.starfare-mobile .app-header-compact .app-header-right {
     gap: 6px;

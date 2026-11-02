@@ -13,7 +13,7 @@ import de.zettsystems.starfare.research.values.ShipResearch;
 /** Own-empire budget editor, with optimistic concurrency enforced by the application service. */
 public final class ResearchDialog {
     private ResearchDialog() { }
-    public static void open(GameService game, GameId id, String account) {
+    public static void open(GameService game, GameId id, String account, Runnable onSaved) {
         game.shipResearchFor(id, account).ifPresent(view -> {
             var research = view.research();
             Dialog dialog = new Dialog();
@@ -29,7 +29,7 @@ public final class ResearchDialog {
             dialog.add(budget);
             Button save = new Button(I18n.t(de.zettsystems.starfare.game.ui.UiTexts.RESEARCH_SAVE), _ -> {
                 Integer percent = budget.getValue();
-                if (percent != null && game.planShipResearch(id, account, view.turn(), research.percent(), percent)) { dialog.close(); }
+                if (percent != null && game.planShipResearch(id, account, view.turn(), research.percent(), percent)) { dialog.close(); onSaved.run(); }
                 else { Notification.show(I18n.t(de.zettsystems.starfare.game.ui.UiTexts.RESEARCH_REJECTED)); }
             });
             save.setId("research-save"); save.setEnabled(budget.isEnabled());

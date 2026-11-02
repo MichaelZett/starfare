@@ -290,7 +290,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         var issues = de.zettsystems.starfare.economy.values.EconomyIssues.forView(view, currentSeat(), pendingBattleSystemIds(view));
         boolean hidden = isObserver() || reviewing || !pendingBattleSystemIds(view).isEmpty();
         header.economyNotices().show(hidden ? List.of() : issues, kind -> { fleetsPanel.showEconomy(kind); revealPanel(); });
-        mapCanvas.economyMarkers(hidden ? List.of() : issues, reportedSystemIds(view), id -> {
+        mapCanvas.economyMarkers(hidden ? List.of() : issues, id -> {
             issues.stream().filter(issue -> issue.system().id() == id).findFirst()
                     .ifPresent(issue -> { fleetsPanel.showEconomy(issue.reasons().getFirst()); revealPanel(); });
         });
@@ -644,8 +644,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 .flatMap(account -> game.hostPlayerIdOf(gameId).filter(account::equals)).isPresent());
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer && pendingBattleSystemIds(view).isEmpty());
-        header.setResearchVisible(!reviewing && !observer && pendingBattleSystemIds(view).isEmpty() && game.shipResearchFor(gameId,
-                UserContext.currentPlayerId().orElse("")).isPresent());
+        header.setResearch(reviewing || observer || !pendingBattleSystemIds(view).isEmpty() ? null
+                : game.shipResearchFor(gameId, UserContext.currentPlayerId().orElse("")).orElse(null));
         header.setRound(view.turn());
         RoundStatus status = reviewing ? RoundStatus.NONE : view.roundStatus();
         roundStatus.update(status, playerId);
@@ -695,7 +695,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private void openShipResearch() {
         if (!reviewing) {
-            de.zettsystems.starfare.research.ui.ResearchDialog.open(game, gameId, UserContext.currentPlayerId().orElse(""));
+            de.zettsystems.starfare.research.ui.ResearchDialog.open(game, gameId, UserContext.currentPlayerId().orElse(""), this::refresh);
         }
     }
 

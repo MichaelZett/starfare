@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.details.Details;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.IntegerField;
 import org.junit.jupiter.api.Test;
 
@@ -73,6 +74,23 @@ class LogisticsJourneyTest extends AbstractMapJourneyTest {
         assertThat(view().ownFleets()).hasSize(fleets);
         assertThat(text("system-metric-rate")).contains("2 (+0/Runde)");
         assertTab("Details");
+    }
+
+    @Test
+    void idleShipsHintGoesAwayWhenAHigherReserveMakesThemIntentional() {
+        createReviewGame();
+        assertThat(idleShipsHint("Beta")).contains("3");
+        assertThat(idleShipsHint("Alpha")).isEmpty();
+        select("Beta");
+        details("system-operations").setOpened(true);
+        test(find(IntegerField.class).single()).setValue(1);
+        click("Reserve speichern");
+        assertThat(idleShipsHint("Beta")).isEmpty();
+    }
+
+    private java.util.Optional<String> idleShipsHint(String system) {
+        return mapSystem(system).getChildren().filter(Div.class::isInstance).map(Div.class::cast)
+                .filter(child -> child.hasClassName("sys-idle-ships")).map(Div::getText).findFirst();
     }
 
     @Test

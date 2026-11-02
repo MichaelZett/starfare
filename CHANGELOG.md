@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.3 - 2026-11-02
 
 - Der Spielassistent sieht jetzt wie ein Spiel aus: Regelvarianten erscheinen als
   Bildkarten, das Setup zeigt die Sternenverteilung live, Abschnitte tragen
@@ -21,6 +21,14 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   ausfallen als die tatsächliche Reichweite.
 - Flottenkästchen tauschen bei Aktionen nicht mehr die Plätze und stehen auch
   auf gemeinsam genutzten Routen an der tatsächlichen Flugposition.
+- Angesehene Schlachten tragen auf der Karte keinen Marker mehr und bleiben im
+  Bericht zum Wiederansehen. Ungesehene Schlachten sind rot mit gekreuzten
+  Schwertern, das gelbe „!“ steht nur noch für Engpässe der Wirtschaft. Ein solcher
+  Engpass wird auch auf einem System mit angesehener Schlacht angezeigt.
+- Forschung steht als Schaltfläche mit Stufe und Budget im Kopf der Karte.
+- Ein gedämpftes Kästchen am Systemrand zeigt freie Schiffe, sobald es mehr sind,
+  als das System pro Runde baut. Eine höhere Reserve oder geplante Flüge lassen es
+  verschwinden.
 - Das Produktionsbundle enthält keine Altlasten früherer Builds mehr und schrumpft
   von rund 26 MB auf rund 1 MB.
 

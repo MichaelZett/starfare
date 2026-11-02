@@ -901,7 +901,7 @@ Ship research is included in the current Spaceward rules for every new game.
 The retained `research-preview` profile no longer changes creation availability.
 Older saved games retain their original rules.
 
-Open **Ship research** in the map menu. One empire-wide percentage reserves
+Open **Research** in the map header or **Ship research** in the map menu. One empire-wide percentage reserves
 industry before mining, expansion and shipbuilding. It starts at 0%; rounding
 happens once per empire, then points are apportioned to systems by capacity,
 with largest remainders and system IDs as tie breakers. Raising the budget

@@ -41,6 +41,18 @@ class ResearchJourneyTest extends AbstractEconomyUiTest {
         assertThat(text("industry-panel")).contains("Stufe 0:", "Stufe 1:", "Kampfstärke");
     }
 
+    @Test
+    void headerButtonShowsTheStateAndOpensResearchWithoutTheMenu() {
+        openGame(EconomyUiStates.research(), "Research Header");
+        Button header = find(Button.class).withId("header-research").single();
+        assertThat(header.getAriaLabel()).contains("Forschung: Stufe 0 · 0 %");
+        test(header).click();
+        assertThat(openedDialog().getHeaderTitle()).isEqualTo("Schiffsforschung");
+        enter("research-budget", 25);
+        click("research-save");
+        assertThat(header.getAriaLabel()).contains("Forschung: Stufe 0 · 25 %");
+    }
+
     private void openResearch() {
         MenuBarTester<MenuBar> menu = test(find(MenuBar.class).withClassName("app-header-menu").single());
         menu.clickItem(0, 0);

@@ -142,6 +142,7 @@ public class BattleSteps {
                         .until(_ -> browser.all(PENDING).size() == 1);
                 assertThat(browser.all(PENDING)).hasSize(1);
                 assertThat(browser.all(".event-victory")).isEmpty();
+                assertThat(browser.all(".sys-report-marker")).as("Nur die offene Schlacht trägt einen Marker").hasSize(1);
             }
         }
     }

@@ -53,3 +53,54 @@
 .starfare-mobile .map-sidebar-compact { display: flex; }
 .starfare-mobile .map-chat-toggle { min-width: 2.75rem; padding-inline: .35rem; }
 .starfare-mobile .map-chat-toggle::part(label) { display: none; }
+
+/* Unseen battles are red with crossed swords; the amber "!" belongs to the economy alone. */
+#map .sys-report-marker {
+    color: #fff;
+    background: #c8363f;
+    border-color: #ffd5d5;
+}
+
+#map .sys-report-event {
+    box-shadow: 0 0 0 3px rgba(226, 72, 80, .85), 0 0 20px rgba(226, 72, 80, .6), 0 4px 12px rgba(0, 0, 0, .45) !important;
+}
+
+/* Research sits with the empire figures and looks clickable, so it is found without the menu. */
+.app-header-stats vaadin-button.app-header-research {
+    --vaadin-button-background: var(--sf-surface-2);
+    --vaadin-button-text-color: var(--sf-text);
+    min-height: 0;
+    height: auto;
+    padding: 3px 12px;
+    border: 1px solid var(--sf-accent-2);
+    border-radius: 999px;
+    font-size: .92rem;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.app-header-research vaadin-icon { width: 14px; height: 14px; color: var(--sf-accent-2); }
+.app-header-research [slot="suffix"] { font-weight: 700; color: var(--sf-accent-2); }
+
+/* Free ships read like a parked fleet badge: muted, on the rim, never an alert. */
+#map .sys-idle-ships {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 6px;
+    transform: translate(-50%, 50%) scale(var(--map-inverse-zoom, 1));
+    border: 1px solid rgba(169, 182, 199, .55);
+    border-radius: 9px;
+    background: rgba(13, 17, 23, .88);
+    color: #c6d2df;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}

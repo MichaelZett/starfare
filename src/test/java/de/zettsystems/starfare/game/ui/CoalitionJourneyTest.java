@@ -42,6 +42,8 @@ class CoalitionJourneyTest extends AbstractMapJourneyTest {
         reloadMap();
         selectTab("Bericht");
         assertThat(find(Div.class).withClassName("event-battle-pending").all()).hasSize(2);
+        assertThat(find(Div.class).withClassName("sys-report-marker").all())
+                .isNotEmpty().allSatisfy(marker -> assertThat(marker.getText()).isEqualTo("⚔"));
         assertThat(find(Component.class).withClassName("event-victory").all()).isEmpty();
         selectTab("Flotten");
         assertThat(viewText()).doesNotContain("Unterstützung in Gamma");
@@ -53,6 +55,7 @@ class CoalitionJourneyTest extends AbstractMapJourneyTest {
         reloadMap();
         selectTab("Bericht");
         assertThat(find(Div.class).withClassName("event-battle-pending").all()).isEmpty();
+        assertThat(find(Div.class).withClassName("sys-report-marker").all()).isEmpty();
         var report = view().report();
         var confirmed = acknowledgements.acknowledgedEventIndices(account, id, report.turn());
         for (int index = 0; index < report.events().size(); index++) {

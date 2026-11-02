@@ -72,12 +72,11 @@ final class MapCanvas extends Div {
     }
 
     void economyMarkers(java.util.List<de.zettsystems.starfare.economy.values.EconomyIssues.Issue> issues,
-                        java.util.Set<Integer> reported, java.util.function.IntConsumer selected) {
+                        java.util.function.IntConsumer selected) {
         map.getChildren().filter(component -> component.hasClassName("sys-economy-marker"))
                 .toList().forEach(map::remove);
         for (var issue : issues) {
             var system = issue.system();
-            if (reported.contains(system.id())) { continue; }
             var button = new com.vaadin.flow.component.button.Button("!", _ -> selected.accept(system.id()));
             button.addClassName("sys-economy-marker");
             button.getElement().setAttribute(HtmlAttributes.MAP_X, Double.toString(system.x()));

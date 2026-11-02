@@ -1,12 +1,15 @@
 package de.zettsystems.starfare.game.ui;
 
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import de.zettsystems.starfare.game.values.EmpireStats;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.i18n.I18n;
+import de.zettsystems.starfare.research.values.ResearchView;
 import de.zettsystems.starfare.style.HtmlAttributes;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Header-bar widget showing the current player's system count, production and ships.
@@ -20,8 +23,10 @@ final class EmpireStatsBar extends HorizontalLayout {
     private final Span metalValue = new Span();
     private final com.vaadin.flow.component.details.Details metalDetails = new com.vaadin.flow.component.details.Details();
     private final Span shipsValue = new Span("0");
+    private final Span researchValue = new Span();
+    private final Button research = new Button(I18n.t(UiTexts.RESEARCH_HEADER_LABEL));
 
-    EmpireStatsBar() {
+    EmpireStatsBar(Runnable onResearch) {
         addClassName("app-header-stats");
         setSpacing(false);
         setPadding(false);
@@ -31,8 +36,23 @@ final class EmpireStatsBar extends HorizontalLayout {
                 buildStat(VaadinIcon.ROCKET, shipsValue, I18n.t(UiTexts.MAP_STATS_SHIPS_TOOLTIP))
         );
         metalDetails.addClassName("empire-metal");
-        add(metalDetails);
+        research.setId("header-research");
+        research.addClassName("app-header-research");
+        research.setPrefixComponent(VaadinIcon.FLASK.create());
+        research.setSuffixComponent(researchValue);
+        research.setTooltipText(I18n.t(UiTexts.RESEARCH_HEADER_TOOLTIP));
+        research.addClickListener(_ -> onResearch.run());
+        research.setVisible(false);
+        add(metalDetails, research);
         setVisible(false);
+    }
+
+    void showResearch(@Nullable ResearchView view) {
+        research.setVisible(view != null);
+        if (view == null) { return; }
+        String value = I18n.t(UiTexts.RESEARCH_HEADER_VALUE, view.research().level(), view.research().percent());
+        researchValue.setText(value);
+        research.setAriaLabel(I18n.t(UiTexts.RESEARCH_HEADER_LABEL) + ": " + value);
     }
 
     void update(PlayerViewState view) {
