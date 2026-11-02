@@ -100,6 +100,7 @@ class HealthTrafficLightTest extends AbstractIntegrationTest {
 
         mockMvc.perform(get(HEALTH))
                 .andExpect(jsonPath("$.status").value("DEGRADED"))
+                .andExpect(jsonPath("$.description").doesNotExist())
                 .andExpect(jsonPath("$.components").doesNotExist());
     }
 

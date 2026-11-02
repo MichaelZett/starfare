@@ -6,15 +6,15 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.2 - 2026-11-02
 
 - Der Health-Endpunkt unterscheidet jetzt `UP`, `DEGRADED` und `DOWN`: Ein nicht
   erreichbarer Mailserver meldet `DEGRADED` mit HTTP 200, das Spiel gilt nicht als
   ausgefallen. Öffentlich steht nur der Stand, Einzelheiten sieht der Administrator.
   Der Mailserver wird höchstens alle 3 Stunden geprüft, echter Versand zählt mit.
   Mailverbindungen brechen nach 10 Sekunden ab, statt unbegrenzt zu warten.
-- Abhängigkeiten aktualisiert: Spring Boot 4.1.2, Vaadin 25.3.4, Identity 1.6.0,
-  Spring Modulith 2.1.2, Error Prone 2.51.0, NullAway 0.14.3, SpotBugs 4.10.5,
+- Abhängigkeiten aktualisiert: Spring Boot 4.1.2, Vaadin 25.3.4, Identity 1.6.1,
+  Spring Modulith 2.1.2, Error Prone 2.52.0, NullAway 0.14.3, SpotBugs 4.10.5,
   JaCoCo 0.8.16. Spring Boot 4.1.2 schließt veröffentlichte Sicherheitslücken in
   Tomcat und Jackson. OpenRewrite bleibt auf 7.39.0, weil die benötigte
   `rewrite-bom` 8.91.0 weiterhin nicht in Maven Central liegt.
