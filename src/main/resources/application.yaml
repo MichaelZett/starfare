@@ -23,6 +23,14 @@ spring:
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}
+    properties:
+      # JavaMail waits forever by default: a server that stops answering would
+      # block a delivery and keep the health check from ever reporting it.
+      mail:
+        smtp:
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
   jpa:
     hibernate:
       ddl-auto: validate
@@ -49,6 +57,9 @@ zs:
     # Spieler waehlen einen oeffentlichen Namen; Vor-/Nachname werden nicht erhoben.
     name-mode: DISPLAY_NAME
     base-url: http://localhost:8110
+    # A dead mail server is DEGRADED, not DOWN: replaces Spring Boot's mail check.
+    mail-health:
+      enabled: true
 
 starfare:
   timing:
@@ -72,15 +83,22 @@ management:
     web:
       exposure:
         include: health,info
+  endpoint:
+    health:
+      # The public answer carries the status only; details are for the administrator.
+      show-details: when-authorized
+      roles: SYSTEM_ADMIN
+      status:
+        # A status missing here silently drops out of the overall result.
+        # degraded = the game runs, something secondary is missing: HTTP 200.
+        # down/out-of-service = real outage: HTTP 503.
+        order: down,out-of-service,degraded,up,unknown
   info:
     build:
       enabled: true
     git:
       enabled: true
       mode: full
-  health:
-    mail:
-      enabled: false
 
 logging:
   level:

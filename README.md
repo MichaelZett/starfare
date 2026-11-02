@@ -528,6 +528,19 @@ environment variables: `STARFARE_BASE_URL`, `STARFARE_LEGAL_OPERATOR_NAME`,
 and the `SPRING_DATASOURCE_*` connection settings. The GitHub secrets
 `COOLIFY_WEBHOOK_URL` and `COOLIFY_API_TOKEN` enable the deployment step.
 
+`/actuator/health` answers with one of three states:
+
+| Status | HTTP | Meaning |
+|---|---|---|
+| `UP` | 200 | everything works |
+| `DEGRADED` | 200 | the game runs, but the mail server is not reachable: no registration or password mails |
+| `DOWN` | 503 | Starfare itself is failing, for instance its database |
+
+The public answer carries the status only; an account with the role `SYSTEM_ADMIN`
+also sees since when and why. The mail server is checked at most every 3 hours and
+real deliveries count as well, so `DEGRADED` can stay until the next check or
+accepted mail. It never restarts the container.
+
 Slow page builds and UI actions (`starfare.timing.slow-page-ms`, default 500 ms),
 slow round resolutions (`starfare.timing.slow-round-ms`, default 1000 ms) and, in
 the `hetzner` profile, SQL queries over 200 ms are logged at WARN; `0` disables a
