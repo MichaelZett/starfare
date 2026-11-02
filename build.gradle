@@ -131,7 +131,7 @@ dependencies {
 // die Flags gehören an den Aufruf, nicht in gradle.properties.
 // Plugin bewusst auf 7.39.0 + rewrite-recipe-bom 3.37.0: 7.40.0/7.41.0 und BOM
 // 3.38.0 verweisen auf ein rewrite-bom 8.91.0, das nicht in Maven Central liegt
-// (Stand 2026-09-17, dort endet es bei 8.90.4).
+// (Stand 2026-11-02, dort endet es bei 8.90.4).
 rewrite {
     // Kuratiert: jedes Recipe lief als Dry-Run, der Diff wurde gelesen.
     activeRecipe('de.zettsystems.ZettSystemsRecipes')
@@ -293,10 +293,12 @@ def depUpdateIsMajorBump = { String current, String candidate ->
     def cand = candidate.split(/[.\-]/, 2)[0]
     return cur.isInteger() && cand.isInteger() && cand.toInteger() > cur.toInteger()
 }
+// Read here rather than inside the closure: it runs at execution time, where
+// `project` is the deprecated Task.project (an error from Gradle 10 on).
+def allowUnstable = project.hasProperty('unstable')
+def allowMajor = project.hasProperty('major')
 dependencyUpdates {
     rejectVersionIf { selection ->
-        def allowUnstable = project.hasProperty('unstable')
-        def allowMajor = project.hasProperty('major')
         if (!allowUnstable
                 && depUpdateIsUnstable(selection.candidate.version)
                 && !depUpdateIsUnstable(selection.currentVersion)) {

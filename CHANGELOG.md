@@ -8,6 +8,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Abhängigkeiten aktualisiert: Spring Boot 4.1.2, Vaadin 25.3.4, Identity 1.5.1,
+  Spring Modulith 2.1.2, Error Prone 2.51.0, NullAway 0.14.3, SpotBugs 4.10.5,
+  JaCoCo 0.8.16. Spring Boot 4.1.2 schließt veröffentlichte Sicherheitslücken in
+  Tomcat und Jackson. OpenRewrite bleibt auf 7.39.0, weil die benötigte
+  `rewrite-bom` 8.91.0 weiterhin nicht in Maven Central liegt.
 - Neun Karten- und Flottentests laufen jetzt mit Vaadin Browserless bei jedem
   Build: Versand, Sammelbefehle, Revanche, Logistik, Stationsreisen und Bündniskämpfe.
   Zwei vollständige Selenium-Szenarien entfallen; Navigation und Bündniskämpfe
