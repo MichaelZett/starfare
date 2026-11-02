@@ -132,14 +132,14 @@ public class SmokeSteps {
         int corrected = Integer.parseInt(original) + 1;
         typeWizardSystems(String.valueOf(corrected));
         browser.clickButtonWithText("Zusammenfassung prüfen");
-        browser.awaitTextIn(".wizard-summary-line", "Systeme: " + corrected);
-        assertThat(browser.textsOf(".wizard-summary-line")).contains("Systeme: " + corrected);
+        browser.awaitTextIn("#wizard-summary-systems", String.valueOf(corrected));
+        assertThat(browser.textsOf("#wizard-summary-systems")).containsExactly(String.valueOf(corrected));
         browser.captureUiAcceptance("wizard-corrected");
         // Restore the standard fixture after verifying the correction round trip.
         browser.clickCss(".wizard-summary-group vaadin-button");
         typeWizardSystems(original);
         browser.clickButtonWithText("Zusammenfassung prüfen");
-        browser.awaitTextIn(".wizard-summary-line", "Systeme: " + original);
+        browser.awaitTextIn("#wizard-summary-systems", original);
         browser.clickButtonWithText("Spiel anlegen");
         browser.awaitUrl(url -> url.contains("/map/"), "Die KI-Partie wurde nicht automatisch gestartet.");
     }

@@ -6,15 +6,27 @@
 .map-sidebar-navigation { min-width: 0; }
 .map-workspace .map-right { min-width: 20rem; }
 .map-sidebar-compact { display: none; align-items: center; gap: .5rem; width: 100%; }
-.map-sidebar-compact > span { flex-shrink: 0; font-size: .85rem; }
 .map-sidebar-select { display: block; min-width: 0; padding: 0; }
 @container sidebar (max-width: 44rem) {
     .map-sidebar-navigation > .map-sidebar-tabs { display: none; }
     .map-sidebar-navigation > .map-sidebar-compact { display: flex; }
 }
-.map-right > .map-controls { flex-wrap: wrap; width: 100%; padding: .5rem; box-sizing: border-box; }
-.map-right .planning-actions { display: flex; flex-wrap: nowrap; width: 100%; gap: .35rem; }
-.map-right .planning-actions vaadin-button { flex: 1 1 0; min-width: 0; padding-inline: .4rem; font-size: .8rem; }
+.map-right > .map-controls { flex-wrap: nowrap; gap: .35rem; width: 100%; padding: 0; box-sizing: border-box; }
+.map-right .planning-actions { display: flex; flex-wrap: nowrap; gap: .35rem; }
+.map-controls vaadin-button { min-width: 2.5rem; padding-inline: .65rem; }
+/* System header: compact icon tiles, the label stays for screen readers and the tooltip. */
+.map-right .system-header-metrics { display: flex; flex-wrap: wrap; gap: .35rem; }
+.map-right .system-header-metrics .system-metric {
+    position: relative; flex: 1 1 auto; justify-content: center; gap: .4rem; min-height: 0; padding: .25rem .55rem;
+}
+.map-right .system-header-metrics .system-metric:not(.system-metric-sendable) .system-metric-icon { display: grid; }
+.map-right .system-header-metrics .system-metric .system-metric-icon { width: 1.5rem; height: 1.5rem; }
+.map-right .system-header-metrics .system-metric .system-metric-value { font-size: 1.05rem; white-space: nowrap; }
+.map-right .system-header-metrics .system-metric .system-metric-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.system-metric-icon vaadin-icon { width: .95rem; height: .95rem; }
+.map-right .industry-panel { box-sizing: border-box; width: 100%; }
 .map-chat-host { flex: 0 0 24rem; width: 24rem; max-width: 100%; height: 100%; min-height: 0; }
 .game-chat-panel {
     display: flex; flex-direction: column; gap: .5rem; height: 100%; min-height: 0;

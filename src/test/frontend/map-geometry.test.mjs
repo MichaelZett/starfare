@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import test from 'node:test';
 globalThis.window = {};
 const source = await readFile(new URL('../../main/frontend/map-geometry.js', import.meta.url), 'utf8');
-const {freeSegments, badgePosition} = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+const {freeSegments, badgePosition, preferredShare} = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 
 test('source, target and a third crossing system are protected', () => {
     assert.deepEqual(freeSegments(400, [
@@ -14,6 +14,16 @@ test('zoom-dependent protection can hide short routes, and badges never occupy a
     assert.deepEqual(freeSegments(80, [{along:0, across:0, radius:220}, {along:80, across:0, radius:220}]), []);
     assert.equal(badgePosition([[50,140],[260,350]], 200, 20), 120);
     assert.equal(badgePosition([[10,20]], 0, 20), undefined);
+});
+test('a fleet badge follows its real progress, whatever the order on a shared route', () => {
+    assert.equal(preferredShare('0.75', 0, 2), 0.75);
+    assert.equal(preferredShare('0.25', 1, 2), 0.25);
+    assert.equal(preferredShare('0.0', 1, 3), 0);
+});
+test('badges without progress share a route evenly', () => {
+    assert.equal(preferredShare(undefined, 0, 1), 0.5);
+    assert.equal(preferredShare(undefined, 0, 3), 0.25);
+    assert.equal(preferredShare(undefined, 2, 3), 0.75);
 });
 test('off-axis circles, overlapping protection and route ends are clipped without negative intervals', () => {
     const obstacles = [{along:50,across:30,radius:50}, {along:60,across:0,radius:30}, {along:200,across:100,radius:50}];

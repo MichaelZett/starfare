@@ -6,6 +6,24 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Der Spielassistent sieht jetzt wie ein Spiel aus: Regelvarianten erscheinen als
+  Bildkarten, das Setup zeigt die Sternenverteilung live, Abschnitte tragen
+  Embleme. Die Zusammenfassung zeigt Name, Variante und Kennzahlen im Kopf,
+  darunter kompakte Zeilen mit Symbolen und einen Sprung zum jeweiligen Schritt.
+- Kartenpanel aufgeräumt: Rückgängig, Versand, Reserven und Bündnisse sind
+  Symbolknöpfe mit Tooltip in einer Reihe, die Beschriftung „Ansicht“ entfällt.
+  Die Kennzahlen eines Systems sind kompakte Symbole und schließen bündig mit
+  der Produktionsbox ab.
+- Der Reichweitenkreis endet vor jedem System, das nicht direkt erreichbar ist.
+  Maßgeblich bleibt die Markierung am Ziel: Der Kreis kann dadurch kleiner
+  ausfallen als die tatsächliche Reichweite.
+- Flottenkästchen tauschen bei Aktionen nicht mehr die Plätze und stehen auch
+  auf gemeinsam genutzten Routen an der tatsächlichen Flugposition.
+- Das Produktionsbundle enthält keine Altlasten früherer Builds mehr und schrumpft
+  von rund 26 MB auf rund 1 MB.
+
 ## 0.2.2 - 2026-11-02
 
 - Der Health-Endpunkt unterscheidet jetzt `UP`, `DEGRADED` und `DOWN`: Ein nicht

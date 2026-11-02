@@ -10,6 +10,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
@@ -232,7 +233,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         });
         navigation.addClassName("map-sidebar-navigation");
         navigation.setWidthFull();
-        Div compactRow = new Div(new Span(I18n.t(UiTexts.MAP_VIEW)), compactNavigation);
+        Div compactRow = new Div(compactNavigation);
         compactRow.addClassName("map-sidebar-compact");
         navigation.add(tabs, compactRow);
         add(navigation, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, logisticsPage, reportPage);
@@ -713,18 +714,18 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         metrics.addClassNames("system-metrics", "system-header-metrics");
         Integer available = system.availableShips();
         if (available != null) {
-            Div sendable = systemMetric("➤", I18n.t(UiTexts.SYSTEM_SENDABLE_SHIPS), available);
+            Div sendable = systemMetric(VaadinIcon.PAPERPLANE, I18n.t(UiTexts.SYSTEM_SENDABLE_SHIPS), available);
             sendable.addClassName("system-metric-sendable");
             metrics.add(sendable);
         }
-        metrics.add(systemMetric("🛡", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())));
+        metrics.add(systemMetric(VaadinIcon.SHIELD, I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())));
         Integer reserve = system.garrisonReserve();
         if (reserve != null) {
-            metrics.add(systemMetric("⛨", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE), reserve));
+            metrics.add(systemMetric(VaadinIcon.LOCK, I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE), reserve));
         }
         String rate = system.routedProduction() == null ? value(system.productionPerTurn())
                 : I18n.t(UiTexts.SYSTEM_PRODUCTION_INCOMING, value(system.productionPerTurn()), flow.incoming());
-        Div production = systemMetric("⚙", I18n.t(UiTexts.SYSTEM_PRODUCTION_RATE), rate);
+        Div production = systemMetric(VaadinIcon.COGS, I18n.t(UiTexts.SYSTEM_PRODUCTION_RATE), rate);
         production.addClassName("system-metric-rate");
         metrics.add(production);
         return metrics;
@@ -1096,8 +1097,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         dialog.setHeaderTitle(I18n.t(UiTexts.MAP_CAPTURE_SUMMARY_TITLE, system.name()));
         dialog.addClassName("capture-summary-dialog");
         Div metrics = new Div(
-                systemMetric("🛡", I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
-                systemMetric("⚙", I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())));
+                systemMetric(VaadinIcon.SHIELD, I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
+                systemMetric(VaadinIcon.COGS, I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())));
         metrics.addClassName("system-metrics");
         dialog.add(metrics);
         Button close = new Button(I18n.t(UiTexts.MAP_CAPTURE_SUMMARY_CLOSE), _ -> dialog.close());
@@ -1530,17 +1531,16 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return row;
     }
 
-    private static Div systemMetric(String icon, String label, Object value) {
-        Span iconSpan = new Span(icon);
+    private static Div systemMetric(VaadinIcon icon, String label, Object value) {
+        Span iconSpan = new Span(icon.create());
         iconSpan.addClassName("system-metric-icon");
-        iconSpan.getElement().setAttribute("title", label);
-        iconSpan.getElement().setAttribute("aria-label", label);
         Span valueSpan = new Span(String.valueOf(value));
         valueSpan.addClassName("system-metric-value");
         Span labelSpan = new Span(label);
         labelSpan.addClassName("system-metric-label");
         Div metric = new Div(iconSpan, new Div(valueSpan, labelSpan));
         metric.addClassName("system-metric");
+        metric.setTitle(label);
         metric.getElement().setAttribute("aria-label", label + ": " + value);
         return metric;
     }

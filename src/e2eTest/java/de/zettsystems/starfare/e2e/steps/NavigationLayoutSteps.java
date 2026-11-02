@@ -75,7 +75,15 @@ public class NavigationLayoutSteps {
         assertThat(js().executeScript("""
                 const circle = document.querySelector('.map-range-circle');
                 const zoom = Number(document.querySelector('#map').style.zoom || 1);
-                return Math.abs(circle.getBoundingClientRect().width - 900 * zoom) < 1
+                const box = circle.getBoundingClientRect();
+                const radius = box.width / 2;
+                const untouched = [...document.querySelectorAll('#map [data-reach=stations], #map [data-reach=none]')]
+                    .every(dot => {
+                        const edge = dot.getBoundingClientRect();
+                        return Math.hypot(edge.x + edge.width / 2 - box.x - radius, edge.y + edge.height / 2 - box.y - radius)
+                                - edge.width / 2 > radius;
+                    });
+                return box.width <= 900 * zoom + 1 && untouched
                     && getComputedStyle(circle).pointerEvents === 'none';
                 """)).isEqualTo(true);
         browser.captureUiAcceptance("navigation-range-circle");

@@ -9,6 +9,7 @@ import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -147,19 +148,19 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             }
         });
         planningActions.addClassName("planning-actions");
-        planningActions.add(planningButton(UiTexts.PLAN_UNDO_SHORT, UiTexts.PLAN_UNDO, () -> {
+        planningActions.add(iconAction(VaadinIcon.ROTATE_LEFT, UiTexts.PLAN_UNDO, () -> {
             if (!game.undoOrders(gameId, currentSeat(), Objects.requireNonNull(displayedTurn))) {
                 Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
             }
             refresh();
-        }), planningButton(UiTexts.PLAN_DISPATCH_SHORT, UiTexts.PLAN_DISPATCH, () -> planningDialogs().dispatch()),
-                planningButton(UiTexts.PLAN_RESERVES_SHORT, UiTexts.PLAN_RESERVES, () -> planningDialogs().reserves()));
+        }), iconAction(VaadinIcon.PAPERPLANE, UiTexts.PLAN_DISPATCH, () -> planningDialogs().dispatch()),
+                iconAction(VaadinIcon.LOCK, UiTexts.PLAN_RESERVES, () -> planningDialogs().reserves()));
         actionBar.addClassName("map-controls");
         actionBar.add(treatyActions, planningActions);
         fleetsPanel.setActions(actionBar);
         chatHost.addClassName("map-chat-host");
         chatHost.setVisible(false);
-        treatyActions.add(new com.vaadin.flow.component.button.Button(I18n.t(UiTexts.DIP_TITLE), _ -> openDiplomacy()));
+        treatyActions.add(iconAction(VaadinIcon.HANDSHAKE, UiTexts.DIP_TITLE, this::openDiplomacy));
         boolean phone = Devices.mobile();
         header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, this::openShipResearch), phone);
@@ -205,10 +206,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (mobile != null) { mobile.showPanel(); }
     }
 
-    private static com.vaadin.flow.component.button.Button planningButton(String shortKey, String fullKey, Runnable action) {
-        var button = new com.vaadin.flow.component.button.Button(I18n.t(shortKey), _ -> action.run());
-        button.setAriaLabel(I18n.t(fullKey));
-        button.setTooltipText(I18n.t(fullKey));
+    private static com.vaadin.flow.component.button.Button iconAction(VaadinIcon icon, String key, Runnable action) {
+        var button = new com.vaadin.flow.component.button.Button(icon.create(), _ -> action.run());
+        button.setAriaLabel(I18n.t(key));
+        button.setTooltipText(I18n.t(key));
         return button;
     }
 

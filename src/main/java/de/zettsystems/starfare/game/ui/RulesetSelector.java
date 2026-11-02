@@ -4,6 +4,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
 import de.zettsystems.starfare.game.values.RulesetDefinition;
 import de.zettsystems.starfare.game.values.RulesetRef;
@@ -23,25 +24,30 @@ final class RulesetSelector extends VerticalLayout {
         variants.setId("ruleset-selection");
         variants.setLabel(I18n.t(UiTexts.RULESET_CHOOSE));
         variants.setItems(catalog.definitions());
-        variants.setItemLabelGenerator(entry -> I18n.t(entry.nameKey()));
+        variants.setRenderer(new ComponentRenderer<>(RulesetSelector::card));
         variants.setItemEnabledProvider(RulesetDefinition::creationEnabled);
         variants.setValue(catalog.definitions().stream().filter(RulesetDefinition::creationEnabled)
                 .findFirst().orElseThrow());
-        Div cards = new Div();
-        cards.addClassName("ruleset-cards");
-        add(variants, cards);
-        for (RulesetDefinition entry : catalog.definitions()) {
-            Span title = new Span(I18n.t(entry.nameKey()));
-            title.addClassName("ruleset-card-title");
-            Span status = new Span(entry.creationEnabled()
-                    ? I18n.t(UiTexts.RULESET_VERSION, entry.defaultRef().version())
-                    : I18n.t(UiTexts.RULESET_PLANNED));
-            Div card = new Div(title, status, new Span(I18n.t(entry.descriptionKey())));
-            card.addClassName("ruleset-card");
-            card.setVisible(entry.equals(variants.getValue()));
-            variants.addValueChangeListener(event -> card.setVisible(entry.equals(event.getValue())));
-            cards.add(card);
-        }
+        add(variants);
+    }
+
+    /** CSS class that paints the artwork of a variant behind its card and the summary header. */
+    static String artClass(RulesetRef ruleset) {
+        return "wizard-art-" + ruleset.variant();
+    }
+
+    private static Div card(RulesetDefinition entry) {
+        Span title = new Span(I18n.t(entry.nameKey()));
+        title.addClassName("ruleset-card-title");
+        Span status = new Span(entry.creationEnabled()
+                ? I18n.t(UiTexts.RULESET_VERSION, entry.defaultRef().version())
+                : I18n.t(UiTexts.RULESET_PLANNED));
+        status.addClassName("ruleset-card-status");
+        Span description = new Span(I18n.t(entry.descriptionKey()));
+        description.addClassName("ruleset-card-description");
+        Div card = new Div(title, status, description);
+        card.addClassNames("ruleset-card", artClass(entry.defaultRef()));
+        return card;
     }
 
     /** Notifies about the current choice immediately and after every change. */

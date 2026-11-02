@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 180" preserveAspectRatio="xMaxYMid slice">
+  <defs>
+    <linearGradient id="space" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0" stop-color="#071019"/>
+      <stop offset=".6" stop-color="#0d2233"/>
+      <stop offset="1" stop-color="#143a4d"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".78" cy=".5" r=".55">
+      <stop offset="0" stop-color="#2bb3a3" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#2bb3a3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="planet" cx=".35" cy=".3" r=".85">
+      <stop offset="0" stop-color="#ffd9a0"/>
+      <stop offset=".45" stop-color="#e08a3c"/>
+      <stop offset="1" stop-color="#5a2412"/>
+    </radialGradient>
+    <radialGradient id="moon" cx=".35" cy=".3" r=".8">
+      <stop offset="0" stop-color="#d7e7f1"/>
+      <stop offset="1" stop-color="#456178"/>
+    </radialGradient>
+    <clipPath id="front"><rect x="400" y="96" width="320" height="84"/></clipPath>
+  </defs>
+  <rect width="720" height="180" fill="url(#space)"/>
+  <rect width="720" height="180" fill="url(#glow)"/>
+  <g fill="#fff">
+    <circle cx="322" cy="30" r="1.1"/><circle cx="376" cy="96" r="1.4"/><circle cx="418" cy="20" r="1"/>
+    <circle cx="470" cy="136" r="1.2"/><circle cx="356" cy="150" r="1"/><circle cx="700" cy="30" r="1.3"/>
+    <circle cx="692" cy="150" r="1.1"/><circle cx="520" cy="18" r="1.2"/><circle cx="430" cy="60" r="1"/>
+  </g>
+  <g fill="none" stroke="#e8c98c" stroke-opacity=".45">
+    <ellipse cx="572" cy="90" rx="128" ry="26" stroke-width="9" transform="rotate(-14 572 90)"/>
+    <ellipse cx="572" cy="90" rx="110" ry="20" stroke-width="3" transform="rotate(-14 572 90)"/>
+  </g>
+  <circle cx="572" cy="90" r="62" fill="url(#planet)"/>
+  <g fill="none" stroke="#7a3618" stroke-opacity=".5" stroke-width="5">
+    <path d="M514 74Q572 92 630 70"/>
+    <path d="M511 100Q572 118 633 96"/>
+    <path d="M522 124Q572 138 622 122"/>
+  </g>
+  <g clip-path="url(#front)" fill="none" stroke="#f3dcae" stroke-opacity=".8">
+    <ellipse cx="572" cy="90" rx="128" ry="26" stroke-width="9" transform="rotate(-14 572 90)"/>
+    <ellipse cx="572" cy="90" rx="110" ry="20" stroke-width="3" transform="rotate(-14 572 90)"/>
+  </g>
+  <circle cx="676" cy="44" r="14" fill="url(#moon)"/>
+  <circle cx="671" cy="40" r="2.6" fill="#456178"/>
+  <circle cx="680" cy="49" r="1.8" fill="#456178"/>
+  <!-- Route with way stations and a fleet under way -->
+  <path d="M300 148C350 136 390 120 430 118" fill="none" stroke="#58a6ff" stroke-width="2" stroke-dasharray="6 6"/>
+  <circle cx="300" cy="148" r="4" fill="#58a6ff"/>
+  <circle cx="362" cy="134" r="3" fill="#79c0ff"/>
+  <g transform="translate(430 118) rotate(-6)">
+    <path d="M-30 0H-8" stroke="#79c0ff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>
+    <path d="M-10 -7L16 0L-10 7L-5 0Z" fill="#e6edf3"/>
+    <path d="M-10 -7L-16 -11L-5 -3ZM-10 7L-16 11L-5 3Z" fill="#81bedf"/>
+    <circle cx="-7" cy="0" r="2.2" fill="#f0c14b"/>
+  </g>
+</svg>

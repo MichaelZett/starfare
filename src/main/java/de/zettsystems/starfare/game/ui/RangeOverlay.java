@@ -7,6 +7,7 @@ import de.zettsystems.starfare.navigation.ui.RouteKeys;
 import de.zettsystems.starfare.navigation.values.RangeView;
 import de.zettsystems.starfare.style.CssProperties;
 import de.zettsystems.starfare.style.HtmlAttributes;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -14,19 +15,40 @@ import java.util.Locale;
  * behaviour, and a reach state on each target that never relies on colour alone.
  */
 final class RangeOverlay {
+    /** Room for the dashed marker around a target: outline width plus offset, and one pixel of air. */
+    private static final double TARGET_CLEARANCE = 6;
+
     private RangeOverlay() { }
 
-    static Div circle(VisibleSystem source, RangeView range) {
+    static Div circle(VisibleSystem source, RangeView range, List<VisibleSystem> systems) {
         Div circle = new Div();
         circle.addClassName("map-range-circle");
         circle.getElement().setAttribute("aria-hidden", "true");
-        double radius = range.range();
+        double radius = drawnRadius(source, range, systems);
         circle.getStyle().set("position", "absolute").set("pointer-events", "none").set("z-index", "1")
                 .set(CssProperties.LEFT, (source.x() - radius) + "px").set(CssProperties.TOP, (source.y() - radius) + "px")
                 .set(CssProperties.WIDTH, (2 * radius) + "px").set(CssProperties.HEIGHT, (2 * radius) + "px")
                 .set("border-radius", "50%").set("box-sizing", "border-box")
                 .set("border", "2px dashed rgba(128, 200, 232, .55)").set("background", "rgba(128, 200, 232, .05)");
         return circle;
+    }
+
+    /**
+     * Range is decided between system centres, yet a system is a large disc: one just out of range
+     * would reach into the circle and look reachable. The circle therefore ends before every system
+     * that cannot be flown to directly. The marker on each target stays the exact answer.
+     */
+    static double drawnRadius(VisibleSystem source, RangeView range, List<VisibleSystem> systems) {
+        double radius = range.range();
+        for (VisibleSystem system : systems) {
+            if (range.targets().containsKey(system.id()) && range.target(system.id()).reach() != RangeView.Reach.DIRECT) {
+                double distance = Math.hypot(system.x() - source.x(), system.y() - source.y());
+                // A pending battle draws the system at the unknown size, so never count less than that.
+                double edge = Math.max(SystemDisplaySize.pixelsFor(system), SystemDisplaySize.UNKNOWN_SIZE) / 2.0;
+                radius = Math.min(radius, distance - edge - TARGET_CLEARANCE);
+            }
+        }
+        return Math.max(radius, 0);
     }
 
     /** Marks a target by reach and returns the accessible description for its tooltip. */

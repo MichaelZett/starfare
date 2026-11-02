@@ -131,10 +131,7 @@ public class AiStrategySteps {
     }
 
     private void assertRuleCard(String name) {
-        var cards = new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .until(_ -> { var visible = browser.all(".ruleset-card").stream().filter(org.openqa.selenium.WebElement::isDisplayed).toList();
-                    return visible.size() == 1 && visible.getFirst().getText().contains(name) ? visible : null; });
-        assertThat(cards).hasSize(1);
+        browser.awaitTextIn("#ruleset-selection vaadin-radio-button[checked]", name);
     }
 
     private void awaitChoices(int count) {

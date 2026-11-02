@@ -75,6 +75,7 @@ public class LayoutSteps {
         browser.clickButtonWithText("Neues Spiel");
         browser.awaitCss("vaadin-dialog[opened] .wizard-section");
         assertWizardFits();
+        assertVariantCardsClearTheForm();
         capture("wizard", width);
         browser.clickButtonWithText("Zusammenfassung prüfen");
         browser.awaitCss(".wizard-confirmation-content");
@@ -106,6 +107,28 @@ public class LayoutSteps {
             throw new IllegalStateException("Wizard overflow measurement is not numeric");
         }
         assertThat(overflow.intValue()).as("Wizard horizontal overflow").isBetween(0, 1);
+    }
+
+    private void assertVariantCardsClearTheForm() {
+        if (!(browser.driver() instanceof JavascriptExecutor js)) {
+            throw new IllegalStateException("Browser does not support JavaScript");
+        }
+        Object measured = js.executeScript("""
+                const bottom = selector => Math.max(...[...document.querySelectorAll(selector)]
+                        .map(element => element.getBoundingClientRect().bottom));
+                const form = document.querySelector('vaadin-dialog[opened] .wizard-section');
+                return {
+                    gap: form.getBoundingClientRect().top - bottom('.ruleset-card'),
+                    details: ['.ruleset-card', '#ruleset-selection vaadin-radio-button', '#ruleset-selection',
+                            '.ruleset-selection'].map(selector => selector + '=' + bottom(selector)).join(' ')
+                            + ' form=' + form.getBoundingClientRect().top
+                };
+                """);
+        if (!(measured instanceof java.util.Map<?, ?> values) || !(values.get("gap") instanceof Number gap)) {
+            throw new IllegalStateException("Wizard card measurement is not numeric");
+        }
+        assertThat(gap.doubleValue()).as("Abstand Variantenkarten zu Deine Partie: " + values.get("details"))
+                .isGreaterThanOrEqualTo(4);
     }
 
     private void capture(String name, int width) throws IOException {

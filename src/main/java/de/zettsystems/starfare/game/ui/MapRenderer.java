@@ -58,7 +58,7 @@ final class MapRenderer {
         map.setClassName(in.logisticsMode() ? "map-logistics-mode" : "");
         var range = in.range();
         VisibleSystem source = in.selectedFrom();
-        if (range != null && source != null) { map.add(RangeOverlay.circle(source, range)); }
+        if (range != null && source != null) { map.add(RangeOverlay.circle(source, range, in.systems())); }
         for (VisibleSystem sys : in.systems()) {
             map.add(buildSystemDot(sys, in));
         }

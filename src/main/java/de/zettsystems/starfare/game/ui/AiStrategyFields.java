@@ -47,7 +47,6 @@ final class AiStrategyFields extends FormLayout {
         field.setItems(AiStrategy.forRules(ruleset));
         field.setItemLabelGenerator(AiStrategyFields::label);
         field.setValue(selected.get(index));
-        field.setHelperText(I18n.t(UiTexts.AI_STRATEGY_HINT));
         field.addValueChangeListener(event -> {
             AiStrategy value = event.getValue();
             selected.set(index, value == null ? AiStrategy.BASELINE : value);

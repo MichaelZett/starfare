@@ -22,6 +22,12 @@ export function badgePosition(segments, desired, halfWidth) {
     return choices.sort((a, b) => Math.abs(a - desired) - Math.abs(b - desired))[0];
 }
 
+/** Fleets sit where they really are; only badges without progress share their route evenly. */
+export function preferredShare(progress, index, count) {
+    if (progress !== undefined) return Number(progress);
+    return count > 1 ? (index + 1) / (count + 1) : 0.5;
+}
+
 function clippedPath(segments, height) {
     return `path('${segments.map(([a, b]) => `M ${a} 0 H ${b} V ${height} H ${a} Z`).join(' ')}')`;
 }
@@ -61,8 +67,7 @@ function placeBadge(node, lane, siblings, geometry, context) {
     const {zoom, badgeObstacles, systems} = context;
     const {ax, ay, ux, uy, length} = geometry;
     const half = Math.hypot(node.offsetWidth / 2, node.offsetHeight / 2) + 4 / zoom;
-    const preferred = siblings.length > 1 ? (siblings.indexOf(lane) + 1) / (siblings.length + 1)
-        : Number(node.dataset.mapProgress || 0.5);
+    const preferred = preferredShare(node.dataset.mapProgress, siblings.indexOf(lane), siblings.length);
     const segments = freeSegments(length, [
         ...projectObstacles(systems, geometry, 6 / zoom),
         ...projectObstacles(badgeObstacles, geometry, half)

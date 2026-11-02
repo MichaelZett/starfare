@@ -4,9 +4,6 @@ package de.zettsystems.starfare.game.ui;
  * Central registry of i18n keys. Resolve via Component#getTranslation or {@link de.zettsystems.starfare.i18n.I18n}.
  */
 public final class UiTexts {
-    public static final String PLAN_UNDO_SHORT = "plan.undo.short";
-    public static final String PLAN_DISPATCH_SHORT = "plan.dispatch.short";
-    public static final String PLAN_RESERVES_SHORT = "plan.reserves.short";
     public static final String MINING_TITLE = "mining.automation.title";
     public static final String MINING_ENABLED = "mining.automation.enabled";
     public static final String MINING_ROUNDS = "mining.automation.rounds";
@@ -32,7 +29,6 @@ public final class UiTexts {
     public static final String CHAT_NEW_MESSAGES = "chat.newMessages";
     public static final String CHAT_SEND_FAILED = "chat.sendFailed";
     public static final String ARCHIVE_VIEW_BLOCKED = "archive.viewBlocked";
-    public static final String UX_SEAT_DETAILS = "ux.seatDetails";
     public static final String RESEARCH_TITLE = "research.title";
     public static final String RESEARCH_BUDGET = "research.budget";
     public static final String RESEARCH_STATUS = "research.status";
@@ -76,13 +72,34 @@ public final class UiTexts {
 
     public static final String UX_CONQUEST_RESULT = "ux.conquest.result";
 
-    public static final String UX_NEUTRAL_DISTRIBUTION = "ux.neutral.distribution";
     public static final String UX_GALAXY = "ux.galaxy";
     public static final String UX_PARTICIPANTS = "ux.participants";
     public static final String UX_VICTORY = "ux.victory";
     public static final String UX_ACCESS = "ux.access";
     public static final String UX_CHANGE = "ux.change";
-    public static final String UX_SOLO_VICTORY = "ux.solo.victory";
+    public static final String LOBBY_WIZARD_SECTION_AI = "lobby.wizard.section.ai";
+    public static final String UX_SUMMARY_SYSTEMS = "ux.summary.systems";
+    public static final String UX_SUMMARY_PLAYERS = "ux.summary.players";
+    public static final String UX_SUMMARY_PLAYERS_VALUE = "ux.summary.players.value";
+    public static final String UX_SUMMARY_VICTORY = "ux.summary.victory";
+    public static final String UX_SUMMARY_PERCENT = "ux.summary.percent";
+    public static final String UX_SUMMARY_RANGE = "ux.summary.range";
+    public static final String UX_SUMMARY_GARRISON = "ux.summary.garrison";
+    public static final String UX_SUMMARY_NEUTRAL_PRODUCTION = "ux.summary.neutralProduction";
+    public static final String UX_SUMMARY_NEUTRAL_DISTRIBUTION = "ux.summary.neutralDistribution";
+    public static final String UX_SUMMARY_SEAT_PRODUCTION = "ux.summary.seatProduction";
+    public static final String UX_SUMMARY_ALLIANCES = "ux.summary.alliances";
+    public static final String UX_SUMMARY_AI_ALLIANCES = "ux.summary.aiAlliances";
+    public static final String UX_SUMMARY_ALLIANCE_VICTORY = "ux.summary.allianceVictory";
+    public static final String UX_SUMMARY_COMBAT_RANDOMNESS = "ux.summary.combatRandomness";
+    public static final String UX_SUMMARY_COMBAT_RANDOMNESS_VALUE = "ux.summary.combatRandomness.value";
+    public static final String UX_SUMMARY_REPLAY = "ux.summary.replay";
+    public static final String UX_SUMMARY_COMBAT_FLOW = "ux.summary.combatFlow";
+    public static final String UX_SUMMARY_COALITION_COMBAT = "ux.summary.coalitionCombat";
+    public static final String UX_SUMMARY_ATTACK_ORDER = "ux.summary.attackOrder";
+    public static final String UX_SUMMARY_VISIBILITY = "ux.summary.visibility";
+    public static final String UX_SUMMARY_OBSERVERS = "ux.summary.observers";
+    public static final String UX_SUMMARY_REENTRY = "ux.summary.reentry";
     public static final String UX_NO_DEADLINE = "ux.no.deadline";
     public static final String UX_METAL_STOCK = "ux.metal.stock";
     public static final String UX_METAL_BALANCE = "ux.metal.balance";
@@ -282,9 +299,7 @@ public final class UiTexts {
 
     // Wizard
     public static final String LOBBY_WIZARD_TITLE = "lobby.wizard.title";
-    public static final String LOBBY_WIZARD_INTRO = "lobby.wizard.intro";
     public static final String LOBBY_WIZARD_SECTION_SETUP = "lobby.wizard.section.setup";
-    public static final String LOBBY_WIZARD_SECTION_SETUP_HINT = "lobby.wizard.section.setup.hint";
     public static final String LOBBY_WIZARD_SECTION_NEUTRAL = "lobby.wizard.section.neutral";
     public static final String LOBBY_WIZARD_SECTION_NEUTRAL_HINT = "lobby.wizard.section.neutral.hint";
     public static final String LOBBY_WIZARD_SECTION_START = "lobby.wizard.section.start";
@@ -401,18 +416,6 @@ public final class UiTexts {
     public static final String LOBBY_GAME_NAME_REQUIRED = "lobby.gameName.required";
     public static final String LOBBY_WIZARD_REVIEW = "lobby.wizard.review";
     public static final String LOBBY_WIZARD_BACK = "lobby.wizard.back";
-    public static final String LOBBY_SUMMARY_VISIBILITY = "lobby.summary.visibility";
-    public static final String LOBBY_SUMMARY_SYSTEMS = "lobby.summary.systems";
-    public static final String LOBBY_SUMMARY_PLAYERS = "lobby.summary.players";
-    public static final String LOBBY_SUMMARY_GALAXY = "lobby.summary.galaxy";
-    public static final String LOBBY_SUMMARY_GARRISON = "lobby.summary.garrison";
-    public static final String LOBBY_SUMMARY_NEUTRAL_PRODUCTION = "lobby.summary.neutralProduction";
-    public static final String LOBBY_SUMMARY_ROUNDS = "lobby.summary.rounds";
-    public static final String LOBBY_SUMMARY_COMBAT = "lobby.summary.combat";
-    public static final String LOBBY_SUMMARY_RULES = "lobby.summary.rules";
-    public static final String LOBBY_SUMMARY_COALITION_COMBAT = "lobby.summary.coalitionCombat";
-    public static final String LOBBY_SUMMARY_ACCESS = "lobby.summary.access";
-    public static final String LOBBY_SUMMARY_START_PRODUCTION = "lobby.summary.startProduction";
     public static final String LOBBY_SUMMARY_ENABLED = "lobby.summary.enabled";
     public static final String LOBBY_SUMMARY_DISABLED = "lobby.summary.disabled";
     public static final String LOBBY_SUMMARY_OBSERVERS_ALLOWED = "lobby.summary.observersAllowed";
@@ -420,7 +423,6 @@ public final class UiTexts {
     public static final String LOBBY_SUMMARY_REENTRY_ALLOWED = "lobby.summary.reentryAllowed";
     public static final String LOBBY_SUMMARY_REENTRY_BLOCKED = "lobby.summary.reentryBlocked";
     public static final String LOBBY_SUMMARY_HUMAN = "lobby.summary.human";
-    public static final String LOBBY_SUMMARY_AI = "lobby.summary.ai";
     public static final String LOBBY_SUMMARY_SCHEMATIC = "lobby.summary.schematic";
     public static final String LOBBY_COLOR_COBALT = "lobby.color.cobalt";
     public static final String LOBBY_COLOR_AMBER = "lobby.color.amber";

@@ -113,6 +113,10 @@ html.starfare-mobile .wizard-body {
     overflow: visible;
 }
 
+html.starfare-mobile .wizard-confirmation {
+    padding: 4px 0 12px;
+}
+
 html.starfare-mobile .wizard-grid,
 html.starfare-mobile .wizard-summary-groups {
     grid-template-columns: 1fr !important;
@@ -412,6 +416,16 @@ html.starfare-mobile .mobile-map-sheet .system-details-actions vaadin-button {
 
 html.starfare-mobile .mobile-map-sheet .system-details-actions {
     flex-wrap: wrap;
+}
+
+/* No hover on a phone: the tile keeps its visible label. */
+html.starfare-mobile .mobile-map-sheet .system-header-metrics .system-metric .system-metric-label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
 }
 
 html.starfare-mobile .mobile-map-nav {

@@ -55,9 +55,14 @@ public class AllianceVictorySteps {
         ((JavascriptExecutor) browser.driver()).executeScript("arguments[0].scrollIntoView({block:'center'});", browser.awaitCss("#alliances-allowed"));
         Files.write(target, ((TakesScreenshot) browser.driver()).getScreenshotAs(OutputType.BYTES));
         browser.clickButtonWithText("Zusammenfassung prüfen");
-        browser.awaitText("Bündnissiege: aktiv (70%)");
-        browser.awaitText("KI-Bündnisse: aktiv");
+        awaitSummaryLine("Bündnissieg", "70 %");
+        awaitSummaryLine("KI-Bündnisse", "aktiv");
         browser.open("/");
+    }
+    private void awaitSummaryLine(String label, String value) {
+        browser.awaitTexts(".wizard-summary-line",
+                lines -> lines.stream().anyMatch(line -> line.contains(label) && line.contains(value)),
+                "Zusammenfassung zeigt nicht " + label + " = " + value);
     }
     private void awaitEnabled(String selector, boolean enabled) {
         Boolean matched = new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(30))

@@ -128,7 +128,7 @@ public class DiplomacySteps {
         browser.type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), label);
         browser.clickMatching("vaadin-combo-box-item", item -> item.getText().equals(label), "Sprache " + label);
     }
-    private static void openTreaties(Browser target) { target.clickButtonWithText("Bündnisse"); target.awaitCss(".diplomacy-content"); }
+    private static void openTreaties(Browser target) { target.clickCss(".map-controls vaadin-button[aria-label='Bündnisse']"); target.awaitCss(".diplomacy-content"); }
     private void advance() { assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue(); }
     private void waitFor(java.util.function.BooleanSupplier condition) { new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> condition.getAsBoolean()); }
     private void clickFleets() { browser.clickTabWithText("Flotten"); }

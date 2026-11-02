@@ -12,6 +12,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -26,6 +27,7 @@ import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -123,8 +125,12 @@ final class CreateGameWizardDialog {
         empireName.setValue(EmpireNameGenerator.forHuman(hostName));
         empireName.setRequiredIndicatorVisible(true);
 
-        FormLayout setupGrid = grid(3, "13em", gameName, systems, humans, ai, galaxyLayout, empireName,
+        FormLayout setupGrid = grid(3, "13em", gameName, empireName, galaxyLayout, systems, humans, ai,
                 joinAfterCreate);
+        GalaxyPreview galaxyPreview = new GalaxyPreview(GameConfig.DEFAULT_GALAXY_LAYOUT);
+        galaxyLayout.addValueChangeListener(event -> galaxyPreview.show(event.getValue()));
+        Div setupLayout = new Div(setupGrid, galaxyPreview);
+        setupLayout.addClassName("wizard-setup-layout");
         FormLayout settingsGrid = grid(3, "13em", startGarrison, combatRandomnessField,
                 observersAllowed, reentryAllowed, battlePresentation, victoryPercent, victorySettings);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
@@ -138,10 +144,10 @@ final class CreateGameWizardDialog {
         attackOrder.setItemLabelGenerator(CreateGameWizardDialog::labelFor);
         attackOrder.setValue(RoundRules.DEFAULT_ATTACK_ORDER);
         FormLayout timerGrid = grid(2, "16em", roundLimit, stragglerLimit);
-        Div timerSection = wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS),
+        Div timerSection = wizardSection(WizardEmblem.ROUNDS, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS),
                 I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS_HINT, GameConfig.MAX_MISSED_ROUNDS), timerGrid);
         FormLayout combatGrid = grid(1, "16em", attackOrder);
-        Div combatSection = wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_COMBAT),
+        Div combatSection = wizardSection(WizardEmblem.COMBAT, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_COMBAT),
                 I18n.t(UiTexts.LOBBY_WIZARD_SECTION_COMBAT_HINT), combatGrid);
         Runnable updateRoundTimerVisibility = () -> timerSection.setVisible(
                 valueOrDefault(humans.getValue(), GameConfig.DEFAULT_HUMAN_PLAYERS) > 1);
@@ -167,36 +173,32 @@ final class CreateGameWizardDialog {
         rebuildProductionInputs.run();
         ai.addValueChangeListener(_ -> aiStrategies.showSeats(valueOrDefault(ai.getValue(), GameConfig.DEFAULT_AI_PLAYERS)));
         aiStrategies.showSeats(GameConfig.DEFAULT_AI_PLAYERS);
+        Div aiSection = wizardSection(WizardEmblem.AI, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_AI),
+                I18n.t(UiTexts.AI_STRATEGY_HINT), aiStrategies);
+        ai.addValueChangeListener(_ -> aiSection.setVisible(valueOrDefault(ai.getValue(), GameConfig.DEFAULT_AI_PLAYERS) > 0));
 
-        Div intro = new Div();
-        intro.addClassName("wizard-intro");
-        intro.setText(I18n.t(UiTexts.LOBBY_WIZARD_INTRO));
-
-        Div privateHint = new Div();
+        Div privateHint = new Div(VaadinIcon.LOCK.create(), new Span(I18n.t(UiTexts.GAME_PRIVATE_HINT)));
         privateHint.addClassName("wizard-private-hint");
-        privateHint.setText(I18n.t(UiTexts.GAME_PRIVATE_HINT));
 
         Div sideSections = new Div(
-                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETTINGS),
+                wizardSection(WizardEmblem.TUNING, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETTINGS),
                         I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETTINGS_HINT), settingsGrid),
-                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL),
+                wizardSection(WizardEmblem.PLANET, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL),
                         I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid), timerSection, combatSection);
         sideSections.addClassName("wizard-overview-side");
         Div advancedContent = new Div(sideSections,
-                wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START),
+                wizardSection(WizardEmblem.FLEET, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START),
                         I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START_HINT), startProductionFields));
         advancedContent.addClassName("wizard-advanced-content");
         Details advanced = new Details(I18n.t(UiTexts.LOBBY_WIZARD_ADVANCED), advancedContent);
         advanced.addClassName("wizard-advanced");
-        Div overview = wizardSection(I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP),
-                I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP_HINT), setupGrid);
+        Div overview = wizardSection(WizardEmblem.GALAXY, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETUP), null, setupLayout);
         VerticalLayout body = new VerticalLayout(
-                privateHint,
-                intro,
                 rulesets,
                 overview,
-                aiStrategies,
-                advanced);
+                aiSection,
+                advanced,
+                privateHint);
         body.addClassName("wizard-body");
         body.setPadding(false);
         body.setSpacing(true);
@@ -403,32 +405,7 @@ final class CreateGameWizardDialog {
 
     private static Div buildConfirmation(GameSetup setup, String gameName, RulesetCatalog catalog,
                                          java.util.function.Consumer<String> edit) {
-        Div content = new WizardSummary(setup, gameName, catalog, edit);
-        content.add(new Details(I18n.t(UiTexts.LOBBY_SUMMARY_SCHEMATIC), galaxyPreview(setup.galaxyLayout())));
-        return content;
-    }
-
-    private static Div galaxyPreview(GalaxyLayout layout) {
-        Div preview = new Div();
-        preview.addClassName("wizard-galaxy-preview");
-        preview.addClassName(layout == GalaxyLayout.EVEN ? "wizard-galaxy-even" : "wizard-galaxy-random");
-        preview.add(new Span(I18n.t(UiTexts.LOBBY_SUMMARY_SCHEMATIC)));
-        Div stars = new Div();
-        stars.addClassName("wizard-galaxy-stars");
-        double[][] evenPositions = {{12, 18}, {34, 16}, {57, 19}, {82, 14}, {22, 43}, {48, 42},
-                {73, 44}, {12, 72}, {38, 68}, {62, 74}, {86, 69}, {50, 88}};
-        double[][] randomPositions = {{8, 20}, {31, 12}, {67, 25}, {85, 11}, {17, 47}, {48, 36},
-                {77, 53}, {29, 76}, {58, 66}, {91, 81}, {6, 88}, {48, 91}};
-        double[][] positions = layout == GalaxyLayout.EVEN ? evenPositions : randomPositions;
-        for (double[] position : positions) {
-            Span star = new Span();
-            star.addClassName("wizard-galaxy-star");
-            star.getStyle().set(CssProperties.LEFT, position[0] + "%");
-            star.getStyle().set(CssProperties.TOP, position[1] + "%");
-            stars.add(star);
-        }
-        preview.add(stars);
-        return preview;
+        return new WizardSummary(setup, gameName, catalog, edit);
     }
 
     private static String labelFor(ProductionDistribution value) {
@@ -532,14 +509,20 @@ final class CreateGameWizardDialog {
         layout.setMaxColumns(maxColumns);
     }
 
-    private static Div wizardSection(String title, String hint, Component content) {
-        Div section = new Div();
-        section.addClassName("wizard-section");
+    private static Div wizardSection(WizardEmblem emblem, String title, @Nullable String hint, Component content) {
         H3 heading = new H3(title);
         heading.addClassName("wizard-section-title");
-        Span sub = new Span(hint);
-        sub.addClassName("wizard-section-hint");
-        section.add(heading, sub, content);
+        Div titles = new Div(heading);
+        titles.addClassName("wizard-section-titles");
+        if (hint != null) {
+            Span sub = new Span(hint);
+            sub.addClassName("wizard-section-hint");
+            titles.add(sub);
+        }
+        Div head = new Div(emblem.create(), titles);
+        head.addClassName("wizard-section-head");
+        Div section = new Div(head, content);
+        section.addClassName("wizard-section");
         return section;
     }
 
