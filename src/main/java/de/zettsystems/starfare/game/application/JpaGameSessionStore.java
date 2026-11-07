@@ -5,6 +5,7 @@ import de.zettsystems.starfare.game.domain.GameSessionEntity;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.PostConstruct;
@@ -34,6 +35,8 @@ public class JpaGameSessionStore implements GameSessionStore {
     private final ConcurrentHashMap<GameId, GameSession> cache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<GameId, Instant> lastAccess = new ConcurrentHashMap<>();
     private final Set<GameId> readableIds = ConcurrentHashMap.newKeySet();
+    /** Lobby summaries of unloaded games, taken at unload; a game is either cached or parked here. */
+    private final ConcurrentHashMap<GameId, GameSummary> parked = new ConcurrentHashMap<>();
     private final Object cacheMonitor = new Object();
 
     public JpaGameSessionStore(GameSessionRepository repository, GameArchiveStore archives, ObjectMapper objectMapper) {
@@ -87,6 +90,7 @@ public class JpaGameSessionStore implements GameSessionStore {
                 lastAccess.put(id, Instant.now());
             }
             readableIds.add(id);
+            parked.remove(id);
             return true;
         } catch (RuntimeException e) {
             // Auch fromSnapshot kann an unvollstaendigen Altdaten scheitern, nicht nur Jackson.
@@ -104,6 +108,7 @@ public class JpaGameSessionStore implements GameSessionStore {
         synchronized (cacheMonitor) {
             cache.put(session.id(), session);
             readableIds.add(session.id());
+            parked.remove(session.id());
             lastAccess.put(session.id(), Instant.now());
         }
         try {
@@ -150,6 +155,7 @@ public class JpaGameSessionStore implements GameSessionStore {
             cache.remove(id);
             lastAccess.remove(id);
             readableIds.remove(id);
+            parked.remove(id);
         }
     }
 
@@ -166,24 +172,33 @@ public class JpaGameSessionStore implements GameSessionStore {
         Instant cutoff = Instant.now().minus(inactivity);
         // readState nie unter cacheMonitor: save() läuft unter dem Schreib-Lock der
         // Partie und wartet auf cacheMonitor — umgekehrt verklemmten sich beide.
-        List<Map.Entry<GameId, GameSession>> candidates = cache.entrySet().stream()
+        List<Candidate> candidates = cache.entrySet().stream()
                 .filter(entry -> isIdle(entry.getKey(), cutoff))
                 .filter(entry -> entry.getValue().readState(state -> state.active() && state.started()
                         && !state.gameOver() && state.originalHumanPlayerIds().size() == 1))
-                .map(Map.Entry::copyOf)
+                .map(entry -> new Candidate(entry.getKey(), entry.getValue(), entry.getValue().summary()))
                 .toList();
         int unloaded = 0;
         synchronized (cacheMonitor) {
             for (var candidate : candidates) {
-                GameId id = candidate.getKey();
+                GameId id = candidate.id();
                 // Zwischenzeitlich gespeichert oder berührt: nicht mehr untätig.
-                if (isIdle(id, cutoff) && cache.remove(id, candidate.getValue())) {
+                if (isIdle(id, cutoff) && cache.remove(id, candidate.session())) {
                     lastAccess.remove(id);
+                    parked.put(id, candidate.summary());
                     unloaded++;
                 }
             }
         }
         return unloaded;
+    }
+
+    @Override
+    public Optional<GameSummary> parkedSummary(GameId id) {
+        return Optional.ofNullable(parked.get(id));
+    }
+
+    private record Candidate(GameId id, GameSession session, GameSummary summary) {
     }
 
     private boolean isIdle(GameId id, Instant cutoff) {

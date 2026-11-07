@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameSummary;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,5 +30,13 @@ public interface GameSessionStore {
 
     default int unloadInactiveSingleHumanGames(Duration inactivity) {
         return 0;
+    }
+
+    /**
+     * Summary taken when the game was unloaded; empty once it is loaded again. Lets the lobby list
+     * an unloaded game without restoring its snapshot.
+     */
+    default Optional<GameSummary> parkedSummary(GameId id) {
+        return Optional.empty();
     }
 }

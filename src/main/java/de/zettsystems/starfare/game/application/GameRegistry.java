@@ -29,6 +29,11 @@ public interface GameRegistry {
 
     Optional<GameSession> find(GameId id);
 
+    /** Summary of an unloaded game, without loading it; empty for loaded or unknown games. */
+    default Optional<de.zettsystems.starfare.game.values.GameSummary> parkedSummary(GameId id) {
+        return Optional.empty();
+    }
+
     GameSession require(GameId id);
 
     void touch(GameId id);

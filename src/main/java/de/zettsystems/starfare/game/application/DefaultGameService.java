@@ -681,12 +681,8 @@ public class DefaultGameService implements GameService {
         return registry.readState(gameId, state -> summaryOf(gameId, name, hostPlayerId, state));
     }
 
-    private GameSummary summaryOf(GameId gameId, String name, @Nullable String hostPlayerId, GameState state) {
-        return new GameSummary(gameId, name, hostPlayerId, state.turn(), state.started(), state.gameOver(),
-                state.observersAllowed(), state.reentryAllowed(),
-                List.copyOf(state.players()), Set.copyOf(state.joinedHumanPlayerIds()),
-                Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats()),
-                state.visibility(), state.outcome(), state.ruleset(), state.victoryRules());
+    private static GameSummary summaryOf(GameId gameId, String name, @Nullable String hostPlayerId, GameState state) {
+        return GameSession.summaryOf(gameId, name, hostPlayerId, state);
     }
 
     @Override
@@ -1059,6 +1055,11 @@ public class DefaultGameService implements GameService {
     }
     @Override
     public Optional<GameSummary> summaryFor(GameId id, String account) {
+        // An unloaded game keeps the summary taken when it was unloaded; listing it must not load it again.
+        Optional<GameSummary> parked = registry.parkedSummary(id);
+        if (parked.isPresent()) {
+            return parked.filter(summary -> access.visible(summary, account));
+        }
         Optional<GameSummary> live = registry.find(id).flatMap(session -> registry.readState(id, state ->
                 access.visible(state, session.hostPlayerId(), account)
                         ? Optional.of(summaryOf(id)) : Optional.empty()));

@@ -6,6 +6,16 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Die Lobby lädt entladene Einzelspieler-Partien nicht mehr vollständig aus der
+  Datenbank nach, nur um sie aufzulisten. Sie zeigt die beim Entladen gemerkte
+  Zusammenfassung; bisher hielt jeder Lobby-Besuch alle diese Partien wieder im Speicher.
+- Die Zeitmessung zählt SQL-Abfragen je Anfrage statt über die globale
+  Hibernate-Statistik, in die gleichzeitige Anfragen und Hintergrundläufe einflossen.
+  Neu gemeldet werden auch schnelle Anfragen mit vielen (ab 20) oder wiederholten
+  Abfragen (dieselbe ab dreimal), mit den häufigsten Abfragen im Log.
+
 ## 0.2.3 - 2026-11-02
 
 - Der Spielassistent sieht jetzt wie ein Spiel aus: Regelvarianten erscheinen als

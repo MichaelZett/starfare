@@ -40,8 +40,9 @@ spring:
           provider_disables_autocommit: true
         jdbc:
           time_zone: UTC
-        # Counts SQL statements per page build (PageTiming). Costs next to nothing.
-        generate_statistics: true
+        # Counts the SQL statements of each request thread (PageTiming).
+        session_factory:
+          statement_inspector: de.zettsystems.starfare.observability.config.SqlStatementRecorder
     open-in-view: false
   flyway:
     enabled: true
@@ -67,6 +68,9 @@ starfare:
     # at WARN (PageTiming, RulesetTurnEngine; prod-langsam.sh). 0 disables.
     slow-page-ms: 500
     slow-round-ms: 1000
+    # A faster request is still logged ("Viele Abfragen") from this many statements
+    # or when one statement runs three times or more.
+    many-statements: 20
   legal:
     operator-name: ${STARFARE_LEGAL_OPERATOR_NAME:}
     postal-address: ${STARFARE_LEGAL_POSTAL_ADDRESS:}

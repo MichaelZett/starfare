@@ -1,7 +1,11 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.GameId;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,6 +64,25 @@ class GameAccessPolicyTest {
         assertThat(policy.canReview(state, null, "outsider")).isFalse();
         state.configureLobby(true, false);
         assertThat(policy.canReview(state, null, "outsider")).isTrue();
+    }
+
+    @Test
+    void summaryOfAnActiveGameDecidesLikeItsState() {
+        state.seatByUser().put("member", 1);
+        state.invitedSeats().put("invited", 2);
+        assertSameDecision();
+        state.publishInLobby();
+        assertSameDecision();
+        state.makePrivate();
+        state.endGame(1);
+        assertSameDecision();
+    }
+
+    private void assertSameDecision() {
+        var summary = GameSession.summaryOf(GameId.of("g"), "Game", "host", state);
+        for (String account : List.of("host", "member", "invited", "outsider", "")) {
+            assertThat(policy.visible(summary, account)).as(account).isEqualTo(policy.visible(state, "host", account));
+        }
     }
 
     @Test

@@ -1,10 +1,14 @@
 package de.zettsystems.starfare.game.domain;
 
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameSummary;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -56,6 +60,21 @@ public class GameSession {
 
     public Instant createdAt() {
         return createdAt;
+    }
+
+    /** Lobby summary of the current state, taken under the read lock. */
+    public GameSummary summary() {
+        String host = hostPlayerId;
+        return readState(current -> summaryOf(id, name, host, current));
+    }
+
+    /** Lobby summary of {@code state}; also used for archived games, which have no session. */
+    public static GameSummary summaryOf(GameId id, String name, @Nullable String hostPlayerId, GameState state) {
+        return new GameSummary(id, name, hostPlayerId, state.turn(), state.started(), state.gameOver(),
+                state.observersAllowed(), state.reentryAllowed(),
+                List.copyOf(state.players()), Set.copyOf(state.joinedHumanPlayerIds()),
+                Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats()),
+                state.visibility(), state.outcome(), state.ruleset(), state.victoryRules());
     }
 
     public <T> T readState(Function<GameState, T> fn) {

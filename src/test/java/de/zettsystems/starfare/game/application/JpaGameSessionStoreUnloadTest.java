@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameListScope;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
@@ -41,6 +42,9 @@ class JpaGameSessionStoreUnloadTest extends AbstractIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private GameService games;
+
     private GameId runningSingleHumanGame() {
         GameId id = registry.createGame(GameSetup.defaults(), "alice", "solo-game");
         registry.writeState(id, state -> {
@@ -69,6 +73,40 @@ class JpaGameSessionStoreUnloadTest extends AbstractIntegrationTest {
         assertThat(store.load(id)).as("aus der DB wieder geladen").isPresent();
         assertThat(store.unloadInactiveSingleHumanGames(ANY_ACCESS_IS_IDLE)).isEqualTo(1);
         assertThat(store.loadedIds()).doesNotContain(id);
+    }
+
+    @Test
+    void lobbyListsAnUnloadedGameWithoutLoadingIt() {
+        GameId id = runningSingleHumanGame();
+        int turn = registry.readState(id, state -> state.turn());
+        assertThat(store.unloadInactiveSingleHumanGames(ANY_ACCESS_IS_IDLE)).isEqualTo(1);
+
+        assertThat(games.visibleGamesFor("alice", GameListScope.LOBBY))
+                .filteredOn(summary -> summary.gameId().equals(id))
+                .singleElement()
+                .satisfies(summary -> {
+                    assertThat(summary.turn()).isEqualTo(turn);
+                    assertThat(summary.seatByPlayer()).containsEntry("alice", 1);
+                });
+        assertThat(games.visibleGamesFor("bob", GameListScope.LOBBY))
+                .as("private Partie bleibt Fremden verborgen")
+                .noneMatch(summary -> summary.gameId().equals(id));
+        assertThat(store.loadedIds()).as("die Lobby lädt die Partie nicht wieder").doesNotContain(id);
+    }
+
+    @Test
+    void reloadedGameIsListedWithItsCurrentState() {
+        GameId id = runningSingleHumanGame();
+        assertThat(store.unloadInactiveSingleHumanGames(ANY_ACCESS_IS_IDLE)).isEqualTo(1);
+
+        registry.writeState(id, state -> {
+            state.publishInLobby();
+            return null;
+        });
+
+        assertThat(games.visibleGamesFor("bob", GameListScope.LOBBY))
+                .as("nach dem Wiederladen gilt der neue Stand, nicht der beim Entladen gemerkte")
+                .anyMatch(summary -> summary.gameId().equals(id));
     }
 
     @Test

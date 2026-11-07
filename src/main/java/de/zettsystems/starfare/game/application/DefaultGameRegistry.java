@@ -78,6 +78,11 @@ public class DefaultGameRegistry implements GameRegistry {
     }
 
     @Override
+    public Optional<de.zettsystems.starfare.game.values.GameSummary> parkedSummary(GameId id) {
+        return store.parkedSummary(id);
+    }
+
+    @Override
     public GameSession require(GameId id) {
         return find(id).orElseThrow(() -> new IllegalArgumentException("Unknown game: " + id));
     }
