@@ -25,6 +25,22 @@ import java.util.function.BooleanSupplier;
 import org.jspecify.annotations.Nullable;
 
 final class SendFleetDialog {
+    private static final String ROUTE_PREVIEW_JS = """
+            document.querySelector('#route-preview')?.remove();
+            if (!$0) return;
+            const map = document.querySelector('#map');
+            if (!map) return;
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.id = 'route-preview';
+            svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4';
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+            path.setAttribute('points', $1);
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke', '#80c8e8');
+            path.setAttribute('stroke-width', '4');
+            path.setAttribute('stroke-dasharray', '10 6');
+            svg.append(path); map.append(svg);
+            """;
 
     private SendFleetDialog() {
     }
@@ -138,22 +154,7 @@ final class SendFleetDialog {
         java.util.List<Integer> ids = route.map(RoutePreview::systems).orElse(java.util.List.of(ctx.from().id(), ctx.to().id()));
         String points = ids.stream().map(id -> view.systems().stream().filter(system -> system.id() == id).findFirst().orElseThrow())
                 .map(system -> system.x() + "," + system.y()).collect(java.util.stream.Collectors.joining(" "));
-        dialog.addOpenedChangeListener(event -> dialog.getElement().executeJs("""
-                document.querySelector('#route-preview')?.remove();
-                if (!$0) return;
-                const map = document.querySelector('#map');
-                if (!map) return;
-                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                svg.id = 'route-preview';
-                svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4';
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-                path.setAttribute('points', $1);
-                path.setAttribute('fill', 'none');
-                path.setAttribute('stroke', '#80c8e8');
-                path.setAttribute('stroke-width', '4');
-                path.setAttribute('stroke-dasharray', '10 6');
-                svg.append(path); map.append(svg);
-                """, event.isOpened() && (ctx.from().industry() == null || route.isPresent()), points));
+        dialog.addOpenedChangeListener(event -> dialog.getElement().executeJs(ROUTE_PREVIEW_JS, event.isOpened() && (ctx.from().industry() == null || route.isPresent()), points));
     }
 
     private static Dialog buildDialog() {
@@ -310,31 +311,38 @@ final class SendFleetDialog {
         return sendBtn;
     }
 
+    private static boolean addStandingOrder(SendContext ctx, IntegerField shipsInput) {
+        int routed = shipsInput.getValue() == null ? 0 : shipsInput.getValue();
+        boolean accepted = ctx.game().addStandingOrder(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), routed);
+        if (!accepted) {
+            Notification.show(I18n.t(UiTexts.MAP_ADD_STANDING_ORDER_FAILED));
+        }
+        return accepted;
+    }
+
+    /** An empty or zero ship count is ignored silently; the field already shows why. */
+    private static boolean sendOnce(SendContext ctx, IntegerField shipsInput, ConquestSelection conquest) {
+        Integer ships = shipsInput.getValue();
+        if (ships == null || ships < 1) {
+            return false;
+        }
+        boolean accepted = ctx.from().industry() == null
+                ? ctx.game().sendFleet(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), ships)
+                : ctx.game().sendFleet(ctx.gameId(), ctx.pid(), ctx.openedTurn(), ctx.from().id(), ctx.to().id(), ships, conquest.beneficiary());
+        if (!accepted) {
+            Notification.show(I18n.t(UiTexts.MAP_INVALID_COMMAND));
+        }
+        return accepted;
+    }
+
     private static void onSendClicked(SendContext ctx, IntegerField shipsInput,
                                       Checkbox standingCheckbox, Dialog dialog, ConquestSelection conquest) {
         if (ctx.game().viewFor(ctx.gameId(), ctx.pid()).turn() != ctx.openedTurn()) {
             Notification.show(I18n.t(UiTexts.MAP_SEND_ROUND_CHANGED));
             return;
         }
-        boolean accepted;
-        if (Boolean.TRUE.equals(standingCheckbox.getValue())) {
-            int routed = shipsInput.getValue() == null ? 0 : shipsInput.getValue();
-            accepted = ctx.game().addStandingOrder(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), routed);
-            if (!accepted) {
-                Notification.show(I18n.t(UiTexts.MAP_ADD_STANDING_ORDER_FAILED));
-            }
-        } else {
-            Integer ships = shipsInput.getValue();
-            if (ships == null || ships < 1) {
-                return;
-            }
-            accepted = ctx.from().industry() == null
-                    ? ctx.game().sendFleet(ctx.gameId(), ctx.pid(), ctx.from().id(), ctx.to().id(), ships)
-                    : ctx.game().sendFleet(ctx.gameId(), ctx.pid(), ctx.openedTurn(), ctx.from().id(), ctx.to().id(), ships, conquest.beneficiary());
-            if (!accepted) {
-                Notification.show(I18n.t(UiTexts.MAP_INVALID_COMMAND));
-            }
-        }
+        boolean accepted = Boolean.TRUE.equals(standingCheckbox.getValue())
+                ? addStandingOrder(ctx, shipsInput) : sendOnce(ctx, shipsInput, conquest);
         if (!accepted) {
             return;
         }

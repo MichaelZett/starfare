@@ -105,6 +105,13 @@
         <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
     </Match>
 
+    <!-- Same record-pattern false positive: `instanceof EconomySummary(int owner, …)` uses every binding. -->
+    <Match>
+        <Class name="de.zettsystems.starfare.game.values.EconomyTotals"/>
+        <Method name="of"/>
+        <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
+    </Match>
+
     <!--
        FALSE POSITIVE: in DefaultGameRegistry.initializeState(...) the local
        `Random r` is reused six times (lines 241..253). SpotBugs analyses

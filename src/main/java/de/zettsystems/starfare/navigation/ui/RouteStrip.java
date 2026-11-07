@@ -69,30 +69,38 @@ public final class RouteStrip extends Div {
         Button point = new Button(names.get(index));
         point.addClassName("route-stop");
         point.getElement().setAttribute(de.zettsystems.starfare.style.HtmlAttributes.ROUTE_SYSTEM, String.valueOf(systems.get(index)));
+        markProgress(point, index);
+        String location = I18n.t(role(index), names.get(index));
+        point.setAriaLabel(location);
+        system.ifPresent(known -> decorate(point, known, index, location));
+        point.setEnabled(system.isPresent()); stops.add(point);
+    }
+    private void markProgress(Button point, int index) {
         if (index < state.activeIndex()) { point.addClassName("route-completed"); }
         if (index == state.activeIndex()) { point.addClassName(state.atStation() ? "route-current" : "route-next"); }
         if (state.atStation() && index == state.activeIndex() + 1) { point.addClassName("route-next"); }
         if (state.blocked() && index == state.activeIndex()) { point.addClassName("route-blocked"); }
+    }
+    /** Later checks win: the current station outranks the destination, which outranks passed stops. */
+    private String role(int index) {
         String role = RouteKeys.STATION;
         if (index == 0) { role = RouteKeys.SOURCE; }
         if (index < state.activeIndex() && !preview) { role = RouteKeys.PASSED; }
         if (index == state.activeIndex() && !state.atStation()) { role = RouteKeys.NEXT; }
         if (index == systems.size() - 1) { role = RouteKeys.DESTINATION; }
         if (index == state.activeIndex() && state.atStation()) { role = RouteKeys.CURRENT; }
-        String location = I18n.t(role, names.get(index));
-        point.setAriaLabel(location);
-        system.ifPresent(known -> {
-            String color = known.colorHex();
-            if (color != null) { point.getStyle().set(CssProperties.BORDER_COLOR, color); }
-            Integer stationOwner = known.ownerId();
-            boolean allied = stationOwner != null && !Objects.equals(stationOwner, owner)
-                    && (alliedOwners.contains(stationOwner) || (preview && !state.blocked() && index > 0 && index < systems.size() - 1));
-            if (allied) {
-                point.setText("◇ " + names.get(index)); point.setAriaLabel(location + " · " + I18n.t(RouteKeys.ALLIED, names.get(index)));
-            }
-            point.addClickListener(_ -> focus(point, known));
-        });
-        point.setEnabled(system.isPresent()); stops.add(point);
+        return role;
+    }
+    private void decorate(Button point, VisibleSystem known, int index, String location) {
+        String color = known.colorHex();
+        if (color != null) { point.getStyle().set(CssProperties.BORDER_COLOR, color); }
+        Integer stationOwner = known.ownerId();
+        boolean allied = stationOwner != null && !Objects.equals(stationOwner, owner)
+                && (alliedOwners.contains(stationOwner) || (preview && !state.blocked() && index > 0 && index < systems.size() - 1));
+        if (allied) {
+            point.setText("◇ " + names.get(index)); point.setAriaLabel(location + " · " + I18n.t(RouteKeys.ALLIED, names.get(index)));
+        }
+        point.addClickListener(_ -> focus(point, known));
     }
     private void focus(Button point, VisibleSystem system) {
         stops.getChildren().forEach(component -> component.removeClassName("route-selected"));

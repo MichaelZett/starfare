@@ -56,7 +56,7 @@ class EarlyIndustryTest {
         var forecast = state.metalPreview();
         long balance = RecyclingOrders.balanceTenths(state);
         var outcomes = economy.produce(state, Map.of());
-        assertThat(state.industries().get(2)).isEqualTo(new Industry(6, 4, 0));
+        assertThat(state.industries()).containsEntry(2, new Industry(6, 4, 0));
         assertThat(state.getSystem(2).garrison()).isEqualTo(3);
         assertThat(state.getSystem(2).productionPerTurn()).isEqualTo(2);
         assertThat(outcomes.stream().filter(p -> p.systemId() == 2).findFirst().orElseThrow().capacityGained()).isEqualTo(2);

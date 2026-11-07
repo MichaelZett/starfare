@@ -35,17 +35,17 @@ class SidebarNavigationTest {
         Tabs tabs = descendants(panel).filter(Tabs.class::isInstance).map(Tabs.class::cast).findFirst().orElseThrow();
         assertThat(compact.getListDataView().getItemCount()).isEqualTo(7);
         panel.showOrders();
-        assertThat(compact.getValue().toString()).isEqualTo("ORDERS");
+        assertThat(compact.getValue()).hasToString("ORDERS");
         assertThat(tabs.getSelectedIndex()).isEqualTo(3);
         panel.showReport();
         panel.setReportAvailable(false);
         assertThat(compact.getListDataView().getItemCount()).isEqualTo(6);
-        assertThat(compact.getValue().toString()).isEqualTo("CONTACTS");
+        assertThat(compact.getValue()).hasToString("CONTACTS");
         assertThat(tabs.getSelectedIndex()).isZero();
         panel.setReportAvailable(true);
         assertThat(compact.getListDataView().getItemCount()).isEqualTo(7);
         tabs.setSelectedIndex(4);
-        assertThat(compact.getValue().toString()).isEqualTo("RELOCATIONS");
+        assertThat(compact.getValue()).hasToString("RELOCATIONS");
     }
 
     private static Stream<Component> descendants(Component component) {

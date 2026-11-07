@@ -18,7 +18,8 @@ public final class SystemDiagramLayout {
     }
 
     public static double bodyHeight(SystemComposition composition, SystemComposition.Body body) {
-        return composition.colonyQuality() == null ? (body.orbit() % 2 == 0 ? 36 : 72) : 48;
+        if (composition.colonyQuality() != null) { return 48; }
+        return body.orbit() % 2 == 0 ? 36 : 72;
     }
 
     public static int starDiameter(SystemComposition.StarType type) {

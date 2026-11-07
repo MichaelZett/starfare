@@ -25,6 +25,7 @@ import org.jspecify.annotations.Nullable;
  * stays owner of selection state and refresh flow.
  */
 final class MapRenderer {
+    private static final String FLEET_ROUTE = "fleet-";
 
     private MapRenderer() {
     }
@@ -171,16 +172,7 @@ final class MapRenderer {
         boolean pendingBattle = in.pendingBattleSystemIds().contains(sys.id());
         VisibleSystem display = pendingBattle ? concealedBattleSystem(sys) : sys;
         Div dot = new Div();
-        dot.addClassName(display.fullyVisible() ? "sys-own" : "sys-fog");
-        if (display.availableShips() != null) {
-            dot.addClassName("sys-action-source");
-        }
-        if (display.ownerId() == null) {
-            dot.addClassName("sys-neutral");
-        }
-        if (pendingBattle) {
-            dot.addClassName("sys-battle-pending");
-        }
+        addStateClasses(dot, display, pendingBattle);
 
         String hex = display.colorHex();
         if (hex != null) {
@@ -199,17 +191,7 @@ final class MapRenderer {
         dot.getStyle().set(CssProperties.WIDTH, size + "px");
         dot.getStyle().set(CssProperties.HEIGHT, size + "px");
 
-        boolean selectedFromReport = in.reportedSystemIds().contains(sys.id())
-                && Objects.equals(in.highlightedReportSystemId(), sys.id());
-        if (pendingBattle || selectedFromReport) {
-            dot.addClassName("sys-report-event");
-        }
-        if (selectedFromReport) {
-            dot.addClassName("sys-report-event-active");
-        }
-        if (pendingBattle) {
-            dot.add(buildBattleMarker(sys, in));
-        }
+        markReportEvent(dot, sys, in, pendingBattle);
         if (showsIdleShips(in)) {
             IdleShips.of(sys).ifPresent(ships -> dot.add(buildIdleShipsHint(ships)));
         }
@@ -221,6 +203,33 @@ final class MapRenderer {
             attachRelocationDragAndDrop(dot, sys, in);
         }
         return dot;
+    }
+
+    private static void addStateClasses(Div dot, VisibleSystem display, boolean pendingBattle) {
+        dot.addClassName(display.fullyVisible() ? "sys-own" : "sys-fog");
+        if (display.availableShips() != null) {
+            dot.addClassName("sys-action-source");
+        }
+        if (display.ownerId() == null) {
+            dot.addClassName("sys-neutral");
+        }
+        if (pendingBattle) {
+            dot.addClassName("sys-battle-pending");
+        }
+    }
+
+    private static void markReportEvent(Div dot, VisibleSystem sys, Inputs in, boolean pendingBattle) {
+        boolean selectedFromReport = in.reportedSystemIds().contains(sys.id())
+                && Objects.equals(in.highlightedReportSystemId(), sys.id());
+        if (pendingBattle || selectedFromReport) {
+            dot.addClassName("sys-report-event");
+        }
+        if (selectedFromReport) {
+            dot.addClassName("sys-report-event-active");
+        }
+        if (pendingBattle) {
+            dot.add(buildBattleMarker(sys, in));
+        }
     }
 
     private static VisibleSystem concealedBattleSystem(VisibleSystem system) {
@@ -343,24 +352,24 @@ final class MapRenderer {
         }
         dot.getElement().setProperty(HtmlAttributes.TITLE, UiMapper.systemTooltip(sys, in.view().turn()) + " — " + hint);
         KeyboardActions.enable(dot);
-        dot.addClickListener(_ -> {
-            VisibleSystem from = in.selectedFrom();
-            if (from == null) {
-                in.onInspectSystem().accept(sys);
-            } else if (from.id() == sys.id()) {
-                in.onSelectSource().accept(sys);
-            } else {
-                if (in.relocationTargetSelection()) {
-                    in.onOpenRelocation().accept(from, sys);
-                } else {
-                    in.onOpenSend().accept(from, sys);
-                }
-            }
-        });
+        dot.addClickListener(_ -> clickSystem(sys, in));
         if (!in.observer() && in.playerId() >= 0 && sys.fullyVisible()) {
             dot.getElement().addEventListener("contextmenu", _ -> in.onSelectSource().accept(sys))
                     .addEventData("event.preventDefault()")
                     .addEventData("event.stopPropagation()");
+        }
+    }
+
+    private static void clickSystem(VisibleSystem sys, Inputs in) {
+        VisibleSystem from = in.selectedFrom();
+        if (from == null) {
+            in.onInspectSystem().accept(sys);
+        } else if (from.id() == sys.id()) {
+            in.onSelectSource().accept(sys);
+        } else if (in.relocationTargetSelection()) {
+            in.onOpenRelocation().accept(from, sys);
+        } else {
+            in.onOpenSend().accept(from, sys);
         }
     }
 
@@ -385,17 +394,17 @@ final class MapRenderer {
         boolean highlighted = highlightedFleetId != null && highlightedFleetId == f.globalId();
 
         Div lane = buildLaneDiv(geom, "#a9b6c7", tooltip, highlighted);
-        routeData(lane, "fleet-" + f.globalId(), a, b, geom);
+        routeData(lane, FLEET_ROUTE + f.globalId(), a, b, geom);
         map.add(lane);
         if (!f.inFlight()) { lane.addClassName("fleet-lane-orbiting"); }
         Div badge = buildFleetBadge(f, a, b, color, tooltip, in, highlighted);
-        routeData(badge, "fleet-" + f.globalId(), a, b, geom);
+        routeData(badge, FLEET_ROUTE + f.globalId(), a, b, geom);
         badge.getElement().setAttribute(HtmlAttributes.MAP_PROGRESS, Double.toString(etaProgress(f, in.view().turn())));
         map.add(badge);
 
         if (!in.observer() && in.playerId() >= 0 && f.inFlight()) {
             Div hit = buildFleetHitArea(f, a.x(), a.y(), len, geom.angle, in);
-            routeData(hit, "fleet-" + f.globalId(), a, b, geom);
+            routeData(hit, FLEET_ROUTE + f.globalId(), a, b, geom);
             hit.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, tooltip);
             map.add(hit);
         }

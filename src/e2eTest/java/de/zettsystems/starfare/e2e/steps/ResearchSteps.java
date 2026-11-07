@@ -11,10 +11,8 @@ import de.zettsystems.starfare.testsupport.EconomyUiStates;
 import io.cucumber.java.de.Wenn;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 

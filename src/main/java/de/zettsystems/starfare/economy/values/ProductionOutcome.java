@@ -11,12 +11,12 @@ public record ProductionOutcome(int shipPoints, int plannedShips, int ships,
     public static ProductionOutcome of(AllocationSplit allocation, IndustryView forecast) {
         MetalView resources = forecast.metal();
         int planned = resources == null ? allocation.ships() : resources.plannedShips();
-        int yield = resources == null ? 0 : resources.yieldPerPoint();
+        int yieldPerPoint = resources == null ? 0 : resources.yieldPerPoint();
         long metal = resources == null ? 0 : resources.extraction();
-        boolean limited = resources != null && allocation.mining() > 0 && metal < (long) allocation.mining() * yield;
+        boolean limited = resources != null && allocation.mining() > 0 && metal < (long) allocation.mining() * yieldPerPoint;
         int next = Math.min(forecast.expansionCost(), forecast.expansionProgress() + allocation.expansion());
         return new ProductionOutcome(allocation.ships(), planned, forecast.shipbuilding(),
-                allocation.mining(), yield, metal, limited,
+                allocation.mining(), yieldPerPoint, metal, limited,
                 allocation.expansion(), forecast.expansionProgress(), next, forecast.expansionCost(), forecast.atMaximum());
     }
 

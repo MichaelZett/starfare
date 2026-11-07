@@ -29,7 +29,8 @@ export function preferredShare(progress, index, count) {
 }
 
 function clippedPath(segments, height) {
-    return `path('${segments.map(([a, b]) => `M ${a} 0 H ${b} V ${height} H ${a} Z`).join(' ')}')`;
+    const parts = segments.map(([a, b]) => `M ${a} 0 H ${b} V ${height} H ${a} Z`);
+    return `path('${parts.join(' ')}')`;
 }
 
 function groupBy(nodes, key) {
@@ -130,8 +131,8 @@ function layoutMarkers(map, systems, zoom) {
     const occupied = [];
     for (const marker of map.querySelectorAll('.sys-report-marker, .sys-economy-marker')) {
         const dot = marker.closest('.sys-own, .sys-fog');
-        const x = dot ? parseFloat(dot.style.left) : Number(marker.dataset.mapX);
-        const y = dot ? parseFloat(dot.style.top) : Number(marker.dataset.mapY);
+        const x = dot ? Number.parseFloat(dot.style.left) : Number(marker.dataset.mapX);
+        const y = dot ? Number.parseFloat(dot.style.top) : Number(marker.dataset.mapY);
         const system = systems.find(item => item.x === x && item.y === y);
         if (!system) continue;
         const point = markerPosition(system, systems, occupied, zoom);
@@ -152,7 +153,7 @@ function layout(map) {
     const systems = [...map.querySelectorAll('.sys-own, .sys-fog')].map(dot => {
         const radius = Math.max(dot.offsetWidth / 2 + 8 / zoom, 22 / zoom);
         dot.style.setProperty('--map-system-target', `${radius * 2}px`);
-        return {x:parseFloat(dot.style.left), y:parseFloat(dot.style.top), radius};
+        return {x:Number.parseFloat(dot.style.left), y:Number.parseFloat(dot.style.top), radius};
     });
     layoutRoutes(map, systems, zoom);
     layoutMarkers(map, systems, zoom);

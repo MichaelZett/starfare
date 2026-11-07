@@ -8,6 +8,8 @@ import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.testsupport.MetalStates;
 import de.zettsystems.starfare.testsupport.RecyclingStates;
 import de.zettsystems.starfare.testsupport.SpacewardStates;
+import de.zettsystems.starfare.game.values.RelocationAdjustment;
+import de.zettsystems.starfare.game.values.StandingOrder;
 import java.time.Instant;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -90,7 +92,7 @@ class ProductionPreviewTest extends AbstractIntegrationTest {
 
     private java.util.Map<Integer, Integer> routes() {
         return registry.readState(id, state -> state.standingOrders().get(1).stream().collect(
-                java.util.stream.Collectors.toMap(order -> order.toSystemId(), order -> order.ships())));
+                java.util.stream.Collectors.toMap(StandingOrder::toSystemId, StandingOrder::ships)));
     }
 
     private de.zettsystems.starfare.economy.values.AllocationSplit saved() {
@@ -135,7 +137,7 @@ class ProductionPreviewTest extends AbstractIntegrationTest {
         assertThat(state.getSystem(1).availableShips()).isPositive();
         save(state);
         var result = games.commitProduction(id, "preview-owner", new ProductionAllocation(1, 1, 6, 0, saved()));
-        assertThat(result.relocations()).extracting(adjustment -> adjustment.after()).containsExactlyInAnyOrder(4, 2);
+        assertThat(result.relocations()).extracting(RelocationAdjustment::after).containsExactlyInAnyOrder(4, 2);
         assertThat(routes()).containsEntry(2, 4).containsEntry(3, 2).containsEntry(1, 2);
     }
 

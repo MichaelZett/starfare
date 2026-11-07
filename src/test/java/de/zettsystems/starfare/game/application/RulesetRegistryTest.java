@@ -10,7 +10,7 @@ import static org.mockito.Mockito.*;
 class RulesetRegistryTest {
     @Test void acceptanceGamesAreCreatedWithCompleteSavedEconomicsBeforeTheirFirstRound() {
         var store = new InMemoryGameSessionStore();
-        GameRegistry preview = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(), RulesetCatalog.builtIn(true));
+        GameRegistry preview = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(), RulesetCatalog.builtIn());
         var id = preview.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_SHIP_RESEARCH));
         var original = preview.readState(id, GameState::toSnapshot);
         assertThat(original.colonies()).hasSameSizeAs(original.systems());
@@ -43,7 +43,8 @@ class RulesetRegistryTest {
         for (var version : RulesetCatalog.builtIn().find("spaceward").orElseThrow().supportedVersions()) {
             var rules = new RulesetRef("spaceward", version);
             if (rules.equals(RulesetRef.SPACEWARD_SHIP_RESEARCH)) { continue; }
-            assertThatThrownBy(() -> registry.createGame(GameSetup.defaults().selectRuleset(rules)))
+            var setup = GameSetup.defaults().selectRuleset(rules);
+            assertThatThrownBy(() -> registry.createGame(setup))
                     .isInstanceOf(IllegalArgumentException.class);
         }
         verifyNoInteractions(store);

@@ -129,7 +129,7 @@ public class ReviewMultiplayerSteps {
                 .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
                 .until(_ -> browser.all("vaadin-button").stream().filter(WebElement::isDisplayed)
                         .map(WebElement::getText).toList());
-        assertThat(visibleButtons).doesNotContain("Bis zur vollständigen Eroberung weiterspielen");
+        assertThat(visibleButtons).isNotEmpty().doesNotContain("Bis zur vollständigen Eroberung weiterspielen");
         assertPending(guest);
         guest.openDetailsWithText("Filter: 6 von 6 Ereignisarten");
         guest.type(".report-filter-options vaadin-combo-box input", Keys.chord(Keys.CONTROL, "a"), "Sofort");

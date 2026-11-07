@@ -43,6 +43,7 @@ html, body, #outlet {
     240px 240px, 310px 310px, 430px 430px, 340px 340px,
     100% 100%, 100% 100%, 100% 100%;
     background-repeat: repeat, repeat, repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
+    --map-inverse-zoom:1;
 }
 
 /* â”€â”€ System dots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -65,6 +66,7 @@ html, body, #outlet {
     padding: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, .45);
     color: #e6edf3;
+    z-index:4;
 }
 
 .sys-own {
@@ -93,7 +95,9 @@ html, body, #outlet {
 
 .sys-clickable {
     cursor: pointer;
-    transition: box-shadow 0.15s ease, transform 0.12s ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .sys-clickable { transition: box-shadow 0.15s ease, transform 0.12s ease; }
 }
 
 .sys-clickable:hover {
@@ -104,7 +108,6 @@ html, body, #outlet {
 .sys-selected {
     box-shadow: 0 0 0 3px #58a6ff, 0 0 22px rgba(88, 166, 255, 0.7) !important;
     transform: translate(-50%, -50%) scale(1.09) !important;
-    z-index: 2;
 }
 
 .sys-target {
@@ -192,11 +195,10 @@ html, body, #outlet {
     border-top: 2px dashed currentColor;
     opacity: 0.75;
     box-shadow: none;
-    /* .fleet-lane sperrt Zeigerereignisse; hier wieder an, sonst bliebe der
-       Tooltip mit Ziel und Schiffszahl unerreichbar. Die Linie ist 2px hoch
-       und faengt damit praktisch keine Klicks ab. */
-    pointer-events: auto;
+    /* Ohne Zeigerereignisse: Die Linie soll die vergroesserten Trefferflaechen
+       der Systeme (::before) nicht verdecken. */
     cursor: help;
+    pointer-events:none;
 }
 
 .fleet-lane-standing {
@@ -266,8 +268,10 @@ html, body, #outlet {
 }
 
 .fleet-travel-card-relocation {
-    border-color: color-mix(in srgb, #bc8cff 65%, var(--sf-border));
-    background: color-mix(in srgb, var(--sf-surface-2) 86%, #bc8cff);
+    background:linear-gradient(120deg,#242038,#17283a);
+    border:1px solid #716286;
+    border-radius:12px;
+    padding:12px;
 }
 
 .fleet-travel-card-selected {
@@ -324,11 +328,11 @@ html, body, #outlet {
     line-height: 1;
     letter-spacing: 0.02em;
     cursor: pointer;
-    z-index: 4;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
     white-space: nowrap;
     transition: transform 0.12s ease, box-shadow 0.12s ease;
+    z-index:3;
 }
 
 .fleet-badge-fleetno {
@@ -345,17 +349,16 @@ html, body, #outlet {
         0 0 0 3px rgba(255, 209, 102, 0.9),
         0 0 22px 4px rgba(255, 186, 46, 0.95),
         0 4px 14px rgba(0, 0, 0, 0.55);
-    z-index: 5;
 }
 
 .fleet-lane-highlighted {
     height: 6px;
-    background: #ffc14f !important;
     box-shadow:
         0 0 14px 2px rgba(255, 193, 79, 0.95),
         0 0 6px rgba(0, 0, 0, 0.85);
     opacity: 1;
     z-index: 4;
+    background:#eef6ff !important;
 }
 
 /* Mirror the gold map highlight onto the selected fleet row so the link
@@ -379,8 +382,8 @@ html, body, #outlet {
 .app-header-left {
     min-width: 0;
     align-items: baseline;
-    flex-wrap: wrap;
     gap: 18px;
+    flex-wrap:wrap;
 }
 
 .app-header-right {
@@ -757,12 +760,10 @@ html, body, #outlet {
 .wizard-summary-line { padding: .45rem .6rem; border: 1px solid var(--sf-border); border-radius: .55rem; }
 .wizard-summary-colors { display: flex; flex-wrap: wrap; gap: .45rem; }
 .wizard-summary-color { border-left: .5rem solid var(--seat-color); padding: .3rem .55rem; background: var(--sf-surface-2); }
-.wizard-galaxy-preview { position: relative; min-height: 12rem; overflow: hidden; border: 1px solid var(--sf-border); border-radius: .8rem; background: radial-gradient(ellipse, #182744, #080d19); }
+.wizard-galaxy-preview { position: relative; min-height: 12rem; overflow: hidden; border: 1px solid var(--sf-border); border-radius: .8rem; background: radial-gradient(ellipse, #182744, #080d19); max-height: 180px; }
 .wizard-galaxy-preview > span { position: absolute; z-index: 1; top: .45rem; left: .6rem; color: var(--sf-text-muted); font-size: .82rem; }
 .wizard-galaxy-stars { position: absolute; inset: 1.8rem .5rem .5rem; }
-.wizard-galaxy-star { position: absolute; color: #f0e442; transform: translate(-50%, -50%); text-shadow: 0 0 .45rem #f0e442; }
-.wizard-galaxy-random .wizard-galaxy-star:nth-child(3n) { color: #56b4e9; }
-.wizard-galaxy-even .wizard-galaxy-star { color: #56b4e9; }
+.wizard-galaxy-star { position: absolute; transform: translate(-50%, -50%); width: 7px; height: 7px; border-radius: 50%; background: #80c8e8; box-shadow: 0 0 8px #80c8e8; }
 
 .wizard-grid vaadin-integer-field::part(label),
 .wizard-grid vaadin-combo-box::part(label),
@@ -947,12 +948,13 @@ html, body, #outlet {
     border-left: 4px solid transparent;
     background: var(--sf-surface);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    opacity: 0;
-    animation: slideIn 0.28s ease forwards;
     font-size: 1rem;
     line-height: 1.4;
     color: var(--sf-text);
     min-height: 3.5rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .event-card { opacity: 0; animation: slideIn 0.28s ease forwards; }
 }
 
 .report-filter-details {
@@ -1215,6 +1217,7 @@ html, body, #outlet {
 .battle-replay-dialog::part(content) {
     background: var(--sf-surface);
     overflow: hidden;
+    border:2px solid #ffd86a;
 }
 
 .battle-replay {
@@ -1262,7 +1265,9 @@ html, body, #outlet {
     font-size: clamp(2.2rem, 6vw, 4.5rem);
     color: #fff3be;
     text-shadow: 0 0 22px #ffb844, 0 0 60px #ff5e27;
-    animation: battle-pulse .85s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .battle-replay-flash { animation: battle-pulse .85s ease-in-out infinite alternate; }
 }
 
 .battle-replay-result {
@@ -2244,9 +2249,9 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
 .ruleset-selection { gap: .5rem; }
 .ruleset-cards {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: .75rem;
     width: 100%;
+    grid-template-columns: 1fr;
 }
 @media (max-width: 900px) {
     .ruleset-cards { grid-template-columns: 1fr; }
@@ -2265,8 +2270,8 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
 .ruleset-card-title { font-weight: 600; }
 
 /* Spaceward industry; Classic keeps its decorative shipyard only. */
-.industry-panel { display: flex; flex-direction: column; gap: .55rem; padding: .85rem; margin: .65rem 0; border: 1px solid #426356; border-radius: 12px; background: linear-gradient(135deg, #142d2c, #142130); min-width: 0; }
-.industry-panel h3 { margin: 0; font-size: 1rem; color: #b6e2cc; }
+.industry-panel { padding: .85rem; margin: .65rem 0; border: 1px solid #426356; border-radius: 12px; background: linear-gradient(135deg, #142d2c, #142130); min-width: 0; display: flex; flex-direction: column; gap: .6rem; }
+.industry-panel h3 { font-size: 1rem; color: #b6e2cc; margin: 0; }
 .industry-panel > span { font-size: .82rem; }
 .industry-allocation-bar { display: flex; height: .7rem; overflow: hidden; border-radius: .4rem; background: #0c1621; }
 .industry-shipbuilding { background: #729dc9; }
@@ -2294,11 +2299,11 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
 }
 
 .diplomacy-content, .diplomacy-card { display: flex; flex-direction: column; gap: .7rem; overflow-wrap: anywhere; }
-.diplomacy-card { border: 1px solid var(--app-border-color, #48526b); border-radius: .5rem; padding: 1rem; margin-top: 1rem; }
+.diplomacy-card { border: 1px solid var(--app-border-color, #48526b); border-radius: .5rem; padding: 1rem; margin-top: 1rem; display:flex; flex-direction:column; align-items:stretch; gap:8px; min-width:0; }
 
 .planning-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 
-.coalition-replay { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: start; padding: 1.5rem 1rem 4rem; max-height: 62vh; overflow: auto; }
+.coalition-replay { align-items: start; padding: 1.5rem 1rem 4rem; max-height: 62vh; overflow: auto; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1rem; }
 .coalition-side { color: #ffd86a; align-items: flex-start; padding: 1rem; border: 1px solid currentColor; border-radius: .6rem; background: rgba(3,8,21,.75); font-size: .85rem; }
 .coalition-side .battle-number { font-size: clamp(2rem, 4vw, 4rem); margin-block: .6rem; }
 .coalition-side.coalition-survived { color: #56d990; }
@@ -2317,14 +2322,9 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
 .wizard-summary-heading h3 { margin: 0 0 .5rem; }
 .wizard-summary-group .wizard-summary-line { display: block; border: 0; background: none; padding: .3rem 0; min-height: 0; }
 .wizard-summary-seat { border-left: 4px solid var(--seat-color); padding-left: .75rem; margin-top: .6rem; }
-.wizard-galaxy-star { width: 7px; height: 7px; border-radius: 50%; background: #80c8e8; box-shadow: 0 0 8px #80c8e8; }
-.wizard-galaxy-preview { max-height: 180px; }
-.ruleset-cards { grid-template-columns: 1fr; }
 .empire-metal { position: relative; white-space: nowrap; }
 .empire-metal[opened] { z-index: 5; }
 .empire-metal::part(content) { position: absolute; padding: .75rem; background: #1c232b; border: 1px solid #354252; border-radius: 8px; width: min(400px, 80vw); white-space: normal; }
-.industry-panel { display: flex; flex-direction: column; gap: .6rem; }
-.industry-panel h3 { margin: 0; }
 .production-allocation-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: .3rem .7rem; margin: .65rem 0; align-items: center; }
 .production-allocation-label { grid-column: 1 / -1; font-weight: 600; }
 .production-allocation-row vaadin-integer-field { width: 100%; min-width: 0; }
@@ -2343,7 +2343,7 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
 }
 
 .app-header-empire { font-weight: 700; }
-.system-transfer-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.system-transfer-row { align-items: center; flex-wrap: wrap; gap: 0.5rem; display:grid; width:100%; box-sizing:border-box; }
 
 /* Production planning: distinct functional silhouettes and inline local drafts. */
 .production-functions { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
@@ -2369,8 +2369,7 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
 .economy-notices { display:flex; flex-wrap:wrap; gap:4px; }
 .economy-notices vaadin-button { font-size:11px; height:28px; padding:4px 6px; }
 .economy-issue-card { display:flex; flex-direction:column; gap:7px; padding:10px; border:1px solid #456178; border-radius:8px; width:100%; box-sizing:border-box; }
-.sys-economy-marker { position:absolute; z-index:5; width:26px; min-width:26px; height:26px; padding:0; border-radius:50%; color:#f5d28c; background:#382d1b; border:1px solid #c4a563; }
-.app-header-left { flex-wrap:wrap; }
+.sys-economy-marker { position:absolute; z-index:5; width:26px; min-width:26px; height:26px; padding:0; border-radius:50%; color:#f5d28c; background:#382d1b; border:1px solid #c4a563; --vaadin-button-background:#ffc14f; --vaadin-button-text-color:#231900; --vaadin-button-border-color:#fff1bf; }
 
 
 /* Shared route strips keep decisions ahead of detailed travel rules. */
@@ -2386,14 +2385,11 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
 .route-more { font-size:12px; }
 .diplomacy-content, .diplomacy-others { display:flex; flex-direction:column; gap:12px; }
 .diplomacy-content h3 { margin:6px 0 0; font-size:16px; }
-.diplomacy-card { display:flex; flex-direction:column; align-items:stretch; gap:8px; min-width:0; }
 .diplomacy-member { border-left:5px solid #61768e; padding-left:10px; font-weight:600; }
 .diplomacy-proposal { border-color:#8db6d8; background:#192e42; }
 .diplomacy-card vaadin-button { width:fit-content; max-width:100%; height:auto; min-height:36px; white-space:normal; }
 .diplomacy-card vaadin-details > div { display:flex; flex-direction:column; gap:8px; }
 /* Map interaction areas follow the actual browser zoom. */
-#map { --map-inverse-zoom:1; }
-.sys-own, .sys-fog { z-index:4; }
 .sys-own::before, .sys-fog::before {
     content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
     width:var(--map-system-target, 100%);
@@ -2401,10 +2397,7 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
     border-radius:50%;
 }
 [data-map-route] { visibility:hidden; }
-.fleet-lane-planned { pointer-events:none; }
 .fleet-lane-orbiting { opacity:0; }
-.fleet-lane-highlighted { background:#eef6ff !important; }
-.fleet-badge { z-index:3; }
 .sys-report-marker, .sys-economy-marker {
     width:calc(44px * var(--map-inverse-zoom)); min-width:calc(44px * var(--map-inverse-zoom));
     height:calc(44px * var(--map-inverse-zoom)); padding:0; box-sizing:border-box;
@@ -2413,12 +2406,6 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
     color:#231900; background:#ffc14f; z-index:6;
     box-shadow:0 0 0 calc(4px * var(--map-inverse-zoom)) #171d2b, 0 2px 12px #000;
 }
-.sys-economy-marker {
-    --vaadin-button-background:#ffc14f; --vaadin-button-text-color:#231900;
-    --vaadin-button-border-color:#fff1bf;
-}
-.system-transfer-row { display:grid; width:100%; box-sizing:border-box; }
-.fleet-travel-card-relocation { background:linear-gradient(120deg,#242038,#17283a); border:1px solid #716286; border-radius:12px; padding:12px; }
 .fleet-travel-card-relocation > span { overflow-wrap:anywhere; }
 .system-transfer-actions { flex-wrap:wrap; gap:8px; margin-top:8px; }
 .system-transfer-actions vaadin-button:first-child {
@@ -2426,9 +2413,7 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
 }
 .battle-condition { font-weight:500; font-size:.9rem; max-width:22rem; }
 .battle-side vaadin-details { color:#d8e3ef; font-size:.8rem; font-weight:400; }
-.coalition-replay { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1rem; }
 .coalition-attackers, .coalition-defenders { display:flex; flex-direction:column; gap:1rem; min-width:0; }
 .coalition-defenders .coalition-side { align-items:flex-end; text-align:right; }
 .coalition-roles-unknown .coalition-attackers { grid-column:1 / -1; }
 .coalition-roles-unknown .coalition-defenders { display:none; }
-.battle-replay-dialog::part(content) { border:2px solid #ffd86a; }

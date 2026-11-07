@@ -93,7 +93,8 @@ public class DiplomacySteps {
         int effective = games.viewFor(id, 1).turn() + 1; browser.clickButtonWithText("Bündnis kündigen");
         browser.awaitTextIn("#diplomacy-leave-confirm", "Runde " + effective);
         browser.clickButtonWithText("Abbrechen");
-        assertThat(registry.readState(id, state -> state.diplomacy().groupFor(1).orElseThrow().departures()).isEmpty()).isTrue();
+        var departures = registry.readState(id, state -> state.diplomacy().groupFor(1).orElseThrow().departures());
+        assertThat(departures).isEmpty();
         browser.clickButtonWithText("Bündnis kündigen");
         browser.clickButtonWithText("Kündigung bestätigen");
         String text = "Diplomat scheidet zu Beginn von Runde " + effective + " aus.";

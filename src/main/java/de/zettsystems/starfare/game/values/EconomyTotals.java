@@ -31,8 +31,9 @@ public record EconomyTotals(long metalMined, long metalConsumed, int industryBui
             TurnReport report = reports.get(round);
             List<TurnEvent> events = report == null ? List.of() : report.events();
             for (TurnEvent event : events) {
-                if (event instanceof TurnEvent.EconomySummary summary && summary.playerId() == playerId) {
-                    mined += summary.metalMined(); consumed += summary.metalConsumed(); built += summary.capacityGained();
+                if (event instanceof TurnEvent.EconomySummary(int owner, long metalMined, long metalConsumed, int capacityGained)
+                        && owner == playerId) {
+                    mined += metalMined; consumed += metalConsumed; built += capacityGained;
                     recorded.add(round);
                 }
             }

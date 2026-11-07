@@ -11,6 +11,8 @@ import de.zettsystems.starfare.navigation.application.DefaultNavigationService;
 import de.zettsystems.starfare.report.application.DefaultReportService;
 import de.zettsystems.starfare.turn.application.EqualMetalSpacewardTurnEngine;
 import de.zettsystems.starfare.turn.application.RoundPipeline;
+import de.zettsystems.starfare.game.values.Fleet;
+import de.zettsystems.starfare.game.values.StarSystem;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -62,8 +64,8 @@ final class InvestmentMatch {
                 int expansion = owned.stream().mapToInt(system -> stateIndustry(planned, system.id()).expansionAllocation()).sum();
                 int capacity = owned.stream().mapToInt(system -> stateIndustry(planned, system.id()).capacity()).sum();
                 int built = owned.stream().mapToInt(system -> forecast.ships().get(system.id())).sum();
-                long ships = owned.stream().mapToLong(system -> system.garrison()).sum()
-                        + state.fleets().stream().filter(fleet -> fleet.ownerId() == owner).mapToLong(fleet -> fleet.ships()).sum();
+                long ships = owned.stream().mapToLong(StarSystem::garrison).sum()
+                        + state.fleets().stream().filter(fleet -> fleet.ownerId() == owner).mapToLong(Fleet::ships).sum();
                 if (player == investor) {
                     invested += expansion;
                     if (expansion > 0 && firstInvestment == 0) { firstInvestment = state.turn(); }

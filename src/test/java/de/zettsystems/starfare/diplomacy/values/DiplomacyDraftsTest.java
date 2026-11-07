@@ -23,6 +23,6 @@ class DiplomacyDraftsTest {
         assertThat(drafts.value(key, 3)).isEqualTo(3); assertThat(drafts.opened(key)).isFalse();
         var group = new AllianceGroup(1, Set.of(1, 2), 0, java.util.Map.of());
         assertThat(group.departureTurn(5)).isEqualTo(6);
-        assertThat(group.announceDeparture(1, 5).departures().get(1)).isEqualTo(group.departureTurn(5));
+        assertThat(group.announceDeparture(1, 5).departures()).containsEntry(1, group.departureTurn(5));
     }
 }

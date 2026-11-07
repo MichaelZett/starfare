@@ -84,7 +84,7 @@ class MiningPlannerTest {
         assertThat(restored.miningAutomation()).containsKey(1);
         restored.submittedThisTurn().add(1); restored.nextTurn();
         assertThat(restored.miningAutomation().get(1).plannedTurn()).isEqualTo(2);
-        assertThat(restored.metals().orElseThrow().mining().get(1)).isEqualTo(6);
+        assertThat(restored.metals().orElseThrow().mining()).containsEntry(1, 6);
     }
 
     @Test
@@ -123,7 +123,7 @@ class MiningPlannerTest {
         var preview = state.metalPreview();
         long stock = preview.economy().stocks().get(1);
         state.recycleShips(); economy.produce(state, Map.of());
-        assertThat(state.metals().orElseThrow().stocks().get(1)).isEqualTo(stock);
+        assertThat(state.metals().orElseThrow().stocks()).containsEntry(1, stock);
         assertThatCode(() -> GameState.toSnapshot(state)).doesNotThrowAnyException();
     }
 }

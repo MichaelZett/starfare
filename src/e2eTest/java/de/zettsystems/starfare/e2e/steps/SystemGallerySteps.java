@@ -59,7 +59,7 @@ public class SystemGallerySteps {
                             stars: box('#gallery-WHITE .system-star').width > box('#gallery-RED .system-star').width,
                             captions: [...document.querySelectorAll('.system-schematic-caption')].every(label => !label.textContent.includes('//'))
                         };
-                        """)).allSatisfy((name, passed) -> assertThat(passed).as(String.valueOf(name)).isEqualTo(true));
+                        """)).allSatisfy((name, passed) -> assertThat((Boolean) passed).as(String.valueOf(name)).isTrue());
                 browser.captureUiAcceptance("system-gallery-" + language + "-" + width);
             }
         }

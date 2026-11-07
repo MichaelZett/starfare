@@ -729,7 +729,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 .map(Player::colorHex).findFirst().orElse("");
         outcomeDialog = GameOutcomeDialog.open(view.wonBy(currentSeat()),
                 game.canContinueAfterVictory(gameId, account), winnerName(view), winnerColor,
-                statistics, () -> {
+                statistics, new GameOutcomeDialog.Actions(() -> {
             game.continueAfterVictory(gameId, UserContext.currentPlayerId().orElse(""));
             resetOutcomePresentation();
             refresh();
@@ -743,7 +743,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             outcomeDialog = null;
             outcomeAcknowledged = true;
             getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
-        });
+        }));
     }
 
     private void resetOutcomePresentation() {

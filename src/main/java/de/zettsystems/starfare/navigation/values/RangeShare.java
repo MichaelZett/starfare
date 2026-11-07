@@ -11,7 +11,7 @@ public final class RangeShare {
     public static double percent(double share) {
         if (!Double.isFinite(share) || share < 0) { throw new IllegalArgumentException("Invalid range share"); }
         double percent = share * 100;
-        if (percent < 99 || percent > 101) { return Math.round(percent); }
+        if (percent < 99 || percent > 101) { return Math.floor(percent + 0.5); }
         if (share <= 1) { return Math.floor(percent * 10 + 1e-9) / 10; }
         return Math.max(100.1, Math.ceil(percent * 10 - 1e-9) / 10);
     }

@@ -407,7 +407,7 @@ sonar {
                 'src/main/frontend/battle-replay.js',
         ].join(',')
 
-        property 'sonar.issue.ignore.multicriteria', 'serial1,serial2,serial3,domainEquals,entityProxyEquals,localDemoPassword,battleAudioRandom,battleTimelineRandom'
+        property 'sonar.issue.ignore.multicriteria', 'serial1,serial2,serial3,domainEquals,entityProxyEquals,localDemoPassword,battleAudioRandom,battleTimelineRandom,cssImportant'
         property 'sonar.issue.ignore.multicriteria.serial1.ruleKey', 'java:S1948'
         property 'sonar.issue.ignore.multicriteria.serial1.resourceKey', '**/*.java'
         property 'sonar.issue.ignore.multicriteria.serial2.ruleKey', 'java:S2057'
@@ -428,6 +428,10 @@ sonar {
         property 'sonar.issue.ignore.multicriteria.battleAudioRandom.resourceKey', 'src/main/frontend/battle-replay.js'
         property 'sonar.issue.ignore.multicriteria.battleTimelineRandom.ruleKey', 'javascript:S2245'
         property 'sonar.issue.ignore.multicriteria.battleTimelineRandom.resourceKey', 'src/main/frontend/battle-replay.js'
+        // Map dots, lanes and mobile layouts get position, size and shadows as inline styles from Java
+        // (MapRenderer, map-geometry.js); only !important overrides them for states and small screens.
+        property 'sonar.issue.ignore.multicriteria.cssImportant.ruleKey', 'css:S9423'
+        property 'sonar.issue.ignore.multicriteria.cssImportant.resourceKey', '**/styles/starfare*.css'
     }
 }
 tasks.named('sonar').configure { dependsOn jacocoTestReport, tasks.named('compileE2eTestJava') }

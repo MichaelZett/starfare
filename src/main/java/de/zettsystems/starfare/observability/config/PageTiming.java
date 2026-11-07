@@ -35,8 +35,8 @@ class PageTiming implements VaadinServiceInitListener, VaadinRequestInterceptor 
     static final int REPEATED = 3;
     private static final long serialVersionUID = 1L;
     private static final int REPEATED_SHOWN = 3;
-    private static final String START_ATTRIBUTE = PageTiming.class.getName() + ".start";
-    private static final String ROUTE_ATTRIBUTE = PageTiming.class.getName() + ".route";
+    static final String START_ATTRIBUTE = PageTiming.class.getName() + ".start";
+    static final String ROUTE_ATTRIBUTE = PageTiming.class.getName() + ".route";
     private static final Logger LOG = LoggerFactory.getLogger(PageTiming.class);
 
     private final long slowMillis;

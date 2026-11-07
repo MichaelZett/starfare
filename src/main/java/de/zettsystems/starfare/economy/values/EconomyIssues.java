@@ -2,6 +2,7 @@ package de.zettsystems.starfare.economy.values;
 
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.game.values.VisibleSystem;
+import de.zettsystems.starfare.game.values.Fleet;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -18,7 +19,7 @@ public final class EconomyIssues {
     public static List<Issue> forView(PlayerViewState view, int player, Set<Integer> pendingBattles) {
         Set<Integer> blocked = view.ownFleets().stream().filter(fleet -> fleet.ownerId() == player)
                 .filter(fleet -> { var journey = fleet.journey(); return journey != null && journey.blocked(); })
-                .map(fleet -> fleet.toSystemId()).collect(java.util.stream.Collectors.toSet());
+                .map(Fleet::toSystemId).collect(java.util.stream.Collectors.toSet());
         return forSystems(view.systems(), player, pendingBattles, blocked);
     }
     public static List<Issue> forSystems(List<VisibleSystem> systems, int player, Set<Integer> pendingBattles, Set<Integer> blocked) {

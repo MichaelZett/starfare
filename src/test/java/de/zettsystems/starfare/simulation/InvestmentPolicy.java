@@ -2,7 +2,6 @@ package de.zettsystems.starfare.simulation;
 
 import de.zettsystems.starfare.game.application.DefaultPlayerViewBuilder;
 import de.zettsystems.starfare.game.domain.GameState;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;

@@ -21,8 +21,6 @@ class RulesetCatalogTest {
                 assertThatThrownBy(() -> catalog.requireCreatable(rules)).isInstanceOf(IllegalArgumentException.class);
             }
         }
-        assertThat(RulesetCatalog.builtIn(true)).isEqualTo(catalog);
-        assertThat(RulesetCatalog.builtIn(false)).isEqualTo(catalog);
     }
 
     @Test void directEconomyCandidatesDropTheLaborLimitAndLaterCandidatesShareMetalEqually() {
@@ -105,8 +103,10 @@ class RulesetCatalogTest {
         var entry = catalog.definitions().getFirst();
         var input4 = List.of(entry, entry);
         assertThatThrownBy(() -> new RulesetCatalog(input4)).isInstanceOf(IllegalArgumentException.class);
+        Set<String> released = Set.of("1.0.0");
+        Set<String> withUnimplemented = Set.of("1.0.0", "9.0.0");
         assertThatThrownBy(() -> new RulesetDefinition(RulesetRef.SPACEWARD, "test.name", "test.description",
-                Set.of("1.0.0"), true, Set.of("1.0.0", "9.0.0"))).isInstanceOf(IllegalArgumentException.class);
+                released, true, withUnimplemented)).isInstanceOf(IllegalArgumentException.class);
         Set<String> input5 = Set.of();
         assertThatThrownBy(() -> new RulesetDefinition(RulesetRef.SPACEWARD, "test.name", "test.description", input5, true)).isInstanceOf(IllegalArgumentException.class);
     }

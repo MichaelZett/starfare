@@ -108,9 +108,10 @@ public record MetalProduction(MetalEconomy economy, Map<Integer, Integer> ships,
         while (remaining > 0) {
             for (var system : active) {
                 int id = system.id();
-                if (Objects.requireNonNull(ships.get(id)) >= Objects.requireNonNull(desired.get(id))) { continue; }
-                ships.compute(id, (_, count) -> Objects.requireNonNull(count) + 1);
-                if (--remaining == 0) { break; }
+                if (remaining > 0 && Objects.requireNonNull(ships.get(id)) < Objects.requireNonNull(desired.get(id))) {
+                    ships.compute(id, (_, count) -> Objects.requireNonNull(count) + 1);
+                    remaining--;
+                }
             }
         }
     }

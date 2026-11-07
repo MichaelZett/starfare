@@ -7,6 +7,7 @@ import de.zettsystems.starfare.game.values.GameListScope;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.game.domain.GameState;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.ObjectMapper;
@@ -78,7 +79,7 @@ class JpaGameSessionStoreUnloadTest extends AbstractIntegrationTest {
     @Test
     void lobbyListsAnUnloadedGameWithoutLoadingIt() {
         GameId id = runningSingleHumanGame();
-        int turn = registry.readState(id, state -> state.turn());
+        int turn = registry.readState(id, GameState::turn);
         assertThat(store.unloadInactiveSingleHumanGames(ANY_ACCESS_IS_IDLE)).isEqualTo(1);
 
         assertThat(games.visibleGamesFor("alice", GameListScope.LOBBY))

@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 /** Presents the final choices as a mission briefing, grouped by the question a player is checking. */
 final class WizardSummary extends Div {
     private static final String SYSTEMS_ID = "wizard-summary-systems";
+    private static final String FACTS_CLASS = "wizard-summary-facts";
 
     WizardSummary(GameSetup setup, String name, RulesetCatalog catalog, Consumer<String> edit) {
         addClassName("wizard-confirmation-content");
@@ -70,7 +71,7 @@ final class WizardSummary extends Div {
                         I18n.t(setup.productionDistribution() == ProductionDistribution.UNIFORM
                                 ? UiTexts.LOBBY_PRODUCTION_DISTRIBUTION_UNIFORM
                                 : UiTexts.LOBBY_PRODUCTION_DISTRIBUTION_GAUSSIAN)));
-        facts.addClassName("wizard-summary-facts");
+        facts.addClassName(FACTS_CLASS);
         Div content = new Div(facts, new GalaxyPreview(setup.galaxyLayout()));
         content.addClassName("wizard-summary-galaxy");
         return group(UiTexts.UX_GALAXY, WizardEmblem.GALAXY, edit, content);
@@ -104,7 +105,7 @@ final class WizardSummary extends Div {
 
     private static Div victory(GameSetup setup, Consumer<String> edit) {
         Div facts = new Div();
-        facts.addClassName("wizard-summary-facts");
+        facts.addClassName(FACTS_CLASS);
         if (setup.ruleset().usesConfigurableVictory()) {
             addAllianceFacts(facts, setup.victoryRules());
         }
@@ -113,9 +114,7 @@ final class WizardSummary extends Div {
                 toggle(VaadinIcon.PLAY_CIRCLE, UiTexts.UX_SUMMARY_REPLAY, setup.battlePresentationEnabled()),
                 setup.ruleset().resolvesCoalitionBattles()
                         ? fact(VaadinIcon.SWORD, UiTexts.UX_SUMMARY_COMBAT_FLOW, I18n.t(UiTexts.UX_SUMMARY_COALITION_COMBAT))
-                        : fact(VaadinIcon.SWORD, UiTexts.UX_SUMMARY_ATTACK_ORDER,
-                                I18n.t(setup.roundRules().attackOrder() == AttackOrder.RANDOM
-                                        ? UiTexts.LOBBY_ATTACK_ORDER_RANDOM : UiTexts.LOBBY_ATTACK_ORDER_STRONGEST_FIRST)));
+                        : fact(VaadinIcon.SWORD, UiTexts.UX_SUMMARY_ATTACK_ORDER, I18n.t(attackOrderKey(setup))));
         return group(UiTexts.UX_VICTORY, WizardEmblem.VICTORY, edit, facts);
     }
 
@@ -132,7 +131,7 @@ final class WizardSummary extends Div {
 
     private static Div access(GameSetup setup, Consumer<String> edit) {
         Div facts = new Div();
-        facts.addClassName("wizard-summary-facts");
+        facts.addClassName(FACTS_CLASS);
         if (setup.humanPlayers() < 2) {
             Span note = new Span(I18n.t(UiTexts.UX_NO_DEADLINE));
             note.addClassName("wizard-summary-note");
@@ -168,6 +167,11 @@ final class WizardSummary extends Div {
         Div row = fact(icon, labelKey, I18n.t(on ? onKey : offKey));
         row.addClassName(on ? "wizard-summary-on" : "wizard-summary-off");
         return row;
+    }
+
+    private static String attackOrderKey(GameSetup setup) {
+        return setup.roundRules().attackOrder() == AttackOrder.RANDOM
+                ? UiTexts.LOBBY_ATTACK_ORDER_RANDOM : UiTexts.LOBBY_ATTACK_ORDER_STRONGEST_FIRST;
     }
 
     private static Div fact(VaadinIcon icon, String labelKey, String value) {

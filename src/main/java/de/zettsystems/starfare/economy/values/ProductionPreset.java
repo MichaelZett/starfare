@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.economy.values;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Set;
 
 /** Whole-point presets preserve local locks and never redistribute on failure. */
@@ -22,25 +24,32 @@ public enum ProductionPreset {
         }
         if (remaining <= 0) { return rejected(current, Rejection.NO_CAPACITY); }
         if (this == AUTARK) { return autark(industry, current, locks, values, remaining); }
-        if (this != EVEN) {
-            int target = switch (this) { case SHIPS -> 0; case METAL -> 1; case INDUSTRY -> 2; default -> throw new IllegalStateException(); };
-            if (locks.contains(target)) { return rejected(current, Rejection.LOCKED); }
-            if (this == METAL && metal != null && metal.remaining() == 0) {
-                return rejected(current, Rejection.EMPTY_DEPOSIT);
-            }
-            if (remaining > limits[target]) { return rejected(current, Rejection.LIMIT); }
-            values[target] = remaining;
-        } else {
-            if (metal != null && metal.remaining() == 0) { limits[1] = 0; }
-            while (remaining > 0) {
-                int before = remaining;
-                for (int index = 0; index < 3 && remaining > 0; index++) {
-                    if (!locks.contains(index) && values[index] < limits[index]) { values[index]++; remaining--; }
-                }
-                if (remaining == before) { return rejected(current, Rejection.LIMIT); }
-            }
-        }
+        Rejection rejection = this == EVEN ? spreadEvenly(metal, locks, limits, values, remaining)
+                : single(metal, locks, limits, values, remaining);
+        if (rejection != Rejection.NONE) { return rejected(current, rejection); }
         return new Result(new AllocationSplit(values[0], values[1], values[2]), Rejection.NONE);
+    }
+
+    private Rejection single(@Nullable MetalView metal, Set<Integer> locks, int[] limits, int[] values, int remaining) {
+        int target = switch (this) { case SHIPS -> 0; case METAL -> 1; case INDUSTRY -> 2; default -> throw new IllegalStateException(); };
+        if (locks.contains(target)) { return Rejection.LOCKED; }
+        if (this == METAL && metal != null && metal.remaining() == 0) { return Rejection.EMPTY_DEPOSIT; }
+        if (remaining > limits[target]) { return Rejection.LIMIT; }
+        values[target] = remaining;
+        return Rejection.NONE;
+    }
+
+    private static Rejection spreadEvenly(@Nullable MetalView metal, Set<Integer> locks, int[] limits, int[] values, int remaining) {
+        if (metal != null && metal.remaining() == 0) { limits[1] = 0; }
+        int left = remaining;
+        while (left > 0) {
+            int before = left;
+            for (int index = 0; index < 3 && left > 0; index++) {
+                if (!locks.contains(index) && values[index] < limits[index]) { values[index]++; left--; }
+            }
+            if (left == before) { return Rejection.LIMIT; }
+        }
+        return Rejection.NONE;
     }
 
     private static Result autark(IndustryView industry, AllocationSplit current, Set<Integer> locks,

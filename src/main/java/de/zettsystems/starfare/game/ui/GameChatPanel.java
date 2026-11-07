@@ -5,6 +5,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
@@ -25,6 +26,33 @@ import java.util.List;
 /** Game-local chat; hiding it preserves the draft without retaining an event subscription. */
 final class GameChatPanel extends Div {
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault());
+    private static final String TAB_TRAP_JS = """
+            if (!this._sfChatKeys) {
+              this._sfChatKeys = true;
+              this.addEventListener('keydown', event => {
+                if (event.key !== 'Tab' || !(matchMedia('(max-width: 1100px)').matches
+                    || document.documentElement.classList.contains('starfare-mobile'))) return;
+                const items = [...this.querySelectorAll('vaadin-button:not([disabled]), vaadin-text-area')]
+                  .filter(item => item.getClientRects().length && !item.hidden);
+                if (!items.length) return;
+                const first = items[0], last = items[items.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                  event.preventDefault(); last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                  event.preventDefault(); first.focus();
+                }
+              });
+            }
+            """;
+    private static final String FOLLOW_SCROLL_JS = """
+            if (!this._sfChatScroll) {
+              this._sfChatScroll = true;
+              this.addEventListener('scroll', () => {
+                this._sfFollow = this.scrollHeight - this.clientHeight - this.scrollTop < 40;
+                if (this._sfFollow) $0.hidden = true;
+              });
+            }
+            """;
     private final GameChatService chat;
     private final PlayerDirectory players;
     private final GameId gameId;
@@ -50,8 +78,8 @@ final class GameChatPanel extends Div {
         Button close = new Button(I18n.t(UiTexts.MANAGE_CLOSE), _ -> close());
         close.addThemeVariants(ButtonVariant.TERTIARY);
         HorizontalLayout heading = new HorizontalLayout(new H2(I18n.t(UiTexts.GAME_CHAT_TITLE)), close);
-        heading.setAlignItems(HorizontalLayout.Alignment.CENTER);
-        heading.setJustifyContentMode(HorizontalLayout.JustifyContentMode.BETWEEN);
+        heading.setAlignItems(FlexComponent.Alignment.CENTER);
+        heading.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
         messages.addClassName("game-chat-messages");
         messages.getElement().setAttribute("role", "log");
         messages.getElement().setAttribute("aria-live", "polite");
@@ -63,7 +91,7 @@ final class GameChatPanel extends Div {
         Button send = new Button(I18n.t(UiTexts.CHAT_SEND), _ -> send());
         send.addThemeVariants(ButtonVariant.PRIMARY);
         HorizontalLayout footer = new HorizontalLayout(input, send);
-        footer.setAlignItems(HorizontalLayout.Alignment.END);
+        footer.setAlignItems(FlexComponent.Alignment.END);
         footer.setWidthFull();
         footer.setFlexGrow(1, input);
         feedback.getElement().setAttribute("role", "status");
@@ -71,33 +99,8 @@ final class GameChatPanel extends Div {
         newMessages.addClickListener(_ -> followLatest());
         add(heading, new Span(I18n.t(UiTexts.GAME_CHAT_HINT)), messages, newMessages, feedback, footer);
         addAttachListener(_ -> {
-            getElement().executeJs("""
-                    if (!this._sfChatKeys) {
-                      this._sfChatKeys = true;
-                      this.addEventListener('keydown', event => {
-                        if (event.key !== 'Tab' || !(matchMedia('(max-width: 1100px)').matches
-                            || document.documentElement.classList.contains('starfare-mobile'))) return;
-                        const items = [...this.querySelectorAll('vaadin-button:not([disabled]), vaadin-text-area')]
-                          .filter(item => item.getClientRects().length && !item.hidden);
-                        if (!items.length) return;
-                        const first = items[0], last = items[items.length - 1];
-                        if (event.shiftKey && document.activeElement === first) {
-                          event.preventDefault(); last.focus();
-                        } else if (!event.shiftKey && document.activeElement === last) {
-                          event.preventDefault(); first.focus();
-                        }
-                      });
-                    }
-                    """);
-            messages.getElement().executeJs("""
-                    if (!this._sfChatScroll) {
-                      this._sfChatScroll = true;
-                      this.addEventListener('scroll', () => {
-                        this._sfFollow = this.scrollHeight - this.clientHeight - this.scrollTop < 40;
-                        if (this._sfFollow) $0.hidden = true;
-                      });
-                    }
-                    """, newMessages.getElement());
+            getElement().executeJs(TAB_TRAP_JS);
+            messages.getElement().executeJs(FOLLOW_SCROLL_JS, newMessages.getElement());
             subscribe();
         });
         addDetachListener(_ -> unsubscribe());

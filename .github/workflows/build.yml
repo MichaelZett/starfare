@@ -34,6 +34,10 @@ permissions:
   contents: read
   checks: write
   pull-requests: write
+  # SpotBugs-SARIF als Code-Scanning-Alerts; ohne actions: read scheitert der
+  # Upload mit „Resource not accessible by integration".
+  security-events: write
+  actions: read
 
 env:
   IMAGE: ghcr.io/michaelzett/starfare
@@ -86,6 +90,15 @@ jobs:
 
       - name: Build and test
         run: ./gradlew --no-daemon build
+
+      # SpotBugs-Befunde erscheinen unter Security > Code scanning, getrennt von
+      # CodeQL (category). Code Scanning gibt es nur für öffentliche Repos.
+      - name: Upload SpotBugs SARIF
+        if: always() && !github.event.repository.private && hashFiles('build/reports/spotbugs/main.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: build/reports/spotbugs/main.sarif
+          category: spotbugs
 
       # Nutzt, was der Build erzeugt hat (Klassen, Testergebnisse, JaCoCo-XML).
       # compileE2eTestJava, weil sonar.java.test.binaries auch das

@@ -15,6 +15,14 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Hibernate-Statistik, in die gleichzeitige Anfragen und Hintergrundläufe einflossen.
   Neu gemeldet werden auch schnelle Anfragen mit vielen (ab 20) oder wiederholten
   Abfragen (dieselbe ab dreimal), mit den häufigsten Abfragen im Log.
+- Mit der Systemeinstellung „Bewegung reduzieren“ entfallen das Einblenden der
+  Berichtskarten, das Pulsieren in der Schlachtwiedergabe und die Übergänge an den
+  Sternsystemen.
+- Code-Aufräumrunde nach Sonar: komplexe Methoden zerlegt (Produktionsvorgaben,
+  Bergbauplanung, Karte, Routenleiste, Flottenversand), doppelte Literale als
+  Konstanten, Tests auf AssertJ-Idiome, nachgetragene CSS-Regeln in ihre Selektoren
+  zusammengelegt (Darstellung unverändert, per Screenshot-Vergleich geprüft).
+  SpotBugs-Befunde erscheinen jetzt unter „Code scanning“ auf GitHub.
 
 ## 0.2.3 - 2026-11-02
 

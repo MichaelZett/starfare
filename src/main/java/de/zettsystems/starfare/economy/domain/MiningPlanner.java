@@ -4,6 +4,7 @@ import de.zettsystems.starfare.economy.values.MiningAutomation;
 import de.zettsystems.starfare.economy.values.MiningPlan;
 import de.zettsystems.starfare.economy.values.MetalRules;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.StandingOrder;
 import de.zettsystems.starfare.game.values.StarSystem;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
 
 /** Deterministic empire-wide order assistance using the existing exact production forecast. */
@@ -23,29 +25,17 @@ public final class MiningPlanner {
         Set<Integer> owned = state.systems().stream().filter(system -> Objects.equals(system.ownerId(), player))
                 .map(StarSystem::id).collect(Collectors.toSet());
         Set<Integer> routed = state.standingOrders().getOrDefault(player, List.of()).stream()
-                .filter(order -> order.ships() > 0).map(order -> order.fromSystemId()).collect(Collectors.toSet());
+                .filter(order -> order.ships() > 0).map(StandingOrder::fromSystemId).collect(Collectors.toSet());
         List<Integer> selected = policy.systems().stream().filter(owned::contains).sorted().toList();
         if (!policy.enabled()) { return summarize(draft, player, policy, selected, original.mining()); }
         List<Integer> adjustable = selected.stream().filter(id -> !policy.protectedSystems().contains(id) && !routed.contains(id))
                 .sorted(Comparator.<Integer>comparingInt(id -> Objects.requireNonNull(original.deposits().get(id)).yieldPerPoint())
                         .reversed().thenComparingInt(Integer::intValue)).toList();
         adjustable.forEach(id -> draft.planMining(id, 0));
+        LongSupplier shortfall = () -> summarize(draft, player, policy, selected, original.mining()).shortfall();
         for (int id : adjustable) {
-            if (summarize(draft, player, policy, selected, original.mining()).shortfall() == 0) { break; }
-            MetalDeposit deposit = Objects.requireNonNull(original.deposits().get(id));
-            int capacity = draft.usableIndustrialCapacity(id) - Objects.requireNonNull(draft.industries().get(id)).expansionAllocation();
-            int upper = (int) Math.min(capacity, Math.ceilDiv(deposit.remaining(), deposit.yieldPerPoint()));
-            if (upper == 0) { continue; }
-            draft.planMining(id, upper);
-            if (summarize(draft, player, policy, selected, original.mining()).shortfall() > 0) { continue; }
-            int lower = 0;
-            while (lower < upper) {
-                int middle = lower + (upper - lower) / 2;
-                draft.planMining(id, middle);
-                if (summarize(draft, player, policy, selected, original.mining()).shortfall() == 0) { upper = middle; }
-                else { lower = middle + 1; }
-            }
-            draft.planMining(id, lower);
+            if (shortfall.getAsLong() == 0) { break; }
+            fitMining(draft, id, Objects.requireNonNull(original.deposits().get(id)), shortfall);
         }
         // Even an unreachable reserve must not silently starve an existing route's production.
         var before = state.metalPreview().ships();
@@ -54,6 +44,23 @@ public final class MiningPlanner {
             return summarize(state, player, policy, selected, original.mining());
         }
         return summarize(draft, player, policy, selected, original.mining());
+    }
+
+    /** Smallest mining allocation that closes the shortfall, or the maximum if even that cannot. */
+    private static void fitMining(GameState draft, int id, MetalDeposit deposit, LongSupplier shortfall) {
+        int capacity = draft.usableIndustrialCapacity(id) - Objects.requireNonNull(draft.industries().get(id)).expansionAllocation();
+        int upper = (int) Math.min(capacity, Math.ceilDiv(deposit.remaining(), deposit.yieldPerPoint()));
+        if (upper == 0) { return; }
+        draft.planMining(id, upper);
+        if (shortfall.getAsLong() > 0) { return; }
+        int lower = 0;
+        while (lower < upper) {
+            int middle = lower + (upper - lower) / 2;
+            draft.planMining(id, middle);
+            if (shortfall.getAsLong() == 0) { upper = middle; }
+            else { lower = middle + 1; }
+        }
+        draft.planMining(id, lower);
     }
 
     private static MiningPlan summarize(GameState state, int player, MiningAutomation policy,

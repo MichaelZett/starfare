@@ -32,9 +32,6 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
     /** Compatibility for retained research-preview launch profiles. */
     public static RulesetCatalog withShipResearch() { return builtIn(); }
 
-    /** Compatibility for retained launch profiles: selection is no longer gated by this switch. */
-    public static RulesetCatalog builtIn(boolean economyPreview) { return builtIn(); }
-
     public Optional<RulesetDefinition> find(String variant) {
         return definitions.stream().filter(entry -> entry.defaultRef().variant().equals(variant)).findFirst();
     }

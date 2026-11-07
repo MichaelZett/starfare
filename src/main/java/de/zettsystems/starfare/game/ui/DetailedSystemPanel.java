@@ -22,6 +22,10 @@ import java.util.Locale;
 
 /** Shared schematic system view; its celestial controls never issue game commands. */
 final class DetailedSystemPanel extends Div {
+    private static final String MODEL_RADIUS = "data-model-radius-km";
+    private static final String BODY_TARGET = "system-body-target";
+    private static final String COLONY_TARGET = "system-colony-target";
+    private static final String WORLD = "system-world";
     private final Div description = new Div();
     private final Div background = new Div();
     private Runnable onInspect = () -> { };
@@ -84,13 +88,13 @@ final class DetailedSystemPanel extends Div {
 
     private void addStar(Div diagram, StarType type, int index, int count) {
         Button star = new Button();
-        star.addClassNames("system-body-target", "system-star", starClass(type));
+        star.addClassNames(BODY_TARGET, "system-star", starClass(type));
         star.setAriaLabel(I18n.t(UiTexts.SYSTEM_STAR_NAME, index == 0 ? "A" : "B")
                 + ": " + I18n.t(starKey(type)));
         star.getElement().setAttribute(HtmlAttributes.TITLE, star.getAriaLabel().orElse(""));
         position(star, 0, 50);
         int radius = PhysicalSystemSize.starRadius(game, system, type, index);
-        star.getElement().setAttribute("data-model-radius-km", String.valueOf(radius));
+        star.getElement().setAttribute(MODEL_RADIUS, String.valueOf(radius));
         String diameter = PhysicalSystemSize.starDiameter(radius) + "px";
         star.getStyle().set(CssProperties.WIDTH, diameter).set(CssProperties.HEIGHT, diameter);
         star.getElement().setAttribute(HtmlAttributes.TITLE, star.getAriaLabel().orElse("") + " · " + radiusText(radius));
@@ -107,14 +111,14 @@ final class DetailedSystemPanel extends Div {
 
     private void addBody(Div diagram, Body body, SystemComposition composition) {
         Button target = bodyButton(body);
-        target.addClassName("system-body-target");
+        target.addClassName(BODY_TARGET);
         var quality = composition.colonyQuality();
         boolean planetColony = quality != null && !quality.moon();
         Span label = new Span(planetColony ? I18n.t(UiTexts.SYSTEM_COLONY_TARGET) : String.valueOf(body.orbit()));
         label.addClassName("system-body-label");
         target.getElement().appendChild(label.getElement());
         if (quality != null && !quality.moon()) {
-            target.addClassName("system-colony-target");
+            target.addClassName(COLONY_TARGET);
             target.setAriaLabel(I18n.t(UiTexts.SYSTEM_COLONY_PLANET));
             applyEnvironment(target, quality);
         }
@@ -135,9 +139,9 @@ final class DetailedSystemPanel extends Div {
 
     private void addColonyMoon(Div diagram, SystemQuality quality, double planetX) {
         Button moon = new Button();
-        moon.addClassNames("system-body-target", "system-world", "system-colony-moon", "system-colony-target");
+        moon.addClassNames(BODY_TARGET, WORLD, "system-colony-moon", COLONY_TARGET);
         int radius = PhysicalSystemSize.moonRadius(game, system, 1, 0);
-        moon.getElement().setAttribute("data-model-radius-km", String.valueOf(radius));
+        moon.getElement().setAttribute(MODEL_RADIUS, String.valueOf(radius));
         moon.getStyle().set(CssProperties.BODY_DIAMETER, PhysicalSystemSize.bodyDiameter(radius) + "px");
         Span sphere = new Span();
         sphere.addClassNames("system-body-sphere", "system-world-rocky");
@@ -165,7 +169,7 @@ final class DetailedSystemPanel extends Div {
 
     private Button bodyButton(Body body) {
         Button target = new Button();
-        target.addClassNames("system-world", "system-surface-" + body.appearance());
+        target.addClassNames(WORLD, "system-surface-" + body.appearance());
         int diameter = body.type() == SystemComposition.BodyType.ASTEROIDS ? SystemDiagramLayout.bodyDiameter(body.type())
                 : PhysicalSystemSize.bodyDiameter(PhysicalSystemSize.bodyRadius(game, system, body));
         target.getStyle().set(CssProperties.BODY_DIAMETER, diameter + "px");
@@ -177,12 +181,12 @@ final class DetailedSystemPanel extends Div {
         target.setAriaLabel(name + ": " + I18n.t(bodyKey(body)));
         target.getElement().setAttribute(HtmlAttributes.TITLE, target.getAriaLabel().orElse(""));
         if (body.type() != SystemComposition.BodyType.ASTEROIDS) {
-            target.getElement().setAttribute("data-model-radius-km", String.valueOf(PhysicalSystemSize.bodyRadius(game, system, body)));
+            target.getElement().setAttribute(MODEL_RADIUS, String.valueOf(PhysicalSystemSize.bodyRadius(game, system, body)));
             target.getElement().setAttribute(HtmlAttributes.TITLE, target.getAriaLabel().orElse("") + " · "
                     + radiusText(PhysicalSystemSize.bodyRadius(game, system, body)));
         }
         target.addClickListener(_ -> {
-            if (target.hasClassName("system-colony-target")) {
+            if (target.hasClassName(COLONY_TARGET)) {
                 highlight(targets.indexOf(target));
                 description.removeAll();
                 description.add(new Span(radiusText(PhysicalSystemSize.bodyRadius(game, system, body))));
@@ -211,7 +215,7 @@ final class DetailedSystemPanel extends Div {
 
     private void selectBody(Body body) {
         // Stars precede worlds in the target list.
-        targets.stream().filter(target -> target.hasClassName("system-world")
+        targets.stream().filter(target -> target.hasClassName(WORLD)
                 && !target.hasClassName("system-colony-moon"))
                 .skip(body.orbit() - 1L).findFirst().ifPresent(target -> highlight(targets.indexOf(target)));
         description.removeAll();

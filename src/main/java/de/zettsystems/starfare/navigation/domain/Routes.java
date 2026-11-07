@@ -31,12 +31,14 @@ public final class Routes {
         return reachableRounds(state, owner).getOrDefault(from, Map.of());
     }
 
+    private static Set<Integer> stations(GameState state, int owner) {
+        return state.systems().stream().map(StarSystem::id).filter(id -> stationAllowed(state, owner, id))
+                .collect(java.util.stream.Collectors.toCollection(HashSet::new));
+    }
+
     /** Batched station network for planners comparing many sources and destinations. */
     public static Map<Integer, Map<Integer, Integer>> reachableRounds(GameState state, int owner) {
-        Set<Integer> stations = new HashSet<>();
-        for (StarSystem system : state.systems()) {
-            if (stationAllowed(state, owner, system.id())) { stations.add(system.id()); }
-        }
+        Set<Integer> stations = stations(state, owner);
         if (stations.isEmpty()) { return Map.of(); }
         var edges = travelEdges(state);
         Map<Integer, Map<Integer, Integer>> routes = new HashMap<>();
@@ -85,10 +87,7 @@ public final class Routes {
         var settings = state.navigationSettings();
         if (!limited(state) || settings.isEmpty() || !stationAllowed(state, owner, from)) { return Optional.empty(); }
         double range = settings.orElseThrow().range();
-        Set<Integer> stations = new HashSet<>();
-        for (StarSystem system : state.systems()) {
-            if (stationAllowed(state, owner, system.id())) { stations.add(system.id()); }
-        }
+        Set<Integer> stations = stations(state, owner);
         var reachable = shortestRounds(from, stations, travelEdges(state));
         Map<Integer, RangeView.Target> targets = new HashMap<>();
         for (StarSystem system : state.systems()) {

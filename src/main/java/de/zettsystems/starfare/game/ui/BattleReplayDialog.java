@@ -13,6 +13,7 @@ import de.zettsystems.starfare.style.HtmlAttributes;
 /** Client-side combat playback with an optional synthesized sound effect. */
 final class BattleReplayDialog {
     private static final int MAX_SHIP_MARKERS = 8;
+    private static final String ATTACKER = "attacker";
 
     private BattleReplayDialog() {
     }
@@ -93,16 +94,16 @@ final class BattleReplayDialog {
         }
         Span number = new Span(String.valueOf(ships));
         number.addClassName("battle-number");
-        number.getElement().setAttribute(sideClass.endsWith("attacker") ? "data-battle-attacking" : "data-battle-defending", "");
+        number.getElement().setAttribute(sideClass.endsWith(ATTACKER) ? "data-battle-attacking" : "data-battle-defending", "");
         side.add(number);
-        BattleCondition.addTo(side, ships, strength, sideClass.endsWith("attacker") ? 1 : 0,
+        BattleCondition.addTo(side, ships, strength, sideClass.endsWith(ATTACKER) ? 1 : 0,
                 CombatStrengthFormat.format(strength, opposingStrength,
                         com.vaadin.flow.component.UI.getCurrentOrThrow().getLocale()));
         Div markers = new Div();
         markers.addClassName("battle-ships");
         int scale = Math.max(1, (int) Math.ceil(Math.max(ships, opponentShips) / (double) MAX_SHIP_MARKERS));
         int markersCount = Math.max(1, (int) Math.ceil(ships / (double) scale));
-        String markerAttribute = sideClass.endsWith("attacker") ? "data-battle-attacker-ship" : "data-battle-defender-ship";
+        String markerAttribute = sideClass.endsWith(ATTACKER) ? "data-battle-attacker-ship" : "data-battle-defender-ship";
         for (int i = 0; i < markersCount; i++) {
             Span marker = new Span("◆");
             marker.addClassName("battle-ship");

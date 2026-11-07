@@ -8,6 +8,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -216,6 +217,12 @@ public class Browser {
                     .orElse(null);
         } catch (StaleElementReferenceException _) {
             return null;
+        } catch (WebDriverException e) {
+            // Chrome reports a button removed by a re-render this way instead of as stale.
+            if (String.valueOf(e.getMessage()).contains("does not belong to the document")) {
+                return null;
+            }
+            throw e;
         }
     }
 

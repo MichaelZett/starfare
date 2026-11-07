@@ -104,7 +104,7 @@ class InvestmentTest {
                 var first = InvestmentMatch.play(scenario, model, policy, AiStrategy.CONCENTRATION, 1, 1, firstRows);
                 var repeatedRows = new StringBuilder();
                 assertThat(InvestmentMatch.play(scenario, model, policy, AiStrategy.CONCENTRATION, 1, 1, repeatedRows)).isEqualTo(first);
-                assertThat(repeatedRows.toString()).isEqualTo(firstRows.toString());
+                assertThat(repeatedRows).hasToString(firstRows.toString());
             }
         }
     }

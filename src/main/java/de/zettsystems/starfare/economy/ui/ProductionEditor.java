@@ -21,6 +21,7 @@ import java.util.function.Function;
  * save immediately, a slider saves when released. Dragging only previews on a copy.
  */
 public final class ProductionEditor extends Div {
+    private static final String VALUE = "element.value";
     private static final String[] LABELS = {UiTexts.UX_BUILD_SHIPS, UiTexts.UX_MINE_METAL, UiTexts.UX_EXPAND_INDUSTRY};
     public static final String MINING_ID = "industry-mining";
     private static final String[] IDS = {"industry-shipbuilding", MINING_ID, IndustryPanel.ALLOCATION_ID};
@@ -114,11 +115,11 @@ public final class ProductionEditor extends Div {
             if (!updating && event.isFromClient() && event.getValue() != null) { input.adjust(index, event.getValue()); save(); }
         });
         slider.getElement().addEventListener("input", event -> {
-            if (!updating) { input.adjust(index, event.getEventData().path("element.value").asInt()); sync(); }
-        }).addEventData("element.value");
+            if (!updating) { input.adjust(index, event.getEventData().path(VALUE).asInt()); sync(); }
+        }).addEventData(VALUE);
         slider.getElement().addEventListener("change", event -> {
-            if (!updating) { input.adjust(index, event.getEventData().path("element.value").asInt()); save(); }
-        }).addEventData("element.value");
+            if (!updating) { input.adjust(index, event.getEventData().path(VALUE).asInt()); save(); }
+        }).addEventData(VALUE);
         amount.getElement().addEventListener("focusin", _ -> input.focus(index));
         amount.getElement().addEventListener("focusout", _ -> input.focus(null));
         slider.getElement().addEventListener("focus", _ -> input.focus(index + 3));
@@ -156,7 +157,7 @@ public final class ProductionEditor extends Div {
                 Span warning = new Span(I18n.t(ProductionKeys.NOT_SAVED)); warning.addClassName("production-warning");
                 status.add(warning);
             }
-            case NONE -> { }
+            case NONE -> { /* nothing to report; the status line is hidden below */ }
         }
         status.setVisible(input.status() != ProductionInputs.Status.NONE);
     }

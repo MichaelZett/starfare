@@ -17,9 +17,12 @@ final class GameOutcomeDialog {
 
     private GameOutcomeDialog() {}
 
+    /** What the three closing buttons do: play on to full conquest, review the map, or leave for the lobby. */
+    record Actions(Runnable continueGame, Runnable review, Runnable lobby) { }
+
     /** {@code continuable}: offer continuing towards full conquest, false once it already is the goal. */
     static Dialog open(boolean victory, boolean continuable, String winnerName, String winnerColor,
-                     GameOutcomeStatistics statistics, Runnable onContinue, Runnable onReview, Runnable onLobby) {
+                     GameOutcomeStatistics statistics, Actions actions) {
         Dialog dialog = new Dialog();
         dialog.setCloseOnEsc(false);
         dialog.setCloseOnOutsideClick(false);
@@ -49,18 +52,18 @@ final class GameOutcomeDialog {
         if (economy != null) { content.add(economy(economy)); }
         Button review = new Button(I18n.t(UiTexts.GAME_OUTCOME_REVIEW), _ -> {
             dialog.close();
-            onReview.run();
+            actions.review().run();
         });
         review.addClassName("game-outcome-review");
         review.addThemeVariants(ButtonVariant.PRIMARY);
         Button continueGame = new Button(I18n.t(UiTexts.GAME_OUTCOME_CONTINUE), _ -> {
             dialog.close();
-            onContinue.run();
+            actions.continueGame().run();
         });
         continueGame.setVisible(victory && continuable);
         Button lobby = new Button(I18n.t(UiTexts.GAME_OUTCOME_LOBBY), _ -> {
             dialog.close();
-            onLobby.run();
+            actions.lobby().run();
         });
         lobby.addClassName("game-outcome-lobby");
         dialog.add(content);
@@ -89,7 +92,7 @@ final class GameOutcomeDialog {
         switch (economy.coverage()) {
             case SINCE -> section.add(new Span(I18n.t(UiTexts.GAME_OUTCOME_ECONOMY_SINCE, economy.firstRound())));
             case PARTIAL -> section.add(new Span(I18n.t(UiTexts.GAME_OUTCOME_ECONOMY_PARTIAL)));
-            case COMPLETE, NOT_RECORDED -> { }
+            case COMPLETE, NOT_RECORDED -> { /* complete or unrecorded history needs no hint */ }
         }
         return section;
     }

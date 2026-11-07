@@ -8,9 +8,9 @@ public final class EconomyRules {
     public static final int EXPANSION_COST_FACTOR = 2;
     private EconomyRules() { }
     public static int expansionCost(int capacity, RulesetRef rules) {
-        return rules.usesCheapEarlyIndustry()
-                ? Math.min(expansionCost(capacity), Math.max(2, Math.ceilDiv(capacity * capacity, 10)))
-                : expansionCost(capacity);
+        int full = expansionCost(capacity);
+        // The floor of 2 never exceeds the regular cost; a zero-capacity colony stays at 0.
+        return rules.usesCheapEarlyIndustry() ? Math.clamp(Math.ceilDiv(capacity * capacity, 10), Math.min(2, full), full) : full;
     }
     public static int expansionCost(int capacity) { return capacity * EXPANSION_COST_FACTOR; }
 }

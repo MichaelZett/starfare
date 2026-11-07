@@ -30,7 +30,7 @@ public record VictoryRules(int individualSystemPercent, boolean alliancesAllowed
                                   @JsonProperty("allianceSystemPercent") int allianceSystemPercent,
                                   @JsonProperty("aiAlliancesAllowed") @Nullable Boolean aiAlliancesAllowed) {
         return new VictoryRules(individualSystemPercent, alliancesAllowed, allianceVictoryAllowed, allianceSystemPercent,
-                aiAlliancesAllowed == null || aiAlliancesAllowed);
+                !Boolean.FALSE.equals(aiAlliancesAllowed));
     }
 
     public static VictoryRules defaults(RulesetRef rules, int individualPercent) {

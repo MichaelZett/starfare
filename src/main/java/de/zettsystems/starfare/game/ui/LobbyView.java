@@ -314,11 +314,10 @@ public class LobbyView extends VerticalLayout {
         var victory = row.summary().victoryRules();
         name.getElement().setAttribute(de.zettsystems.starfare.style.HtmlAttributes.TITLE,
                 I18n.t(UiTexts.VICTORY_RULES_SUMMARY, victory.individualSystemPercent(),
-                        I18n.t(victory.alliancesAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED),
-                        I18n.t(victory.allianceVictoryAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED),
+                        enabledText(victory.alliancesAllowed()), enabledText(victory.allianceVictoryAllowed()),
                         victory.allianceSystemPercent())
-                        + (victory.alliancesAllowed() ? " · " + I18n.t(UiTexts.AI_ALLIANCES_SUMMARY,
-                        I18n.t(victory.aiAlliancesAllowed() ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED)) : ""));
+                        + (victory.alliancesAllowed()
+                        ? " · " + I18n.t(UiTexts.AI_ALLIANCES_SUMMARY, enabledText(victory.aiAlliancesAllowed())) : ""));
         name.addClassName("lobby-game-name-text");
         container.add(name, new Span(RulesetLabels.label(game.rulesets(), row.summary().ruleset())),
                 new Span(I18n.t(row.visibilityKey())));
@@ -357,6 +356,10 @@ public class LobbyView extends VerticalLayout {
             return UiTexts.STATUS_RUNNING;
         }
         return row.canStart() ? UiTexts.STATUS_WAITING : UiTexts.STATUS_CREATED;
+    }
+
+    private static String enabledText(boolean enabled) {
+        return I18n.t(enabled ? UiTexts.LOBBY_SUMMARY_ENABLED : UiTexts.LOBBY_SUMMARY_DISABLED);
     }
 
     private static String statusStyleClass(LobbyGameRow row) {
