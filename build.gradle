@@ -435,3 +435,6 @@ sonar {
     }
 }
 tasks.named('sonar').configure { dependsOn jacocoTestReport, tasks.named('compileE2eTestJava') }
+
+// Additional embeddable artifact; the executable application remains the default.
+apply from: 'gradle/game-module.gradle'

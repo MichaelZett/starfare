@@ -1,0 +1,69 @@
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = rootProject.group
+version = rootProject.version
+layout.buildDirectory = rootProject.layout.buildDirectory.dir('game-module-publication')
+java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
+
+// Freeze the production graph already selected by the application's BOMs.
+// Only strings and native Gradle dependency models enter publication tasks.
+def selectedVersions = rootProject.configurations.gameModuleRuntimeClasspath.incoming.resolutionResult
+        .allComponents.findAll { it.id instanceof ModuleComponentIdentifier }
+        .collectEntries { [(it.id.group + ':' + it.id.module): it.id.version] }
+
+repositories { mavenCentral() }
+dependencies {
+    api platform("org.springframework.boot:spring-boot-dependencies:${rootProject.springBootVersion}")
+    api platform("com.vaadin:vaadin-bom:${rootProject.vaadinVersion}")
+    api platform("org.springframework.modulith:spring-modulith-bom:${rootProject.springModulithVersion}")
+    [api: rootProject.configurations.implementation,
+     runtimeOnly: rootProject.configurations.runtimeOnly].each { scope, configuration ->
+        configuration.allDependencies.each { dependency ->
+            def key = dependency.group + ':' + dependency.name
+            def selected = selectedVersions[key]
+            if (selected == null) { throw new GradleException('Unresolved production dependency: ' + key) }
+            add(scope, key + ':' + selected) {
+                dependency.excludeRules.each { rule -> exclude group: rule.group, module: rule.module }
+            }
+        }
+    }
+    constraints {
+        selectedVersions.sort().each { coordinates, selected ->
+            api(coordinates + ':' + selected) { version { strictly(selected) } }
+        }
+    }
+}
+
+// No second compilation or source copy: publish the root's additional archive.
+tasks.named('jar') { enabled = false }
+def gameArchive = rootProject.tasks.named('gameModuleJar')
+[configurations.apiElements, configurations.runtimeElements].each { variant ->
+    variant.outgoing.artifacts.clear()
+    variant.outgoing.artifact(gameArchive)
+    variant.outgoing.capability("${project.group}:starfare-game:${project.version}")
+}
+
+publishing {
+    publications {
+        gameModule(MavenPublication) {
+            artifactId = 'starfare-game'
+            from components.java
+            pom {
+                name = 'Starfare game module'
+                description = 'Starfare services, views and source resources for an embedding application.'
+                licenses { license { name = 'MIT License'; url = 'https://opensource.org/license/mit' } }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = 'gameModuleLocal'
+            url = rootProject.layout.buildDirectory.dir('game-module-repository')
+        }
+    }
+}

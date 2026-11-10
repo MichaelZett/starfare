@@ -6,3 +6,6 @@ pluginManagement {
 }
 
 rootProject.name = 'starfare'
+
+// Packaging only; application sources and the executable root project stay in place.
+include 'game-module-publication'

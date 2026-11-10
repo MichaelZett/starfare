@@ -953,3 +953,48 @@ systems and reassigned seats do not carry orders to a new owner, and new conques
 are not enrolled automatically. Disabling keeps the last production plan.
 The existing autark preset remains a one-time allocation. No economic formulas,
 rule versions or dependency versions change.
+
+
+## Embeddable game artifact
+
+The normal application remains `build/libs/starfare.jar`, with the same
+`bootRun`, routes and release workflow. An additional `gameModuleJar` task
+builds `starfare-game-<version>.jar` from the same compiled sources. It contains
+the game services and views, frontend source files, public assets, translations,
+and byte-identical migrations under `games/starfare/migrations`.
+
+The game artifact omits the standalone application, AppShell, security chain,
+local demo-account setup, application configuration, build metadata and compiled
+frontend bundle. An embedding application must supply these explicitly and
+build its own frontend. Game rules and the standalone entry points are unchanged;
+a shared hosting application is not included in this step.
+
+`check` runs `verifyGameModule` against the actual game archive, its dependency
+metadata and the standalone Boot JAR. The additional Gradle variants have the
+capability `de.zettsystems:starfare-game`; they do not replace the application's
+normal variants. The small `game-module-publication` subproject packages this
+output without compiling a second copy of the game or moving application sources.
+It uses native Gradle publication so the configuration cache remains usable.
+Maven POM and Gradle module metadata describe only production dependencies,
+with constraints derived from the application's selected BOM versions. Local publication uses a repository inside `build/`, not Maven
+Local or a remote service:
+
+    ./gradlew check publishGameModulePublicationToGameModuleLocalRepository
+
+The fixture in `src/moduleTest/consumer` compiles and runs independently from
+published archives. It checks the ruleset catalog, a snapshot JSON round trip,
+the public service/view types, identity dependencies and source resources.
+For an isolated proof in PowerShell, run from the repository root:
+
+    $consumer = Join-Path ([IO.Path]::GetTempPath()) ('starfare-consumer-' + [Guid]::NewGuid().ToString('N'))
+    Copy-Item -LiteralPath src/moduleTest/consumer -Destination $consumer -Recurse
+    $repository = ([Uri]((Get-Item build/game-module-repository).FullName + [IO.Path]::DirectorySeparatorChar)).AbsoluteUri
+    $version = ((Get-Content gradle.properties | Where-Object { $_ -match '^appVersion=' }) -split '=', 2)[1]
+    .\gradlew.bat -p $consumer check "-PmoduleRepository=$repository" "-PmoduleVersion=$version"
+    .\gradlew.bat -p $consumer check "-PmoduleRepository=$repository" "-PmoduleVersion=$version" -PpomOnly --rerun-tasks
+
+The second run disables Gradle metadata redirection to verify the Maven POM
+independently. Neither consumer adds `includeBuild`, a source directory, test
+libraries or undeclared runtime dependencies. For a future composite build,
+explicitly select the `starfare-game` capability; substituting the default
+Starfare project dependency would select the standalone project's normal variant.

@@ -1,0 +1,31 @@
+plugins { id 'java' }
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
+
+repositories {
+    maven {
+        url = uri(providers.gradleProperty('moduleRepository').get())
+        metadataSources {
+            if (providers.gradleProperty('pomOnly').isPresent()) {
+                mavenPom()
+                ignoreGradleMetadataRedirection()
+            } else {
+                gradleMetadata()
+                mavenPom()
+            }
+        }
+    }
+    mavenCentral()
+}
+
+dependencies {
+    implementation "de.zettsystems:starfare-game:${providers.gradleProperty('moduleVersion').get()}"
+}
+
+def verifyConsumption = tasks.register('verifyConsumption', JavaExec) {
+    group = 'verification'
+    description = 'Uses only the published game module and its declared dependencies.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'example.ModuleConsumer'
+}
+tasks.named('check') { dependsOn verifyConsumption }

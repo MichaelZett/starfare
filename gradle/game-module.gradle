@@ -1,0 +1,212 @@
+import groovy.json.JsonSlurper
+import groovy.xml.XmlSlurper
+import org.gradle.api.attributes.Bundling
+import org.gradle.api.attributes.Category
+import org.gradle.api.attributes.LibraryElements
+import org.gradle.api.attributes.Usage
+import org.gradle.api.attributes.java.TargetJvmVersion
+import java.util.jar.Manifest
+import java.util.zip.ZipFile
+
+// An additional library output; the default executable application is unchanged.
+def gameModuleJar = tasks.register('gameModuleJar', Jar) {
+    group = 'build'
+    description = 'Builds the embeddable Starfare game without application bootstrap.'
+    archiveBaseName = 'starfare-game'
+    archiveClassifier = ''
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+    // Apply to every copy spec, including frontend resources added by the Vaadin plugin.
+    exclude 'META-INF/VAADIN/**', 'META-INF/resources/VAADIN/**', 'META-INF/resources/build/**'
+    exclude '**/flow-build-info.json', '**/prod.bundle'
+    from(sourceSets.main.output) {
+        exclude 'de/zettsystems/starfare/StarfareApplication*.class'
+        exclude 'de/zettsystems/starfare/AppShell*.class'
+        exclude 'de/zettsystems/starfare/auth/config/SecurityConfig*.class'
+        exclude 'de/zettsystems/starfare/auth/config/LocalDemoAccountConfiguration*.class'
+        exclude 'application*.yaml', 'application*.yml', 'application*.properties'
+        exclude 'git.properties', 'META-INF/build-info.properties'
+        exclude 'db/migration/**', 'META-INF/VAADIN/**'
+        exclude 'META-INF/resources/VAADIN/**', 'META-INF/resources/build/**'
+        exclude '**/flow-build-info.json', '**/prod.bundle'
+    }
+    from('src/main/frontend') {
+        into 'META-INF/frontend'
+        exclude 'generated/**', 'index.html'
+    }
+    from('src/main/resources/db/migration') { into 'games/starfare/migrations' }
+    from('LICENSE') { into 'META-INF/starfare' }
+}
+
+// Keep the same BOMs available to both Gradle and Maven consumers.
+def gameModulePlatforms = configurations.create('gameModulePlatforms') {
+    canBeResolved = false
+    canBeConsumed = false
+}
+["org.springframework.boot:spring-boot-dependencies:${springBootVersion}",
+ "com.vaadin:vaadin-bom:${vaadinVersion}",
+ "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"].each { coordinates ->
+    dependencies.add('gameModulePlatforms', dependencies.platform(coordinates))
+}
+
+// Only production dependencies; developmentOnly and test configurations stay private.
+def gameModuleRuntimeClasspath = configurations.create('gameModuleRuntimeClasspath') {
+    canBeResolved = true
+    canBeConsumed = false
+    extendsFrom configurations.implementation, configurations.runtimeOnly, gameModulePlatforms
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements, LibraryElements.JAR))
+    }
+}
+[api: Usage.JAVA_API, runtime: Usage.JAVA_RUNTIME].each { scope, usage ->
+    def variantConfiguration = configurations.create('gameModule' + scope.capitalize() + 'Elements') {
+        canBeResolved = false
+        canBeConsumed = true
+        extendsFrom configurations.implementation, gameModulePlatforms
+        if (scope == 'runtime') { extendsFrom configurations.runtimeOnly }
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, usage))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+            attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements, LibraryElements.JAR))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.EXTERNAL))
+            attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, java.toolchain.languageVersion.get().asInt())
+        }
+        outgoing.artifact(gameModuleJar)
+        outgoing.capability("${project.group}:starfare-game:${project.version}")
+    }
+}
+// Publication lives in a native Gradle subproject so Spring's automatic POM
+// XML action cannot capture this application's dependency-management objects.
+tasks.register('publishGameModulePublicationToGameModuleLocalRepository') {
+    group = 'publishing'
+    description = 'Publishes only the game artifact to the local build repository.'
+    dependsOn ':game-module-publication:publishGameModulePublicationToGameModuleLocalRepository'
+}
+
+abstract class VerifyGameModule extends DefaultTask {
+    @InputFile @PathSensitive(PathSensitivity.NONE)
+    abstract RegularFileProperty getModuleArchive()
+    @InputFile @PathSensitive(PathSensitivity.NONE)
+    abstract RegularFileProperty getStandaloneArchive()
+    @InputFile @PathSensitive(PathSensitivity.NONE)
+    abstract RegularFileProperty getModuleMetadata()
+    @InputFile @PathSensitive(PathSensitivity.NONE)
+    abstract RegularFileProperty getModulePom()
+    @InputDirectory @PathSensitive(PathSensitivity.RELATIVE)
+    abstract DirectoryProperty getMigrationSources()
+    @InputDirectory @PathSensitive(PathSensitivity.RELATIVE)
+    abstract DirectoryProperty getFrontendSources()
+
+    @TaskAction
+    void verifyArchives() {
+        VerifyGameModule.verifyGameArchive(moduleArchive.get().asFile,
+                migrationSources.get().asFile, frontendSources.get().asFile)
+        VerifyGameModule.verifyStandaloneArchive(standaloneArchive.get().asFile)
+        VerifyGameModule.verifyMetadata(moduleMetadata.get().asFile, modulePom.get().asFile)
+        logger.lifecycle('Game module contract verified; standalone entry points preserved.')
+    }
+
+    static void verifyGameArchive(File archive, File migrations, File frontend) {
+        new ZipFile(archive).withCloseable { zip ->
+            def entries = zip.entries().toList().findAll { !it.directory }.collect { it.name }
+            VerifyGameModule.checkCondition(entries.size() == entries.toSet().size(), 'Duplicate game module entries')
+            ['de/zettsystems/starfare/game/application/GameService.class',
+             'de/zettsystems/starfare/game/application/DefaultGameService.class',
+             'de/zettsystems/starfare/game/domain/GameState.class',
+             'de/zettsystems/starfare/game/ui/LobbyView.class',
+             'vaadin-i18n/translations.properties', 'system-names.txt',
+             'META-INF/resources/icons/starfare.svg', 'META-INF/starfare/LICENSE'].each {
+                VerifyGameModule.checkCondition(entries.contains(it), 'Missing game entry: ' + it)
+            }
+            ['de/zettsystems/starfare/StarfareApplication.class',
+             'de/zettsystems/starfare/AppShell.class',
+             'de/zettsystems/starfare/auth/config/SecurityConfig.class',
+             'de/zettsystems/starfare/auth/config/LocalDemoAccountConfiguration.class'].each {
+                VerifyGameModule.checkCondition(!entries.contains(it), 'Application bootstrap leaked: ' + it)
+            }
+            entries.each { entry ->
+                VerifyGameModule.checkCondition(!(entry.startsWith('BOOT-INF/') || entry.startsWith('db/migration/') ||
+                        entry.startsWith('META-INF/VAADIN/') || entry.startsWith('META-INF/resources/VAADIN/') ||
+                        entry.startsWith('META-INF/resources/build/') || entry.startsWith('META-INF/frontend/generated/') ||
+                        entry == 'META-INF/frontend/index.html' || entry == 'META-INF/build-info.properties' ||
+                        entry == 'git.properties' || entry.endsWith('flow-build-info.json') ||
+                        entry.endsWith('prod.bundle') || entry ==~ /application.*\.(yaml|yml|properties)/),
+                        'Host-owned resource leaked: ' + entry)
+            }
+            def manifest = zip.getInputStream(zip.getEntry('META-INF/MANIFEST.MF')).withCloseable { new Manifest(it) }
+            VerifyGameModule.checkCondition(manifest.mainAttributes.getValue('Main-Class') == null &&
+                    manifest.mainAttributes.getValue('Start-Class') == null, 'Game module must not be executable')
+            VerifyGameModule.verifySourceResources(zip, migrations, frontend)
+        }
+    }
+
+    static void verifySourceResources(ZipFile zip, File migrations, File frontend) {
+            migrations.eachFile { source ->
+                VerifyGameModule.assertSameBytes(zip, 'games/starfare/migrations/' + source.name, source)
+            }
+            frontend.eachFileRecurse { source ->
+                if (source.file) {
+                    def relative = frontend.toPath().relativize(source.toPath()).toString().replace('\\', '/')
+                    if (!relative.startsWith('generated/') && relative != 'index.html') {
+                        VerifyGameModule.assertSameBytes(zip, 'META-INF/frontend/' + relative, source)
+                    }
+                }
+            }
+    }
+
+    static void verifyStandaloneArchive(File archive) {
+        new ZipFile(archive).withCloseable { zip ->
+            ['BOOT-INF/classes/de/zettsystems/starfare/StarfareApplication.class',
+             'BOOT-INF/classes/de/zettsystems/starfare/AppShell.class',
+             'BOOT-INF/classes/de/zettsystems/starfare/auth/config/SecurityConfig.class',
+             'BOOT-INF/classes/application.yaml', 'BOOT-INF/classes/db/migration/V2_1__create_schema.sql'].each {
+                VerifyGameModule.checkCondition(zip.getEntry(it) != null, 'Standalone entry lost: ' + it)
+            }
+            VerifyGameModule.checkCondition(archive.name == 'starfare.jar', 'Standalone filename changed')
+        }
+    }
+
+    static void verifyMetadata(File metadataFile, File pomFile) {
+        def metadata = new JsonSlurper().parse(metadataFile)
+        VerifyGameModule.checkCondition(metadata.component.module == 'starfare-game', 'Incorrect module coordinates')
+        VerifyGameModule.checkCondition(metadata.variants.size() == 2, 'Expected compile and runtime variants')
+        metadata.variants.each { variant ->
+            variant.dependencies.each { dependency ->
+                VerifyGameModule.checkCondition(dependency.version?.requires, 'Unversioned dependency: ' + dependency.module)
+                VerifyGameModule.checkCondition(!(dependency.group.startsWith('org.testcontainers') ||
+                        dependency.group.startsWith('org.junit') || dependency.group.startsWith('io.cucumber') ||
+                        dependency.module in ['vaadin-dev', 'spring-boot-docker-compose', 'spring-boot-starter-test', 'mockito-core', 'browserless-test-spring']),
+                        'Non-production dependency leaked: ' + dependency.module)
+            }
+        }
+        def pom = new XmlSlurper().parse(pomFile)
+        VerifyGameModule.checkCondition(pom.artifactId.text() == 'starfare-game', 'Incorrect POM coordinates')
+        VerifyGameModule.checkCondition(!pom.dependencies.dependency.isEmpty(), 'POM must describe production dependencies')
+    }
+
+    static void assertSameBytes(ZipFile zip, String name, File source) {
+        def entry = zip.getEntry(name)
+        VerifyGameModule.checkCondition(entry != null, 'Missing source resource: ' + name)
+        byte[] content = zip.getInputStream(entry).withCloseable { it.readAllBytes() }
+        VerifyGameModule.checkCondition(Arrays.equals(content, source.bytes), 'Resource content changed: ' + name)
+    }
+
+    static void checkCondition(Object condition, String message) {
+        if (!condition) { throw new GradleException(message) }
+    }
+}
+
+def verifyGameModule = tasks.register('verifyGameModule', VerifyGameModule) {
+    group = 'verification'
+    description = 'Checks the packaged game contract and unchanged standalone bootstrap.'
+    moduleArchive = gameModuleJar.flatMap { it.archiveFile }
+    standaloneArchive = tasks.named('bootJar', Jar).flatMap { it.archiveFile }
+    moduleMetadata = layout.buildDirectory.file('game-module-publication/publications/gameModule/module.json')
+    modulePom = layout.buildDirectory.file('game-module-publication/publications/gameModule/pom-default.xml')
+    migrationSources = layout.projectDirectory.dir('src/main/resources/db/migration')
+    frontendSources = layout.projectDirectory.dir('src/main/frontend')
+    dependsOn ':game-module-publication:generateMetadataFileForGameModulePublication',
+            ':game-module-publication:generatePomFileForGameModulePublication'
+}
+tasks.named('check') { dependsOn verifyGameModule }
