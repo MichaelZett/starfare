@@ -19,6 +19,8 @@ public record EconomyTotals(long metalMined, long metalConsumed, int industryBui
     public boolean recorded() { return coverage != Coverage.NOT_RECORDED; }
 
     /**
+     * Sums the recorded economy events for one player and reports the available history.
+     *
      * @param reports the player's report per resolved round; rounds without a report count as unrecorded
      * @param rounds  every resolved round of the game
      */
