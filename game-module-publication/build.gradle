@@ -53,6 +53,7 @@ publishing {
         gameModule(MavenPublication) {
             artifactId = 'starfare-game'
             from components.java
+            artifact(rootProject.tasks.named('gameModuleE2eFixturesJar'))
             pom {
                 name = 'Starfare game module'
                 description = 'Starfare services, views and source resources for an embedding application.'

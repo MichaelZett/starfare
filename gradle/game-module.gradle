@@ -210,3 +210,22 @@ def verifyGameModule = tasks.register('verifyGameModule', VerifyGameModule) {
             ':game-module-publication:generatePomFileForGameModulePublication'
 }
 tasks.named('check') { dependsOn verifyGameModule }
+
+// Test-only journeys for an embedding host. Never part of the runtime variant.
+tasks.register('gameModuleE2eFixturesJar', Jar) {
+    group = 'verification'
+    archiveBaseName = 'starfare-game'
+    archiveClassifier = 'e2e-fixtures'
+    from(sourceSets.e2eTest.output) {
+        exclude '**/CucumberSpringConfiguration*.class', '**/CucumberE2eTest*.class'
+        exclude 'application*.yaml', 'application*.yml', 'application*.properties'
+    }
+    from(sourceSets.test.output.classesDirs) {
+        include 'de/zettsystems/starfare/testsupport/ColonyStates*.class'
+        include 'de/zettsystems/starfare/testsupport/EconomyUiStates*.class'
+        include 'de/zettsystems/starfare/testsupport/FleetUiStates*.class'
+        include 'de/zettsystems/starfare/testsupport/ReviewGameFixture*.class'
+    }
+    from('LICENSE') { into 'META-INF/starfare' }
+    dependsOn tasks.named('e2eTestClasses'), tasks.named('testClasses')
+}

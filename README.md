@@ -998,3 +998,20 @@ independently. Neither consumer adds `includeBuild`, a source directory, test
 libraries or undeclared runtime dependencies. For a future composite build,
 explicitly select the `starfare-game` capability; substituting the default
 Starfare project dependency would select the standalone project's normal variant.
+
+### Browser journeys for embedding hosts
+
+The local publication also contains the optional `e2e-fixtures` classifier. It
+packages the existing Cucumber features and browser steps, recording mail sender,
+and four required state helpers. It excludes the standalone Cucumber Spring
+configuration and suite runner. An embedding host supplies its own Spring context,
+isolated PostgreSQL container and Cucumber runner, and explicitly declares its
+browser test dependencies. Add the classifier only to the browser-test source set:
+
+```groovy
+e2eTestImplementation "de.zettsystems:starfare-game:${starfareVersion}:e2e-fixtures"
+```
+
+It is not part of the game module's runtime variants or transitive production
+dependencies. The standalone application's source sets, startup and release
+artifact remain unchanged.
