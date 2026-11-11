@@ -85,6 +85,8 @@ public class CoalitionRenderingSteps {
             assertRemainingShips(index);
             capture(index);
             browser.clickButtonWithText("Ergebnis übernehmen");
+            // The closing overlay can remain in the DOM until its animation finishes.
+            browser.awaitCount(".coalition-replay", 0);
             if (index == 0) {
                 new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                         .until(_ -> browser.all(".event-battle-pending").size() == 1);
