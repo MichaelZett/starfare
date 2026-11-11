@@ -318,7 +318,7 @@ public class ReviewMapSteps {
     }
 
     private void open(ReviewGameFixture.Game game) {
-        browser.open("/map/" + game.id().value());
+        browser.open(Browser.LOBBY + "/map/" + game.id().value());
         browser.awaitCss(".map-content");
     }
 

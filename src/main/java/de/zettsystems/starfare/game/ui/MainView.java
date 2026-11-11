@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
  * Fleet commands are issued directly on the map: click own system to select source,
  * click target to open the send dialog; right-click a fleet line for Wait/Disband.
  */
-@Route("map/:gameId")
+@Route(StarfareRoutes.MAP)
 @CssImport("./styles/starfare.css")
 @JsModule("./battle-replay.js")
 @PermitAll

@@ -111,7 +111,7 @@ public class EconomyLayoutSteps {
     }
 
     private void openAlpha(GameId id) {
-        browser.open("/map/" + id.value());
+        browser.open(Browser.LOBBY + "/map/" + id.value());
         browser.awaitCss("#map .sys-own");
         browser.clickMatching("#map .sys-own", system -> system.getText().startsWith("Alpha"), "Alpha");
         browser.awaitTextIn(".system-details-heading", "Alpha");

@@ -122,7 +122,7 @@ public class LobbySteps {
     public void privateGameHidden() {
         browser.awaitCss(".lobby-root");
         assertThat(browser.pageText()).doesNotContain(name);
-        browser.open("/map/" + id.value());
+        browser.open(Browser.LOBBY + "/map/" + id.value());
         browser.awaitCss(".lobby-root");
         assertThat(browser.driver().getCurrentUrl()).doesNotContain("/map/");
     }
@@ -169,7 +169,7 @@ public class LobbySteps {
 
     @Dann("liegt die Partie nur im Archiv und lässt sich lesend öffnen")
     public void reviewArchive() throws IOException {
-        browser.open("/");
+        browser.open(Browser.LOBBY);
         browser.awaitCss(".lobby-root");
         assertThat(browser.pageText()).doesNotContain(name);
         browser.clickCss("vaadin-menu-bar-button");

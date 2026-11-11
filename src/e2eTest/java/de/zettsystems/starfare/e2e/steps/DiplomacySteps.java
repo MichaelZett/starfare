@@ -47,8 +47,8 @@ public class DiplomacySteps {
         state.intel().put(1, new java.util.HashMap<>()); state.intel().put(2, new java.util.HashMap<>());
         state.configureNavigation(new NavigationSettings(450)); state.start();
         id = GameId.newId(); store.save(new GameSession(id, "Spaceward treaty test", host, Instant.now(), state));
-        browser.open("/map/" + id.value()); browser.awaitCss(".map-content");
-        partner = browser.newSession(); partner.logIn(partnerEmail); partner.open("/map/" + id.value()); partner.awaitCss(".map-content");
+        browser.open(Browser.LOBBY + "/map/" + id.value()); browser.awaitCss(".map-content");
+        partner = browser.newSession(); partner.logIn(partnerEmail); partner.open(Browser.LOBBY + "/map/" + id.value()); partner.awaitCss(".map-content");
         openTreaties(browser); openTreaties(partner);
     }
     @Dann("erfordert die Bündnisgründung die Zustimmung des Partners")

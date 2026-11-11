@@ -23,6 +23,7 @@ def gameModuleJar = tasks.register('gameModuleJar', Jar) {
         exclude 'de/zettsystems/starfare/AppShell*.class'
         exclude 'de/zettsystems/starfare/auth/config/SecurityConfig*.class'
         exclude 'de/zettsystems/starfare/auth/config/LocalDemoAccountConfiguration*.class'
+        exclude 'de/zettsystems/starfare/standalone/**'
         exclude 'application*.yaml', 'application*.yml', 'application*.properties'
         exclude 'git.properties', 'META-INF/build-info.properties'
         exclude 'db/migration/**', 'META-INF/VAADIN/**'
@@ -115,16 +116,19 @@ abstract class VerifyGameModule extends DefaultTask {
              'de/zettsystems/starfare/game/application/DefaultGameService.class',
              'de/zettsystems/starfare/game/domain/GameState.class',
              'de/zettsystems/starfare/game/ui/LobbyView.class',
-             'vaadin-i18n/translations.properties', 'system-names.txt',
+             'games/starfare/game.properties', 'games/starfare/i18n/translations.properties',
+             'games/starfare/i18n/translations_en.properties', 'system-names.txt',
              'META-INF/resources/icons/starfare.svg', 'META-INF/starfare/LICENSE'].each {
                 VerifyGameModule.checkCondition(entries.contains(it), 'Missing game entry: ' + it)
             }
             ['de/zettsystems/starfare/StarfareApplication.class',
              'de/zettsystems/starfare/AppShell.class',
              'de/zettsystems/starfare/auth/config/SecurityConfig.class',
-             'de/zettsystems/starfare/auth/config/LocalDemoAccountConfiguration.class'].each {
+             'de/zettsystems/starfare/auth/config/LocalDemoAccountConfiguration.class',
+             'de/zettsystems/starfare/standalone/ui/StandaloneEntryView.class'].each {
                 VerifyGameModule.checkCondition(!entries.contains(it), 'Application bootstrap leaked: ' + it)
             }
+            VerifyGameModule.verifyGameDescription(zip)
             entries.each { entry ->
                 VerifyGameModule.checkCondition(!(entry.startsWith('BOOT-INF/') || entry.startsWith('db/migration/') ||
                         entry.startsWith('META-INF/VAADIN/') || entry.startsWith('META-INF/resources/VAADIN/') ||
@@ -138,6 +142,23 @@ abstract class VerifyGameModule extends DefaultTask {
             VerifyGameModule.checkCondition(manifest.mainAttributes.getValue('Main-Class') == null &&
                     manifest.mainAttributes.getValue('Start-Class') == null, 'Game module must not be executable')
             VerifyGameModule.verifySourceResources(zip, migrations, frontend)
+        }
+    }
+
+    /** The host reads games/<key>/game.properties; key and directory must agree. */
+    static void verifyGameDescription(ZipFile zip) {
+        def entry = zip.getEntry('games/starfare/game.properties')
+        def description = new Properties()
+        zip.getInputStream(entry).withCloseable { description.load(it) }
+        ['key', 'basePackage', 'schema', 'defaultStage', 'publicPaths'].each {
+            VerifyGameModule.checkCondition(description.containsKey(it), 'Game description lacks ' + it)
+        }
+        VerifyGameModule.checkCondition(description.getProperty('key') == 'starfare', 'Game description key must match its directory')
+        VerifyGameModule.checkCondition(description.getProperty('defaultStage') in ['TESTING', 'PUBLIC'], 'Unknown release stage')
+        ['games/starfare/i18n/translations.properties', 'games/starfare/i18n/translations_en.properties'].each { bundle ->
+            def texts = new Properties()
+            zip.getInputStream(zip.getEntry(bundle)).withCloseable { texts.load(new InputStreamReader(it, 'UTF-8')) }
+            VerifyGameModule.checkCondition(texts.getProperty('game.title')?.trim(), 'Catalog title game.title missing in ' + bundle)
         }
     }
 
@@ -160,6 +181,7 @@ abstract class VerifyGameModule extends DefaultTask {
             ['BOOT-INF/classes/de/zettsystems/starfare/StarfareApplication.class',
              'BOOT-INF/classes/de/zettsystems/starfare/AppShell.class',
              'BOOT-INF/classes/de/zettsystems/starfare/auth/config/SecurityConfig.class',
+             'BOOT-INF/classes/de/zettsystems/starfare/standalone/ui/StandaloneEntryView.class',
              'BOOT-INF/classes/application.yaml', 'BOOT-INF/classes/db/migration/V2_1__create_schema.sql'].each {
                 VerifyGameModule.checkCondition(zip.getEntry(it) != null, 'Standalone entry lost: ' + it)
             }

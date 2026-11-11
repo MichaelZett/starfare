@@ -90,7 +90,7 @@ public class MobileSteps {
 
     @Wenn("ich die Partie auf dem Handy öffne")
     public void openGameOnPhone() {
-        phone().open("/map/" + game().value());
+        phone().open(Browser.LOBBY + "/map/" + game().value());
         phone().awaitCss(".mobile-map .round-status");
     }
 
@@ -102,7 +102,7 @@ public class MobileSteps {
         assertThat(phone().all(".mobile-map-nav vaadin-button")).hasSize(2);
 
         browser.logIn(Objects.requireNonNull(guestEmail));
-        browser.open("/map/" + game().value());
+        browser.open(Browser.LOBBY + "/map/" + game().value());
         browser.awaitCss(".map-content");
         assertThat(browser.all(".mobile-map")).as("Desktop baut keine Handy-Ansicht").isEmpty();
         assertThat(mobileStylesheetLoaded(browser)).as("Desktop lädt das Handy-Stylesheet nicht").isFalse();

@@ -55,7 +55,7 @@ public class BattleSteps {
         GameId id = games.newGame(GameSetup.defaults(), account, "Finale Schlachten");
         int seat = games.joinGame(id, account, "Battle Tester", "Battle Empire").orElseThrow();
         assertThat(games.startGame(id)).isTrue();
-        browser.open("/map/" + id.value());
+        browser.open(Browser.LOBBY + "/map/" + id.value());
         browser.awaitCss(".map-content");
         registry.writeState(id, state -> {
             var first = state.systems().get(1);

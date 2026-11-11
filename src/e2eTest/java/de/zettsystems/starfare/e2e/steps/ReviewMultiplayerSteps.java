@@ -47,11 +47,11 @@ public class ReviewMultiplayerSteps {
     @Wenn("zwei Browsersitzungen eine Partie für {string} und {string} öffnen")
     public void twoSessions(String hostEmail, String guestEmail) {
         current = fixture.create(hostEmail, guestEmail);
-        browser.open("/map/" + current.id().value());
+        browser.open(Browser.LOBBY + "/map/" + current.id().value());
         browser.awaitCss(".round-status");
         guest = browser.newSession();
         guest.logIn(guestEmail);
-        guest.open("/map/" + current.id().value());
+        guest.open(Browser.LOBBY + "/map/" + current.id().value());
         guest.awaitCss(".round-status");
     }
 

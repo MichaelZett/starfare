@@ -40,9 +40,7 @@ spring:
           provider_disables_autocommit: true
         jdbc:
           time_zone: UTC
-        # Counts the SQL statements of each request thread (PageTiming).
-        session_factory:
-          statement_inspector: de.zettsystems.starfare.observability.config.SqlStatementRecorder
+        # SqlStatementRecorder (PageTiming) registers itself: SqlStatementRecorderConfiguration.
     open-in-view: false
   flyway:
     enabled: true

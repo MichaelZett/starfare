@@ -42,7 +42,7 @@ public class LayoutSteps {
             for (int width : new int[]{1366, 1024}) {
                 browser.driver().manage().window().setSize(new Dimension(width, 768));
                 visitLobbyAndWizard(width);
-                browser.open("/map/" + game.id().value());
+                browser.open(Browser.LOBBY + "/map/" + game.id().value());
                 browser.awaitCss("#map .sys-own");
                 browser.clickMatching("#map .sys-own", element -> element.getText().startsWith("Alpha"), "Alpha");
                 browser.awaitCss(".system-metric");
@@ -51,7 +51,7 @@ public class LayoutSteps {
             registry.writeState(game.id(), state -> { state.endGame(game.hostSeat()); return null; });
             for (int width : new int[]{1366, 1024}) {
                 browser.driver().manage().window().setSize(new Dimension(width, 768));
-                browser.open("/archive");
+                browser.open(Browser.LOBBY + "/archive");
                 browser.awaitCss(".archive-game-card");
                 capture("archive", width);
                 browser.clickMatching(".archive-game-card vaadin-button", button ->
@@ -69,7 +69,7 @@ public class LayoutSteps {
     }
 
     private void visitLobbyAndWizard(int width) throws IOException {
-        browser.open("/");
+        browser.open(Browser.LOBBY);
         browser.awaitCss(".lobby-root");
         capture("lobby", width);
         browser.clickButtonWithText("Neues Spiel");

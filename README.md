@@ -247,7 +247,7 @@ all except production), travel-time preview, optional "as production transfer"
 mode. A configurable garrison reserve stays at the source system.*
 
 Completed games are retained as compact results for the personal statistics
-page (`/statistics`), including wins, losses, draws and the record against each
+page (`/starfare/statistics`), including wins, losses, draws and the record against each
 opponent. The page shows the result balance and opponent records as cards while
 retaining the recent game history. Statistics resolve opponent names in one
 batch for both the opponent cards and game history.
@@ -345,7 +345,7 @@ contains the responsible provider and its contact details. Signed-in players can
 permanently delete their account at `/account/delete`. Direct and party-chat
 messages are removed after 365 days.
 
-## Map view (`/map/:gameId`)
+## Map view (`/starfare/map/:gameId`)
 
 Top: **Starfare**, game name, round number and an empire summary with
 icons for owned systems, total production per round and total ships
@@ -964,10 +964,20 @@ the game services and views, frontend source files, public assets, translations,
 and byte-identical migrations under `games/starfare/migrations`.
 
 The game artifact omits the standalone application, AppShell, security chain,
-local demo-account setup, application configuration, build metadata and compiled
-frontend bundle. An embedding application must supply these explicitly and
-build its own frontend. Game rules and the standalone entry points are unchanged;
-a shared hosting application is not included in this step.
+local demo-account setup, the entry view for `/`, application configuration,
+build metadata and compiled frontend bundle. An embedding application must
+supply these explicitly and build its own frontend.
+
+All game routes start with `/starfare` (lobby `/starfare`, map
+`/starfare/map/:gameId`, `/starfare/archive`, `/starfare/statistics`); in the
+standalone application `/` forwards to the lobby. The artifact describes itself
+in `games/starfare/game.properties` (key, base package, schema, release stage,
+public paths). Texts live in `games/starfare/i18n/translations*.properties` and
+are resolved by Starfare's own helper in the language of the current UI, not by
+the embedding application's `I18NProvider`. Setting defaults are in the
+`@ConfigurationProperties` classes, and the per-request SQL counter registers
+itself through a `HibernatePropertiesCustomizer`, so a host needs no Starfare
+lines in its configuration.
 
 `check` runs `verifyGameModule` against the actual game archive, its dependency
 metadata and the standalone Boot JAR. The additional Gradle variants have the

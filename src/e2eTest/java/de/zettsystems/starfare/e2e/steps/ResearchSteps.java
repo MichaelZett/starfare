@@ -45,7 +45,7 @@ public class ResearchSteps {
         Browser phone = browser.newPhoneSession();
         try {
             phone.logIn(email);
-            phone.open("/map/" + id.value());
+            phone.open(Browser.LOBBY + "/map/" + id.value());
             phone.awaitCss(".mobile-map");
             openResearch(phone);
             assertThat(phone.awaitCss("#research-budget input").getDomProperty("value")).isEqualTo("50");

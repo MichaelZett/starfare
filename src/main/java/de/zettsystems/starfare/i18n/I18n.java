@@ -6,22 +6,27 @@ import com.vaadin.flow.server.VaadinService;
 import java.util.Locale;
 
 /**
- * Static facade for translation lookups. Prefer Component#getTranslation inside Vaadin components;
- * use this helper from plain utility classes or when no component is at hand.
+ * Translation lookups for Starfare. Reads Starfare's own bundle in the language of the current UI,
+ * so Starfare's texts do not depend on the I18NProvider of the application that starts it.
  */
 public final class I18n {
+
+    private static final StarfareI18NProvider BUNDLE = new StarfareI18NProvider();
 
     private I18n() {
     }
 
     public static String t(String key, Object... params) {
+        return BUNDLE.getTranslation(key, currentLocale(), params);
+    }
+
+    private static Locale currentLocale() {
         UI ui = UI.getCurrent();
         if (ui != null) {
-            return ui.getTranslation(key, params);
+            return ui.getLocale();
         }
         VaadinService service = VaadinService.getCurrent();
         Locale locale = service != null ? service.getContext().getAttribute(Locale.class) : null;
-        StarfareI18NProvider provider = new StarfareI18NProvider();
-        return provider.getTranslation(key, locale == null ? StarfareI18NProvider.GERMAN : locale, params);
+        return locale == null ? StarfareI18NProvider.GERMAN : locale;
     }
 }

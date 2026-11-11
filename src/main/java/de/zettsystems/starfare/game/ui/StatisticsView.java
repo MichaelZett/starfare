@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /** Personal overview of completed games, retained independently from archived sessions. */
-@Route("statistics")
+@Route(StarfareRoutes.STATISTICS)
 @PermitAll
 @CssImport("./styles/starfare.css")
 public class StatisticsView extends VerticalLayout {

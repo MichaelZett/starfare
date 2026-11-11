@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-@Route("")
+@Route(StarfareRoutes.LOBBY)
 @CssImport("./styles/starfare.css")
 @PermitAll
 public class LobbyView extends VerticalLayout {

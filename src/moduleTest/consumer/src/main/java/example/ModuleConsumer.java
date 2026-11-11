@@ -45,7 +45,7 @@ public final class ModuleConsumer {
         var loader = ModuleConsumer.class.getClassLoader();
         for (var resource : new String[]{"META-INF/frontend/battle-replay.js", "META-INF/frontend/map-geometry.js",
                 "META-INF/frontend/styles/starfare.css", "META-INF/resources/icons/starfare.svg",
-                "games/starfare/migrations/V2_1__create_schema.sql", "vaadin-i18n/translations.properties"}) {
+                "games/starfare/migrations/V2_1__create_schema.sql", "games/starfare/i18n/translations.properties"}) {
             require(loader.getResource(resource) != null, "Missing resource: " + resource);
         }
         require(loader.getResource("de/zettsystems/starfare/StarfareApplication.class") == null,

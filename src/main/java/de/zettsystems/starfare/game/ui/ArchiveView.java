@@ -33,7 +33,7 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-@Route("archive")
+@Route(StarfareRoutes.ARCHIVE)
 @PermitAll
 @CssImport("./styles/starfare.css")
 public class ArchiveView extends VerticalLayout {

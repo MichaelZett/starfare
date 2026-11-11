@@ -8,6 +8,15 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Alle Seiten liegen jetzt unter `/starfare` (Lobby `/starfare`, Karte
+  `/starfare/map/<id>`, Archiv und Statistik unter `/starfare/archive` und
+  `/starfare/statistics`); `/` leitet zur Lobby weiter. Alte Lesezeichen auf eine
+  Karte oder das Archiv sind damit ungültig. Vorbereitung für den Betrieb auf der
+  gemeinsamen Spieleplattform.
+- Das Spielartefakt beschreibt sich selbst (`games/starfare/game.properties`);
+  Texte liegen unter `games/starfare/i18n`. Ein einbettender Host braucht keine
+  Starfare-Einstellungen mehr in seiner Konfiguration.
+
 - Die Lobby lädt entladene Einzelspieler-Partien nicht mehr vollständig aus der
   Datenbank nach, nur um sie aufzulisten. Sie zeigt die beim Entladen gemerkte
   Zusammenfassung; bisher hielt jeder Lobby-Besuch alle diese Partien wieder im Speicher.

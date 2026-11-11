@@ -18,8 +18,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TranslationKeysCoverageTest {
 
-    private static final String DE_BUNDLE = "/vaadin-i18n/translations.properties";
-    private static final String EN_BUNDLE = "/vaadin-i18n/translations_en.properties";
+    private static final String DE_BUNDLE = "/games/starfare/i18n/translations.properties";
+    private static final String EN_BUNDLE = "/games/starfare/i18n/translations_en.properties";
 
     /**
      * Keys not declared in {@link UiTexts} but emitted as opaque strings from the application layer
@@ -30,6 +30,15 @@ class TranslationKeysCoverageTest {
             "map.orderType.wait",
             "map.orderType.disband"
     );
+
+    /** Keys read by a host (games-platform) rather than by Starfare itself. */
+    private static final Set<String> HOST_KEYS = Set.of("game.title");
+
+    @Test
+    void hostKeysExistInBothBundles() throws Exception {
+        assertThat(loadBundle(DE_BUNDLE).stringPropertyNames()).containsAll(HOST_KEYS);
+        assertThat(loadBundle(EN_BUNDLE).stringPropertyNames()).containsAll(HOST_KEYS);
+    }
 
     @Test
     void everyUiTextsKeyHasGermanTranslation() throws Exception {
@@ -65,6 +74,7 @@ class TranslationKeysCoverageTest {
     void bundleHasNoOrphanKeys() throws Exception {
         Set<String> known = new TreeSet<>(collectUiTextsKeys());
         known.addAll(APPLICATION_LAYER_KEYS);
+        known.addAll(HOST_KEYS);
         Properties de = loadBundle(DE_BUNDLE);
         Set<String> orphans = de.stringPropertyNames().stream()
                 .filter(k -> !known.contains(k))

@@ -53,7 +53,7 @@ public class NavigationLayoutSteps {
         created.add(id);
         store.save(new GameSession(id, "Navigation layout", host, Instant.now(), state));
         browser.logIn(email);
-        browser.open("/map/" + id.value());
+        browser.open(Browser.LOBBY + "/map/" + id.value());
         browser.awaitCss("#map .sys-own");
         inspectPreview();
         assertThat(games.sendFleet(id, 1, 1, 4, 10)).isTrue();

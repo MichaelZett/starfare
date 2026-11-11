@@ -66,12 +66,12 @@ public class RoundSteps {
 
     @Wenn("ich die Partie öffne")
     public void openGame() {
-        browser.open("/map/" + id.value());
+        browser.open(Browser.LOBBY + "/map/" + id.value());
         browser.awaitCss(".round-status");
         if (guestSession == null) {
             guestSession = browser.newSession();
             guestSession.logIn(guestAccountEmail);
-            guestSession.open("/map/" + id.value());
+            guestSession.open(Browser.LOBBY + "/map/" + id.value());
             guestSession.awaitCss(".round-status");
         }
     }

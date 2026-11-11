@@ -57,7 +57,7 @@ public class AllianceVictorySteps {
         browser.clickButtonWithText("Zusammenfassung prüfen");
         awaitSummaryLine("Bündnissieg", "70 %");
         awaitSummaryLine("KI-Bündnisse", "aktiv");
-        browser.open("/");
+        browser.open(Browser.LOBBY);
     }
     private void awaitSummaryLine(String label, String value) {
         browser.awaitTexts(".wizard-summary-line",
@@ -86,7 +86,7 @@ public class AllianceVictorySteps {
         state.players().forEach(p -> state.intel().put(p.id(), new HashMap<>())); state.start();
         state.agreeTreaties(new DiplomacyState(2, List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of()));
         id = GameId.newId(); store.save(new GameSession(id, "Alliance victory acceptance", host, Instant.now(), state));
-        browser.open("/map/" + id.value());
+        browser.open(Browser.LOBBY + "/map/" + id.value());
         browser.awaitCss(".map-content");
         assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue();
         assertThat(games.viewFor(id, 1).outcome().winnerIds()).containsExactly(1, 2);
@@ -105,7 +105,7 @@ public class AllianceVictorySteps {
     }
     @Dann("zeigt das Archiv den gemeinsamen Sieg")
     public void archive() {
-        browser.open("/archive"); browser.awaitText("Alliance victory acceptance");
+        browser.open(Browser.LOBBY + "/archive"); browser.awaitText("Alliance victory acceptance");
         assertThat(browser.driver().getPageSource()).contains("Commander, Partner");
     }
     @After public void cleanup() { if (id != null) { store.delete(id); } }

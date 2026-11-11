@@ -69,7 +69,7 @@ public class CoalitionRenderingSteps {
             assertThat(games.submitTurn(id, 3)).isTrue();
         }
         browser.logIn(email);
-        browser.open("/map/" + id.value());
+        browser.open(Browser.LOBBY + "/map/" + id.value());
         browser.awaitCss(".map-content");
         browser.clickTabWithText("Bericht");
         browser.awaitCss(".event-battle-pending");

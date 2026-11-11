@@ -34,6 +34,8 @@ public class Browser {
     private static final Duration LOAD = Duration.ofSeconds(30);
 
     public static final String PASSWORD = "ein-langes-testpasswort";
+    /** Starfare's entry route; the other routes start with it. */
+    public static final String LOBBY = "/starfare";
 
     private final Environment environment;
     private final @Nullable WebDriver ownedDriver;
@@ -87,6 +89,10 @@ public class Browser {
         type("input[name='username']", email);
         type("input[name='password']", PASSWORD + Keys.ENTER);
         awaitUrl(url -> !url.contains("/login"), "Anmeldung als " + email + " blieb auf /login hängen.");
+        // A host with several games answers / with its game selection, not with Starfare.
+        if (!String.valueOf(driver().getCurrentUrl()).contains(LOBBY)) {
+            open(LOBBY);
+        }
     }
 
     public WebElement awaitCss(String css) {
