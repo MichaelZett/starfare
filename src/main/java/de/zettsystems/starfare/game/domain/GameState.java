@@ -498,6 +498,24 @@ public class GameState {
         return observers;
     }
 
+    /** Releases identity bindings without removing other players or their game. */
+    public boolean releaseAccount(String account) {
+        Integer seat = seatByUser.remove(account);
+        boolean changed = observers.remove(account);
+        changed |= invitedSeats.remove(account) != null;
+        if (seat != null) {
+            joinedHumanPlayerIds.remove(seat);
+            originalHumanPlayerIds.remove(seat);
+            submittedThisTurn.remove(seat);
+            pendingOrders.remove(seat);
+            standingOrders.remove(seat);
+            miningAutomation.remove(seat);
+            updatePlayer(seat, Player::asAi);
+            changed = true;
+        }
+        return changed;
+    }
+
     public Map<String, Integer> seatByUser() {
         return seatByUser;
     }

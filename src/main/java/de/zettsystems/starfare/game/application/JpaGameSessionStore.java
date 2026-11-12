@@ -160,6 +160,15 @@ public class JpaGameSessionStore implements GameSessionStore {
     }
 
     @Override
+    public void invalidate(GameId id) {
+        synchronized (cacheMonitor) {
+            cache.remove(id);
+            lastAccess.remove(id);
+            parked.remove(id);
+        }
+    }
+
+    @Override
     public void touch(GameId id) {
         cache.computeIfPresent(id, (key, session) -> {
             lastAccess.put(key, Instant.now());

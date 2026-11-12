@@ -25,6 +25,10 @@ public interface GameSessionStore {
 
     void delete(GameId id);
 
+    /** Drops a derived cache after an externally committed snapshot update; uncached stores need no action. */
+    default void invalidate(GameId id) { }
+
+
     default void touch(GameId id) {
     }
 

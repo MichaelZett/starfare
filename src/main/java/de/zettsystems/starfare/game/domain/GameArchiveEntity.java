@@ -30,5 +30,6 @@ public class GameArchiveEntity extends AbstractBaseEntity<String> {
     public @Nullable String getHostPlayerId() { return hostPlayerId; }
     public Instant getFinishedAt() { return finishedAt; }
     public String getStateJson() { return stateJson; }
+    public void transferHostTo(@Nullable String host) { hostPlayerId = host; }
     public void replaceSnapshot(String json) { stateJson = json; }
 }
