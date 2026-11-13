@@ -64,7 +64,9 @@ complete game.
 
 Choose a game variant before its settings in the new-game dialog. SectorForces
 (rules **1.0.0**) is preselected. **Spaceward** (rules **1.2.0-w7**, with **1.2.0-w6** also selectable), inspired by
-Spaceward Ho!, is available for new games as well. It adds
+Spaceward Ho!, is available for new games as well (inside the games platform
+host only for testers: global `SYSTEM_ADMIN` or `GAME_TESTER` scoped to
+`game:starfare`; games someone already takes part in stay playable). It adds
 production allocation between ships and industrial expansion, plus limited flight range,
 automatically planned routes through owned or allied systems and refuelling stops.
 Diplomacy adds unanimous alliance groups, agreed notice periods and

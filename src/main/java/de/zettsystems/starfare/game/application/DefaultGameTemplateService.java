@@ -3,8 +3,11 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "EI_EXPOSE_REP2",
@@ -14,13 +17,21 @@ public class DefaultGameTemplateService implements GameTemplateService {
     private final GameArchiveStore archives;
     private final GameAccessPolicy access;
     private final Broadcaster broadcaster;
+    private final RulesetAccess rulesetAccess;
 
     public DefaultGameTemplateService(GameRegistry registry, GameArchiveStore archives,
                                       GameAccessPolicy access, Broadcaster broadcaster) {
+        this(registry, archives, access, broadcaster, RulesetAccess.unrestricted());
+    }
+
+    @Autowired
+    public DefaultGameTemplateService(GameRegistry registry, GameArchiveStore archives,
+                                      GameAccessPolicy access, Broadcaster broadcaster, RulesetAccess rulesetAccess) {
         this.registry = registry;
         this.archives = archives;
         this.access = access;
         this.broadcaster = broadcaster;
+        this.rulesetAccess = rulesetAccess;
     }
 
     @Override
@@ -35,6 +46,7 @@ public class DefaultGameTemplateService implements GameTemplateService {
         return state.originalSetup().flatMap(setup -> registry.rulesets().find(setup.ruleset().variant())
                 .filter(RulesetDefinition::creationEnabled)
                 .filter(entry -> entry.supports(setup.ruleset()))
+                .filter(entry -> rulesetAccess.mayUse(entry.defaultRef(), account))
                 .map(entry -> new GameTemplate(setup.selectRuleset(entry.defaultRef()).chooseVictoryRules(setup.victoryRules()), state.seatByUser())));
     }
 
@@ -44,8 +56,12 @@ public class DefaultGameTemplateService implements GameTemplateService {
         return template(source, account).map(template -> {
             GameId id = registry.createGame(template.setup(), account, name.strip());
             if (rematch) {
+                // Wer die Variante nicht nutzen darf, bekommt keinen reservierten Platz, den er nie einnehmen könnte.
+                var admitted = template.participants().entrySet().stream()
+                        .filter(entry -> rulesetAccess.mayUse(template.setup().ruleset(), entry.getKey()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 registry.writeState(id, state -> {
-                    template.participants().forEach((participant, seat) -> {
+                    admitted.forEach((participant, seat) -> {
                         if (state.originalHumanPlayerIds().contains(seat)) { state.invitedSeats().put(participant, seat); }
                     });
                     return null;

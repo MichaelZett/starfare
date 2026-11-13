@@ -26,7 +26,7 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
                         RulesetDefinition.SECTOR_FORCES_DESCRIPTION, Set.of(RulesetRef.SECTOR_FORCES.version()), true),
                 new RulesetDefinition(ECONOMY_CANDIDATE, RulesetDefinition.SPACEWARD_NAME,
                         RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.SPACEWARD.version(), RulesetRef.SPACEWARD_ALLIANCE.version(), RulesetRef.SPACEWARD_COLONIES.version(), RulesetRef.SPACEWARD_METALS.version(), RulesetRef.SPACEWARD_RECYCLING.version(), RulesetRef.SPACEWARD_ECONOMY_PREVIEW.version(), RulesetRef.SPACEWARD_DIRECT_ECONOMY.version(), RulesetRef.SPACEWARD_EQUAL_METAL.version(), RulesetRef.SPACEWARD_EARLY_INDUSTRY.version(), RulesetRef.SPACEWARD_SHIP_RESEARCH.version()), true,
-                        Set.of(ECONOMY_CANDIDATE.version()))));
+                        Set.of(ECONOMY_CANDIDATE.version())).forTesters()));
     }
 
     /** Compatibility for retained research-preview launch profiles. */
@@ -34,6 +34,11 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
 
     public Optional<RulesetDefinition> find(String variant) {
         return definitions.stream().filter(entry -> entry.defaultRef().variant().equals(variant)).findFirst();
+    }
+
+    /** Whether the variant is reserved for testers; unknown variants are not. */
+    public boolean testing(RulesetRef ref) {
+        return find(ref.variant()).filter(RulesetDefinition::testing).isPresent();
     }
 
     public void requireSupported(RulesetRef ref) {

@@ -39,6 +39,11 @@ beschreiben, worin es von SectorForces abweicht. Weil dort alle feindlichen Seit
 gleichzeitig kämpfen, blendet der Dialog bei Spaceward die Einstellung
 **Reihenfolge mehrerer Angreifer** aus.
 
+Auf der gemeinsamen Spieleplattform ist Spaceward derzeit eine Testvariante: Nur
+Tester sehen sie im Dialog, sehen offene Spaceward-Partien in der Lobby und können
+ihnen beitreten. Partien, an denen du schon teilnimmst, spielst du in jedem Fall
+weiter. Im eigenen Start von Starfare stehen beide Varianten allen offen.
+
 Variante und Regelversion bleiben für die Partie fest. Die Anwendungsversion
 ist davon unabhängig. Alte Partien werden als SectorForces angezeigt und behalten
 ihre bisherigen Regeln. Lobby, Beitritt, Verwaltung und Archiv zeigen die

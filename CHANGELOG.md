@@ -8,6 +8,13 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Spaceward ist im Plattform-Host eine Testvariante: Neue Spaceward-Partien (Wizard,
+  Vorlage, Revanche) legen nur Tester an (globale Rolle `SYSTEM_ADMIN` oder
+  `GAME_TESTER` für Starfare). Andere sehen offene Spaceward-Partien nicht in der Lobby
+  und können weder beitreten, zuschauen noch eingeladen werden. Eigene laufende und
+  archivierte Partien bleiben vollständig spielbar. Im eigenen Start ändert sich nichts.
+- Kurzbeschreibung `game.description` (DE/EN) für die Spielkarte der Plattform und
+  aktuelle `platform.css`-Kopie (Willkommen, Verwaltung, Sprachwahl ohne Konto).
 - Alle Seiten liegen jetzt unter `/starfare` (Lobby `/starfare`, Karte
   `/starfare/map/<id>`, Archiv und Statistik unter `/starfare/archive` und
   `/starfare/statistics`); `/` leitet zur Lobby weiter. Alte Lesezeichen auf eine

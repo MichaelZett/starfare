@@ -20,6 +20,7 @@ import com.vaadin.flow.server.VaadinSession;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
+import de.zettsystems.starfare.game.application.RulesetAccess;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 public class ArchiveView extends VerticalLayout {
     private final GameService games;
     private final de.zettsystems.starfare.game.application.GameTemplateService templates;
+    private final RulesetAccess rulesetAccess;
     private final Broadcaster broadcaster;
     private final String positionAccount = UserContext.currentPlayerId().orElse("");
     private final Grid<GameSummary> grid = new Grid<>(GameSummary.class, false);
@@ -52,9 +54,11 @@ public class ArchiveView extends VerticalLayout {
     private record Position(String account, String search, boolean own, ArchiveResult result, @Nullable GameId lastViewed) { }
 
     public ArchiveView(GameService games, Broadcaster broadcaster,
-                       de.zettsystems.starfare.game.application.GameTemplateService templates) {
+                       de.zettsystems.starfare.game.application.GameTemplateService templates,
+                       RulesetAccess rulesetAccess) {
         this.games = games;
         this.templates = templates;
+        this.rulesetAccess = rulesetAccess;
         this.broadcaster = broadcaster;
         setSizeFull();
         if (OwnFrame.active()) {
@@ -112,7 +116,8 @@ public class ArchiveView extends VerticalLayout {
         details.addClassName("archive-game-card-details");
         Div actions = new Div(viewButton(summary));
         actions.addClassName("archive-game-actions");
-        if (summary.belongsTo(UserContext.currentPlayerId().orElse(""))) {
+        // Vorlage und Revanche nur für Varianten, die das Konto neu anlegen darf (Testvarianten im Host).
+        if (summary.belongsTo(account()) && rulesetAccess.mayUse(summary.ruleset(), account())) {
             Button template = GameTemplateDialog.button(templates, summary.gameId(), summary.name(), this::refresh);
             template.addThemeVariants(ButtonVariant.TERTIARY);
             actions.add(template);

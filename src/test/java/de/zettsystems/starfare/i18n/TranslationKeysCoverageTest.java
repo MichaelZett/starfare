@@ -33,9 +33,9 @@ class TranslationKeysCoverageTest {
 
     /**
      * Keys read by a host (games-platform) rather than by Starfare itself: the catalog title and
-     * the texts of the game navigation named in games/starfare/game.properties.
+     * description and the texts of the game navigation named in games/starfare/game.properties.
      */
-    private static final Set<String> HOST_KEYS = Set.of("game.title",
+    private static final Set<String> HOST_KEYS = Set.of("game.title", "game.description",
             "game.navigation.lobby", "game.navigation.statistics", "game.navigation.archive");
 
     @Test

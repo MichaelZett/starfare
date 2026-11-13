@@ -5,9 +5,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/** Catalog entry; supported versions and creation availability are separate concerns. */
+/**
+ * Catalog entry; supported versions and creation availability are separate concerns.
+ * {@code testing} marks a variant that only testers may start or join inside a platform host;
+ * it never restricts loading or playing stored games.
+ */
 public record RulesetDefinition(RulesetRef defaultRef, String nameKey, String descriptionKey,
-                                Set<String> supportedVersions, boolean creationEnabled, Set<String> creatableVersions) {
+                                Set<String> supportedVersions, boolean creationEnabled, Set<String> creatableVersions,
+                                boolean testing) {
     public static final String SECTOR_FORCES_NAME = "ruleset.sectorForces.name";
     public static final String SECTOR_FORCES_DESCRIPTION = "ruleset.sectorForces.description";
     public static final String SPACEWARD_NAME = "ruleset.spaceward.name";
@@ -17,6 +22,11 @@ public record RulesetDefinition(RulesetRef defaultRef, String nameKey, String de
                              Set<String> supportedVersions, boolean creationEnabled) {
         this(defaultRef, nameKey, descriptionKey, supportedVersions, creationEnabled,
                 creationEnabled ? Set.of(defaultRef.version()) : Set.of());
+    }
+
+    public RulesetDefinition(RulesetRef defaultRef, String nameKey, String descriptionKey,
+                             Set<String> supportedVersions, boolean creationEnabled, Set<String> creatableVersions) {
+        this(defaultRef, nameKey, descriptionKey, supportedVersions, creationEnabled, creatableVersions, false);
     }
 
     public RulesetDefinition {
@@ -37,6 +47,12 @@ public record RulesetDefinition(RulesetRef defaultRef, String nameKey, String de
         return creatableVersions.stream().map(version -> new RulesetRef(defaultRef.variant(), version))
                 .sorted(Comparator.comparing((RulesetRef ref) -> !ref.equals(defaultRef))
                         .thenComparing(RulesetRef::version)).toList();
+    }
+
+    /** Same entry, reserved for testers inside a platform host. */
+    public RulesetDefinition forTesters() {
+        return new RulesetDefinition(defaultRef, nameKey, descriptionKey, supportedVersions, creationEnabled,
+                creatableVersions, true);
     }
 
     public boolean supports(RulesetRef ref) {

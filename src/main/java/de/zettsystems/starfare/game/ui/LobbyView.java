@@ -24,6 +24,7 @@ import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
+import de.zettsystems.starfare.game.application.RulesetAccess;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.social.application.*;
@@ -50,6 +51,7 @@ public class LobbyView extends VerticalLayout {
 
     private final GameService game;
     private final de.zettsystems.starfare.game.application.GameTemplateService templates;
+    private final RulesetAccess rulesetAccess;
     private final Broadcaster broadcaster;
     private final InvitationService invitationService;
     private final PresenceTracker presence;
@@ -73,9 +75,11 @@ public class LobbyView extends VerticalLayout {
                      SocialBroadcaster socialBroadcaster, VisibilityFilter visibilityFilter,
                      FriendshipService friendshipService, UserPreferencesService preferencesService, PlayerDirectory players,
                      MessageService messageService, InvitationService invitationService,
-                     de.zettsystems.starfare.game.application.GameTemplateService templates) {
+                     de.zettsystems.starfare.game.application.GameTemplateService templates,
+                     RulesetAccess rulesetAccess) {
         this.game = game;
         this.templates = templates;
+        this.rulesetAccess = rulesetAccess;
         this.broadcaster = broadcaster;
         this.invitationService = invitationService;
         this.presence = presence;
@@ -200,7 +204,8 @@ public class LobbyView extends VerticalLayout {
         Button primary = primaryAction(row);
         primary.addClassName("lobby-game-card-primary");
         card.add(heading, overview, primary, secondaryActions(row));
-        if (row.summary().belongsTo(UserContext.currentPlayerId().orElse(""))) {
+        String account = UserContext.currentPlayerId().orElse("");
+        if (row.summary().belongsTo(account) && rulesetAccess.mayUse(row.summary().ruleset(), account)) {
             card.add(GameTemplateDialog.button(templates, row.gameId(), row.name(), this::refresh));
         }
         return card;
@@ -459,7 +464,8 @@ public class LobbyView extends VerticalLayout {
     }
 
     private void openCreateGameWizard() {
-        CreateGameWizardDialog.open(game, players, this::refresh);
+        CreateGameWizardDialog.open(game, players, this::refresh,
+                rulesetAccess.usableBy(UserContext.currentPlayerId().orElse(null)));
     }
 
     private void openManageDialog(LobbyGameRow row) {

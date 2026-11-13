@@ -21,16 +21,23 @@ public class DefaultGameRegistry implements GameRegistry {
     private final GameSessionStore store;
     private final GameAccessPolicy access;
     private final RulesetCatalog catalog;
+    private final RulesetAccess rulesetAccess;
 
     public DefaultGameRegistry(GameSessionStore store, GameAccessPolicy access) {
         this(store, access, RulesetCatalog.builtIn());
     }
 
-    @org.springframework.beans.factory.annotation.Autowired
     public DefaultGameRegistry(GameSessionStore store, GameAccessPolicy access, RulesetCatalog catalog) {
+        this(store, access, catalog, RulesetAccess.unrestricted());
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public DefaultGameRegistry(GameSessionStore store, GameAccessPolicy access, RulesetCatalog catalog,
+                               RulesetAccess rulesetAccess) {
         this.store = store;
         this.access = access;
         this.catalog = catalog;
+        this.rulesetAccess = rulesetAccess;
     }
 
     @Override
@@ -40,6 +47,9 @@ public class DefaultGameRegistry implements GameRegistry {
     public GameId createGame(GameSetup requestedSetup, @Nullable String hostPlayerId, String name) {
         GameSetup setup = requestedSetup.normalized();
         catalog.requireCreatable(setup.ruleset());
+        if (!rulesetAccess.mayUse(setup.ruleset(), hostPlayerId)) {
+            throw new IllegalArgumentException("Ruleset is reserved for testers: " + setup.ruleset().variant());
+        }
         GameId id = GameId.newId();
         GameSession session = new GameSession(id, name, hostPlayerId, Instant.now());
         session.writeState(state -> {
@@ -117,9 +127,12 @@ public class DefaultGameRegistry implements GameRegistry {
             return Optional.empty();
         }
         if (find(id).isEmpty()) { return Optional.empty(); }
+        // Die Variante ändert sich nach dem Anlegen nicht; die Kontoabfrage läuft deshalb vor dem Schreiblock.
+        boolean newcomersAdmitted = rulesetAccess.mayUse(readState(id, GameState::ruleset), playerId);
         return Optional.ofNullable(writeState(id, state -> {
             if (!access.visible(state, require(id).hostPlayerId(), playerId)) { return null; }
             boolean knownAccount = state.seatByUser().containsKey(playerId);
+            if (!knownAccount && !newcomersAdmitted) { return null; }
             Integer seat = tryClaimSeat(state, playerId);
             if (seat != null && !knownAccount) {
                 state.updatePlayer(seat, player -> player.identifiedAs(playerName, empireName));

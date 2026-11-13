@@ -339,6 +339,7 @@ public class DefaultGameService implements GameService {
     private final GameArchiveStore archives;
     private final BattleAcknowledgementService battleAcknowledgements;
     private final GameTimingProperties timing;
+    private final RulesetAccess rulesetAccess;
 
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
@@ -357,13 +358,26 @@ public class DefaultGameService implements GameService {
         this(registry, turnEngine, fleetService, reportService, autoplayRunner, broadcaster, playerViewBuilder,
                 access, statistics, archives, timing, battleAcknowledgements, economy, new DefaultDiplomacyService());
     }
-    @Autowired
+
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
                               PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
                               GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
                               BattleAcknowledgementService battleAcknowledgements, EconomyService economy,
                               DiplomacyService diplomacy) {
+        this(registry, turnEngine, fleetService, reportService, autoplayRunner, broadcaster, playerViewBuilder,
+                access, statistics, archives, timing, battleAcknowledgements, economy, diplomacy,
+                RulesetAccess.unrestricted());
+    }
+
+    @Autowired
+    public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
+                              ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
+                              PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
+                              GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
+                              BattleAcknowledgementService battleAcknowledgements, EconomyService economy,
+                              DiplomacyService diplomacy, RulesetAccess rulesetAccess) {
+        this.rulesetAccess = rulesetAccess;
         this.diplomacy = diplomacy;
         this.economy = economy;
         this.registry = registry;
@@ -495,7 +509,8 @@ public class DefaultGameService implements GameService {
 
     @Override
     public Optional<Integer> inviteUser(GameId gameId, @Nullable String inviteePlayerId) {
-        if (inviteePlayerId == null || inviteePlayerId.isBlank()) {
+        if (inviteePlayerId == null || inviteePlayerId.isBlank()
+                || !rulesetAccess.mayUse(registry.readState(gameId, GameState::ruleset), inviteePlayerId)) {
             return Optional.empty();
         }
         Integer seat = registry.writeState(gameId, state -> {
@@ -589,8 +604,12 @@ public class DefaultGameService implements GameService {
         if (registry.find(gameId).isEmpty() || playerId == null || playerId.isBlank()) {
             return false;
         }
+        boolean newcomersAdmitted = rulesetAccess.mayUse(registry.readState(gameId, GameState::ruleset), playerId);
         boolean added = registry.writeState(gameId, state -> {
             if (!state.active() || state.gameOver()) {
+                return false;
+            }
+            if (!newcomersAdmitted && !state.observers().contains(playerId) && !state.seatByUser().containsKey(playerId)) {
                 return false;
             }
             if (!access.canObserve(state, registry.require(gameId).hostPlayerId(), playerId)) {
@@ -1046,7 +1065,12 @@ public class DefaultGameService implements GameService {
     @Override
     public List<GameSummary> visibleGamesFor(String account, GameListScope scope) {
         List<GameSummary> live = registry.listIds().stream().map(id -> summaryFor(id, account)).flatMap(Optional::stream).toList();
-        if (scope == GameListScope.LOBBY) { return live.stream().filter(summary -> !summary.gameOver()).toList(); }
+        if (scope == GameListScope.LOBBY) {
+            // Fremde Partien einer Testvariante bleiben für Nicht-Tester unsichtbar; eigene laufen weiter.
+            var usable = rulesetAccess.usableBy(account);
+            return live.stream().filter(summary -> !summary.gameOver())
+                    .filter(summary -> summary.belongsTo(account) || usable.test(summary.ruleset())).toList();
+        }
         var archived = archives.all().stream()
                 .filter(game -> access.canReview(game.state(), game.hostPlayerId(), account))
                 .map(game -> summaryOf(game.id(), game.name(), game.hostPlayerId(), game.state())).toList();

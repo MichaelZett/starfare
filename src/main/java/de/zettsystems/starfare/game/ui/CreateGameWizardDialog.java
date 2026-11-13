@@ -33,6 +33,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 
 /**
  * Multi-section dialog for creating a new game: system/player counts, neutral-system
@@ -44,17 +45,23 @@ final class CreateGameWizardDialog {
     private CreateGameWizardDialog() {
     }
 
-    static void open(GameService game, PlayerDirectory players, Runnable onCreated) {
-        open(game, players, onCreated, game.rulesets());
+    /** Bietet nur Varianten an, die {@code usable} dem aktuellen Konto erlaubt. */
+    static void open(GameService game, PlayerDirectory players, Runnable onCreated, Predicate<RulesetRef> usable) {
+        open(game, players, onCreated, game.rulesets(), usable);
     }
 
     static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetCatalog catalog) {
+        open(game, players, onCreated, catalog, _ -> true);
+    }
+
+    private static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetCatalog catalog,
+                             Predicate<RulesetRef> usable) {
         Dialog dialog = new Dialog();
         dialog.addClassName("create-game-dialog");
         dialog.setHeaderTitle(I18n.t(UiTexts.LOBBY_WIZARD_TITLE));
         dialog.setWidth("min(1380px, 96vw)");
 
-        RulesetSelector rulesets = new RulesetSelector(catalog);
+        RulesetSelector rulesets = new RulesetSelector(catalog, usable);
         VictorySettings victorySettings = new VictorySettings();
         AiStrategyFields aiStrategies = new AiStrategyFields();
         IntegerField systems = intField(I18n.t(UiTexts.LOBBY_FIELD_SYSTEMS),

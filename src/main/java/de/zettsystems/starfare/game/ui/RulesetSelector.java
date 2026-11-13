@@ -10,7 +10,9 @@ import de.zettsystems.starfare.game.values.RulesetDefinition;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.i18n.I18n;
 
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /** Offers creatable game versions and explains planned variants before game-specific settings. */
 final class RulesetSelector extends VerticalLayout {
@@ -18,15 +20,25 @@ final class RulesetSelector extends VerticalLayout {
     private final RulesetCatalog catalog;
 
     RulesetSelector(RulesetCatalog catalog) {
+        this(catalog, _ -> true);
+    }
+
+    /**
+     * {@code usable} blendet Varianten aus, die das Konto nicht nutzen darf (Testvarianten im
+     * Plattform-Host). Vorausgewählt ist die erste verbleibende spielbare Variante.
+     */
+    RulesetSelector(RulesetCatalog catalog, Predicate<RulesetRef> usable) {
         this.catalog = catalog;
         setPadding(false);
         addClassName("ruleset-selection");
         variants.setId("ruleset-selection");
         variants.setLabel(I18n.t(UiTexts.RULESET_CHOOSE));
-        variants.setItems(catalog.definitions());
+        List<RulesetDefinition> offered = catalog.definitions().stream()
+                .filter(entry -> usable.test(entry.defaultRef())).toList();
+        variants.setItems(offered);
         variants.setRenderer(new ComponentRenderer<>(RulesetSelector::card));
         variants.setItemEnabledProvider(RulesetDefinition::creationEnabled);
-        variants.setValue(catalog.definitions().stream().filter(RulesetDefinition::creationEnabled)
+        variants.setValue(offered.stream().filter(RulesetDefinition::creationEnabled)
                 .findFirst().orElseThrow());
         add(variants);
     }
@@ -39,15 +51,20 @@ final class RulesetSelector extends VerticalLayout {
     private static Div card(RulesetDefinition entry) {
         Span title = new Span(I18n.t(entry.nameKey()));
         title.addClassName("ruleset-card-title");
-        Span status = new Span(entry.creationEnabled()
-                ? I18n.t(UiTexts.RULESET_VERSION, entry.defaultRef().version())
-                : I18n.t(UiTexts.RULESET_PLANNED));
+        Span status = new Span(status(entry));
         status.addClassName("ruleset-card-status");
         Span description = new Span(I18n.t(entry.descriptionKey()));
         description.addClassName("ruleset-card-description");
         Div card = new Div(title, status, description);
         card.addClassNames("ruleset-card", artClass(entry.defaultRef()));
         return card;
+    }
+
+    private static String status(RulesetDefinition entry) {
+        if (!entry.creationEnabled()) { return I18n.t(UiTexts.RULESET_PLANNED); }
+        // Im eigenen Start ist alles frei; der Hinweis gilt nur im Plattform-Host.
+        boolean testersOnly = entry.testing() && !OwnFrame.active();
+        return I18n.t(testersOnly ? UiTexts.RULESET_VERSION_TESTING : UiTexts.RULESET_VERSION, entry.defaultRef().version());
     }
 
     /** Notifies about the current choice immediately and after every change. */

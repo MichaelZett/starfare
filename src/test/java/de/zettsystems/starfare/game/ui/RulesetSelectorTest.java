@@ -28,6 +28,15 @@ class RulesetSelectorTest {
                 RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD_SHIP_RESEARCH);
     }
 
+    @Test void variantsTheAccountMayNotUseAreNotOfferedAndTheRemainingOneIsPreselected() {
+        var catalog = RulesetCatalog.builtIn();
+        var selector = new RulesetSelector(catalog, ruleset -> !catalog.testing(ruleset));
+        RadioButtonGroup<RulesetDefinition> variants = field(selector, "ruleset-selection");
+        assertThat(variants.getListDataView().getItems().map(RulesetDefinition::defaultRef))
+                .containsExactly(RulesetRef.SECTOR_FORCES);
+        assertThat(selector.selectedRuleset()).isEqualTo(RulesetRef.SECTOR_FORCES);
+    }
+
     @SuppressWarnings("unchecked")
     private static <T> RadioButtonGroup<T> field(RulesetSelector selector, String id) {
         return (RadioButtonGroup<T>) selector.getChildren().filter(component -> component.getId().orElse("").equals(id))
