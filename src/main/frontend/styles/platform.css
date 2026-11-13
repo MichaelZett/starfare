@@ -1,0 +1,446 @@
+/*
+ * Zetthaven platform stylesheet (M9). The host loads it; every game keeps a byte-identical
+ * copy for its own start (verifyPlatformStyles). Three layers:
+ *   1. Structure: spacing, radii, UI font, traffic-light colours, focus. Always the platform's.
+ *   2. Frame: header with logo, navigation, game shield and account; light or dark
+ *      depending on the page's scheme (html[data-gp-scheme]).
+ *   3. Game area: colours and heading font from a fixed set of --gp-area-* variables, which
+ *      a game sets for html[data-gp-game="<key>"]. Small games set only an accent.
+ * Game stylesheets contain rules for their own classes only, never for :root, html, body,
+ * bare elements or Vaadin components without their own scope (verifyStyleCollisions).
+ */
+
+/* ── Layer 1: structure ─────────────────────────────────────────── */
+/* Defaults carry no specificity, so a game's html[data-gp-game] block always wins. */
+:where(:root) {
+    color-scheme: light;
+    --gp-font-ui: "DM Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --gp-font-mono: "IBM Plex Mono", Consolas, monospace;
+    --gp-radius: 10px;
+    --gp-radius-sm: 6px;
+    --gp-space: 16px;
+    --gp-touch: 44px;
+    --gp-page-pad: clamp(16px, 3vw, 36px);
+    --gp-brand: #b93a2b;
+    --gp-brand-soft: #fde2dc;
+    --gp-brand-on-dark: #ff8a70;
+    --gp-ok: #15803d;
+    --gp-warn: #b45309;
+    --gp-bad: #b91c1c;
+
+    /* Platform light */
+    --gp-bg: #f7f5f0;
+    --gp-surface: #ffffff;
+    --gp-surface-2: #f0ede6;
+    --gp-border: #e3ded3;
+    --gp-text: #1f2933;
+    --gp-muted: #5b6670;
+
+    /* Layer 2: header, light */
+    --gp-header-bg: #ffffff;
+    --gp-header-text: var(--gp-text);
+    --gp-header-muted: var(--gp-muted);
+    --gp-header-border: var(--gp-border);
+    --gp-header-brand: var(--gp-brand);
+    --gp-header-height: 60px;
+    --gp-header-slim-height: 40px;
+
+    /* Layer 3: game area defaults, overridden per game */
+    --gp-area-bg: var(--gp-bg);
+    --gp-area-surface: var(--gp-surface);
+    --gp-area-surface-2: var(--gp-surface-2);
+    --gp-area-border: var(--gp-border);
+    --gp-area-text: var(--gp-text);
+    --gp-area-muted: var(--gp-muted);
+    --gp-area-accent: var(--gp-game-accent, var(--gp-brand));
+    --gp-area-on-accent: #ffffff;
+    --gp-area-font-head: var(--gp-font-ui);
+
+    --gp-focus: 0 0 0 3px color-mix(in srgb, var(--gp-area-accent) 45%, transparent);
+    --vaadin-background-color: var(--gp-area-bg);
+}
+
+:where(html[data-gp-scheme="dark"]) {
+    color-scheme: dark;
+    --gp-ok: #3fb950;
+    --gp-warn: #d29922;
+    --gp-bad: #f85149;
+    --gp-header-bg: #12161c;
+    --gp-header-text: #e6edf3;
+    --gp-header-muted: #9aa4ae;
+    --gp-header-border: #262c35;
+    --gp-header-brand: var(--gp-brand-on-dark);
+    --gp-area-bg: #12161c;
+    --gp-area-surface: #1a1f27;
+    --gp-area-surface-2: #232933;
+    --gp-area-border: #2f3742;
+    --gp-area-text: #e6edf3;
+    --gp-area-muted: #9aa4ae;
+    --gp-area-accent: var(--gp-game-accent, var(--gp-brand-on-dark));
+    --gp-area-on-accent: #12161c;
+    --aura-background-color-dark: var(--gp-area-bg);
+}
+
+html, body, #outlet {
+    background: var(--gp-area-bg);
+    color: var(--gp-area-text);
+}
+
+/* ── Frame ──────────────────────────────────────────────────────── */
+.gp-frame {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+/* Full-screen pages size themselves to the viewport minus this offset (the slim strip). */
+.gp-frame.gp-fullscreen {
+    height: 100%;
+    --gp-frame-offset: var(--gp-header-slim-height);
+}
+
+.gp-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+}
+
+.gp-content > * {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.gp-header {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    height: var(--gp-header-height);
+    flex: none;
+    padding: 0 20px;
+    box-sizing: border-box;
+    background: var(--gp-header-bg);
+    color: var(--gp-header-text);
+    border-bottom: 1px solid var(--gp-header-border);
+    font-family: var(--gp-font-ui);
+}
+
+.gp-header.gp-header-slim {
+    height: var(--gp-header-slim-height);
+    gap: 14px;
+}
+
+.gp-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--gp-header-text);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.gp-logo {
+    width: 30px;
+    height: 30px;
+    flex: none;
+}
+
+.gp-header-slim .gp-brand {
+    font-size: 15px;
+}
+
+.gp-header-slim .gp-logo {
+    width: 22px;
+    height: 22px;
+}
+
+.gp-platform-nav {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.gp-platform-nav a,
+.gp-game-nav a {
+    color: var(--gp-header-muted);
+    text-decoration: none;
+    padding: 19px 10px 17px;
+    font-weight: 500;
+    font-size: 15px;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+}
+
+.gp-platform-nav a.gp-active {
+    color: var(--gp-header-text);
+    border-bottom-color: var(--gp-header-brand);
+}
+
+.gp-back {
+    flex: 1;
+    color: var(--gp-header-muted);
+    text-decoration: none;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.gp-header-end {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    min-width: 0;
+}
+
+.gp-shield {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 6px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    color: var(--gp-game-accent, var(--gp-header-brand));
+    background: color-mix(in srgb, var(--gp-game-accent, var(--gp-header-brand)) 14%, transparent);
+}
+
+.gp-game-icon {
+    width: 18px;
+    height: 18px;
+    flex: none;
+}
+
+.gp-account {
+    --vaadin-button-background: transparent;
+}
+
+.gp-account vaadin-menu-bar-button {
+    min-height: var(--gp-touch);
+    color: var(--gp-header-text);
+    background: transparent;
+}
+
+.gp-account vaadin-menu-bar-button > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gp-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-grid;
+    place-items: center;
+    font-weight: 700;
+    background: color-mix(in srgb, var(--gp-header-brand) 18%, transparent);
+    color: var(--gp-header-brand);
+}
+
+.gp-account-name {
+    font-size: 14px;
+    max-width: 14rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Game bar: shows in which game one is, with the game's own navigation */
+.gp-game-bar {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    height: 50px;
+    flex: none;
+    padding: 0 var(--gp-page-pad);
+    box-sizing: border-box;
+    background: var(--gp-area-surface);
+    border-bottom: 1px solid var(--gp-area-border);
+    font-family: var(--gp-font-ui);
+}
+
+.gp-game-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--gp-area-text);
+    font: 700 17px var(--gp-area-font-head);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.gp-game-name .gp-game-icon {
+    width: 26px;
+    height: 26px;
+}
+
+.gp-game-nav {
+    display: flex;
+    gap: 2px;
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.gp-game-nav a {
+    color: var(--gp-area-muted);
+    padding: 14px 10px 12px;
+    font-size: 14px;
+    border-bottom-width: 2px;
+}
+
+.gp-game-nav a.gp-active {
+    color: var(--gp-area-text);
+    border-bottom-color: var(--gp-area-accent);
+}
+
+.gp-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    flex: none;
+    padding: .5rem;
+    font-size: .8rem;
+    font-family: var(--gp-font-ui);
+}
+
+.gp-footer a {
+    color: var(--gp-area-muted);
+}
+
+.gp-platform-nav a:focus-visible,
+.gp-game-nav a:focus-visible,
+.gp-brand:focus-visible,
+.gp-shield:focus-visible,
+.gp-back:focus-visible,
+.gp-game-name:focus-visible,
+.gp-footer a:focus-visible {
+    outline: none;
+    box-shadow: var(--gp-focus);
+    border-radius: var(--gp-radius-sm);
+}
+
+/* Pages of the platform itself */
+.gp-page {
+    box-sizing: border-box;
+    padding: 28px var(--gp-page-pad);
+    font-family: var(--gp-font-ui);
+}
+
+.gp-text-page {
+    max-width: 58rem;
+}
+
+.gp-page h1,
+.gp-page h2 {
+    font-family: var(--gp-area-font-head);
+    margin: 0 0 10px;
+}
+
+.gp-page h2 {
+    margin-top: 26px;
+}
+
+.gp-muted {
+    color: var(--gp-area-muted);
+}
+
+.gp-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font: 600 15px var(--gp-font-ui);
+    padding: 9px 16px;
+    border-radius: var(--gp-radius-sm);
+    background: var(--gp-game-accent, var(--gp-area-accent));
+    color: var(--gp-game-on-accent, var(--gp-area-on-accent));
+}
+
+.gp-secondary-link {
+    color: var(--gp-area-muted);
+}
+
+/* Game selection: each game as a card in its accent */
+.gp-game-cards {
+    display: grid;
+    gap: var(--gp-space);
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    margin-top: 20px;
+}
+
+.gp-game-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--gp-radius);
+    border: 1px solid var(--gp-area-border);
+    background: var(--gp-area-surface);
+    color: var(--gp-area-text);
+    text-decoration: none;
+}
+
+.gp-game-card:hover {
+    border-color: var(--gp-game-accent, var(--gp-area-accent));
+}
+
+.gp-game-card:focus-visible {
+    outline: none;
+    box-shadow: var(--gp-focus);
+}
+
+.gp-game-card-art {
+    height: 120px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--gp-game-accent, var(--gp-area-accent)) 16%, var(--gp-area-surface-2));
+}
+
+.gp-game-card-icon {
+    width: 64px;
+    height: 64px;
+}
+
+.gp-game-card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px 16px;
+}
+
+.gp-game-card-body h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+@media (max-width: 860px) {
+    .gp-header {
+        gap: 12px;
+        padding: 0 12px;
+    }
+
+    .gp-brand span,
+    .gp-account-name,
+    .gp-shield span {
+        display: none;
+    }
+
+    .gp-platform-nav a {
+        padding-inline: 7px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gp-frame * {
+        scroll-behavior: auto;
+    }
+}

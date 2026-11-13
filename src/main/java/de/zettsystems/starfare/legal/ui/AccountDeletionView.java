@@ -23,7 +23,7 @@ public class AccountDeletionView extends VerticalLayout {
     public AccountDeletionView(UserAccountService accounts) {
         this.accounts = accounts;
         setMaxWidth("42rem");
-        add(new de.zettsystems.starfare.game.ui.AccountNavigation(), new LegalFooter());
+        add(new de.zettsystems.starfare.game.ui.AccountNavigation(), new de.zettsystems.starfare.game.ui.LegalFooter());
         Button delete = new Button(I18n.t(UiTexts.ACCOUNT_DELETE_ACTION), _ -> confirmDeletion());
         delete.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.PRIMARY);
         add(new H1(I18n.t(UiTexts.LEGAL_DELETE_ACCOUNT)), new Paragraph(I18n.t(UiTexts.ACCOUNT_DELETE_WARNING)), delete);

@@ -195,6 +195,10 @@ public class ReviewMapSteps {
     }
 
     private void switchLanguage(String option, String selected) {
+        if (!browser.hasOwnLanguageSwitch()) {
+            browser.switchLanguage(option);
+            return;
+        }
         browser.type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), option);
         selectComboItem("vaadin-combo-box-item", option);
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10))

@@ -57,7 +57,9 @@ public class ArchiveView extends VerticalLayout {
         this.templates = templates;
         this.broadcaster = broadcaster;
         setSizeFull();
-        add(new AccountNavigation());
+        if (OwnFrame.active()) {
+            add(new AccountNavigation());
+        }
         search.setPlaceholder(I18n.t(UiTexts.LOBBY_SEARCH));
         search.setClearButtonVisible(true);
         own.setLabel(I18n.t(UiTexts.LOBBY_FILTER_OWN));
@@ -82,7 +84,10 @@ public class ArchiveView extends VerticalLayout {
         add(new H1(I18n.t(UiTexts.ARCHIVE_TITLE)), filters);
         grid.addComponentColumn(this::archiveCard).setHeader("").setFlexGrow(1);
         grid.setWidthFull();
-        add(grid, empty, new de.zettsystems.starfare.legal.ui.LegalFooter());
+        add(grid, empty);
+        if (OwnFrame.active()) {
+            add(new LegalFooter());
+        }
     }
 
     private Div archiveCard(GameSummary summary) {

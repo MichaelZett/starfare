@@ -8,6 +8,27 @@ import org.gradle.api.attributes.java.TargetJvmVersion
 import java.util.jar.Manifest
 import java.util.zip.ZipFile
 
+// Path of the checked copy of games-platform's platform.css below src/main/frontend.
+ext.PLATFORM_STYLES = 'styles/platform.css'
+
+// Copies the platform stylesheet from the neighbouring host checkout (plan M9). The host's
+// check fails while a game's copy differs; run this, then rebuild and republish the game.
+def platformStylesOriginal = file(providers.gradleProperty('gamesPlatformProject').getOrElse('../games-platform') +
+        "/src/main/frontend/${PLATFORM_STYLES}")
+tasks.register('syncPlatformStyles', Copy) {
+    group = 'build'
+    description = 'Copies platform.css from ../games-platform into src/main/frontend/styles.'
+    def original = platformStylesOriginal
+    from(original)
+    into(file('src/main/frontend/styles'))
+    doFirst {
+        if (!original.isFile()) {
+            throw new GradleException("Missing ${original}: check out games-platform next to starfare " +
+                    'or pass -PgamesPlatformProject=<path>')
+        }
+    }
+}
+
 // An additional library output; the default executable application is unchanged.
 def gameModuleJar = tasks.register('gameModuleJar', Jar) {
     group = 'build'
@@ -24,6 +45,8 @@ def gameModuleJar = tasks.register('gameModuleJar', Jar) {
         exclude 'de/zettsystems/starfare/auth/config/SecurityConfig*.class'
         exclude 'de/zettsystems/starfare/auth/config/LocalDemoAccountConfiguration*.class'
         exclude 'de/zettsystems/starfare/standalone/**'
+        // Imprint, privacy and account deletion belong to the starting application (M9).
+        exclude 'de/zettsystems/starfare/legal/**'
         exclude 'application*.yaml', 'application*.yml', 'application*.properties'
         exclude 'git.properties', 'META-INF/build-info.properties'
         exclude 'db/migration/**', 'META-INF/VAADIN/**'
@@ -32,8 +55,11 @@ def gameModuleJar = tasks.register('gameModuleJar', Jar) {
     }
     from('src/main/frontend') {
         into 'META-INF/frontend'
-        exclude 'generated/**', 'index.html'
+        exclude 'generated/**', 'index.html', PLATFORM_STYLES
     }
+    // The checked copy of the host's platform.css; the host compares it byte for byte
+    // (verifyPlatformStyles) and loads its own original.
+    from("src/main/frontend/${PLATFORM_STYLES}") { into 'games/starfare' }
     from('src/main/resources/db/migration') { into 'games/starfare/migrations' }
     from('LICENSE') { into 'META-INF/starfare' }
 }
@@ -125,7 +151,8 @@ abstract class VerifyGameModule extends DefaultTask {
              'de/zettsystems/starfare/AppShell.class',
              'de/zettsystems/starfare/auth/config/SecurityConfig.class',
              'de/zettsystems/starfare/auth/config/LocalDemoAccountConfiguration.class',
-             'de/zettsystems/starfare/standalone/ui/StandaloneEntryView.class'].each {
+             'de/zettsystems/starfare/standalone/ui/StandaloneEntryView.class',
+             'de/zettsystems/starfare/legal/ui/ImprintView.class'].each {
                 VerifyGameModule.checkCondition(!entries.contains(it), 'Application bootstrap leaked: ' + it)
             }
             VerifyGameModule.verifyGameDescription(zip)
@@ -169,7 +196,11 @@ abstract class VerifyGameModule extends DefaultTask {
             frontend.eachFileRecurse { source ->
                 if (source.file) {
                     def relative = frontend.toPath().relativize(source.toPath()).toString().replace('\\', '/')
-                    if (!relative.startsWith('generated/') && relative != 'index.html') {
+                    if (relative == 'styles/platform.css') {
+                        VerifyGameModule.assertSameBytes(zip, 'games/starfare/platform.css', source)
+                        VerifyGameModule.checkCondition(zip.getEntry('META-INF/frontend/' + relative) == null,
+                                'Platform stylesheet copy leaked into the game frontend')
+                    } else if (!relative.startsWith('generated/') && relative != 'index.html') {
                         VerifyGameModule.assertSameBytes(zip, 'META-INF/frontend/' + relative, source)
                     }
                 }
@@ -182,6 +213,7 @@ abstract class VerifyGameModule extends DefaultTask {
              'BOOT-INF/classes/de/zettsystems/starfare/AppShell.class',
              'BOOT-INF/classes/de/zettsystems/starfare/auth/config/SecurityConfig.class',
              'BOOT-INF/classes/de/zettsystems/starfare/standalone/ui/StandaloneEntryView.class',
+             'BOOT-INF/classes/de/zettsystems/starfare/legal/ui/ImprintView.class',
              'BOOT-INF/classes/application.yaml', 'BOOT-INF/classes/db/migration/V2_1__create_schema.sql'].each {
                 VerifyGameModule.checkCondition(zip.getEntry(it) != null, 'Standalone entry lost: ' + it)
             }

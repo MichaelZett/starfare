@@ -22,6 +22,6 @@ public class PrivacyView extends VerticalLayout {
                 new H2(I18n.t(UiTexts.PRIVACY_RIGHTS_TITLE)),
                 new Paragraph(I18n.t(UiTexts.PRIVACY_RIGHTS)),
                 new H2(I18n.t(UiTexts.LEGAL_IMPRINT_CONTACT)),
-                new Paragraph(I18n.t(UiTexts.LEGAL_PRIVACY_CONTACT)), new LegalFooter());
+                new Paragraph(I18n.t(UiTexts.LEGAL_PRIVACY_CONTACT)), new de.zettsystems.starfare.game.ui.LegalFooter());
     }
 }

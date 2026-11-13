@@ -1,28 +1,30 @@
-/* â”€â”€ CSS custom properties (dark palette) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-:root {
-    color-scheme: dark;
-    --sf-bg: #0d1117;
-    --sf-surface: #161b22;
-    --sf-surface-2: #21262d;
-    --sf-border: rgba(48, 54, 61, 0.8);
-    --sf-text: #e6edf3;
-    --sf-text-muted: #8b949e;
-    --sf-accent: #58a6ff;
+/* Starfare's game area (platform layer 3). The platform frame sets html[data-gp-game] in a
+   host, index.html in Starfare's own start; colour scheme and Aura background come from
+   platform.css. Starfare's own --sf-* names stay as aliases for its rules. */
+html[data-gp-game="starfare"] {
+    --gp-area-bg: #0d1117;
+    --gp-area-surface: #161b22;
+    --gp-area-surface-2: #21262d;
+    --gp-area-border: rgba(48, 54, 61, 0.8);
+    --gp-area-text: #e6edf3;
+    --gp-area-muted: #8b949e;
+    --gp-area-accent: #58a6ff;
+    --gp-area-on-accent: #0d1117;
+    --gp-area-font-head: "Space Grotesk", "IBM Plex Sans", "Segoe UI", sans-serif;
+    --sf-bg: var(--gp-area-bg);
+    --sf-surface: var(--gp-area-surface);
+    --sf-surface-2: var(--gp-area-surface-2);
+    --sf-border: var(--gp-area-border);
+    --sf-text: var(--gp-area-text);
+    --sf-text-muted: var(--gp-area-muted);
+    --sf-accent: var(--gp-area-accent);
     --sf-accent-2: #79c0ff;
-    --sf-on-accent: #0d1117;
+    --sf-on-accent: var(--gp-area-on-accent);
     --sf-accent-subtle: rgba(88, 166, 255, 0.15);
     --sf-contrast-5: rgba(230, 237, 243, 0.05);
     --sf-contrast-10: rgba(230, 237, 243, 0.10);
     --sf-contrast-30: rgba(230, 237, 243, 0.30);
-    --sf-page-pad: clamp(16px, 3vw, 36px);
-    /* Align Aura's dark background with our palette */
-    --aura-background-color-dark: #0d1117;
-    --vaadin-background-color: var(--sf-bg);
-}
-
-html, body, #outlet {
-    background: var(--sf-bg);
-    color: var(--sf-text);
+    --sf-page-pad: var(--gp-page-pad);
 }
 
 /* â”€â”€ Star-map canvas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -2166,7 +2168,7 @@ html, body, #outlet {
 }
 
 .map-controls, .legal-footer { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .5rem; }
-[role=button]:focus-visible { outline: 3px solid #58a6ff; outline-offset: 3px; }
+:where(html[data-gp-game="starfare"]) [role=button]:focus-visible { outline: 3px solid #58a6ff; outline-offset: 3px; }
 .detailed-system { width: 100%; min-width: 0; }
 .system-orrery {
     box-sizing: border-box;
@@ -2396,7 +2398,7 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
     height:var(--map-system-target, 100%);
     border-radius:50%;
 }
-[data-map-route] { visibility:hidden; }
+:where(html[data-gp-game="starfare"]) [data-map-route] { visibility:hidden; }
 .fleet-lane-orbiting { opacity:0; }
 .sys-report-marker, .sys-economy-marker {
     width:calc(44px * var(--map-inverse-zoom)); min-width:calc(44px * var(--map-inverse-zoom));

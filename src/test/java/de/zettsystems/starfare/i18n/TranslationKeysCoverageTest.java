@@ -31,8 +31,25 @@ class TranslationKeysCoverageTest {
             "map.orderType.disband"
     );
 
-    /** Keys read by a host (games-platform) rather than by Starfare itself. */
-    private static final Set<String> HOST_KEYS = Set.of("game.title");
+    /**
+     * Keys read by a host (games-platform) rather than by Starfare itself: the catalog title and
+     * the texts of the game navigation named in games/starfare/game.properties.
+     */
+    private static final Set<String> HOST_KEYS = Set.of("game.title",
+            "game.navigation.lobby", "game.navigation.statistics", "game.navigation.archive");
+
+    @Test
+    void everyNavigationEntryOfTheGameDescriptionHasAHostKey() throws Exception {
+        Properties description = new Properties();
+        try (InputStream in = TranslationKeysCoverageTest.class.getResourceAsStream("/games/starfare/game.properties")) {
+            description.load(in);
+        }
+        Set<String> keys = java.util.Arrays.stream(description.getProperty("navigation").split(","))
+                .map(entry -> "game.navigation." + entry.strip().split(":")[0])
+                .collect(Collectors.toCollection(TreeSet::new));
+        assertThat(keys).isEqualTo(HOST_KEYS.stream().filter(key -> key.startsWith("game.navigation."))
+                .collect(Collectors.toCollection(TreeSet::new)));
+    }
 
     @Test
     void hostKeysExistInBothBundles() throws Exception {

@@ -7,11 +7,13 @@ import com.vaadin.flow.server.AppShellSettings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * Enables Vaadin server-push and loads the Aura theme. Forced dark color-scheme
- * is applied via starfare.css so Aura's light-dark() values resolve to dark.
+ * Enables Vaadin server-push and loads the Aura theme and the platform stylesheet (a checked
+ * copy of games-platform's platform.css, see syncPlatformStyles). index.html marks the page as
+ * Starfare's dark game area, so Aura's light-dark() values resolve to dark.
  */
 @Push
 @CssImport("@vaadin/aura/aura.css")
+@CssImport("./styles/platform.css")
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID",
         justification = "Vaadin AppShell singleton; never crosses JVM boundaries, so serialVersionUID is irrelevant.")
 public class AppShell implements AppShellConfigurator {

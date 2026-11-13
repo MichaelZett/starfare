@@ -108,7 +108,11 @@ public class LobbyView extends VerticalLayout {
         Button newGameTopButton = new Button(I18n.t(UiTexts.LOBBY_NEW_GAME), _ -> openCreateGameWizard());
         newGameTopButton.addThemeVariants(ButtonVariant.PRIMARY);
         VisibilityMenu visibilityMenu = new VisibilityMenu(preferencesService, onlineUsersPanel::refresh);
-        toolbarAction.add(new LanguageSwitcher(), visibilityMenu, new AccountNavigation(), newGameTopButton);
+        if (OwnFrame.active()) {
+            toolbarAction.add(new LanguageSwitcher(), visibilityMenu, new AccountNavigation(), newGameTopButton);
+        } else {
+            toolbarAction.add(visibilityMenu, newGameTopButton);
+        }
 
         toolbar.add(toolbarText, toolbarAction);
 
@@ -146,7 +150,10 @@ public class LobbyView extends VerticalLayout {
         body.setFlexGrow(0, sidebar);
         body.add(card, sidebar);
 
-        add(toolbar, body, new de.zettsystems.starfare.legal.ui.LegalFooter());
+        add(toolbar, body);
+        if (OwnFrame.active()) {
+            add(new LegalFooter());
+        }
     }
 
     @Override

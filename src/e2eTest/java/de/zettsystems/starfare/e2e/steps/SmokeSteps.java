@@ -272,9 +272,13 @@ public class SmokeSteps {
     }
 
     private void changeLanguage(String label, String shipyard) {
-        browser.type("vaadin-combo-box input", org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"), label);
-        browser.awaitTextIn("vaadin-combo-box-item", label);
-        browser.clickCss("vaadin-combo-box-item");
+        if (browser.hasOwnLanguageSwitch()) {
+            browser.type(".lang-switcher input", org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"), label);
+            browser.awaitTextIn("vaadin-combo-box-item", label);
+            browser.clickCss("vaadin-combo-box-item");
+        } else {
+            browser.switchLanguage(label);
+        }
         browser.awaitText(shipyard.equals("Werft") ? "Runde abgeben" : "Submit turn");
         browser.clickCss(".sys-action-source");
         browser.awaitTextIn(".system-shipyard", shipyard);

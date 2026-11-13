@@ -112,6 +112,28 @@ public class Browser {
         return driver().findElements(By.cssSelector(css));
     }
 
+    /** Whether the page shows Starfare's own language box (own start) or a platform frame's menu (host). */
+    public boolean hasOwnLanguageSwitch() {
+        return !all(".lang-switcher input").isEmpty();
+    }
+
+    /**
+     * Switches the language by its label in Starfare's language box ("Englisch", "German", ...).
+     * Inside a platform host the account menu of the header carries the languages instead (M9).
+     */
+    public void switchLanguage(String label) {
+        if (hasOwnLanguageSwitch()) {
+            type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), label);
+            clickMatching("vaadin-combo-box-item", item -> item.getText().equals(label), "Sprache " + label);
+            return;
+        }
+        String target = label.startsWith("Engl") ? "English" : "Deutsch";
+        clickCss(".gp-account vaadin-menu-bar-button");
+        clickMatching("vaadin-menu-bar-item", item -> List.of("Sprache", "Language").contains(item.getText().trim()),
+                "Language menu");
+        clickMatching("vaadin-menu-bar-item", item -> item.getText().trim().equals(target), "Language " + target);
+    }
+
     /**
      * Für Ansichten ohne Element-Kennungen: der Knopf mit genau diesem Text. Rendert Vaadin
      * zwischen Suchen und Klicken neu (alter Knopf weg, neuer noch nicht bedienbar), sucht die

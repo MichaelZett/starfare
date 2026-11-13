@@ -7,7 +7,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import de.zettsystems.starfare.i18n.I18n;
-import de.zettsystems.starfare.legal.ui.LegalFooter;
 import java.util.List;
 
 /**
@@ -42,7 +41,10 @@ final class MobileMapLayout extends Div {
         targetBanner.addClassName("mobile-map-target");
         targetBanner.setVisible(false);
 
-        sheet.add(panel, new LegalFooter());
+        sheet.add(panel);
+        if (OwnFrame.active()) {
+            sheet.add(new LegalFooter());
+        }
         sheet.addClassName("mobile-map-sheet");
 
         gameOverBanner.getElement().getClassList().add("mobile-map-banner");

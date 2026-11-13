@@ -22,8 +22,7 @@ public class SystemGallerySteps {
         var js = (JavascriptExecutor) browser.driver();
         for (String language : new String[]{"de", "en"}) {
             if (language.equals("en")) {
-                browser.type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), "Englisch");
-                browser.clickMatching("vaadin-combo-box-item", option -> option.getText().equals("Englisch"), "Sprache Englisch");
+                browser.switchLanguage("Englisch");
                 browser.awaitTextIn(".system-schematic-caption", "Star reduced");
             }
             for (int width : new int[]{1366, 1024}) {

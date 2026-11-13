@@ -964,9 +964,24 @@ the game services and views, frontend source files, public assets, translations,
 and byte-identical migrations under `games/starfare/migrations`.
 
 The game artifact omits the standalone application, AppShell, security chain,
-local demo-account setup, the entry view for `/`, application configuration,
-build metadata and compiled frontend bundle. An embedding application must
-supply these explicitly and build its own frontend.
+local demo-account setup, the entry view for `/`, the imprint, privacy and
+account-deletion pages (`legal`), application configuration, build metadata and
+compiled frontend bundle. An embedding application must supply these explicitly
+and build its own frontend.
+
+Inside a platform host, the host's frame shows the account menu (language, sign
+out, account deletion), the game navigation and the legal footer; Starfare's
+pages then leave out their own account menu, language switch and footer. The
+standalone start keeps them. `games/starfare/game.properties` additionally names
+the frame's look (`scheme=dark`, `accent`, `icon`), the game navigation
+(`navigation=<id>:<path>, ...`, texts `game.navigation.<id>`) and the full-screen
+map (`fullscreenPaths`). `src/main/frontend/styles/platform.css` is a checked copy
+of the host's platform stylesheet: `./gradlew syncPlatformStyles` copies it from
+a neighbouring `../games-platform` checkout, the artifact carries it as
+`games/starfare/platform.css`, and the host's check compares it byte for byte.
+Starfare's own stylesheets style only Starfare's classes and the scope
+`html[data-gp-game="starfare"]`, which sets the platform's `--gp-area-*`
+variables to Starfare's palette.
 
 All game routes start with `/starfare` (lobby `/starfare`, map
 `/starfare/map/:gameId`, `/starfare/archive`, `/starfare/statistics`); in the

@@ -26,8 +26,7 @@ public class RouteAcceptanceSteps {
         browser.awaitCss("#route-direct .route-selected");
         for (String language : new String[]{"de", "en"}) {
             if (language.equals("en")) {
-                browser.type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), "Englisch");
-                browser.clickMatching("vaadin-combo-box-item", option -> option.getText().equals("Englisch"), "Sprache Englisch");
+                browser.switchLanguage("Englisch");
                 browser.type("#route-preview .route-more", Keys.ENTER);
                 new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> browser.all("#route-preview .route-stop").size() == 7);
             }

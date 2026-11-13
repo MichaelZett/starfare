@@ -4,27 +4,27 @@
  * Served as a static resource, outside the frontend bundle.
  */
 
-html.starfare-mobile {
+html.starfare-mobile[data-gp-game="starfare"] {
     --sf-page-pad: 12px;
     --sf-touch: 44px;
     -webkit-text-size-adjust: 100%;
 }
 
-html.starfare-mobile body {
+html.starfare-mobile[data-gp-game="starfare"] body {
     overflow-x: hidden;
 }
 
 /* ── Touch targets ─────────────────────────────────────────────── */
-html.starfare-mobile vaadin-button {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-button {
     min-height: var(--sf-touch);
 }
 
-html.starfare-mobile vaadin-tab {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-tab {
     min-height: var(--sf-touch);
 }
 
-html.starfare-mobile .legal-footer a,
-html.starfare-mobile a.legal-link {
+html.starfare-mobile[data-gp-game="starfare"] .legal-footer a,
+html.starfare-mobile[data-gp-game="starfare"] a.legal-link {
     display: inline-block;
     min-height: var(--sf-touch);
     line-height: var(--sf-touch);
@@ -33,7 +33,7 @@ html.starfare-mobile a.legal-link {
 /* ── Dialogs fill the screen ───────────────────────────────────────
  * Vaadin's internal resizer container grows with the content and cannot be styled, so the
  * overlay itself scrolls; header and footer stick to its edges and stay tappable. */
-html.starfare-mobile vaadin-dialog::part(overlay) {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog::part(overlay) {
     position: fixed;
     inset: 0;
     width: 100vw !important;
@@ -49,7 +49,7 @@ html.starfare-mobile vaadin-dialog::part(overlay) {
     -webkit-overflow-scrolling: touch;
 }
 
-html.starfare-mobile vaadin-dialog::part(header) {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog::part(header) {
     position: sticky;
     top: 0;
     z-index: 3;
@@ -57,13 +57,13 @@ html.starfare-mobile vaadin-dialog::part(header) {
     background: var(--sf-surface-2, #1c232b);
 }
 
-html.starfare-mobile vaadin-dialog::part(content) {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog::part(content) {
     padding: 10px 12px;
     border-radius: 0;
     overflow: visible;
 }
 
-html.starfare-mobile vaadin-dialog::part(footer) {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog::part(footer) {
     position: sticky;
     bottom: 0;
     z-index: 3;
@@ -74,72 +74,72 @@ html.starfare-mobile vaadin-dialog::part(footer) {
     border-top: 1px solid var(--sf-border, #354252);
 }
 
-html.starfare-mobile vaadin-dialog [slot="footer"] vaadin-button,
-html.starfare-mobile vaadin-dialog > vaadin-button[slot="footer"] {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog [slot="footer"] vaadin-button,
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog > vaadin-button[slot="footer"] {
     flex: 1 1 auto;
 }
 
-html.starfare-mobile vaadin-confirm-dialog::part(overlay) {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-confirm-dialog::part(overlay) {
     max-width: calc(100vw - 24px) !important;
 }
 
 /* Every layout row inside a dialog stacks instead of overflowing. */
-html.starfare-mobile vaadin-dialog vaadin-horizontal-layout {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-horizontal-layout {
     flex-wrap: wrap;
     max-width: 100%;
 }
 
-html.starfare-mobile vaadin-dialog vaadin-text-field,
-html.starfare-mobile vaadin-dialog vaadin-integer-field,
-html.starfare-mobile vaadin-dialog vaadin-combo-box,
-html.starfare-mobile vaadin-dialog vaadin-select,
-html.starfare-mobile vaadin-dialog vaadin-text-area {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-text-field,
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-integer-field,
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-combo-box,
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-select,
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-text-area {
     max-width: 100%;
     min-width: 0;
 }
 
-html.starfare-mobile vaadin-dialog vaadin-vertical-layout > vaadin-combo-box,
-html.starfare-mobile vaadin-dialog vaadin-vertical-layout > vaadin-select,
-html.starfare-mobile vaadin-dialog vaadin-vertical-layout > vaadin-integer-field,
-html.starfare-mobile vaadin-dialog vaadin-vertical-layout > vaadin-text-field {
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-vertical-layout > vaadin-combo-box,
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-vertical-layout > vaadin-select,
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-vertical-layout > vaadin-integer-field,
+html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-vertical-layout > vaadin-text-field {
     width: 100%;
 }
 
 /* ── Wizard ─────────────────────────────────────────────────────── */
-html.starfare-mobile .wizard-body {
+html.starfare-mobile[data-gp-game="starfare"] .wizard-body {
     min-width: 0 !important;
     width: 100% !important;
     padding: 4px 0 12px;
     overflow: visible;
 }
 
-html.starfare-mobile .wizard-confirmation {
+html.starfare-mobile[data-gp-game="starfare"] .wizard-confirmation {
     padding: 4px 0 12px;
 }
 
-html.starfare-mobile .wizard-grid,
-html.starfare-mobile .wizard-summary-groups {
+html.starfare-mobile[data-gp-game="starfare"] .wizard-grid,
+html.starfare-mobile[data-gp-game="starfare"] .wizard-summary-groups {
     grid-template-columns: 1fr !important;
 }
 
-html.starfare-mobile .wizard-section {
+html.starfare-mobile[data-gp-game="starfare"] .wizard-section {
     padding: 12px 10px;
 }
 
-html.starfare-mobile .wizard-overview-side {
+html.starfare-mobile[data-gp-game="starfare"] .wizard-overview-side {
     display: none;
 }
 
 /* ── Lobby ──────────────────────────────────────────────────────── */
-html.starfare-mobile .lobby-root {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-root {
     padding: 0 var(--sf-page-pad) 16px;
     box-sizing: border-box;
     max-width: 100vw;
 }
 
-html.starfare-mobile .lobby-toolbar,
-html.starfare-mobile .lobby-filters,
-html.starfare-mobile .archive-filters {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-toolbar,
+html.starfare-mobile[data-gp-game="starfare"] .lobby-filters,
+html.starfare-mobile[data-gp-game="starfare"] .archive-filters {
     flex-wrap: wrap;
     align-items: stretch;
     gap: 10px;
@@ -147,40 +147,40 @@ html.starfare-mobile .archive-filters {
     box-sizing: border-box;
 }
 
-html.starfare-mobile .lobby-filters > *,
-html.starfare-mobile .archive-filters > vaadin-text-field,
-html.starfare-mobile .archive-filters > vaadin-select,
-html.starfare-mobile .archive-filters > vaadin-combo-box {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-filters > *,
+html.starfare-mobile[data-gp-game="starfare"] .archive-filters > vaadin-text-field,
+html.starfare-mobile[data-gp-game="starfare"] .archive-filters > vaadin-select,
+html.starfare-mobile[data-gp-game="starfare"] .archive-filters > vaadin-combo-box {
     flex: 1 1 100% !important;
     width: 100% !important;
     min-width: 0;
 }
 
-html.starfare-mobile .archive-filters > vaadin-checkbox {
+html.starfare-mobile[data-gp-game="starfare"] .archive-filters > vaadin-checkbox {
     flex: 1 1 100%;
     white-space: normal;
 }
 
-html.starfare-mobile .lobby-toolbar-action,
-html.starfare-mobile .lobby-toolbar-action vaadin-button {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-toolbar-action,
+html.starfare-mobile[data-gp-game="starfare"] .lobby-toolbar-action vaadin-button {
     width: 100%;
 }
 
-html.starfare-mobile .lobby-card,
-html.starfare-mobile .lobby-sidebar {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-card,
+html.starfare-mobile[data-gp-game="starfare"] .lobby-sidebar {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box;
     padding: 12px;
 }
 
-html.starfare-mobile .lobby-card vaadin-grid::part(cell) {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-card vaadin-grid::part(cell) {
     padding: 8px 4px;
 }
 
-html.starfare-mobile .lobby-game-card,
-html.starfare-mobile .archive-game-card,
-html.starfare-mobile .statistics-history-card {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-game-card,
+html.starfare-mobile[data-gp-game="starfare"] .archive-game-card,
+html.starfare-mobile[data-gp-game="starfare"] .statistics-history-card {
     grid-template-columns: 1fr !important;
     gap: 8px;
     min-width: 0;
@@ -188,99 +188,99 @@ html.starfare-mobile .statistics-history-card {
     white-space: normal;
 }
 
-html.starfare-mobile .lobby-game-card *,
-html.starfare-mobile .archive-game-card * {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-game-card *,
+html.starfare-mobile[data-gp-game="starfare"] .archive-game-card * {
     min-width: 0;
     overflow-wrap: anywhere;
 }
 
-html.starfare-mobile .lobby-game-name {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-game-name {
     flex-wrap: wrap;
 }
 
-html.starfare-mobile .lobby-game-name-text {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-game-name-text {
     max-width: 100% !important;
     white-space: normal;
 }
 
 /* ── Statistics, archive, legal pages ───────────────────────────── */
-html.starfare-mobile .statistics-view,
-html.starfare-mobile .statistics-summary-cards,
-html.starfare-mobile .statistics-opponent-cards {
+html.starfare-mobile[data-gp-game="starfare"] .statistics-view,
+html.starfare-mobile[data-gp-game="starfare"] .statistics-summary-cards,
+html.starfare-mobile[data-gp-game="starfare"] .statistics-opponent-cards {
     max-width: 100%;
     box-sizing: border-box;
 }
 
-html.starfare-mobile .statistics-summary-cards {
+html.starfare-mobile[data-gp-game="starfare"] .statistics-summary-cards {
     grid-template-columns: 1fr 1fr !important;
 }
 
 /* Lobby game card rows wrap instead of squeezing labels into one letter per line. */
-html.starfare-mobile .lobby-game-card-heading,
-html.starfare-mobile .lobby-game-card-overview {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-game-card-heading,
+html.starfare-mobile[data-gp-game="starfare"] .lobby-game-card-overview {
     flex-wrap: wrap;
     align-items: flex-start;
 }
 
-html.starfare-mobile .lobby-game-card-overview > *,
-html.starfare-mobile .lobby-game-card-heading > * {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-game-card-overview > *,
+html.starfare-mobile[data-gp-game="starfare"] .lobby-game-card-heading > * {
     flex: 0 1 auto;
     white-space: nowrap;
 }
 
-html.starfare-mobile .lobby-game-card-participants {
+html.starfare-mobile[data-gp-game="starfare"] .lobby-game-card-participants {
     flex: 1 1 100%;
     white-space: normal;
 }
 
-html.starfare-mobile .game-outcome-content {
+html.starfare-mobile[data-gp-game="starfare"] .game-outcome-content {
     min-width: 0;
     padding: .6rem 0;
 }
 
-html.starfare-mobile .game-outcome-metrics {
+html.starfare-mobile[data-gp-game="starfare"] .game-outcome-metrics {
     grid-template-columns: 1fr 1fr !important;
 }
 
 /* ── Map: own phone layout (MobileMapLayout) ────────────────────── */
-html.starfare-mobile .map-root-mobile {
-    height: 100dvh;
+html.starfare-mobile[data-gp-game="starfare"] .map-root-mobile {
+    height: calc(100dvh - var(--gp-frame-offset, 0px));
     min-height: 0;
     overflow: hidden;
 }
 
-html.starfare-mobile .mobile-map {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map {
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100dvh;
+    height: calc(100dvh - var(--gp-frame-offset, 0px));
     min-height: 0;
 }
 
-html.starfare-mobile .mobile-map [hidden] {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map [hidden] {
     display: none !important;
 }
 
-html.starfare-mobile .mobile-map-top {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-top {
     flex: 0 0 auto;
     background: var(--sf-surface-2, #1c232b);
     border-bottom: 1px solid var(--sf-border, #354252);
 }
 
-html.starfare-mobile .app-header-compact {
+html.starfare-mobile[data-gp-game="starfare"] .app-header-compact {
     padding: 6px 10px;
     gap: 8px;
     align-items: center;
 }
 
-html.starfare-mobile .app-header-compact .app-header-left {
+html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .app-header-left {
     gap: 4px 10px;
     align-items: center;
     flex-wrap: wrap;
     min-width: 0;
 }
 
-html.starfare-mobile .app-header-compact .app-header-game {
+html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .app-header-game {
     font-size: 1rem;
     font-weight: 600;
     max-width: 100%;
@@ -289,46 +289,46 @@ html.starfare-mobile .app-header-compact .app-header-game {
     white-space: nowrap;
 }
 
-html.starfare-mobile .app-header-compact .app-header-round {
+html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .app-header-round {
     font-size: .9rem;
     white-space: nowrap;
 }
 
-html.starfare-mobile .app-header-compact .app-header-stats {
+html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .app-header-stats {
     flex-wrap: wrap;
     gap: 6px;
     margin: 0;
 }
 
-html.starfare-mobile .app-header-compact .app-header-stat {
+html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .app-header-stat {
     padding: 1px 8px;
     font-size: .85rem;
 }
 
-html.starfare-mobile .app-header-compact .app-header-research::part(label) { display: none; }
+html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .app-header-research::part(label) { display: none; }
 
-html.starfare-mobile .app-header-compact .app-header-right {
+html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .app-header-right {
     gap: 6px;
 }
 
-html.starfare-mobile .app-header-compact .round-submit {
+html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .round-submit {
     padding: 0 12px;
 }
 
-html.starfare-mobile .mobile-map-top .round-status {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-top .round-status {
     padding: 2px 10px 6px;
     overflow-x: auto;
     flex-wrap: nowrap;
 }
 
-html.starfare-mobile .mobile-map-stage {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-stage {
     position: relative;
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
 }
 
-html.starfare-mobile .mobile-map-stage #scroll {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-stage #scroll {
     position: absolute;
     inset: 0;
     height: 100% !important;
@@ -337,7 +337,7 @@ html.starfare-mobile .mobile-map-stage #scroll {
     box-shadow: none;
 }
 
-html.starfare-mobile .mobile-map-banner {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-banner {
     position: absolute;
     top: 8px;
     left: 8px;
@@ -348,7 +348,7 @@ html.starfare-mobile .mobile-map-banner {
     background: var(--sf-surface-2, #1c232b);
 }
 
-html.starfare-mobile .mobile-map-zoom {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-zoom {
     position: absolute;
     right: 10px;
     bottom: 12px;
@@ -358,7 +358,7 @@ html.starfare-mobile .mobile-map-zoom {
     gap: 8px;
 }
 
-html.starfare-mobile .mobile-map-zoom vaadin-button {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-zoom vaadin-button {
     width: var(--sf-touch);
     height: var(--sf-touch);
     border-radius: 50%;
@@ -367,7 +367,7 @@ html.starfare-mobile .mobile-map-zoom vaadin-button {
     box-shadow: 0 4px 12px rgba(0, 0, 0, .5);
 }
 
-html.starfare-mobile .mobile-map-target {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-target {
     position: absolute;
     top: 8px;
     left: 8px;
@@ -385,7 +385,7 @@ html.starfare-mobile .mobile-map-target {
     box-shadow: 0 6px 16px rgba(0, 0, 0, .55);
 }
 
-html.starfare-mobile .mobile-map-sheet {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet {
     position: absolute;
     inset: 0;
     z-index: 6;
@@ -397,7 +397,7 @@ html.starfare-mobile .mobile-map-sheet {
     background: var(--sf-surface, #151b22);
 }
 
-html.starfare-mobile .mobile-map-sheet .map-right {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet .map-right {
     min-width: 0;
     height: auto !important;
     padding: 0;
@@ -407,21 +407,21 @@ html.starfare-mobile .mobile-map-sheet .map-right {
     overflow: visible;
 }
 
-html.starfare-mobile .mobile-map-sheet .map-controls {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet .map-controls {
     padding: 0 0 8px;
 }
 
-html.starfare-mobile .mobile-map-sheet .planning-actions vaadin-button,
-html.starfare-mobile .mobile-map-sheet .system-details-actions vaadin-button {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet .planning-actions vaadin-button,
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet .system-details-actions vaadin-button {
     flex: 1 1 auto;
 }
 
-html.starfare-mobile .mobile-map-sheet .system-details-actions {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet .system-details-actions {
     flex-wrap: wrap;
 }
 
 /* No hover on a phone: the tile keeps its visible label. */
-html.starfare-mobile .mobile-map-sheet .system-header-metrics .system-metric .system-metric-label {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet .system-header-metrics .system-metric .system-metric-label {
     position: static;
     width: auto;
     height: auto;
@@ -430,7 +430,7 @@ html.starfare-mobile .mobile-map-sheet .system-header-metrics .system-metric .sy
     white-space: normal;
 }
 
-html.starfare-mobile .mobile-map-nav {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-nav {
     flex: 0 0 auto;
     display: flex;
     gap: 8px;
@@ -439,6 +439,6 @@ html.starfare-mobile .mobile-map-nav {
     border-top: 1px solid var(--sf-border, #354252);
 }
 
-html.starfare-mobile .mobile-map-tab {
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-tab {
     flex: 1 1 0;
 }

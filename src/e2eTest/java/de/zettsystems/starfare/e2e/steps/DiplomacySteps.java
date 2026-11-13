@@ -126,8 +126,7 @@ public class DiplomacySteps {
         openTreaties(browser);
     }
     private void switchLanguage(String label) {
-        browser.type(".lang-switcher input", Keys.chord(Keys.CONTROL, "a"), label);
-        browser.clickMatching("vaadin-combo-box-item", item -> item.getText().equals(label), "Sprache " + label);
+        browser.switchLanguage(label);
     }
     private static void openTreaties(Browser target) { target.clickCss(".map-controls vaadin-button[aria-label='Bündnisse']"); target.awaitCss(".diplomacy-content"); }
     private void advance() { assertThat(games.submitTurn(id, 1)).isTrue(); assertThat(games.submitTurn(id, 2)).isTrue(); }

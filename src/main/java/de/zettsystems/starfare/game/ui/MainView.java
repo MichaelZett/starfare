@@ -196,8 +196,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             add(mobile);
         } else {
             mobile = null;
-            add(header, roundStatus, spectatorControls, reviewControls, buildContent(),
-                    new de.zettsystems.starfare.legal.ui.LegalFooter());
+            add(header, roundStatus, spectatorControls, reviewControls, buildContent());
+            if (OwnFrame.active()) {
+                add(new LegalFooter());
+            }
         }
     }
 

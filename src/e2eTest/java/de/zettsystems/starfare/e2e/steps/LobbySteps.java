@@ -172,8 +172,13 @@ public class LobbySteps {
         browser.open(Browser.LOBBY);
         browser.awaitCss(".lobby-root");
         assertThat(browser.pageText()).doesNotContain(name);
-        browser.clickCss("vaadin-menu-bar-button");
-        browser.clickMatching("vaadin-menu-bar-item", item -> item.getText().strip().equals("Archiv"), "Menüeintrag Archiv");
+        if (browser.all(".gp-game-nav").isEmpty()) {
+            browser.clickCss(".lobby-toolbar vaadin-menu-bar-button");
+            browser.clickMatching("vaadin-menu-bar-item", item -> item.getText().strip().equals("Archiv"), "Menüeintrag Archiv");
+        } else {
+            // Inside a platform host the game bar of the frame carries Starfare's navigation (M9).
+            browser.clickCss(".gp-game-nav a[href$='/archive']");
+        }
         browser.awaitText(name);
         browser.captureUiAcceptance("archive");
         browser.clickButtonWithText("Ansehen");
