@@ -3,6 +3,7 @@
   "license": "UNLICENSED",
   "type": "module",
   "dependencies": {
+    "@fontsource-variable/dm-sans": "5.3.0",
     "@vaadin/aura": "25.3.5",
     "@vaadin/common-frontend": "0.0.25",
     "@vaadin/confirm-dialog": "25.3.4",
@@ -45,6 +46,7 @@
     "vite-plugin-checker": "0.14.5"
   },
   "overrides": {
+    "@fontsource-variable/dm-sans": "$@fontsource-variable/dm-sans",
     "@vaadin/a11y-base": "25.3.5",
     "@vaadin/accordion": "25.3.5",
     "@vaadin/app-layout": "25.3.5",
@@ -123,6 +125,7 @@
   },
   "vaadin": {
     "dependencies": {
+      "@fontsource-variable/dm-sans": "5.3.0",
       "@vaadin/aura": "25.3.5",
       "@vaadin/common-frontend": "0.0.25",
       "@vaadin/react-components": "25.3.5",
@@ -160,6 +163,6 @@
       "vite": "8.3.5",
       "vite-plugin-checker": "0.14.5"
     },
-    "hash": "72a034c1ab78d3ecabdf591babad5f7ee4ed182e93dee8510a1241ad94390bc6"
+    "hash": "6fadca49a5ec1a26fe998fb4312b1ee64c6773ae09f2732bde062cc85761530b"
   }
 }

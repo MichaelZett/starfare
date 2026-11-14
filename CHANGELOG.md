@@ -8,6 +8,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Plattformschrift DM Sans wird selbst ausgeliefert (npm-Paket @fontsource-variable/dm-sans)
+  statt auf die Systemschrift zurückzufallen; platform.css mit den allgemeinen Handy-Regeln
+  der Plattform übernommen. starfare-mobile.css bleibt unverändert.
 - Spaceward ist im Plattform-Host eine Testvariante: Neue Spaceward-Partien (Wizard,
   Vorlage, Revanche) legen nur Tester an (globale Rolle `SYSTEM_ADMIN` oder
   `GAME_TESTER` für Starfare). Andere sehen offene Spaceward-Partien nicht in der Lobby
