@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -246,18 +247,35 @@ public class Browser {
         } catch (StaleElementReferenceException _) {
             return null;
         } catch (WebDriverException e) {
-            // Chrome reports a button removed by a re-render this way instead of as stale.
-            if (String.valueOf(e.getMessage()).contains("does not belong to the document")) {
-                return null;
-            }
+            if (detached(e)) { return null; }
             throw e;
         }
+    }
+
+    /**
+     * Chrome reports an element removed by a re-render as "Node with given id does not belong to
+     * the document" instead of as stale. Such a condition counts as not yet met, so the wait asks
+     * again; StaleElementReferenceException is a subclass and is covered as well.
+     */
+    static <T> Function<WebDriver, @Nullable T> retryingDetached(Function<WebDriver, @Nullable T> condition) {
+        return webDriver -> {
+            try {
+                return condition.apply(webDriver);
+            } catch (WebDriverException e) {
+                if (e instanceof StaleElementReferenceException || detached(e)) { return null; }
+                throw e;
+            }
+        };
+    }
+
+    static boolean detached(WebDriverException e) {
+        return String.valueOf(e.getMessage()).contains("does not belong to the document");
     }
 
     public void awaitText(String snippet) {
         new WebDriverWait(driver(), LOAD).ignoring(StaleElementReferenceException.class)
                 .withMessage("Erwarteter Text fehlt: " + snippet)
-                .until(_ -> fullPageText().contains(snippet));
+                .until(retryingDetached(_ -> fullPageText().contains(snippet) ? Boolean.TRUE : null));
     }
 
     public List<WebElement> awaitAtLeast(String css, int count) {
@@ -278,36 +296,36 @@ public class Browser {
         new WebDriverWait(driver(), LOAD)
                 .withMessage("In " + css + " fehlt der Text: " + snippet)
                 .ignoring(StaleElementReferenceException.class)
-                .until(_ -> all(css).stream()
+                .until(retryingDetached(_ -> all(css).stream()
                         .map(element -> String.valueOf(element.getDomProperty("textContent")))
-                        .anyMatch(text -> text.contains(snippet)));
+                        .anyMatch(text -> text.contains(snippet)) ? Boolean.TRUE : null));
     }
 
     /** Momentaufnahme der Texte; ein Neu-Rendern während des Auslesens liest erneut. */
     public List<String> textsOf(String css) {
         return new WebDriverWait(driver(), LOAD).ignoring(StaleElementReferenceException.class)
-                .until(_ -> all(css).stream()
+                .until(retryingDetached(_ -> all(css).stream()
                         .map(element -> String.valueOf(element.getDomProperty("textContent")).strip())
-                        .toList());
+                        .toList()));
     }
 
     /** Wartet, bis die Texte zum Selektor die Bedingung erfüllen, statt eine Momentaufnahme zu prüfen. */
     public List<String> awaitTexts(String css, Predicate<List<String>> condition, String message) {
         return new WebDriverWait(driver(), LOAD).withMessage(message)
                 .ignoring(StaleElementReferenceException.class)
-                .until(_ -> {
+                .until(retryingDetached(_ -> {
                     List<String> texts = all(css).stream()
                             .map(element -> String.valueOf(element.getDomProperty("textContent")).strip())
                             .toList();
                     return condition.test(texts) ? texts : null;
-                });
+                }));
     }
 
     /** Wartet, bis kein Element zum Selektor mehr sichtbar ist (entfernte Elemente zählen als unsichtbar). */
     public void awaitNoneDisplayed(String css) {
         new WebDriverWait(driver(), LOAD).withMessage("Noch sichtbar: " + css)
                 .ignoring(StaleElementReferenceException.class)
-                .until(_ -> all(css).stream().noneMatch(WebElement::isDisplayed));
+                .until(retryingDetached(_ -> all(css).stream().noneMatch(WebElement::isDisplayed) ? Boolean.TRUE : null));
     }
 
     /** Wartet, bis genau {@code count} Elemente zum Selektor im DOM stehen. */
