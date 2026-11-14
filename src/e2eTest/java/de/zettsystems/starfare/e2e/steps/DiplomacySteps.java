@@ -62,7 +62,8 @@ public class DiplomacySteps {
         choosePartner(); browser.clickButtonWithText("Bündnis vorschlagen");
         partner.awaitTextIn(".diplomacy-content", "Neues Bündnis"); partner.clickButtonWithText("Zustimmen");
         browser.awaitTextIn(".diplomacy-content", "Kündigungsfrist: 3 Runden");
-        assertThat(registry.readState(id, state -> state.allied(1, 2)).booleanValue()).isTrue();
+        // The notice text can show before the partner's consent is stored; wait for the alliance.
+        waitFor(() -> registry.readState(id, state -> state.allied(1, 2)).booleanValue());
         screenshot("group");
         captureEnglishGroup();
     }
