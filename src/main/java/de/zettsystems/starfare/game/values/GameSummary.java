@@ -10,6 +10,8 @@ import java.util.Set;
  * Immutable lobby-level view of one game: lifecycle flags plus who sits where. Seats are
  * player IDs of the seat holders; {@code joinedHumanSeats} lists the human seats that have
  * actually joined, {@code invitedSeats} the reservations by invited player ID.
+ * {@code submittedSeats} are the seats that have submitted the current round, and
+ * {@code roundStartedAt} is when the current round began (creation time while the game is open).
  */
 public record GameSummary(
         GameId gameId,
@@ -27,7 +29,35 @@ public record GameSummary(
         GameVisibility visibility,
         GameOutcome outcome,
         RulesetRef ruleset,
+        @Nullable VictoryRules victoryRules,
+        Set<Integer> submittedSeats,
+        java.time.Instant roundStartedAt) {
+    public GameSummary {
+        submittedSeats = Set.copyOf(submittedSeats);
+    }
+
+    public GameSummary(
+        GameId gameId,
+        String name,
+        @Nullable String hostPlayerId,
+        int turn,
+        boolean started,
+        boolean gameOver,
+        boolean observersAllowed,
+        boolean reentryAllowed,
+        List<Player> players,
+        Set<Integer> joinedHumanSeats,
+        Map<String, Integer> seatByPlayer,
+        Map<String, Integer> invitedSeats,
+        GameVisibility visibility,
+        GameOutcome outcome,
+        RulesetRef ruleset,
         @Nullable VictoryRules victoryRules) {
+        this(gameId, name, hostPlayerId, turn, started, gameOver, observersAllowed, reentryAllowed, players,
+                joinedHumanSeats, seatByPlayer, invitedSeats, visibility, outcome, ruleset, victoryRules, Set.of(),
+                java.time.Instant.EPOCH);
+    }
+
     public GameSummary(
         GameId gameId,
         String name,

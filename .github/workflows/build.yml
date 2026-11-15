@@ -61,6 +61,14 @@ jobs:
           # Sonar braucht die Historie, sonst gilt jede Zeile als neu.
           fetch-depth: 0
 
+      # games-platform-api kommt bis 0.1.0 aus einem Nachbar-Checkout (settings.gradle, includeBuild).
+      - name: Check out games-platform-api
+        run: |
+          ref="$(sed -n 's/^gamesPlatformApiRef=//p' gradle.properties)"
+          [[ "$ref" =~ ^[0-9a-f]{40}$ ]] || { echo "gamesPlatformApiRef fehlt in gradle.properties"; exit 1; }
+          git clone --quiet --filter=blob:none https://github.com/MichaelZett/games-platform-api.git ../games-platform-api
+          git -C ../games-platform-api checkout --quiet "$ref"
+
       - name: Read app version
         id: app_version
         run: |
@@ -164,6 +172,14 @@ jobs:
       && !contains(github.event.head_commit.message, '[skip-e2e]')
     steps:
       - uses: actions/checkout@v7
+
+      # games-platform-api kommt bis 0.1.0 aus einem Nachbar-Checkout (settings.gradle, includeBuild).
+      - name: Check out games-platform-api
+        run: |
+          ref="$(sed -n 's/^gamesPlatformApiRef=//p' gradle.properties)"
+          [[ "$ref" =~ ^[0-9a-f]{40}$ ]] || { echo "gamesPlatformApiRef fehlt in gradle.properties"; exit 1; }
+          git clone --quiet --filter=blob:none https://github.com/MichaelZett/games-platform-api.git ../games-platform-api
+          git -C ../games-platform-api checkout --quiet "$ref"
 
       - name: Set up JDK 25
         uses: actions/setup-java@v6

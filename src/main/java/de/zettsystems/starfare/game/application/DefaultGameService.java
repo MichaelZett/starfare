@@ -426,9 +426,19 @@ public class DefaultGameService implements GameService {
 
     @Override
     public void abortGame(GameId gameId) {
+        // Taken before the game is deleted: the platform learns who took part in an aborted match.
+        GameEvent.GameAborted aborted = registry.find(gameId)
+                .map(session -> session.readState(state -> new GameEvent.GameAborted(gameId,
+                        state.started() && !state.gameOver(), accountsInSeatOrder(state))))
+                .orElseGet(() -> new GameEvent.GameAborted(gameId));
         registry.abortGame(gameId);
         battleAcknowledgements.forgetGame(gameId);
-        broadcaster.publish(new GameEvent.GameAborted(gameId));
+        broadcaster.publish(aborted);
+    }
+
+    private static List<String> accountsInSeatOrder(GameState state) {
+        return state.seatByUser().entrySet().stream().sorted(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey).toList();
     }
 
     @Override

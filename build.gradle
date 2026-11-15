@@ -78,6 +78,7 @@ configurations {
 dependencies {
     implementation "de.zettsystems:identity-core:${identityVersion}"
     implementation "de.zettsystems:identity-vaadin:${identityVersion}"
+    implementation "de.zettsystems:games-platform-api:${gamesPlatformApiVersion}"
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'com.vaadin:vaadin-spring-boot-starter'

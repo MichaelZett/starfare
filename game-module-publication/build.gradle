@@ -12,9 +12,11 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
 
 // Freeze the production graph already selected by the application's BOMs.
 // Only strings and native Gradle dependency models enter publication tasks.
-def selectedVersions = rootProject.configurations.gameModuleRuntimeClasspath.incoming.resolutionResult
-        .allComponents.findAll { it.id instanceof ModuleComponentIdentifier }
-        .collectEntries { [(it.id.group + ':' + it.id.module): it.id.version] }
+// Included builds (games-platform-api until it is on Maven Central) count with their coordinates.
+def resolution = rootProject.configurations.gameModuleRuntimeClasspath.incoming.resolutionResult
+def selectedVersions = resolution.allComponents
+        .findAll { it.id instanceof ModuleComponentIdentifier || (it != resolution.root && it.moduleVersion != null) }
+        .collectEntries { [(it.moduleVersion.group + ':' + it.moduleVersion.name): it.moduleVersion.version] }
 
 repositories { mavenCentral() }
 dependencies {

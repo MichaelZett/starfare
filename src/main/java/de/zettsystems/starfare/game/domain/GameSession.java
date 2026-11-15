@@ -74,7 +74,8 @@ public class GameSession {
                 state.observersAllowed(), state.reentryAllowed(),
                 List.copyOf(state.players()), Set.copyOf(state.joinedHumanPlayerIds()),
                 Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats()),
-                state.visibility(), state.outcome(), state.ruleset(), state.victoryRules());
+                state.visibility(), state.outcome(), state.ruleset(), state.victoryRules(),
+                Set.copyOf(state.submittedThisTurn()), state.turnStartedAt());
     }
 
     public <T> T readState(Function<GameState, T> fn) {

@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.gamesplatformapi.MatchEnded;
+import de.zettsystems.gamesplatformapi.MatchResult;
 import de.zettsystems.starfare.game.domain.GameResultEntity;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.values.CompletedGameOutcome;
@@ -8,9 +10,12 @@ import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.OpponentStatistics;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.PlayerStatistics;
+import de.zettsystems.starfare.game.platform.StarfareMatches;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import jakarta.transaction.Transactional;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -20,11 +25,23 @@ import java.util.*;
 class DefaultGameStatisticsService implements GameStatisticsService {
     private final GameRegistry registry;
     private final GameResultRepository results;
+    private final ApplicationEventPublisher events;
 
     DefaultGameStatisticsService(GameRegistry registry, GameResultRepository results) {
+        this(registry, results, _ -> { });
+    }
+
+    @Autowired
+    DefaultGameStatisticsService(GameRegistry registry, GameResultRepository results, ApplicationEventPublisher events) {
         this.registry = registry;
         this.results = results;
+        this.events = events;
     }
+
+    /**
+     * Records the result of a finished game once and announces the end to the platform within the
+     * same transaction ({@link MatchEnded}); a game the winner continues does not end twice.
+     */
 
     @Override
     @Transactional
@@ -50,17 +67,23 @@ class DefaultGameStatisticsService implements GameStatisticsService {
                     .map(Map.Entry::getKey).collect(java.util.stream.Collectors.toSet());
             boolean aiVictory = state.players().stream()
                     .anyMatch(player -> player.ai() && state.outcome().wonBy(player.id()));
-            return new FinishedGame(session.name(), state.outcome().allianceVictory() ? null : winner, aiVictory, state.finishedAt(), accounts, aiOpponentNames, state.ruleset(), winningAccounts);
+            return new FinishedGame(session.name(), state.outcome().allianceVictory() ? null : winner, aiVictory, state.finishedAt(), accounts, aiOpponentNames, state.ruleset(), winningAccounts,
+                    StarfareMatches.result(state).orElse(null));
         });
         if (game != null && !game.participants().isEmpty()) {
+            Instant finishedAt = game.finishedAt() != null ? game.finishedAt() : Instant.now();
             var result = new GameResultEntity(gameId.value(), game.name(), game.winner(),
-                    game.finishedAt() != null ? game.finishedAt() : Instant.now(), game.participants(), game.aiOpponentNames());
+                    finishedAt, game.participants(), game.aiOpponentNames());
             if (game.aiVictory()) {
                 result.recordAiVictory();
             }
             result.recordRuleset(game.ruleset());
             result.recordWinners(game.winners());
             results.save(result);
+            MatchResult platformResult = game.platformResult();
+            if (platformResult != null) {
+                events.publishEvent(new MatchEnded(StarfareMatches.GAME_KEY, gameId.value(), finishedAt, platformResult));
+            }
         }
     }
 
@@ -127,7 +150,7 @@ class DefaultGameStatisticsService implements GameStatisticsService {
 
     private record FinishedGame(String name, @Nullable String winner, boolean aiVictory, @Nullable Instant finishedAt,
                                 LinkedHashSet<String> participants, LinkedHashSet<String> aiOpponentNames,
-                                RulesetRef ruleset, Set<String> winners) {
+                                RulesetRef ruleset, Set<String> winners, @Nullable MatchResult platformResult) {
     }
 
     private static final class Totals {

@@ -35,7 +35,16 @@ public sealed interface GameEvent {
 
     record GameCreated(GameId gameId) implements GameEvent {}
 
-    record GameAborted(GameId gameId) implements GameEvent {}
+    /**
+     * The game was aborted and deleted. {@code running} tells whether it had started and not yet
+     * ended; {@code accounts} are the accounts that held a seat, in seat order.
+     */
+    record GameAborted(GameId gameId, boolean running, java.util.List<String> accounts) implements GameEvent {
+        public GameAborted(GameId gameId) {
+            this(gameId, false, java.util.List.of());
+        }
+        public GameAborted { accounts = java.util.List.copyOf(accounts); }
+    }
 
     record GameStarted(GameId gameId) implements GameEvent {}
 

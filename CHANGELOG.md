@@ -8,6 +8,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Plattform-Vertrag `de.zettsystems:games-platform-api` umgesetzt: Starfare meldet dem
+  Plattform-Host seine offenen und laufenden Partien je Konto (wer am Zug ist, freie Plätze,
+  Sprung zur Karte), kündigt Änderungen an und meldet das Partieende mit Platzierungen (Sieger
+  zuerst, dann nach gehaltenen Systemen; Aufgabe und Ausscheiden vermerkt) oder als Abbruch.
+  Im eigenen Start ändert sich nichts.
 - Plattformschrift DM Sans wird selbst ausgeliefert (npm-Paket @fontsource-variable/dm-sans)
   statt auf die Systemschrift zurückzufallen; platform.css mit den allgemeinen Handy-Regeln
   der Plattform übernommen. starfare-mobile.css bleibt unverändert.
