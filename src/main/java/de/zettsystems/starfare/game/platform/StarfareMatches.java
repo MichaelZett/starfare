@@ -67,17 +67,23 @@ public final class StarfareMatches {
             return Optional.empty();
         }
         int seats = game.players().size();
-        MatchStatus status = game.gameOver() ? MatchStatus.FINISHED
-                : game.started() ? MatchStatus.RUNNING : MatchStatus.OPEN;
+        MatchStatus status = status(game);
         Map<Integer, AccountId> accounts = accountsBySeat(game.seatByPlayer());
-        List<AccountId> toMove = status != MatchStatus.RUNNING ? List.of() : accounts.entrySet().stream()
+        List<AccountId> toMove = status == MatchStatus.RUNNING ? accounts.entrySet().stream()
                 .filter(entry -> game.joinedHumanSeats().contains(entry.getKey())
                         && !game.submittedSeats().contains(entry.getKey()))
-                .map(Map.Entry::getValue).toList();
+                .map(Map.Entry::getValue).toList() : List.of();
         String title = game.name().isBlank() ? game.gameId().value() : game.name();
         return Optional.of(new MatchSummary(GAME_KEY, game.gameId().value(), title, status,
                 List.copyOf(accounts.values()), seats, seats - (int) humanSeats, toMove, game.roundStartedAt(),
                 viewPath(game.gameId())));
+    }
+
+    private static MatchStatus status(GameSummary game) {
+        if (game.gameOver()) {
+            return MatchStatus.FINISHED;
+        }
+        return game.started() ? MatchStatus.RUNNING : MatchStatus.OPEN;
     }
 
     private static boolean humanSeat(GameSummary game, Player player) {
