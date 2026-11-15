@@ -71,7 +71,8 @@ class DefaultGameStatisticsService implements GameStatisticsService {
                     StarfareMatches.result(state).orElse(null));
         });
         if (game != null && !game.participants().isEmpty()) {
-            Instant finishedAt = Objects.requireNonNullElseGet(game.finishedAt(), Instant::now);
+            Instant recordedEnd = game.finishedAt();
+            Instant finishedAt = recordedEnd == null ? Instant.now() : recordedEnd;
             var result = new GameResultEntity(gameId.value(), game.name(), game.winner(),
                     finishedAt, game.participants(), game.aiOpponentNames());
             if (game.aiVictory()) {
