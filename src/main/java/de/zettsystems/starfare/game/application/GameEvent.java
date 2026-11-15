@@ -33,6 +33,9 @@ public sealed interface GameEvent {
 
     record VisibilityChanged(GameId gameId) implements GameEvent {}
 
+    /** A seat was reserved for an invited account or the invitation was withdrawn. */
+    record InvitationChanged(GameId gameId) implements GameEvent {}
+
     record GameCreated(GameId gameId) implements GameEvent {}
 
     /**

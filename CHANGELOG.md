@@ -13,6 +13,8 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Sprung zur Karte), kündigt Änderungen an und meldet das Partieende mit Platzierungen (Sieger
   zuerst, dann nach gehaltenen Systemen; Aufgabe und Ausscheiden vermerkt) oder als Abbruch.
   Im eigenen Start ändert sich nichts.
+- Einladen und Zurückziehen einer Einladung melden sich als Änderung der Partie; die Lobby der
+  Plattform zeigt eingeladenen Konten die Partie dadurch sofort.
 - Plattformschrift DM Sans wird selbst ausgeliefert (npm-Paket @fontsource-variable/dm-sans)
   statt auf die Systemschrift zurückzufallen; platform.css mit den allgemeinen Handy-Regeln
   der Plattform übernommen. starfare-mobile.css bleibt unverändert.

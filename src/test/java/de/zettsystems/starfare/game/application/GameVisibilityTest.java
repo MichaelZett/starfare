@@ -82,6 +82,22 @@ class GameVisibilityTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void acceptedInvitationsAndWithdrawalsPublishEvents() {
+        GameId id = games.newGame(GameSetup.defaults(), "host", "Invitation events");
+        var events = new ArrayList<GameEvent>();
+        var subscription = broadcaster.subscribe(id, events::add);
+        try {
+            assertThat(games.inviteUser(id, "guest")).isPresent();
+            assertThat(games.inviteUser(id, "guest")).isEmpty();
+            assertThat(games.revokeInvite(id, "guest")).isPresent();
+            assertThat(games.revokeInvite(id, "guest")).isEmpty();
+            assertThat(events).containsExactly(new GameEvent.InvitationChanged(id), new GameEvent.InvitationChanged(id));
+        } finally {
+            subscription.remove();
+        }
+    }
+
+    @Test
     void simultaneousClaimsCannotTakeTheSameSeat() throws Exception {
         GameId id = games.newGame(GameSetup.defaults(), "host", "Concurrent");
         games.changeVisibility(id, "host", GameVisibility.PUBLIC);

@@ -546,6 +546,9 @@ public class DefaultGameService implements GameService {
             state.invitedSeats().put(inviteePlayerId, candidate);
             return candidate;
         });
+        if (seat != null) {
+            broadcaster.publish(new GameEvent.InvitationChanged(gameId));
+        }
         return Optional.ofNullable(seat);
     }
 
@@ -555,6 +558,9 @@ public class DefaultGameService implements GameService {
             return Optional.empty();
         }
         Integer seat = registry.writeState(gameId, state -> state.gameOver() ? null : state.invitedSeats().remove(inviteePlayerId));
+        if (seat != null) {
+            broadcaster.publish(new GameEvent.InvitationChanged(gameId));
+        }
         return Optional.ofNullable(seat);
     }
 

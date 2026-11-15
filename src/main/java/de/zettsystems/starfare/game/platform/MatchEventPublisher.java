@@ -51,7 +51,7 @@ class MatchEventPublisher implements InitializingBean {
             }
             case GameEvent.GameCreated _, GameEvent.PlayerJoined _, GameEvent.PlayerSubmitted _,
                  GameEvent.SeatAbandoned _, GameEvent.GameStarted _, GameEvent.GameContinued _,
-                 GameEvent.VisibilityChanged _ -> changed(event.gameId());
+                 GameEvent.VisibilityChanged _, GameEvent.InvitationChanged _ -> changed(event.gameId());
             default -> {
                 // Chat, diplomacy, production, observers, host and round rules are not part of a match summary.
             }

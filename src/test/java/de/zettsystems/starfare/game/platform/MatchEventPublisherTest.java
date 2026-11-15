@@ -40,7 +40,8 @@ class MatchEventPublisherTest {
     void announcesChangesTheLobbyShows() {
         List<GameEvent> events = List.of(new GameEvent.GameCreated(ID), new GameEvent.PlayerJoined(ID, 1),
                 new GameEvent.PlayerSubmitted(ID, 1), new GameEvent.SeatAbandoned(ID, 2), new GameEvent.GameStarted(ID),
-                new GameEvent.GameContinued(ID), new GameEvent.VisibilityChanged(ID));
+                new GameEvent.GameContinued(ID), new GameEvent.VisibilityChanged(ID),
+                new GameEvent.InvitationChanged(ID));
 
         events.forEach(broadcaster::publish);
 
