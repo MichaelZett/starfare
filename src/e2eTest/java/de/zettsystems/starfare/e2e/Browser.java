@@ -129,13 +129,16 @@ public class Browser {
             return;
         }
         String target = label.startsWith("Engl") ? "English" : "Deutsch";
-        WebElement page = driver().findElement(By.tagName("body"));
+        var js = (JavascriptExecutor) driver();
+        js.executeScript("window.e2eBeforeLanguageSwitch = true;");
         clickCss(".gp-account vaadin-menu-bar-button");
         clickMatching("vaadin-menu-bar-item", item -> List.of("Sprache", "Language").contains(item.getText().trim()),
                 "Language menu");
         clickMatching("vaadin-menu-bar-item", item -> item.getText().trim().equals(target), "Language " + target);
-        // The platform reloads the page after a language change; wait for it before the next step looks up elements.
-        new WebDriverWait(driver(), LOAD).until(ExpectedConditions.stalenessOf(page));
+        // The platform reloads the page after a language change; the reload drops the marker. Wait for the new page
+        // before the next step looks up elements. During the navigation Chrome may reject the script.
+        new WebDriverWait(driver(), LOAD).ignoring(WebDriverException.class).until(_ -> Boolean.TRUE.equals(
+                js.executeScript("return window.e2eBeforeLanguageSwitch !== true && document.readyState === 'complete';")));
     }
 
     /**
