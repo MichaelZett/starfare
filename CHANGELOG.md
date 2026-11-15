@@ -8,7 +8,7 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
-- Plattform-Vertrag `de.zettsystems:games-platform-api` umgesetzt: Starfare meldet dem
+- Plattform-Vertrag `de.zettsystems:games-platform-api` (0.1.0 von Maven Central) umgesetzt: Starfare meldet dem
   Plattform-Host seine offenen und laufenden Partien je Konto (wer am Zug ist, freie Plätze,
   Sprung zur Karte), kündigt Änderungen an und meldet das Partieende mit Platzierungen (Sieger
   zuerst, dann nach gehaltenen Systemen; Aufgabe und Ausscheiden vermerkt) oder als Abbruch.
