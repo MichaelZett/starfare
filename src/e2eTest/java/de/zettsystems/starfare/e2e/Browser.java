@@ -377,9 +377,18 @@ public class Browser {
     public void assertNoSidewaysScrolling() {
         JavascriptExecutor js = (JavascriptExecutor) driver();
         // Layout settles after a navigation (a scroll bar appears, observers resize): only a lasting overflow counts.
+        // Chrome on Linux keeps a stale overflow width when the vertical scroll bar appears later (CI, 2026-11-16:
+        // hiding any <style> removed it); a fresh style pass before each look leaves only real overflow.
         try {
-            new WebDriverWait(driver(), Duration.ofSeconds(3)).until(_ -> (Boolean) js.executeScript(
-                    "return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1"));
+            new WebDriverWait(driver(), Duration.ofSeconds(3)).until(_ -> (Boolean) js.executeScript("""
+                    const root = document.documentElement;
+                    const probe = document.createElement('style');
+                    document.head.appendChild(probe);
+                    void root.offsetWidth;
+                    probe.remove();
+                    void root.offsetWidth;
+                    return root.scrollWidth <= root.clientWidth + 1;
+                    """));
         } catch (org.openqa.selenium.TimeoutException lasting) {
             // reported below with the overflowing elements
         }
