@@ -9,8 +9,9 @@ import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.Player;
-import de.zettsystems.starfare.social.application.InvitationService;
-import de.zettsystems.starfare.social.application.PresenceTracker;
+import de.zettsystems.starfare.game.application.InvitationService;
+import de.zettsystems.gamesplatformapi.PlatformPresence;
+import de.zettsystems.starfare.game.platform.StarfareMatches;
 import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
 import org.openqa.selenium.JavascriptExecutor;
@@ -35,14 +36,14 @@ public class LobbySteps {
     private final GameRegistry registry;
     private final Broadcaster broadcaster;
     private final InvitationService invitations;
-    private final PresenceTracker presence;
+    private final PlatformPresence presence;
     private final PlayerDirectory players;
     private GameId id;
     private String name;
     private String host;
 
     public LobbySteps(Browser browser, GameService games, GameRegistry registry, Broadcaster broadcaster,
-                      InvitationService invitations, PresenceTracker presence, PlayerDirectory players) {
+                      InvitationService invitations, PlatformPresence presence, PlayerDirectory players) {
         this.browser = browser;
         this.games = games;
         this.registry = registry;
@@ -146,7 +147,7 @@ public class LobbySteps {
     @Dann("ist die Lobby-Partie sichtbar")
     public void gameVisible() {
         if (browser.hosted()) {
-            // After accepting on the social page: the platform lobby lists the match.
+            // After accepting in the waiting room: the platform lobby lists the match.
             browser.open(Browser.LOBBY);
             browser.awaitLobby();
         }
@@ -156,7 +157,9 @@ public class LobbySteps {
 
     @Wenn("der Host die Partie wieder privat stellt und {string} einlädt")
     public void invite(String displayName) {
-        String guest = presence.onlineUsers().stream().map(p -> p.playerId())
+        // Who is online comes from the platform in a host and from Starfare in its own start (plan M13).
+        String guest = presence.onlineFor(StarfareMatches.account(host).orElseThrow()).stream()
+                .map(StarfareMatches::accountName)
                 .filter(account -> players.displayName(account).equals(displayName)).findFirst().orElseThrow();
         assertThat(games.changeVisibility(id, host, GameVisibility.PRIVATE)).isTrue();
         assertThat(invitations.inviteUser(id, host, guest)).isPresent();
@@ -167,13 +170,16 @@ public class LobbySteps {
         if (browser.awaitLobby()) {
             browser.awaitCss(".invitations-row");
             browser.awaitNoneDisplayed(".lobby-game-card vaadin-details");
-        } else {
-            // In a host invitations arrive on Starfare's social page (M12.1, until M13).
-            browser.open(Browser.LOBBY + "/social");
-            browser.awaitCss(".invitations-row");
+            browser.captureUiAcceptance("invitation");
+            browser.clickButtonWithText("Annehmen");
+            return;
         }
+        // In a host the platform lobby lists the invitation; it leads to the waiting room (plan M13).
+        browser.open("/games");
+        browser.clickCss("#gp-lobby-invitations .gp-lobby-invitation");
         browser.captureUiAcceptance("invitation");
-        browser.clickButtonWithText("Annehmen");
+        browser.clickCss("#waiting-room-accept");
+        browser.awaitText(name);
     }
 
     @Wenn("die Lobby-Partie regulär beendet wird")

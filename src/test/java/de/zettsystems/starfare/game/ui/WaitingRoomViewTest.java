@@ -12,7 +12,7 @@ import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.legal.ui.ImprintView;
-import de.zettsystems.starfare.social.application.InvitationService;
+import de.zettsystems.starfare.game.application.InvitationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 

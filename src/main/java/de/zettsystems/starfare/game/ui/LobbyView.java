@@ -27,8 +27,10 @@ import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.application.RulesetAccess;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
-import de.zettsystems.starfare.social.application.*;
-import de.zettsystems.starfare.social.ui.*;
+import de.zettsystems.gamesplatformapi.PlatformFriends;
+import de.zettsystems.gamesplatformapi.PlatformPresence;
+import de.zettsystems.starfare.game.application.InvitationService;
+import org.springframework.beans.factory.ObjectProvider;
 import jakarta.annotation.security.PermitAll;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,27 +56,19 @@ public class LobbyView extends VerticalLayout {
     private final RulesetAccess rulesetAccess;
     private final Broadcaster broadcaster;
     private final InvitationService invitationService;
-    private final PresenceTracker presence;
-    private final VisibilityFilter visibilityFilter;
+    private final PlatformPresence presence;
+    private final PlatformFriends friends;
     private final PlayerDirectory players;
-    private final SocialBroadcaster socialBroadcaster;
     private final Grid<LobbyGameRow> grid = new Grid<>(LobbyGameRow.class, false);
     private final TextField search = new TextField();
     private final ComboBox<LobbyFilter> filter = new ComboBox<>();
     private final Div emptyState = new Div();
-    private final OnlineUsersPanel onlineUsersPanel;
-    private final FriendRequestsPanel friendRequestsPanel;
-    private final InvitationsPanel invitationsPanel;
-    private final ChatDrawer chatDrawer;
     private @Nullable Button newGameButton;
     private @Nullable Subscription broadcasterSubscription;
-    private @Nullable Subscription socialSubscription;
 
     @Autowired
-    public LobbyView(GameService game, Broadcaster broadcaster, PresenceTracker presence,
-                     SocialBroadcaster socialBroadcaster, VisibilityFilter visibilityFilter,
-                     FriendshipService friendshipService, UserPreferencesService preferencesService, PlayerDirectory players,
-                     MessageService messageService, InvitationService invitationService,
+    public LobbyView(GameService game, Broadcaster broadcaster, PlatformPresence presence, PlatformFriends friends,
+                     ObjectProvider<LobbyExtras> extras, PlayerDirectory players, InvitationService invitationService,
                      de.zettsystems.starfare.game.application.GameTemplateService templates,
                      RulesetAccess rulesetAccess) {
         this.game = game;
@@ -83,14 +77,9 @@ public class LobbyView extends VerticalLayout {
         this.broadcaster = broadcaster;
         this.invitationService = invitationService;
         this.presence = presence;
-        this.visibilityFilter = visibilityFilter;
+        this.friends = friends;
         this.players = players;
-        this.socialBroadcaster = socialBroadcaster;
-        this.chatDrawer = new ChatDrawer(messageService, socialBroadcaster, players);
-        this.onlineUsersPanel = new OnlineUsersPanel(presence, socialBroadcaster, visibilityFilter,
-                friendshipService, players, chatDrawer::openChatWith);
-        this.friendRequestsPanel = new FriendRequestsPanel(friendshipService, socialBroadcaster, players);
-        this.invitationsPanel = new InvitationsPanel(game, invitationService, socialBroadcaster, players);
+        LobbyExtras.@Nullable Parts parts = extras.stream().findFirst().map(LobbyExtras::create).orElse(null);
         setSizeFull();
         setPadding(false);
         setSpacing(false);
@@ -111,12 +100,16 @@ public class LobbyView extends VerticalLayout {
         toolbarAction.addClassName("lobby-toolbar-action");
         Button newGameTopButton = new Button(I18n.t(UiTexts.LOBBY_NEW_GAME), _ -> openCreateGameWizard());
         newGameTopButton.addThemeVariants(ButtonVariant.PRIMARY);
-        VisibilityMenu visibilityMenu = new VisibilityMenu(preferencesService, onlineUsersPanel::refresh);
         if (OwnFrame.active()) {
-            toolbarAction.add(new LanguageSwitcher(), visibilityMenu, new AccountNavigation(), newGameTopButton);
-        } else {
-            toolbarAction.add(visibilityMenu, newGameTopButton);
+            toolbarAction.add(new LanguageSwitcher());
         }
+        if (parts != null) {
+            toolbarAction.add(parts.toolbar());
+        }
+        if (OwnFrame.active()) {
+            toolbarAction.add(new AccountNavigation());
+        }
+        toolbarAction.add(newGameTopButton);
 
         toolbar.add(toolbarText, toolbarAction);
 
@@ -142,8 +135,12 @@ public class LobbyView extends VerticalLayout {
 
         // Div statt VerticalLayout: das Layout setzt inline width:100% und würde
         // die feste Sidebar-Breite aus dem Stylesheet überstimmen.
-        Div sidebar = new Div(friendRequestsPanel, invitationsPanel, onlineUsersPanel, chatDrawer);
+        Div sidebar = new Div();
         sidebar.addClassName("lobby-sidebar");
+        if (parts != null) {
+            sidebar.add(parts.sidebar());
+        }
+        sidebar.setVisible(parts != null);
 
         HorizontalLayout body = new HorizontalLayout();
         body.addClassName("lobby-body");
@@ -166,13 +163,11 @@ public class LobbyView extends VerticalLayout {
         UI ui = attachEvent.getUI();
         broadcasterSubscription = broadcaster.subscribeAll(_ ->
                 ui.access(this::refresh));
-        socialSubscription = socialBroadcaster.subscribe(_ -> ui.access(this::refresh));
         refresh();
     }
 
     @Override
     protected void onDetach(DetachEvent detachEvent) {
-        if (socialSubscription != null) { socialSubscription.remove(); socialSubscription = null; }
         if (broadcasterSubscription != null) {
             broadcasterSubscription.remove();
             broadcasterSubscription = null;
@@ -482,7 +477,7 @@ public class LobbyView extends VerticalLayout {
             return;
         }
         ManageGameDialog dialog = new ManageGameDialog(row.gameId(), playerId, game, invitationService,
-                presence, visibilityFilter, broadcaster, socialBroadcaster, players);
+                presence, friends, broadcaster, players);
         dialog.open();
     }
 

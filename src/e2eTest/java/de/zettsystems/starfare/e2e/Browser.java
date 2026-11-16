@@ -378,13 +378,18 @@ public class Browser {
         JavascriptExecutor js = (JavascriptExecutor) driver();
         // Layout settles after a navigation (a scroll bar appears, observers resize): only a lasting overflow counts.
         // Chrome on Linux keeps a stale overflow width when the vertical scroll bar appears later (CI, 2026-11-16:
-        // hiding any <style> removed it); a fresh style pass before each look leaves only real overflow.
+        // hiding any <style> removed it; an empty probe style did not always). Before each look a rule on :root
+        // restyles the page and the root scroller is rebuilt once; real overflow survives both.
         try {
             new WebDriverWait(driver(), Duration.ofSeconds(3)).until(_ -> (Boolean) js.executeScript("""
                     const root = document.documentElement;
                     const probe = document.createElement('style');
+                    probe.textContent = ':root { --sf-layout-probe: ' + Date.now() + '; }';
                     document.head.appendChild(probe);
+                    const overflowX = root.style.overflowX;
+                    root.style.overflowX = 'hidden';
                     void root.offsetWidth;
+                    root.style.overflowX = overflowX;
                     probe.remove();
                     void root.offsetWidth;
                     return root.scrollWidth <= root.clientWidth + 1;

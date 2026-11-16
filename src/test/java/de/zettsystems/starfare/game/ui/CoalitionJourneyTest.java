@@ -8,8 +8,8 @@ import com.vaadin.flow.component.html.Div;
 import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.report.values.TurnEvent;
-import de.zettsystems.starfare.social.application.UserPreferencesService;
-import de.zettsystems.starfare.social.values.DisplaySetting;
+import de.zettsystems.starfare.game.application.DisplaySettingsService;
+import de.zettsystems.starfare.game.values.DisplaySetting;
 import de.zettsystems.starfare.testsupport.DomEvents;
 import de.zettsystems.starfare.testsupport.FleetUiStates;
 import org.junit.jupiter.api.AfterEach;
@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CoalitionJourneyTest extends AbstractMapJourneyTest {
-    @Autowired private UserPreferencesService preferences;
+    @Autowired private DisplaySettingsService preferences;
     @Autowired private BattleAcknowledgementService acknowledgements;
 
     @Test

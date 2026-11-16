@@ -31,10 +31,16 @@
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
     </Match>
 
+    <!-- LobbyExtras.Parts hands freshly built components from Starfare's own start to the lobby (plan M13). -->
+    <Match>
+        <Class name="de.zettsystems.starfare.game.ui.LobbyExtras$Parts"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
     <!-- Vaadin UI instances keep Spring services and immutable game identifiers;
          cross-node Java session serialization is not used. Includes diplomacy and economy UI. -->
     <Match>
-        <Class name="~de\.zettsystems\.starfare\.(game|social|auth|legal|diplomacy|economy|navigation)\.ui\..*"/>
+        <Class name="~de\.zettsystems\.starfare\.(game|standalone\.social|auth|legal|diplomacy|economy|navigation)\.ui\..*"/>
         <Bug pattern="SE_BAD_FIELD,SE_NO_SERIALVERSIONID,SE_BAD_FIELD_STORE,SE_TRANSIENT_FIELD_NOT_RESTORED"/>
     </Match>
 
@@ -65,8 +71,7 @@
     <Match>
         <Or>
             <Class name="de.zettsystems.starfare.game.ui.LobbyView"/>
-            <Class name="de.zettsystems.starfare.game.ui.SocialView"/>
-            <Class name="de.zettsystems.starfare.social.ui.ManageGameDialog"/>
+            <Class name="de.zettsystems.starfare.game.ui.ManageGameDialog"/>
         </Or>
         <Method name="&lt;init&gt;"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>

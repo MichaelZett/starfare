@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.platform;
 
 import de.zettsystems.gamesplatformapi.AccountId;
 import de.zettsystems.gamesplatformapi.MatchDirectory;
+import de.zettsystems.gamesplatformapi.MatchInvitation;
 import de.zettsystems.gamesplatformapi.MatchSummary;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameListScope;
@@ -46,6 +47,19 @@ class StarfareMatchDirectory implements MatchDirectory {
         String name = StarfareMatches.accountName(viewer);
         return lobbyOf(name, game -> !game.started() && !takesPart(game, name) && game.canJoin(name))
                 .stream().filter(MatchSummary::isJoinable).toList();
+    }
+
+    /** Games with a seat reserved for the account that has not started, from the host who invited (plan M13). */
+    @Override
+    public List<MatchInvitation> invitationsOf(AccountId account) {
+        String name = StarfareMatches.accountName(account);
+        return games.visibleGamesFor(name, GameListScope.LOBBY).stream()
+                .filter(game -> !game.started() && game.invitedSeats().containsKey(name))
+                .flatMap(game -> Optional.ofNullable(game.hostPlayerId()).flatMap(StarfareMatches::account)
+                        .flatMap(host -> StarfareMatches.summary(game).map(match -> new MatchInvitation(match, host)))
+                        .stream())
+                .sorted(Comparator.comparing((MatchInvitation invitation) -> invitation.match().lastChange()).reversed())
+                .toList();
     }
 
     /** Seated, or the host who organises a game without a seat of their own (M12.1). */

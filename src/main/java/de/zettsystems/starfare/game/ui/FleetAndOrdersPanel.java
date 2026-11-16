@@ -139,22 +139,22 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     void onEditOrder(Consumer<PlannedOrder> action) { onEditOrder = action; }
 
     private void restoreFilters() {
-        routeFilter = DisplayPreferences.get(de.zettsystems.starfare.social.values.DisplaySetting.ROUTE_FILTER, "");
-        String events = DisplayPreferences.get(de.zettsystems.starfare.social.values.DisplaySetting.EVENT_FILTERS, "*");
+        routeFilter = DisplayPreferences.get(de.zettsystems.starfare.game.values.DisplaySetting.ROUTE_FILTER, "");
+        String events = DisplayPreferences.get(de.zettsystems.starfare.game.values.DisplaySetting.EVENT_FILTERS, "*");
         if (!events.equals("*")) {
             enabledEventCategories.removeIf(category -> !List.of(events.split(",")).contains(category.name()));
         }
-        String logistics = DisplayPreferences.get(de.zettsystems.starfare.social.values.DisplaySetting.LOGISTICS_FILTERS, "");
+        String logistics = DisplayPreferences.get(de.zettsystems.starfare.game.values.DisplaySetting.LOGISTICS_FILTERS, "");
         for (LogisticsFilter filter : LogisticsFilter.values()) {
             if (List.of(logistics.split(",")).contains(filter.name())) { enabledLogisticsFilters.add(filter); }
         }
     }
 
     private void saveFilters() {
-        DisplayPreferences.choose(de.zettsystems.starfare.social.values.DisplaySetting.ROUTE_FILTER, routeFilter);
-        DisplayPreferences.choose(de.zettsystems.starfare.social.values.DisplaySetting.EVENT_FILTERS,
+        DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.ROUTE_FILTER, routeFilter);
+        DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.EVENT_FILTERS,
                 enabledEventCategories.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(",")));
-        DisplayPreferences.choose(de.zettsystems.starfare.social.values.DisplaySetting.LOGISTICS_FILTERS,
+        DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.LOGISTICS_FILTERS,
                 enabledLogisticsFilters.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(",")));
     }
     private final VerticalLayout fleetCards = page();

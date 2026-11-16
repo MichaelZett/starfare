@@ -2,11 +2,12 @@ package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.button.Button;
 import de.zettsystems.starfare.AbstractBrowserlessTest;
+import de.zettsystems.starfare.standalone.social.ui.SocialView;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** The pages a host links instead of Starfare's lobby: a new game, and friends and chat. */
+/** The pages a host links instead of Starfare's lobby: a new game; friends and chat only in Starfare's own start. */
 class HostPagesTest extends AbstractBrowserlessTest {
 
     @Test

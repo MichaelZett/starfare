@@ -97,7 +97,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     @Autowired
     public MainView(GameService service, Broadcaster broadcaster, BattleAcknowledgementService battleAcknowledgements,
                     GameChatService gameChat, PlayerDirectory players,
-                    de.zettsystems.starfare.social.application.UserPreferencesService preferences) {
+                    de.zettsystems.starfare.game.application.DisplaySettingsService preferences) {
         DisplayPreferences.load(preferences);
         this.game = service;
         this.gameChat = gameChat;
@@ -251,9 +251,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         var content = new SplitLayout(left, fleetsPanel);
         content.setWidthFull();
         content.setHeightFull();
-        content.setSplitterPosition(Math.clamp(DisplayPreferences.number(de.zettsystems.starfare.social.values.DisplaySetting.SIDEBAR, 70), 20, 85));
+        content.setSplitterPosition(Math.clamp(DisplayPreferences.number(de.zettsystems.starfare.game.values.DisplaySetting.SIDEBAR, 70), 20, 85));
         content.addSplitterDragEndListener(_ -> DisplayPreferences.choose(
-                de.zettsystems.starfare.social.values.DisplaySetting.SIDEBAR, String.valueOf(content.getSplitterPosition())));
+                de.zettsystems.starfare.game.values.DisplaySetting.SIDEBAR, String.valueOf(content.getSplitterPosition())));
         content.addClassName("map-content");
         var workspace = new com.vaadin.flow.component.orderedlayout.HorizontalLayout(content, chatHost);
         workspace.setPadding(false);

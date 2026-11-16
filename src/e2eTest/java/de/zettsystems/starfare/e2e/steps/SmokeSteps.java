@@ -117,14 +117,13 @@ public class SmokeSteps {
 
     @Dann("sehe ich in der Lobby den Online-Spieler {string}")
     public void lobbyShowsOnlinePlayer(String displayName) {
-        boolean onSocialPage = String.valueOf(browser.driver().getCurrentUrl()).contains(Browser.LOBBY + "/social");
-        if (onSocialPage || browser.awaitLobby()) {
+        if (browser.awaitLobby()) {
             browser.awaitTextIn(".presence-name", displayName);
             return;
         }
-        // In a host the platform lists the matches; who is online stays on Starfare's social page (M12.1).
-        browser.open(Browser.LOBBY + "/social");
-        browser.awaitTextIn(".presence-name", displayName);
+        // In a host the platform shows who is online on its friends page (plan M13).
+        browser.open("/friends");
+        browser.awaitTextIn("#gp-social-online .gp-social-name", displayName);
         browser.open(Browser.LOBBY);
         browser.awaitLobby();
     }

@@ -46,7 +46,7 @@ final class BattleReplayDialog {
         boolean soundEnabled = soundEnabled();
         Checkbox sound = new Checkbox(I18n.t(UiTexts.BATTLE_REPLAY_SOUND), soundEnabled);
         sound.addValueChangeListener(event -> DisplayPreferences.choose(
-                de.zettsystems.starfare.social.values.DisplaySetting.SOUND, String.valueOf(event.getValue())));
+                de.zettsystems.starfare.game.values.DisplaySetting.SOUND, String.valueOf(event.getValue())));
         sound.getElement().executeJs("""
                 this.addEventListener('change', () => {
                     const audio = window.starfareBattleAudio;
@@ -115,16 +115,16 @@ final class BattleReplayDialog {
     }
 
     private static boolean soundEnabled() {
-        return Boolean.parseBoolean(DisplayPreferences.get(de.zettsystems.starfare.social.values.DisplaySetting.SOUND, "true"));
+        return Boolean.parseBoolean(DisplayPreferences.get(de.zettsystems.starfare.game.values.DisplaySetting.SOUND, "true"));
     }
 
     private static double speed() {
-        double value = DisplayPreferences.number(de.zettsystems.starfare.social.values.DisplaySetting.SPEED, 1.0);
+        double value = DisplayPreferences.number(de.zettsystems.starfare.game.values.DisplaySetting.SPEED, 1.0);
         return value > 0 ? value : 1.0;
     }
 
     static void setSpeed(double speed) {
-        DisplayPreferences.choose(de.zettsystems.starfare.social.values.DisplaySetting.SPEED, String.valueOf(speed));
+        DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.SPEED, String.valueOf(speed));
     }
 
     record BattleSides(String attacker, String defender) {

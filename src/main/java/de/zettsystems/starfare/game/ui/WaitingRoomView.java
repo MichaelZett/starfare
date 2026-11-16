@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.game.ui;
 
+import de.zettsystems.gamesplatformapi.PlatformFriends;
+import de.zettsystems.gamesplatformapi.PlatformPresence;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
@@ -30,11 +32,8 @@ import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.Subscription;
 import de.zettsystems.starfare.i18n.I18n;
-import de.zettsystems.starfare.social.application.InvitationService;
-import de.zettsystems.starfare.social.application.PresenceTracker;
-import de.zettsystems.starfare.social.application.SocialBroadcaster;
-import de.zettsystems.starfare.social.application.VisibilityFilter;
-import de.zettsystems.starfare.social.ui.ManageGameDialog;
+import de.zettsystems.starfare.game.application.InvitationService;
+import de.zettsystems.starfare.game.ui.ManageGameDialog;
 import de.zettsystems.starfare.style.CssProperties;
 import jakarta.annotation.security.PermitAll;
 import org.jspecify.annotations.Nullable;
@@ -58,9 +57,8 @@ public class WaitingRoomView extends VerticalLayout implements BeforeEnterObserv
     private final RulesetAccess rulesetAccess;
     private final Broadcaster broadcaster;
     private final InvitationService invitations;
-    private final PresenceTracker presence;
-    private final VisibilityFilter visibilityFilter;
-    private final SocialBroadcaster socialBroadcaster;
+    private final PlatformPresence presence;
+    private final PlatformFriends friends;
     private final PlayerDirectory players;
     private final H1 title = new H1();
     private final Span facts = new Span();
@@ -72,17 +70,15 @@ public class WaitingRoomView extends VerticalLayout implements BeforeEnterObserv
 
     @SuppressWarnings("java:S107") // Spring-Konstruktor: die Ansicht verbindet Spiel, Einladungen und Anzeige.
     public WaitingRoomView(GameService game, GameTemplateService templates, RulesetAccess rulesetAccess,
-                           Broadcaster broadcaster, InvitationService invitations, PresenceTracker presence,
-                           VisibilityFilter visibilityFilter, SocialBroadcaster socialBroadcaster,
-                           PlayerDirectory players) {
+                           Broadcaster broadcaster, InvitationService invitations, PlatformPresence presence,
+                           PlatformFriends friends, PlayerDirectory players) {
         this.game = game;
         this.templates = templates;
         this.rulesetAccess = rulesetAccess;
         this.broadcaster = broadcaster;
         this.invitations = invitations;
         this.presence = presence;
-        this.visibilityFilter = visibilityFilter;
-        this.socialBroadcaster = socialBroadcaster;
+        this.friends = friends;
         this.players = players;
         addClassName("waiting-room");
         setPadding(true);
@@ -251,8 +247,8 @@ public class WaitingRoomView extends VerticalLayout implements BeforeEnterObserv
         }
         if (host) {
             actions.add(button(UiTexts.LOBBY_ACTION_MANAGE, "waiting-room-manage", ButtonVariant.TERTIARY,
-                    () -> new ManageGameDialog(summary.gameId(), account, game, invitations, presence,
-                            visibilityFilter, broadcaster, socialBroadcaster, players).open()));
+                    () -> new ManageGameDialog(summary.gameId(), account, game, invitations, presence, friends,
+                            broadcaster, players).open()));
         }
         if (summary.belongsTo(account) && rulesetAccess.mayUse(summary.ruleset(), account)) {
             actions.add(GameTemplateDialog.button(templates, summary.gameId(), summary.name(), this::refresh));

@@ -9,8 +9,8 @@ import de.zettsystems.starfare.game.application.GameSessionStore;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.report.values.TurnEvent;
-import de.zettsystems.starfare.social.application.UserPreferencesService;
-import de.zettsystems.starfare.social.values.DisplaySetting;
+import de.zettsystems.starfare.game.application.DisplaySettingsService;
+import de.zettsystems.starfare.game.values.DisplaySetting;
 import de.zettsystems.starfare.testsupport.FleetUiStates;
 import io.cucumber.java.After;
 import io.cucumber.java.de.Dann;
@@ -34,12 +34,12 @@ public class CoalitionRenderingSteps {
     private final GameService games;
     private final GameSessionStore store;
     private final UserAccountService accounts;
-    private final UserPreferencesService preferences;
+    private final DisplaySettingsService preferences;
     private final BattleAcknowledgementService acknowledgements;
     private final List<GameId> created = new ArrayList<>();
 
     public CoalitionRenderingSteps(Browser browser, GameService games, GameSessionStore store,
-                                    UserAccountService accounts, UserPreferencesService preferences,
+                                    UserAccountService accounts, DisplaySettingsService preferences,
                                     BattleAcknowledgementService acknowledgements) {
         this.browser = browser;
         this.games = games;

@@ -156,6 +156,9 @@ abstract class VerifyGameModule extends DefaultTask {
                 VerifyGameModule.checkCondition(!entries.contains(it), 'Application bootstrap leaked: ' + it)
             }
             VerifyGameModule.verifyGameDescription(zip)
+            // Friends, presence and chat of Starfare's own start stay out: a host has its own (plan M13).
+            VerifyGameModule.checkCondition(entries.every { !it.startsWith('de/zettsystems/starfare/standalone/') },
+                    'Standalone code leaked into the game module')
             entries.each { entry ->
                 VerifyGameModule.checkCondition(!(entry.startsWith('BOOT-INF/') || entry.startsWith('db/migration/') ||
                         entry.startsWith('META-INF/VAADIN/') || entry.startsWith('META-INF/resources/VAADIN/') ||

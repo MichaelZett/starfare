@@ -6,6 +6,23 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Freunde, Anwesenheit, Sichtbarkeit und Chat gehören im Plattform-Host der Plattform
+  (games-platform-api 0.2.0, `PlatformFriends` und `PlatformPresence`). Das Spiel fragt nur diese
+  Schnittstellen; Starfares eigene Freundesliste, Anwesenheit und Chat bleiben im eigenen Start
+  (`standalone.social`) und stecken nicht mehr im Spielmodul. `/starfare/social` und der Eintrag
+  „Freunde & Chat“ in der Spielleiste entfallen im Host.
+- Einladen im Verwalten-Dialog: Freunde auch, wenn sie gerade nicht online sind, dazu sichtbare
+  Spieler, die online sind; sortiert nach Namen. Wer sich vor dem Gastgeber verbirgt oder ihn
+  blockiert, ist nicht einladbar.
+- Offene Einladungen meldet Starfare an die Plattform (`MatchDirectory.invitationsOf`); die
+  Plattform-Lobby zeigt sie und führt in den Warteraum.
+- Anzeige-Einstellungen (Tempo, Ton, Filter, Seitenleiste) sind ein eigener Dienst des Spiels und
+  brauchen keinen Eintrag in den Sozial-Einstellungen mehr (Migration V2_10). Beim Löschen eines
+  Kontos gehen sie mit; Nachrichten in Starfares alten Tabellen verfallen weiter nach einem Jahr,
+  auch im Host.
+
 ## 0.2.4 - 2026-11-16
 
 - Nur der Gastgeber startet eine wartende Partie; geprüft im Dienst, nicht nur am Knopf. Hat die

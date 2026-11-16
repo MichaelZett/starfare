@@ -6,8 +6,8 @@ import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.*;
 import de.zettsystems.starfare.game.domain.*;
 import de.zettsystems.starfare.game.values.*;
-import de.zettsystems.starfare.social.application.UserPreferencesService;
-import de.zettsystems.starfare.social.values.DisplaySetting;
+import de.zettsystems.starfare.game.application.DisplaySettingsService;
+import de.zettsystems.starfare.game.values.DisplaySetting;
 import io.cucumber.java.After;
 import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
@@ -26,10 +26,10 @@ public class AllianceVictorySteps {
     private final GameService games;
     private final GameSessionStore store;
     private final UserAccountService accounts;
-    private final UserPreferencesService preferences;
+    private final DisplaySettingsService preferences;
     private GameId id;
     public AllianceVictorySteps(Browser browser, GameService games, GameSessionStore store,
-                                UserAccountService accounts, UserPreferencesService preferences) {
+                                UserAccountService accounts, DisplaySettingsService preferences) {
         this.browser = browser; this.games = games; this.store = store; this.accounts = accounts; this.preferences = preferences;
     }
     @Dann("prüfe ich die getrennten Bündnisoptionen in der internen Wizard-Vorschau")

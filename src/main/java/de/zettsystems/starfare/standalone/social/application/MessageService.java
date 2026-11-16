@@ -1,0 +1,22 @@
+package de.zettsystems.starfare.standalone.social.application;
+
+import de.zettsystems.starfare.standalone.social.values.DirectMessage;
+
+import java.util.List;
+
+public interface MessageService {
+
+    SendResult send(String from, String to, String text);
+
+    List<DirectMessage> conversation(String firstUser, String secondUser);
+    void archiveConversation(String viewer, String otherUser);
+    long removeExpiredMessages();
+
+    enum SendResult {
+        DELIVERED,
+        EMPTY,
+        REJECTED,
+        RECIPIENT_OFFLINE,
+        NOT_VISIBLE
+    }
+}

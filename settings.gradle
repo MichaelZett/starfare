@@ -9,3 +9,7 @@ rootProject.name = 'starfare'
 
 // Packaging only; application sources and the executable root project stay in place.
 include 'game-module-publication'
+
+// Until games-platform-api 0.2.0 is on Maven Central (plan M13) it comes from a sibling checkout
+// (locally as it is, in CI on the commit pinned as gamesPlatformApiRef).
+includeBuild(providers.gradleProperty('gamesPlatformApiProject').orElse('../games-platform-api').get())

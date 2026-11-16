@@ -12,7 +12,7 @@ final class BattlePresentationPreference {
     }
 
     static double speed(boolean defaultValue) {
-        return DisplayPreferences.number(de.zettsystems.starfare.social.values.DisplaySetting.SPEED, defaultValue ? 1.0 : 0.0);
+        return DisplayPreferences.number(de.zettsystems.starfare.game.values.DisplaySetting.SPEED, defaultValue ? 1.0 : 0.0);
     }
 
     static void set(boolean enabled) {
