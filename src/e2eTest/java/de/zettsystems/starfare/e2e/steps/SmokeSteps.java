@@ -117,13 +117,22 @@ public class SmokeSteps {
 
     @Dann("sehe ich in der Lobby den Online-Spieler {string}")
     public void lobbyShowsOnlinePlayer(String displayName) {
+        boolean onSocialPage = String.valueOf(browser.driver().getCurrentUrl()).contains(Browser.LOBBY + "/social");
+        if (onSocialPage || browser.awaitLobby()) {
+            browser.awaitTextIn(".presence-name", displayName);
+            return;
+        }
+        // In a host the platform lists the matches; who is online stays on Starfare's social page (M12.1).
+        browser.open(Browser.LOBBY + "/social");
         browser.awaitTextIn(".presence-name", displayName);
+        browser.open(Browser.LOBBY);
+        browser.awaitLobby();
     }
 
     @Wenn("ich ein Standardspiel anlege und beitrete")
     public void createDefaultGameAndJoin() throws IOException {
         browser.captureUiAcceptance("lobby");
-        browser.clickButtonWithText("Neues Spiel");
+        browser.openNewGameWizard();
         browser.clickButtonWithText("Zusammenfassung prüfen");
         browser.awaitCss(".wizard-summary-group");
         browser.captureUiAcceptance("wizard-summary");

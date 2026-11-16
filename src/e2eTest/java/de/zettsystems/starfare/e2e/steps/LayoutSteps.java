@@ -70,10 +70,9 @@ public class LayoutSteps {
 
     private void visitLobbyAndWizard(int width) throws IOException {
         browser.open(Browser.LOBBY);
-        browser.awaitCss(".lobby-root");
+        browser.awaitLobby();
         capture("lobby", width);
-        browser.clickButtonWithText("Neues Spiel");
-        browser.awaitCss("vaadin-dialog[opened] .wizard-section");
+        browser.openNewGameWizard();
         assertWizardFits();
         assertVariantCardsClearTheForm();
         capture("wizard", width);

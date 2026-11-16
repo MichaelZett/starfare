@@ -54,7 +54,7 @@ public class LobbySteps {
 
     @Wenn("ich eine private Lobby-Partie ohne Beitritt anlege")
     public void createPrivateGame() throws IOException {
-        browser.clickButtonWithText("Neues Spiel");
+        browser.openNewGameWizard();
         browser.awaitText("Private Partien sehen nur Eingeladene.");
         verifyRulesetSelection();
         WebElement hostOnly = browser.awaitCss("#host-only");
@@ -120,17 +120,23 @@ public class LobbySteps {
 
     @Dann("ist die private Lobby-Partie verborgen")
     public void privateGameHidden() {
-        browser.awaitCss(".lobby-root");
+        browser.awaitLobby();
         assertThat(browser.pageText()).doesNotContain(name);
         browser.open(Browser.LOBBY + "/map/" + id.value());
-        browser.awaitCss(".lobby-root");
+        browser.awaitLobby();
         assertThat(browser.driver().getCurrentUrl()).doesNotContain("/map/");
     }
 
     @Wenn("ich die Partie im Verwalten-Dialog veröffentliche")
     public void publishGame() {
-        browser.openDetailsWithText("Weitere Aktionen");
-        browser.clickButtonWithText("Verwalten");
+        if (browser.awaitLobby()) {
+            browser.openDetailsWithText("Weitere Aktionen");
+            browser.clickButtonWithText("Verwalten");
+        } else {
+            // The platform lobby has no host actions; Starfare's waiting room keeps them (M12.1).
+            browser.open(Browser.LOBBY + "/match/" + id.value());
+            browser.clickCss("#waiting-room-manage");
+        }
         browser.clickCss("vaadin-checkbox");
         browser.clickButtonWithText("Schließen");
         browser.awaitText("Öffentlich");
@@ -139,6 +145,11 @@ public class LobbySteps {
 
     @Dann("ist die Lobby-Partie sichtbar")
     public void gameVisible() {
+        if (browser.hosted()) {
+            // After accepting on the social page: the platform lobby lists the match.
+            browser.open(Browser.LOBBY);
+            browser.awaitLobby();
+        }
         browser.awaitText(name);
         assertThat(browser.pageText()).contains(name);
     }
@@ -153,8 +164,14 @@ public class LobbySteps {
 
     @Wenn("ich die Lobby-Einladung annehme")
     public void acceptInvite() throws IOException {
-        browser.awaitCss(".invitations-row");
-        browser.awaitNoneDisplayed(".lobby-game-card vaadin-details");
+        if (browser.awaitLobby()) {
+            browser.awaitCss(".invitations-row");
+            browser.awaitNoneDisplayed(".lobby-game-card vaadin-details");
+        } else {
+            // In a host invitations arrive on Starfare's social page (M12.1, until M13).
+            browser.open(Browser.LOBBY + "/social");
+            browser.awaitCss(".invitations-row");
+        }
         browser.captureUiAcceptance("invitation");
         browser.clickButtonWithText("Annehmen");
     }
@@ -170,9 +187,9 @@ public class LobbySteps {
     @Dann("liegt die Partie nur im Archiv und lässt sich lesend öffnen")
     public void reviewArchive() throws IOException {
         browser.open(Browser.LOBBY);
-        browser.awaitCss(".lobby-root");
+        browser.awaitLobby();
         assertThat(browser.pageText()).doesNotContain(name);
-        if (browser.all(".gp-game-nav").isEmpty()) {
+        if (!browser.hosted()) {
             browser.clickCss(".lobby-toolbar vaadin-menu-bar-button");
             browser.clickMatching("vaadin-menu-bar-item", item -> item.getText().strip().equals("Archiv"), "Menüeintrag Archiv");
         } else {

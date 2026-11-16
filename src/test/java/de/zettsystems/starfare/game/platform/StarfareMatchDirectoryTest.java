@@ -10,6 +10,7 @@ import de.zettsystems.starfare.game.values.GameListScope;
 import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -40,6 +41,15 @@ class StarfareMatchDirectoryTest {
         when(games.visibleGamesFor("17", GameListScope.LOBBY)).thenReturn(List.of(older, foreign, newer));
 
         assertThat(directory.matchesOf(VIEWER)).extracting(MatchSummary::title).containsExactly("newer", "older");
+    }
+
+    @Test
+    void listsAGameTheAccountOrganisesWithoutASeatAsItsOwnNotAsOpen() {
+        GameSummary organised = game("organised", "17", Instant.parse("2026-11-01T10:00:00Z"), state -> { });
+        when(games.visibleGamesFor("17", GameListScope.LOBBY)).thenReturn(List.of(organised));
+
+        assertThat(directory.matchesOf(VIEWER)).extracting(MatchSummary::title).containsExactly("organised");
+        assertThat(directory.openMatches(VIEWER)).isEmpty();
     }
 
     @Test
@@ -75,12 +85,16 @@ class StarfareMatchDirectoryTest {
     }
 
     private static GameSummary game(String name, Instant lastChange, Consumer<GameState> setup) {
+        return game(name, null, lastChange, setup);
+    }
+
+    private static GameSummary game(String name, @Nullable String host, Instant lastChange, Consumer<GameState> setup) {
         GameState state = new GameState();
         state.publishInLobby();
         state.players().add(new Player(1, "P1", false, "#111111"));
         state.players().add(new Player(2, "P2", false, "#222222"));
         setup.accept(state);
-        GameSummary summary = GameSession.summaryOf(GameId.of(name), name, null, state);
+        GameSummary summary = GameSession.summaryOf(GameId.of(name), name, host, state);
         return new GameSummary(summary.gameId(), summary.name(), summary.hostPlayerId(), summary.turn(),
                 summary.started(), summary.gameOver(), summary.observersAllowed(), summary.reentryAllowed(),
                 summary.players(), summary.joinedHumanSeats(), summary.seatByPlayer(), summary.invitedSeats(),

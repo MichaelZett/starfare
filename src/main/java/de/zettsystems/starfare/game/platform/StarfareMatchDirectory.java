@@ -38,14 +38,19 @@ class StarfareMatchDirectory implements MatchDirectory {
     @Override
     public List<MatchSummary> matchesOf(AccountId account) {
         String name = StarfareMatches.accountName(account);
-        return lobbyOf(name, game -> game.seatByPlayer().containsKey(name));
+        return lobbyOf(name, game -> takesPart(game, name));
     }
 
     @Override
     public List<MatchSummary> openMatches(AccountId viewer) {
         String name = StarfareMatches.accountName(viewer);
-        return lobbyOf(name, game -> !game.started() && !game.seatByPlayer().containsKey(name) && game.canJoin(name))
+        return lobbyOf(name, game -> !game.started() && !takesPart(game, name) && game.canJoin(name))
                 .stream().filter(MatchSummary::isJoinable).toList();
+    }
+
+    /** Seated, or the host who organises a game without a seat of their own (M12.1). */
+    private static boolean takesPart(GameSummary game, String account) {
+        return game.seatByPlayer().containsKey(account) || account.equals(game.hostPlayerId());
     }
 
     private List<MatchSummary> lobbyOf(String account, Predicate<GameSummary> filter) {

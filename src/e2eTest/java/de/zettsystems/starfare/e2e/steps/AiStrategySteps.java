@@ -33,7 +33,7 @@ public class AiStrategySteps {
 
     @Dann("kann ich unterschiedliche KI-Strategien im Wizard wählen und dauerhaft speichern")
     public void chooseAndPersist() throws java.io.IOException {
-        browser.clickButtonWithText("Neues Spiel");
+        browser.openNewGameWizard();
         assertRuleCard("SectorForces");
         awaitChoices(5);
         choose(1, "Früher Angriff");
@@ -68,6 +68,8 @@ public class AiStrategySteps {
         browser.clickButtonWithText("Spiel anlegen");
         created = new WebDriverWait(browser.driver(), Duration.ofSeconds(15)).until(_ -> games.listGames().stream()
                 .filter(id -> !before.contains(id)).findFirst().orElse(null));
+        // A game with a free seat opens its waiting room; reload only once it is there.
+        browser.awaitUrl(url -> url.contains("/match/"), "Der Warteraum der neuen Partie öffnete nicht.");
         List<Player> players = registry.readState(created, state -> List.copyOf(state.players()));
         assertThat(players).extracting(Player::aiStrategy)
                 .containsExactly(AiStrategy.BASELINE, AiStrategy.INDUSTRY_ADAPTIVE, AiStrategy.DEFENSE);

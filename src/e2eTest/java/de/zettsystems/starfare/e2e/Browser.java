@@ -96,6 +96,36 @@ public class Browser {
         }
     }
 
+    /**
+     * Waits for the lobby after sign-in or after opening {@link #LOBBY}: Starfare's own lobby in its
+     * own start, the platform lobby on /games in a host that lists Starfare's matches (M12.1).
+     *
+     * @return whether it is Starfare's own lobby
+     */
+    public boolean awaitLobby() {
+        new WebDriverWait(driver(), LOAD).withMessage("Weder Starfares Lobby noch die Plattform-Lobby erschien.")
+                .until(driver -> !driver.findElements(By.cssSelector(".lobby-root, #gp-lobby-mine")).isEmpty());
+        return !driver().findElements(By.cssSelector(".lobby-root")).isEmpty();
+    }
+
+    /**
+     * Opens the wizard from the lobby the page shows: the button of Starfare's own lobby, in a host
+     * Starfare's page for a new match (the platform lobby links there).
+     */
+    public void openNewGameWizard() {
+        if (awaitLobby()) {
+            clickButtonWithText("Neues Spiel");
+        } else {
+            open(LOBBY + "/new");
+        }
+        awaitCss("vaadin-dialog[opened] .wizard-section");
+    }
+
+    /** Whether a platform host frames the page: its game bar carries Starfare's navigation (M9). */
+    public boolean hosted() {
+        return !driver().findElements(By.cssSelector(".gp-game-nav")).isEmpty();
+    }
+
     public WebElement awaitCss(String css) {
         return new WebDriverWait(driver(), LOAD)
                 .until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(css)));
@@ -346,13 +376,31 @@ public class Browser {
      */
     public void assertNoSidewaysScrolling() {
         JavascriptExecutor js = (JavascriptExecutor) driver();
+        // Layout settles after a navigation (a scroll bar appears, observers resize): only a lasting overflow counts.
+        try {
+            new WebDriverWait(driver(), Duration.ofSeconds(3)).until(_ -> (Boolean) js.executeScript(
+                    "return document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1"));
+        } catch (org.openqa.selenium.TimeoutException lasting) {
+            // reported below with the overflowing elements
+        }
         long scrollWidth = ((Number) js.executeScript("return document.documentElement.scrollWidth")).longValue();
         long clientWidth = ((Number) js.executeScript("return document.documentElement.clientWidth")).longValue();
+        // Also inside shadow roots, and the containers whose content is wider than they are.
         Object overflowing = scrollWidth > clientWidth ? js.executeScript("""
-                return [...document.querySelectorAll('body *')]
-                    .filter(element => element.getBoundingClientRect().right > document.documentElement.clientWidth)
-                    .slice(0, 12).map(element => element.tagName + '.' + element.className
-                        + ': ' + element.getBoundingClientRect().right).join('; ');
+                const limit = document.documentElement.clientWidth;
+                const found = [];
+                const visit = root => root.querySelectorAll('*').forEach(element => {
+                    const right = element.getBoundingClientRect().right;
+                    if (right > limit || (element.scrollWidth > element.clientWidth + 1
+                            && getComputedStyle(element).overflowX === 'visible' && element.clientWidth > 0)) {
+                        found.push(element.tagName + '.' + element.className + ': right ' + Math.round(right)
+                            + ', scroll ' + element.scrollWidth + '/' + element.clientWidth);
+                    }
+                    if (element.shadowRoot) visit(element.shadowRoot);
+                });
+                visit(document);
+                return 'body ' + document.body.scrollWidth + '/' + document.body.clientWidth + '; '
+                    + found.slice(0, 15).join('; ');
                 """) : "";
         assertThat(scrollWidth)
                 .withFailMessage("Seite %s scrollt seitwärts (%d > %d px): %s", driver().getCurrentUrl(), scrollWidth, clientWidth, overflowing)

@@ -23,6 +23,8 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   zeigt Freundschaftsanfragen, Einladungen, wer online ist und den Chat. Die Spielbeschreibung
   nennt `newMatchPath` und `platformLobby=true`; im eigenen Start bleibt die Lobby unverändert.
 - Wer eine Einladung annimmt, erscheint mit Reich und Namen statt als „P2“.
+- Eine Partie, die jemand ohne eigenen Sitz organisiert, steht in der Plattform-Lobby unter
+  dessen eigenen Partien (vorher fehlte sie dort ganz).
 - Lobby: „Wartet auf den Start“ statt „Wartet“, wenn alle Plätze belegt sind.
 - Plattform-Vertrag `de.zettsystems:games-platform-api` (0.1.0 von Maven Central) umgesetzt: Starfare meldet dem
   Plattform-Host seine offenen und laufenden Partien je Konto (wer am Zug ist, freie Plätze,

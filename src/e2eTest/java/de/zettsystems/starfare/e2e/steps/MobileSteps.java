@@ -74,13 +74,17 @@ public class MobileSteps {
     public void logInOnPhone(String email) {
         phone = browser.newPhoneSession();
         phone().logIn(email);
-        phone().awaitCss(".lobby-root");
+        phone().awaitLobby();
     }
 
     @Dann("lässt sich der Spielassistent auf dem Handy bis zur Fußleiste bedienen")
     public void wizardIsUsable() {
         assertPhoneLayout();
-        tap("Neues Spiel");
+        if (phone().awaitLobby()) {
+            tap("Neues Spiel");
+        } else {
+            phone().open(Browser.LOBBY + "/new");
+        }
         phone().awaitCss("vaadin-dialog[opened]");
         tap("Zusammenfassung prüfen");
         assertTappable(button("Spiel anlegen"));
