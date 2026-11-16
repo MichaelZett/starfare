@@ -502,33 +502,31 @@ switch the fog of war on or off; spectator views never permit commands. In
 pure-AI games the round runs automatically (autoplay) until the last observer leaves or the game
 ends.
 
-## Release and deployment
+## Release
 
 `appVersion` in `gradle.properties` drives releases. While a version ends in
 `-SNAPSHOT`, pushes to `main` only build and test. To release:
 
 1. Remove the `-SNAPSHOT` suffix.
 2. Rename `## Unreleased` in `CHANGELOG.md` to `## <appVersion> - <date>`.
-3. Commit and push to `main`. The workflow tags `v<appVersion>`, creates a
-   GitHub Release with the changelog section and `starfare.jar`, pushes the
-   Docker image `ghcr.io/michaelzett/starfare` (`latest`, `v<appVersion>`, commit
-   SHA) and triggers the Coolify deployment. Afterwards it bumps `appVersion` to
-   the next patch `-SNAPSHOT` (`[skip ci]`) — run `git pull` before continuing.
+3. Commit and push to `main`. The workflow tags `v<appVersion>` and creates a
+   GitHub Release with the changelog section and `starfare.jar`. Afterwards it
+   bumps `appVersion` to the next patch `-SNAPSHOT` (`[skip ci]`) — run `git pull`
+   before continuing.
 
-Rollback: run the workflow manually with `rollback_version=<x.y.z>`; it retags the
-existing image `v<x.y.z>` as `latest` and redeploys without a rebuild.
+There is no image and no deployment of its own: in production Starfare runs as a
+game module inside the platform host games-platform, which pins a Starfare commit
+and releases it.
 
-### Operation on zs-hetzner
+### Running it on a server
 
-Starfare runs at `https://starfare.zettsystems.de` as a Coolify resource on the
-shared Hetzner server (port 8080, health check `/actuator/health`). Activate the
-profiles `hetzner,brevo`. The `hetzner` profile disables local Docker Compose,
-listens on port 8080 and honours forwarded headers from the reverse proxy. Required
+Starfare still starts on its own. On a server, activate the profiles
+`hetzner,brevo`. The `hetzner` profile disables local Docker Compose, listens on
+port 8080 and honours forwarded headers from the reverse proxy. Required
 environment variables: `STARFARE_BASE_URL`, `STARFARE_LEGAL_OPERATOR_NAME`,
 `STARFARE_LEGAL_POSTAL_ADDRESS`, `STARFARE_LEGAL_CONTACT_EMAIL`,
 `STARFARE_MAIL_USERNAME`, `STARFARE_MAIL_PASSWORD`, `STARFARE_MAIL_FROM_ADDRESS`
-and the `SPRING_DATASOURCE_*` connection settings. The GitHub secrets
-`COOLIFY_WEBHOOK_URL` and `COOLIFY_API_TOKEN` enable the deployment step.
+and the `SPRING_DATASOURCE_*` connection settings.
 
 `/actuator/health` answers with one of three states:
 
