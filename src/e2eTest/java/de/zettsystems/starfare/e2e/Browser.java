@@ -399,7 +399,30 @@ public class Browser {
                     if (element.shadowRoot) visit(element.shadowRoot);
                 });
                 visit(document);
-                return 'body ' + document.body.scrollWidth + '/' + document.body.clientWidth + '; '
+                // Hide subtrees one at a time: the path names the culprit even if it is a pseudo-element.
+                const root = document.documentElement;
+                const fits = () => root.scrollWidth <= root.clientWidth + 1;
+                const path = [];
+                let element = root;
+                for (let depth = 0; depth < 25; depth++) {
+                    const culprit = [...element.children].find(child => {
+                        const display = child.style.display;
+                        child.style.display = 'none';
+                        const ok = fits();
+                        child.style.display = display;
+                        return ok;
+                    });
+                    if (!culprit) break;
+                    path.push(culprit.tagName + (culprit.id ? '#' + culprit.id : '')
+                        + (culprit.className && typeof culprit.className === 'string' ? '.' + culprit.className.trim().replace(/\\s+/g, '.') : '')
+                        + '[' + Math.round(culprit.getBoundingClientRect().width) + ']');
+                    element = culprit;
+                }
+                const style = getComputedStyle(element);
+                return 'body ' + document.body.scrollWidth + '/' + document.body.clientWidth
+                    + '; path ' + path.join(' > ') + ' (width ' + style.width + ', min ' + style.minWidth
+                    + ', position ' + style.position + ', before ' + getComputedStyle(element, '::before').width
+                    + ', after ' + getComputedStyle(element, '::after').width + '); '
                     + found.slice(0, 15).join('; ');
                 """) : "";
         assertThat(scrollWidth)
