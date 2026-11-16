@@ -51,9 +51,14 @@ public final class StarfareMatches {
         return Long.toString(account.value());
     }
 
-    /** The map of the game; for a game that has not started, Starfare forwards to its lobby. */
+    /** The map of a running or finished game. */
     public static String viewPath(GameId id) {
         return "/" + GAME_KEY + "/map/" + URLEncoder.encode(id.value(), StandardCharsets.UTF_8);
+    }
+
+    /** The waiting room of a game that has not started: players join there and the host starts it. */
+    public static String waitingRoomPath(GameId id) {
+        return "/" + GAME_KEY + "/match/" + URLEncoder.encode(id.value(), StandardCharsets.UTF_8);
     }
 
     /**
@@ -76,7 +81,7 @@ public final class StarfareMatches {
         String title = game.name().isBlank() ? game.gameId().value() : game.name();
         return Optional.of(new MatchSummary(GAME_KEY, game.gameId().value(), title, status,
                 List.copyOf(accounts.values()), seats, seats - (int) humanSeats, toMove, game.roundStartedAt(),
-                viewPath(game.gameId())));
+                status == MatchStatus.OPEN ? waitingRoomPath(game.gameId()) : viewPath(game.gameId())));
     }
 
     private static MatchStatus status(GameSummary game) {

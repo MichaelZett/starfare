@@ -8,6 +8,22 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Nur der Gastgeber startet eine wartende Partie; geprüft im Dienst, nicht nur am Knopf. Hat die
+  Partie keinen Gastgeber mehr, startet sie jemand mit Sitz. Vorher konnte jeder Mitspieler starten.
+- Warteraum je Partie (`/starfare/match/<id>`): Plätze mit Reich und Namen, Eingeladene und freie
+  Plätze, Beitreten, Einladung annehmen oder ablehnen, Starten (Gastgeber), Verwalten, Vorlage und
+  Abbrechen; aktualisiert sich ohne Neuladen und führt beim Start auf die Karte. Die Plattform
+  verlinkt eine noch nicht gestartete Partie dorthin, die Karte einer solchen Partie ebenso.
+- Assistent „Neues Spiel“: Ein Klick daneben schließt ihn nicht mehr (nur „Abbrechen“ und Esc).
+  Wahl offen (alle können beitreten) oder privat (nur Eingeladene), Vorgabe privat. Der Ersteller
+  sitzt immer mit am Tisch; ohne eigenen Sitz anlegen ist ein ausdrücklicher Haken. Die
+  Zusammenfassung zeigt den eigenen Namen und die gewählte Sichtbarkeit. Danach geht es in den
+  Warteraum (Einzelspiel gegen die KI wie bisher direkt auf die Karte).
+- Eigene Seiten für den Plattform-Host: `/starfare/new` öffnet den Assistenten, `/starfare/social`
+  zeigt Freundschaftsanfragen, Einladungen, wer online ist und den Chat. Die Spielbeschreibung
+  nennt `newMatchPath` und `platformLobby=true`; im eigenen Start bleibt die Lobby unverändert.
+- Wer eine Einladung annimmt, erscheint mit Reich und Namen statt als „P2“.
+- Lobby: „Wartet auf den Start“ statt „Wartet“, wenn alle Plätze belegt sind.
 - Plattform-Vertrag `de.zettsystems:games-platform-api` (0.1.0 von Maven Central) umgesetzt: Starfare meldet dem
   Plattform-Host seine offenen und laufenden Partien je Konto (wer am Zug ist, freie Plätze,
   Sprung zur Karte), kündigt Änderungen an und meldet das Partieende mit Platzierungen (Sieger

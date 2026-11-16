@@ -17,6 +17,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -47,17 +48,29 @@ final class CreateGameWizardDialog {
 
     /** Bietet nur Varianten an, die {@code usable} dem aktuellen Konto erlaubt. */
     static void open(GameService game, PlayerDirectory players, Runnable onCreated, Predicate<RulesetRef> usable) {
-        open(game, players, onCreated, game.rulesets(), usable);
+        open(game, players, onCreated, game.rulesets(), usable, () -> { });
+    }
+
+    /** Like {@link #open(GameService, PlayerDirectory, Runnable, Predicate)}; {@code onCancel} runs when the person gives up. */
+    static void open(GameService game, PlayerDirectory players, Runnable onCreated, Predicate<RulesetRef> usable,
+                     Runnable onCancel) {
+        open(game, players, onCreated, game.rulesets(), usable, onCancel);
     }
 
     static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetCatalog catalog) {
-        open(game, players, onCreated, catalog, _ -> true);
+        open(game, players, onCreated, catalog, _ -> true, () -> { });
     }
 
     private static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetCatalog catalog,
-                             Predicate<RulesetRef> usable) {
+                             Predicate<RulesetRef> usable, Runnable onCancel) {
         Dialog dialog = new Dialog();
         dialog.addClassName("create-game-dialog");
+        // A stray click next to the wizard must not throw away every choice; "Cancel" and Esc close it.
+        dialog.setCloseOnOutsideClick(false);
+        dialog.addDialogCloseActionListener(_ -> {
+            dialog.close();
+            onCancel.run();
+        });
         dialog.setHeaderTitle(I18n.t(UiTexts.LOBBY_WIZARD_TITLE));
         dialog.setWidth("min(1380px, 96vw)");
 
@@ -70,7 +83,10 @@ final class CreateGameWizardDialog {
                 GameConfig.MIN_HUMAN_PLAYERS, GameConfig.MAX_HUMAN_PLAYERS, GameConfig.DEFAULT_HUMAN_PLAYERS);
         IntegerField ai = intField(I18n.t(UiTexts.LOBBY_FIELD_AI),
                 GameConfig.MIN_AI_PLAYERS, GameConfig.MAX_AI_PLAYERS, GameConfig.DEFAULT_AI_PLAYERS);
+        humans.setId("wizard-humans");
+        ai.setId("wizard-ai");
         TextField gameName = new TextField(I18n.t(UiTexts.LOBBY_FIELD_GAME_NAME));
+        gameName.setId("wizard-game-name");
         gameName.setValue(GameNameGenerator.random());
         gameName.setMaxLength(80);
 
@@ -123,17 +139,25 @@ final class CreateGameWizardDialog {
         Div combatRandomnessField = new Div(new Span(I18n.t(UiTexts.LOBBY_FIELD_COMBAT_RANDOMNESS)),
                 combatRandomness, combatRandomnessValue, combatRandomnessHint);
         combatRandomnessField.addClassName("combat-randomness-field");
-        Checkbox joinAfterCreate = new Checkbox(I18n.t(UiTexts.LOBBY_WIZARD_JOIN_AFTER_CREATE));
-        joinAfterCreate.setId("join-after-create");
-        joinAfterCreate.setValue(true);
+        // Normally the creator plays; hosting without a seat is the exception.
+        Checkbox hostOnly = new Checkbox(I18n.t(UiTexts.LOBBY_WIZARD_HOST_ONLY));
+        hostOnly.setId("host-only");
+        hostOnly.setValue(false);
+        RadioButtonGroup<GameVisibility> visibility = new RadioButtonGroup<>(I18n.t(UiTexts.LOBBY_WIZARD_VISIBILITY));
+        visibility.setId("wizard-visibility");
+        visibility.setItems(GameVisibility.PUBLIC, GameVisibility.PRIVATE);
+        visibility.setItemLabelGenerator(choice -> I18n.t(choice == GameVisibility.PUBLIC
+                ? UiTexts.LOBBY_WIZARD_VISIBILITY_PUBLIC : UiTexts.LOBBY_WIZARD_VISIBILITY_PRIVATE));
+        visibility.setValue(GameVisibility.PRIVATE);
         String hostPlayerId = UserContext.currentPlayerId().orElse("");
         String hostName = hostPlayerId.isBlank() ? "" : players.displayName(hostPlayerId);
         TextField empireName = new TextField(I18n.t(UiTexts.LOBBY_FIELD_EMPIRE_NAME));
         empireName.setValue(EmpireNameGenerator.forHuman(hostName));
         empireName.setRequiredIndicatorVisible(true);
+        hostOnly.addValueChangeListener(event -> empireName.setEnabled(!Boolean.TRUE.equals(event.getValue())));
 
         FormLayout setupGrid = grid(3, "13em", gameName, empireName, galaxyLayout, systems, humans, ai,
-                joinAfterCreate);
+                visibility, hostOnly);
         GalaxyPreview galaxyPreview = new GalaxyPreview(GameConfig.DEFAULT_GALAXY_LAYOUT);
         galaxyLayout.addValueChangeListener(event -> galaxyPreview.show(event.getValue()));
         Div setupLayout = new Div(setupGrid, galaxyPreview);
@@ -242,10 +266,13 @@ final class CreateGameWizardDialog {
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_REVIEW));
         createButton.set(create);
         WizardActionContext actionContext = new WizardActionContext(game, onCreated, hostName, gameName, empireName,
-                joinAfterCreate, formInputs, seatColorInputs, confirmedSetup, confirmation, body, back, create, dialog);
+                hostOnly, visibility, formInputs, seatColorInputs, confirmedSetup, confirmation, body, back, create, dialog);
         create.addClickListener(_ -> handleCreate(actionContext));
         create.addThemeVariants(ButtonVariant.PRIMARY);
-        Button cancel = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CANCEL), _ -> dialog.close());
+        Button cancel = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CANCEL), _ -> {
+            dialog.close();
+            onCancel.run();
+        });
         dialog.getFooter().add(cancel, create);
         dialog.add(body, confirmation);
         dialog.open();
@@ -257,7 +284,7 @@ final class CreateGameWizardDialog {
             showConfirmation(context);
             return;
         }
-        if (context.empireName().getValue().trim().isEmpty()) {
+        if (context.seated() && context.empireName().getValue().trim().isEmpty()) {
             context.empireName().setInvalid(true);
             context.empireName().setErrorMessage(I18n.t(UiTexts.LOBBY_EMPIRE_NAME_REQUIRED));
             return;
@@ -277,7 +304,7 @@ final class CreateGameWizardDialog {
         applyNormalizedColors(context.seatColorInputs(), setup);
         context.confirmedSetup().set(setup);
         context.confirmation().removeAll();
-        context.confirmation().add(buildConfirmation(setup, context.gameName().getValue().trim(), context.game().rulesets(), key -> {
+        context.confirmation().add(new WizardSummary(setup, context.gameName().getValue().trim(), context.game().rulesets(), key -> {
             context.back().click();
             Component target = switch (key) {
                 case UiTexts.UX_PARTICIPANTS -> context.formInputs().humans();
@@ -288,7 +315,7 @@ final class CreateGameWizardDialog {
             context.body().getChildren().filter(Details.class::isInstance).map(Details.class::cast)
                     .forEach(details -> details.setOpened(true));
             target.getElement().executeJs("this.scrollIntoView({block: 'center'}); this.focus();");
-        }));
+        }, context.chosenVisibility(), context.seated() ? context.hostName() : null));
         context.body().setVisible(false);
         context.confirmation().setVisible(true);
         context.confirmation().getElement().executeJs("this.scrollIntoView({block: 'start'});");
@@ -301,24 +328,35 @@ final class CreateGameWizardDialog {
         String accountId = UserContext.currentPlayerId().orElse(null);
         GameId gameId = context.game().newGame(setup, accountId, context.gameName().getValue().trim());
         boolean joined = accountId != null && joinNewGame(context.game(), gameId, accountId,
-                context.hostName(), context.empireName().getValue(),
-                Boolean.TRUE.equals(context.joinAfterCreate().getValue()));
+                context.hostName(), context.empireName().getValue(), context.seated());
+        if (accountId != null && context.chosenVisibility() == GameVisibility.PUBLIC) {
+            context.game().changeVisibility(gameId, accountId, GameVisibility.PUBLIC);
+        }
         boolean started = joined && setup.humanPlayers() == 1 && setup.aiPlayers() > 0
-                && context.game().startGame(gameId);
+                && context.game().startGame(gameId, accountId);
         var currentUi = context.dialog().getUI();
         context.onCreated().run();
         context.dialog().close();
-        if (started) {
-            currentUi.ifPresent(ui -> ui.navigate(MainView.class,
-                    new RouteParameters("gameId", gameId.value())));
-        }
+        // A running single-player game opens its map; any other game waits for players in its waiting room.
+        Class<? extends Component> target = started ? MainView.class : WaitingRoomView.class;
+        currentUi.ifPresent(ui -> ui.navigate(target, new RouteParameters("gameId", gameId.value())));
     }
 
     private record WizardActionContext(GameService game, Runnable onCreated, String hostName,
-                                       TextField gameName, TextField empireName, Checkbox joinAfterCreate,
+                                       TextField gameName, TextField empireName, Checkbox hostOnly,
+                                       RadioButtonGroup<GameVisibility> visibility,
                                        FormInputs formInputs, List<ComboBox<ColorOption>> seatColorInputs,
                                        AtomicReference<GameSetup> confirmedSetup, Div confirmation,
-                                       VerticalLayout body, Button back, Button create, Dialog dialog) {}
+                                       VerticalLayout body, Button back, Button create, Dialog dialog) {
+        /** Whether the creator takes a seat (the normal case). */
+        boolean seated() {
+            return !Boolean.TRUE.equals(hostOnly.getValue());
+        }
+
+        GameVisibility chosenVisibility() {
+            return visibility.getValue() == null ? GameVisibility.PRIVATE : visibility.getValue();
+        }
+    }
 
     private static void rebuildStartProduction(FormLayout fields, List<IntegerField> inputs, List<ComboBox<ColorOption>> colors,
                                                IntegerField humans, IntegerField ai) {
@@ -408,11 +446,6 @@ final class CreateGameWizardDialog {
                     .filter(option -> option.hex().equals(normalizedHex))
                     .findFirst().orElse(colorOptions().getFirst()));
         }
-    }
-
-    private static Div buildConfirmation(GameSetup setup, String gameName, RulesetCatalog catalog,
-                                         java.util.function.Consumer<String> edit) {
-        return new WizardSummary(setup, gameName, catalog, edit);
     }
 
     private static String labelFor(ProductionDistribution value) {
@@ -538,8 +571,8 @@ final class CreateGameWizardDialog {
     }
 
     private static boolean joinNewGame(GameService game, GameId gameId, String hostPlayerId, String hostName,
-                                       String empireName, boolean joinAfterCreate) {
-        if (!joinAfterCreate) {
+                                       String empireName, boolean seated) {
+        if (!seated) {
             return false;
         }
         if (game.joinGame(gameId, hostPlayerId, hostName, empireName).isEmpty()) {

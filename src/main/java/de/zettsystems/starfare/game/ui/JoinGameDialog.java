@@ -51,6 +51,7 @@ final class JoinGameDialog {
             dialog.close();
         });
         join.addThemeVariants(ButtonVariant.PRIMARY);
+        join.setId("join-game-confirm");
         dialog.getFooter().add(cancel, join);
         dialog.open();
     }

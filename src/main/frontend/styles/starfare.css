@@ -2419,3 +2419,30 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
 .coalition-defenders .coalition-side { align-items:flex-end; text-align:right; }
 .coalition-roles-unknown .coalition-attackers { grid-column:1 / -1; }
 .coalition-roles-unknown .coalition-defenders { display:none; }
+
+/* Warteraum einer Partie vor dem Start */
+.waiting-room { max-width: 52rem; margin: 0 auto; gap: .6rem; }
+.waiting-room h1 { margin: 0; }
+.waiting-room-facts { color: var(--lumo-secondary-text-color); }
+.waiting-room-status { font-weight: 600; }
+.waiting-room-seats { display: grid; gap: .4rem; width: 100%; }
+.waiting-room-seat {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .45rem .75rem;
+    border-left: 4px solid var(--seat-color);
+    border-radius: 6px;
+    background: var(--lumo-contrast-5pct);
+}
+.waiting-room-seat-color { width: .8rem; height: .8rem; border-radius: 50%; background: var(--seat-color); flex: none; }
+.waiting-room-seat-free .waiting-room-seat-label,
+.waiting-room-seat-invited .waiting-room-seat-label { font-style: italic; color: var(--lumo-secondary-text-color); }
+.waiting-room-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
+
+/* Freunde, Einladungen, Online und Chat als eigene Seite (im Host statt der Lobby-Seitenleiste) */
+.social-page { max-width: 52rem; margin: 0 auto; }
+.social-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; }
+.social-page-heading h1 { margin: 0; }
+.social-page-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 12px; width: 100%; }
+.new-match { max-width: 52rem; margin: 0 auto; }

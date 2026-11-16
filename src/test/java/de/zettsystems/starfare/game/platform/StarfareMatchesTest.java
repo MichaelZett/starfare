@@ -66,7 +66,7 @@ class StarfareMatchesTest {
             assertThat(summary.isJoinable()).isTrue();
             assertThat(summary.toMove()).isEmpty();
             assertThat(summary.lastChange()).isEqualTo(state.turnStartedAt());
-            assertThat(summary.viewPath()).isEqualTo("/starfare/map/" + ID.value());
+            assertThat(summary.viewPath()).as("an open game opens its waiting room").isEqualTo("/starfare/match/" + ID.value());
         }
 
         @Test
@@ -79,6 +79,7 @@ class StarfareMatchesTest {
             assertThat(summary.status()).isEqualTo(MatchStatus.RUNNING);
             assertThat(summary.participants()).containsExactly(SEVENTEEN, TWENTY_THREE);
             assertThat(summary.toMove()).containsExactly(TWENTY_THREE);
+            assertThat(summary.viewPath()).as("a running game opens its map").isEqualTo("/starfare/map/" + ID.value());
         }
 
         @Test

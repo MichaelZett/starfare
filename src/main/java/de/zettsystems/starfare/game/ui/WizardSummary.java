@@ -12,11 +12,13 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import de.zettsystems.starfare.game.values.AttackOrder;
 import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.ProductionDistribution;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
 import de.zettsystems.starfare.game.values.VictoryRules;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -25,9 +27,15 @@ final class WizardSummary extends Div {
     private static final String SYSTEMS_ID = "wizard-summary-systems";
     private static final String FACTS_CLASS = "wizard-summary-facts";
 
-    WizardSummary(GameSetup setup, String name, RulesetCatalog catalog, Consumer<String> edit) {
+    /**
+     * @param visibility the choice made in the wizard
+     * @param ownSeat    the creator's name for the first human seat, or null if the creator only hosts
+     */
+    WizardSummary(GameSetup setup, String name, RulesetCatalog catalog, Consumer<String> edit,
+                  GameVisibility visibility, @Nullable String ownSeat) {
         addClassName("wizard-confirmation-content");
-        Div groups = new Div(galaxy(setup, edit), participants(setup, edit), victory(setup, edit), access(setup, edit));
+        Div groups = new Div(galaxy(setup, edit), participants(setup, edit, ownSeat), victory(setup, edit),
+                access(setup, edit, visibility));
         groups.addClassName("wizard-summary-groups");
         add(hero(setup, name, catalog), groups);
     }
@@ -77,21 +85,21 @@ final class WizardSummary extends Div {
         return group(UiTexts.UX_GALAXY, WizardEmblem.GALAXY, edit, content);
     }
 
-    private static Div participants(GameSetup setup, Consumer<String> edit) {
+    private static Div participants(GameSetup setup, Consumer<String> edit, @Nullable String ownSeat) {
         Div seats = new Div();
         seats.addClassName("wizard-summary-seats");
         for (int index = 0; index < setup.totalPlayers(); index++) {
-            seats.add(seat(setup, index));
+            seats.add(seat(setup, index, ownSeat));
         }
         return group(UiTexts.UX_PARTICIPANTS, WizardEmblem.FLEET, edit, seats);
     }
 
-    private static Div seat(GameSetup setup, int index) {
+    private static Div seat(GameSetup setup, int index, @Nullable String ownSeat) {
         boolean human = index < setup.humanPlayers();
         int aiIndex = index - setup.humanPlayers();
         Icon token = (human ? VaadinIcon.USER : VaadinIcon.AUTOMATION).create();
         token.addClassName("wizard-summary-seat-token");
-        Span name = new Span(human ? I18n.t(UiTexts.LOBBY_SUMMARY_HUMAN, index + 1)
+        Span name = new Span(human ? humanSeat(index, ownSeat)
                 : I18n.t(UiTexts.AI_STRATEGY_SUMMARY, aiIndex + 1, AiStrategyFields.label(setup.strategyForAi(aiIndex))));
         name.addClassName("wizard-summary-seat-name");
         Span production = new Span(VaadinIcon.FACTORY.create(), new Span(String.valueOf(setup.startProductionForSeat(index))));
@@ -101,6 +109,14 @@ final class WizardSummary extends Div {
         row.addClassName("wizard-summary-seat");
         row.getStyle().set(CssProperties.SEAT_COLOR, setup.colorForSeat(index));
         return row;
+    }
+
+    /** The creator takes the first seat; the others stay open until someone joins. */
+    private static String humanSeat(int index, @Nullable String ownSeat) {
+        if (index == 0 && ownSeat != null) {
+            return I18n.t(UiTexts.LOBBY_SUMMARY_OWN_SEAT, ownSeat);
+        }
+        return I18n.t(UiTexts.LOBBY_SUMMARY_HUMAN, index + 1);
     }
 
     private static Div victory(GameSetup setup, Consumer<String> edit) {
@@ -129,7 +145,7 @@ final class WizardSummary extends Div {
                 : toggle(VaadinIcon.TROPHY, UiTexts.UX_SUMMARY_ALLIANCE_VICTORY, false));
     }
 
-    private static Div access(GameSetup setup, Consumer<String> edit) {
+    private static Div access(GameSetup setup, Consumer<String> edit, GameVisibility visibility) {
         Div facts = new Div();
         facts.addClassName(FACTS_CLASS);
         if (setup.humanPlayers() < 2) {
@@ -141,7 +157,9 @@ final class WizardSummary extends Div {
                     fact(VaadinIcon.HOURGLASS, UiTexts.LOBBY_FIELD_STRAGGLER_LIMIT,
                             DurationLabels.label(setup.roundRules().stragglerLimit())));
         }
-        facts.add(fact(VaadinIcon.LOCK, UiTexts.UX_SUMMARY_VISIBILITY, I18n.t(UiTexts.GAME_PRIVATE)),
+        boolean open = visibility == GameVisibility.PUBLIC;
+        facts.add(fact(open ? VaadinIcon.UNLOCK : VaadinIcon.LOCK, UiTexts.UX_SUMMARY_VISIBILITY,
+                        I18n.t(open ? UiTexts.GAME_PUBLIC : UiTexts.GAME_PRIVATE)),
                 state(VaadinIcon.EYE, UiTexts.UX_SUMMARY_OBSERVERS, setup.observersAllowed(),
                         UiTexts.LOBBY_SUMMARY_OBSERVERS_ALLOWED, UiTexts.LOBBY_SUMMARY_OBSERVERS_BLOCKED),
                 state(VaadinIcon.SIGN_IN, UiTexts.UX_SUMMARY_REENTRY, setup.reentryAllowed(),

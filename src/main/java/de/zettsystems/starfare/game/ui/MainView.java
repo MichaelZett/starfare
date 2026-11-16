@@ -443,7 +443,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         GameId candidate = GameId.of(parameter);
-        if (game.viewForAccount(candidate, UserContext.currentPlayerId().orElse("")).isEmpty()) {
+        String account = UserContext.currentPlayerId().orElse("");
+        if (game.viewForAccount(candidate, account).isEmpty()) {
+            // A game that has not started yet has no map; its players gather in the waiting room.
+            if (!game.hasStartedGame(candidate) && game.summaryFor(candidate, account).isPresent()) {
+                event.forwardTo(WaitingRoomView.class, WaitingRoomView.parameters(candidate));
+                return;
+            }
             event.forwardTo(LobbyView.class);
             return;
         }
@@ -471,7 +477,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 return;
             }
         } else if (!game.hasStartedGame(gameId)) {
-            getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
+            GameId waiting = gameId;
+            getUI().ifPresent(ui -> ui.navigate(WaitingRoomView.class, WaitingRoomView.parameters(waiting)));
             return;
         }
         UI ui = attachEvent.getUI();

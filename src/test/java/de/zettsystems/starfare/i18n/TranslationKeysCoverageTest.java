@@ -36,7 +36,8 @@ class TranslationKeysCoverageTest {
      * description and the texts of the game navigation named in games/starfare/game.properties.
      */
     private static final Set<String> HOST_KEYS = Set.of("game.title", "game.description",
-            "game.navigation.lobby", "game.navigation.statistics", "game.navigation.archive");
+            "game.navigation.lobby", "game.navigation.new", "game.navigation.social", "game.navigation.statistics",
+            "game.navigation.archive");
 
     @Test
     void everyNavigationEntryOfTheGameDescriptionHasAHostKey() throws Exception {

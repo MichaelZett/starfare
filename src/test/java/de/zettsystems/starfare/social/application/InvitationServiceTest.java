@@ -114,6 +114,8 @@ class InvitationServiceTest extends AbstractIntegrationTest {
         assertThat(games.seatFor(id, "bob")).isEqualTo(invitedSeat);
         assertThat(games.seatFor(id, "bob").get()).isNotEqualTo(hostSeat.get());
         assertThat(games.invitedSeatsOf(id)).isEmpty();
+        assertThat(games.summaryOf(id).players().stream().filter(player -> player.id() == invitedSeat.orElseThrow())
+                .findFirst().orElseThrow().label()).as("named like a seat taken through the dialog").contains("bob Empire");
         assertThat(games.canStartGame(id)).isTrue();
         assertThat(events.stream().filter(SocialEvent.InviteAccepted.class::isInstance).findFirst().orElseThrow()).isInstanceOf(SocialEvent.InviteAccepted.class);
     }

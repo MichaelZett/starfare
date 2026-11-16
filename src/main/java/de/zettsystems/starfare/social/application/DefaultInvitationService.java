@@ -1,6 +1,8 @@
 package de.zettsystems.starfare.social.application;
 
+import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.application.GameService;
+import de.zettsystems.starfare.game.values.EmpireNameGenerator;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.social.values.SocialEvent;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -16,11 +18,14 @@ public class DefaultInvitationService implements InvitationService {
     private final GameService games;
     private final VisibilityFilter visibility;
     private final SocialBroadcaster broadcaster;
+    private final PlayerDirectory players;
 
-    public DefaultInvitationService(GameService games, VisibilityFilter visibility, SocialBroadcaster broadcaster) {
+    public DefaultInvitationService(GameService games, VisibilityFilter visibility, SocialBroadcaster broadcaster,
+                                    PlayerDirectory players) {
         this.games = games;
         this.visibility = visibility;
         this.broadcaster = broadcaster;
+        this.players = players;
     }
 
     @Override
@@ -60,7 +65,9 @@ public class DefaultInvitationService implements InvitationService {
         if (games.seatReservedFor(gameId, inviteePlayerId).isEmpty()) {
             return false;
         }
-        Optional<Integer> seat = games.joinGame(gameId, inviteePlayerId);
+        // Like joining through the dialog: the seat shows the person and an empire, not "P2".
+        String name = players.displayName(inviteePlayerId);
+        Optional<Integer> seat = games.joinGame(gameId, inviteePlayerId, name, EmpireNameGenerator.forHuman(name));
         seat.ifPresent(s -> broadcaster.publish(new SocialEvent.InviteAccepted(gameId, inviteePlayerId, s)));
         return seat.isPresent();
     }

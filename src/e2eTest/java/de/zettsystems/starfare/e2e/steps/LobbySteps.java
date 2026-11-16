@@ -55,11 +55,11 @@ public class LobbySteps {
     @Wenn("ich eine private Lobby-Partie ohne Beitritt anlege")
     public void createPrivateGame() throws IOException {
         browser.clickButtonWithText("Neues Spiel");
-        browser.awaitText("Neue Partien sind privat.");
+        browser.awaitText("Private Partien sehen nur Eingeladene.");
         verifyRulesetSelection();
-        WebElement joinAfterCreate = browser.awaitCss("#join-after-create");
+        WebElement hostOnly = browser.awaitCss("#host-only");
         ((JavascriptExecutor) browser.driver()).executeScript(
-                "arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", joinAfterCreate);
+                "arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", hostOnly);
         browser.clickButtonWithText("Zusammenfassung prüfen");
         List<GameId> before = games.listGames();
         browser.clickButtonWithText("Spiel anlegen");

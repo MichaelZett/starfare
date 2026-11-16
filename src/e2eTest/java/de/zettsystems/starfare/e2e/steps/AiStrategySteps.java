@@ -54,7 +54,7 @@ public class AiStrategySteps {
         variant("Spaceward");
         awaitChoices(8);
         choose(1, "Adaptiver Industrieausbau");
-        browser.clickCss("#join-after-create");
+        browser.clickCss("#host-only");
         browser.clickButtonWithText("Zusammenfassung prüfen");
         browser.awaitText("KI 1: Adaptiver Industrieausbau");
         browser.awaitText("KI 2: Verteidigung");

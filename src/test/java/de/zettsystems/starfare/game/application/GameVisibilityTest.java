@@ -43,6 +43,42 @@ class GameVisibilityTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void onlyTheHostStartsAMatchOnceEveryHumanSeatIsTaken() {
+        GameId id = games.newGame(GameSetup.defaults(), "host", "Host starts");
+        assertThat(games.changeVisibility(id, "host", GameVisibility.PUBLIC)).isTrue();
+        assertThat(games.canStartGame(id, "host")).as("seat still free").isFalse();
+        assertThat(games.joinGame(id, "guest")).isPresent();
+
+        assertThat(games.canStartGame(id, "guest")).isFalse();
+        assertThat(games.startGame(id, "guest")).as("a seated guest").isFalse();
+        assertThat(games.startGame(id, "stranger")).isFalse();
+        assertThat(games.startGame(id, null)).isFalse();
+        assertThat(games.hasStartedGame(id)).isFalse();
+
+        assertThat(games.canStartGame(id, "host")).isTrue();
+        assertThat(games.startGame(id, "host")).as("the host, even without a seat").isTrue();
+        assertThat(games.hasStartedGame(id)).isTrue();
+    }
+
+    @Test
+    void aGameWhoseHostHasGoneIsStartedByASeatedPerson() {
+        GameId id = games.newGame(GameSetup.defaults(), "host", "Hostless");
+        assertThat(games.changeVisibility(id, "host", GameVisibility.PUBLIC)).isTrue();
+        assertThat(games.joinGame(id, "guest")).isPresent();
+        registry.require(id).transferHostTo(null);
+
+        assertThat(games.startGame(id, "stranger")).isFalse();
+        assertThat(games.startGame(id, "host")).as("no longer the host").isFalse();
+        assertThat(games.startGame(id, "guest")).isTrue();
+    }
+
+    @Test
+    void unknownGamesCannotBeStarted() {
+        assertThat(games.canStartGame(GameId.newId(), "host")).isFalse();
+        assertThat(games.startGame(GameId.newId(), "host")).isFalse();
+    }
+
+    @Test
     void makingPrivateRemovesForeignObservers() {
         GameId id = games.newGame(GameSetup.defaults(), "host", "Observers");
         registry.writeState(id, state -> { state.configureLobby(true, true); return null; });

@@ -108,7 +108,17 @@ public interface GameService {
 
     boolean canStartGame(GameId gameId);
 
+    /**
+     * Starts without asking who starts: for internal runs (single-player start in the wizard,
+     * tests, fixtures). Anything a person triggers goes through {@link #startGame(GameId, String)}.
+     */
     boolean startGame(GameId gameId);
+
+    /** Whether {@code actor} may start the game now: only its host, once all human seats are taken. */
+    boolean canStartGame(GameId gameId, @Nullable String actor);
+
+    /** Starts the game on behalf of {@code actor}; refused for anyone but the host. */
+    boolean startGame(GameId gameId, @Nullable String actor);
 
     PlayerViewState viewFor(GameId gameId, int playerId);
 

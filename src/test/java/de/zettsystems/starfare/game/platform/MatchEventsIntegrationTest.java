@@ -67,7 +67,7 @@ class MatchEventsIntegrationTest extends AbstractIntegrationTest {
         assertThat(directory.matchesOf(SEVENTEEN)).singleElement().satisfies(match -> {
             assertThat(match.matchId()).isEqualTo(id.value());
             assertThat(match.status()).isEqualTo(MatchStatus.OPEN);
-            assertThat(match.viewPath()).isEqualTo("/starfare/map/" + id.value());
+            assertThat(match.viewPath()).isEqualTo("/starfare/match/" + id.value());
         });
     }
 

@@ -592,6 +592,28 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public boolean canStartGame(GameId gameId, @Nullable String actor) {
+        return mayStart(gameId, actor) && registry.canStartGame(gameId);
+    }
+
+    @Override
+    public boolean startGame(GameId gameId, @Nullable String actor) {
+        return mayStart(gameId, actor) && startGame(gameId);
+    }
+
+    /** The host starts; a game whose host has gone may be started by any seated person. */
+    private boolean mayStart(GameId gameId, @Nullable String actor) {
+        if (actor == null || actor.isBlank() || registry.find(gameId).isEmpty()) {
+            return false;
+        }
+        String host = registry.require(gameId).hostPlayerId();
+        if (host != null && !host.isBlank()) {
+            return host.equals(actor);
+        }
+        return registry.readState(gameId, state -> state.seatByUser().containsKey(actor));
+    }
+
+    @Override
     public PlayerViewState viewFor(GameId gameId, int playerId) {
         return registry.readState(gameId, state -> playerViewBuilder.forPlayer(state, playerId));
     }

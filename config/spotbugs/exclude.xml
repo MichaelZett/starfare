@@ -55,7 +55,7 @@
     </Match>
 
     <!--
-       FALSE POSITIVE: LobbyView's and ManageGameDialog's constructors compose Vaadin components,
+       FALSE POSITIVE: LobbyView's, SocialView's and ManageGameDialog's constructors compose Vaadin components,
        which internally invoke framework callbacks that SpotBugs models as
        throwing. The view has no finalizer and receives only Spring-managed
        collaborators; moving the composition out of the Vaadin lifecycle
@@ -65,6 +65,7 @@
     <Match>
         <Or>
             <Class name="de.zettsystems.starfare.game.ui.LobbyView"/>
+            <Class name="de.zettsystems.starfare.game.ui.SocialView"/>
             <Class name="de.zettsystems.starfare.social.ui.ManageGameDialog"/>
         </Or>
         <Method name="&lt;init&gt;"/>

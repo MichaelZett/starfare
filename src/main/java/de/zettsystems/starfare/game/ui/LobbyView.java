@@ -215,7 +215,7 @@ public class LobbyView extends VerticalLayout {
         if (row.started() && row.joinedByCurrentUser()) {
             return buildPlayButton(row);
         }
-        if (!row.started() && row.canStart()) {
+        if (row.mayStart()) {
             return buildStartButton(row);
         }
         if (row.canJoin()) {
@@ -233,6 +233,12 @@ public class LobbyView extends VerticalLayout {
         VerticalLayout actions = new VerticalLayout();
         actions.setPadding(false);
         actions.setSpacing(true);
+        if (!row.started()) {
+            Button waitingRoom = new Button(I18n.t(UiTexts.LOBBY_ACTION_WAITING_ROOM), _ -> getUI().ifPresent(ui ->
+                    ui.navigate(WaitingRoomView.class, WaitingRoomView.parameters(row.gameId()))));
+            waitingRoom.addThemeVariants(ButtonVariant.SMALL);
+            actions.add(waitingRoom);
+        }
         Button manage = buildManageButton(row);
         if (manage.isVisible()) {
             actions.add(manage);
@@ -407,7 +413,7 @@ public class LobbyView extends VerticalLayout {
 
     private Button buildStartButton(LobbyGameRow row) {
         Button start = new Button(I18n.t(UiTexts.LOBBY_ACTION_START), _ -> {
-            if (!game.startGame(row.gameId())) {
+            if (!game.startGame(row.gameId(), UserContext.currentPlayerId().orElse(null))) {
                 Notification.show(I18n.t(UiTexts.LOBBY_START_FAILED));
                 refresh();
                 return;
@@ -421,7 +427,7 @@ public class LobbyView extends VerticalLayout {
             refresh();
         });
         start.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
-        start.setEnabled(!row.started() && row.canStart());
+        start.setEnabled(row.mayStart());
         return start;
     }
 
@@ -508,6 +514,11 @@ public class LobbyView extends VerticalLayout {
                     summary.canJoin(playerId == null ? "" : playerId),
                     summary.visibility() == GameVisibility.PRIVATE
                             ? UiTexts.GAME_PRIVATE : UiTexts.GAME_PUBLIC);
+        }
+
+        /** Only the host starts; a game whose host has gone may be started by any seated person. */
+        boolean mayStart() {
+            return !started && canStart && (isHostedByCurrentUser || (!hasHost && knownToCurrentUser));
         }
 
         int openHumanSeats() {

@@ -5,6 +5,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.dom.Element;
 import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.game.values.VictoryRules;
@@ -70,7 +71,7 @@ class WizardSummaryTest {
     void everyGroupOffersToChangeItsOwnChoices() {
         List<String> requested = new ArrayList<>();
         WizardSummary summary = new WizardSummary(GameSetup.defaults(), "Aufstand bei Deneb", RulesetCatalog.builtIn(),
-                requested::add);
+                requested::add, GameVisibility.PRIVATE, null);
 
         descendants(summary).filter(Button.class::isInstance).map(Button.class::cast).forEach(Button::click);
 
@@ -90,7 +91,24 @@ class WizardSummaryTest {
     }
 
     private static WizardSummary summary(GameSetup setup) {
-        return new WizardSummary(setup, "Aufstand bei Deneb", RulesetCatalog.builtIn(), _ -> { });
+        return new WizardSummary(setup, "Aufstand bei Deneb", RulesetCatalog.builtIn(), _ -> { },
+                GameVisibility.PRIVATE, null);
+    }
+
+    @Test
+    void namesTheCreatorsSeatAndTheChosenVisibility() {
+        String text = new WizardSummary(GameSetup.defaults(), "Aufstand bei Deneb", RulesetCatalog.builtIn(), _ -> { },
+                GameVisibility.PUBLIC, "Ada").getElement().getTextRecursively();
+
+        assertThat(text).contains(I18n.t(UiTexts.LOBBY_SUMMARY_OWN_SEAT, "Ada"), I18n.t(UiTexts.GAME_PUBLIC))
+                .doesNotContain(I18n.t(UiTexts.LOBBY_SUMMARY_HUMAN, 1));
+    }
+
+    @Test
+    void aHostWithoutSeatLeavesEverySeatOpen() {
+        String text = textOf(GameSetup.defaults());
+
+        assertThat(text).contains(I18n.t(UiTexts.LOBBY_SUMMARY_HUMAN, 1), I18n.t(UiTexts.GAME_PRIVATE));
     }
 
     private static String textOf(GameSetup setup) {
