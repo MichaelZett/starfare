@@ -6,8 +6,9 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.5 - 2026-11-16
 
+- games-platform-api 0.2.0 aus Maven Central.
 - Freunde, Anwesenheit, Sichtbarkeit und Chat gehören im Plattform-Host der Plattform
   (games-platform-api 0.2.0, `PlatformFriends` und `PlatformPresence`). Das Spiel fragt nur diese
   Schnittstellen; Starfares eigene Freundesliste, Anwesenheit und Chat bleiben im eigenen Start

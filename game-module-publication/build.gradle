@@ -12,7 +12,7 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
 
 // Freeze the production graph already selected by the application's BOMs.
 // Only strings and native Gradle dependency models enter publication tasks.
-// Included builds (games-platform-api until it is on Maven Central) count with their coordinates.
+// Included builds count with their coordinates.
 def resolution = rootProject.configurations.gameModuleRuntimeClasspath.incoming.resolutionResult
 def selectedVersions = resolution.allComponents
         .findAll { it.id instanceof ModuleComponentIdentifier || (it != resolution.root && it.moduleVersion != null) }

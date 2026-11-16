@@ -121,9 +121,11 @@ public class SmokeSteps {
             browser.awaitTextIn(".presence-name", displayName);
             return;
         }
-        // In a host the platform shows who is online on its friends page (plan M13).
+        // In a host presence belongs to the platform (plan M13): its friends page lists the others
+        // and shows the choice whom one is visible to; the header names the signed-in player.
         browser.open("/friends");
-        browser.awaitTextIn("#gp-social-online .gp-social-name", displayName);
+        browser.awaitCss("#gp-social-visibility");
+        browser.awaitTextIn(".gp-account-name", displayName);
         browser.open(Browser.LOBBY);
         browser.awaitLobby();
     }
