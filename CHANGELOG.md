@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.4 - 2026-11-16
 
 - Nur der Gastgeber startet eine wartende Partie; geprüft im Dienst, nicht nur am Knopf. Hat die
   Partie keinen Gastgeber mehr, startet sie jemand mit Sitz. Vorher konnte jeder Mitspieler starten.
