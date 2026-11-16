@@ -117,6 +117,21 @@ class WaitingRoomViewTest extends AbstractBrowserlessTest {
     }
 
     @Test
+    void theLobbyCardOfAWaitingGameLeadsToItsWaitingRoom() {
+        loginAsNewPlayer("Card Host");
+        twoSeatGame(account());
+        navigate(LobbyView.class);
+
+        @SuppressWarnings("unchecked") // rationale: the lobby's row type is private; its rendered cells are public components.
+        var cell = test((com.vaadin.flow.component.grid.Grid<Object>) find(com.vaadin.flow.component.grid.Grid.class).single())
+                .getCellComponent(0, 0);
+        test(find(Button.class, cell).withText("Warteraum").single()).click();
+
+        assertThat(getCurrentView()).isInstanceOf(WaitingRoomView.class);
+        assertThat(viewText()).contains("Waiting test", "Freier Platz");
+    }
+
+    @Test
     void theMapOfAGameThatHasNotStartedLeadsToTheWaitingRoom() {
         loginAsNewPlayer("Early Bird");
         GameId id = twoSeatGame(account());

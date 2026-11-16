@@ -204,6 +204,14 @@ public class LobbyView extends VerticalLayout {
         Button primary = primaryAction(row);
         primary.addClassName("lobby-game-card-primary");
         card.add(heading, overview, primary, secondaryActions(row));
+        if (!row.started()) {
+            // Everyone who sees a waiting game may look into its waiting room; host actions stay under "more".
+            Button waitingRoom = new Button(I18n.t(UiTexts.LOBBY_ACTION_WAITING_ROOM), _ -> getUI().ifPresent(ui ->
+                    ui.navigate(WaitingRoomView.class, WaitingRoomView.parameters(row.gameId()))));
+            waitingRoom.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+            waitingRoom.addClassName("lobby-game-card-waiting-room");
+            card.add(waitingRoom);
+        }
         String account = UserContext.currentPlayerId().orElse("");
         if (row.summary().belongsTo(account) && rulesetAccess.mayUse(row.summary().ruleset(), account)) {
             card.add(GameTemplateDialog.button(templates, row.gameId(), row.name(), this::refresh));
@@ -233,12 +241,6 @@ public class LobbyView extends VerticalLayout {
         VerticalLayout actions = new VerticalLayout();
         actions.setPadding(false);
         actions.setSpacing(true);
-        if (!row.started()) {
-            Button waitingRoom = new Button(I18n.t(UiTexts.LOBBY_ACTION_WAITING_ROOM), _ -> getUI().ifPresent(ui ->
-                    ui.navigate(WaitingRoomView.class, WaitingRoomView.parameters(row.gameId()))));
-            waitingRoom.addThemeVariants(ButtonVariant.SMALL);
-            actions.add(waitingRoom);
-        }
         Button manage = buildManageButton(row);
         if (manage.isVisible()) {
             actions.add(manage);
