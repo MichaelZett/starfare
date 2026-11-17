@@ -6,6 +6,14 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Die Migration zu den Anzeige-Einstellungen heißt `V2_12` statt `V2_10`: In Produktion ist `V2_11` seit
+  Oktober eingespielt, und Flyway lehnt eine darunter einsortierte Migration ab (der Plattform-Deploy 0.1.8
+  startete deshalb nicht). Ein Test hält fest, dass neue Migrationen die nächste Nummer bekommen. Lokale
+  Datenbanken, die `V2_10` schon eingespielt haben, neu anlegen oder dort die Zeile `2.10` aus
+  `flyway_schema_history` löschen.
+
 ## 0.2.5 - 2026-11-16
 
 - games-platform-api 0.2.0 aus Maven Central.
