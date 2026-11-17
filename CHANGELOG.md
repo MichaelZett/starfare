@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.6 - 2026-11-17
 
 - Die Migration zu den Anzeige-Einstellungen heißt `V2_12` statt `V2_10`: In Produktion ist `V2_11` seit
   Oktober eingespielt, und Flyway lehnt eine darunter einsortierte Migration ab (der Plattform-Deploy 0.1.8
