@@ -5,6 +5,8 @@
 #   -> release (nur wenn appVersion in gradle.properties NICHT auf -SNAPSHOT
 #      endet: Tag v<version> + GitHub-Release mit starfare.jar)
 #      -> bump_version (appVersion auf nächstes Patch-SNAPSHOT, [skip ci])
+#      -> deliver (startet im Host games-platform game-update.yml: Version
+#         festhalten, Host-Release, Deploy; Plattformplan Z1)
 #
 # SNAPSHOT-Pushes bauen und testen nur. Nach einem Release steht main wieder
 # auf -SNAPSHOT; vor dem Weiterarbeiten einmal `git pull`.
@@ -243,6 +245,29 @@ jobs:
           body_path: release-body.md
           generate_release_notes: true
           files: build/libs/starfare.jar
+
+  # Ein Release geht ohne weiteren Auftrag in Produktion: Der Host hält die neue
+  # Version fest, releast und deployt (game-update.yml dort). Secret
+  # PLATFORM_DEPLOY_TOKEN: Fine-grained PAT nur für das Host-Repository, Recht
+  # Actions: Read and write. Ohne Secret nur ein Hinweis mit dem Befehl von Hand.
+  deliver:
+    runs-on: ubuntu-latest
+    needs: [ build, release ]
+    if: ${{ !cancelled() && needs.release.result == 'success' }}
+    permissions: {}
+    steps:
+      - name: Start game update in the platform host
+        env:
+          GH_TOKEN: ${{ secrets.PLATFORM_DEPLOY_TOKEN }}
+          VERSION: ${{ needs.build.outputs.app_version }}
+        run: |
+          command=(gh workflow run game-update.yml --repo MichaelZett/games-platform --ref main -f game=starfare -f "version=$VERSION")
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::Secret PLATFORM_DEPLOY_TOKEN fehlt; Auslieferung von Hand: ${command[*]}"
+            exit 0
+          fi
+          "${command[@]}"
+          echo "Gestartet: game-update.yml in MichaelZett/games-platform (Starfare $VERSION)"
 
   # Nach dem Release: appVersion auf nächstes Patch-SNAPSHOT heben, damit
   # Folge-Pushes nicht erneut releasen. [skip ci] -> kein weiterer Lauf.
