@@ -377,31 +377,20 @@ public class Browser {
     public void assertNoSidewaysScrolling() {
         JavascriptExecutor js = (JavascriptExecutor) driver();
         // Layout settles after a navigation (a scroll bar appears, observers resize): only a lasting overflow counts.
-        // Chrome on Linux keeps a stale overflow width when the vertical scroll bar appears later (CI, 2026-11-16:
-        // hiding any <style> removed it; an empty probe style did not always). Before each look a rule on :root
-        // restyles the page and the root scroller is rebuilt once; real overflow survives both.
         try {
-            new WebDriverWait(driver(), Duration.ofSeconds(3)).until(_ -> (Boolean) js.executeScript("""
-                    const root = document.documentElement;
-                    const probe = document.createElement('style');
-                    probe.textContent = ':root { --sf-layout-probe: ' + Date.now() + '; }';
-                    document.head.appendChild(probe);
-                    const overflowX = root.style.overflowX;
-                    root.style.overflowX = 'hidden';
-                    void root.offsetWidth;
-                    root.style.overflowX = overflowX;
-                    probe.remove();
-                    void root.offsetWidth;
-                    return root.scrollWidth <= root.clientWidth + 1;
-                    """));
+            new WebDriverWait(driver(), Duration.ofSeconds(3)).until(_ -> (Boolean) js.executeScript(
+                    "const root = document.documentElement; return root.scrollWidth <= root.clientWidth + 1;"));
         } catch (org.openqa.selenium.TimeoutException lasting) {
             // reported below with the overflowing elements
         }
-        long scrollWidth = ((Number) js.executeScript("return document.documentElement.scrollWidth")).longValue();
-        long clientWidth = ((Number) js.executeScript("return document.documentElement.clientWidth")).longValue();
+        // One script reads both widths and judges them. Read in two calls, a vertical scroll bar appearing in
+        // between (the page grows after sign-in) compared the width without the bar to the width with it: a
+        // fitting page looked exactly one scroll bar too wide and no element stuck out (CI, 2026-11-16).
         // Also inside shadow roots, and the containers whose content is wider than they are.
-        Object overflowing = scrollWidth > clientWidth ? js.executeScript("""
+        Object overflow = js.executeScript("""
                 const limit = document.documentElement.clientWidth;
+                if (document.documentElement.scrollWidth <= limit + 1) return '';
+                const widths = document.documentElement.scrollWidth + ' > ' + limit + ' px)';
                 const found = [];
                 const visit = root => root.querySelectorAll('*').forEach(element => {
                     const right = element.getBoundingClientRect().right;
@@ -433,15 +422,15 @@ public class Browser {
                     element = culprit;
                 }
                 const style = getComputedStyle(element);
-                return 'body ' + document.body.scrollWidth + '/' + document.body.clientWidth
+                return widths + ': body ' + document.body.scrollWidth + '/' + document.body.clientWidth
                     + '; path ' + path.join(' > ') + ' (width ' + style.width + ', min ' + style.minWidth
                     + ', position ' + style.position + ', before ' + getComputedStyle(element, '::before').width
                     + ', after ' + getComputedStyle(element, '::after').width + '); '
                     + found.slice(0, 15).join('; ');
-                """) : "";
-        assertThat(scrollWidth)
-                .withFailMessage("Seite %s scrollt seitwärts (%d > %d px): %s", driver().getCurrentUrl(), scrollWidth, clientWidth, overflowing)
-                .isLessThanOrEqualTo(clientWidth + 1);
+                """);
+        assertThat(String.valueOf(overflow))
+                .withFailMessage("Seite %s scrollt seitwärts (%s", driver().getCurrentUrl(), overflow)
+                .isEmpty();
     }
 
     /** Reading browser logs drains them; call after each visited view to retain attribution. */
