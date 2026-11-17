@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.7 - 2026-11-17
 
 - Das Spiel fragt Konten nur noch über games-platform-api 0.3.0 (`PlatformAccounts`: angemeldetes Konto,
   Anzeigenamen, Testerrolle; `AccountRemoved` beim Löschen eines Kontos). zs-identity gehört nur noch zum
