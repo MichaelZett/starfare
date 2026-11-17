@@ -1,6 +1,6 @@
 package de.zettsystems.starfare.game.application;
 
-import de.zettsystems.identity.values.AccountDeleted;
+import de.zettsystems.gamesplatformapi.AccountRemoved;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
 import de.zettsystems.starfare.game.values.GameId;
@@ -15,7 +15,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import tools.jackson.databind.ObjectMapper;
 
-/** Updates detached snapshot copies inside identity's transaction; live caches change only after commit. */
+/** Updates detached snapshot copies inside the platform's deleting transaction; live caches change only after commit. */
 @Component
 public class GameAccountDeletionListener {
     private static final List<String> DELETE_BINDINGS = List.of(
@@ -43,8 +43,8 @@ public class GameAccountDeletionListener {
     @EventListener
     @org.springframework.core.annotation.Order(0)
     @Transactional(propagation = Propagation.MANDATORY)
-    public void accountDeleted(AccountDeleted event) {
-        String account = event.userId().toString();
+    public void accountDeleted(AccountRemoved event) {
+        String account = String.valueOf(event.account().value());
         var changed = releaseSessions(account);
         releaseArchives(account);
         DELETE_BINDINGS.forEach(sql -> jdbc.update(sql, account));

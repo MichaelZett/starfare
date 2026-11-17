@@ -1,6 +1,6 @@
 package de.zettsystems.starfare.game.application;
 
-import de.zettsystems.identity.values.AccountDeleted;
+import de.zettsystems.gamesplatformapi.AccountRemoved;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -32,8 +32,8 @@ public class LegacySocialRecords {
     @EventListener
     @Order(0)
     @Transactional(propagation = Propagation.MANDATORY)
-    public void accountDeleted(AccountDeleted event) {
-        String account = event.userId().toString();
+    public void accountDeleted(AccountRemoved event) {
+        String account = String.valueOf(event.account().value());
         jdbc.update(FRIENDSHIPS, account, account);
         jdbc.update(MESSAGES, account, account);
         jdbc.update(DISPLAY_SETTINGS, account);

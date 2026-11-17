@@ -27,6 +27,14 @@ class LayerRulesTest {
             .because("the UI consumes immutable view models from ..values.. built by the application layer");
 
     @ArchTest
+    static final ArchRule only_the_own_start_knows_the_identity_building_block = noClasses()
+            .that().resideOutsideOfPackages("de.zettsystems.starfare.standalone..",
+                    "de.zettsystems.starfare.legal..", "de.zettsystems.starfare.auth.config..")
+            .should().dependOnClassesThat().resideInAPackage("de.zettsystems.identity..")
+            .because("the game asks the platform through games-platform-api (PlatformAccounts, AccountRemoved; "
+                    + "plan Z3); zs-identity belongs to Starfare's own start and stays out of the game artifact");
+
+    @ArchTest
     static final ArchRule application_top_level_classes_must_be_spring_beans = classes()
             .that().resideInAPackage("..application..")
             .and().areTopLevelClasses()

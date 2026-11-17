@@ -73,11 +73,19 @@ configurations.named('e2eTestAnnotationProcessor') { extendsFrom configurations.
 
 configurations {
     mockitoAgent
+    // Starfare's own start only (sign-in, imprint, account deletion; packages standalone, legal,
+    // auth.config): on the application's classpaths, but not inherited by the game artifact's
+    // variants, which extend implementation only (gradle/game-module.gradle). The game itself asks
+    // the platform through games-platform-api (plan Z3, LayerRulesTest).
+    standaloneImplementation
+    compileClasspath.extendsFrom standaloneImplementation
+    runtimeClasspath.extendsFrom standaloneImplementation
+    testImplementation.extendsFrom standaloneImplementation
 }
 
 dependencies {
-    implementation "de.zettsystems:identity-core:${identityVersion}"
-    implementation "de.zettsystems:identity-vaadin:${identityVersion}"
+    standaloneImplementation "de.zettsystems:identity-core:${identityVersion}"
+    standaloneImplementation "de.zettsystems:identity-vaadin:${identityVersion}"
     implementation "de.zettsystems:games-platform-api:${gamesPlatformApiVersion}"
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -85,7 +93,7 @@ dependencies {
     developmentOnly 'com.vaadin:vaadin-dev'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     // identity-core only declares mail compileOnly; without the starter, account mails go to the log.
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    standaloneImplementation 'org.springframework.boot:spring-boot-starter-mail'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

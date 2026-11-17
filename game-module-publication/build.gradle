@@ -18,7 +18,11 @@ def selectedVersions = resolution.allComponents
         .findAll { it.id instanceof ModuleComponentIdentifier || (it != resolution.root && it.moduleVersion != null) }
         .collectEntries { [(it.moduleVersion.group + ':' + it.moduleVersion.name): it.moduleVersion.version] }
 
-repositories { mavenCentral() }
+repositories {
+    mavenCentral()
+    // As in the root project: unreleased de.zettsystems libraries from publishToMavenLocal.
+    mavenLocal { content { includeGroup 'de.zettsystems' } }
+}
 dependencies {
     api platform("org.springframework.boot:spring-boot-dependencies:${rootProject.springBootVersion}")
     api platform("com.vaadin:vaadin-bom:${rootProject.vaadinVersion}")

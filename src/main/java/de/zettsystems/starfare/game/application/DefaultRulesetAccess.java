@@ -1,8 +1,7 @@
 package de.zettsystems.starfare.game.application;
 
-import de.zettsystems.identity.application.UserAccountService;
-import de.zettsystems.identity.values.Scope;
-import de.zettsystems.identity.values.UserAccountDto;
+import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.PlatformAccounts;
 import de.zettsystems.starfare.game.config.StandaloneStart;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
 import de.zettsystems.starfare.game.values.RulesetRef;
@@ -13,27 +12,24 @@ import org.springframework.stereotype.Service;
 
 /**
  * Testvarianten (im Katalog als {@code testing} markiert) stehen im Plattform-Host nur Testern
- * offen: aktive Konten mit globaler Rolle {@code SYSTEM_ADMIN} oder mit {@code GAME_TESTER} im
- * Bereich {@code game:starfare} – dieselbe Regel wie im Host. Ein globaler {@code GAME_TESTER}
- * oder der eines anderen Spiels reicht nicht. Im eigenen Start ist alles frei. Rollen werden bei
- * jeder Frage frisch gelesen, damit eine Änderung auch für laufende Sitzungen gilt.
+ * offen; wer Tester ist, beantwortet die Plattform ({@link PlatformAccounts#isTester}: aktive
+ * Systemadministratoren oder Tester genau dieses Spiels). Im eigenen Start ist alles frei. Die
+ * Plattform liest Rollen bei jeder Frage frisch, damit eine Änderung auch für laufende Sitzungen gilt.
  */
 @Service
 public class DefaultRulesetAccess implements RulesetAccess {
-    static final String SYSTEM_ADMIN = "SYSTEM_ADMIN";
-    static final String GAME_TESTER = "GAME_TESTER";
-    static final Scope TESTER_SCOPE = Scope.of("game", "starfare");
+    static final String GAME_KEY = "starfare";
 
     private final RulesetCatalog catalog;
-    private final UserAccountService accounts;
+    private final PlatformAccounts accounts;
     private final boolean standalone;
 
     @Autowired
-    public DefaultRulesetAccess(RulesetCatalog catalog, UserAccountService accounts) {
+    public DefaultRulesetAccess(RulesetCatalog catalog, PlatformAccounts accounts) {
         this(catalog, accounts, StandaloneStart.active());
     }
 
-    DefaultRulesetAccess(RulesetCatalog catalog, UserAccountService accounts, boolean standalone) {
+    DefaultRulesetAccess(RulesetCatalog catalog, PlatformAccounts accounts, boolean standalone) {
         this.catalog = catalog;
         this.accounts = accounts;
         this.standalone = standalone;
@@ -69,17 +65,13 @@ public class DefaultRulesetAccess implements RulesetAccess {
         if (account == null || account.isBlank()) {
             return false;
         }
-        long id;
+        AccountId id;
         try {
-            id = Long.parseLong(account);
-        } catch (NumberFormatException _) {
+            id = AccountId.of(Long.parseLong(account));
+        } catch (IllegalArgumentException _) {
+            // Not a number or not positive: no platform account.
             return false;
         }
-        return accounts.findById(id).filter(UserAccountDto::enabled).filter(DefaultRulesetAccess::isTester).isPresent();
-    }
-
-    private static boolean isTester(UserAccountDto account) {
-        return account.hasRole(SYSTEM_ADMIN) || account.roleAssignments().stream()
-                .anyMatch(role -> role.roleCode().equals(GAME_TESTER) && TESTER_SCOPE.equals(role.scope()));
+        return accounts.isTester(id, GAME_KEY);
     }
 }

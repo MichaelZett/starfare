@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.game.application;
 
-import de.zettsystems.identity.values.AccountDeleted;
+import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.AccountRemoved;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -13,7 +14,7 @@ class LegacySocialRecordsTest {
     @Test
     void removesBothDirectionsOfSocialLinksTheDisplaySettingsAndTheAccountsPreferences() {
         var jdbc = mock(JdbcTemplate.class);
-        assertThatCode(() -> new LegacySocialRecords(jdbc).accountDeleted(new AccountDeleted(42L, null)))
+        assertThatCode(() -> new LegacySocialRecords(jdbc).accountDeleted(new AccountRemoved(AccountId.of(42))))
                 .doesNotThrowAnyException();
         verify(jdbc).update("DELETE FROM friendships WHERE player_a = ? OR player_b = ?", "42", "42");
         verify(jdbc).update("DELETE FROM direct_messages WHERE sender_player_id = ? OR recipient_player_id = ?", "42", "42");

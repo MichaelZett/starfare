@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.game.application;
 
-import de.zettsystems.identity.values.AccountDeleted;
+import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.AccountRemoved;
 import de.zettsystems.starfare.game.domain.GameArchiveEntity;
 import de.zettsystems.starfare.game.domain.GameSessionEntity;
 import de.zettsystems.starfare.game.domain.GameState;
@@ -32,7 +33,7 @@ class GameAccountDeletionListenerTest {
         when(archives.findAll()).thenReturn(List.of(archive));
         TransactionSynchronizationManager.initSynchronization();
         try {
-            assertThatCode(() -> listener.accountDeleted(new AccountDeleted(42L, null))).doesNotThrowAnyException();
+            assertThatCode(() -> listener.accountDeleted(new AccountRemoved(AccountId.of(42)))).doesNotThrowAnyException();
             assertThat(session.getHostPlayerId()).isEqualTo("43");
             assertThat(archive.getHostPlayerId()).isNull();
             assertThat(session.getStateJson()).doesNotContain("\"42\"");
@@ -52,7 +53,7 @@ class GameAccountDeletionListenerTest {
         doThrow(new IllegalStateException("SQL failed")).when(jdbc).update(anyString(), eq("99"));
         TransactionSynchronizationManager.initSynchronization();
         try {
-            assertThatThrownBy(() -> listener.accountDeleted(new AccountDeleted(99L, null))).isInstanceOf(IllegalStateException.class);
+            assertThatThrownBy(() -> listener.accountDeleted(new AccountRemoved(AccountId.of(99)))).isInstanceOf(IllegalStateException.class);
             assertThat(session.getStateJson()).isEqualTo(snapshot);
             assertThat(TransactionSynchronizationManager.getSynchronizations()).isEmpty();
             verifyNoInteractions(store);
