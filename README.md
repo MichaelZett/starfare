@@ -275,7 +275,8 @@ instance up automatically and supplies its connection details. The local databas
 port is bound to loopback. Without Docker Compose, set `SPRING_DATASOURCE_URL`,
 `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` explicitly; the
 application has no fallback credentials. Then open
-[http://localhost:8110](http://localhost:8110).
+[http://localhost:8110](http://localhost:8110); you play as the standard account,
+without signing in.
 
 For local development with Vaadin hot reload:
 
@@ -294,17 +295,13 @@ $env:SONAR_TOKEN = "<SonarQube-Token>"
 .\gradlew.bat test jacocoTestReport sonar "-Dsonar.host.url=http://localhost:9000" "-Dsonar.projectKey=starfare" "-Dsonar.token=$env:SONAR_TOKEN"
 ```
 
-## Sign in
+## Accounts
 
-On first visit: create an account with email address, public player name and
-password, then confirm the email address. Subsequent sessions use the email
-address and password. Starfare stores the internal account ID as the player
-reference; the public player name is shown in games.
-
-For real verification and password-reset mail, start with the `brevo` profile.
-It reads the SMTP login, key and verified sender address from the external file
-`~/.config/starfare/brevo.yaml` under `starfare.mail.username`,
-`starfare.mail.password` and `starfare.mail.from-address`.
+Starfare's own start has no sign-in: whoever starts it plays as its standard
+account (Commander) against the computer. Accounts, friends, invitations to other
+players and statistics belong to the platform host games-platform, which asks
+nobody to sign in to Starfare separately. Starfare stores the account ID as the
+player reference; the public player name comes from the platform.
 
 ## Language
 
@@ -339,10 +336,10 @@ The landing route `/` is the lobby. From there:
 
 ## Privacy
 
-The public `/privacy` page explains the processed data and retention; `/imprint`
-contains the responsible provider and its contact details. Signed-in players can
-permanently delete their account at `/account/delete`. Direct and party-chat
-messages are removed after 365 days.
+Accounts and their deletion belong to the platform host; a deleted account reaches
+Starfare as `AccountRemoved`, and Starfare removes what belongs to it. Party-chat
+messages are removed after 365 days. The own start still serves `/privacy` and
+`/imprint` from its former public operation until plan M19 removes them.
 
 ## Map view (`/starfare/map/:gameId`)
 
@@ -521,37 +518,22 @@ platform releases with several games).
 
 ### Running it on a server
 
-Starfare still starts on its own. On a server, activate the profiles
-`hetzner,brevo`. The `hetzner` profile disables local Docker Compose, listens on
-port 8080 and honours forwarded headers from the reverse proxy. Required
-environment variables: `STARFARE_BASE_URL`, `STARFARE_LEGAL_OPERATOR_NAME`,
-`STARFARE_LEGAL_POSTAL_ADDRESS`, `STARFARE_LEGAL_CONTACT_EMAIL`,
-`STARFARE_MAIL_USERNAME`, `STARFARE_MAIL_PASSWORD`, `STARFARE_MAIL_FROM_ADDRESS`
-and the `SPRING_DATASOURCE_*` connection settings.
+The own start is meant for local play; on a server Starfare runs inside the
+platform host. Without a sign-in everybody reaching the own start plays the same
+standard account, so do not expose it publicly.
 
-`/actuator/health` answers with one of three states:
-
-| Status | HTTP | Meaning |
-|---|---|---|
-| `UP` | 200 | everything works |
-| `DEGRADED` | 200 | the game runs, but the mail server is not reachable: no registration or password mails |
-| `DOWN` | 503 | Starfare itself is failing, for instance its database |
-
-The public answer carries the status only; an account with the role `SYSTEM_ADMIN`
-also sees since when and why. The mail server is checked at most every 3 hours and
-real deliveries count as well, so `DEGRADED` can stay until the next check or
-accepted mail. It never restarts the container.
+`/actuator/health` answers `UP` (200) or `DOWN` (503); the public answer carries the
+status only. Other actuator endpoints stay closed.
 
 Slow page builds and UI actions (`starfare.timing.slow-page-ms`, default 500 ms),
-slow round resolutions (`starfare.timing.slow-round-ms`, default 1000 ms) and, in
-the `hetzner` profile, SQL queries over 200 ms are logged at WARN; `0` disables a
-threshold.
+and slow round resolutions (`starfare.timing.slow-round-ms`, default 1000 ms) are
+logged at WARN; `0` disables a threshold.
 
 ## Tests
 
 `./gradlew test` runs the unit and integration tests (PostgreSQL via
-Testcontainers), including Vaadin Browserless checks of real views with actual
-identity accounts. These cover map dispatch and round broadcasts, switching
+Testcontainers), including Vaadin Browserless checks of real views with test
+accounts as a platform host has them (`testsupport.TestPlatformAccounts`). These cover map dispatch and round broadcasts, switching
 accounts in the private lobby, and automatic navigation after wizard creation.
 Economy journeys also cover colony growth, mining and shortages, recycling,
 production presets and relocation trimming, the Spaceward wizard and ship research,
@@ -560,7 +542,7 @@ Map journeys cover fleet actions, bulk dispatch and reserves, editing and undo,
 saved filters after a new sign-in, rematches, relocation limits, station routes
 and coalition ownership, concealed results and persistent battle acknowledgements.
 They need neither Chrome nor a running HTTP server. `./gradlew e2eTest` runs Cucumber/Selenium journeys
-against the real application in headless Chrome: registration and one round,
+against the real application in headless Chrome: sign-in of a test account and one round,
 lobby access, round submission, battle playback, native relocation dragging,
 route geometry and separate map viewports. An emulated iPhone checks the phone
 interface by real taps next to a desktop session. Two browser sessions verify live chat,
@@ -965,9 +947,9 @@ the game services and views, frontend source files, public assets, translations,
 and byte-identical migrations under `games/starfare/migrations`.
 
 The game artifact omits the standalone application, AppShell, security chain,
-local demo-account setup, the entry view for `/`, the imprint, privacy and
-account-deletion pages (`legal`), application configuration, build metadata and
-compiled frontend bundle. An embedding application must supply these explicitly
+the standard account and the own start's other answers to the platform
+(`standalone.platform`), the entry view for `/`, the imprint and privacy pages
+(`legal`), application configuration, build metadata and compiled frontend bundle. An embedding application must supply these explicitly
 and build its own frontend.
 
 Inside a platform host, the host's frame shows the account menu (language, sign
@@ -1008,7 +990,7 @@ Local or a remote service:
 
 The fixture in `src/moduleTest/consumer` compiles and runs independently from
 published archives. It checks the ruleset catalog, a snapshot JSON round trip,
-the public service/view types, identity dependencies and source resources.
+the public service/view types, games-platform-api without zs-identity and source resources.
 For an isolated proof in PowerShell, run from the repository root:
 
     $consumer = Join-Path ([IO.Path]::GetTempPath()) ('starfare-consumer-' + [Guid]::NewGuid().ToString('N'))

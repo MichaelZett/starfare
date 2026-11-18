@@ -11,15 +11,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Guards the Starfare-specific part of the security chain. Login, registration and
- * password reset themselves are covered in the zs-identity repository.
+ * Guards the security chain of Starfare's own start: no sign-in, every page open, actuator
+ * endpoints other than health and info closed (plan Z3 b).
  */
 class SecurityChainTest extends AbstractIntegrationTest {
 
@@ -36,17 +34,11 @@ class SecurityChainTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void anonymousRequestToProtectedRouteRedirectsToLogin() throws Exception {
-        mockMvc.perform(get("/map"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/login")));
-    }
-
-    @Test
-    void identityRoutesAreAnonymouslyReachable() throws Exception {
-        assertPassesSecurityChain("/login");
-        assertPassesSecurityChain("/register");
-        assertPassesSecurityChain("/password/forgot");
+    void gamePagesNeedNoSignIn() throws Exception {
+        assertPassesSecurityChain("/");
+        assertPassesSecurityChain("/starfare");
+        assertPassesSecurityChain("/starfare/archive");
+        assertPassesSecurityChain("/imprint");
     }
 
     @Test
@@ -56,10 +48,8 @@ class SecurityChainTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void otherActuatorEndpointsRequireSystemAdmin() throws Exception {
-        mockMvc.perform(get("/actuator"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/login")));
+    void otherActuatorEndpointsStayClosed() throws Exception {
+        mockMvc.perform(get("/actuator")).andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -76,7 +66,7 @@ class SecurityChainTest extends AbstractIntegrationTest {
 
     /**
      * MockMvc has no Vaadin servlet, so a request that passes the security chain fails with a
-     * "no servlet" {@link ServletException}; a redirect to {@code /login} fails the status check.
+     * "no servlet" {@link ServletException}; a redirect or a denial fails the status check.
      */
     private void assertPassesSecurityChain(String path) throws Exception {
         try {

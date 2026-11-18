@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.e2e;
 
+import de.zettsystems.starfare.testsupport.TestPlatformSocial;
 import io.cucumber.spring.CucumberContextConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -9,14 +10,15 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Der Spring-Kontext der Cucumber-Suite: die echte Anwendung auf einem
- * zufälligen Port, eigene Postgres-Instanz, aufgezeichnete statt verschickte
- * Mails. Profil {@code test} schaltet Docker Compose ab; alles andere kommt aus
- * der produktiven {@code application.yaml}.
+ * zufälligen Port, eigene Postgres-Instanz, Testkonten statt des Standardkontos
+ * (TestPlatformAccounts, E2eSignInView) und einstellbare Sichtbarkeit
+ * (TestPlatformSocial). Profil {@code test} schaltet Docker Compose ab; alles
+ * andere kommt aus der produktiven {@code application.yaml}.
  */
 @CucumberContextConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import(RecordingMailConfiguration.class)
+@Import(TestPlatformSocial.Configuration.class)
 public class CucumberSpringConfiguration {
 
     @ServiceConnection

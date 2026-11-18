@@ -1,7 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.identity.application.UserAccountService;
-import de.zettsystems.identity.values.AccountName;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameService;
@@ -30,11 +29,11 @@ public class NavigationLayoutSteps {
     private final GameRegistry registry;
     private final GameService games;
     private final GameSessionStore store;
-    private final UserAccountService accounts;
+    private final TestPlatformAccounts accounts;
     private final List<GameId> created = new ArrayList<>();
 
     public NavigationLayoutSteps(Browser browser, GameRegistry registry, GameService games,
-                                 GameSessionStore store, UserAccountService accounts) {
+                                 GameSessionStore store, TestPlatformAccounts accounts) {
         this.browser = browser;
         this.registry = registry;
         this.games = games;
@@ -45,8 +44,7 @@ public class NavigationLayoutSteps {
     @Wenn("ich Reichweitenkreis, Routenvorschau und Auftankkarten im Browser prüfe")
     public void navigationLayout() throws IOException {
         String email = "navigation-layout-" + UUID.randomUUID() + "@example.test";
-        String host = String.valueOf(accounts.createAccount(email, Browser.PASSWORD,
-                AccountName.display("Navigator"), true).id());
+        String host = String.valueOf(accounts.createAccount(email, "Navigator").id());
         var state = FleetUiStates.navigation();
         state.seatByUser().put(host, 1);
         GameId id = GameId.newId();

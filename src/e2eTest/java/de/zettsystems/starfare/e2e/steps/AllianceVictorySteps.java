@@ -1,6 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.identity.application.UserAccountService;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.diplomacy.values.*;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.*;
@@ -25,11 +25,11 @@ public class AllianceVictorySteps {
     private final Browser browser;
     private final GameService games;
     private final GameSessionStore store;
-    private final UserAccountService accounts;
+    private final TestPlatformAccounts accounts;
     private final DisplaySettingsService preferences;
     private GameId id;
     public AllianceVictorySteps(Browser browser, GameService games, GameSessionStore store,
-                                UserAccountService accounts, DisplaySettingsService preferences) {
+                                TestPlatformAccounts accounts, DisplaySettingsService preferences) {
         this.browser = browser; this.games = games; this.store = store; this.accounts = accounts; this.preferences = preferences;
     }
     @Dann("prüfe ich die getrennten Bündnisoptionen in der internen Wizard-Vorschau")

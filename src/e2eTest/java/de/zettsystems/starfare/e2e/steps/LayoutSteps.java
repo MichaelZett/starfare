@@ -1,7 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.identity.application.UserAccountService;
-import de.zettsystems.identity.values.AccountName;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.testsupport.ReviewGameFixture;
@@ -20,11 +19,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** Browser-only layout and production-bundle checks retained when functional journeys move. */
 public class LayoutSteps {
     private final Browser browser;
-    private final UserAccountService accounts;
+    private final TestPlatformAccounts accounts;
     private final ReviewGameFixture fixtures;
     private final GameRegistry registry;
 
-    public LayoutSteps(Browser browser, UserAccountService accounts, ReviewGameFixture fixtures, GameRegistry registry) {
+    public LayoutSteps(Browser browser, TestPlatformAccounts accounts, ReviewGameFixture fixtures, GameRegistry registry) {
         this.browser = browser;
         this.accounts = accounts;
         this.fixtures = fixtures;
@@ -34,7 +33,7 @@ public class LayoutSteps {
     @Wenn("ich den Layout-Rundgang bei 1366 und 1024 Pixeln durchlaufe")
     public void walkLayouts() throws IOException {
         String email = "layout-" + UUID.randomUUID() + "@example.test";
-        accounts.createAccount(email, Browser.PASSWORD, AccountName.display("Layout Tester"), true);
+        accounts.createAccount(email, "Layout Tester");
         browser.logIn(email);
         var game = fixtures.create(email, null);
         Dimension original = browser.driver().manage().window().getSize();

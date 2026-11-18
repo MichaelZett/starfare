@@ -1,7 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.identity.application.UserAccountService;
-import de.zettsystems.identity.values.AccountName;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.game.application.GameSessionStore;
@@ -30,11 +29,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** Retains geometry, keyboard activation and acceptance pictures from migrated economy journeys. */
 public class EconomyLayoutSteps {
     private final Browser browser;
-    private final UserAccountService accounts;
+    private final TestPlatformAccounts accounts;
     private final GameSessionStore store;
     private final List<GameId> created = new ArrayList<>();
 
-    public EconomyLayoutSteps(Browser browser, UserAccountService accounts, GameSessionStore store) {
+    public EconomyLayoutSteps(Browser browser, TestPlatformAccounts accounts, GameSessionStore store) {
         this.browser = browser;
         this.accounts = accounts;
         this.store = store;
@@ -43,8 +42,7 @@ public class EconomyLayoutSteps {
     @Wenn("ich Mondkolonie, Wirtschaftsplanung und Forschung bei beiden Desktopbreiten prüfe")
     public void economyLayouts() throws IOException {
         String email = "economy-layout-" + UUID.randomUUID() + "@example.test";
-        String host = String.valueOf(accounts.createAccount(email, Browser.PASSWORD,
-                AccountName.display("Economy Layout"), true).id());
+        String host = String.valueOf(accounts.createAccount(email, "Economy Layout").id());
         browser.logIn(email);
         GameId colony = save(ColonyStates.readyWithMoon(), host);
         GameId research = save(mixedResearch(), host);

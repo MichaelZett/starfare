@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameEvent;
@@ -10,8 +9,7 @@ import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.application.InvitationService;
-import de.zettsystems.gamesplatformapi.PlatformPresence;
-import de.zettsystems.starfare.game.platform.StarfareMatches;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
 import org.openqa.selenium.JavascriptExecutor;
@@ -36,21 +34,19 @@ public class LobbySteps {
     private final GameRegistry registry;
     private final Broadcaster broadcaster;
     private final InvitationService invitations;
-    private final PlatformPresence presence;
-    private final PlayerDirectory players;
+    private final TestPlatformAccounts accounts;
     private GameId id;
     private String name;
     private String host;
 
     public LobbySteps(Browser browser, GameService games, GameRegistry registry, Broadcaster broadcaster,
-                      InvitationService invitations, PlatformPresence presence, PlayerDirectory players) {
+                      InvitationService invitations, TestPlatformAccounts accounts) {
         this.browser = browser;
         this.games = games;
         this.registry = registry;
         this.broadcaster = broadcaster;
         this.invitations = invitations;
-        this.presence = presence;
-        this.players = players;
+        this.accounts = accounts;
     }
 
     @Wenn("ich eine private Lobby-Partie ohne Beitritt anlege")
@@ -157,10 +153,8 @@ public class LobbySteps {
 
     @Wenn("der Host die Partie wieder privat stellt und {string} einlädt")
     public void invite(String displayName) {
-        // Who is online comes from the platform in a host and from Starfare in its own start (plan M13).
-        String guest = presence.onlineFor(StarfareMatches.account(host).orElseThrow()).stream()
-                .map(StarfareMatches::accountName)
-                .filter(account -> players.displayName(account).equals(displayName)).findFirst().orElseThrow();
+        // The host picks the guest from the platform's friends or online list; here the test account is known.
+        String guest = accounts.findByDisplayName(displayName).orElseThrow().playerId();
         assertThat(games.changeVisibility(id, host, GameVisibility.PRIVATE)).isTrue();
         assertThat(invitations.inviteUser(id, host, guest)).isPresent();
     }
@@ -168,10 +162,13 @@ public class LobbySteps {
     @Wenn("ich die Lobby-Einladung annehme")
     public void acceptInvite() throws IOException {
         if (browser.awaitLobby()) {
-            browser.awaitCss(".invitations-row");
-            browser.awaitNoneDisplayed(".lobby-game-card vaadin-details");
+            // The invitee's open lobby lists the private game without reload; accepting happens in
+            // the waiting room, as inside a platform host.
+            browser.awaitText(name);
+            browser.open(Browser.LOBBY + "/match/" + id.value());
             browser.captureUiAcceptance("invitation");
-            browser.clickButtonWithText("Annehmen");
+            browser.clickCss("#waiting-room-accept");
+            browser.awaitText(name);
             return;
         }
         // In a host the platform lobby lists the invitation; it leads to the waiting room (plan M13).

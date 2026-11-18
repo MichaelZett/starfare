@@ -2,7 +2,7 @@ package de.zettsystems.starfare.e2e.steps;
 
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.e2e.E2eWorld;
-import de.zettsystems.starfare.e2e.RecordingMailConfiguration.RecordingMailSender;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import io.cucumber.java.After;
 import io.cucumber.java.AfterStep;
 import io.cucumber.java.Before;
@@ -14,31 +14,23 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Die Schritte des Smoke-Szenarios: vom Konto bis zur ersten Runde.
- *
- * <p>Die Identity-Ansichten tragen keine Element-Kennungen; ihre Felder werden
- * in DOM-Reihenfolge befüllt, Knöpfe über ihren Text gefunden. Vom
- * Bestätigungslink zählt nur Pfad und Query — der konfigurierte Host passt
- * nicht zum zufälligen Testport.
- */
+/** Die Schritte des Smoke-Szenarios: vom Konto bis zur ersten Runde. */
 public class SmokeSteps {
 
     private final Browser browser;
     private final E2eWorld world;
-    private final RecordingMailSender mails;
+    private final TestPlatformAccounts accounts;
 
-    public SmokeSteps(Browser browser, E2eWorld world, RecordingMailSender mails) {
+    public SmokeSteps(Browser browser, E2eWorld world, TestPlatformAccounts accounts) {
         this.browser = browser;
         this.world = world;
-        this.mails = mails;
+        this.accounts = accounts;
     }
 
     @Before
@@ -81,33 +73,11 @@ public class SmokeSteps {
         }
     }
 
-    @Wenn("ich mich als {string} mit der E-Mail-Adresse {string} registriere")
-    public void register(String displayName, String email) {
+    /** Ein Konto, wie es ein Plattform-Host kennt; Starfares eigener Start hat keine Registrierung. */
+    @Wenn("das Konto {string} mit der E-Mail-Adresse {string} besteht")
+    public void accountExists(String displayName, String email) {
         world.rememberAccount(displayName, email);
-        browser.open("/register");
-        browser.type("vaadin-text-field input", displayName);
-        browser.type("vaadin-email-field input", email);
-        List<WebElement> passwordFields = browser.awaitAtLeast("vaadin-password-field input", 2);
-        passwordFields.get(0).sendKeys(Browser.PASSWORD);
-        passwordFields.get(1).sendKeys(Browser.PASSWORD);
-        browser.clickButtonWithText("Registrieren");
-        browser.awaitText("Fast geschafft");
-    }
-
-    @Dann("liegt eine Bestätigungsmail für {string} vor")
-    public void confirmationMailExists(String email) {
-        assertThat(confirmationUrlFor(email)).isNotBlank();
-    }
-
-    @Wenn("ich den Bestätigungslink für {string} öffne")
-    public void openConfirmationLink(String email) {
-        URI url = URI.create(confirmationUrlFor(email));
-        String pathAndQuery = url.getRawPath() + (url.getRawQuery() == null ? "" : "?" + url.getRawQuery());
-        browser.open(pathAndQuery);
-        // Eingelöst wird erst auf Knopfdruck — schützt das Einmal-Token vor Mail-Scannern.
-        browser.awaitText("E-Mail bestätigen");
-        browser.clickButtonWithText("E-Mail-Adresse bestätigen");
-        browser.awaitText("Konto freigeschaltet");
+        accounts.createAccount(email, displayName);
     }
 
     @Wenn("ich mich mit {string} anmelde")
@@ -289,16 +259,5 @@ public class SmokeSteps {
         browser.awaitUrl(url -> url.contains("/map/"), "Die Karte wurde nach dem Zug verlassen.");
         browser.awaitSelectedTabWithText("Bericht");
         browser.awaitText("Runde " + (round + 1));
-    }
-
-    /** Mail delivery may run after the confirmation page is shown; poll instead of reading once. */
-    private String confirmationUrlFor(String email) {
-        return new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
-                .withMessage("Keine aufgezeichnete Mail an " + email + ".")
-                .until(_ -> mails.sent().stream()
-                        .filter(mail -> mail.recipient().equals(email))
-                        .reduce((_, second) -> second)
-                        .map(RecordingMailSender.Sent::url)
-                        .orElse(null));
     }
 }

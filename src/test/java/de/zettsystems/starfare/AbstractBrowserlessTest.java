@@ -8,27 +8,25 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.server.VaadinSession;
-import de.zettsystems.identity.application.UserAccountService;
-import de.zettsystems.identity.values.AccountName;
 import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.application.RoundDeadlineRunner;
+import de.zettsystems.starfare.legal.ui.ImprintView;
 import de.zettsystems.starfare.testsupport.ReviewGameFixture;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Locale;
 import java.util.UUID;
 
-/** Real views, identity principals and game services, without a browser or JavaScript. */
+/** Real views, test accounts (as a platform host has them) and game services, without a browser or JavaScript. */
 @SpringBootTest
 @Import({SyncAsyncTestConfig.class, TestPostgresConfiguration.class,
         de.zettsystems.starfare.testsupport.TestPlatformSocial.Configuration.class})
@@ -45,15 +43,16 @@ public abstract class AbstractBrowserlessTest extends SpringBrowserlessTest {
     @Autowired
     protected ReviewGameFixture reviewGames;
     @Autowired
-    protected UserAccountService accounts;
-    @Autowired
-    private UserDetailsService userDetailsService;
+    protected TestPlatformAccounts accounts;
 
     @BeforeEach
     void prepareSession() {
         registry.listIds().forEach(registry::abortGame);
         VaadinSession.getCurrent().setAttribute("starfare.locale", Locale.GERMAN);
         UI.getCurrent().setLocale(Locale.GERMAN);
+        // The mock UI opens "/" before this runs; the own start forwards it to the lobby without a
+        // sign-in, so a lobby in the JVM's default language would stay current. Leave it.
+        navigate(ImprintView.class);
     }
 
     @AfterEach
@@ -61,18 +60,16 @@ public abstract class AbstractBrowserlessTest extends SpringBrowserlessTest {
         SecurityContextHolder.clearContext();
     }
 
-    /** Creates a unique verified account, then signs in with the application's actual principal. */
+    /** Creates a unique test account and signs it in. */
     protected String loginAsNewPlayer(String name) {
         String email = "browserless-" + UUID.randomUUID() + "@example.test";
-        accounts.createAccount(email, "Test-password-42!", AccountName.display(name), true);
+        accounts.createAccount(email, name);
         loginAs(email);
         return email;
     }
 
     protected void loginAs(String email) {
-        var details = userDetailsService.loadUserByUsername(email);
-        SecurityContextHolder.getContext().setAuthentication(
-                UsernamePasswordAuthenticationToken.authenticated(details, null, details.getAuthorities()));
+        SecurityContextHolder.setContext(accounts.signedIn(email));
     }
 
     /** ui.access tasks are drained when the test releases the session lock. */

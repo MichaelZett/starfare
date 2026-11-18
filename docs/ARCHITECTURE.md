@@ -341,21 +341,21 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
 - `diplomacy` — alliance groups, unanimous consent and round-based departures.
 - `ai` — Classic and Spaceward AI decisions (`AiService`, `SpacewardPlanning`).
 - `report` — Round reports (`TurnReport`, `TurnEvent`).
-- `auth` — Starfare adapter around the reusable identity building block
-  (`de.zettsystems:identity-core` / `identity-vaadin` from the `zs-identity`
-  repository, consumed as Maven artifacts). Authentication uses email; game and
-  social references use the immutable account ID, while the public player name
-  (`zs.identity.name-mode: DISPLAY_NAME`) is presentation-only. The building
-  block migrates its own database schema `identity` (own Flyway history, run
-  before the application's); Starfare's schema lives in `V2_x` under
-  `db/migration`.
+- `auth` — the signed-in player (`UserContext`) and display names
+  (`PlayerDirectory`), both read from games-platform-api's `PlatformAccounts`.
+  Game references use the immutable account ID; the public player name is
+  presentation-only. `auth.config` holds the own start's security chain: no
+  sign-in, every page open (plan Z3 b). Starfare's schema lives in `V2_x` under
+  `db/migration`; the schema `identity` of the former zs-identity building block
+  stays unread in old databases.
 - `i18n` — `StarfareI18NProvider` (Vaadin `I18NProvider`),
   `I18n.t(...)` facade, `LocaleServiceInitListener` (restores the UI
   locale from the session).
 - `standalone` — Starfare's own start only (left out of the game artifact): the
   entry view and its answers to the platform interfaces (`standalone.platform`:
-  no friends, nobody else online, everybody visible).
-- `legal` — Imprint, privacy information and account deletion views.
+  the standard account everybody plays as without signing in, no friends, nobody
+  else online, everybody visible).
+- `legal` — Imprint and privacy information views.
 - `style` — `CssProperties`, `HtmlAttributes` (central constants for
   Vaadin styling and attributes).
 

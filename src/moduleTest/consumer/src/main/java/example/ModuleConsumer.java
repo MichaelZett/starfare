@@ -1,6 +1,6 @@
 package example;
 
-import de.zettsystems.identity.application.IdentityUserDetails;
+import de.zettsystems.gamesplatformapi.PlatformAccounts;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
@@ -41,8 +41,9 @@ public final class ModuleConsumer {
         require(restored.started(), "Snapshot round trip lost the started state");
         require(GameService.class.isInterface(), "Game service API unavailable");
         require(LobbyView.class.getName().endsWith("LobbyView"), "Vaadin views unavailable");
-        require(IdentityUserDetails.class.getName().endsWith("IdentityUserDetails"), "Identity dependency unavailable");
-        var loader = ModuleConsumer.class.getClassLoader();
+        require(PlatformAccounts.class.isInterface(), "games-platform-api unavailable");
+        require(loader().getResource("de/zettsystems/identity/") == null, "zs-identity leaked into game module");
+        var loader = loader();
         for (var resource : new String[]{"META-INF/frontend/battle-replay.js", "META-INF/frontend/map-geometry.js",
                 "META-INF/frontend/styles/starfare.css", "META-INF/resources/icons/starfare.svg",
                 "games/starfare/migrations/V2_1__create_schema.sql", "games/starfare/i18n/translations.properties"}) {
@@ -52,7 +53,11 @@ public final class ModuleConsumer {
                 "Executable application leaked into game module");
         require(loader.getResource("de/zettsystems/starfare/AppShell.class") == null,
                 "Standalone AppShell leaked into game module");
-        System.out.println("Published module consumed: both variants, snapshot round trip, views, identity and resources verified.");
+        System.out.println("Published module consumed: both variants, snapshot round trip, views, platform API and resources verified.");
+    }
+
+    private static ClassLoader loader() {
+        return ModuleConsumer.class.getClassLoader();
     }
 
     private static void require(boolean condition, String message) {

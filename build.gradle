@@ -73,10 +73,10 @@ configurations.named('e2eTestAnnotationProcessor') { extendsFrom configurations.
 
 configurations {
     mockitoAgent
-    // Starfare's own start only (sign-in, imprint, account deletion; packages standalone, legal,
-    // auth.config): on the application's classpaths, but not inherited by the game artifact's
-    // variants, which extend implementation only (gradle/game-module.gradle). The game itself asks
-    // the platform through games-platform-api (plan Z3, LayerRulesTest).
+    // Libraries for Starfare's own start only (packages standalone, legal, auth.config): on the
+    // application's classpaths, but not inherited by the game artifact's variants, which extend
+    // implementation only (gradle/game-module.gradle). Empty since the own start needs no sign-in
+    // (plan Z3 b); the game asks the platform through games-platform-api (LayerRulesTest).
     standaloneImplementation
     compileClasspath.extendsFrom standaloneImplementation
     runtimeClasspath.extendsFrom standaloneImplementation
@@ -84,16 +84,12 @@ configurations {
 }
 
 dependencies {
-    standaloneImplementation "de.zettsystems:identity-core:${identityVersion}"
-    standaloneImplementation "de.zettsystems:identity-vaadin:${identityVersion}"
     implementation "de.zettsystems:games-platform-api:${gamesPlatformApiVersion}"
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'com.vaadin:vaadin-spring-boot-starter'
     developmentOnly 'com.vaadin:vaadin-dev'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    // identity-core only declares mail compileOnly; without the starter, account mails go to the log.
-    standaloneImplementation 'org.springframework.boot:spring-boot-starter-mail'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -416,7 +412,7 @@ sonar {
                 'src/main/frontend/battle-replay.js',
         ].join(',')
 
-        property 'sonar.issue.ignore.multicriteria', 'serial1,serial2,serial3,domainEquals,entityProxyEquals,localDemoPassword,battleAudioRandom,battleTimelineRandom,cssImportant'
+        property 'sonar.issue.ignore.multicriteria', 'serial1,serial2,serial3,domainEquals,entityProxyEquals,battleAudioRandom,battleTimelineRandom,cssImportant'
         property 'sonar.issue.ignore.multicriteria.serial1.ruleKey', 'java:S1948'
         property 'sonar.issue.ignore.multicriteria.serial1.resourceKey', '**/*.java'
         property 'sonar.issue.ignore.multicriteria.serial2.ruleKey', 'java:S2057'
@@ -427,12 +423,10 @@ sonar {
         property 'sonar.issue.ignore.multicriteria.domainEquals.ruleKey', 'java:S2160'
         property 'sonar.issue.ignore.multicriteria.domainEquals.resourceKey', '**/domain/**'
         // These findings were reviewed against the runtime behavior: application entities have no
-        // lazy associations/proxy lookups; the demo credential is created only in the local profile;
+        // lazy associations/proxy lookups;
         // battle-replay randomness controls presentation timing and audio pitch only.
         property 'sonar.issue.ignore.multicriteria.entityProxyEquals.ruleKey', 'java:S8947'
         property 'sonar.issue.ignore.multicriteria.entityProxyEquals.resourceKey', '**/persistence/AbstractBaseEntity.java'
-        property 'sonar.issue.ignore.multicriteria.localDemoPassword.ruleKey', 'java:S2068'
-        property 'sonar.issue.ignore.multicriteria.localDemoPassword.resourceKey', '**/auth/config/LocalDemoAccountConfiguration.java'
         property 'sonar.issue.ignore.multicriteria.battleAudioRandom.ruleKey', 'javascript:S2245'
         property 'sonar.issue.ignore.multicriteria.battleAudioRandom.resourceKey', 'src/main/frontend/battle-replay.js'
         property 'sonar.issue.ignore.multicriteria.battleTimelineRandom.ruleKey', 'javascript:S2245'

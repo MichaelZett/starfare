@@ -16,8 +16,8 @@ Kontaktadresse im Impressum.
 
 ## Schnellstart
 
-1. Registriere dich mit E-Mail-Adresse, öffentlichem Spielernamen und Passwort.
-   Bestätige die E-Mail-Adresse und melde dich an.
+1. Melde dich auf der Spieleplattform an und öffne Starfare. Im eigenen Start
+   (lokal) spielst du ohne Anmeldung als Standardkonto gegen den Computer.
 2. Erstelle in der Lobby ein **Neues Spiel** oder tritt einer verfügbaren Partie bei.
 3. Der Gastgeber startet die Partie, sobald alle menschlichen Plätze besetzt sind.
 4. Wähle auf der Karte ein eigenes System und danach ein anderes System als Ziel.
@@ -454,10 +454,8 @@ werden je Konto gespeichert und bei einer späteren Anmeldung wieder geladen.
 Sprache bleibt sitzungsbezogen; Kartenposition und Zoom werden je Partie in der
 Browsersitzung behalten.
 
-**Mein Bereich** bündelt Lobby, Archiv und die Kontolöschung.
-Impressum und Datenschutz sind über die gemeinsame Fußzeile erreichbar.
-Die Kontolöschung ist dauerhaft; Einzelheiten zu Daten und Aufbewahrung stehen
-in der Datenschutzansicht der Anwendung.
+**Mein Bereich** bündelt Lobby und Archiv. Konto, Kontolöschung, Impressum und
+Datenschutz gehören der Spieleplattform und stehen in ihrem Rahmen.
 
 ## Grafische Systemsicht
 

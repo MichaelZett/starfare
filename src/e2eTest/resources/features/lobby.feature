@@ -3,14 +3,12 @@
 Funktionalität: Private Lobby und Archiv
 
   Szenario: Sichtbarkeit, Einladung und lesende Nachbetrachtung
-    Wenn ich mich als "Lobby Host" mit der E-Mail-Adresse "lobby-host@example.test" registriere
-    Und ich den Bestätigungslink für "lobby-host@example.test" öffne
+    Wenn das Konto "Lobby Host" mit der E-Mail-Adresse "lobby-host@example.test" besteht
     Und das Konto "lobby-host@example.test" Tester für Starfare ist
     Und ich mich mit "lobby-host@example.test" anmelde
     Und ich eine private Lobby-Partie ohne Beitritt anlege
     Und ich die Browsersitzung wechsle
-    Und ich mich als "Lobby Guest" mit der E-Mail-Adresse "lobby-guest@example.test" registriere
-    Und ich den Bestätigungslink für "lobby-guest@example.test" öffne
+    Und das Konto "Lobby Guest" mit der E-Mail-Adresse "lobby-guest@example.test" besteht
     Und ich mich mit "lobby-guest@example.test" anmelde
     Dann ist die private Lobby-Partie verborgen
     Wenn ich die Browsersitzung wechsle

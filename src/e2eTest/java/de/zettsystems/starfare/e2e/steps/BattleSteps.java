@@ -1,6 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.identity.application.UserAccountService;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameEvent;
@@ -37,11 +37,11 @@ public class BattleSteps {
     private final GameService games;
     private final GameRegistry registry;
     private final Broadcaster broadcaster;
-    private final UserAccountService accounts;
+    private final TestPlatformAccounts accounts;
     private Dimension originalSize;
 
     public BattleSteps(Browser browser, GameService games, GameRegistry registry,
-                       Broadcaster broadcaster, UserAccountService accounts) {
+                       Broadcaster broadcaster, TestPlatformAccounts accounts) {
         this.browser = browser;
         this.games = games;
         this.registry = registry;

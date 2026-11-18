@@ -1,34 +1,42 @@
 package de.zettsystems.starfare.auth.config;
 
+import com.vaadin.flow.spring.security.NavigationAccessControlConfigurer;
 import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
-import de.zettsystems.identity.ui.LoginView;
 import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Starfare's own start has no sign-in: everybody plays as its standard account
+ * ({@code standalone.platform.SoloPlatformAccounts}), games against the computer (plan Z3 b). So
+ * every page is open and the views' access annotations are not checked; inside a platform host the
+ * host's security decides. Actuator endpoints other than health and info stay closed.
+ */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         return http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/register", "/register/**", "/password/**", "/privacy", "/imprint", "/account/delete")
-                        .permitAll()
-                        .requestMatchers("/favicon.ico", "/icons/**", "/images/**", "/styles.css", "/styles/**",
-                                "/manifest.webmanifest", "/sw.js", "/offline.html", "/robots.txt")
-                        .permitAll()
                         .requestMatchers(EndpointRequest.to("health", "info"))
                         .permitAll()
                         .requestMatchers(EndpointRequest.toAnyEndpoint())
                         .hasRole("SYSTEM_ADMIN"))
-                .with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer.loginView(LoginView.class))
+                .with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer
+                        .enableNavigationAccessControl(false)
+                        .anyRequest(AuthorizeHttpRequestsConfigurer.AuthorizedUrl::permitAll))
                 .build();
+    }
+
+    /** Without a sign-in there is nobody to check views against. */
+    @Bean
+    NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
+        return new NavigationAccessControlConfigurer().disabled();
     }
 }

@@ -1,7 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.identity.application.UserAccountService;
-import de.zettsystems.identity.values.AccountName;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.application.GameService;
@@ -33,13 +32,13 @@ public class CoalitionRenderingSteps {
     private final Browser browser;
     private final GameService games;
     private final GameSessionStore store;
-    private final UserAccountService accounts;
+    private final TestPlatformAccounts accounts;
     private final DisplaySettingsService preferences;
     private final BattleAcknowledgementService acknowledgements;
     private final List<GameId> created = new ArrayList<>();
 
     public CoalitionRenderingSteps(Browser browser, GameService games, GameSessionStore store,
-                                    UserAccountService accounts, DisplaySettingsService preferences,
+                                    TestPlatformAccounts accounts, DisplaySettingsService preferences,
                                     BattleAcknowledgementService acknowledgements) {
         this.browser = browser;
         this.games = games;
@@ -52,8 +51,7 @@ public class CoalitionRenderingSteps {
     @Wenn("zwei aufgelöste Bündnisschlachten für die Browser-Wiedergabe bereitstehen")
     public void prepareResolvedBattles() {
         String email = "coalition-rendering-" + UUID.randomUUID() + "@example.test";
-        String host = String.valueOf(accounts.createAccount(email, Browser.PASSWORD,
-                AccountName.display("Commander"), true).id());
+        String host = String.valueOf(accounts.createAccount(email, "Commander").id());
         preferences.chooseDisplaySetting(host, DisplaySetting.SOUND, "false");
         preferences.chooseDisplaySetting(host, DisplaySetting.SPEED, "1.0");
         var state = FleetUiStates.coalition();

@@ -1,7 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.identity.application.UserAccountService;
-import de.zettsystems.identity.values.AccountName;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameSessionStore;
@@ -23,9 +22,9 @@ public class ResearchSteps {
     private final Browser browser;
     private final GameRegistry registry;
     private final GameSessionStore store;
-    private final UserAccountService accounts;
+    private final TestPlatformAccounts accounts;
 
-    public ResearchSteps(Browser browser, GameRegistry registry, GameSessionStore store, UserAccountService accounts) {
+    public ResearchSteps(Browser browser, GameRegistry registry, GameSessionStore store, TestPlatformAccounts accounts) {
         this.browser = browser;
         this.registry = registry;
         this.store = store;
@@ -35,8 +34,7 @@ public class ResearchSteps {
     @Wenn("ich die Schiffsforschung auf dem Handy prüfe")
     public void researchPhone() throws IOException {
         String email = "phone-research-" + UUID.randomUUID() + "@example.test";
-        String host = String.valueOf(accounts.createAccount(email, Browser.PASSWORD,
-                AccountName.display("Phone Researcher"), true).id());
+        String host = String.valueOf(accounts.createAccount(email, "Phone Researcher").id());
         var state = EconomyUiStates.research();
         state.seatByUser().put(host, 1);
         state.planShipResearch(1, 50);

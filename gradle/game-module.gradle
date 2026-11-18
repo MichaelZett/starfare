@@ -26,9 +26,8 @@ def gameModuleJar = tasks.register('gameModuleJar', Jar) {
         exclude 'de/zettsystems/starfare/StarfareApplication*.class'
         exclude 'de/zettsystems/starfare/AppShell*.class'
         exclude 'de/zettsystems/starfare/auth/config/SecurityConfig*.class'
-        exclude 'de/zettsystems/starfare/auth/config/LocalDemoAccountConfiguration*.class'
         exclude 'de/zettsystems/starfare/standalone/**'
-        // Imprint, privacy and account deletion belong to the starting application (M9).
+        // Imprint and privacy belong to the starting application (M9).
         exclude 'de/zettsystems/starfare/legal/**'
         exclude 'application*.yaml', 'application*.yml', 'application*.properties'
         exclude 'git.properties', 'META-INF/build-info.properties'
@@ -130,13 +129,12 @@ abstract class VerifyGameModule extends DefaultTask {
             ['de/zettsystems/starfare/StarfareApplication.class',
              'de/zettsystems/starfare/AppShell.class',
              'de/zettsystems/starfare/auth/config/SecurityConfig.class',
-             'de/zettsystems/starfare/auth/config/LocalDemoAccountConfiguration.class',
              'de/zettsystems/starfare/standalone/ui/StandaloneEntryView.class',
              'de/zettsystems/starfare/legal/ui/ImprintView.class'].each {
                 VerifyGameModule.checkCondition(!entries.contains(it), 'Application bootstrap leaked: ' + it)
             }
             VerifyGameModule.verifyGameDescription(zip)
-            // Friends, presence and chat of Starfare's own start stay out: a host has its own (plan M13).
+            // The own start's standard account and its answers to the platform stay out (plans M13, Z3).
             VerifyGameModule.checkCondition(entries.every { !it.startsWith('de/zettsystems/starfare/standalone/') },
                     'Standalone code leaked into the game module')
             entries.each { entry ->

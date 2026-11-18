@@ -1,6 +1,6 @@
 package de.zettsystems.starfare.testsupport;
 
-import de.zettsystems.identity.application.UserAccountService;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameId;
@@ -21,9 +21,9 @@ public class ReviewGameFixture {
 
     private final GameService games;
     private final GameRegistry registry;
-    private final UserAccountService accounts;
+    private final TestPlatformAccounts accounts;
 
-    ReviewGameFixture(GameService games, GameRegistry registry, UserAccountService accounts) {
+    ReviewGameFixture(GameService games, GameRegistry registry, TestPlatformAccounts accounts) {
         this.games = games;
         this.registry = registry;
         this.accounts = accounts;

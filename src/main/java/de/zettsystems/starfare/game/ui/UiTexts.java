@@ -591,7 +591,6 @@ public final class UiTexts {
     public static final String CHAT_SEND = "chat.send";
     public static final String LEGAL_PRIVACY = "legal.privacy";
     public static final String LEGAL_IMPRINT = "legal.imprint";
-    public static final String LEGAL_DELETE_ACCOUNT = "legal.deleteAccount";
     public static final String LEGAL_IMPRINT_TITLE = "legal.imprint.title";
     public static final String LEGAL_IMPRINT_PROVIDER = "legal.imprint.provider";
     public static final String LEGAL_IMPRINT_CONTACT = "legal.imprint.contact";
@@ -648,10 +647,6 @@ public final class UiTexts {
     public static final String PRIVACY_PURPOSE = "privacy.purpose";
     public static final String PRIVACY_RIGHTS_TITLE = "privacy.rightsTitle";
     public static final String PRIVACY_RIGHTS = "privacy.rights";
-    public static final String ACCOUNT_DELETE_ACTION = "account.deleteAction";
-    public static final String ACCOUNT_DELETE_CONFIRM = "account.deleteConfirm";
-    public static final String ACCOUNT_DELETE_EFFECT = "account.deleteEffect";
-    public static final String ACCOUNT_DELETE_WARNING = "account.deleteWarning";
     public static final String ACCOUNT_DELETE_CANCEL = "account.deleteCancel";
     public static final String PLAN_EDIT = "plan.edit";
     public static final String PLAN_SAVE = "plan.save";

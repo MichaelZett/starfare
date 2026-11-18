@@ -1,6 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.identity.application.UserAccountService;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.*;
 import de.zettsystems.starfare.game.domain.*;
@@ -26,10 +26,10 @@ public class DiplomacySteps {
     private final GameService games;
     private final GameRegistry registry;
     private final GameSessionStore store;
-    private final UserAccountService accounts;
+    private final TestPlatformAccounts accounts;
     private Browser partner;
     private GameId id;
-    public DiplomacySteps(Browser browser, GameService games, GameRegistry registry, GameSessionStore store, UserAccountService accounts) {
+    public DiplomacySteps(Browser browser, GameService games, GameRegistry registry, GameSessionStore store, TestPlatformAccounts accounts) {
         this.browser = browser; this.games = games; this.registry = registry; this.store = store; this.accounts = accounts;
     }
     @Wenn("zwei Imperien die interne Bündnispartie für {string} und {string} öffnen")

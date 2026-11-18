@@ -1,15 +1,13 @@
 # language: de
 @ui-acceptance
 Funktionalität: Smoke — vom Konto bis zur ersten Runde
-  Ein neuer Spieler legt sein Konto an, bestätigt die E-Mail-Adresse, meldet
-  sich an, legt eine KI-Partie an und spielt die erste Runde. Deckt den Happy Path
-  durch Identity-Baustein, Lobby, automatischen Start, Karte und Rundenbericht ab.
+  Ein Spieler mit einem Konto der Plattform meldet sich an, legt eine KI-Partie
+  an und spielt die erste Runde. Deckt den Happy Path durch Lobby, automatischen
+  Start, Karte und Rundenbericht ab.
 
   @direct-send
-  Szenario: Registrieren, bestätigen, anmelden, Spiel anlegen und eine Runde spielen
-    Wenn ich mich als "Alice Tester" mit der E-Mail-Adresse "alice@example.test" registriere
-    Dann liegt eine Bestätigungsmail für "alice@example.test" vor
-    Wenn ich den Bestätigungslink für "alice@example.test" öffne
+  Szenario: Anmelden, Spiel anlegen und eine Runde spielen
+    Wenn das Konto "Alice Tester" mit der E-Mail-Adresse "alice@example.test" besteht
     Und ich mich mit "alice@example.test" anmelde
     Wenn ich ein Standardspiel anlege und beitrete
     Dann zeigen die Empire-Stats 1 System, Produktion 4 und 8 Schiffe

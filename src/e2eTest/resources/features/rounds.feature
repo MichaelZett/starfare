@@ -3,11 +3,9 @@
 Funktionalität: Rundenstatus
 
   Szenario: Mitspieler sehen Abgaben und die Nachzügler-Uhr
-    Wenn ich mich als "Runden Host" mit der E-Mail-Adresse "rounds-host@example.test" registriere
-    Und ich den Bestätigungslink für "rounds-host@example.test" öffne
+    Wenn das Konto "Runden Host" mit der E-Mail-Adresse "rounds-host@example.test" besteht
     Und ich die Browsersitzung wechsle
-    Und ich mich als "Runden Gast" mit der E-Mail-Adresse "rounds-guest@example.test" registriere
-    Und ich den Bestätigungslink für "rounds-guest@example.test" öffne
+    Und das Konto "Runden Gast" mit der E-Mail-Adresse "rounds-guest@example.test" besteht
     Und eine laufende Partie für "rounds-host@example.test" und "rounds-guest@example.test" mit Standardfristen bereitsteht
     Und ich mich mit "rounds-guest@example.test" anmelde
     Und ich die Partie öffne

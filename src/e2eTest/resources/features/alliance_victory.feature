@@ -2,8 +2,7 @@
 Funktionalität: Getrennte Bündnisoptionen und gemeinsamer Sieg
 
   Szenario: Partieoptionen und gemeinsames Ergebnis bleiben nachvollziehbar
-    Wenn ich mich als "Commander" mit der E-Mail-Adresse "group-win@example.test" registriere
-    Und ich den Bestätigungslink für "group-win@example.test" öffne
+    Wenn das Konto "Commander" mit der E-Mail-Adresse "group-win@example.test" besteht
     Und ich mich mit "group-win@example.test" anmelde
     Dann prüfe ich die getrennten Bündnisoptionen in der internen Wizard-Vorschau
     Wenn eine interne Bündnissiegpartie für "group-win@example.test" endet

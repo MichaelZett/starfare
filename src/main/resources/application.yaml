@@ -7,7 +7,7 @@ server:
 
 vaadin:
   productionMode: true
-  allowed-packages: de.zettsystems.starfare,de.zettsystems.identity
+  allowed-packages: de.zettsystems.starfare
 
 spring:
   application:
@@ -20,17 +20,6 @@ spring:
       # https://vladmihalcea.com/why-you-should-always-use-hibernate-connection-provider_disables_autocommit-for-resource-local-jpa-transactions/
       # in combination with jpa.properties.hibernate.connection.provider_disables_autocommit: true
       auto-commit: false
-  mail:
-    host: ${MAIL_HOST:localhost}
-    port: ${MAIL_PORT:1025}
-    properties:
-      # JavaMail waits forever by default: a server that stops answering would
-      # block a delivery and keep the health check from ever reporting it.
-      mail:
-        smtp:
-          connectiontimeout: 10000
-          timeout: 10000
-          writetimeout: 10000
   jpa:
     hibernate:
       ddl-auto: validate
@@ -44,21 +33,9 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
-    # Nur die eigenen Migrationen. Der Identity-Baustein (seit 0.8.0) migriert
-    # sein eigenes Schema `identity` mit eigener History selbst, vor diesem
-    # Lauf — kein out-of-order und kein fremder Ablageort mehr. Beim ersten
-    # Start mit 0.8.0 zieht er die auth_*-Tabellen einmalig nach `identity` um.
+    # Nur die eigenen Migrationen. Das Schema `identity` des früheren
+    # Identity-Bausteins bleibt in alten Datenbanken liegen; niemand liest es mehr.
     locations: classpath:db/migration
-
-zs:
-  identity:
-    from-name: Starfare
-    # Spieler waehlen einen oeffentlichen Namen; Vor-/Nachname werden nicht erhoben.
-    name-mode: DISPLAY_NAME
-    base-url: http://localhost:8110
-    # A dead mail server is DEGRADED, not DOWN: replaces Spring Boot's mail check.
-    mail-health:
-      enabled: true
 
 starfare:
   timing:

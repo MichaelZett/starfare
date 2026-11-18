@@ -1,6 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
-import de.zettsystems.identity.application.UserAccountService;
+import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameId;
@@ -33,12 +33,12 @@ public class MobileSteps {
 
     private final Browser browser;
     private final GameService games;
-    private final UserAccountService accounts;
+    private final TestPlatformAccounts accounts;
     private @Nullable Browser phone;
     private @Nullable GameId id;
     private @Nullable String guestEmail;
 
-    public MobileSteps(Browser browser, GameService games, UserAccountService accounts) {
+    public MobileSteps(Browser browser, GameService games, TestPlatformAccounts accounts) {
         this.browser = browser;
         this.games = games;
         this.accounts = accounts;

@@ -21,6 +21,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Sichtbarkeitswahl und Direktnachrichten mehr, keine Seite `/starfare/social`. Der Partie-Chat
   bleibt. Die alten Tabellen bleiben bis zu ihrer Löschung nach einer Sicherung; `LegacySocialRecords`
   hält Kontolöschung und die Frist von 365 Tagen weiter ein.
+- Der eigene Start braucht keine Anmeldung mehr (Plattform-Z3 b): Wer ihn startet, spielt als
+  Standardkonto „Commander“ gegen den Computer. zs-identity, Mailversand, Registrierung, Kontolöschung
+  und die Profile `hetzner` und `brevo` entfallen; der eigene Start ist nur noch für lokales Spielen da.
+  Im Host ändert sich nichts.
 
 ## 0.2.7 - 2026-11-17
 

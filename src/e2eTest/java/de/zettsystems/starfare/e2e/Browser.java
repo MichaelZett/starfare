@@ -25,8 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Die Browser-Handgriffe der Steps an einer Stelle, damit die
- * Vaadin-Eigenheiten (Wert steht im inneren {@code input}, Knöpfe ohne
- * Kennungen im Identity-Baustein, Dialoge im Overlay) nicht in jede
+ * Vaadin-Eigenheiten (Wert steht im inneren {@code input}, Knöpfe über
+ * ihren Text, Dialoge im Overlay) nicht in jede
  * Step-Klasse wandern.
  */
 @Component
@@ -34,8 +34,6 @@ public class Browser {
 
     private static final Duration LOAD = Duration.ofSeconds(30);
 
-    public static final String PASSWORD = "ein-langes-testpasswort";
-    /** Starfare's entry route; the other routes start with it. */
     public static final String LOBBY = "/starfare";
 
     private final Environment environment;
@@ -81,19 +79,18 @@ public class Browser {
 
     /** Neues Szenario, niemand angemeldet: Session-Cookie weg. */
     public void resetSession() {
-        driver().get(baseUrl() + "/login");
+        driver().get(baseUrl() + LOBBY);
         driver().manage().deleteAllCookies();
     }
 
+    /**
+     * Meldet das Testkonto in dieser Browsersitzung an (E2eSignInView). Starfares eigener Start hat
+     * keine Anmeldung; Konten mehrerer Spieler kennt nur die Test-Umsetzung der Plattform-Konten.
+     */
     public void logIn(String email) {
-        open("/login");
-        type("input[name='username']", email);
-        type("input[name='password']", PASSWORD + Keys.ENTER);
-        awaitUrl(url -> !url.contains("/login"), "Anmeldung als " + email + " blieb auf /login hängen.");
-        // A host with several games answers / with its game selection, not with Starfare.
-        if (!String.valueOf(driver().getCurrentUrl()).contains(LOBBY)) {
-            open(LOBBY);
-        }
+        open("/" + E2eSignInView.PATH + "?email=" + java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8));
+        awaitUrl(url -> !url.contains(E2eSignInView.PATH), "Anmeldung als " + email + " blieb hängen.");
+        awaitLobby();
     }
 
     /**
