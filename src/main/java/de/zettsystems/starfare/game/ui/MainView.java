@@ -672,8 +672,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
     }
 
+    /** The header disables or hides the button during target selection and review; account and game may change meanwhile. */
     private void openGameChat() {
-        if (targetSelection != TargetSelection.NONE || reviewing || isObserver() || !game.hasActiveGame(gameId)) { return; }
+        if (isObserver() || !game.hasActiveGame(gameId)) { return; }
         GameChatPanel current = chatPanel;
         if (current == null) {
             current = new GameChatPanel(gameChat, players, gameId, broadcaster, () -> {

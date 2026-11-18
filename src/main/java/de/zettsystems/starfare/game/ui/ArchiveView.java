@@ -193,9 +193,10 @@ public class ArchiveView extends VerticalLayout {
     private void refresh() {
         String account = account();
         String term = search.getValue().strip().toLowerCase(Locale.ROOT);
+        @Nullable ArchiveResult result = resultFilter.getValue();
         var summaries = games.visibleGamesFor(account, GameListScope.ARCHIVE).stream()
                 .filter(s -> !own.getValue() || s.belongsTo(account))
-                .filter(s -> resultMatches(s, resultFilter.getValue()))
+                .filter(s -> result == null || result.matches(s, account))
                 .filter(s -> (s.name() + " " + participants(s)).toLowerCase(Locale.ROOT).contains(term))
                 .sorted(Comparator.comparing((GameSummary s) -> s.outcome().finishedAt(),
                         Comparator.nullsLast(Comparator.reverseOrder()))
@@ -204,21 +205,8 @@ public class ArchiveView extends VerticalLayout {
         empty.setVisible(summaries.isEmpty());
     }
 
-    private boolean resultMatches(GameSummary summary, @Nullable ArchiveResult result) {
-        if (result == null || result == ArchiveResult.ALL) {
-            return true;
-        }
-        Integer seat = summary.seatByPlayer().get(account());
-        return switch (result) {
-            case ALL -> true;
-            case VICTORY -> seat != null && summary.outcome().wonBy(seat);
-            case DEFEAT -> seat != null && summary.outcome().hasWinner()
-                    && !summary.outcome().wonBy(seat);
-            case NO_WINNER -> seat != null && !summary.outcome().hasWinner();
-        };
-    }
-
-    private enum ArchiveResult {
+    /** Result filter of the archive; only games with an own seat have a result for the account. */
+    enum ArchiveResult {
         ALL(UiTexts.ARCHIVE_RESULT_ALL),
         VICTORY(UiTexts.ARCHIVE_RESULT_VICTORY_FILTER),
         DEFEAT(UiTexts.ARCHIVE_RESULT_DEFEAT_FILTER),
@@ -232,6 +220,17 @@ public class ArchiveView extends VerticalLayout {
 
         String textKey() {
             return textKey;
+        }
+
+        boolean matches(GameSummary summary, String account) {
+            Integer seat = summary.seatByPlayer().get(account);
+            GameOutcome outcome = summary.outcome();
+            return switch (this) {
+                case ALL -> true;
+                case VICTORY -> outcome.wonBy(seat);
+                case DEFEAT -> seat != null && outcome.hasWinner() && !outcome.wonBy(seat);
+                case NO_WINNER -> seat != null && !outcome.hasWinner();
+            };
         }
     }
 

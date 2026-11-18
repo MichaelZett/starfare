@@ -280,7 +280,7 @@ public class LobbyView extends VerticalLayout {
     }
 
     /** Auswahl im Lobby-Filter. Identitaet haengt am Enum, nicht am uebersetzten Label. */
-    private enum LobbyFilter {
+    enum LobbyFilter {
         ALL(UiTexts.LOBBY_FILTER_ALL),
         OWN(UiTexts.LOBBY_FILTER_OWN),
         OPEN(UiTexts.LOBBY_FILTER_OPEN),
@@ -471,11 +471,11 @@ public class LobbyView extends VerticalLayout {
                 new RouteParameters("gameId", gameId.value())));
     }
 
-    private record LobbyGameRow(GameSummary summary, GameId gameId, String name, String players, int turn, boolean finished,
-                                boolean started, boolean canStart, boolean joinedByCurrentUser,
-                                boolean knownToCurrentUser, boolean hasOpenHumanSeat,
-                                boolean observersAllowed, boolean reentryAllowed,
-                                boolean isHostedByCurrentUser, boolean hasHost, boolean canJoin, String visibilityKey) {
+    record LobbyGameRow(GameSummary summary, GameId gameId, String name, String players, int turn, boolean finished,
+                        boolean started, boolean canStart, boolean joinedByCurrentUser,
+                        boolean knownToCurrentUser, boolean hasOpenHumanSeat,
+                        boolean observersAllowed, boolean reentryAllowed,
+                        boolean isHostedByCurrentUser, boolean hasHost, boolean canJoin, String visibilityKey) {
         static LobbyGameRow from(GameSummary summary, @Nullable String playerId) {
             String players = summary.players().stream()
                     .map(LobbyGameRow::playerLabel)

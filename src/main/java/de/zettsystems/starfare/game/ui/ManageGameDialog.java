@@ -108,6 +108,8 @@ public class ManageGameDialog extends Dialog {
 
         Button close = new Button(I18n.t(UiTexts.MANAGE_CLOSE), _ -> close());
         getFooter().add(close);
+        // A UI that goes away with the dialog still open must not stay subscribed.
+        addDetachListener(_ -> unsubscribe());
     }
 
     @Override
@@ -120,11 +122,16 @@ public class ManageGameDialog extends Dialog {
 
     @Override
     public void close() {
-        if (gameSubscription != null) {
-            gameSubscription.remove();
-            gameSubscription = null;
-        }
+        unsubscribe();
         super.close();
+    }
+
+    private void unsubscribe() {
+        Subscription subscription = gameSubscription;
+        gameSubscription = null;
+        if (subscription != null) {
+            subscription.remove();
+        }
     }
 
     private void refresh() {
@@ -221,7 +228,7 @@ public class ManageGameDialog extends Dialog {
 
     private void onInvite() {
         String inviteePlayerId = inviteCombo.getValue();
-        if (inviteePlayerId == null || inviteePlayerId.isBlank()) {
+        if (inviteePlayerId == null) {
             Notification.show(I18n.t(UiTexts.MANAGE_INVITE_FAILED));
             return;
         }

@@ -179,7 +179,7 @@ final class ReviewControls extends HorizontalLayout {
         if (markers.isEmpty()) { return; }
         int nextIndex = currentEvent == null
                 ? firstEventIndexAtOrAfter(replayTurn()) : markers.indexOf(currentEvent) + 1;
-        if (nextIndex >= 0 && nextIndex < markers.size()) { selectEvent(markers.get(nextIndex)); }
+        if (nextIndex < markers.size()) { selectEvent(markers.get(nextIndex)); }
     }
 
     private int firstEventIndexAtOrAfter(int turn) {

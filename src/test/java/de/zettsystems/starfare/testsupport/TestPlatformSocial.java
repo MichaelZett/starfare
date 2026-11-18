@@ -12,12 +12,18 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Friends and visibility as a platform host answers them, adjustable per test: an account can hide
- * from another or block it. Starfare's own start knows neither and answers with empty lists.
+ * Friends and visibility as a platform host answers them, adjustable per test: accounts can be
+ * friends, an account can hide from another or block it. Starfare's own start knows none of this
+ * and answers with empty lists.
  */
 public class TestPlatformSocial implements PlatformFriends, PlatformPresence {
     private final Set<List<AccountId>> hidden = ConcurrentHashMap.newKeySet();
     private final Set<Set<AccountId>> blocked = ConcurrentHashMap.newKeySet();
+    private final Set<Set<AccountId>> friendships = ConcurrentHashMap.newKeySet();
+
+    public void befriend(AccountId one, AccountId other) {
+        friendships.add(Set.of(one, other));
+    }
 
     /** {@code account} no longer shows itself to {@code viewer}. */
     public void hide(AccountId account, AccountId viewer) {
@@ -31,16 +37,19 @@ public class TestPlatformSocial implements PlatformFriends, PlatformPresence {
     public void reset() {
         hidden.clear();
         blocked.clear();
+        friendships.clear();
     }
 
     @Override
     public List<AccountId> friendsOf(AccountId account) {
-        return List.of();
+        return friendships.stream().filter(pair -> pair.contains(account))
+                .flatMap(pair -> pair.stream().filter(member -> !member.equals(account)))
+                .sorted(java.util.Comparator.comparingLong(AccountId::value)).toList();
     }
 
     @Override
     public boolean areFriends(AccountId one, AccountId other) {
-        return false;
+        return !one.equals(other) && friendships.contains(Set.of(one, other));
     }
 
     @Override
