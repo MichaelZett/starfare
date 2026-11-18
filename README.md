@@ -253,10 +253,6 @@ cover all games. `game_results` only remembers that a game has ended.
 For newly completed games, the archive map also provides a timeline for replaying
 each resolved round.
 
-Direct-message conversations track read state and can be archived independently
-by either participant. Messages older than one year can be removed through the
-message service without affecting invitations or game archives.
-
 ![Round report](docs/screenshots/Runde.png)
 
 *Round report: a filterable timeline of production, reinforcements,

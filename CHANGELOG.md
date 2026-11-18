@@ -6,10 +6,11 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.10 - 2026-11-18
 
-- Starfare fasst die alten Sozial- und Ergebnistabellen nicht mehr an (Vorbereitung ihrer Löschung im
-  nächsten Release); die Kontolöschung entfernt die persönlichen Anzeige-Einstellungen.
+- Starfare fasst die alten Sozial- und Ergebnistabellen nicht mehr an; ein späteres Release löscht
+  sie. Die Kontolöschung entfernt weiterhin die persönlichen Anzeige-Einstellungen.
+- Dokumentation beschreibt die aktuelle Spaceward-Regelfassung 1.3.0-r1.
 
 ## 0.2.9 - 2026-11-18
 
