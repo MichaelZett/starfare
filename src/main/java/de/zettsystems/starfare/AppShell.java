@@ -8,8 +8,8 @@ import com.vaadin.flow.server.AppShellSettings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * Enables Vaadin server-push and loads the Aura theme and the platform stylesheet (a checked
- * copy of games-platform's platform.css, see syncPlatformStyles). index.html marks the page as
+ * Enables Vaadin server-push and loads the Aura theme and the platform stylesheet (Starfare's own,
+ * unchecked copy of games-platform's platform.css for its own start). index.html marks the page as
  * Starfare's dark game area, so Aura's light-dark() values resolve to dark. The platform's UI
  * font DM Sans is bundled from npm, as in the host.
  */

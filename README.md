@@ -972,10 +972,9 @@ pages then leave out their own account menu, language switch and footer. The
 standalone start keeps them. `games/starfare/game.properties` additionally names
 the frame's look (`scheme=dark`, `accent`, `icon`), the game navigation
 (`navigation=<id>:<path>, ...`, texts `game.navigation.<id>`) and the full-screen
-map (`fullscreenPaths`). `src/main/frontend/styles/platform.css` is a checked copy
-of the host's platform stylesheet: `./gradlew syncPlatformStyles` copies it from
-a neighbouring `../games-platform` checkout, the artifact carries it as
-`games/starfare/platform.css`, and the host's check compares it byte for byte.
+map (`fullscreenPaths`). `src/main/frontend/styles/platform.css` is Starfare's own
+copy of the host's platform stylesheet for the standalone start; it is neither
+synchronised nor part of the game artifact, a host serves its own.
 Starfare's own stylesheets style only Starfare's classes and the scope
 `html[data-gp-game="starfare"]`, which sets the platform's `--gp-area-*`
 variables to Starfare's palette.
@@ -1023,17 +1022,5 @@ Starfare project dependency would select the standalone project's normal variant
 
 ### Browser journeys for embedding hosts
 
-The local publication also contains the optional `e2e-fixtures` classifier. It
-packages the existing Cucumber features and browser steps, recording mail sender,
-and four required state helpers. It excludes the standalone Cucumber Spring
-configuration and suite runner. An embedding host supplies its own Spring context,
-isolated PostgreSQL container and Cucumber runner, and explicitly declares its
-browser test dependencies. Add the classifier only to the browser-test source set:
-
-```groovy
-e2eTestImplementation "de.zettsystems:starfare-game:${starfareVersion}:e2e-fixtures"
-```
-
-It is not part of the game module's runtime variants or transitive production
-dependencies. The standalone application's source sets, startup and release
-artifact remain unchanged.
+A host runs its own browser journeys; Starfare's complete journeys run in
+Starfare's own build. The game artifact ships no test fixtures.

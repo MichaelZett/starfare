@@ -8,26 +8,9 @@ import org.gradle.api.attributes.java.TargetJvmVersion
 import java.util.jar.Manifest
 import java.util.zip.ZipFile
 
-// Path of the checked copy of games-platform's platform.css below src/main/frontend.
+// Starfare's own copy of games-platform's platform.css for its own start (plan Z4: no longer
+// synchronised or checked). In a host the platform serves its own; the game artifact leaves it out.
 ext.PLATFORM_STYLES = 'styles/platform.css'
-
-// Copies the platform stylesheet from the neighbouring host checkout (plan M9). The host's
-// check fails while a game's copy differs; run this, then rebuild and republish the game.
-def platformStylesOriginal = file(providers.gradleProperty('gamesPlatformProject').getOrElse('../games-platform') +
-        "/src/main/frontend/${PLATFORM_STYLES}")
-tasks.register('syncPlatformStyles', Copy) {
-    group = 'build'
-    description = 'Copies platform.css from ../games-platform into src/main/frontend/styles.'
-    def original = platformStylesOriginal
-    from(original)
-    into(file('src/main/frontend/styles'))
-    doFirst {
-        if (!original.isFile()) {
-            throw new GradleException("Missing ${original}: check out games-platform next to starfare " +
-                    'or pass -PgamesPlatformProject=<path>')
-        }
-    }
-}
 
 // An additional library output; the default executable application is unchanged.
 def gameModuleJar = tasks.register('gameModuleJar', Jar) {
@@ -57,9 +40,6 @@ def gameModuleJar = tasks.register('gameModuleJar', Jar) {
         into 'META-INF/frontend'
         exclude 'generated/**', 'index.html', PLATFORM_STYLES
     }
-    // The checked copy of the host's platform.css; the host compares it byte for byte
-    // (verifyPlatformStyles) and loads its own original.
-    from("src/main/frontend/${PLATFORM_STYLES}") { into 'games/starfare' }
     from('src/main/resources/db/migration') { into 'games/starfare/migrations' }
     from('LICENSE') { into 'META-INF/starfare' }
 }
@@ -200,9 +180,9 @@ abstract class VerifyGameModule extends DefaultTask {
                 if (source.file) {
                     def relative = frontend.toPath().relativize(source.toPath()).toString().replace('\\', '/')
                     if (relative == 'styles/platform.css') {
-                        VerifyGameModule.assertSameBytes(zip, 'games/starfare/platform.css', source)
-                        VerifyGameModule.checkCondition(zip.getEntry('META-INF/frontend/' + relative) == null,
-                                'Platform stylesheet copy leaked into the game frontend')
+                        VerifyGameModule.checkCondition(zip.getEntry('META-INF/frontend/' + relative) == null &&
+                                zip.getEntry('games/starfare/platform.css') == null,
+                                'Platform stylesheet copy leaked into the game artifact')
                     } else if (!relative.startsWith('generated/') && relative != 'index.html') {
                         VerifyGameModule.assertSameBytes(zip, 'META-INF/frontend/' + relative, source)
                     }
@@ -267,22 +247,3 @@ def verifyGameModule = tasks.register('verifyGameModule', VerifyGameModule) {
             ':game-module-publication:generatePomFileForGameModulePublication'
 }
 tasks.named('check') { dependsOn verifyGameModule }
-
-// Test-only journeys for an embedding host. Never part of the runtime variant.
-tasks.register('gameModuleE2eFixturesJar', Jar) {
-    group = 'verification'
-    archiveBaseName = 'starfare-game'
-    archiveClassifier = 'e2e-fixtures'
-    from(sourceSets.e2eTest.output) {
-        exclude '**/CucumberSpringConfiguration*.class', '**/CucumberE2eTest*.class'
-        exclude 'application*.yaml', 'application*.yml', 'application*.properties'
-    }
-    from(sourceSets.test.output.classesDirs) {
-        include 'de/zettsystems/starfare/testsupport/ColonyStates*.class'
-        include 'de/zettsystems/starfare/testsupport/EconomyUiStates*.class'
-        include 'de/zettsystems/starfare/testsupport/FleetUiStates*.class'
-        include 'de/zettsystems/starfare/testsupport/ReviewGameFixture*.class'
-    }
-    from('LICENSE') { into 'META-INF/starfare' }
-    dependsOn tasks.named('e2eTestClasses'), tasks.named('testClasses')
-}

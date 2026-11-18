@@ -15,6 +15,8 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - `game_results` merkt sich nur noch, dass eine Partie geendet hat (`V2_13` macht `game_name`
   optional). Die nicht mehr gelesenen Ergebnisdaten bleiben bis zu ihrer Löschung nach einer Sicherung
   stehen; die Kontolöschung bereinigt sie weiter.
+- Das Spielartefakt enthält keine Kopie von `platform.css` und keinen Klassifikator `e2e-fixtures`
+  mehr; `syncPlatformStyles` entfällt (Plattform-Z4). Starfares Kopie gilt nur noch im eigenen Start.
 
 ## 0.2.7 - 2026-11-17
 
