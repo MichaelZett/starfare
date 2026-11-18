@@ -32,8 +32,7 @@ class AbstractBaseEntityTest {
     void entitiesWithoutAnIdAreOnlyEqualToThemselves() {
         Ship transientShip = new Ship(null);
 
-        assertThat(transientShip).isNotEqualTo(new Ship(null));
-        assertThat(transientShip).isNotEqualTo(new Ship(4L));
+        assertThat(transientShip).isNotEqualTo(new Ship(null)).isNotEqualTo(new Ship(4L));
         assertThat(new Ship(4L)).isNotEqualTo(transientShip);
         assertThat(transientShip.hashCode()).isEqualTo(System.identityHashCode(transientShip));
     }
@@ -47,7 +46,7 @@ class AbstractBaseEntityTest {
 
     @Test
     void theHashCodeOfAPersistedEntityIsTheHashCodeOfItsId() {
-        assertThat(new Ship(4L).hashCode()).isEqualTo(Long.valueOf(4L).hashCode());
+        assertThat(new Ship(4L)).hasSameHashCodeAs(4L);
     }
 
     /** Calls equals directly: AssertJ short-cuts identity and null before equals is reached. */
