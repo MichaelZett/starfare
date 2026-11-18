@@ -30,7 +30,8 @@ import java.util.UUID;
 
 /** Real views, identity principals and game services, without a browser or JavaScript. */
 @SpringBootTest
-@Import({SyncAsyncTestConfig.class, TestPostgresConfiguration.class})
+@Import({SyncAsyncTestConfig.class, TestPostgresConfiguration.class,
+        de.zettsystems.starfare.testsupport.TestPlatformSocial.Configuration.class})
 @ActiveProfiles("test")
 public abstract class AbstractBrowserlessTest extends SpringBrowserlessTest {
 

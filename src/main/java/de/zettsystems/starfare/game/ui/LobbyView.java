@@ -30,7 +30,6 @@ import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.gamesplatformapi.PlatformFriends;
 import de.zettsystems.gamesplatformapi.PlatformPresence;
 import de.zettsystems.starfare.game.application.InvitationService;
-import org.springframework.beans.factory.ObjectProvider;
 import jakarta.annotation.security.PermitAll;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +67,7 @@ public class LobbyView extends VerticalLayout {
 
     @Autowired
     public LobbyView(GameService game, Broadcaster broadcaster, PlatformPresence presence, PlatformFriends friends,
-                     ObjectProvider<LobbyExtras> extras, PlayerDirectory players, InvitationService invitationService,
+                     PlayerDirectory players, InvitationService invitationService,
                      de.zettsystems.starfare.game.application.GameTemplateService templates,
                      RulesetAccess rulesetAccess) {
         this.game = game;
@@ -79,7 +78,6 @@ public class LobbyView extends VerticalLayout {
         this.presence = presence;
         this.friends = friends;
         this.players = players;
-        LobbyExtras.@Nullable Parts parts = extras.stream().findFirst().map(LobbyExtras::create).orElse(null);
         setSizeFull();
         setPadding(false);
         setSpacing(false);
@@ -102,9 +100,6 @@ public class LobbyView extends VerticalLayout {
         newGameTopButton.addThemeVariants(ButtonVariant.PRIMARY);
         if (OwnFrame.active()) {
             toolbarAction.add(new LanguageSwitcher());
-        }
-        if (parts != null) {
-            toolbarAction.add(parts.toolbar());
         }
         if (OwnFrame.active()) {
             toolbarAction.add(new AccountNavigation());
@@ -133,23 +128,13 @@ public class LobbyView extends VerticalLayout {
         buildEmptyState();
         card.add(emptyState);
 
-        // Div statt VerticalLayout: das Layout setzt inline width:100% und würde
-        // die feste Sidebar-Breite aus dem Stylesheet überstimmen.
-        Div sidebar = new Div();
-        sidebar.addClassName("lobby-sidebar");
-        if (parts != null) {
-            sidebar.add(parts.sidebar());
-        }
-        sidebar.setVisible(parts != null);
-
         HorizontalLayout body = new HorizontalLayout();
         body.addClassName("lobby-body");
         body.setWidthFull();
         body.setPadding(false);
         body.setSpacing(true);
         body.setFlexGrow(1, card);
-        body.setFlexGrow(0, sidebar);
-        body.add(card, sidebar);
+        body.add(card);
 
         add(toolbar, body);
         if (OwnFrame.active()) {

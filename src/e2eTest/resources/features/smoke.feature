@@ -11,7 +11,6 @@ Funktionalität: Smoke — vom Konto bis zur ersten Runde
     Dann liegt eine Bestätigungsmail für "alice@example.test" vor
     Wenn ich den Bestätigungslink für "alice@example.test" öffne
     Und ich mich mit "alice@example.test" anmelde
-    Dann sehe ich in der Lobby den Online-Spieler "Alice Tester"
     Wenn ich ein Standardspiel anlege und beitrete
     Dann zeigen die Empire-Stats 1 System, Produktion 4 und 8 Schiffe
     Dann zeigt die Systemsicht stabile Himmelskörper und bleibt auf Desktopbreiten bedienbar

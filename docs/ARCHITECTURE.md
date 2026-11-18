@@ -352,8 +352,9 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
 - `i18n` — `StarfareI18NProvider` (Vaadin `I18NProvider`),
   `I18n.t(...)` facade, `LocaleServiceInitListener` (restores the UI
   locale from the session).
-- `social` — Presence, friendship, direct and game messages, invitations and
-  persistent personal display settings.
+- `standalone` — Starfare's own start only (left out of the game artifact): the
+  entry view and its answers to the platform interfaces (`standalone.platform`:
+  no friends, nobody else online, everybody visible).
 - `legal` — Imprint, privacy information and account deletion views.
 - `style` — `CssProperties`, `HtmlAttributes` (central constants for
   Vaadin styling and attributes).
@@ -620,49 +621,19 @@ logic and callbacks stay in `MainView`; only the arrangement differs.
   re-applies the session locale on every UI init, so the choice
   survives navigation and reload.
 
-## Module `social`
+## Friends, presence and invitations
 
-`de.zettsystems.starfare.social` covers presence, friendship, direct
-messages and invitations. Sub-layers as usual (`values`, `domain`,
-`application`, `ui`).
+Friends, presence, visibility and direct messages belong to the platform (plan
+M13). The game asks only games-platform-api's `PlatformFriends` and
+`PlatformPresence`; in a host the platform answers, in Starfare's own start
+`standalone.platform` answers with no friends, nobody else online and everybody
+visible. Starfare's former tables `friendships`, `direct_messages` and
+`user_preferences` are no longer read; `LegacySocialRecords` keeps deleting an
+account's rows and messages after a year until a migration drops them.
 
-### Data model
-
-- `friendships` is canonicalised on `(user_a, user_b)` with
-  `user_a < user_b` — one row per pair. Columns: `status`
-  (`PENDING | ACCEPTED | BLOCKED`), `requested_by` (the requester for
-  `PENDING`, the blocker for `BLOCKED`), `created_at`, `updated_at`.
-- `user_preferences` stores the per-user `visibility`
-  (`ALL | FRIENDS_ONLY | NONE`, default `ALL`).
-- `direct_messages` stores the chronological history between two users;
-  `SocialBroadcaster` still delivers newly sent messages immediately to
-  attached UIs. Sending remains limited to visible, online recipients. Opening
-  a conversation records incoming messages as read. Each participant can archive
-  a conversation independently; the other participant retains it. The store also
-  supports removing messages older than the one-year retention period.
-- Invitations are stored as `GameState.invitedSeats` in the persisted
-  `game_sessions.state_json` snapshot, so a restart retains the seat
-  reservation.
-
-### Visibility rule
-
-`sees(a, b) = canSee(a, b) ∧ canSee(b, a)` with
-`canSee(x, y) = x.visibility == ALL ∨ (x.visibility == FRIENDS_ONLY ∧ friends(x, y))`.
-Any existing `BLOCKED` row hides the pair in both directions.
-`VisibilityFilter` encapsulates the rule — the UI never checks it
-itself.
-
-### Presence
-
-`PresenceTracker` rides on Vaadin `UI` attach/detach with a ref-count
-per player id (multiple tabs count). `SocialBroadcaster` is the global
-fan-out for `SocialEvent`s (`PresenceChanged`, `FriendRequestReceived`,
-`FriendshipUpdated`, `VisibilityUpdated`, `DirectMessage`,
-`InviteReceived/Withdrawn/Accepted/Declined`).
-Both `DefaultSocialBroadcaster` and `DefaultBroadcaster` stop delivery and
-release their listeners on `ContextClosedEvent`, before bean destruction.
-UI detachment can still update presence counts during shutdown, but its events
-no longer enqueue view refreshes against a closed database.
+Invitations are stored as `GameState.invitedSeats` in the persisted
+`game_sessions.state_json` snapshot, so a restart retains the seat reservation.
+Inviting asks `PlatformPresence.canSee(host, invitee)`.
 
 ### Owner mechanics and invites
 

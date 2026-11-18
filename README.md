@@ -8,8 +8,8 @@ A multiplayer space strategy game in the browser. Humans and AI empires share a
 galaxy, conquer star systems and dispatch fleets; a round is resolved once every
 human has submitted.
 
-**Play now: [starfare.zettsystems.de](https://starfare.zettsystems.de)** — create
-an account with your email address and start a game against the AI or invite
+**Play now: [games.zettsystems.de/starfare](https://games.zettsystems.de/starfare)** —
+create an account on the platform and start a game against the AI or invite
 friends. **Spielanleitung auf Deutsch:** [Anleitung](docs/ANLEITUNG.md).
 
 ## The plan: three classics, one platform

@@ -17,6 +17,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   stehen; die Kontolöschung bereinigt sie weiter.
 - Das Spielartefakt enthält keine Kopie von `platform.css` und keinen Klassifikator `e2e-fixtures`
   mehr; `syncPlatformStyles` entfällt (Plattform-Z4). Starfares Kopie gilt nur noch im eigenen Start.
+- Starfares eigenes Sozialmodul entfällt auch im eigenen Start: keine Freundesliste, Anwesenheit,
+  Sichtbarkeitswahl und Direktnachrichten mehr, keine Seite `/starfare/social`. Der Partie-Chat
+  bleibt. Die alten Tabellen bleiben bis zu ihrer Löschung nach einer Sicherung; `LegacySocialRecords`
+  hält Kontolöschung und die Frist von 365 Tagen weiter ein.
 
 ## 0.2.7 - 2026-11-17
 

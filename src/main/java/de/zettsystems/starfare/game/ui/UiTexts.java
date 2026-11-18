@@ -185,8 +185,6 @@ public final class UiTexts {
     public static final String RULESET_VERSION = "ruleset.version";
     public static final String RULESET_VERSION_TESTING = "ruleset.versionTesting";
     public static final String RULESET_PLANNED = "ruleset.planned";
-    public static final String RULESET_FILTER = "ruleset.filter";
-    public static final String RULESET_ALL = "ruleset.all";
     public static final String SYSTEM_SCHEMATIC = "system.schematic";
     public static final String SYSTEM_CATALOG = "system.catalog";
     public static final String SYSTEM_ORBIT = "system.orbit";
@@ -316,7 +314,6 @@ public final class UiTexts {
     public static final String LOBBY_WIZARD_VISIBILITY_PRIVATE = "lobby.wizard.visibility.private";
     public static final String LOBBY_SUMMARY_OWN_SEAT = "lobby.summary.ownSeat";
     public static final String LOBBY_ACTION_WAITING_ROOM = "lobby.action.waitingRoom";
-    public static final String SOCIAL_TITLE = "social.title";
     public static final String WAITING_BACK = "waiting.back";
     public static final String WAITING_GONE = "waiting.gone";
     public static final String WAITING_HOST = "waiting.host";
@@ -564,33 +561,10 @@ public final class UiTexts {
     public static final String LOBBY_ABORT_DENIED = "lobby.abort.denied";
 
     // Presence panel
-    public static final String PRESENCE_TITLE = "presence.title";
-    public static final String PRESENCE_EMPTY = "presence.empty";
-    public static final String PRESENCE_ACTION_FRIEND_REQUEST = "presence.action.friendRequest";
-    public static final String PRESENCE_ACTION_CANCEL_REQUEST = "presence.action.cancelRequest";
-    public static final String PRESENCE_ACTION_REMOVE_FRIEND = "presence.action.removeFriend";
-    public static final String PRESENCE_ACTION_BLOCK = "presence.action.block";
-    public static final String PRESENCE_ACTION_UNBLOCK = "presence.action.unblock";
-    public static final String PRESENCE_STATUS_FRIEND = "presence.status.friend";
-    public static final String PRESENCE_STATUS_PENDING = "presence.status.pending";
-    public static final String PRESENCE_STATUS_BLOCKED = "presence.status.blocked";
-    public static final String PRESENCE_STATUS_ONLINE = "presence.status.online";
-    public static final String PRESENCE_ACTIONS_LABEL = "presence.actions.label";
-    public static final String PRESENCE_REQUEST_SENT = "presence.requestSent";
-    public static final String PRESENCE_REQUEST_FAILED = "presence.requestFailed";
-    public static final String PRESENCE_ACTION_FAILED = "presence.actionFailed";
 
     // Friend requests inbox
-    public static final String FRIEND_INBOX_TITLE = "friend.inbox.title";
-    public static final String FRIEND_INBOX_EMPTY = "friend.inbox.empty";
-    public static final String FRIEND_INBOX_ACCEPT = "friend.inbox.accept";
-    public static final String FRIEND_INBOX_DECLINE = "friend.inbox.decline";
 
     // Visibility toggle
-    public static final String VISIBILITY_LABEL = "visibility.label";
-    public static final String VISIBILITY_ALL = "visibility.all";
-    public static final String VISIBILITY_FRIENDS_ONLY = "visibility.friendsOnly";
-    public static final String VISIBILITY_NONE = "visibility.none";
 
     // Manage-game dialog + invitations (Phase 4)
     public static final String LOBBY_ACTION_MANAGE = "lobby.action.manage";
@@ -608,26 +582,13 @@ public final class UiTexts {
     public static final String MANAGE_INVITE_FAILED = "manage.invite.failed";
     public static final String MANAGE_INVITE_SUCCESS = "manage.invite.success";
     public static final String MANAGE_CLOSE = "manage.close";
-    public static final String INVITATIONS_TITLE = "invitations.title";
-    public static final String INVITATIONS_EMPTY = "invitations.empty";
-    public static final String INVITATIONS_ROW = "invitations.row";
     public static final String INVITATIONS_ACCEPT = "invitations.accept";
     public static final String INVITATIONS_DECLINE = "invitations.decline";
     public static final String INVITATIONS_ACCEPT_FAILED = "invitations.acceptFailed";
-    public static final String INVITATIONS_ACCEPTED = "invitations.accepted";
 
     // Chat drawer / direct messages
-    public static final String CHAT_TITLE = "chat.title";
-    public static final String CHAT_ACTION_MESSAGE = "chat.action.message";
-    public static final String CHAT_EMPTY_LIST = "chat.empty.list";
-    public static final String CHAT_EMPTY_CONVERSATION = "chat.empty.conversation";
     public static final String CHAT_INPUT_PLACEHOLDER = "chat.input.placeholder";
     public static final String CHAT_SEND = "chat.send";
-    public static final String CHAT_SEND_EMPTY = "chat.send.empty";
-    public static final String CHAT_SEND_OFFLINE = "chat.send.offline";
-    public static final String CHAT_SEND_NOT_VISIBLE = "chat.send.notVisible";
-    public static final String CHAT_SEND_REJECTED = "chat.send.rejected";
-    public static final String CHAT_UNREAD_BADGE = "chat.unread.badge";
     public static final String LEGAL_PRIVACY = "legal.privacy";
     public static final String LEGAL_IMPRINT = "legal.imprint";
     public static final String LEGAL_DELETE_ACCOUNT = "legal.deleteAccount";

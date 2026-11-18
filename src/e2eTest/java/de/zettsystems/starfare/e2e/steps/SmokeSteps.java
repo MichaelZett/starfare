@@ -115,21 +115,6 @@ public class SmokeSteps {
         browser.logIn(email);
     }
 
-    @Dann("sehe ich in der Lobby den Online-Spieler {string}")
-    public void lobbyShowsOnlinePlayer(String displayName) {
-        if (browser.awaitLobby()) {
-            browser.awaitTextIn(".presence-name", displayName);
-            return;
-        }
-        // In a host presence belongs to the platform (plan M13): its friends page lists the others
-        // and shows the choice whom one is visible to; the header names the signed-in player.
-        browser.open("/friends");
-        browser.awaitCss("#gp-social-visibility");
-        browser.awaitTextIn(".gp-account-name", displayName);
-        browser.open(Browser.LOBBY);
-        browser.awaitLobby();
-    }
-
     @Wenn("ich ein Standardspiel anlege und beitrete")
     public void createDefaultGameAndJoin() throws IOException {
         browser.captureUiAcceptance("lobby");

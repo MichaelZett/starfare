@@ -6,9 +6,8 @@ import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.values.Subscription;
-import de.zettsystems.starfare.standalone.social.application.FriendshipService;
-import de.zettsystems.starfare.standalone.social.application.UserPreferencesService;
-import de.zettsystems.starfare.standalone.social.values.Visibility;
+import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.starfare.testsupport.TestPlatformSocial;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,10 +37,7 @@ class InvitationServiceTest extends AbstractIntegrationTest {
     private Broadcaster broadcaster;
 
     @Autowired
-    private FriendshipService friendships;
-
-    @Autowired
-    private UserPreferencesService preferences;
+    private TestPlatformSocial social;
 
     @Autowired
     private PlayerDirectory players;
@@ -57,8 +53,7 @@ class InvitationServiceTest extends AbstractIntegrationTest {
     @AfterEach
     void stopListening() {
         subscription.remove();
-        friendships.unblock(BOB, HOST);
-        preferences.setVisibility(BOB, Visibility.ALL);
+        social.reset();
     }
 
     private GameId newTwoHumanGame(String host) {
@@ -85,11 +80,11 @@ class InvitationServiceTest extends AbstractIntegrationTest {
     @Test
     void anInviteeWhoHidesFromTheHostCannotBeInvited() {
         GameId id = newTwoHumanGame(HOST);
-        preferences.setVisibility(BOB, Visibility.NONE);
+        social.hide(AccountId.of(Long.parseLong(BOB)), AccountId.of(Long.parseLong(HOST)));
 
         assertThat(invitations.inviteUser(id, HOST, BOB)).isEmpty();
-        preferences.setVisibility(BOB, Visibility.ALL);
-        friendships.block(BOB, HOST);
+        social.reset();
+        social.block(AccountId.of(Long.parseLong(BOB)), AccountId.of(Long.parseLong(HOST)));
         assertThat(invitations.inviteUser(id, HOST, BOB)).isEmpty();
         assertThat(invitations.inviteUser(id, HOST, "no-account")).as("only accounts").isEmpty();
         assertThat(games.invitedSeatsOf(id)).isEmpty();

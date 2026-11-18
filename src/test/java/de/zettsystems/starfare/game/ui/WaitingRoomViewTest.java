@@ -108,11 +108,15 @@ class WaitingRoomViewTest extends AbstractBrowserlessTest {
         loginAsNewPlayer("Waiting Friend");
         String guest = account();
         navigate(LobbyView.class);
-        assertThat(viewText()).doesNotContain("Waiting test");
+        assertThat(find(com.vaadin.flow.component.grid.Grid.class).all()).as("the private game is hidden before the invitation").isEmpty();
 
         assertThat(invitations.inviteUser(id, host, guest)).isPresent();
         runPendingUiAccess();
 
+        // The invitee accepts in the waiting room, as inside a platform host.
+        @SuppressWarnings("unchecked") // rationale: the lobby's row type is private; its rendered cells are public components.
+        var grid = (com.vaadin.flow.component.grid.Grid<Object>) find(com.vaadin.flow.component.grid.Grid.class).single();
+        test(find(Button.class, test(grid).getCellComponent(0, 0)).withText("Warteraum").single()).click();
         assertThat(viewText()).contains("Waiting test", "Annehmen");
     }
 

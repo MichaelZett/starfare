@@ -10,7 +10,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
-@Import({SyncAsyncTestConfig.class, TestPostgresConfiguration.class})
+@Import({SyncAsyncTestConfig.class, TestPostgresConfiguration.class,
+        de.zettsystems.starfare.testsupport.TestPlatformSocial.Configuration.class})
 // Profil-Datei statt application.yaml: eine gleichnamige Test-Ressource würde die
 // Haupt-Konfiguration komplett verdecken (nur die erste Datei auf dem Classpath zählt).
 @ActiveProfiles("test")

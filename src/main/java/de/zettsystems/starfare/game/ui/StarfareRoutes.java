@@ -12,8 +12,6 @@ public final class StarfareRoutes {
     public static final String MATCH = KEY + "/match/:gameId";
     /** Opens the wizard for a new game. */
     public static final String NEW_MATCH = KEY + "/new";
-    /** Friends, invitations, who is online and chat. */
-    public static final String SOCIAL = KEY + "/social";
     public static final String ARCHIVE = KEY + "/archive";
 
     private StarfareRoutes() {
