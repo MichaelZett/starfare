@@ -963,7 +963,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         event.battleSystemId().ifPresent(onReportSystemSelected);
         Runnable acknowledge = battleAcknowledgement(event, eventIndex);
         if (battlePresentationEnabled && replay != null) {
-            BattleReplayDialog.open(replay, battleSides(event), acknowledge);
+            BattleReplayDialog.open(replay, RoundEventTexts.sides(event), acknowledge);
         } else {
             acknowledge.run();
         }
@@ -1001,7 +1001,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         Div card = new Div();
         card.addClassNames("event-card", eventCss(event, eventIndex));
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
-        card.add(new Span(eventIcon(event, eventIndex)), new Span(eventText(event, eventIndex)));
+        card.add(new Span(eventIcon(event, eventIndex)), new Span(RoundEventTexts.text(event, isEventPending(eventIndex))));
         BattleReplay replay = BattleReplay.from(event).orElse(null);
         if (event.battleSystemId().isPresent()) { KeyboardActions.enable(card); }
         event.battleSystemId().ifPresent(systemId -> {
@@ -1020,7 +1020,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             card.addClassName("event-battle-interactive");
             card.addClickListener(_ -> {
                 onReportSystemSelected.accept(event.battleSystemId().getAsInt());
-                BattleReplayDialog.open(replay, battleSides(event), acknowledge);
+                BattleReplayDialog.open(replay, RoundEventTexts.sides(event), acknowledge);
             });
             return card;
         }
@@ -1030,30 +1030,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return card;
         }
         return card;
-    }
-
-    private static BattleReplayDialog.BattleSides battleSides(TurnEvent event) {
-        return switch (event) {
-            case TurnEvent.BattleWon battle -> new BattleReplayDialog.BattleSides(youName(battle.attackerName()),
-                    battle.wasNeutral() ? I18n.t(UiTexts.BATTLE_REPLAY_NEUTRAL) : opponentName(battle.defenderName()));
-            case TurnEvent.BattleLost battle -> new BattleReplayDialog.BattleSides(youName(battle.attackerName()),
-                    opponentName(battle.defenderName()));
-            case TurnEvent.SystemLost lost -> new BattleReplayDialog.BattleSides(opponentName(lost.attackerName()),
-                    youName(lost.defenderName()));
-            case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponentName(held.attackerName()),
-                    youName(held.defenderName()));
-            case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
-                 TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _ ->
-                    new BattleReplayDialog.BattleSides("", "");
-        };
-    }
-
-    private static String youName(String name) {
-        return name.isBlank() ? I18n.t(UiTexts.BATTLE_REPLAY_YOU) : I18n.t(UiTexts.BATTLE_REPLAY_YOU) + " · " + name;
-    }
-
-    private static String opponentName(String name) {
-        return name.isBlank() ? I18n.t(UiTexts.BATTLE_REPLAY_OPPONENT) : name;
     }
 
     private boolean isBattlePending(int systemId) {
@@ -1148,41 +1124,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.DefenseHeld _ -> "event-defense-held";
             case TurnEvent.Victory _ -> "event-victory";
             case TurnEvent.Defeat _ -> "event-system-lost";
-        };
-    }
-
-    private String eventText(TurnEvent event, int eventIndex) {
-        return switch (event) {
-            case TurnEvent.CoalitionBattle battle -> isEventPending(eventIndex)
-                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName()) : CoalitionPresentation.report(battle);
-            case TurnEvent.Recycling r -> I18n.t(UiTexts.RECYCLING_EVENT, r.systemName(), r.ships(), r.recoveredTenths() / 10.0);
-            case TurnEvent.Production production -> I18n.t(UiTexts.ROUND_EVENT_PRODUCTION,
-                    production.systemName(), production.amount());
-            case TurnEvent.Reinforcement reinforcement -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
-                    reinforcement.systemName(), reinforcement.ships(), reinforcement.totalGarrison(), reinforcement.fleetLabel());
-            case TurnEvent.BattleWon battle -> isEventPending(eventIndex)
-                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName())
-                    : I18n.t(battle.wasNeutral() ? UiTexts.ROUND_EVENT_BATTLE_WON_NEUTRAL
-                    : UiTexts.ROUND_EVENT_BATTLE_WON_ENEMY, battle.systemName(), battle.attacking(),
-                    battle.defending(), battle.remaining());
-            case TurnEvent.BattleLost battle -> isEventPending(eventIndex)
-                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, battle.systemName())
-                    : I18n.t(UiTexts.ROUND_EVENT_BATTLE_LOST, battle.systemName(), battle.attacking(),
-                    battle.defending(), battle.defendersLeft());
-            case TurnEvent.SystemLost lost -> isEventPending(eventIndex)
-                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, lost.systemName())
-                    : I18n.t(UiTexts.ROUND_EVENT_SYSTEM_LOST, lost.systemName());
-            case TurnEvent.DefenseHeld held -> isEventPending(eventIndex)
-                    ? I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, held.systemName())
-                    : I18n.t(UiTexts.ROUND_EVENT_DEFENSE_HELD,
-                    held.systemName(), held.attacking(), held.defendersLeft());
-            case TurnEvent.Victory victory -> victory.allianceId() == null
-                    ? I18n.t(UiTexts.ROUND_EVENT_VICTORY, victory.systemPercent())
-                    : I18n.t(UiTexts.ROUND_EVENT_ALLIANCE_VICTORY, victory.allianceId(),
-                            String.join(", ", victory.winnerNames()), victory.systemPercent());
-            case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
-            case TurnEvent.ResearchCompleted research -> I18n.t(UiTexts.RESEARCH_COMPLETED, research.level(), research.level() * 10);
-            case TurnEvent.EconomySummary _ -> "";
         };
     }
 
