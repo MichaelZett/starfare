@@ -53,6 +53,22 @@ class OrderPlanningTest {
     }
 
     @Test
+    void editOfAnIndexBehindTheLastOrderIsRejectedWithoutFailing() {
+        assertThat(new DefaultFleetService().queueSend(state, 1, 1, 3, 12)).isTrue();
+        PlannedOrder behind = new PlannedOrder(1, "map.orderType.send", 1, 3, "A", "C", 12, false, null);
+
+        assertThat(OrderPlanning.edit(state, 1, behind, 2, 1)).isFalse();
+        assertThat(state.pendingOrders().get(1)).containsExactly(new FleetOrder.Send(1, 1, 3, 12));
+    }
+
+    @Test
+    void replacementWithAnEmptySendIsRejected() {
+        assertThat(OrderPlanning.replace(state, 1, List.of(new FleetOrder.Send(1, 2, 3, 0)))).isFalse();
+        assertThat(OrderPlanning.replace(state, 1, List.of(new FleetOrder.Send(1, 2, 3, 1)))).isTrue();
+        assertThat(state.pendingOrders().get(1)).containsExactly(new FleetOrder.Send(1, 2, 3, 1));
+    }
+
+    @Test
     void undoIsPersonalSurvivesSnapshotAndExpiresAtTurnBoundary() {
         assertThat(OrderPlanning.dispatch(state, 1, 3, List.of(new FleetDispatch(1, 5)))).isTrue();
         assertThat(OrderPlanning.dispatch(state, 2, 1, List.of(new FleetDispatch(3, 5)))).isTrue();

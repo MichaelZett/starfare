@@ -54,6 +54,16 @@ class AllianceVictoryTest {
         resolve(stricter); assertThat(stricter.gameOver()).isFalse();
     }
 
+    @Test void exactlyReachingAThresholdIsEnough() {
+        var individual = state(60, true, 90, 6, 4, 0, 0);
+        resolve(individual);
+        assertThat(individual.outcome().winnerIds()).containsExactly(1);
+        var group = state(90, true, 70, 4, 3, 0, 3);
+        resolve(group);
+        assertThat(group.outcome().allianceVictory()).isTrue();
+        assertThat(group.outcome().winnerIds()).containsExactly(1, 2);
+    }
+
     @Test void individualVictoryTakesPriority() {
         var state = state(70, true, 70, 12, 4, 0, 0); resolve(state);
         assertThat(state.outcome().winnerIds()).containsExactly(1);

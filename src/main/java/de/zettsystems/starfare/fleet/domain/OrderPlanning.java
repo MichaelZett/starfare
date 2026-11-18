@@ -52,7 +52,6 @@ public final class OrderPlanning {
                 if (source == null || !Objects.equals(source.ownerId(), player) || owner != player
                         || !ConquestOrders.allowed(state, player, beneficiary)
                         || ships <= 0 || from == to
-                        || state.systems().stream().noneMatch(system -> system.id() == to)
                         || Routes.plan(state, player, from, to).isEmpty()) { return false; }
                 long total = committed.merge(from, (long) ships, Long::sum);
                 if (total + state.recyclingShips(source.id()) > source.availableShips()) { return false; }

@@ -10,6 +10,8 @@ import de.zettsystems.starfare.testsupport.NavigationStates;
 import de.zettsystems.starfare.turn.application.RoundPipeline;
 import de.zettsystems.starfare.navigation.values.FlightJourney.Phase;
 import org.junit.jupiter.api.Test;
+import de.zettsystems.starfare.navigation.domain.Routes;
+import java.util.List;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 
@@ -32,6 +34,8 @@ class NavigationServiceTest {
         through(state, 5); assertThat(state.fleets().getFirst().fromSystemId()).isEqualTo(2);
         assertThat(state.fleets().getFirst().toSystemId()).isEqualTo(3);
         through(state, 6); assertThat(state.fleets().getFirst().journey().phase()).isEqualTo(Phase.STATION);
+        through(state, 8); assertThat(state.fleets().getFirst().journey().finalArrivalTurn()).isEqualTo(9);
+        assertThat(state.fleets().getFirst().arrivalTurn()).isEqualTo(9);
         through(state, 9); assertThat(state.fleets()).isEmpty();
         assertThat(state.reports().get(1).events()).isNotEmpty();
     }
@@ -93,6 +97,35 @@ class NavigationServiceTest {
         state.updateSystem(2, system -> system.captureBy(1, 1));
         assertThat(fleets.applyStandingOrdersForProduction(state)).containsEntry(1, 3);
         assertThat(state.fleets().getFirst().journey().stations()).containsExactly(1, 2, 3, 4);
+    }
+    @Test void aReadyFleetWhoseNextStationWasLostIsHeldInsteadOfDeparting() {
+        GameState state = NavigationStates.running(); fleets.sendFleet(state, 1, 1, 4, 10);
+        state.replaceFleet(state.fleets().getFirst().landForRefueling());
+        state.updateSystem(3, system -> system.captureBy(2, 1));
+        while (state.turn() < 4) { state.nextTurn(); }
+        navigation.departReadyFleets(state);
+        Fleet held = state.fleets().getFirst();
+        assertThat(held.journey().phase()).isEqualTo(Phase.BLOCKED);
+        assertThat(held.toSystemId()).isEqualTo(2);
+    }
+    @Test void losingTheNextStationBlocksADockedFleetBeforeItIsReady() {
+        GameState state = NavigationStates.running(); fleets.sendFleet(state, 1, 1, 4, 10);
+        state.replaceFleet(state.fleets().getFirst().landForRefueling());
+        state.updateSystem(3, system -> system.captureBy(2, 1));
+        navigation.refreshStationAccess(state, state.turn() + 1);
+        assertThat(state.fleets().getFirst().journey().phase()).isEqualTo(Phase.BLOCKED);
+    }
+    @Test void aReturningFleetLandsAtHomeButDocksAndKeepsReturningWhenHomeWasLost() {
+        GameState state = NavigationStates.running(); fleets.sendFleet(state, 1, 2, 1, 5);
+        Fleet flying = state.fleets().getFirst();
+        Fleet returning = flying.prepareReturn(Routes.preview(state, List.of(2, 1)), state.turn(), flying.arrivalTurn());
+        state.replaceFleet(returning);
+        assertThat(navigation.interceptStationArrival(state, returning)).isFalse();
+        state.updateSystem(1, system -> system.captureBy(2, 1));
+        assertThat(navigation.interceptStationArrival(state, returning)).isTrue();
+        Fleet docked = state.fleets().getFirst();
+        assertThat(docked.evacuating()).isTrue();
+        assertThat(docked.inFlight()).isFalse();
     }
     @Test void disbandingDockedShipsAddsThemToTheCurrentStationOnly() {
         GameState state = NavigationStates.running(); fleets.sendFleet(state, 1, 1, 4, 10); through(state, 3);

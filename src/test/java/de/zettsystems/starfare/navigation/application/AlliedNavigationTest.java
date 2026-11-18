@@ -6,6 +6,9 @@ import de.zettsystems.starfare.diplomacy.values.DiplomacyOrder;
 import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.Fleet;
+import de.zettsystems.starfare.game.values.Player;
+import de.zettsystems.starfare.navigation.values.FlightJourney;
 import de.zettsystems.starfare.navigation.domain.Routes;
 import de.zettsystems.starfare.report.application.DefaultReportService;
 import de.zettsystems.starfare.testsupport.NavigationStates;
@@ -36,6 +39,24 @@ class AlliedNavigationTest {
         assertThat(state.getSystem(4).garrison()).isEqualTo(37); assertThat(state.fleets().getFirst().journey().stationed()).isTrue();
         advance(state); assertThat(state.fleets().getFirst().ships()).isEqualTo(10);
         assertThat(state.reports().values().stream().flatMap(report -> report.events().stream())).noneMatch(event -> event instanceof de.zettsystems.starfare.report.values.TurnEvent.BattleWon);
+    }
+    @Test void arrivalAtAnAlliedSystemDocksTheContingentWhileTheAllianceHolds() {
+        var state = allied(); fleets.sendFleet(state, 1, 1, 2, 10);
+        var navigation = new DefaultNavigationService();
+        assertThat(navigation.interceptStationArrival(state, state.fleets().getFirst())).isTrue();
+        assertThat(state.fleets().getFirst().journey().phase()).isEqualTo(FlightJourney.Phase.PARTNER);
+        navigation.refreshStationAccess(state, state.turn() + 1);
+        assertThat(state.fleets().getFirst().evacuating()).isFalse();
+        assertThat(state.fleets().getFirst().journey().stationed()).isTrue();
+    }
+    @Test void conquestClaimsSurviveLaunchAndQueuedOrdersOnlyForAllies() {
+        var state = allied(); state.players().add(new Player(3, "Third", false, "#009e73"));
+        assertThat(fleets.sendFleet(state, 1, 1, 3, 5, 2)).isTrue();
+        assertThat(fleets.sendFleet(state, 1, 1, 3, 5, 3)).isTrue();
+        assertThat(state.fleets()).extracting(Fleet::beneficiaryId).containsExactly(2, null);
+        assertThat(fleets.queueSend(state, 1, 1, 3, 5, 2)).isTrue();
+        advance(state);
+        assertThat(state.fleets()).extracting(Fleet::beneficiaryId).containsExactly(2, null, 2);
     }
     @Test void departureAutomaticallyReturnsDockedShipsWithoutAnAttackOrForeignDisband() {
         var state = allied(); fleets.sendFleet(state, 1, 1, 4, 10); through(state, 3);

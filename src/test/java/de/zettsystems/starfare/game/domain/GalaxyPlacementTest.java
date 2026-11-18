@@ -44,6 +44,30 @@ class GalaxyPlacementTest {
         assertThat(reachable(systems, 5)).hasSize(2);
         assertThat(RangeCalibration.forGalaxy(List.of()).range()).isEqualTo(1);
         assertThat(RangeCalibration.forGalaxy(systems.subList(0, 1)).range()).isEqualTo(1);
+        assertThat(RangeCalibration.forGalaxy(systems.subList(0, 2)).range()).isEqualTo(5);
+    }
+    @Test void evenLayoutPlacesEverySystemInTheCentralHalfOfItsOwnCell() {
+        for (int count : List.of(8, 24, 60, 120)) {
+            GameSetup base = GameSetup.defaults();
+            GameSetup setup = new GameSetup(count, 2, 0, List.of(10, 10), 1, 20, 10,
+                    base.observersAllowed(), base.reentryAllowed(), base.seatColorHexes(), base.productionDistribution(), GalaxyLayout.EVEN);
+            int cols = (int) Math.ceil(Math.sqrt(count * (double) GameConfig.MAX_X / GameConfig.MAX_Y));
+            int rows = (int) Math.ceil((double) count / cols);
+            double margin = GameConfig.SYSTEM_MARGIN;
+            double width = (GameConfig.MAX_X - 2 * margin) / cols;
+            double height = (GameConfig.MAX_Y - 2 * margin) / rows;
+            Set<List<Integer>> cells = new HashSet<>();
+            for (double[] point : GalaxyPlacement.positionsFor(setup, new Random(count))) {
+                double column = (point[0] - margin) / width;
+                double row = (point[1] - margin) / height;
+                assertThat(column - Math.floor(column)).as("x offset in cell").isBetween(0.2499, 0.7501);
+                assertThat(row - Math.floor(row)).as("y offset in cell").isBetween(0.2499, 0.7501);
+                assertThat(cells.add(List.of((int) column, (int) row))).as("one system per cell").isTrue();
+                assertThat((int) column).isBetween(0, cols - 1);
+                assertThat((int) row).isBetween(0, rows - 1);
+            }
+            assertThat(cells).hasSize(count);
+        }
     }
     private static Set<Integer> reachable(List<StarSystem> systems, double range) {
         Set<Integer> visited = new HashSet<>(); ArrayDeque<StarSystem> queue = new ArrayDeque<>();

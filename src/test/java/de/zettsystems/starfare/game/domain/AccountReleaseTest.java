@@ -21,4 +21,10 @@ class AccountReleaseTest {
         assertThat(state.players().getFirst().ai()).isTrue();
         assertThat(state.releaseAccount("42")).isFalse();
     }
+    @Test void releasingAnInvitationAloneCountsAsAChange() {
+        var state = new GameState();
+        state.invitedSeats().put("44", 2);
+        assertThat(state.releaseAccount("44")).isTrue();
+        assertThat(state.invitedSeats()).isEmpty();
+    }
 }

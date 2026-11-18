@@ -9,6 +9,7 @@ import de.zettsystems.starfare.navigation.values.*;
 import de.zettsystems.starfare.testsupport.NavigationStates;
 import org.junit.jupiter.api.Test;
 import java.util.List;
+import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 
 class RoutesTest {
@@ -71,7 +72,55 @@ class RoutesTest {
         state.updateSystem(2, system -> system.captureBy(2, 1));
         assertThat(Routes.plan(state, 1, 1, 4).orElseThrow().systems()).containsExactly(1, 9, 3, 4);
     }
+    @Test void searchPrefersFewerRoundsOverLowerSystemIdsAndLongerLegs() {
+        // 10 map units per round; legs of 20 take 2 rounds, legs of about 30 take 3.
+        // Beyond precedes Hop in the list, so equally short returns must be ordered by system id.
+        GameState state = network(35, new StarSystem(1, "Start", 0, 0, 1, 10, 1, false),
+                new StarSystem(2, "Detour", 20, 22, 1, 1, 1, false), new StarSystem(3, "Goal", 40, 0, 1, 1, 1, false),
+                new StarSystem(5, "Beyond", 60, 0, 1, 1, 1, false), new StarSystem(4, "Hop", 20, 0, 1, 1, 1, false));
+        var route = Routes.plan(state, 1, 1, 3).orElseThrow();
+        assertThat(route.systems()).containsExactly(1, 4, 3);
+        assertThat(route.rounds()).isEqualTo(5);
+        assertThat(Routes.plan(state, 1, 1, 5).orElseThrow().rounds()).isEqualTo(8);
+        assertThat(Routes.reachableRounds(state, 1, 1)).containsExactlyInAnyOrderEntriesOf(Map.of(2, 3, 3, 5, 4, 2, 5, 8));
+        var home = Routes.returnHome(state, 1, 3).orElseThrow();
+        assertThat(home.systems()).containsExactly(3, 4);
+        assertThat(home.rounds()).isEqualTo(2);
+    }
+    @Test void everyIntermediateStopCostsAFullRound() {
+        GameState state = network(35, new StarSystem(1, "Start", 0, 0, 1, 10, 1, false),
+                new StarSystem(2, "Middle", 30, 0, 1, 1, 1, false), new StarSystem(3, "Near", 20, 0, 1, 1, 1, false),
+                new StarSystem(4, "Goal", 60, 0, 1, 1, 1, false), new StarSystem(5, "Far", 40, 0, 1, 1, 1, false));
+        var route = Routes.plan(state, 1, 1, 4).orElseThrow();
+        assertThat(route.systems()).containsExactly(1, 2, 4);
+        assertThat(route.rounds()).isEqualTo(7);
+    }
+    @Test void unknownSystemsAreNeverWithinRangeEvenWithoutALimit() {
+        GameState state = new GameState(); state.players().add(new Player(1, "Human", false, "#111111"));
+        state.systems().add(new StarSystem(1, "A", 0, 0, 1, 10, 1, false));
+        assertThat(Routes.withinRange(state, 1, 99)).isFalse();
+        assertThat(Routes.withinRange(state, 99, 1)).isFalse();
+    }
+    private static GameState network(double range, StarSystem... stations) {
+        GameState state = new GameState(); state.resetForNewGame();
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
+        state.players().add(new Player(1, "Navigator", false, "#56b4e9"));
+        state.systems().addAll(List.of(stations));
+        // Neutral corner far from every station: the 160 x 120 map has a 200 diagonal, so a round covers 10.
+        state.systems().add(new StarSystem(99, "Corner", 160, 120, null, 1, 1, true));
+        state.configureNavigation(new NavigationSettings(range));
+        return state;
+    }
     @Test void invalidSettingsAndImpossibleJourneyPhasesAreRejected() {
+        var single = List.of(1);
+        assertThatThrownBy(() -> new FlightJourney(single, 1, FlightJourney.Phase.FLYING, 0, 3)).isInstanceOf(IllegalArgumentException.class);
+        var pair = List.of(1, 2);
+        assertThatThrownBy(() -> new FlightJourney(pair, 2, FlightJourney.Phase.FLYING, 0, 3)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new FlightJourney(pair, 1, FlightJourney.Phase.FLYING, 0, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(new FlightJourney(pair, 1, FlightJourney.Phase.FLYING, 0, 1).destination()).isEqualTo(2);
+        var three = List.of(1, 2, 3);
+        assertThatThrownBy(() -> new FlightJourney(three, 1, FlightJourney.Phase.STATION, 0, 3)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(new FlightJourney(three, 1, FlightJourney.Phase.STATION, 1, 3).readyTurn()).isOne();
         assertThatThrownBy(() -> new NavigationSettings(Double.NaN)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new NavigationSettings(0)).isInstanceOf(IllegalArgumentException.class);
         var input1 = List.of(1, 2);

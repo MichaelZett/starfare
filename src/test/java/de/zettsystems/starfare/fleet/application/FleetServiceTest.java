@@ -123,6 +123,80 @@ class FleetServiceTest {
         assertThat(service.queueWait(state, 1, 999)).isFalse();
     }
 
+    @Test
+    void zeroShipOrdersAreRejectedEverywhere() {
+        assertThat(service.queueSend(state, 1, 1, 2, 0)).isFalse();
+        assertThat(service.sendFleet(state, 1, 1, 2, 0)).isFalse();
+        assertThat(service.addStandingOrder(state, 1, 1, 2, 0)).isEqualTo(-1);
+
+        assertThat(state.pendingOrders()).isEmpty();
+        assertThat(state.fleets()).isEmpty();
+        assertThat(state.standingOrders()).isEmpty();
+    }
+
+    @Test
+    void sendFleetMayLaunchTheWholeAvailableGarrison() {
+        assertThat(service.sendFleet(state, 1, 1, 2, 10)).isTrue();
+
+        assertThat(state.getSystem(1).garrison()).isZero();
+        assertThat(state.fleets()).singleElement().satisfies(fleet -> assertThat(fleet.ships()).isEqualTo(10));
+    }
+
+    @Test
+    void queuedShipsFromAnotherSystemDoNotReduceThisSystemsBudget() {
+        state.systems().add(new StarSystem(3, "S3", 50, 0, 1, 5, 1, false));
+        assertThat(service.queueSend(state, 1, 3, 2, 5)).isTrue();
+        assertThat(service.queueSend(state, 1, 1, 2, 10)).isTrue();
+
+        assertThat(state.pendingOrders().get(1)).containsExactly(
+                new FleetOrder.Send(1, 3, 2, 5), new FleetOrder.Send(1, 1, 2, 10));
+    }
+
+    @Test
+    void waitAndDisbandOrdersAreOnlyAcceptedForTheOwnersFleet() {
+        state.players().add(new Player(2, "P2", false, "#000"));
+        state.systems().add(new StarSystem(3, "S3", 50, 0, 2, 5, 1, false));
+        service.sendFleet(state, 2, 3, 2, 3);
+        service.sendFleet(state, 1, 1, 2, 3);
+        int foreign = state.fleets().getFirst().globalId();
+
+        assertThat(service.queueWait(state, 1, foreign)).isFalse();
+        assertThat(service.queueDisband(state, 1, foreign)).isFalse();
+        assertThat(service.setFleetWait(state, 1, foreign)).isFalse();
+        assertThat(state.pendingOrders().get(1)).isNull();
+        assertThat(state.waitThisTurn()).isEmpty();
+    }
+
+    @Test
+    void setFleetWaitMarksTheFleetForThisTurn() {
+        service.sendFleet(state, 1, 1, 2, 3);
+        int fleetId = state.fleets().getFirst().globalId();
+
+        assertThat(service.setFleetWait(state, 1, fleetId)).isTrue();
+
+        assertThat(state.waitThisTurn()).containsExactly(fleetId);
+    }
+
+    @Test
+    void waitAndDisbandAreQueuedNextToSendsAndCanBeUndone() {
+        service.sendFleet(state, 1, 1, 2, 3);
+        int fleetId = state.fleets().getFirst().globalId();
+        assertThat(service.queueSend(state, 1, 1, 2, 2)).isTrue();
+
+        assertThat(service.queueWait(state, 1, fleetId)).isTrue();
+        assertThat(state.pendingOrders().get(1)).containsExactly(
+                new FleetOrder.Send(1, 1, 2, 2), new FleetOrder.Wait(1, fleetId));
+        assertThat(state.undoOrders(1)).isTrue();
+        assertThat(state.pendingOrders().get(1)).containsExactly(new FleetOrder.Send(1, 1, 2, 2));
+
+        assertThat(service.queueDisband(state, 1, fleetId)).isTrue();
+        assertThat(service.queueDisband(state, 1, fleetId)).isTrue();
+        assertThat(state.pendingOrders().get(1)).containsExactly(
+                new FleetOrder.Send(1, 1, 2, 2), new FleetOrder.Disband(1, fleetId));
+        assertThat(state.undoOrders(1)).isTrue();
+        assertThat(state.pendingOrders().get(1)).containsExactly(new FleetOrder.Send(1, 1, 2, 2));
+    }
+
     // --- queueDisband ---
 
     @Test
@@ -299,6 +373,18 @@ class FleetServiceTest {
         assertThat(service.removeStandingOrder(state, 1, id)).isTrue();
         assertThat(state.standingOrders().get(1)).isEmpty();
         assertThat(service.removeStandingOrder(state, 1, id)).isFalse();
+    }
+
+    @Test
+    void removingStandingOrdersKeepsTheOtherRoutes() {
+        state.systems().add(new StarSystem(3, "S3", 50, 0, 1, 5, 2, false));
+        int first = service.addStandingOrder(state, 1, 1, 2, 1);
+        int second = service.addStandingOrder(state, 1, 3, 2, 2);
+
+        assertThat(service.removeStandingOrder(state, 1, first)).isTrue();
+        assertThat(service.removeStandingOrderFrom(state, 1, 1)).isFalse();
+        assertThat(state.standingOrders().get(1)).singleElement().satisfies(order ->
+                assertThat(order.id()).isEqualTo(second));
     }
 
     @Test

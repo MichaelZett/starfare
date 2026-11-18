@@ -32,6 +32,7 @@ class RouteStateTest {
     @Test void classicTimingStaysDirect() {
         var classic = new Fleet(1, 1, 1, 1, 2, 10, 1, 4);
         assertThat(RouteState.forFleet(classic, true).arrivalTurn()).isEqualTo(5);
+        assertThat(RouteState.forFleet(classic, true).nextTurn()).isEqualTo(5);
         assertThat(RouteState.forFleet(classic, false).systems()).containsExactly(1, 2);
     }
     @Test void longRoutesAlwaysKeepCurrentNextAndDestinationVisible() {
@@ -39,5 +40,7 @@ class RouteStateTest {
         assertThat(state.compactIndices()).containsExactly(0, 4, 5, 6);
         var preview = new RouteState(state.systems(), 0, true, false, null, null);
         assertThat(preview.compactIndices()).containsExactly(0, 1, 6);
+        var arriving = new RouteState(state.systems(), 6, false, false, 9, 9);
+        assertThat(arriving.compactIndices()).containsExactly(0, 6);
     }
 }

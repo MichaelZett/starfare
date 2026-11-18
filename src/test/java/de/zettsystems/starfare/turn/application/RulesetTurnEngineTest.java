@@ -84,6 +84,18 @@ class RulesetTurnEngineTest {
     }
 
     @Test
+    void anEngineRegisteredForARulesetOutsideTheCatalogIsNeverInvoked() {
+        RulesetRef retired = new RulesetRef("classic", "9.0.0");
+        TurnEngine stray = mock(TurnEngine.class);
+        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), Map.ofEntries(Map.entry(retired, stray), Map.entry(RulesetRef.SECTOR_FORCES, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_ALLIANCE, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_COLONIES, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_METALS, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_RECYCLING, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_ECONOMY_PREVIEW, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_DIRECT_ECONOMY, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_EQUAL_METAL, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_EARLY_INDUSTRY, mock(TurnEngine.class)), Map.entry(RulesetRef.SPACEWARD_SHIP_RESEARCH, mock(TurnEngine.class))));
+        GameState state = new GameState();
+        state.rememberSetup(GameSetup.defaults().selectRuleset(retired));
+        assertThatThrownBy(() -> engine.advanceTurn(state)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Unsupported ruleset");
+        verifyNoInteractions(stray);
+    }
+
+    @Test
     void providerRegistrationRoutesClassicAndRejectsMissingImplementations() {
         RulesetRoundImplementation provider = mock(RulesetRoundImplementation.class);
         when(provider.ruleset()).thenReturn(RulesetRef.SECTOR_FORCES);

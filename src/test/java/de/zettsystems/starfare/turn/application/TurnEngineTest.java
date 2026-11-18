@@ -37,6 +37,25 @@ class TurnEngineTest {
     }
 
     @Test
+    void routingSystemStillProducesAndKeepsWhatIsNotRouted() {
+        GameState state = new GameState();
+        state.players().add(new Player(1, "P1", false, "#fff"));
+        state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 3, false));
+        state.systems().add(new StarSystem(2, "S2", 100, 0, 1, 4, 0, false));
+        state.intel().put(1, new HashMap<>());
+        DefaultFleetService fleets = new DefaultFleetService();
+        assertThat(fleets.addStandingOrder(state, 1, 1, 2, 1)).isOne();
+
+        ReportService reportService = new DefaultReportService();
+        new DefaultTurnEngine(new DefaultCombatService(reportService), new DefaultAiService(), reportService, fleets)
+                .advanceTurn(state);
+
+        // 5 garrison + 3 produced - 1 routed
+        assertThat(state.getSystem(1).garrison()).isEqualTo(7);
+        assertThat(state.fleets()).singleElement().satisfies(fleet -> assertThat(fleet.ships()).isOne());
+    }
+
+    @Test
     void reinforcementAddsGarrisonAndReport() {
         GameState state = new GameState();
         state.players().add(new Player(1, "P1", false, "#fff"));

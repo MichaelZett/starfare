@@ -113,9 +113,7 @@ public class RoundPipeline {
         if (state.ruleset().isSpaceward()) {
             coalitions.resolveArrivals(state); return;
         }
-        for (Fleet fleet : List.copyOf(state.fleets())) {
-            if (fleet.inFlight() && fleet.arrivalTurn() == state.turn() + 1) { navigation.interceptStationArrival(state, fleet); }
-        }
+        // Without Spaceward navigation there are no itineraries, stations or alliances to intercept an arrival.
         Map<Integer, Map<Integer, MergedArrival>> merged = groupArrivals(state);
         state.fleets().removeIf(f -> f.inFlight() && f.arrivalTurn() == state.turn() + 1);
         for (var e : merged.entrySet()) {

@@ -59,6 +59,8 @@ class RangeViewTest {
         assertThat(RangeShare.percent(1.0049)).isEqualTo(100.5);
         assertThat(RangeShare.percent(1.5)).isEqualTo(150.0);
         assertThat(RangeShare.percent(1.0123)).isEqualTo(101.0);
+        assertThat(RangeShare.percent(1.002)).isEqualTo(100.2);
+        assertThat(RangeShare.percent(0)).isZero();
         assertThatThrownBy(() -> RangeShare.percent(-1)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> RangeShare.percent(Double.NaN)).isInstanceOf(IllegalArgumentException.class);
     }

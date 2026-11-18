@@ -1,20 +1,39 @@
 package de.zettsystems.starfare.game.domain;
 
+import de.zettsystems.starfare.diplomacy.values.AllianceGroup;
+import de.zettsystems.starfare.diplomacy.values.DiplomacyState;
+import de.zettsystems.starfare.economy.domain.ColonyGenesis;
+import de.zettsystems.starfare.economy.domain.MetalEconomy;
+import de.zettsystems.starfare.economy.domain.MetalGenesis;
+import de.zettsystems.starfare.economy.values.MiningAutomation;
+import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
+import de.zettsystems.starfare.game.values.AttackOrder;
+import de.zettsystems.starfare.game.values.Fleet;
+import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.Player;
+import de.zettsystems.starfare.game.values.RoundRules;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.game.values.SystemOwnership;
 import de.zettsystems.starfare.game.values.VictoryRules;
+import de.zettsystems.starfare.navigation.values.NavigationSettings;
+import de.zettsystems.starfare.report.application.DefaultReportService;
+import de.zettsystems.starfare.testsupport.ColonyStates;
 import de.zettsystems.starfare.testsupport.NavigationStates;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class GameStateTest {
 
@@ -260,6 +279,275 @@ class GameStateTest {
 
         assertThat(reachable).contains(1, 2).doesNotContain(3);
         assertThat(state.systemsWithinRounds(List.of(), 2)).isEmpty();
+    }
+
+    @Test
+    void copyAndSnapshotRoundTripKeepEveryField() {
+        GameState state = populated();
+        state.makePrivate();
+        GameStateSnapshot snapshot = GameState.toSnapshot(state);
+
+        assertThat(snapshot.intel()).isEqualTo(state.intel());
+        assertThat(snapshot.ownershipHistory()).isEqualTo(state.ownershipHistory()).containsOnlyKeys(4);
+        assertThat(state.combatRandomnessPercent()).isEqualTo(25);
+        assertThat(GameState.toSnapshot(GameState.copyOf(state))).isEqualTo(snapshot);
+        GameState restored = GameState.fromSnapshot(snapshot);
+        assertThat(GameState.toSnapshot(restored)).isEqualTo(snapshot);
+        assertThat(restored.intel()).isEqualTo(state.intel());
+    }
+
+    @Test
+    void resetForNewGameStartsAnEmptyPrivateLobby() {
+        GameState state = populated();
+
+        state.resetForNewGame();
+
+        assertThat(state.visibility()).isEqualTo(GameVisibility.PRIVATE);
+        assertThat(state.gameOver()).isFalse();
+        assertThat(state.active()).isTrue();
+        assertThat(state.ruleset()).isEqualTo(RulesetRef.SECTOR_FORCES);
+        assertThat(state.navigationSettings()).isEmpty();
+        assertThat(state.players()).isEmpty();
+        assertThat(state.systems()).isEmpty();
+        assertThat(state.fleets()).isEmpty();
+        assertThat(state.reports()).isEmpty();
+        assertThat(state.intel()).isEmpty();
+        assertThat(state.ownershipHistory()).isEmpty();
+        assertThat(state.replayFrames()).isEmpty();
+        assertThat(state.industries()).isEmpty();
+        assertThat(state.miningAutomation()).isEmpty();
+        assertPerMatchDataCleared(state);
+    }
+
+    @Test
+    void resetForAbortClosesTheGameAndDropsPerMatchData() {
+        GameState state = populated();
+
+        state.resetForAbort();
+
+        assertThat(state.active()).isFalse();
+        assertThat(state.gameOver()).isFalse();
+        assertThat(state.replayFrames()).isEmpty();
+        assertPerMatchDataCleared(state);
+    }
+
+    private static void assertPerMatchDataCleared(GameState state) {
+        assertThat(state.waitThisTurn()).isEmpty();
+        assertThat(state.submittedThisTurn()).isEmpty();
+        assertThat(state.joinedHumanPlayerIds()).isEmpty();
+        assertThat(state.originalHumanPlayerIds()).isEmpty();
+        assertThat(state.observers()).isEmpty();
+        assertThat(state.seatByUser()).isEmpty();
+        assertThat(state.invitedSeats()).isEmpty();
+        assertThat(state.pendingOrders()).isEmpty();
+        assertThat(state.undoOrders(1)).isFalse();
+        assertThat(state.standingOrders()).isEmpty();
+        assertThat(state.missedRounds()).isEmpty();
+        assertThat(state.observersAllowed()).isFalse();
+        assertThat(state.battlePresentationEnabled()).isTrue();
+        assertThat(state.combatRandomnessPercent()).isEqualTo(10);
+        assertThat(state.roundRules()).isEqualTo(RoundRules.defaults());
+        assertThat(state.nextLocalNoFor(1)).isOne();
+        assertThat(state.nextStandingOrderIdFor(1)).isOne();
+    }
+
+    /** A running alliance game with every per-match collection filled. */
+    private static GameState populated() {
+        GameState state = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE, new VictoryRules(90, true, true, 80));
+        var fleets = new DefaultFleetService();
+        assertThat(fleets.sendFleet(state, 1, 1, 2, 5)).isTrue();
+        assertThat(fleets.queueSend(state, 1, 1, 2, 3)).isTrue();
+        assertThat(fleets.addStandingOrder(state, 1, 1, 2, 2)).isOne();
+        state.waitThisTurn().add(state.fleets().getFirst().globalId());
+        state.submittedThisTurn().add(1);
+        state.observers().add("watcher");
+        state.seatByUser().put("alice", 1);
+        state.invitedSeats().put("bob", 2);
+        state.intel().get(1).put(4, new GameState.Intel(2, 1, 5));
+        new DefaultReportService().appendReport(state, 1, "report line");
+        state.updateSystem(4, system -> system.captureBy(1, 3));
+        state.missedRounds().put(2, 1);
+        state.miningAutomation().put(1, MiningAutomation.off("alice"));
+        state.agreeTreaties(new DiplomacyState(2, List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of()));
+        state.configureLobby(true, true, false, 25);
+        state.configureRoundRules(new RoundRules(Duration.ofMinutes(10), Duration.ofMinutes(2), AttackOrder.STRONGEST_FIRST));
+        state.publishInLobby();
+        state.endGame(1);
+        return state;
+    }
+
+    @Test
+    void stragglerClockRunsOnlyWhileExactlyOneOfSeveralHumansIsMissing() {
+        GameState state = new GameState();
+        state.start();
+        state.joinedHumanPlayerIds().addAll(Set.of(1, 2));
+        Instant start = state.turnStartedAt();
+        Instant roundEnd = start.plus(state.roundRules().roundLimit());
+
+        state.updateStragglerClock(start.plusSeconds(5));
+        assertThat(state.stragglerSince()).isNull();
+        assertThat(state.roundDeadline()).isEqualTo(roundEnd);
+
+        state.submittedThisTurn().add(1);
+        state.updateStragglerClock(start.plusSeconds(10));
+        state.updateStragglerClock(start.plusSeconds(20));
+        assertThat(state.pendingHumanPlayerIds()).containsExactly(2);
+        assertThat(state.stragglerSince()).isEqualTo(start.plusSeconds(10));
+        assertThat(state.roundDeadline()).isEqualTo(start.plusSeconds(10).plus(state.roundRules().stragglerLimit()));
+
+        state.submittedThisTurn().remove(1);
+        assertThat(state.roundDeadline()).isEqualTo(roundEnd);
+        state.updateStragglerClock(start.plusSeconds(30));
+        assertThat(state.stragglerSince()).isNull();
+    }
+
+    @Test
+    void noDeadlineRunsBeforeStartOrForASingleHuman() {
+        GameState state = new GameState();
+        state.joinedHumanPlayerIds().addAll(Set.of(1, 2));
+        state.submittedThisTurn().add(1);
+        assertThat(state.roundDeadline()).isNull();
+
+        state.start();
+        state.joinedHumanPlayerIds().remove(2);
+        state.updateStragglerClock(state.turnStartedAt());
+
+        assertThat(state.roundDeadline()).isNull();
+        assertThat(state.stragglerSince()).isNull();
+    }
+
+    @Test
+    void repeatedClassicEndKeepsTheFirstFinishingTime() {
+        GameState state = new GameState();
+        Instant first = Instant.parse("2026-01-01T10:00:00Z");
+
+        state.endGame(1, first);
+        state.endGame(2, first.plusSeconds(60));
+
+        assertThat(state.finishedAt()).isEqualTo(first);
+        assertThat(state.winnerId()).isEqualTo(2);
+    }
+
+    @Test
+    void allianceVictoryMustNameTheEffectiveGroup() {
+        GameState state = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE, new VictoryRules(100, true, true, 70));
+        state.agreeTreaties(new DiplomacyState(2, List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of()));
+        Set<Integer> members = Set.of(1, 2);
+
+        assertThatThrownBy(() -> state.winAsAlliance(9, members)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(state.gameOver()).isFalse();
+        state.winAsAlliance(1, members);
+        assertThat(state.outcome().winnerIds()).containsExactly(1, 2);
+    }
+
+    @Test
+    void unknownIdsAreRejectedAsArgumentErrors() {
+        GameState state = new GameState();
+        state.players().add(new Player(1, "P1", false, "#fff"));
+        state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 2, false));
+        Fleet unknown = new Fleet(9, 1, 1, 1, 1, 1, 1, 3);
+
+        assertThatThrownBy(() -> state.updateSystem(2, system -> system)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> state.updatePlayer(2, player -> player)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> state.replaceFleet(unknown)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void addFleetReturnsTheNewGlobalFleetId() {
+        GameState state = new GameState();
+        state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 2, false));
+        state.systems().add(new StarSystem(2, "S2", 100, 0, null, 5, 2, true));
+
+        assertThat(state.addFleet(1, 1, 2, 2)).isOne();
+        assertThat(state.addFleet(1, 1, 2, 2)).isEqualTo(2);
+    }
+
+    @Test
+    void travelTimeDependsOnTheGalaxyExtentNotItsPosition() {
+        GameState state = new GameState();
+        state.systems().add(new StarSystem(1, "A", 1000, 1000, 1, 5, 1, false));
+        state.systems().add(new StarSystem(2, "B", 1100, 1000, null, 5, 1, true));
+        state.systems().add(new StarSystem(3, "C", 1000, 1200, null, 5, 1, true));
+
+        // 100 x 200 extent: the 223.6 diagonal makes one round cover 11.18, so 100 takes 9 rounds.
+        assertThat(state.travelRounds(1, 2)).isEqualTo(9);
+        assertThat(state.travelRounds(1, 3)).isEqualTo(18);
+        assertThat(state.systemsWithinRounds(List.of(1), 9)).containsExactlyInAnyOrder(1, 2);
+    }
+
+    @Test
+    void startCalibratesTheSpacewardRangeWhenNoneWasConfigured() {
+        GameState state = new GameState();
+        state.resetForNewGame();
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
+        state.players().add(new Player(1, "P1", false, "#fff"));
+        state.systems().add(new StarSystem(1, "A", 0, 0, 1, 5, 2, false));
+        state.systems().add(new StarSystem(2, "B", 30, 40, null, 5, 2, true));
+
+        state.start();
+
+        assertThat(state.navigationSettings()).contains(new NavigationSettings(50));
+    }
+
+    @Test
+    void metalRulesRequireACompleteStoredEconomy() {
+        GameState state = new GameState();
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_METALS));
+        state.players().add(new Player(1, "P1", false, "#fff"));
+        state.systems().add(new StarSystem(1, "A", 0, 0, 1, 5, 4, false));
+        state.systems().add(new StarSystem(2, "B", 30, 40, null, 5, 2, true));
+        state.initializeIndustry();
+        state.establishColonies(ColonyGenesis.forGalaxy(state.systems(), 42));
+
+        assertThatThrownBy(state::start).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Missing stored metal");
+        assertThat(state.started()).isFalse();
+        assertThatThrownBy(() -> GameState.toSnapshot(state)).hasMessageContaining("Missing stored metal");
+        var genesis = MetalGenesis.forGalaxy(state.systems(), state.players(), state.colonies());
+        var strangerStock = new MetalEconomy(genesis.deposits(), Map.of(1, 0L, 9, 0L), genesis.mining());
+        assertThatThrownBy(() -> state.establishMetals(strangerStock)).hasMessageContaining("Incomplete stored metal");
+    }
+
+    @Test
+    void miningAndExpansionShareTheUsableCapacity() {
+        GameState state = ColonyStates.ready(RulesetRef.SPACEWARD_METALS);
+        int usable = state.usableIndustrialCapacity(1);
+        state.planIndustrialExpansion(1, state.industries().get(1).allocateExpansion(2));
+
+        assertThatThrownBy(() -> state.planMining(1, usable - 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(state.metals().orElseThrow().mining()).containsEntry(1, 0);
+        state.planMining(1, usable - 2);
+        var moreExpansion = state.industries().get(1).allocateExpansion(3);
+        assertThatThrownBy(() -> state.planIndustrialExpansion(1, moreExpansion)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void researchReservationIsTakenFromShipbuildingAndRebalancedAfterACapture() {
+        GameState state = ColonyStates.ready(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+        state.start();
+        int before = state.getSystem(1).productionPerTurn();
+
+        state.planShipResearch(1, 50);
+
+        assertThat(state.researchReservations()).containsEntry(1, 5).containsEntry(2, 2);
+        assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(before - 5);
+        // Keeping the garrison keeps the recycling ship balance intact.
+        state.updateSystem(2, system -> system.captureBy(2, system.garrison()));
+        assertThat(state.researchReservations()).containsEntry(2, 0);
+        assertThatCode(() -> GameState.toSnapshot(state)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void storedItinerariesNeedShipsAndMayArriveExactlyAtTheirFinalRound() {
+        GameState state = NavigationStates.running();
+        assertThat(new DefaultFleetService().sendFleet(state, 1, 1, 2, 10)).isTrue();
+        Fleet direct = state.fleets().getFirst();
+        assertThat(direct.journey().finalArrivalTurn()).isEqualTo(direct.arrivalTurn());
+        assertThatCode(() -> GameState.toSnapshot(state)).doesNotThrowAnyException();
+
+        state.replaceFleet(new Fleet(direct.globalId(), 1, direct.localNo(), 1, 2, 0, direct.launchTurn(),
+                direct.arrivalTurn(), direct.journey()));
+
+        assertThatThrownBy(() -> GameState.toSnapshot(state)).hasMessage("Fleet and itinerary disagree");
     }
 
     @Test

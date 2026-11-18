@@ -688,9 +688,9 @@ public class GameState {
         configureVictorySystemPercent(GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
         clearGameOver();
         turnStartedAt = now;
+        // Every joined human must submit again, so no straggler clock can be running.
         stragglerSince = null;
         submittedThisTurn.clear();
-        updateStragglerClock(now);
     }
 
     public void resetForNewGame() {
@@ -726,6 +726,7 @@ public class GameState {
         this.systems.clear();
         this.industries.clear();
         colonies.clear();
+        miningAutomation.clear();
         metals = null;
         navigation = null;
         diplomacy = DiplomacyState.EMPTY;

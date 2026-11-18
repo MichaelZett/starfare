@@ -28,6 +28,20 @@ class ShipCohortsTest {
         assertThatThrownBy(() -> new ShipCohorts(overflow)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ShipCohorts.of(0, -1)).isInstanceOf(IllegalArgumentException.class);
     }
+    @Test void casualtyRemaindersGoToTheGenerationsWithTheLargestShareFirst() {
+        var cohorts = new ShipCohorts(Map.of(0, 1, 1, 2, 2, 3));
+        // Exact shares of 2 survivors: 1/3, 2/3 and 1; the 2/3 share gets the remaining ship.
+        assertThat(cohorts.survive(2)).isEqualTo(new ShipCohorts(Map.of(1, 1, 2, 1)));
+        assertThat(new ShipCohorts(Map.of(ShipResearch.MAX_LEVEL, 1)).count()).isOne();
+        var beyondMaximum = Map.of(ShipResearch.MAX_LEVEL + 1, 1);
+        assertThatThrownBy(() -> new ShipCohorts(beyondMaximum)).isInstanceOf(IllegalArgumentException.class);
+        var empty = Map.of(0, 0);
+        assertThatThrownBy(() -> new ShipCohorts(empty)).isInstanceOf(IllegalArgumentException.class);
+    }
+    @Test void exactlyTheLevelCostCompletesTheLevel() {
+        assertThat(ShipResearch.INITIAL.allocate(10).advance(100)).isEqualTo(new ShipResearch(10, 1, 0));
+        assertThat(ShipResearch.INITIAL.allocate(10).advance(99)).isEqualTo(new ShipResearch(10, 0, 99));
+    }
     @Test void immutableSystemAndFleetOperationsPreserveBuildTimeGenerations() {
         var mixed = new ShipCohorts(Map.of(0, 8, 2, 4));
         var system = new StarSystem(1, "A", 0, 0, 1, 12, 4, false, 0, mixed);
