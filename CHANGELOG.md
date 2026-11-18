@@ -6,6 +6,13 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Ein offener Verwalten-Dialog hält eine geschlossene Browserseite nicht mehr am Leben: Ereignisse
+  anderer Partien schlugen danach mit einem Fehler fehl.
+- Tests: Diplomatie-Dialog, Archiv- und Lobbyfilter, Kartenkopf, Nachbetrachtung, Rundenbericht
+  und Wirtschaftsliste haben eigene Tests; Mutationstests (PIT) für die Regelpakete stehen bereit.
+
 ## 0.2.8 - 2026-11-18
 
 - Starfare führt keine eigene Statistik mehr (Plattform-M14): Die Seite `/starfare/statistics`, ihr

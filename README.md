@@ -147,8 +147,8 @@ and reopening it preserves the draft within the same map view; navigation or a
 reload discards it. Reading older messages no longer jumps to the latest message.
 Complete or cancel target selection before opening chat.
 Focusable map objects and action cards accept Enter and Space. Background updates
-preserve unchanged input controls and focus. **My account** groups statistics,
-archive and account actions; imprint and privacy share a footer.
+preserve unchanged input controls and focus. In the own start, **My account** leads to
+lobby and archive; imprint and privacy share a footer.
 
 System details put sendable ships, total garrison, reserve and forecast ship
 production per round above the send and relocation actions, followed by the
