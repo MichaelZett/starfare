@@ -33,7 +33,6 @@ import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.Subscription;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.game.application.InvitationService;
-import de.zettsystems.starfare.game.ui.ManageGameDialog;
 import de.zettsystems.starfare.style.CssProperties;
 import jakarta.annotation.security.PermitAll;
 import org.jspecify.annotations.Nullable;

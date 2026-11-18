@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.testsupport;
 
-import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameId;

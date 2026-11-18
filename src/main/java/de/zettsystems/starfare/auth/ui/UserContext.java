@@ -5,6 +5,7 @@ import de.zettsystems.gamesplatformapi.PlatformAccounts;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The signed-in player for code that is not a Spring bean (views, dialogs). Reads the platform's
@@ -13,16 +14,14 @@ import java.util.Optional;
  * a binding (plain unit tests) nobody is signed in.
  */
 public final class UserContext {
-    private static volatile @Nullable PlatformAccounts accounts;
+    private static final AtomicReference<@Nullable PlatformAccounts> ACCOUNTS = new AtomicReference<>();
 
     private UserContext() {
     }
 
     /** Binds the platform's accounts and returns the previous binding (tests restore it). */
     static @Nullable PlatformAccounts bind(@Nullable PlatformAccounts platformAccounts) {
-        PlatformAccounts previous = accounts;
-        accounts = platformAccounts;
-        return previous;
+        return ACCOUNTS.getAndSet(platformAccounts);
     }
 
     public static Optional<String> currentPlayerId() {
@@ -31,7 +30,7 @@ public final class UserContext {
 
     /** Stabile fachliche Kennung eines Spielers; E-Mail und Anzeigename bleiben privat bzw. änderbar. */
     public static Optional<Long> currentUserId() {
-        PlatformAccounts bound = accounts;
+        PlatformAccounts bound = ACCOUNTS.get();
         return bound == null ? Optional.empty() : bound.current().map(AccountId::value);
     }
 }

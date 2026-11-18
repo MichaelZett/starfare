@@ -377,7 +377,7 @@ public class Browser {
         try {
             new WebDriverWait(driver(), Duration.ofSeconds(3)).until(_ -> (Boolean) js.executeScript(
                     "const root = document.documentElement; return root.scrollWidth <= root.clientWidth + 1;"));
-        } catch (org.openqa.selenium.TimeoutException lasting) {
+        } catch (org.openqa.selenium.TimeoutException _) {
             // reported below with the overflowing elements
         }
         // One script reads both widths and judges them. Read in two calls, a vertical scroll bar appearing in

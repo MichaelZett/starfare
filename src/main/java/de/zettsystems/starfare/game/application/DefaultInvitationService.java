@@ -4,7 +4,6 @@ import de.zettsystems.gamesplatformapi.PlatformPresence;
 import de.zettsystems.starfare.game.platform.StarfareMatches;
 
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
-import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.EmpireNameGenerator;
 import de.zettsystems.starfare.game.values.GameId;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;

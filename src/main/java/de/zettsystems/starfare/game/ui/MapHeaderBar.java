@@ -83,11 +83,14 @@ final class MapHeaderBar extends HorizontalLayout {
         headerLeft.setSpacing(true);
         headerLeft.addClassName("app-header-left");
 
-        var headerRight = logistics == null
-                ? new HorizontalLayout(chat, next, headerMenu)
-                : OwnFrame.active()
-                ? new HorizontalLayout(new LanguageSwitcher(), logistics, chat, next, headerMenu)
-                : new HorizontalLayout(logistics, chat, next, headerMenu);
+        HorizontalLayout headerRight;
+        if (logistics == null) {
+            headerRight = new HorizontalLayout(chat, next, headerMenu);
+        } else if (OwnFrame.active()) {
+            headerRight = new HorizontalLayout(new LanguageSwitcher(), logistics, chat, next, headerMenu);
+        } else {
+            headerRight = new HorizontalLayout(logistics, chat, next, headerMenu);
+        }
         headerRight.setAlignItems(Alignment.CENTER);
         headerRight.setSpacing(true);
         headerRight.addClassName("app-header-right");

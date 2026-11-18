@@ -20,8 +20,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.ui.RulesetLabels;
-import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.GameVisibility;

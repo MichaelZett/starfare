@@ -53,7 +53,8 @@ class GameAccountDeletionListenerTest {
         doThrow(new IllegalStateException("SQL failed")).when(jdbc).update(anyString(), eq("99"));
         TransactionSynchronizationManager.initSynchronization();
         try {
-            assertThatThrownBy(() -> listener.accountDeleted(new AccountRemoved(AccountId.of(99)))).isInstanceOf(IllegalStateException.class);
+            AccountRemoved removed = new AccountRemoved(AccountId.of(99));
+            assertThatThrownBy(() -> listener.accountDeleted(removed)).isInstanceOf(IllegalStateException.class);
             assertThat(session.getStateJson()).isEqualTo(snapshot);
             assertThat(TransactionSynchronizationManager.getSynchronizations()).isEmpty();
             verifyNoInteractions(store);

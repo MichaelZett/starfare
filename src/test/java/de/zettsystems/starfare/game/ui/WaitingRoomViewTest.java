@@ -4,7 +4,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.component.textfield.TextField;
 import de.zettsystems.starfare.AbstractBrowserlessTest;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
