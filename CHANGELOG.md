@@ -6,6 +6,11 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Starfare fasst die alten Sozial- und Ergebnistabellen nicht mehr an (Vorbereitung ihrer Löschung im
+  nächsten Release); die Kontolöschung entfernt die persönlichen Anzeige-Einstellungen.
+
 ## 0.2.9 - 2026-11-18
 
 - Ein offener Verwalten-Dialog hält eine geschlossene Browserseite nicht mehr am Leben: Ereignisse

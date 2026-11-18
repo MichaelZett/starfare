@@ -630,8 +630,7 @@ M13). The game asks only games-platform-api's `PlatformFriends` and
 `PlatformPresence`; in a host the platform answers, in Starfare's own start
 `standalone.platform` answers with no friends, nobody else online and everybody
 visible. Starfare's former tables `friendships`, `direct_messages` and
-`user_preferences` are no longer read; `LegacySocialRecords` keeps deleting an
-account's rows and messages after a year until a migration drops them.
+`user_preferences` are no longer touched and are dropped by a later migration.
 
 Invitations are stored as `GameState.invitedSeats` in the persisted
 `game_sessions.state_json` snapshot, so a restart retains the seat reservation.
@@ -714,8 +713,8 @@ generates a fresh private game, and optionally reserves the previous human seats
 Reservations do not join participants or start the game. Archived source games
 use the same access check.
 
-`user_display_settings` (Flyway V2_8) belongs to the existing `user_preferences`
-aggregate. Its enum keys store speed, sound, event/logistics filters, route search
+`user_display_settings` (Flyway V2_8) belongs to the game; deleting an account
+removes its rows (`GameAccountDeletionListener`). Its enum keys store speed, sound, event/logistics filters, route search
 and sidebar position. `DisplayPreferences` loads an account-bound session cache;
 each explicit changed choice is saved transactionally. Reopening a map refreshes
 the cache. These values never modify game setup or game state.

@@ -21,9 +21,7 @@ public class GameAccountDeletionListener {
     private static final List<String> DELETE_BINDINGS = List.of(
             "DELETE FROM battle_acknowledgements WHERE player_id = ?",
             "DELETE FROM game_chat_messages WHERE sender_player_id = ?",
-            "DELETE FROM game_result_participants WHERE player_id = ?",
-            "DELETE FROM game_result_winners WHERE player_id = ?");
-    private static final String CLEAR_WINNER = "UPDATE game_results SET winner_player_id = NULL, version = version + 1 WHERE winner_player_id = ?";
+            "DELETE FROM user_display_settings WHERE player_id = ?");
     private final GameSessionRepository sessions;
     private final GameArchiveRepository archives;
     private final GameSessionStore store;
@@ -48,7 +46,6 @@ public class GameAccountDeletionListener {
         var changed = releaseSessions(account);
         releaseArchives(account);
         DELETE_BINDINGS.forEach(sql -> jdbc.update(sql, account));
-        jdbc.update(CLEAR_WINNER, account);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override public void afterCommit() { changed.forEach(store::invalidate); }
         });

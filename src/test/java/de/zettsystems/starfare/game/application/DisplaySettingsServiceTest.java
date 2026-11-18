@@ -18,7 +18,7 @@ class DisplaySettingsServiceTest extends AbstractIntegrationTest {
     private TransactionTemplate transactions;
 
     @Test
-    void displayChoicesPersistPerAccountWithoutSocialPreferences() {
+    void displayChoicesPersistPerAccount() {
         service.chooseDisplaySetting("display-alice", DisplaySetting.SPEED, "0.0");
         service.chooseDisplaySetting(" display-alice ", DisplaySetting.SOUND, "false");
         service.chooseDisplaySetting("display-alice", DisplaySetting.SPEED, "1.5");
@@ -27,8 +27,6 @@ class DisplaySettingsServiceTest extends AbstractIntegrationTest {
         assertThat(service.displaySettings("display-alice"))
                 .containsEntry(DisplaySetting.SPEED, "1.5").containsEntry(DisplaySetting.SOUND, "false");
         assertThat(service.displaySettings("display-bob")).containsOnlyKeys(DisplaySetting.SPEED);
-        assertThat(jdbc.queryForObject("SELECT count(*) FROM user_preferences WHERE player_id = 'display-alice'",
-                Integer.class)).isZero();
     }
 
     @Test
