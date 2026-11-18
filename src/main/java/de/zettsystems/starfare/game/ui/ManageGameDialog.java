@@ -209,8 +209,10 @@ public class ManageGameDialog extends Dialog {
     private void updateInviteCandidates(GameSummary summary) {
         Set<String> seated = summary.seatByPlayer().keySet();
         Set<String> alreadyInvited = summary.invitedSeats().keySet();
+        // Only whom the host may see: the service rejects anyone else, so they must not be offered.
         List<String> candidates = StarfareMatches.account(host).map(self -> Stream.concat(
-                        presence.onlineFor(self).stream(), friends.friendsOf(self).stream()))
+                        presence.onlineFor(self).stream(), friends.friendsOf(self).stream())
+                        .filter(other -> presence.canSee(self, other)))
                 .orElseGet(Stream::empty)
                 .map(StarfareMatches::accountName)
                 .distinct()

@@ -124,6 +124,17 @@ class ManageGameDialogTest extends AbstractBrowserlessTest {
     }
 
     @Test
+    void aFriendWhoHidesFromTheHostIsNotOffered() {
+        assertThat(test(inviteCombo()).getSuggestionItems()).containsExactly(friend);
+        social.hide(AccountId.of(Long.parseLong(friend)), AccountId.of(Long.parseLong(host)));
+        openedDialog().close();
+
+        test(button("Verwalten")).click();
+
+        assertThat(test(inviteCombo()).getSuggestionItems()).isEmpty();
+    }
+
+    @Test
     void theDialogClosesWhenTheGameIsAborted() {
         Dialog dialog = openedDialog();
 
