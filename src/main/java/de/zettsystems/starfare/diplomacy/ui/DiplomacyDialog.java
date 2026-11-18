@@ -14,6 +14,7 @@ import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.i18n.I18n;
 import java.util.HashSet;
+import java.util.function.Consumer;
 
 /** The map host refreshes an open dialog; this adds no independent subscription. */
 public class DiplomacyDialog extends Dialog {
@@ -23,10 +24,15 @@ public class DiplomacyDialog extends Dialog {
     private final Div content = new Div();
     private final DiplomacyDrafts drafts = new DiplomacyDrafts();
     private final DiplomacyCards cards;
+    private final Consumer<String> notify;
     private @org.jspecify.annotations.Nullable ConfirmDialog leaveConfirmation;
 
     public DiplomacyDialog(GameService game, GameId id, String account) {
-        this.game = game; this.id = id; this.account = account;
+        this(game, id, account, Notification::show);
+    }
+    /** {@code notify} shows a short message; tests capture it instead of opening a notification. */
+    DiplomacyDialog(GameService game, GameId id, String account, Consumer<String> notify) {
+        this.game = game; this.id = id; this.account = account; this.notify = notify;
         cards = new DiplomacyCards(drafts, this::send, this::leave);
         setHeaderTitle(I18n.t(UiTexts.DIP_TITLE)); setWidth("640px");
         getElement().getStyle().set(de.zettsystems.starfare.style.CssProperties.MAX_WIDTH, "calc(100vw - 32px)");
@@ -72,13 +78,13 @@ public class DiplomacyDialog extends Dialog {
                     .filter(player -> view.aiAlliancesAllowed() || !player.ai())
                     .forEach(player -> valid.add(new DiplomacyDrafts.Key(DiplomacyOrder.Action.FOUND, player.id())));
         }
-        if (drafts.retain(valid)) { Notification.show(I18n.t(DiplomacyKeys.LOST_TARGET)); }
+        if (drafts.retain(valid)) { notify.accept(I18n.t(DiplomacyKeys.LOST_TARGET)); }
     }
     private void send(DiplomacyView view, DiplomacyOrder order) {
         if (!isOpened()) { return; }
         if (game.diplomacyOrder(id, account, view.turn(), order)) {
             drafts.completed(new DiplomacyDrafts.Key(order.action(), order.subject()));
-        } else { Notification.show(I18n.t(UiTexts.DIP_REJECTED)); }
+        } else { notify.accept(I18n.t(UiTexts.DIP_REJECTED)); }
         refresh();
     }
     private void leave(DiplomacyView view, AllianceGroup group) {
