@@ -27,9 +27,9 @@ simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md
 application release. SectorForces uses `classic / 1.0.0`; the display name does
 not change its stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
-Spaceward supports stored versions 1.0.0, 1.1.0 and W1–W7. New games offer
-`spaceward / 1.2.0-w7` by default and W6 as an alternative. Older versions remain
-restoration-only. Versioned implementations share economy, navigation, diplomacy
+Spaceward supports stored versions 1.0.0, 1.1.0, W1–W7 and 1.3.0-r1. New games
+use only the current `spaceward / 1.3.0-r1`; inside the platform host the variant is
+reserved for testers. Older versions remain restoration-only. Versioned implementations share economy, navigation, diplomacy
 and coalition combat services;
 Spaceward is enabled for new games since M7. Orion has
 no implementation or selectable entry.
@@ -1034,7 +1034,8 @@ multiple completions, capacity cap, next-round output and material conservation.
 
 `RulesetDefinition.creatableVersions` explicitly limits new-game references,
 independently of `supportedVersions`. The built-in Spaceward entry permits only
-W6 and W7, defaulting to W7; SectorForces keeps its existing entry and default.
+the current 1.3.0-r1 (it permitted W6 and W7 before 0.2.1); SectorForces keeps its
+existing entry and default.
 `creationChoices()` returns the default first with stable ordering. Catalog
 validation rejects unsupported choices and a non-creatable enabled default.
 `requireCreatable` applies the same choices to registry creation. The retained

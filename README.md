@@ -22,8 +22,8 @@ variant and rule version, so rules can evolve without changing running games.
 | Variant | Inspired by | Status |
 |---|---|---|
 | **SectorForces** | *Sector Forces* (Commodore 64) | Playable, rules 1.0.0 |
-| **Spaceward** | *Spaceward Ho!* | Playable, rules 1.1.0; economy with colonies, metal and recycling (1.2.0) in acceptance |
-| *(not named yet)* | *Master of Orion II: Battle at Antares* | Planned |
+| **Spaceward** | *Spaceward Ho!* | Playable, rules 1.3.0-r1 with colonies, metal, recycling and ship research; testers only inside the platform host |
+| *(not named yet)* | *Master of Orion II: Battle at Antares* | An idea, not planned |
 
 The steps build on each other: SectorForces is the compact core of conquest and
 fleet movement. Spaceward adds an economy, limited flight range, alliances and
