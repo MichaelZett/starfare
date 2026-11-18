@@ -15,8 +15,8 @@ friends. **Spielanleitung auf Deutsch:** [Anleitung](docs/ANLEITUNG.md).
 ## The plan: three classics, one platform
 
 Starfare rebuilds the ideas of three science fiction strategy classics as game
-variants on a shared platform. Lobby, accounts, AI opponents, archive, statistics
-and the map are common; each variant brings its own rules. Every game keeps its
+variants on a shared platform. Lobby, AI opponents, archive and the map are
+common; each variant brings its own rules. Every game keeps its
 variant and rule version, so rules can evolve without changing running games.
 
 | Variant | Inspired by | Status |
@@ -77,9 +77,8 @@ The planned variant inspired by Master of Orion II is not available yet.
 
 Every game keeps its variant and rule version independently of the application
 release. Existing games default to SectorForces; their Classic behavior remains
-unchanged. Lobby, joining, management, archive and statistics show the selected
-rules. Templates and rematches retain them. Personal statistics can be filtered
-by variant, including totals and opponent records.
+unchanged. Lobby, joining, management and archive show the selected rules.
+Templates and rematches retain them.
 
 ## AI strategies
 
@@ -135,7 +134,7 @@ For newly completed games, the timeline can rewind to every resolved round;
 Private archives remain restricted to the host and seat holders. For public
 archives, outsiders can open the map only when spectators are allowed. Games
 are copied to an independent archive. Optional cleanup of the operative session
-is disabled by default and retains archive replay and statistics.
+is disabled by default and retains archive replay.
 
 ## Map sidebar
 
@@ -248,11 +247,9 @@ presence panel, chat, language switcher and a per-user visibility menu.*
 all except production), travel-time preview, optional "as production transfer"
 mode. A configurable garrison reserve stays at the source system.*
 
-Completed games are retained as compact results for the personal statistics
-page (`/starfare/statistics`), including wins, losses, draws and the record against each
-opponent. The page shows the result balance and opponent records as cards while
-retaining the recent game history. Statistics resolve opponent names in one
-batch for both the opponent cards and game history.
+Starfare keeps no statistics of its own: at the first end of a game it announces
+the places to the platform (`MatchEnded`, games-platform-api), whose statistics
+cover all games. `game_results` only remembers that a game has ended.
 For newly completed games, the archive map also provides a timeline for replaying
 each resolved round.
 
@@ -491,8 +488,8 @@ shows the winner and personal ship totals.
 
 The winner can choose **Continue until every system is conquered** to resume toward 100%.
 This restarts the round deadlines and clears submissions without advancing the
-round. Other participants are informed automatically. The first result remains
-in personal statistics; continued play does not replace it with a second result.
+round. Other participants are informed automatically. The first end is the one
+reported to the platform; continued play does not end the game a second time.
 
 ## Observer mode
 
@@ -761,9 +758,9 @@ without this option keep the previous AI participation.
 Individual victory takes precedence. Otherwise, the eligible group controlling
 the most systems wins (group ID breaks ties). All effective members win,
 including members without systems. Neutral systems remain in the denominator.
-Results freeze every winner for reports, replay, archive and account statistics.
+Results freeze every winner for reports, replay, archive and the platform's result.
 Any winning member may continue once, raising both victory thresholds to 100%;
-the original statistical result remains unchanged.
+the original result remains unchanged.
 
 ## License
 
@@ -984,7 +981,7 @@ Starfare's own stylesheets style only Starfare's classes and the scope
 variables to Starfare's palette.
 
 All game routes start with `/starfare` (lobby `/starfare`, map
-`/starfare/map/:gameId`, `/starfare/archive`, `/starfare/statistics`); in the
+`/starfare/map/:gameId`, `/starfare/archive`); in the
 standalone application `/` forwards to the lobby. The artifact describes itself
 in `games/starfare/game.properties` (key, base package, schema, release stage,
 public paths). Texts live in `games/starfare/i18n/translations*.properties` and

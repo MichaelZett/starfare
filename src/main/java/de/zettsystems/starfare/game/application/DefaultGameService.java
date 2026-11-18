@@ -335,7 +335,7 @@ public class DefaultGameService implements GameService {
     private final AutoplayRunner autoplayRunner;
     private final Broadcaster broadcaster;
     private final PlayerViewBuilder playerViewBuilder;
-    private final GameStatisticsService statistics;
+    private final GameEndRecorder gameEnds;
     private final GameArchiveStore archives;
     private final BattleAcknowledgementService battleAcknowledgements;
     private final GameTimingProperties timing;
@@ -344,29 +344,29 @@ public class DefaultGameService implements GameService {
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
                               PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
-                              GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
+                              GameEndRecorder gameEnds, GameArchiveStore archives, GameTimingProperties timing,
                               BattleAcknowledgementService battleAcknowledgements) {
         this(registry, turnEngine, fleetService, reportService, autoplayRunner, broadcaster,
-                playerViewBuilder, access, statistics, archives, timing, battleAcknowledgements, new DefaultEconomyService());
+                playerViewBuilder, access, gameEnds, archives, timing, battleAcknowledgements, new DefaultEconomyService());
     }
 
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
                               PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
-                              GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
+                              GameEndRecorder gameEnds, GameArchiveStore archives, GameTimingProperties timing,
                               BattleAcknowledgementService battleAcknowledgements, EconomyService economy) {
         this(registry, turnEngine, fleetService, reportService, autoplayRunner, broadcaster, playerViewBuilder,
-                access, statistics, archives, timing, battleAcknowledgements, economy, new DefaultDiplomacyService());
+                access, gameEnds, archives, timing, battleAcknowledgements, economy, new DefaultDiplomacyService());
     }
 
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
                               PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
-                              GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
+                              GameEndRecorder gameEnds, GameArchiveStore archives, GameTimingProperties timing,
                               BattleAcknowledgementService battleAcknowledgements, EconomyService economy,
                               DiplomacyService diplomacy) {
         this(registry, turnEngine, fleetService, reportService, autoplayRunner, broadcaster, playerViewBuilder,
-                access, statistics, archives, timing, battleAcknowledgements, economy, diplomacy,
+                access, gameEnds, archives, timing, battleAcknowledgements, economy, diplomacy,
                 RulesetAccess.unrestricted());
     }
 
@@ -374,7 +374,7 @@ public class DefaultGameService implements GameService {
     public DefaultGameService(GameRegistry registry, TurnEngine turnEngine, FleetService fleetService,
                               ReportService reportService, AutoplayRunner autoplayRunner, Broadcaster broadcaster,
                               PlayerViewBuilder playerViewBuilder, GameAccessPolicy access,
-                              GameStatisticsService statistics, GameArchiveStore archives, GameTimingProperties timing,
+                              GameEndRecorder gameEnds, GameArchiveStore archives, GameTimingProperties timing,
                               BattleAcknowledgementService battleAcknowledgements, EconomyService economy,
                               DiplomacyService diplomacy, RulesetAccess rulesetAccess) {
         this.rulesetAccess = rulesetAccess;
@@ -389,7 +389,7 @@ public class DefaultGameService implements GameService {
         this.autoplayRunner = autoplayRunner;
         this.broadcaster = broadcaster;
         this.playerViewBuilder = playerViewBuilder;
-        this.statistics = statistics;
+        this.gameEnds = gameEnds;
         this.archives = archives;
         this.timing = timing;
     }
@@ -1045,7 +1045,7 @@ public class DefaultGameService implements GameService {
         switch (result) {
             case TurnResult.Advanced(int turn) -> broadcaster.publish(new GameEvent.TurnAdvanced(gameId, turn));
             case TurnResult.Finished(int turn, Integer winnerId, var winnerIds, var allianceId) -> {
-                statistics.recordFinishedGame(gameId);
+                gameEnds.recordFinishedGame(gameId);
                 broadcaster.publish(new GameEvent.TurnAdvanced(gameId, turn));
                 broadcaster.publish(new GameEvent.GameFinished(gameId, winnerId, winnerIds, allianceId));
             }

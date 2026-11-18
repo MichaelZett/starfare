@@ -16,7 +16,8 @@ import static org.assertj.core.api.Assertions.*;
 
 class AlliancePersistenceTest extends AbstractIntegrationTest {
     @Autowired ObjectMapper mapper;
-    @Autowired GameStatisticsService statistics;
+    @Autowired GameEndRecorder gameEnds;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
     @Autowired GameService games;
     @Autowired GameSessionStore store;
     @Autowired GameTemplateService templates;
@@ -85,10 +86,8 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
         state.originalHumanPlayerIds().addAll(Set.of(1, 2, 3));
         state.winAsAlliance(1, Set.of(1, 2));
         var id = GameId.newId(); store.save(new GameSession(id, "Group result", "ally-one", Instant.now(), state));
-        statistics.recordFinishedGame(id);
-        assertThat(statistics.statisticsFor("ally-one").wins()).isEqualTo(1);
-        assertThat(statistics.statisticsFor("ally-two").wins()).isEqualTo(1);
-        assertThat(statistics.statisticsFor("loser").losses()).isEqualTo(1);
+        gameEnds.recordFinishedGame(id);
+        assertThat(recordedEnds(id)).isOne();
         assertThat(games.summaryFor(id, "ally-two").orElseThrow().outcome().wonBy(2)).isTrue();
         var copiedSetup = templates.template(id, "ally-two").orElseThrow().setup();
         assertThat(copiedSetup.ruleset()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
@@ -101,8 +100,13 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
         assertThat(games.continueAfterVictory(id, "ally-one")).isFalse();
         int groupPercent = registry.readState(id, s -> s.victoryRules().allianceSystemPercent());
         assertThat(groupPercent).isEqualTo(100);
-        statistics.recordFinishedGame(id);
-        assertThat(statistics.statisticsFor("ally-two").wins()).isEqualTo(1);
+        gameEnds.recordFinishedGame(id);
+        assertThat(recordedEnds(id)).isOne();
+    }
+
+    private int recordedEnds(GameId id) {
+        Integer count = jdbc.queryForObject("select count(*) from game_results where game_id = ?", Integer.class, id.value());
+        return count == null ? 0 : count;
     }
 
     private static GameState sample(RulesetRef ref, boolean group) {

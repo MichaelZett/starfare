@@ -20,7 +20,7 @@ import java.util.List;
  * Turns Starfare's game events into the platform's {@link MatchChanged} and, for aborted games,
  * {@link MatchEnded}. Starfare keeps its games in memory and stores each change before it
  * broadcasts it, outside a database transaction, so the platform events follow the stored change.
- * A regular end is announced by the statistics service, once, when it records the result.
+ * A regular end is announced by the game end recorder, once, when it records the end.
  */
 @Component
 class MatchEventPublisher implements InitializingBean {

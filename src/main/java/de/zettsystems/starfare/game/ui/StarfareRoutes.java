@@ -15,7 +15,6 @@ public final class StarfareRoutes {
     /** Friends, invitations, who is online and chat. */
     public static final String SOCIAL = KEY + "/social";
     public static final String ARCHIVE = KEY + "/archive";
-    public static final String STATISTICS = KEY + "/statistics";
 
     private StarfareRoutes() {
     }

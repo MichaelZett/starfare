@@ -6,6 +6,16 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Starfare führt keine eigene Statistik mehr (Plattform-M14): Die Seite `/starfare/statistics`, ihr
+  Eintrag in der Spielnavigation und im Kontomenü des eigenen Starts entfallen. Ergebnisse und
+  Statistik führt die Plattform, die das Partieende über `MatchEnded` erfährt. Archiv und
+  Ergebnisdialog am Partieende bleiben.
+- `game_results` merkt sich nur noch, dass eine Partie geendet hat (`V2_13` macht `game_name`
+  optional). Die nicht mehr gelesenen Ergebnisdaten bleiben bis zu ihrer Löschung nach einer Sicherung
+  stehen; die Kontolöschung bereinigt sie weiter.
+
 ## 0.2.7 - 2026-11-17
 
 - Das Spiel fragt Konten nur noch über games-platform-api 0.3.0 (`PlatformAccounts`: angemeldetes Konto,

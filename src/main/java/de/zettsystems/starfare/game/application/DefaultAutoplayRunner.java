@@ -19,14 +19,14 @@ public class DefaultAutoplayRunner implements AutoplayRunner {
     private final GameRegistry registry;
     private final TurnEngine turnEngine;
     private final Broadcaster broadcaster;
-    private final GameStatisticsService statistics;
+    private final GameEndRecorder gameEnds;
 
     public DefaultAutoplayRunner(GameRegistry registry, TurnEngine turnEngine, Broadcaster broadcaster,
-                                 GameStatisticsService statistics) {
+                                 GameEndRecorder gameEnds) {
         this.registry = registry;
         this.turnEngine = turnEngine;
         this.broadcaster = broadcaster;
-        this.statistics = statistics;
+        this.gameEnds = gameEnds;
     }
 
     @Async
@@ -38,7 +38,7 @@ public class DefaultAutoplayRunner implements AutoplayRunner {
                     .map(_ -> registry.writeState(gameId, state -> tickOnce(gameId, state, events)))
                     .orElse(true);
             if (events.stream().anyMatch(GameEvent.GameFinished.class::isInstance)) {
-                statistics.recordFinishedGame(gameId);
+                gameEnds.recordFinishedGame(gameId);
             }
             for (GameEvent event : events) {
                 broadcaster.publish(event);

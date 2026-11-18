@@ -9,7 +9,7 @@ import de.zettsystems.gamesplatformapi.MatchStatus;
 import de.zettsystems.gamesplatformapi.Placement;
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.application.GameStatisticsService;
+import de.zettsystems.starfare.game.application.GameEndRecorder;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
@@ -40,7 +40,7 @@ class MatchEventsIntegrationTest extends AbstractIntegrationTest {
     private static final AccountId TWENTY_THREE = AccountId.of(23);
 
     @Autowired private GameService games;
-    @Autowired private GameStatisticsService statistics;
+    @Autowired private GameEndRecorder gameEnds;
     @Autowired private JdbcTemplate jdbc;
     @Autowired private MatchDirectory directory;
     @Autowired private PlatformTransactionManager transactions;
@@ -75,8 +75,8 @@ class MatchEventsIntegrationTest extends AbstractIntegrationTest {
     void endsAFinishedGameOnceAfterTheResultIsCommitted() {
         GameId id = finishedGame();
 
-        statistics.recordFinishedGame(id);
-        statistics.recordFinishedGame(id);
+        gameEnds.recordFinishedGame(id);
+        gameEnds.recordFinishedGame(id);
 
         assertThat(recorder.of(id)).singleElement().isInstanceOfSatisfying(MatchEnded.class, ended ->
                 assertThat(ended.result()).isEqualTo(MatchResult.ranked(List.of(
@@ -88,7 +88,7 @@ class MatchEventsIntegrationTest extends AbstractIntegrationTest {
         GameId id = finishedGame();
 
         new TransactionTemplate(transactions).executeWithoutResult(status -> {
-            statistics.recordFinishedGame(id);
+            gameEnds.recordFinishedGame(id);
             status.setRollbackOnly();
         });
 

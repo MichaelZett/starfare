@@ -52,10 +52,9 @@ supported reference needs an explicit registered round implementation; incomplet
 The isolated third-variant tests verify extensibility without shipping another
 game. Later variants may add their own commands, state and views as required.
 
-Flyway V2_9 adds variant and version columns to `game_results` with legacy
-SectorForces defaults. Statistics filter by variant before aggregating outcomes
-and opponents; participant and AI collections still use separate fetches.
-Rule references remain in the compact result after detailed sessions are removed.
+Results and statistics belong to the platform. Starfare writes only the game
+id and the time of the first end to `game_results`; the older result columns and
+tables are no longer read and are dropped later, after a backup.
 
 ## Configurable victory and diplomacy
 
@@ -79,9 +78,7 @@ effective through the existing round pipeline before evaluation.
 Snapshots, replay frames, completion events and player views carry the full
 outcome; victory/defeat reports preserve group membership at resolution time.
 Old constructors and nullable JSON fields retain legacy read compatibility.
-Account statistics use Flyway V2_11's `game_result_winners`, backfilled from
-legacy individual winners. Participants, AI names and winners are fetched with
-three separate collection queries, avoiding a Cartesian product.
+The platform learns every winner from `MatchEnded` (place 1).
 
 The internal browser acceptance route exists only in e2e sources. It previews
 the wizard's Spaceward choices without modifying the production catalog, which enables W6 and W7 for new Spaceward games. The muted
@@ -414,8 +411,8 @@ zero survivors on both sides, rather than comparing rounded ship counts.
 
 `DefaultAutoplayRunner` resolves unattended AI games through
 `GameRegistry.writeState`, so each turn is persisted under the session lock
-and completion also creates the archive. It records the first result through
-`GameStatisticsService` before publishing the final turn and completion events.
+and completion also creates the archive. It records the first end through
+`GameEndRecorder` before publishing the final turn and completion events.
 
 ## Round limits
 
@@ -461,13 +458,10 @@ After completion, invitations no longer grant private archive access.
 is set at the first game end and preserved by snapshots and copies; old archives
 without the timestamp retain an unknown date. Archive opening calls `reviewFor`
 and does not register spectators or save state. Map actions and service commands
-reject edits after game end. At the first game end, `GameStatisticsService` writes
-the compact result plus human participants to `game_results`; this data remains
-after `game_sessions` is later pruned.
-`game_results.ai_victory` distinguishes an AI winner without an account from
-a game without a winner. Such victories count as losses for human participants.
-Older results default to false because a missing account alone cannot establish
-whether the original game ended with an AI victory or no winner.
+reject edits after game end. At the first game end of a game with human
+accounts, `GameEndRecorder` writes a row to `game_results` and announces
+`MatchEnded` with the places in the same transaction; the platform keeps the
+statistics. The row keeps a continued game from ending a second time.
 
 Any recorded winning member may resume a completed game once. `resumeForFullConquest`
 raises both victory thresholds to 100%, clears the outcome and submissions, and
@@ -475,14 +469,13 @@ restarts the round and straggler clocks without advancing the turn.
 `GameContinued` refreshes every subscribed view and clears its outcome
 acknowledgement and any open outcome dialog. A subsequent game end therefore
 waits for its own pending battles before opening the result or review again.
-The initial statistical result remains unchanged when play continues.
+The first end remains the reported one when play continues.
 
 `JpaGameSessionStore` also writes a complete idempotent copy to `game_archives`.
 The optional `GameArchiveCleanupRunner` removes only operative `game_sessions`
 older than `starfare.game.archive-cleanup.retention` (90 days by default), and
 only when cleanup is enabled. It rechecks that the session is completed before
-deleting it; archive review, replay and statistics then read from their durable
-stores.
+deleting it; archive review and replay then read from their durable store.
 
 `GameState.replayFrames` stores immutable systems, fleets and reports at game
 start and after every resolved turn. It is optional in `GameStateSnapshot` so
@@ -568,7 +561,7 @@ For phones it adds the static stylesheet `META-INF/resources/styles/starfare-mob
 and the class `starfare-mobile` on `<html>`. The stylesheet lies outside the frontend
 bundle, so desktops never load it; all its rules are scoped to that class.
 
-Lobby, archive, statistics and dialogs share their components with the desktop
+Lobby, archive and dialogs share their components with the desktop
 and adapt through that stylesheet. The map does not: `MainView` builds either the
 `SplitLayout` with map and sidebar or `MobileMapLayout`, never both. The phone layout
 reuses the same `MapCanvas`, `FleetAndOrdersPanel` and controls, arranges them as

@@ -3,7 +3,6 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
-import de.zettsystems.starfare.game.values.CompletedGameOutcome;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
@@ -23,7 +22,8 @@ class AutoplayToEndTest extends AbstractIntegrationTest {
 
     @Autowired private GameSessionRepository sessions;
     @Autowired private GameArchiveStore archives;
-    @Autowired private GameStatisticsService statistics;
+    @Autowired private GameEndRecorder gameEnds;
+    @Autowired private GameEndRepository ends;
     @Autowired private ObjectMapper mapper;
 
     @Test
@@ -48,19 +48,15 @@ class AutoplayToEndTest extends AbstractIntegrationTest {
             assertThat(archive.state().gameOver()).isTrue();
             assertThat(archive.state().turn()).isEqualTo(2);
         });
-        var persistedStatistics = statistics.statisticsFor(formerHuman);
-        assertThat(persistedStatistics.games()).isOne();
-        assertThat(persistedStatistics.losses()).isOne();
-        assertThat(persistedStatistics.completedGames()).singleElement()
-                .satisfies(result -> assertThat(result.outcome()).isEqualTo(CompletedGameOutcome.LOSS));
+        var firstEnd = ends.findById(id.value()).orElseThrow().getFinishedAt();
 
         registry.writeState(id, state -> {
             state.resumeForFullConquest(java.time.Instant.now());
             state.endGame(2);
             return null;
         });
-        statistics.recordFinishedGame(id);
-        assertThat(statistics.statisticsFor(formerHuman)).isEqualTo(persistedStatistics);
+        gameEnds.recordFinishedGame(id);
+        assertThat(ends.findById(id.value()).orElseThrow().getFinishedAt()).isEqualTo(firstEnd);
     }
 
     private GameId setupAiDominantGame() {

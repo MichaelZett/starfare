@@ -319,8 +319,8 @@ beginnt sie später oder hat Lücken, nennt der Dialog „seit Runde N“ bzw.
 
 Der Sieger darf **Bis zur vollständigen Eroberung weiterspielen** wählen. Das Ziel
 steigt dann auf 100 %, die Abgaben werden zurückgesetzt und die Fristen starten neu.
-Die anderen Teilnehmer werden automatisch informiert. Das zuerst gespeicherte
-Ergebnis bleibt in der Statistik bestehen.
+Die anderen Teilnehmer werden automatisch informiert. Das zuerst erreichte
+Ergebnis bleibt in der Statistik der Plattform bestehen.
 
 Im **Archiv** ist **Ansehen** die Hauptaktion; **Als Vorlage / Revanche** steht
 nachgeordnet daneben. Such- und Ergebnisfilter bleiben bei Rückkehr innerhalb
@@ -333,9 +333,8 @@ wählen und den Kriegsnebel umschalten. Die Zeitleiste zeigt gespeicherte Runden
 Kriegsnebel; bei **Endstand** gelten wieder Perspektive und Nebelschalter. Ältere
 Partien ohne gespeicherte Runden bieten nur den Endstand. Private Archive bleiben
 auf Berechtigte beschränkt; öffentliche erlauben fremde Zuschauer nur bei aktivierter
-Zuschaueroption. Die **Statistik** zeigt deine Ergebnisse und Gegnerbilanzen.
-Mit dem Filter **Spielvariante** beschränkst du Summen, Gegnerbilanzen und
-Partienliste auf eine Variante. Ein leerer Filter zeigt alle Varianten.
+Zuschaueroption. Deine Ergebnisse zeigt die **Statistik** der Plattform über alle
+Spiele; Starfare selbst führt keine eigene Statistik.
 
 ## Spaceward-Wirtschaft
 
@@ -455,7 +454,7 @@ werden je Konto gespeichert und bei einer späteren Anmeldung wieder geladen.
 Sprache bleibt sitzungsbezogen; Kartenposition und Zoom werden je Partie in der
 Browsersitzung behalten.
 
-**Mein Bereich** bündelt Lobby, Statistik, Archiv und die Kontolöschung.
+**Mein Bereich** bündelt Lobby, Archiv und die Kontolöschung.
 Impressum und Datenschutz sind über die gemeinsame Fußzeile erreichbar.
 Die Kontolöschung ist dauerhaft; Einzelheiten zu Daten und Aufbewahrung stehen
 in der Datenschutzansicht der Anwendung.
@@ -493,9 +492,9 @@ Bei 16 Systemen und 70 % reichen zwölf Systeme gemeinsam: Partner mit 11 und
 5 Systemen gewinnen als Gruppe, sofern Bündnissiege erlaubt sind. Ohne diese
 Option braucht weiterhin ein einzelnes Imperium zwölf Systeme.
 
-Dialog, Bericht, Archiv und persönliche Statistik berücksichtigen jeden Sieger.
+Dialog, Bericht, Archiv und die Statistik der Plattform berücksichtigen jeden Sieger.
 Jeder Sieger darf einmal bis zur vollständigen Eroberung fortsetzen; dann
-steigen beide Schwellen auf 100 %. Das erste statistische Ergebnis bleibt
+steigen beide Schwellen auf 100 %. Das erste Ergebnis bleibt
 erhalten. Einstellungen bleiben in Vorlagen und Revanchen erhalten. Bestehende
 Partien bleiben bei ihrer Regelversion; Spaceward 1.0.0 behält ausschließlich
 den Einzelsieg und erlaubte Bündnisse.
@@ -592,7 +591,7 @@ anschließend die gespeicherten Verluste jedes Imperiums. Bis zur persönlichen
 Bestätigung bleiben Besitzer, Endwerte und überlebende Unterstützung in Karte,
 Flottenliste und Logistik verborgen. Auch Neuladen umgeht das nicht. Erst nach
 der letzten offenen Schlacht erscheint ein ausstehendes Spielergebnis.
-Persönliche Statistiken zählen verlorene Schiffe exakt und teilen Abschüsse
+Der Ergebnisdialog zählt verlorene Schiffe exakt und teilen Abschüsse
 anhand des verursachten Feuers auf, sodass jedes zerstörte Schiff insgesamt
 nur einmal als Abschuss gezählt wird. Kampfentscheidungen und Flucht folgen
 in einem gesonderten Ausbau.

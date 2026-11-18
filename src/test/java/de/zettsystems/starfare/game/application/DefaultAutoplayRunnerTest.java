@@ -33,7 +33,7 @@ class DefaultAutoplayRunnerTest {
         GameRegistry registry = mock(GameRegistry.class);
         TurnEngine engine = mock(TurnEngine.class);
         Broadcaster broadcaster = mock(Broadcaster.class);
-        GameStatisticsService statistics = mock(GameStatisticsService.class);
+        GameEndRecorder gameEnds = mock(GameEndRecorder.class);
         List<GameStateSnapshot> persisted = new ArrayList<>();
         when(registry.find(id)).thenReturn(Optional.of(session));
         when(registry.writeState(eq(id), any())).thenAnswer(call -> {
@@ -48,12 +48,12 @@ class DefaultAutoplayRunnerTest {
             return null;
         }).when(engine).advanceTurn(state);
 
-        new DefaultAutoplayRunner(registry, engine, broadcaster, statistics).autoplayToEnd(id);
+        new DefaultAutoplayRunner(registry, engine, broadcaster, gameEnds).autoplayToEnd(id);
 
         assertThat(persisted).extracting(GameStateSnapshot::turn).containsExactly(2, 3);
         assertThat(persisted.getFirst().gameOver()).isFalse();
         assertThat(persisted.getLast().gameOver()).isTrue();
-        verify(statistics).recordFinishedGame(id);
+        verify(gameEnds).recordFinishedGame(id);
         ArgumentCaptor<GameEvent> events = ArgumentCaptor.forClass(GameEvent.class);
         verify(broadcaster, times(3)).publish(events.capture());
         assertThat(events.getAllValues()).containsExactly(new GameEvent.TurnAdvanced(id, 2),
