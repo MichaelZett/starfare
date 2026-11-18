@@ -25,6 +25,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Standardkonto „Commander“ gegen den Computer. zs-identity, Mailversand, Registrierung, Kontolöschung
   und die Profile `hetzner` und `brevo` entfallen; der eigene Start ist nur noch für lokales Spielen da.
   Im Host ändert sich nichts.
+- Das Partieende meldet Starfare der Plattform genau einmal je Partie, auch wenn eine Partie nach dem
+  Ende noch einmal gespeichert oder geladen wird.
+- Ein Release geht nur noch in Produktion, wenn seine Commit-Nachricht `[deliver]` enthält; sonst nimmt
+  das nächste Host-Release die Version mit.
+- Werkzeuge aktualisiert: NullAway 0.14.4, ErrorProne 2.53.0, Cucumber 8.1.0, Sonar-Plugin 7.6.
 
 ## 0.2.7 - 2026-11-17
 
