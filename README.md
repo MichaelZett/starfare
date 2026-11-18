@@ -512,8 +512,12 @@ ends.
    before continuing.
 
 There is no image and no deployment of its own: in production Starfare runs as a
-game module inside the platform host games-platform, which pins a Starfare commit
-and releases it.
+game module inside the platform host games-platform. A release goes to production
+only when its commit message contains `[deliver]`, e.g. `Release 0.2.8 [deliver]`:
+then the job `deliver` starts `game-update.yml` in the host. Without the marker the
+release stays a tag and GitHub Release, and a later host release takes the version
+along (`starfareVersion` in the host's `gradle.properties`, host README, section on
+platform releases with several games).
 
 ### Running it on a server
 
