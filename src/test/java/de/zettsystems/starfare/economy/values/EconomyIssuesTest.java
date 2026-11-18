@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.economy.values;
 
+import de.zettsystems.starfare.game.values.SystemComposition;
 import de.zettsystems.starfare.game.values.VisibleSystem;
 import java.util.List;
 import java.util.Set;
@@ -36,5 +37,22 @@ class EconomyIssuesTest {
         assertThat(EconomyIssues.forSystems(systems, 1, Set.of(), Set.of())).isEmpty();
         assertThat(EconomyIssues.forSystems(systems, 1, Set.of(), Set.of(1)).getFirst().reasons())
                 .containsExactly(EconomyIssues.Kind.DELIVERY);
+    }
+    @Test void issuesAreSortedByNameBeforeId() {
+        var shortage = new IndustryView(10, 0, 0, 20, 0, false, 0, null, new MetalView(0, 3, 0, 0, 0, 10, 0));
+        var beta = new VisibleSystem(1, "Beta", 0, 0, 1, 10, 2, true, "#abc", null, false, 0, 0, 10, List.of(), shortage);
+        var alpha = new VisibleSystem(2, "Alpha", 0, 0, 1, 10, 2, true, "#abc", null, false, 0, 0, 10, List.of(), shortage);
+        assertThat(EconomyIssues.forSystems(List.of(beta, alpha), 1, Set.of(), Set.of()))
+                .extracting(issue -> issue.system().name()).containsExactly("Alpha", "Beta");
+    }
+    @Test void depositExactlyCoveringTheMiningAndLaborEqualToCapacityAreNoIssues() {
+        var covered = new IndustryView(10, 0, 0, 20, 0, false, 0, null, new MetalView(6, 3, 2, 0, 6, 8, 8));
+        var quality = new SystemQuality(SystemComposition.StarType.YELLOW, 1, 1, SystemComposition.BodyType.ROCKY, false,
+                SystemQuality.Atmosphere.TEMPERATE, 3);
+        var staffed = new IndustryView(10, 0, 0, 20, 0, false, 0, new ColonyView(quality, 1000, 1000, true));
+        assertThat(EconomyIssues.forSystems(List.of(system(1, 1, true, covered), system(2, 1, true, staffed)), 1, Set.of(), Set.of())).isEmpty();
+        var understaffed = new IndustryView(10, 0, 0, 20, 0, false, 0, new ColonyView(quality, 999, 1000, true));
+        assertThat(EconomyIssues.forSystems(List.of(system(1, 1, true, understaffed)), 1, Set.of(), Set.of()).getFirst().reasons())
+                .containsExactly(EconomyIssues.Kind.LABOR);
     }
 }

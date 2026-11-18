@@ -115,4 +115,22 @@ class CombatResolverTest {
         // exactly one side wipes the other in this model
         assertThat((r.attackersLeft() == 0) ^ (r.defendersLeft() == 0)).isTrue();
     }
+
+    @Test
+    void exactlyEqualRolledStrengthsLetTheDefenderHold() {
+        CombatResolver.Result result = CombatResolver.resolve(5, 5, 10, 0.5, 0.5);
+
+        assertThat(result.attackerWon()).isFalse();
+        assertThat(result.attackersLeft()).isZero();
+        assertThat(result.defendersLeft()).isZero();
+    }
+
+    @Test
+    void undefendedSystemFallsWithoutRollingTheAttackersStrength() {
+        CombatResolver.Result result = CombatResolver.resolve(10, 0, 10, 0.0, 0.0);
+
+        assertThat(result.attackerStrength()).isEqualTo(10);
+        assertThat(result.defenderStrength()).isZero();
+        assertThat(result.attackersLeft()).isEqualTo(10);
+    }
 }

@@ -1,5 +1,7 @@
 package de.zettsystems.starfare.economy.domain;
 
+import de.zettsystems.starfare.game.values.RulesetRef;
+import de.zettsystems.starfare.economy.values.EconomyRules;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 
@@ -35,5 +37,12 @@ class IndustryTest {
         assertThatThrownBy(() -> new Industry(10, 11, 0)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Industry(10, -1, 0)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Industry(10, 0, 20)).isInstanceOf(IllegalArgumentException.class);
+    }
+    @Test void cheapEarlyIndustryCostsATenthOfTheSquaredCapacityRoundedUpButAtLeastTwo() {
+        assertThat(EconomyRules.expansionCost(1, RulesetRef.SPACEWARD_EARLY_INDUSTRY)).isEqualTo(2);
+        assertThat(EconomyRules.expansionCost(5, RulesetRef.SPACEWARD_EARLY_INDUSTRY)).isEqualTo(3);
+        assertThat(EconomyRules.expansionCost(14, RulesetRef.SPACEWARD_EARLY_INDUSTRY)).isEqualTo(20);
+        assertThat(EconomyRules.expansionCost(25, RulesetRef.SPACEWARD_EARLY_INDUSTRY)).isEqualTo(50);
+        assertThat(EconomyRules.expansionCost(5, RulesetRef.SPACEWARD)).isEqualTo(10);
     }
 }

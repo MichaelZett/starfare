@@ -74,4 +74,17 @@ class EconomyServiceTest {
         assertThatThrownBy(() -> economy.produce(classic, input1)).isInstanceOf(IllegalArgumentException.class);
         assertThat(classic.industries()).isEmpty();
     }
+    @Test void zeroPointsStopAnExpansion() {
+        GameState state = SpacewardStates.running();
+        assertThat(economy.allocateExpansion(state, 1, 1, 4)).isTrue();
+        assertThat(economy.allocateExpansion(state, 1, 1, 0)).isTrue();
+        assertThat(state.industries().get(1).expansionAllocation()).isZero();
+        assertThat(economy.allocateExpansion(state, 1, 1, -1)).isFalse();
+    }
+    @Test void productionReportsTheCapacityGainedThisRound() {
+        GameState state = SpacewardStates.running();
+        assertThat(economy.allocateExpansion(state, 1, 1, 10)).isTrue();
+        assertThat(economy.produce(state, Map.of()).stream().filter(r -> r.systemId() == 1).findFirst().orElseThrow().capacityGained()).isZero();
+        assertThat(economy.produce(state, Map.of()).stream().filter(r -> r.systemId() == 1).findFirst().orElseThrow().capacityGained()).isOne();
+    }
 }

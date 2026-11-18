@@ -55,4 +55,14 @@ class AllocationSplitTest {
             }
         }
     }
+
+    @Test void remainingPointsFollowTheProportionsOfTheFreeShares() {
+        assertThat(new AllocationSplit(0, 2, 6).adjust(0, 4, new boolean[3], new int[]{8, 8, 8}))
+                .isEqualTo(new AllocationSplit(4, 1, 3));
+    }
+
+    @Test void aShareAtItsLimitReceivesNoFurtherPoints() {
+        assertThat(new AllocationSplit(2, 2, 2).adjust(0, 0, new boolean[3], new int[]{6, 2, 6}))
+                .isEqualTo(new AllocationSplit(0, 2, 4));
+    }
 }

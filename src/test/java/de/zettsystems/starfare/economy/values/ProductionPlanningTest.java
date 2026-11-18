@@ -4,6 +4,8 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ProductionPlanningTest {
     private static IndustryView industry(int capacity, int mining, int expansion, long remaining) {
@@ -131,5 +133,46 @@ class ProductionPlanningTest {
         assertThat(new MetalBalance(10, 4, 0, 1, 13).formattedChange()).isEqualTo("(+3)");
         assertThat(new MetalBalance(5, 0, 0, 0, 5).formattedChange()).isEqualTo("(±0)");
         assertThat(new MetalBalance(24, 2, 1, 6, 21).change()).isEqualTo(-3);
+    }
+    @Test void shipbuildingIsUsableCapacityMinusExpansion() {
+        assertThat(new IndustryView(10, 3, 0, 20, 0, false, 0).shipbuilding()).isEqualTo(7);
+        assertThat(ProductionPreset.saved(industry(10, 3, 2, 100))).isEqualTo(new AllocationSplit(5, 3, 2));
+    }
+    @Test void presetsUseTheWholeLimitAndNameTheirRejection() {
+        var current = industry(10, 3, 2, 100);
+        var saved = ProductionPreset.saved(current);
+        var ships = ProductionPreset.SHIPS.apply(current, saved, Set.of());
+        assertThat(ships.applicable()).isTrue();
+        assertThat(ships.allocation()).isEqualTo(new AllocationSplit(10, 0, 0));
+        assertThat(ProductionPreset.SHIPS.apply(current, saved, Set.of(0)).rejection()).isEqualTo(ProductionPreset.Rejection.LOCKED);
+        assertThat(ProductionPreset.SHIPS.apply(current, saved, Set.of(0, 1, 2)).rejection()).isEqualTo(ProductionPreset.Rejection.NO_CAPACITY);
+        var noMetal = new IndustryView(10, 0, 0, 20, 0, false, 0);
+        assertThat(ProductionPreset.SHIPS.apply(noMetal, new AllocationSplit(5, 0, 5), Set.of(1)))
+                .isEqualTo(new ProductionPreset.Result(new AllocationSplit(10, 0, 0), ProductionPreset.Rejection.NONE));
+        var two = industry(2, 0, 0, 100);
+        assertThat(ProductionPreset.AUTARK.apply(two, ProductionPreset.saved(two), Set.of()).allocation()).isEqualTo(new AllocationSplit(1, 1, 0));
+    }
+    @Test void inputsStartCollapsedRespectPinsAndCheckLimits() {
+        var inputs = new ProductionInputs();
+        var input = inputs.forSystem(1, 1, industry(10, 0, 2, 100));
+        assertThat(input.expanded()).isFalse();
+        assertThat(input.valid()).isTrue();
+        input.pin(2, true);
+        input.adjust(1, 4);
+        assertThat(input.allocation()).isEqualTo(new AllocationSplit(4, 4, 2));
+        var maximum = new IndustryView(EconomyRules.MAX_CAPACITY, 5, 0, 100, 0, false, 0);
+        assertThat(inputs.forSystem(2, 1, maximum).valid()).isFalse();
+    }
+    @Test void environmentAndAutomationBoundsIncludeTheirLimits() {
+        var star = de.zettsystems.starfare.game.values.SystemComposition.StarType.YELLOW;
+        var rocky = de.zettsystems.starfare.game.values.SystemComposition.BodyType.ROCKY;
+        assertThatThrownBy(() -> new SystemQuality(star, 0, 1, rocky, false, SystemQuality.Atmosphere.THIN, 1))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatCode(() -> new MiningAutomation("a", true, 0, Set.of(), Set.of(), 0, 0, MiningPlan.EMPTY)).doesNotThrowAnyException();
+        assertThatCode(() -> new MiningAutomation("a", true, 10, Set.of(), Set.of(), 0, 0, MiningPlan.EMPTY)).doesNotThrowAnyException();
+        Set<Integer> none = Set.of();
+        assertThatThrownBy(() -> new MiningAutomation("a", true, -1, none, none, 0, 0, MiningPlan.EMPTY)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new MiningAutomation("a", true, 11, none, none, 0, 0, MiningPlan.EMPTY)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new MiningAutomation("a", true, 1, none, none, -1, 0, MiningPlan.EMPTY)).isInstanceOf(IllegalArgumentException.class);
     }
 }

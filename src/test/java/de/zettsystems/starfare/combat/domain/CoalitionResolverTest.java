@@ -74,4 +74,20 @@ class CoalitionResolverTest {
         var input2 = List.of(side(1, 3), side(2, 4));
         assertThatThrownBy(() -> CoalitionResolver.resolve(input2, 0, _ -> Double.NaN)).isInstanceOf(IllegalArgumentException.class);
     }
+    @Test void forcesMustBelongToExactlyOneNonEmptySide() {
+        var twice = List.of(side(1, 3), new CoalitionSide(2, 0, List.of(new CoalitionSide.Member(1, "P1", 4, 4, 0))));
+        assertThatThrownBy(() -> CoalitionResolver.resolve(twice, 0, _ -> .5))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Each force belongs to exactly one combat side");
+        var empty = List.of(side(1, 3), new CoalitionSide(2, 0, List.of()));
+        assertThatThrownBy(() -> CoalitionResolver.resolve(empty, 0, _ -> .5))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Each force belongs to exactly one combat side");
+    }
+    @Test void largestRemainderGoesToTheBiggestFractionNotTheLowestId() {
+        assertThat(ProportionalAllocation.distribute(2, Map.of(1, 2.0, 2, 1.0))).containsEntry(1, 1).containsEntry(2, 1);
+        assertThat(ProportionalAllocation.distribute(5, Map.of(1, 1.0, 2, 1.0, 3, 8.0)))
+                .containsEntry(1, 1).containsEntry(2, 0).containsEntry(3, 4);
+    }
+    @Test void weightlessForcesReceiveNothing() {
+        assertThat(ProportionalAllocation.distribute(3, Map.of(1, 0.0, 2, 0.0))).containsEntry(1, 0).containsEntry(2, 0);
+    }
 }

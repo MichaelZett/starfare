@@ -2,6 +2,7 @@ package de.zettsystems.starfare.economy.domain;
 
 import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.economy.values.MiningAutomation;
+import de.zettsystems.starfare.economy.values.MiningPlan;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.game.values.StandingOrder;
@@ -125,5 +126,65 @@ class MiningPlannerTest {
         state.recycleShips(); economy.produce(state, Map.of());
         assertThat(state.metals().orElseThrow().stocks()).containsEntry(1, stock);
         assertThatCode(() -> GameState.toSnapshot(state)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void richerDepositIsMinedFirstEvenWithTheHigherSystemId() {
+        var state = ColonyStates.ready(RulesetRef.SPACEWARD_EARLY_INDUSTRY, original -> {
+            var deposits = new HashMap<>(original.deposits());
+            deposits.put(1, new MetalDeposit(100, 1)); deposits.put(2, new MetalDeposit(100, 3));
+            var stocks = new HashMap<>(original.stocks()); stocks.put(1, 0L);
+            return new MetalEconomy(deposits, stocks, original.mining());
+        });
+        state.start();
+        var plan = MiningPlanner.plan(state, 1, policy(1, Set.of()));
+        // The yield-3 world is exhausted at its capacity of 4 before the yield-1 world contributes.
+        assertThat(plan.allocations()).containsEntry(1, 3).containsEntry(2, 4);
+        assertThat(plan.shortfall()).isZero();
+    }
+
+    @Test
+    void automationStartsFromZeroAndReportsOnlyChangedSystems() {
+        var state = ready(100, 100); state.planMining(1, 6);
+        var plan = MiningPlanner.plan(state, 1, policy(0, Set.of()));
+        assertThat(plan.allocations()).containsEntry(1, 0).containsEntry(2, 0);
+        assertThat(plan.changes()).containsExactly(Map.entry(1, new MiningPlan.Change(6, 0)));
+        assertThat(plan.shortfall()).isZero();
+    }
+
+    @Test
+    void foreignSystemsInThePolicyAreIgnored() {
+        var plan = MiningPlanner.plan(ready(0, 100), 1, MiningAutomation.off("owner").configure(true, 1, Set.of(1, 2, 3), Set.of()));
+        assertThat(plan.allocations()).containsOnlyKeys(1, 2).containsEntry(1, 6);
+    }
+
+    @Test
+    void routesThatKeepTheirProductionDoNotBlockTheAutomation() {
+        var state = ready(100, 100); state.planMining(1, 6);
+        state.standingOrders().put(1, List.of(new StandingOrder(1, 1, 2, 1, 1)));
+        var plan = MiningPlanner.plan(state, 1, policy(0, Set.of()));
+        assertThat(plan.allocations()).containsEntry(1, 0);
+    }
+
+    @Test
+    void emptyLegacyRoutesDoNotProtectTheirSourceFromAutomation() {
+        var state = ready(0, 100);
+        state.standingOrders().put(1, List.of(StandingOrder.of(1, 1, 1, 2, null)));
+        assertThat(MiningPlanner.plan(state, 1, policy(1, Set.of())).allocations()).containsEntry(1, 6).containsEntry(2, 0);
+    }
+
+    @Test
+    void manualApplyWritesThePlanUnlessThePlayerAlreadySubmitted() {
+        var submitted = ready(0, 100); submitted.miningAutomation().put(1, policy(1, Set.of()));
+        submitted.submittedThisTurn().add(1);
+        MiningPlanner.applyFor(submitted, 1);
+        assertThat(submitted.metals().orElseThrow().mining()).containsEntry(1, 0);
+        assertThat(submitted.miningAutomation().get(1).plannedTurn()).isZero();
+
+        var open = ready(0, 100); open.miningAutomation().put(1, policy(1, Set.of()));
+        MiningPlanner.applyFor(open, 1);
+        assertThat(open.metals().orElseThrow().mining()).containsEntry(1, 6).containsEntry(2, 0);
+        assertThat(open.miningAutomation().get(1).plannedTurn()).isEqualTo(open.turn());
+        assertThat(open.miningAutomation().get(1).lastPlan().allocations()).containsEntry(1, 6);
     }
 }

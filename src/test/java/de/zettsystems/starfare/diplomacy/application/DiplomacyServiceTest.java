@@ -147,4 +147,14 @@ class DiplomacyServiceTest {
         assertThat(state.diplomacy().proposals()).isEmpty();
         assertThat(state.diplomacy().groups()).isEmpty();
     }
+    @Test void aStaleAiProposalDoesNotBlockApprovalOfAnotherHumanTreaty() {
+        var state = withAi(false);
+        state.players().add(new Player(4, "Fourth", false, "#cc79a7")); state.players().add(new Player(5, "Fifth", false, "#d55e00"));
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 1))).isTrue();
+        state.players().replaceAll(player -> player.id() == 2 ? player.asAi() : player);
+        assertThat(service.act(state, 4, order(DiplomacyOrder.Action.FOUND, 5, 1))).isTrue();
+        int humans = state.diplomacy().proposals().getLast().id();
+        assertThat(service.act(state, 5, order(DiplomacyOrder.Action.APPROVE, humans, 0))).isTrue();
+        assertThat(state.allied(4, 5)).isTrue();
+    }
 }

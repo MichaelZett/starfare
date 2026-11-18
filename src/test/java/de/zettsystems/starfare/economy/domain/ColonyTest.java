@@ -41,4 +41,19 @@ class ColonyTest {
                 SystemComposition.BodyType.GAS_GIANT, false, SystemQuality.Atmosphere.TEMPERATE, 2))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+    @Test void populationMayReachButNotExceedTheEnvironmentLimit() {
+        var harsh = quality(0.04, 1, SystemQuality.Atmosphere.NONE, 3);
+        assertThat(harsh.suitability()).isEqualTo(SystemQuality.Suitability.HARSH);
+        assertThat(new ColonyEconomy(harsh, new Colony(2500)).colony().labor()).isEqualTo(25);
+        var crowded = new Colony(2501);
+        assertThatThrownBy(() -> new ColonyEconomy(harsh, crowded)).isInstanceOf(IllegalArgumentException.class);
+    }
+    @Test void suitabilityThresholdsIncludeTheirBounds() {
+        assertThat(quality(0.75, 1, SystemQuality.Atmosphere.TEMPERATE, 1).suitability()).isEqualTo(SystemQuality.Suitability.FERTILE);
+        assertThat(quality(1.5, 1, SystemQuality.Atmosphere.TEMPERATE, 1).suitability()).isEqualTo(SystemQuality.Suitability.FERTILE);
+        assertThat(quality(0.4, 1, SystemQuality.Atmosphere.THIN, 1).suitability()).isEqualTo(SystemQuality.Suitability.HABITABLE);
+        assertThat(quality(2.0, 1, SystemQuality.Atmosphere.THIN, 1).suitability()).isEqualTo(SystemQuality.Suitability.HABITABLE);
+        assertThat(quality(0.39, 1, SystemQuality.Atmosphere.THIN, 1).suitability()).isEqualTo(SystemQuality.Suitability.HARSH);
+        assertThatThrownBy(() -> quality(0, 1, SystemQuality.Atmosphere.THIN, 1)).isInstanceOf(IllegalArgumentException.class);
+    }
 }

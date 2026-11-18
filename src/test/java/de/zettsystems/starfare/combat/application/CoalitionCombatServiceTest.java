@@ -105,4 +105,30 @@ class CoalitionCombatServiceTest {
         assertThat(state.pendingOrders().get(1).getFirst()).isEqualTo(new de.zettsystems.starfare.fleet.values.FleetOrder.Send(1, 3, 4, 3, 3));
         assertThat(state.undoOrders(1)).isTrue(); assertThat(state.pendingOrders().get(1)).isEmpty();
     }
+    @Test void ownArrivalWithoutEnemiesJoinsTheGarrisonAndIsReported() {
+        var state = state(); incoming(state, 1, 2, 40); combat.resolveArrivals(state);
+        assertThat(state.getSystem(4).garrison()).isEqualTo(100); assertThat(state.fleets()).isEmpty();
+        assertThat(state.reports().get(2).events()).singleElement().isInstanceOfSatisfying(TurnEvent.Reinforcement.class, event -> {
+            assertThat(event.ships()).isEqualTo(40); assertThat(event.totalGarrison()).isEqualTo(100); assertThat(event.fleetLabel()).isEqualTo("F1");
+        });
+    }
+    @Test void onlyTheLeadingEmpireClaimsAndPartnerFleetsDoNotVoteForTheirOwner() {
+        var state = state(); allies(state, 1, 3);
+        incoming(state, 1, 1, 50); var forPartner = incoming(state, 2, 1, 30); state.replaceFleet(forPartner.designateConquest(3));
+        incoming(state, 3, 3, 40);
+        combat.resolveArrivals(state);
+        // 120 against 60 leaves 60: player 1 keeps 40 (25 + 15), player 3 keeps 20. Player 1 leads and its own claim (25)
+        // beats its claim for 3 (15); counting the partner's 20 for its owner would hand the system to 3 instead.
+        assertThat(state.getSystem(4).ownerId()).isEqualTo(1);
+        assertThat(state.getSystem(4).garrison()).isEqualTo(40);
+        assertThat(state.fleets()).singleElement().satisfies(fleet -> { assertThat(fleet.ownerId()).isEqualTo(3); assertThat(fleet.ships()).isEqualTo(20); });
+    }
+    @Test void fleetStationedInItsOwnersSystemJoinsTheGarrisonAfterABattle() {
+        var state = state(); var parked = incoming(state, 1, 2, 40); state.replaceFleet(parked.dockAtPartner());
+        incoming(state, 2, 3, 20); combat.resolveArrivals(state);
+        // 100 defenders against 20 leave 80, shared 60:40 between garrison and the parked fleet.
+        assertThat(state.getSystem(4).ownerId()).isEqualTo(2);
+        assertThat(state.getSystem(4).garrison()).isEqualTo(80);
+        assertThat(state.fleets()).isEmpty();
+    }
 }

@@ -118,4 +118,12 @@ class DefaultCombatServiceTest {
         // defender intel about themselves is not changed by a failed scout
         assertThat(state.intel().get(2).get(2)).isNull();
     }
+
+    @Test
+    void reinforcementLabelListsAllMergedFleetsInAscendingOrder() {
+        service.resolveAttack(state, 1, 1, 3, List.of(9, 3));
+
+        TurnEvent.Reinforcement r = (TurnEvent.Reinforcement) reportOf(1).events().getFirst();
+        assertThat(r.fleetLabel()).isEqualTo("F3,9");
+    }
 }
