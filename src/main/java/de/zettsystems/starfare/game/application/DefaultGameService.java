@@ -232,7 +232,7 @@ public class DefaultGameService implements GameService {
     }
 
     private static boolean canPlan(GameState state, int player, int expectedTurn) {
-        return state.active() && state.started() && !state.gameOver() && state.turn() == expectedTurn
+        return state.started() && !state.gameOver() && state.turn() == expectedTurn
                 && state.joinedHumanPlayerIds().contains(player) && !state.submittedThisTurn().contains(player);
     }
 
@@ -467,13 +467,13 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean hasActiveGame(GameId gameId) {
-        return registry.find(gameId).map(s -> s.readState(GameState::active)).orElse(false);
+        return registry.find(gameId).isPresent();
     }
 
     @Override
     public boolean hasStartedGame(GameId gameId) {
         return registry.find(gameId)
-                .map(s -> s.readState(state -> state.active() && state.started()))
+                .map(s -> s.readState(GameState::started))
                 .orElseGet(() -> archives.load(gameId).map(game -> game.state().started() && game.state().gameOver())
                         .orElse(false));
     }
@@ -481,7 +481,7 @@ public class DefaultGameService implements GameService {
     /** Guard für Befehle: Reine Archivpartien liegen nicht in der Registry, writeState würfe. */
     private boolean isRunningGame(GameId gameId) {
         return registry.find(gameId)
-                .map(s -> s.readState(state -> state.active() && state.started()))
+                .map(s -> s.readState(GameState::started))
                 .orElse(false);
     }
 
@@ -524,7 +524,7 @@ public class DefaultGameService implements GameService {
             return Optional.empty();
         }
         Integer seat = registry.writeState(gameId, state -> {
-            if (!state.active() || state.started() || state.gameOver()) {
+            if (state.started() || state.gameOver()) {
                 return null;
             }
             if (state.invitedSeats().containsKey(inviteePlayerId)) {
@@ -626,7 +626,7 @@ public class DefaultGameService implements GameService {
     @Override
     public Optional<PlayerViewState> observerViewFor(GameId id, String account, int perspective, boolean fogOfWar) {
         return registry.find(id).flatMap(session -> registry.readState(id, state -> {
-            boolean permitted = state.active() && !state.gameOver()
+            boolean permitted = !state.gameOver()
                     && state.observers().contains(account)
                     && access.canObserve(state, session.hostPlayerId(), account);
             boolean knownPerspective = state.players().stream().anyMatch(player -> player.id() == perspective);
@@ -644,7 +644,7 @@ public class DefaultGameService implements GameService {
         }
         boolean newcomersAdmitted = rulesetAccess.mayUse(registry.readState(gameId, GameState::ruleset), playerId);
         boolean added = registry.writeState(gameId, state -> {
-            if (!state.active() || state.gameOver()) {
+            if (state.gameOver()) {
                 return false;
             }
             if (!newcomersAdmitted && !state.observers().contains(playerId) && !state.seatByUser().containsKey(playerId)) {
@@ -679,8 +679,7 @@ public class DefaultGameService implements GameService {
 
     private boolean shouldAutoplay(GameId gameId) {
         return registry.readState(gameId, state ->
-                state.active()
-                        && state.started()
+                state.started()
                         && !state.gameOver()
                         && state.observers().isEmpty()
                         && state.joinedHumanPlayerIds().isEmpty());
@@ -692,7 +691,7 @@ public class DefaultGameService implements GameService {
             return false;
         }
         TurnResult result = registry.writeState(gameId, state -> {
-            if (!state.active() || !state.started() || state.gameOver()) {
+            if (!state.started() || state.gameOver()) {
                 return TurnResult.REJECTED;
             }
             if (!state.observers().contains(playerId)) {
@@ -712,7 +711,7 @@ public class DefaultGameService implements GameService {
     @Override
     public boolean isAiOnly(GameId gameId) {
         return registry.find(gameId)
-                .map(s -> s.readState(state -> state.active() && state.joinedHumanPlayerIds().isEmpty()))
+                .map(s -> s.readState(state -> state.joinedHumanPlayerIds().isEmpty()))
                 .orElse(false);
     }
 
@@ -822,7 +821,7 @@ public class DefaultGameService implements GameService {
     @Override
     public boolean submitTurn(GameId gameId, int playerId) {
         SubmitResult result = registry.writeState(gameId, state -> {
-            if (!state.active() || !state.started() || state.gameOver()) {
+            if (!state.started() || state.gameOver()) {
                 return new SubmitResult(false, TurnResult.REJECTED);
             }
             if (!state.joinedHumanPlayerIds().contains(playerId)) {
@@ -927,7 +926,7 @@ public class DefaultGameService implements GameService {
     @Override
     public boolean leaveGame(GameId gameId, int playerId) {
         SubmitResult result = registry.writeState(gameId, state -> {
-            if (!state.active() || !state.started() || state.gameOver()) {
+            if (!state.started() || state.gameOver()) {
                 return new SubmitResult(false, TurnResult.REJECTED);
             }
             if (!state.joinedHumanPlayerIds().contains(playerId)) {
@@ -976,7 +975,7 @@ public class DefaultGameService implements GameService {
     }
 
     private KickResult resolveKick(GameState state, int seatId, @Nullable String actorPlayerId, @Nullable String kickedPlayerId) {
-        if (!state.active() || state.gameOver()) {
+        if (state.gameOver()) {
             return new KickResult(false, TurnResult.REJECTED);
         }
         boolean existsAsHuman = state.players().stream().anyMatch(p -> p.id() == seatId && !p.ai());
@@ -1133,7 +1132,7 @@ public class DefaultGameService implements GameService {
         if (registry.find(id).isEmpty()) { return false; }
         boolean changed = registry.writeState(id, state -> {
             String host = registry.require(id).hostPlayerId();
-            if (!actor.equals(host) || state.started() || state.gameOver() || !state.active()) { return false; }
+            if (!actor.equals(host) || state.started() || state.gameOver()) { return false; }
             if (visibility == GameVisibility.PUBLIC) { state.publishInLobby(); } else {
                 state.makePrivate();
                 state.observers().removeIf(account -> !access.related(state, host, account));
@@ -1307,7 +1306,7 @@ public class DefaultGameService implements GameService {
             return Optional.empty();
         }
         return registry.find(gameId).flatMap(session -> registry.readState(gameId, state ->
-                state.active() && state.started() && !state.gameOver() && state.seatByUser().containsKey(account)
+                state.started() && !state.gameOver() && state.seatByUser().containsKey(account)
                         ? Optional.of(state.roundRules()) : Optional.empty()));
     }
 
@@ -1317,7 +1316,7 @@ public class DefaultGameService implements GameService {
             return false;
         }
         boolean changed = registry.find(gameId).map(session -> registry.writeState(gameId, state -> {
-            if (!state.active() || !state.started() || state.gameOver() || !actor.equals(session.hostPlayerId())) {
+            if (!state.started() || state.gameOver() || !actor.equals(session.hostPlayerId())) {
                 return false;
             }
             state.configureRoundRules(rules);

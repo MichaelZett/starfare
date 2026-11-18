@@ -168,12 +168,9 @@ class GameServiceObserveTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void observeRejectedWhenGameNotActive() {
+    void observeRejectedWhenGameWasAborted() {
         GameId id = registry.createGame(GameSetup.defaults());
-        registry.writeState(id, state -> {
-            state.resetForAbort();
-            return null;
-        });
+        registry.abortGame(id);
 
         assertThat(game.observeGame(id, "alice")).isFalse();
     }

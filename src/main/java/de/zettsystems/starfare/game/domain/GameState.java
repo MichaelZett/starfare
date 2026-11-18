@@ -363,7 +363,6 @@ public class GameState {
     public void makePrivate() { visibility = GameVisibility.PRIVATE; }
 
     private @Nullable Integer winnerId;
-    private boolean active = true;
     private boolean started;
     private final Set<Integer> joinedHumanPlayerIds = new HashSet<>();
     private final Set<Integer> originalHumanPlayerIds = new HashSet<>();
@@ -462,10 +461,6 @@ public class GameState {
 
     public @Nullable Integer winnerId() {
         return winnerId;
-    }
-
-    public boolean active() {
-        return active;
     }
 
     public boolean started() {
@@ -621,7 +616,7 @@ public class GameState {
     }
 
     private boolean timed() {
-        return active && started && !gameOver && joinedHumanPlayerIds.size() >= 2;
+        return started && !gameOver && joinedHumanPlayerIds.size() >= 2;
     }
 
     /**
@@ -736,39 +731,6 @@ public class GameState {
         this.ownershipHistory.clear();
         this.replayFrames.clear();
         clearGameOver();
-        this.active = true;
-        this.started = false;
-    }
-
-    public void resetForAbort() {
-        this.nextGlobalFleetId = 1;
-        this.nextLocalFleetNo.clear();
-        this.waitThisTurn.clear();
-        this.submittedThisTurn.clear();
-        this.joinedHumanPlayerIds.clear();
-        this.originalHumanPlayerIds.clear();
-        this.observers.clear();
-        this.seatByUser.clear();
-        this.invitedSeats.clear();
-        this.pendingOrders.clear();
-        this.previousOrders.clear();
-        this.originalSetup = null;
-        this.victoryRules = null;
-        this.groupWinners = List.of();
-        this.winningAlliance = null;
-        this.standingOrders.clear();
-        this.nextStandingOrderId.clear();
-        this.replayFrames.clear();
-        this.observersAllowed = false;
-        this.reentryAllowed = false;
-        this.battlePresentationEnabled = GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED;
-        this.combatRandomnessPercent = GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT;
-        this.victorySystemPercent = GameConfig.VICTORY_SYSTEM_PERCENT;
-        this.roundRules = RoundRules.defaults();
-        this.stragglerSince = null;
-        this.missedRounds.clear();
-        clearGameOver();
-        this.active = false;
         this.started = false;
     }
 
@@ -954,7 +916,7 @@ public class GameState {
                 List.copyOf(s.players), List.copyOf(s.systems), List.copyOf(s.fleets),
                 new HashMap<>(s.reports), intelCopy,
                 new HashSet<>(s.waitThisTurn), new HashSet<>(s.submittedThisTurn),
-                s.gameOver, s.winnerId, s.active, s.started,
+                s.gameOver, s.winnerId, s.started,
                 new HashSet<>(s.joinedHumanPlayerIds), new HashSet<>(s.originalHumanPlayerIds),
                 new HashSet<>(s.observers), new HashMap<>(s.seatByUser), new HashMap<>(s.invitedSeats()),
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
@@ -1003,7 +965,6 @@ public class GameState {
         }
         c.finishedAt = s.finishedAt();
         c.visibility = s.visibility() == null ? GameVisibility.PUBLIC : s.visibility();
-        c.active = s.active();
         c.started = s.started();
         c.joinedHumanPlayerIds.addAll(s.joinedHumanPlayerIds());
         c.originalHumanPlayerIds.addAll(s.originalHumanPlayerIds());
@@ -1154,7 +1115,6 @@ public class GameState {
         c.groupWinners = s.groupWinners;
         c.winningAlliance = s.winningAlliance;
         c.visibility = s.visibility() == null ? GameVisibility.PUBLIC : s.visibility();
-        c.active = s.active();
         c.started = s.started();
 
         // Rehydrate counters and clocks without executing a new round.

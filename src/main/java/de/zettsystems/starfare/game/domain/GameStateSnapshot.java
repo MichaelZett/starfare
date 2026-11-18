@@ -8,6 +8,7 @@ import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.navigation.values.NavigationSettings;
 import de.zettsystems.starfare.report.values.TurnReport;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import org.jspecify.annotations.Nullable;
  * Jackson-serializable snapshot of {@link GameState} for DB persistence.
  * Reconstructed via {@link GameState#fromSnapshot(GameStateSnapshot)}.
  */
+// Older snapshots still carry "active" from the removed abort-in-place; it was always true.
+@JsonIgnoreProperties({"active"})
 public record GameStateSnapshot(
         int turn,
         int nextGlobalFleetId,
@@ -31,7 +34,6 @@ public record GameStateSnapshot(
         Set<Integer> submittedThisTurn,
         boolean gameOver,
         @Nullable Integer winnerId,
-        boolean active,
         boolean started,
         Set<Integer> joinedHumanPlayerIds,
         Set<Integer> originalHumanPlayerIds,
@@ -78,7 +80,6 @@ public record GameStateSnapshot(
         Set<Integer> submittedThisTurn,
         boolean gameOver,
         @Nullable Integer winnerId,
-        boolean active,
         boolean started,
         Set<Integer> joinedHumanPlayerIds,
         Set<Integer> originalHumanPlayerIds,
@@ -113,7 +114,7 @@ public record GameStateSnapshot(
         @Nullable MetalEconomy metals) {
         this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems,
                 fleets, reports, intel, waitThisTurn, submittedThisTurn,
-                gameOver, winnerId, active, started, joinedHumanPlayerIds,
+                gameOver, winnerId, started, joinedHumanPlayerIds,
                 originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders,
                 standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt,
                 visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled,
@@ -136,7 +137,6 @@ public record GameStateSnapshot(
         Set<Integer> submittedThisTurn,
         boolean gameOver,
         @Nullable Integer winnerId,
-        boolean active,
         boolean started,
         Set<Integer> joinedHumanPlayerIds,
         Set<Integer> originalHumanPlayerIds,
@@ -168,7 +168,7 @@ public record GameStateSnapshot(
         @Nullable VictoryRules victoryRules,
         @Nullable GameOutcome outcome,
         @Nullable Map<Integer, ColonyEconomy> colonies) {
-        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, victoryRules, outcome, colonies, null);
+        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, victoryRules, outcome, colonies, null);
     }
 
     /** Compatibility constructor for snapshots written before colony rules. */
@@ -185,7 +185,6 @@ public record GameStateSnapshot(
         Set<Integer> submittedThisTurn,
         boolean gameOver,
         @Nullable Integer winnerId,
-        boolean active,
         boolean started,
         Set<Integer> joinedHumanPlayerIds,
         Set<Integer> originalHumanPlayerIds,
@@ -216,7 +215,7 @@ public record GameStateSnapshot(
         @Nullable DiplomacyState diplomacy,
         @Nullable VictoryRules victoryRules,
         @Nullable GameOutcome outcome) {
-        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, victoryRules, outcome, null);
+        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, victoryRules, outcome, null);
     }
 
     public GameStateSnapshot(
@@ -232,7 +231,6 @@ public record GameStateSnapshot(
         Set<Integer> submittedThisTurn,
         boolean gameOver,
         @Nullable Integer winnerId,
-        boolean active,
         boolean started,
         Set<Integer> joinedHumanPlayerIds,
         Set<Integer> originalHumanPlayerIds,
@@ -262,7 +260,7 @@ public record GameStateSnapshot(
         @Nullable NavigationSettings navigation,
         @Nullable DiplomacyState diplomacy
 ) {
-        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, null, null, null);
+        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, null, null, null);
     }
 
     public GameStateSnapshot(
@@ -278,7 +276,6 @@ public record GameStateSnapshot(
         Set<Integer> submittedThisTurn,
         boolean gameOver,
         @Nullable Integer winnerId,
-        boolean active,
         boolean started,
         Set<Integer> joinedHumanPlayerIds,
         Set<Integer> originalHumanPlayerIds,
@@ -307,7 +304,7 @@ public record GameStateSnapshot(
         @Nullable Map<Integer, Industry> industries,
         @Nullable NavigationSettings navigation
     ) {
-        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, null);
+        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, null);
     }
 
     public GameStateSnapshot(
@@ -323,7 +320,6 @@ public record GameStateSnapshot(
         Set<Integer> submittedThisTurn,
         boolean gameOver,
         @Nullable Integer winnerId,
-        boolean active,
         boolean started,
         Set<Integer> joinedHumanPlayerIds,
         Set<Integer> originalHumanPlayerIds,
@@ -351,7 +347,7 @@ public record GameStateSnapshot(
         @Nullable RulesetRef ruleset,
         @Nullable Map<Integer, Industry> industries) {
         this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn,
-                submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds,
+                submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds,
                 originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders,
                 nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt,
                 ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules,
@@ -363,7 +359,7 @@ public record GameStateSnapshot(
             List<Player> players, List<StarSystem> systems, List<Fleet> fleets,
             Map<Integer, TurnReport> reports, Map<Integer, Map<Integer, GameState.Intel>> intel,
             Set<Integer> waitThisTurn, Set<Integer> submittedThisTurn, boolean gameOver,
-            @Nullable Integer winnerId, boolean active, boolean started, Set<Integer> joinedHumanPlayerIds,
+            @Nullable Integer winnerId, boolean started, Set<Integer> joinedHumanPlayerIds,
             Set<Integer> originalHumanPlayerIds, Set<String> observers, Map<String, Integer> seatByUser,
             @Nullable Map<String, Integer> invitedSeats, Map<Integer, List<FleetOrder>> pendingOrders,
             @Nullable Map<Integer, List<StandingOrder>> standingOrders, Map<Integer, Integer> nextStandingOrderId,
@@ -375,7 +371,7 @@ public record GameStateSnapshot(
             @Nullable Integer victorySystemPercent, @Nullable GameSetup originalSetup,
             @Nullable Map<Integer, List<FleetOrder>> previousOrders, @Nullable RulesetRef ruleset) {
         this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn,
-                submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds,
+                submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds,
                 observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId,
                 observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames,
                 battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds,
@@ -394,8 +390,7 @@ public record GameStateSnapshot(
             Set<Integer> submittedThisTurn,
             boolean gameOver,
             @Nullable Integer winnerId,
-            boolean active,
-            boolean started,
+                boolean started,
             Set<Integer> joinedHumanPlayerIds,
             Set<Integer> originalHumanPlayerIds,
             Set<String> observers,
@@ -420,7 +415,7 @@ public record GameStateSnapshot(
             @Nullable GameSetup originalSetup,
             @Nullable Map<Integer, List<FleetOrder>> previousOrders) {
         this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn,
-                submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds,
+                submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds,
                 originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders,
                 nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt,
                 ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules,
@@ -431,7 +426,7 @@ public record GameStateSnapshot(
                              List<Player> players, List<StarSystem> systems, List<Fleet> fleets,
                              Map<Integer, TurnReport> reports, Map<Integer, Map<Integer, GameState.Intel>> intel,
                              Set<Integer> waitThisTurn, Set<Integer> submittedThisTurn, boolean gameOver,
-                             @Nullable Integer winnerId, boolean active, boolean started,
+                             @Nullable Integer winnerId, boolean started,
                              Set<Integer> joinedHumanPlayerIds, Set<Integer> originalHumanPlayerIds,
                              Set<String> observers, Map<String, Integer> seatByUser,
                              @Nullable Map<String, Integer> invitedSeats,
@@ -443,7 +438,7 @@ public record GameStateSnapshot(
                              @Nullable Map<Integer, List<SystemOwnership>> ownershipHistory,
                              @Nullable Map<Integer, ReplayFrame> replayFrames) {
         this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn,
-                submittedThisTurn, gameOver, winnerId, active, started, joinedHumanPlayerIds, originalHumanPlayerIds,
+                submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds,
                 observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId,
                 observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory,
                 replayFrames, null, null, null, null, null, null, null, null);

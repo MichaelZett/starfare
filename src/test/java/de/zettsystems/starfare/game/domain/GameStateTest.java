@@ -124,16 +124,6 @@ class GameStateTest {
     }
 
     @Test
-    void resetForAbortClearsSubmittedThisTurn() {
-        GameState state = new GameState();
-        state.submittedThisTurn().add(1);
-
-        state.resetForAbort();
-
-        assertThat(state.submittedThisTurn()).isEmpty();
-    }
-
-    @Test
     void copyOfCreatesIndependentSubmittedThisTurn() {
         GameState state = new GameState();
         state.submittedThisTurn().add(1);
@@ -167,16 +157,6 @@ class GameStateTest {
         state.pendingOrders().put(1, List.of(new FleetOrder.Send(1, 1, 2, 3)));
 
         state.resetForNewGame();
-
-        assertThat(state.pendingOrders()).isEmpty();
-    }
-
-    @Test
-    void resetForAbortClearsPendingOrders() {
-        GameState state = new GameState();
-        state.pendingOrders().put(2, List.of(new FleetOrder.Wait(2, 7)));
-
-        state.resetForAbort();
 
         assertThat(state.pendingOrders()).isEmpty();
     }
@@ -251,7 +231,7 @@ class GameStateTest {
     private static GameStateSnapshot withoutTurnStartedAt(GameStateSnapshot s) {
         return new GameStateSnapshot(s.turn(), s.nextGlobalFleetId(), s.nextLocalFleetNo(), s.players(), s.systems(),
                 s.fleets(), s.reports(), s.intel(), s.waitThisTurn(), s.submittedThisTurn(), s.gameOver(), s.winnerId(),
-                s.active(), s.started(), s.joinedHumanPlayerIds(), s.originalHumanPlayerIds(), s.observers(),
+                s.started(), s.joinedHumanPlayerIds(), s.originalHumanPlayerIds(), s.observers(),
                 s.seatByUser(), s.invitedSeats(), s.pendingOrders(), s.standingOrders(), s.nextStandingOrderId(),
                 s.observersAllowed(), s.reentryAllowed(), null, s.visibility(), s.finishedAt(), s.ownershipHistory(),
                 s.replayFrames());
@@ -304,7 +284,6 @@ class GameStateTest {
 
         assertThat(state.visibility()).isEqualTo(GameVisibility.PRIVATE);
         assertThat(state.gameOver()).isFalse();
-        assertThat(state.active()).isTrue();
         assertThat(state.ruleset()).isEqualTo(RulesetRef.SECTOR_FORCES);
         assertThat(state.navigationSettings()).isEmpty();
         assertThat(state.players()).isEmpty();
@@ -316,18 +295,6 @@ class GameStateTest {
         assertThat(state.replayFrames()).isEmpty();
         assertThat(state.industries()).isEmpty();
         assertThat(state.miningAutomation()).isEmpty();
-        assertPerMatchDataCleared(state);
-    }
-
-    @Test
-    void resetForAbortClosesTheGameAndDropsPerMatchData() {
-        GameState state = populated();
-
-        state.resetForAbort();
-
-        assertThat(state.active()).isFalse();
-        assertThat(state.gameOver()).isFalse();
-        assertThat(state.replayFrames()).isEmpty();
         assertPerMatchDataCleared(state);
     }
 

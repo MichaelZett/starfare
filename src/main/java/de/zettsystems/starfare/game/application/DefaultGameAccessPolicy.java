@@ -15,7 +15,7 @@ public class DefaultGameAccessPolicy implements GameAccessPolicy {
     }
     @Override
     public boolean visible(GameState state, @Nullable String host, String account) {
-        return state.active() && visible(state.visibility(), state.gameOver(), host, state.seatByUser(),
+        return visible(state.visibility(), state.gameOver(), host, state.seatByUser(),
                 state.invitedSeats(), account);
     }
     @Override

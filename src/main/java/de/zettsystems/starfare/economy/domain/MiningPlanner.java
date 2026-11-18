@@ -92,7 +92,7 @@ public final class MiningPlanner {
     public static void applyFor(GameState state, int player) { applyFor(state, player, false); }
 
     private static void applyFor(GameState state, int player, boolean newRound) {
-        if (!state.active() || !state.started() || state.gameOver() || !state.ruleset().usesMetals()) { return; }
+        if (!state.started() || state.gameOver() || !state.ruleset().usesMetals()) { return; }
         MiningAutomation policy = state.miningAutomation().get(player);
         if (policy == null) { return; }
         if (!Objects.equals(state.seatByUser().get(policy.account()), player)

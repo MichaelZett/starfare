@@ -21,7 +21,7 @@ final class InvestmentSnapshots {
                 s.turn(), s.nextGlobalFleetId(), s.nextLocalFleetNo(), s.players(),
                 systems, s.fleets(), s.reports(), s.intel(),
                 s.waitThisTurn(), s.submittedThisTurn(), s.gameOver(), s.winnerId(),
-                s.active(), s.started(), s.joinedHumanPlayerIds(), s.originalHumanPlayerIds(),
+                s.started(), s.joinedHumanPlayerIds(), s.originalHumanPlayerIds(),
                 s.observers(), s.seatByUser(), s.invitedSeats(), s.pendingOrders(),
                 s.standingOrders(), s.nextStandingOrderId(), s.observersAllowed(), s.reentryAllowed(),
                 s.turnStartedAt(), s.visibility(), s.finishedAt(), s.ownershipHistory(),

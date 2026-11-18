@@ -50,7 +50,7 @@ public class DefaultAutoplayRunner implements AutoplayRunner {
     }
 
     private boolean tickOnce(GameId gameId, GameState state, List<GameEvent> events) {
-        if (!state.active() || !state.started() || state.gameOver()) {
+        if (!state.started() || state.gameOver()) {
             return true;
         }
         if (!state.joinedHumanPlayerIds().isEmpty() || !state.observers().isEmpty()) {

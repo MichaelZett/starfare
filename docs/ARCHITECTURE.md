@@ -434,10 +434,12 @@ seat, which can be reclaimed if the game allows re-entry.
 
 ## Lifecycle and lobby
 
-`GameState` carries `active` (game exists), `started` (turns running)
-and `joinedHumanPlayerIds`. `LobbyView` walks
+A game exists while the registry holds it; aborting deletes it.
+`GameState` carries `started` (turns running), `gameOver` and
+`joinedHumanPlayerIds`. Older snapshots still contain an always-true `active`
+field, which `GameStateSnapshot` ignores. `LobbyView` walks
 `newGame → joinGame → canStartGame → startGame → MainView`.
-`PlayerContext` holds the player ID in the Vaadin session.
+`UserContext` provides the signed-in account id from `PlatformAccounts`.
 `MainView.onAttach` redirects back to the lobby when no game is
 running.
 
@@ -643,7 +645,7 @@ Inviting asks `PlatformPresence.canSee(host, invitee)`.
   neither humans nor observers left, the game plays itself out via
   `AutoplayRunner`.
 - An invite reserves the seat (`GameState.invitedSeats`, persisted with the
-  game session and reset in `resetForNewGame` / `resetForAbort`). `canStartGame` blocks
+  game session and reset in `resetForNewGame`). `canStartGame` blocks
   while reserved seats have not yet been joined.
 - `kickHuman` works pre-start **and** during a running game: the seat
   becomes AI; host transfer plus the autoplay check are identical to

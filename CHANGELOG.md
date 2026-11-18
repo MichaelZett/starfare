@@ -10,6 +10,8 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 - Ein offener Verwalten-Dialog hält eine geschlossene Browserseite nicht mehr am Leben: Ereignisse
   anderer Partien schlugen danach mit einem Fehler fehl.
+- Intern: Der nicht mehr genutzte Abbruch-Zustand einer Partie (`active`) entfällt; ältere Spielstände
+  laden unverändert.
 - Tests: Diplomatie-Dialog, Archiv- und Lobbyfilter, Kartenkopf, Nachbetrachtung, Rundenbericht
   und Wirtschaftsliste haben eigene Tests; Mutationstests (PIT) für die Regelpakete stehen bereit.
 

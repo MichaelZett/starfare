@@ -55,7 +55,7 @@ class DefaultGameChatService implements GameChatService {
 
     private boolean mayUseChat(GameId gameId, String account) {
         return account != null && !account.isBlank() && registry.find(gameId)
-                .map(session -> registry.readState(gameId, state -> state.active() && state.started()
+                .map(session -> registry.readState(gameId, state -> state.started()
                         && state.seatByUser().containsKey(account)))
                 .orElse(false);
     }

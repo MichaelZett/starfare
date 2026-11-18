@@ -142,7 +142,7 @@ public class DefaultGameRegistry implements GameRegistry {
     }
 
     private static @Nullable Integer tryClaimSeat(GameState state, String playerId) {
-        if (!state.active() || state.gameOver()) {
+        if (state.gameOver()) {
             return null;
         }
         Integer existing = state.seatByUser().get(playerId);
@@ -210,7 +210,7 @@ public class DefaultGameRegistry implements GameRegistry {
     @Override
     public boolean joinHumanPlayer(GameId id, int playerId) {
         return writeState(id, state -> {
-            if (!state.active() || state.gameOver()) {
+            if (state.gameOver()) {
                 return false;
             }
             if (state.joinedHumanPlayerIds().contains(playerId)) {
@@ -239,7 +239,7 @@ public class DefaultGameRegistry implements GameRegistry {
     @Override
     public boolean canStartGame(GameId id) {
         return readState(id, state -> {
-            if (!state.active() || state.started() || state.gameOver()) {
+            if (state.started() || state.gameOver()) {
                 return false;
             }
             var humans = state.players().stream().filter(p -> !p.ai()).map(Player::id).toList();
@@ -250,7 +250,7 @@ public class DefaultGameRegistry implements GameRegistry {
     @Override
     public boolean startGame(GameId id) {
         return writeState(id, state -> {
-            if (!state.active() || state.started() || state.gameOver()) {
+            if (state.started() || state.gameOver()) {
                 return false;
             }
             var humans = state.players().stream().filter(p -> !p.ai()).map(Player::id).toList();

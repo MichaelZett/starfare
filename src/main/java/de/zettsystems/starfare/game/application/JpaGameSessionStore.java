@@ -183,7 +183,7 @@ public class JpaGameSessionStore implements GameSessionStore {
         // Partie und wartet auf cacheMonitor — umgekehrt verklemmten sich beide.
         List<Candidate> candidates = cache.entrySet().stream()
                 .filter(entry -> isIdle(entry.getKey(), cutoff))
-                .filter(entry -> entry.getValue().readState(state -> state.active() && state.started()
+                .filter(entry -> entry.getValue().readState(state -> state.started()
                         && !state.gameOver() && state.originalHumanPlayerIds().size() == 1))
                 .map(entry -> new Candidate(entry.getKey(), entry.getValue(), entry.getValue().summary()))
                 .toList();
