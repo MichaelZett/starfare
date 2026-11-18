@@ -17,6 +17,7 @@ plugins {
     id 'com.gorylenko.gradle-git-properties' version "${gitPropertiesPluginVersion}"
     id 'io.github.ben-manes.versions' version "${benManesVersionsPluginVersion}"
     id 'org.openrewrite.rewrite' version "${openrewriteVersion}"
+    id 'info.solidsoft.pitest' version "${pitestPluginVersion}"
 }
 
 group = 'de.zettsystems'
@@ -445,3 +446,4 @@ tasks.named('sonar').configure { dependsOn jacocoTestReport, tasks.named('compil
 
 // Additional embeddable artifact; the executable application remains the default.
 apply from: 'gradle/game-module.gradle'
+apply from: 'gradle/pitest.gradle'

@@ -1,0 +1,23 @@
+// Mutation tests (PIT) for the rule classes, on demand only: ./gradlew pitest --no-configuration-cache
+// Not part of build or CI. Only plain unit tests run: Spring and Testcontainers tests would make
+// every mutant start an application. Report: build/reports/pitest (HTML, mutations.xml).
+def rulePackages = ['combat', 'diplomacy.application', 'diplomacy.domain', 'diplomacy.values',
+                    'economy.application', 'economy.domain', 'economy.values', 'fleet', 'navigation',
+                    'research', 'turn', 'game.domain'].collect { "de.zettsystems.starfare.${it}.*" }
+
+pitest {
+    pitestVersion = providers.gradleProperty('pitestVersion').get()
+    junit5PluginVersion = providers.gradleProperty('pitestJunit5PluginVersion').get()
+    // Plugin 1.19.0 would otherwise bypass io.spring.dependency-management for the launcher.
+    addJUnitPlatformLauncher = false
+    targetClasses = rulePackages
+    excludedClasses = ['de.zettsystems.starfare.*.ui.*', 'de.zettsystems.starfare.*.config.*']
+    targetTests = rulePackages
+    excludedTestClasses = ['*JourneyTest', '*.AbstractEconomyUiTest', '*IntegrationTest', '*PersistenceTest']
+    jvmArgs = ["-javaagent:${configurations.mockitoAgent.asPath}"]
+    threads = Math.max(2, Runtime.runtime.availableProcessors().intdiv(2))
+    timestampedReports = false
+    outputFormats = ['HTML', 'XML']
+    inputCharset = java.nio.charset.StandardCharsets.UTF_8
+    outputCharset = java.nio.charset.StandardCharsets.UTF_8
+}
