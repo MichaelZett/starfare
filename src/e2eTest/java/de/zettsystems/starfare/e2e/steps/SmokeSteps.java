@@ -85,6 +85,11 @@ public class SmokeSteps {
         browser.logIn(email);
     }
 
+    @Wenn("ich die Browsersitzung wechsle")
+    public void switchSession() {
+        browser.resetSession();
+    }
+
     @Wenn("ich ein Standardspiel anlege und beitrete")
     public void createDefaultGameAndJoin() throws IOException {
         browser.captureUiAcceptance("lobby");

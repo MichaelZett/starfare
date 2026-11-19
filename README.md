@@ -568,7 +568,6 @@ visible Vaadin system errors.
 ./gradlew test
 ./gradlew e2eTest
 ./gradlew e2eTest "-Dcucumber.filter.tags=@ui-acceptance"
-./gradlew e2eTest "-Dcucumber.filter.tags=@ai-strategies"
 ./gradlew e2eTest "-Dcucumber.filter.tags=@mobile"
 ./gradlew e2eTest "-Dcucumber.filter.tags=@layout"
 node --test "src/test/frontend/*.test.mjs"

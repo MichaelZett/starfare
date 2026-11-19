@@ -80,10 +80,9 @@ outcome; victory/defeat reports preserve group membership at resolution time.
 Old constructors and nullable JSON fields retain legacy read compatibility.
 The platform learns every winner from `MatchEnded` (place 1).
 
-The internal browser acceptance route exists only in e2e sources. It previews
-the wizard's Spaceward choices without modifying the production catalog, which enables W6 and W7 for new Spaceward games. The muted
-`alliance_victory.feature` covers option dependencies, both winners, reload and
-archive. The strategy harness can pair 1.1.0 scenarios with group victory on/off;
+The production catalog enables W6 and W7 for new Spaceward games.
+`CreateGameWizardTest` covers the option dependencies with every variant creatable;
+`AllianceVictoryJourneyTest` covers both winners, reload and archive. The strategy harness can pair 1.1.0 scenarios with group victory on/off;
 each member receives its own win in the report.
 
 ## Spaceward navigation (M4)
@@ -809,9 +808,9 @@ with BASELINE, drops extra entries and resets unsupported industry profiles.
 `DefaultGameRegistry` copies each choice into `Player.aiStrategy`. Both fields
 are included in existing JSON snapshots, requiring no database migration.
 Missing fields deserialize as the historical baseline. Player handovers retain
-the profile; templates and rematches retain the setup list. The muted
-`ai_strategies.feature` verifies ruleset switches, count changes, confirmation,
-back navigation, creation and reload.
+the profile; templates and rematches retain the setup list. `CreateGameWizardTest`
+verifies ruleset switches, count changes, confirmation, back navigation, creation
+and the saved setup.
 
 `Observation` exposes only PlayerViewBuilder's filtered state, diplomacy membership
 and legal route durations. Alternative policies never receive GameState. The

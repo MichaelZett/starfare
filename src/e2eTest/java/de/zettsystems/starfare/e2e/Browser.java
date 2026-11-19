@@ -118,11 +118,6 @@ public class Browser {
         awaitCss("vaadin-dialog[opened] .wizard-section");
     }
 
-    /** Whether a platform host frames the page: its game bar carries Starfare's navigation (M9). */
-    public boolean hosted() {
-        return !driver().findElements(By.cssSelector(".gp-game-nav")).isEmpty();
-    }
-
     public WebElement awaitCss(String css) {
         return new WebDriverWait(driver(), LOAD)
                 .until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(css)));
