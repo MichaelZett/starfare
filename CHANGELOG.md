@@ -8,6 +8,27 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Aufgeben:** Neben **Verlassen** gibt es **Aufgeben**. Der Computer übernimmt das Reich bis zum
+  Ende der Partie; anders als beim Verlassen gibt es keinen Weg zurück, auch wenn die Partie
+  Wiedereinstieg erlaubt.
+- **SectorForces nach Galactic Empire (1983):** Im Spielassistenten gibt es den neuen Abschnitt
+  **Galaxie-Ereignisse und Wertung**. Alles ist zunächst aus; ältere Partien bleiben unverändert.
+  - Zufallsereignisse **aus / selten / normal**, jedes Ereignis einzeln abwählbar: kosmische
+    Stürme (alle Flotten eine Runde später), Raum-Zeit-Erschütterung (halbe Restflugzeit),
+    mysteriöses Verschwinden von Schiffen, Raumhafenbeben und Supernova.
+  - Supernova: Eine Runde vorher meldet der Bericht „Sonne instabil“, auf der Karte pulsiert das
+    System. Danach ist es für immer zerstört, zählt nicht mehr zur Siegschwelle und ist kein Ziel
+    mehr. Die Garnison flieht zu einem zufälligen System, Flotten auf dem Weg dorthin springen
+    weiter. Heimatwelten explodieren nie.
+  - Piraten (nur mit Supernova): Die Garnison einer neutralen Sonne flieht als Piratenflotte ohne
+    Sitz. Gewinnt sie, wird das angegriffene System neutral.
+  - **Startausgleich nach Lage:** Wer nah an Gegnern startet, bekommt mehr Schiffe; wer viele
+    neutrale Systeme in der Nähe hat, weniger (zwischen halber und doppelter Startgarnison).
+  - **Spielende nach Runden** (10–500): Erreicht niemand die Siegschwelle, gewinnt nach der
+    letzten Runde die höchste Wertung (400 je System, 25 je stationiertes Schiff, 20 je Schiff
+    unterwegs). Die letzten fünf Runden werden angekündigt; danach gibt es keine Fortsetzung.
+  - Die Zusammenfassung des Assistenten nennt die aktiven Ereignisse.
+
 - Die wirkungslosen Startprofile `economy-preview` und `research-preview` sind entfernt; neue
   Partien nutzen ohnehin immer die aktuellen Regeln.
 - Diplomatie, Fortsetzung nach dem Sieg und offene Schlachten am Spielende werden ohne Browser

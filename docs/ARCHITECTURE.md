@@ -394,11 +394,13 @@ Fixed sequence, fully inside one `writeState`:
    `CombatService`, each against the garrison left by the previous one. The
    order is a game rule (`RoundRules.attackOrder`): random (default) or
    strongest first.
-6. Victory check (>= the configured system share, neutrals included;
-   default `GameConfig.VICTORY_SYSTEM_PERCENT`, 70%); optional group victory follows
-   individual victory. It sends `Victory` to every winner and `Defeat` with the
-   winning members to every other participant.
-7. `state.nextTurn()`.
+6. SectorForces random events (`CosmicEvents`, only with `SectorOptions`, see below).
+7. Victory check (>= the configured system share, neutrals included, destroyed
+   systems excluded; default `GameConfig.VICTORY_SYSTEM_PERCENT`, 70%); optional group
+   victory follows individual victory. It sends `Victory` to every winner and `Defeat`
+   with the winning members to every other participant. Without a winner, `RoundLimit`
+   warns during the last five rounds and ends a game with a round limit by `SectorScore`.
+8. `state.nextTurn()`.
 
 If `state.gameOver()` is true, `advanceTurn` is a no-op.
 
@@ -413,6 +415,34 @@ zero survivors on both sides, rather than comparing rounded ship counts.
 `GameRegistry.writeState`, so each turn is persisted under the session lock
 and completion also creates the archive. It records the first end through
 `GameEndRecorder` before publishing the final turn and completion events.
+
+## SectorForces events and scoring (after Galactic Empire, 1983)
+
+`GameSetup.sectorOptions` (`SectorOptions`: `EventFrequency` off/rare/normal, the switched-on
+`CosmicEvent`s, start balance, round limit) exists only for SectorForces; other variants and
+setups without the field normalize to `SectorOptions.none()`. It is part of the stored
+`originalSetup`, so rules stay 1.0.0 and older snapshots read as off.
+
+Runtime state lives in `GameState.cosmic` (`CosmicState`: home systems, unstable suns with
+their explosion round, destroyed systems, `PirateFleet`s), a nullable snapshot component that
+reads as `CosmicState.EMPTY`. `CosmicEvents` runs after the arrivals of a round, so every
+remaining fleet is in hyperspace:
+
+1. Due suns explode (`StarSystem.explode`: neutral, no ships, no production). The garrison
+   leaves via `GameState.launchEventFleet` (owner) or as pirates (neutral, needs `PIRATES`).
+2. Fleets and pirates bound for any destroyed system make a panic jump to a random system.
+3. Landing pirates fight with `CombatResolver`; a win calls `StarSystem.fallToPirates`.
+4. Each switched-on event rolls `SectorOptions.chance`: storm, space-time quake,
+   disappearance, spaceport quake, and a new unstable sun (never a home) due next round.
+
+Reports carry `TurnEvent.Cosmic` (kind `CosmicNews`) and, at the end, `TurnEvent.FinalScore`;
+a victory by score is `TurnEvent.Victory` with `BY_SCORE` (0). Destroyed systems are no target:
+`Routes.plan` and `DefaultFleetService` reject them, the baseline AI skips them, and
+`PlayerViewState.sky` (`SkyMarks`) marks destroyed and unstable systems on the map regardless
+of fog. `VictoryEvaluation` divides by `GameState.livingSystemCount`. `StartBalance` adjusts the
+home garrisons after the galaxy is spaced out. `GameState.roundLimitReached` blocks continuing
+after a victory and makes `StarfareMatches.result` rank the non-winners by `SectorScore` instead of
+held systems.
 
 ## Round limits
 

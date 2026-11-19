@@ -320,7 +320,46 @@ beginnt sie später oder hat Lücken, nennt der Dialog „seit Runde N“ bzw.
 Der Sieger darf **Bis zur vollständigen Eroberung weiterspielen** wählen. Das Ziel
 steigt dann auf 100 %, die Abgaben werden zurückgesetzt und die Fristen starten neu.
 Die anderen Teilnehmer werden automatisch informiert. Das zuerst erreichte
-Ergebnis bleibt in der Statistik der Plattform bestehen.
+Ergebnis bleibt in der Statistik der Plattform bestehen. Endet eine SectorForces-Partie
+durch ihr Rundenlimit, gibt es keine Fortsetzung.
+
+**Aufgeben** steht in der Kopfleiste neben **Verlassen**. Nach einer Rückfrage übernimmt
+der Computer dein Reich bis zum Ende der Partie. Anders als beim Verlassen kannst du
+nicht zurückkehren, auch wenn die Partie Wiedereinstieg erlaubt.
+
+## Galaxie-Ereignisse und Wertung (SectorForces)
+
+Nach dem C64-Klassiker Galactic Empire (1983). Der Abschnitt **Galaxie-Ereignisse und
+Wertung** im Spielassistenten erscheint nur bei SectorForces; alles ist zunächst aus.
+Die Zusammenfassung nennt die gewählten Ereignisse.
+
+**Zufallsereignisse** stehen auf **Aus**, **Selten** oder **Normal**; darunter lässt sich
+jedes Ereignis einzeln abwählen. Meldungen erscheinen im Bericht als Ticker-Karten:
+
+- **Kosmische Stürme:** Alle Flotten im Hyperraum, auch Piraten, kommen eine Runde später an.
+- **Raum-Zeit-Erschütterung:** Alle Flotten im Hyperraum brauchen nur noch die halbe Restzeit.
+- **Mysteriöses Verschwinden:** Eine zufällige Flotte verliert bis zur Hälfte ihrer Schiffe.
+  Nur ihr Besitzer erfährt davon.
+- **Raumhafenbeben:** Ein zufälliges System verliert einen Teil seiner Garnison (leichtes oder
+  schweres Beben). Nur der Besitzer erfährt davon.
+- **Supernova:** Der Bericht meldet allen „Sonne instabil“, die Karte zeigt das System mit
+  pulsierendem Rand. Am Ende dieser Runde explodiert die Sonne; bis dahin kannst du stationierte
+  Schiffe abziehen. Danach ist das System für immer zerstört (dunkel auf der Karte), zählt nicht mehr zur Siegschwelle und kann nicht
+  mehr angeflogen werden. Seine Garnison flieht als Flotte zu einem zufälligen System;
+  Flotten auf dem Weg dorthin springen per Panikschaltung zu einem anderen System weiter.
+  Heimatwelten explodieren nie.
+- **Piraten** (nur zusammen mit der Supernova): Die Garnison einer neutralen Sonne flieht
+  als Piratenflotte ohne Sitz. Gewinnt sie den Kampf am Ziel, wird das System neutral.
+
+**Startausgleich nach Lage:** Wer nah an Gegnern startet, bekommt mehr Schiffe; wer viele
+neutrale Systeme in der Nähe hat, weniger. Jede Startgarnison bleibt zwischen der Hälfte
+und dem Doppelten des normalen Werts.
+
+**Spielende nach Runden** (10 bis 500): Erreicht bis dahin niemand die Siegschwelle, endet
+die Partie nach der letzten Runde. Es gewinnt die höchste Wertung: 400 Punkte je System,
+25 je stationiertes Schiff, 20 je Schiff unterwegs; bei Gleichstand mehr Systeme, dann der
+niedrigere Sitz. In den letzten fünf Runden kündigt der Bericht das Ende an; die Wertung
+aller Reiche steht im letzten Bericht.
 
 Im **Archiv** ist **Ansehen** die Hauptaktion; **Als Vorlage / Revanche** steht
 nachgeordnet daneben. Such- und Ergebnisfilter bleiben bei Rückkehr innerhalb

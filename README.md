@@ -483,6 +483,31 @@ The winner can choose **Continue until every system is conquered** to resume tow
 This restarts the round deadlines and clears submissions without advancing the
 round. Other participants are informed automatically. The first end is the one
 reported to the platform; continued play does not end the game a second time.
+A SectorForces game that ended by its round limit cannot be continued.
+
+**Resign** sits next to **Leave** in the map header. The computer takes over the empire until
+the end of the game; unlike leaving there is no way back, even when the game allows re-entry.
+
+## SectorForces: galactic events and scoring
+
+Inspired by the C64 classic Galactic Empire (1983), SectorForces games offer a wizard section
+**Galactic events and scoring**. Everything is off by default; older games read as off and keep
+rules 1.0.0.
+
+- **Random events** off / rare / normal, each event can be switched off on its own: cosmic
+  storms (every fleet in hyperspace one round later), space-time quake (half the remaining
+  travel time), mysterious disappearance of ships, spaceport quake and supernova.
+- **Supernova:** the report warns everyone ("unstable sun") and the map marks the system for
+  one round. Then it is destroyed for good, no longer counts towards the victory threshold and
+  can no longer be targeted. Its garrison flees to a random system; fleets bound for it jump on.
+  Home systems never explode.
+- **Pirates** (needs the supernova): the garrison of a neutral sun flees as a pirate fleet
+  without a seat. A successful raid leaves the system neutral.
+- **Start balance by position:** homes close to opponents get more ships, homes with many
+  neutral systems nearby fewer (between half and twice the regular garrison).
+- **Round limit** (10–500): if nobody reaches the threshold, the best score after the last round
+  wins (400 per system, 25 per stationed ship, 20 per ship in flight; ties go to more systems,
+  then the lower seat). The last five rounds are announced.
 
 ## Observer mode
 
