@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.ui;
 
+import de.zettsystems.starfare.standalone.ui.ArchiveView;
 import com.vaadin.flow.component.grid.GridTester;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -107,6 +108,9 @@ class PrivateGameLifecycleTest extends AbstractBrowserlessTest {
         assertThat(getCurrentView()).isInstanceOf(MainView.class);
         assertThat(find(Button.class).withText("Runde abgeben").all()).isEmpty();
         assertThat(find(Button.class).withText("Verlegungen verwalten").all()).isEmpty();
+        Button template = find(Button.class).withId("review-template").single();
+        assertThat(template.getText()).as("the review offers a new game from this one").isEqualTo("Als Vorlage / Revanche");
+        assertThat(template.isEnabled()).isTrue();
 
         switchPerspectiveAndFog();
         chooseSidebarSections();

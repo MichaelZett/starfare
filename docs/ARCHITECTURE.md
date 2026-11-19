@@ -762,7 +762,13 @@ snapshot field is absent in older saves; those games cannot supply an exact
 template. `GameTemplateService` restricts copying to hosts and participants,
 generates a fresh private game, and optionally reserves the previous human seats.
 Reservations do not join participants or start the game. Archived source games
-use the same access check.
+use the same access check. For finished games the review offers the dialog
+(`MainView.offerTemplate`, in `ReviewControls`), so both starts keep it.
+
+`ArchiveView` lives in `standalone.ui` (plan S.3, 19.11.2026): only Starfare's own
+start lists finished games; the game module has no `/starfare/archive` route and
+`game.properties` no archive link. In a host, the platform will list finished
+games and link to the review (plan S.4).
 
 `user_display_settings` (Flyway V2_8) belongs to the game; deleting an account
 removes its rows (`GameAccountDeletionListener`). Its enum keys store speed, sound, event/logistics filters, route search

@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-final class OutcomeLabels {
+public final class OutcomeLabels {
     private OutcomeLabels() { }
-    static String winners(@Nullable GameOutcome outcome, List<Player> players) {
+    public static String winners(@Nullable GameOutcome outcome, List<Player> players) {
         return winners(outcome, players, Player::label);
     }
     static String winningEmpires(@Nullable GameOutcome outcome, List<Player> players) {

@@ -8,6 +8,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Als Vorlage in der Nachbetrachtung:** „Als Vorlage / Revanche“ steht bei beendeten Partien jetzt
+  in der Leiste über der Karte statt auf der Archivkarte. Das Archiv ist nur noch Teil des eigenen
+  Starts; in der Plattform listet künftig die Plattform die beendeten Partien.
 - **Verpasste Runden zählen über die ganze Partie:** Wer zum zweiten Mal eine Rundenfrist verpasst,
   fliegt hinaus; der Computer übernimmt den Sitz endgültig, ohne Wiedereinstieg. Bisher übernahm
   der Computer erst nach drei verpassten Runden in Folge, und der Sitz ließ sich zurückholen.

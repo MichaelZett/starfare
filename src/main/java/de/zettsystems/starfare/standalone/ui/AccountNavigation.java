@@ -1,7 +1,6 @@
 package de.zettsystems.starfare.standalone.ui;
 
 import com.vaadin.flow.component.menubar.MenuBar;
-import de.zettsystems.starfare.game.ui.ArchiveView;
 import de.zettsystems.starfare.game.ui.LobbyView;
 import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.i18n.I18n;

@@ -23,6 +23,10 @@ import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.application.GameChatService;
 import de.zettsystems.starfare.game.application.GameEvent;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import de.zettsystems.starfare.game.application.GameTemplateService;
+import de.zettsystems.starfare.game.application.RulesetAccess;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.TurnEvent;
@@ -94,14 +98,20 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private @Nullable PlayerViewState economicView;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
     private final BattleAcknowledgements acknowledgements;
+    private final GameTemplateService templates;
+    private final RulesetAccess rulesetAccess;
+    private boolean templateOffered;
 
     @Autowired
     public MainView(GameService service, Broadcaster broadcaster, BattleAcknowledgementService battleAcknowledgements,
                     GameChatService gameChat, PlayerDirectory players,
                     de.zettsystems.starfare.game.application.DisplaySettingsService preferences,
+                    GameTemplateService templates, RulesetAccess rulesetAccess,
                     @Nullable OwnFrameParts frame) {
         DisplayPreferences.load(preferences);
         this.game = service;
+        this.templates = templates;
+        this.rulesetAccess = rulesetAccess;
         this.gameChat = gameChat;
         this.players = players;
         this.broadcaster = broadcaster;
@@ -466,6 +476,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         witnessedRunningGame = false;
         resetOutcomePresentation();
         reviewControls.reset();
+        templateOffered = false;
         spectatorControls.reset();
     }
 
@@ -495,6 +506,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 witnessedRunningGame = true;
                 resetOutcomePresentation();
                 reviewControls.reset();
+        templateOffered = false;
             }
             refresh();
         }));
@@ -568,6 +580,24 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         }
         Notification.show(I18n.t(UiTexts.MAP_RESIGNED));
         getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
+    }
+
+    /**
+     * The review offers a new game with these settings (or a rematch) to whoever hosted or held a seat,
+     * for rulesets the account may still use. It moved here from the own start's archive (plan S.3).
+     */
+    private void offerTemplate() {
+        if (templateOffered) { return; }
+        templateOffered = true;
+        String account = UserContext.currentPlayerId().orElse("");
+        game.summaryFor(gameId, account)
+                .filter(summary -> summary.belongsTo(account) && rulesetAccess.mayUse(summary.ruleset(), account))
+                .ifPresent(summary -> {
+                    Button template = GameTemplateDialog.button(templates, gameId, summary.name(), () -> { });
+                    template.addThemeVariants(ButtonVariant.TERTIARY);
+                    template.setId("review-template");
+                    reviewControls.offer(template);
+                });
     }
 
     private int currentSeat() {
@@ -673,6 +703,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private void configureHeader(PlayerViewState view, boolean observer, int playerId) {
         reviewControls.setVisible(reviewing);
+        if (reviewing) { offerTemplate(); }
         fleetsPanel.setViewsVisible(!observer || reviewing);
         fleetsPanel.setReportAvailable(currentSeat() >= 0);
         header.setNextVisible(!reviewing && (!observer || game.isAiOnly(gameId)));

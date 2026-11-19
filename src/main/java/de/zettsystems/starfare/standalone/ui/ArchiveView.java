@@ -1,4 +1,4 @@
-package de.zettsystems.starfare.game.ui;
+package de.zettsystems.starfare.standalone.ui;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
@@ -20,7 +20,12 @@ import com.vaadin.flow.server.VaadinSession;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.application.RulesetAccess;
+import de.zettsystems.starfare.game.ui.LobbyView;
+import de.zettsystems.starfare.game.ui.MainView;
+import de.zettsystems.starfare.game.ui.OutcomeLabels;
+import de.zettsystems.starfare.game.ui.RulesetLabels;
+import de.zettsystems.starfare.game.ui.StarfareRoutes;
+import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
@@ -34,13 +39,16 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
+/**
+ * Finished games in Starfare's own start. Not part of the game artifact: in a platform host the
+ * platform lists finished games and links to the review (plans S.3 and S.4, 19.11.2026). Creating
+ * a new game from a finished one lives in the review ({@code MainView}), which both starts share.
+ */
 @Route(StarfareRoutes.ARCHIVE)
 @PermitAll
 @CssImport("./styles/starfare.css")
 public class ArchiveView extends VerticalLayout {
     private final GameService games;
-    private final de.zettsystems.starfare.game.application.GameTemplateService templates;
-    private final RulesetAccess rulesetAccess;
     private final Broadcaster broadcaster;
     private final String positionAccount = UserContext.currentPlayerId().orElse("");
     private final Grid<GameSummary> grid = new Grid<>(GameSummary.class, false);
@@ -53,17 +61,11 @@ public class ArchiveView extends VerticalLayout {
 
     private record Position(String account, String search, boolean own, ArchiveResult result, @Nullable GameId lastViewed) { }
 
-    public ArchiveView(GameService games, Broadcaster broadcaster,
-                       de.zettsystems.starfare.game.application.GameTemplateService templates,
-                       RulesetAccess rulesetAccess, @Nullable OwnFrameParts frame) {
+    public ArchiveView(GameService games, Broadcaster broadcaster) {
         this.games = games;
-        this.templates = templates;
-        this.rulesetAccess = rulesetAccess;
         this.broadcaster = broadcaster;
         setSizeFull();
-        if (frame != null) {
-            add(frame.accountNavigation());
-        }
+        add(new AccountNavigation());
         search.setPlaceholder(I18n.t(UiTexts.LOBBY_SEARCH));
         search.setClearButtonVisible(true);
         own.setLabel(I18n.t(UiTexts.LOBBY_FILTER_OWN));
@@ -88,10 +90,7 @@ public class ArchiveView extends VerticalLayout {
         add(new H1(I18n.t(UiTexts.ARCHIVE_TITLE)), filters);
         grid.addComponentColumn(this::archiveCard).setHeader("").setFlexGrow(1);
         grid.setWidthFull();
-        add(grid, empty);
-        if (frame != null) {
-            add(frame.legalFooter());
-        }
+        add(grid, empty, new LegalFooter());
     }
 
     private Div archiveCard(GameSummary summary) {
@@ -116,13 +115,6 @@ public class ArchiveView extends VerticalLayout {
         details.addClassName("archive-game-card-details");
         Div actions = new Div(viewButton(summary));
         actions.addClassName("archive-game-actions");
-        // Vorlage und Revanche nur für Varianten, die das Konto neu anlegen darf (Testvarianten im Host).
-        if (summary.belongsTo(account()) && rulesetAccess.mayUse(summary.ruleset(), account())) {
-            Button template = GameTemplateDialog.button(templates, summary.gameId(), summary.name(), this::refresh);
-            template.addThemeVariants(ButtonVariant.TERTIARY);
-            actions.add(template);
-            if (!template.isEnabled()) { actions.add(new Span(I18n.t(UiTexts.PLAN_TEMPLATE_MISSING))); }
-        }
         if (!summary.belongsTo(account()) && !summary.observersAllowed()) {
             actions.add(new Span(I18n.t(UiTexts.ARCHIVE_VIEW_BLOCKED)));
         }

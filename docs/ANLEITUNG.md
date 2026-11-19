@@ -365,8 +365,7 @@ die Partie nach der letzten Runde. Es gewinnt die höchste Wertung: 400 Punkte j
 niedrigere Sitz. In den letzten fünf Runden kündigt der Bericht das Ende an; die Wertung
 aller Reiche steht im letzten Bericht.
 
-Im **Archiv** ist **Ansehen** die Hauptaktion; **Als Vorlage / Revanche** steht
-nachgeordnet daneben. Such- und Ergebnisfilter bleiben bei Rückkehr innerhalb
+Im **Archiv** öffnet **Ansehen** die Nachbetrachtung. Such- und Ergebnisfilter bleiben bei Rückkehr innerhalb
 derselben Sitzung erhalten; die Liste führt zur zuletzt angesehenen Partie.
 Bei zehn Sitzen im Spielassistenten lassen sich die zunächst offenen Sitzdetails
 in der Zusammenfassung einklappen; **Ändern** bleibt am Gruppenkopf erreichbar.
@@ -480,7 +479,8 @@ SectorForces verwendet weiterhin direkte Flüge ohne Reichweitengrenze.
 
 ## Vorlagen und Revanche
 
-Öffne bei einer eigenen Partie in Lobby oder Archiv **Als Vorlage / Revanche**.
+Öffne bei einer eigenen Partie in der Lobby oder in der Nachbetrachtung einer beendeten Partie
+(Leiste über der Karte) **Als Vorlage / Revanche**.
 Vergib einen Namen. Mit **Bisherigen Teilnehmern ihre Plätze reservieren** werden
 die früheren menschlichen Plätze reserviert; ohne Haken entsteht nur eine Vorlage
 mit denselben Ausgangseinstellungen.

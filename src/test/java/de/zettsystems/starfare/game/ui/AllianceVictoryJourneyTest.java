@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.ui;
 
+import de.zettsystems.starfare.standalone.ui.ArchiveView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridTester;

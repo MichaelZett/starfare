@@ -12,7 +12,7 @@ import de.zettsystems.starfare.game.application.GameSessionStore;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.ui.MainView;
-import de.zettsystems.starfare.game.ui.ArchiveView;
+import de.zettsystems.starfare.standalone.ui.ArchiveView;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.legal.ui.ImprintView;
 import de.zettsystems.starfare.testsupport.DomEvents;

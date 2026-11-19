@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.ui;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -32,6 +33,7 @@ final class ReviewControls extends HorizontalLayout {
     private @Nullable ReplayEventMarker currentEvent;
     private boolean initialized;
     private int latestReplayTurn = -1;
+    private @Nullable Component offered;
 
     ReviewControls(Runnable onChange, Consumer<ReplayEventMarker> onEventSelected) {
         this.onChange = onChange;
@@ -95,7 +97,18 @@ final class ReviewControls extends HorizontalLayout {
         next.setVisible(false);
         replayNotice.setVisible(false);
         eventMarks.setVisible(false);
+        Component current = offered;
+        if (current != null) { remove(current); }
+        offered = null;
         setVisible(false);
+    }
+
+    /** An action for the finished game, such as starting a new one from it; replaces an earlier one. */
+    void offer(Component action) {
+        Component current = offered;
+        if (current != null) { remove(current); }
+        offered = action;
+        add(action);
     }
 
     void show(List<Player> players, int ownSeat, List<Integer> availableTurns, List<ReplayEventMarker> markers) {

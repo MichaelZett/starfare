@@ -1,4 +1,4 @@
-package de.zettsystems.starfare.game.ui;
+package de.zettsystems.starfare.standalone.ui;
 
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameOutcome;

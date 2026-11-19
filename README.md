@@ -116,7 +116,7 @@ once the game starts.
 
 Finished games move from the lobby to **Archive**. Search by game or player name,
 filter your games and open a completed map without issuing further orders.
-**View** is the primary action; template/rematch remains secondary. Returning to
+**View** opens the review. Returning to
 the archive within the same account session restores filters and scrolls to the
 last viewed game. Ten-seat wizard summaries offer collapsible seat details,
 initially expanded, with **Change** always accessible at the group heading.
@@ -187,7 +187,8 @@ With battle speed **Instant**, **Resolve all open battles** acknowledges the com
 round. Speed, sound, report/logistics filters, route search and sidebar width are
 saved per account and restored on later sign-ins.
 
-Use **Use as template / rematch** on your lobby or archive games to reuse the
+Use **Use as template / rematch** on your lobby games or in the review of a
+finished game (the bar above the map) to reuse the
 original settings with a new map. Rematches reserve the previous human seats;
 players still join themselves. Games created before original settings were saved
 cannot be used as templates. New games remain private until explicitly published.
@@ -993,8 +994,9 @@ Starfare's own stylesheets style only Starfare's classes and the scope
 variables to Starfare's palette.
 
 All game routes start with `/starfare` (lobby `/starfare`, map
-`/starfare/map/:gameId`, `/starfare/archive`); in the
-standalone application `/` forwards to the lobby. The artifact describes itself
+`/starfare/map/:gameId`); in the standalone application `/` forwards to the
+lobby, and `/starfare/archive` lists finished games. In a platform host the
+archive page is absent: the platform lists finished games (plan S.4). The artifact describes itself
 in `games/starfare/game.properties` (key, base package, schema, release stage,
 public paths). Texts live in `games/starfare/i18n/translations*.properties` and
 are resolved by Starfare's own helper in the language of the current UI, not by
