@@ -1,4 +1,4 @@
-package de.zettsystems.starfare.i18n;
+package de.zettsystems.starfare.standalone.ui;
 
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
@@ -10,7 +10,8 @@ import java.util.Locale;
 /**
  * Applies the session-stored locale to every newly created {@code UI}, so the
  * language survives navigation and page reloads (after the switcher has written
- * it). Without this, Vaadin would always fall back to the browser locale.
+ * it). Without this, Vaadin would always fall back to the browser locale. Own start only: a platform
+ * host decides the language of its pages itself.
  */
 @Component
 public class LocaleServiceInitListener implements VaadinServiceInitListener {

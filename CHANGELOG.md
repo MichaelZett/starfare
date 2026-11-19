@@ -8,6 +8,12 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Plattform-Einbindung aufgeräumt:** Starfare meldet seine Einstellungen selbst an, ein Host
+  braucht keinen Einstellungs-Scan der Starfare-Pakete mehr. Lobby, Sprachwahl, Kontomenü,
+  Rechtshinweise und das Merken der Sprache gehören nur noch zum eigenen Start und fehlen im
+  Spielartefakt. Starfares Stylesheets gelten nur noch auf Starfare-Seiten, nicht mehr auf den
+  übrigen Seiten eines Hosts. Anzeigenamen in Listen kommen in einer Abfrage von der Plattform;
+  der eigene Zwischenspeicher entfällt, Umbenennungen erscheinen sofort.
 - **Aufgeben:** Neben **Verlassen** gibt es **Aufgeben**. Der Computer übernimmt das Reich bis zum
   Ende der Partie; anders als beim Verlassen gibt es keinen Weg zurück, auch wenn die Partie
   Wiedereinstieg erlaubt.

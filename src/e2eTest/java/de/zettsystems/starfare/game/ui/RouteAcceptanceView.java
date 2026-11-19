@@ -16,7 +16,7 @@ import java.util.Set;
 @PermitAll
 public class RouteAcceptanceView extends Div {
     public RouteAcceptanceView() {
-        setId("route-acceptance"); add(new LanguageSwitcher());
+        setId("route-acceptance"); add(new de.zettsystems.starfare.standalone.ui.LanguageSwitcher());
         var systems = java.util.stream.IntStream.rangeClosed(1, 7).mapToObj(id ->
                 new VisibleSystem(id, "Station " + id + " mit langem Namen", id * 100, 100,
                         id == 2 ? 2 : 1, 1, 1, true, id == 2 ? "#d55e00" : "#56b4e9", null, false, null, List.of())).toList();

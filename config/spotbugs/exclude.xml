@@ -31,16 +31,15 @@
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
     </Match>
 
-    <!-- LobbyExtras.Parts hands freshly built components from Starfare's own start to the lobby (plan M13). -->
     <Match>
-        <Class name="de.zettsystems.starfare.game.ui.LobbyExtras$Parts"/>
+        <Class name="de.zettsystems.starfare.standalone.ui.StandaloneLobby"/>
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
     </Match>
 
     <!-- Vaadin UI instances keep Spring services and immutable game identifiers;
          cross-node Java session serialization is not used. Includes diplomacy and economy UI. -->
     <Match>
-        <Class name="~de\.zettsystems\.starfare\.(game|standalone\.social|auth|legal|diplomacy|economy|navigation)\.ui\..*"/>
+        <Class name="~de\.zettsystems\.starfare\.(game|standalone|auth|legal|diplomacy|economy|navigation)\.ui\..*"/>
         <Bug pattern="SE_BAD_FIELD,SE_NO_SERIALVERSIONID,SE_BAD_FIELD_STORE,SE_TRANSIENT_FIELD_NOT_RESTORED"/>
     </Match>
 
@@ -61,7 +60,7 @@
     </Match>
 
     <!--
-       FALSE POSITIVE: LobbyView's, SocialView's and ManageGameDialog's constructors compose Vaadin components,
+       FALSE POSITIVE: StandaloneLobby's, SocialView's and ManageGameDialog's constructors compose Vaadin components,
        which internally invoke framework callbacks that SpotBugs models as
        throwing. The view has no finalizer and receives only Spring-managed
        collaborators; moving the composition out of the Vaadin lifecycle
@@ -70,7 +69,7 @@
     -->
     <Match>
         <Or>
-            <Class name="de.zettsystems.starfare.game.ui.LobbyView"/>
+            <Class name="de.zettsystems.starfare.standalone.ui.StandaloneLobby"/>
             <Class name="de.zettsystems.starfare.game.ui.ManageGameDialog"/>
         </Or>
         <Method name="&lt;init&gt;"/>

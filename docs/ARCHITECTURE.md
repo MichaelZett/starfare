@@ -329,8 +329,9 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
   `domain` (`GameState`), `values` (records for setup/views:
   `StarSystem`, `Fleet`, `PlayerViewState`, `VisibleSystem`, `FleetView`,
   `GameSetup`, `GameConfig`, `PlannedOrder`, `StandingOrderView`, …),
-  `ui` (Vaadin views: `LobbyView`, `MainView`, panels, dialogs,
-  `UiMapper`, `UiTexts`).
+  `ui` (Vaadin views: the entry route `LobbyView`, `MainView`, panels, dialogs,
+  `UiMapper`, `UiTexts`, and `OwnFrameParts`, through which the views ask for the
+  own start's lobby, language switch, account menu and legal footer).
 - `turn` — Ruleset dispatch and shared `RoundPipeline`.
 - `combat` — Combat resolution (`CombatService`, `CombatResolver`).
 - `fleet` — Fleet commands and validation (`FleetService`,
@@ -348,12 +349,16 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
   `db/migration`; the schema `identity` of the former zs-identity building block
   stays unread in old databases.
 - `i18n` — `StarfareI18NProvider` (Vaadin `I18NProvider`),
-  `I18n.t(...)` facade, `LocaleServiceInitListener` (restores the UI
-  locale from the session).
+  `I18n.t(...)` facade.
 - `standalone` — Starfare's own start only (left out of the game artifact): the
   entry view and its answers to the platform interfaces (`standalone.platform`:
   the standard account everybody plays as without signing in, no friends, nobody
-  else online, everybody visible).
+  else online, everybody visible). `standalone.ui` holds the parts a host's frame
+  replaces: the lobby (`StandaloneLobby`), language switch, account menu, legal
+  footer and `LocaleServiceInitListener`. `StandaloneFrameParts` hands them to the
+  game's views as the bean `OwnFrameParts`; without it (inside a host) the views
+  leave them out and the entry route `LobbyView` stays empty, since the host
+  forwards it to its own game overview (`platformLobby=true` in `game.properties`).
 - `legal` — Imprint and privacy information views.
 - `style` — `CssProperties`, `HtmlAttributes` (central constants for
   Vaadin styling and attributes).
@@ -610,7 +615,7 @@ logic and callbacks stay in `MainView`; only the arrangement differs.
 - Spring configs: `@ConfigurationProperties` (records or classes), never
   `@Value`. `@Configuration` classes live in the `<module>/config/`
   package (they fit neither `ui` nor `application/domain/values`).
-- New game: wizard in `LobbyView` → `GameSetup` (`game.values`);
+- New game: wizard (`CreateGameWizardDialog`, opened from the lobby or `NewMatchView`) → `GameSetup` (`game.values`);
   `GameSetup.normalized()` clamps and defaults inputs. The fixed limits are
   8–120 systems, 0–8 human and 0–7 AI participants (at most 10 combined),
   production 1–20 and starting garrison 1–50. The system count is raised to
@@ -648,12 +653,12 @@ logic and callbacks stay in `MainView`; only the arrangement differs.
 - Layer-clean: `PlayerViewBuilder` (application) emits **keys** instead
   of strings (`map.orderType.send/wait/disband`); the UI translates at
   the rendering point.
-- Language switcher: `game.ui.LanguageSwitcher` ComboBox in the lobby
-  toolbar and the map header; stores the `Locale` in the
+- Language switcher (own start only): `standalone.ui.LanguageSwitcher` ComboBox
+  in the lobby toolbar and the map header; stores the `Locale` in the
   `VaadinSession`, calls `ui.setLocale(...)` and reloads the page.
-- `i18n.LocaleServiceInitListener` (Vaadin `ServiceInitListener`)
+- `standalone.ui.LocaleServiceInitListener` (Vaadin `ServiceInitListener`)
   re-applies the session locale on every UI init, so the choice
-  survives navigation and reload.
+  survives navigation and reload. Inside a host the platform decides the language.
 
 ## Friends, presence and invitations
 

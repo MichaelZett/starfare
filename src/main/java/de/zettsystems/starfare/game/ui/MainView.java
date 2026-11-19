@@ -98,7 +98,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     @Autowired
     public MainView(GameService service, Broadcaster broadcaster, BattleAcknowledgementService battleAcknowledgements,
                     GameChatService gameChat, PlayerDirectory players,
-                    de.zettsystems.starfare.game.application.DisplaySettingsService preferences) {
+                    de.zettsystems.starfare.game.application.DisplaySettingsService preferences,
+                    @Nullable OwnFrameParts frame) {
         DisplayPreferences.load(preferences);
         this.game = service;
         this.gameChat = gameChat;
@@ -164,7 +165,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         treatyActions.add(iconAction(VaadinIcon.HANDSHAKE, UiTexts.DIP_TITLE, this::openDiplomacy));
         boolean phone = Devices.mobile();
         header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
-                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, this::openShipResearch, this::confirmResign), phone);
+                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, this::openShipResearch, this::confirmResign), phone, frame);
 
         gameOverBanner.setVisible(false);
         gameOverBanner.getStyle().set(CssProperties.FONT_WEIGHT, "600");
@@ -192,14 +193,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         });
         if (phone) {
             mobile = new MobileMapLayout(List.of(header, roundStatus, spectatorControls, reviewControls), gameOverBanner,
-                    mapCanvas, fleetsPanel, chatHost, this::cancelTargetSelectionAndRefresh, this::hideGameChat);
+                    mapCanvas, fleetsPanel, chatHost, this::cancelTargetSelectionAndRefresh, this::hideGameChat, frame);
             addClassName("map-root-mobile");
             add(mobile);
         } else {
             mobile = null;
             add(header, roundStatus, spectatorControls, reviewControls, buildContent());
-            if (OwnFrame.active()) {
-                add(new LegalFooter());
+            if (frame != null) {
+                add(frame.legalFooter());
             }
         }
     }

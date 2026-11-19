@@ -55,14 +55,14 @@ public class ArchiveView extends VerticalLayout {
 
     public ArchiveView(GameService games, Broadcaster broadcaster,
                        de.zettsystems.starfare.game.application.GameTemplateService templates,
-                       RulesetAccess rulesetAccess) {
+                       RulesetAccess rulesetAccess, @Nullable OwnFrameParts frame) {
         this.games = games;
         this.templates = templates;
         this.rulesetAccess = rulesetAccess;
         this.broadcaster = broadcaster;
         setSizeFull();
-        if (OwnFrame.active()) {
-            add(new AccountNavigation());
+        if (frame != null) {
+            add(frame.accountNavigation());
         }
         search.setPlaceholder(I18n.t(UiTexts.LOBBY_SEARCH));
         search.setClearButtonVisible(true);
@@ -89,8 +89,8 @@ public class ArchiveView extends VerticalLayout {
         grid.addComponentColumn(this::archiveCard).setHeader("").setFlexGrow(1);
         grid.setWidthFull();
         add(grid, empty);
-        if (OwnFrame.active()) {
-            add(new LegalFooter());
+        if (frame != null) {
+            add(frame.legalFooter());
         }
     }
 

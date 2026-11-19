@@ -1,9 +1,10 @@
-package de.zettsystems.starfare.game.ui;
+package de.zettsystems.starfare.standalone.ui;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.server.VaadinSession;
+import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.i18n.StarfareI18NProvider;
 
@@ -16,11 +17,11 @@ import java.util.Locale;
  * current {@link UI} via {@link UI#setLocale(Locale)}; the page reloads so all
  * rendered strings pick up the new language.
  */
-final class LanguageSwitcher extends HorizontalLayout {
+public final class LanguageSwitcher extends HorizontalLayout {
 
-    static final String SESSION_KEY = "starfare.locale";
+    static final String SESSION_KEY = LocaleServiceInitListener.SESSION_KEY;
 
-    LanguageSwitcher() {
+    public LanguageSwitcher() {
         ComboBox<Locale> combo = new ComboBox<>();
         combo.setItems(List.of(StarfareI18NProvider.GERMAN, StarfareI18NProvider.ENGLISH));
         combo.setItemLabelGenerator(LanguageSwitcher::labelFor);

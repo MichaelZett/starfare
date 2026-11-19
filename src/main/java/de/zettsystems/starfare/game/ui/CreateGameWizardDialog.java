@@ -41,13 +41,13 @@ import java.util.function.Predicate;
  * production bounds, per-player starting production. Calls {@code GameService.newGame}
  * on confirm and runs {@code onCreated} afterwards.
  */
-final class CreateGameWizardDialog {
+public final class CreateGameWizardDialog {
 
     private CreateGameWizardDialog() {
     }
 
     /** Bietet nur Varianten an, die {@code usable} dem aktuellen Konto erlaubt. */
-    static void open(GameService game, PlayerDirectory players, Runnable onCreated, Predicate<RulesetRef> usable) {
+    public static void open(GameService game, PlayerDirectory players, Runnable onCreated, Predicate<RulesetRef> usable) {
         open(game, players, onCreated, game.rulesets(), usable, () -> { });
     }
 

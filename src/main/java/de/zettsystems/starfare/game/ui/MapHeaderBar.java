@@ -39,7 +39,7 @@ final class MapHeaderBar extends HorizontalLayout {
     record Actions(Runnable onNext, Runnable onToggleLogistics, Runnable onLeave, Runnable onLobby,
                    Runnable onChat, Runnable onEditRoundRules, Runnable onResearch, Runnable onResign) { }
 
-    MapHeaderBar(Actions actions, boolean compact) {
+    MapHeaderBar(Actions actions, boolean compact, @Nullable OwnFrameParts frame) {
         empireStats = new EmpireStatsBar(actions.onResearch());
         gameNameLabel.addClassName("app-header-game");
         empireNameLabel.addClassName("app-header-empire");
@@ -89,8 +89,8 @@ final class MapHeaderBar extends HorizontalLayout {
         HorizontalLayout headerRight;
         if (logistics == null) {
             headerRight = new HorizontalLayout(chat, next, headerMenu);
-        } else if (OwnFrame.active()) {
-            headerRight = new HorizontalLayout(new LanguageSwitcher(), logistics, chat, next, headerMenu);
+        } else if (frame != null) {
+            headerRight = new HorizontalLayout(frame.languageSwitcher(), logistics, chat, next, headerMenu);
         } else {
             headerRight = new HorizontalLayout(logistics, chat, next, headerMenu);
         }

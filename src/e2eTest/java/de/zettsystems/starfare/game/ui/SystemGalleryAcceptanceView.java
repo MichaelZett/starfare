@@ -15,7 +15,7 @@ import java.util.List;
 public class SystemGalleryAcceptanceView extends Div {
     public SystemGalleryAcceptanceView() {
         setId("system-gallery");
-        add(new LanguageSwitcher());
+        add(new de.zettsystems.starfare.standalone.ui.LanguageSwitcher());
         for (var star : SystemComposition.StarType.values()) {
             addCard(de.zettsystems.starfare.i18n.I18n.t("system.star." + star.name().toLowerCase(java.util.Locale.ROOT)), star.name(), new SystemComposition(List.of(star), List.of(
                     body(1, SystemComposition.BodyType.ROCKY), body(2, SystemComposition.BodyType.GAS_GIANT))));

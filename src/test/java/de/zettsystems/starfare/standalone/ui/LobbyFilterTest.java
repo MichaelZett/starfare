@@ -1,4 +1,4 @@
-package de.zettsystems.starfare.game.ui;
+package de.zettsystems.starfare.standalone.ui;
 
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameOutcome;
@@ -23,8 +23,8 @@ class LobbyFilterTest {
 
     @Test
     void allMatchesEveryGame() {
-        assertThat(LobbyView.LobbyFilter.ALL.matches(row(lobby(Set.of(1, 2)), STRANGER))).isTrue();
-        assertThat(LobbyView.LobbyFilter.ALL.matches(row(finished(), null))).isTrue();
+        assertThat(StandaloneLobby.LobbyFilter.ALL.matches(row(lobby(Set.of(1, 2)), STRANGER))).isTrue();
+        assertThat(StandaloneLobby.LobbyFilter.ALL.matches(row(finished(), null))).isTrue();
     }
 
     @Test
@@ -32,28 +32,28 @@ class LobbyFilterTest {
         GameSummary game = new GameSummary(GameId.of("lobby-own"), "Own", HOST, 1, false, false, false, false,
                 PLAYERS, Set.of(2), Map.of(SEATED, 2), Map.of(), GameVisibility.PUBLIC, new GameOutcome(null, null));
 
-        assertThat(LobbyView.LobbyFilter.OWN.matches(row(game, SEATED))).as("seated, not hosting").isTrue();
-        assertThat(LobbyView.LobbyFilter.OWN.matches(row(game, HOST))).as("hosting, not seated").isTrue();
-        assertThat(LobbyView.LobbyFilter.OWN.matches(row(game, STRANGER))).isFalse();
-        assertThat(LobbyView.LobbyFilter.OWN.matches(row(game, null))).isFalse();
+        assertThat(StandaloneLobby.LobbyFilter.OWN.matches(row(game, SEATED))).as("seated, not hosting").isTrue();
+        assertThat(StandaloneLobby.LobbyFilter.OWN.matches(row(game, HOST))).as("hosting, not seated").isTrue();
+        assertThat(StandaloneLobby.LobbyFilter.OWN.matches(row(game, STRANGER))).isFalse();
+        assertThat(StandaloneLobby.LobbyFilter.OWN.matches(row(game, null))).isFalse();
     }
 
     @Test
     void openMatchesOnlyGamesThatHaveNotStartedAndStillHaveAFreeHumanSeat() {
-        assertThat(LobbyView.LobbyFilter.OPEN.matches(row(lobby(Set.of(1)), STRANGER))).isTrue();
-        assertThat(LobbyView.LobbyFilter.OPEN.matches(row(lobby(Set.of(1, 2)), STRANGER))).as("all seats taken").isFalse();
-        assertThat(LobbyView.LobbyFilter.OPEN.matches(row(running(Set.of(1)), STRANGER))).as("already started").isFalse();
+        assertThat(StandaloneLobby.LobbyFilter.OPEN.matches(row(lobby(Set.of(1)), STRANGER))).isTrue();
+        assertThat(StandaloneLobby.LobbyFilter.OPEN.matches(row(lobby(Set.of(1, 2)), STRANGER))).as("all seats taken").isFalse();
+        assertThat(StandaloneLobby.LobbyFilter.OPEN.matches(row(running(Set.of(1)), STRANGER))).as("already started").isFalse();
     }
 
     @Test
     void runningMatchesOnlyStartedGamesThatAreNotOver() {
-        assertThat(LobbyView.LobbyFilter.RUNNING.matches(row(running(Set.of(1, 2)), STRANGER))).isTrue();
-        assertThat(LobbyView.LobbyFilter.RUNNING.matches(row(finished(), STRANGER))).as("game over").isFalse();
-        assertThat(LobbyView.LobbyFilter.RUNNING.matches(row(lobby(Set.of(1)), STRANGER))).as("not started").isFalse();
+        assertThat(StandaloneLobby.LobbyFilter.RUNNING.matches(row(running(Set.of(1, 2)), STRANGER))).isTrue();
+        assertThat(StandaloneLobby.LobbyFilter.RUNNING.matches(row(finished(), STRANGER))).as("game over").isFalse();
+        assertThat(StandaloneLobby.LobbyFilter.RUNNING.matches(row(lobby(Set.of(1)), STRANGER))).as("not started").isFalse();
     }
 
-    private static LobbyView.LobbyGameRow row(GameSummary summary, @Nullable String account) {
-        return LobbyView.LobbyGameRow.from(summary, account);
+    private static StandaloneLobby.LobbyGameRow row(GameSummary summary, @Nullable String account) {
+        return StandaloneLobby.LobbyGameRow.from(summary, account);
     }
 
     private static GameSummary lobby(Set<Integer> joined) {

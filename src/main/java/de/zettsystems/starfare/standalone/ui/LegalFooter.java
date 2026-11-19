@@ -1,7 +1,8 @@
-package de.zettsystems.starfare.game.ui;
+package de.zettsystems.starfare.standalone.ui;
 
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
+import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.HtmlAttributes;
 

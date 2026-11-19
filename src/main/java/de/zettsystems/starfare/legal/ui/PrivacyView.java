@@ -15,13 +15,13 @@ import jakarta.annotation.security.PermitAll;
 public class PrivacyView extends VerticalLayout {
     public PrivacyView() {
         setMaxWidth("58rem");
-        add(new de.zettsystems.starfare.game.ui.AccountNavigation(), new H1(I18n.t(UiTexts.LEGAL_PRIVACY)),
+        add(new de.zettsystems.starfare.standalone.ui.AccountNavigation(), new H1(I18n.t(UiTexts.LEGAL_PRIVACY)),
                 new Paragraph(I18n.t(UiTexts.PRIVACY_DATA)),
                 new H2(I18n.t(UiTexts.PRIVACY_PURPOSE_TITLE)),
                 new Paragraph(I18n.t(UiTexts.PRIVACY_PURPOSE)),
                 new H2(I18n.t(UiTexts.PRIVACY_RIGHTS_TITLE)),
                 new Paragraph(I18n.t(UiTexts.PRIVACY_RIGHTS)),
                 new H2(I18n.t(UiTexts.LEGAL_IMPRINT_CONTACT)),
-                new Paragraph(I18n.t(UiTexts.LEGAL_PRIVACY_CONTACT)), new de.zettsystems.starfare.game.ui.LegalFooter());
+                new Paragraph(I18n.t(UiTexts.LEGAL_PRIVACY_CONTACT)), new de.zettsystems.starfare.standalone.ui.LegalFooter());
     }
 }

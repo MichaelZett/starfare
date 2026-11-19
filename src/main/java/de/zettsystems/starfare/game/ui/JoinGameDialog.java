@@ -14,11 +14,11 @@ import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.i18n.I18n;
 
 /** Collects the per-game empire name before a registered account claims a human seat. */
-final class JoinGameDialog {
+public final class JoinGameDialog {
     private JoinGameDialog() {
     }
 
-    static void open(GameService game, GameSummary summary, String accountId, String playerName, Runnable onJoined) {
+    public static void open(GameService game, GameSummary summary, String accountId, String playerName, Runnable onJoined) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(I18n.t(UiTexts.LOBBY_JOIN_TITLE));
 

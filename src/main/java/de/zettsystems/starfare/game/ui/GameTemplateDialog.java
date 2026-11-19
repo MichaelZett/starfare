@@ -11,10 +11,10 @@ import de.zettsystems.starfare.game.application.GameTemplateService;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.i18n.I18n;
 
-final class GameTemplateDialog {
+public final class GameTemplateDialog {
     private GameTemplateDialog() { }
 
-    static Button button(GameTemplateService templates, GameId source, String sourceName, Runnable created) {
+    public static Button button(GameTemplateService templates, GameId source, String sourceName, Runnable created) {
         Button button = new Button(I18n.t(UiTexts.PLAN_TEMPLATE), _ -> open(templates, source, sourceName, created));
         button.setEnabled(templates.template(source, UserContext.currentPlayerId().orElse("")).isPresent());
         if (!button.isEnabled()) { button.setTooltipText(I18n.t(UiTexts.PLAN_TEMPLATE_MISSING)); }

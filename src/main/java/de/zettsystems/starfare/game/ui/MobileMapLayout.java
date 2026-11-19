@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.ui;
 
+import org.jspecify.annotations.Nullable;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -22,7 +23,8 @@ final class MobileMapLayout extends Div {
     private final Button panelTab;
 
     MobileMapLayout(List<Component> top, Component gameOverBanner, MapCanvas canvas,
-                    FleetAndOrdersPanel panel, Component chat, Runnable onCancelTarget, Runnable onCloseChat) {
+                    FleetAndOrdersPanel panel, Component chat, Runnable onCancelTarget, Runnable onCloseChat,
+                    @Nullable OwnFrameParts frame) {
         addClassName("mobile-map");
         var head = new Div(top.toArray(Component[]::new));
         head.addClassName("mobile-map-top");
@@ -42,8 +44,8 @@ final class MobileMapLayout extends Div {
         targetBanner.setVisible(false);
 
         sheet.add(panel);
-        if (OwnFrame.active()) {
-            sheet.add(new LegalFooter());
+        if (frame != null) {
+            sheet.add(frame.legalFooter());
         }
         sheet.addClassName("mobile-map-sheet");
 
