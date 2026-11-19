@@ -192,6 +192,7 @@ final class MapRenderer {
         dot.getStyle().set(CssProperties.HEIGHT, size + "px");
 
         markReportEvent(dot, sys, in, pendingBattle);
+        markSky(dot, sys, in.view().sky());
         if (showsIdleShips(in)) {
             IdleShips.of(sys).ifPresent(ships -> dot.add(buildIdleShipsHint(ships)));
         }
@@ -203,6 +204,17 @@ final class MapRenderer {
             attachRelocationDragAndDrop(dot, sys, in);
         }
         return dot;
+    }
+
+    /** Supernova marks are public news, so they show regardless of fog. */
+    private static void markSky(Div dot, VisibleSystem sys, SkyMarks sky) {
+        if (sky.destroyed().contains(sys.id())) {
+            dot.addClassName("sys-destroyed");
+            dot.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.SECTOR_MAP_DESTROYED, sys.name()));
+        } else if (sky.unstable().contains(sys.id())) {
+            dot.addClassName("sys-unstable");
+            dot.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.SECTOR_MAP_UNSTABLE, sys.name()));
+        }
     }
 
     private static void addStateClasses(Div dot, VisibleSystem display, boolean pendingBattle) {

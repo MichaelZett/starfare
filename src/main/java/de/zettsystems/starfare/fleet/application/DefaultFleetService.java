@@ -25,7 +25,8 @@ public class DefaultFleetService implements FleetService {
                              @Nullable Integer beneficiary) {
         if (!ConquestOrders.allowed(state, playerId, beneficiary)) { return false; }
         StarSystem from = state.getSystem(fromId);
-        if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)) {
+        if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)
+                || state.destroyed(toId)) {
             return false;
         }
         if (ships <= 0 || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
@@ -86,7 +87,8 @@ public class DefaultFleetService implements FleetService {
         // A treaty can expire after planning. Preserve the launch, but fall back to the fleet's owner.
         Integer claim = ConquestOrders.allowed(state, playerId, beneficiary) ? beneficiary : null;
         StarSystem from = state.getSystem(fromId);
-        if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)) {
+        if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)
+                || state.destroyed(toId)) {
             return false;
         }
         if (ships <= 0 || from.availableShips() - state.recyclingShips(fromId) < ships || Routes.plan(state, playerId, fromId, toId).isEmpty()) {

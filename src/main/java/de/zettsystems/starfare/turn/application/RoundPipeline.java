@@ -38,6 +38,7 @@ public class RoundPipeline {
     private final DiplomacyService diplomacy;
     private final CoalitionCombatService coalitions;
     private final java.util.function.Supplier<java.util.Random> attackRandom;
+    private final CosmicEvents cosmicEvents;
 
     public RoundPipeline(CombatService combatService, ReportService reportService, FleetService fleetService) {
         this(combatService, reportService, fleetService, new DefaultNavigationService());
@@ -63,6 +64,7 @@ public class RoundPipeline {
                          CoalitionCombatService coalitions, java.util.function.Supplier<java.util.Random> attackRandom) {
         this.victory = new VictoryEvaluation(reportService);
         this.attackRandom = attackRandom;
+        this.cosmicEvents = new CosmicEvents(reportService, attackRandom);
         this.coalitions = coalitions;
         this.diplomacy = diplomacy;
         this.navigation = navigation;
@@ -88,6 +90,7 @@ public class RoundPipeline {
         resolveArrivals(state);
         navigation.refreshStationAccess(state, state.turn() + 1);
         state.recordCombatLoss(shipsBeforeCombat - state.totalShips());
+        cosmicEvents.resolve(state);
         checkVictory(state);
         state.captureReplayFrame();
         state.nextTurn();

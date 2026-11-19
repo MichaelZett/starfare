@@ -20,7 +20,8 @@ public final class Routes {
         return !limited(state) || state.distance(from, to) <= state.navigationSettings().orElseThrow().range();
     }
     public static Optional<RoutePreview> plan(GameState state, int owner, int from, int to) {
-        if (from == to || !stationAllowed(state, owner, from) || state.systems().stream().noneMatch(system -> system.id() == to)) { return Optional.empty(); }
+        if (from == to || !stationAllowed(state, owner, from) || state.systems().stream().noneMatch(system -> system.id() == to)
+                || state.destroyed(to)) { return Optional.empty(); }
         if (withinRange(state, from, to)) { return Optional.of(preview(state, List.of(from, to))); }
         return new Search(state, owner, from, to).find();
     }

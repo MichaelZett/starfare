@@ -30,6 +30,22 @@ class TurnEngineVictoryTest {
         assertThat(state.reports().get(1).events()).contains(new TurnEvent.Victory(1, 50));
     }
 
+    @Test
+    void destroyedSystemsNoLongerCountTowardsTheThreshold() {
+        GameState state = fourSystemsWith(2);
+        state.configureVictorySystemPercent(60);
+        newEngine().advanceTurn(state);
+        assertThat(state.gameOver()).isFalse();
+
+        state.updateCosmic(cosmic -> cosmic.explode(4));
+        state.updateSystem(4, StarSystem::explode);
+        newEngine().advanceTurn(state);
+
+        assertThat(state.livingSystemCount()).isEqualTo(3);
+        assertThat(state.gameOver()).isTrue();
+        assertThat(state.winnerId()).isOne();
+    }
+
     /** @param ownedByP1 wie viele der vier Systeme P1 gehoeren; der Rest geht an P2. */
     private static GameState fourSystemsWith(int ownedByP1) {
         GameState state = new GameState();

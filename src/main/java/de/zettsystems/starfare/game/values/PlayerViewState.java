@@ -26,7 +26,16 @@ public record PlayerViewState(
         Set<Integer> waitingFleetIds,
         boolean battlePresentationEnabled,
         RoundStatus roundStatus,
-        @Nullable GameOutcome outcome) {
+        @Nullable GameOutcome outcome,
+        SkyMarks sky) {
+    public PlayerViewState(int turn, List<Player> players, List<VisibleSystem> systems, List<Fleet> ownFleets,
+                           @Nullable TurnReport report, boolean gameOver, @Nullable Integer winnerId,
+                           List<PlannedOrder> plannedOrders, List<StandingOrderView> standingOrders, EmpireStats empire,
+                           Set<Integer> waitingFleetIds, boolean battlePresentationEnabled, RoundStatus roundStatus,
+                           @Nullable GameOutcome outcome) {
+        this(turn, players, systems, ownFleets, report, gameOver, winnerId, plannedOrders, standingOrders, empire,
+                waitingFleetIds, battlePresentationEnabled, roundStatus, outcome, SkyMarks.NONE);
+    }
     public PlayerViewState(
         int turn,
         List<Player> players,

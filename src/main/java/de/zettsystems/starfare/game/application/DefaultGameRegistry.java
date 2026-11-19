@@ -319,6 +319,7 @@ public class DefaultGameRegistry implements GameRegistry {
             int startGarrison = Math.max(setup.startGarrison(), startProduction);
             state.updateSystem(s.id(), current -> current.colonize(p.id(), startGarrison, startProduction));
         }
+        state.updateCosmic(cosmic -> cosmic.rememberHomes(homes.stream().limit(state.players().size()).map(StarSystem::id).toList()));
         spaceOut(state, GameConfig.SPACEOUT_ITERATIONS, GameConfig.SPACEOUT_MIN_DIST);
     }
 

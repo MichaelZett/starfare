@@ -50,7 +50,7 @@ public class DefaultAiService implements AiService {
             return;
         }
         state.systems().stream()
-                .filter(s -> !Objects.equals(s.ownerId(), p.id()))
+                .filter(s -> !Objects.equals(s.ownerId(), p.id()) && !state.destroyed(s.id()))
                 .min(Comparator.comparingDouble(s -> state.distance(base.id(), s.id())))
                 .ifPresent(t -> fleetService.queueSend(state, p.id(), base.id(), t.id(), Math.max(1, available / 2)));
     }

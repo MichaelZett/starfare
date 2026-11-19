@@ -29,6 +29,8 @@ final class RoundEventTexts {
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
             case TurnEvent.ResearchCompleted research -> I18n.t(UiTexts.RESEARCH_COMPLETED, research.level(), research.level() * 10);
             case TurnEvent.EconomySummary _ -> "";
+            case TurnEvent.Cosmic news -> CosmicNewsTexts.text(news);
+            case TurnEvent.FinalScore score -> CosmicNewsTexts.score(score);
         };
     }
 
@@ -43,8 +45,8 @@ final class RoundEventTexts {
             case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponent(held.attackerName()),
                     you(held.defenderName()));
             case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _,
-                 TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _ ->
-                    new BattleReplayDialog.BattleSides("", "");
+                 TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _,
+                 TurnEvent.Cosmic _, TurnEvent.FinalScore _ -> new BattleReplayDialog.BattleSides("", "");
         };
     }
 
@@ -58,6 +60,9 @@ final class RoundEventTexts {
     }
 
     private static String victory(TurnEvent.Victory victory) {
+        if (victory.byScore()) {
+            return I18n.t(UiTexts.ROUND_EVENT_VICTORY_SCORE);
+        }
         return victory.allianceId() == null
                 ? I18n.t(UiTexts.ROUND_EVENT_VICTORY, victory.systemPercent())
                 : I18n.t(UiTexts.ROUND_EVENT_ALLIANCE_VICTORY, victory.allianceId(),

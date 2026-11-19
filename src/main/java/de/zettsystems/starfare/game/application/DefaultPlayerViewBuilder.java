@@ -71,7 +71,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var report = state.reports().getOrDefault(playerId, new TurnReport(turn - 1, List.of()));
         return new PlayerViewState(turn, players, vis, ownFleets, report, state.gameOver(), state.winnerId(),
                 plannedOrders, standing, empireStats(state, playerId, ownFleets), waitingFleetIds(state, orders),
-                state.battlePresentationEnabled(), roundStatus(state), state.outcome());
+                state.battlePresentationEnabled(), roundStatus(state), state.outcome(), SkyMarks.of(state.cosmic()));
     }
 
     @Override
@@ -79,7 +79,8 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         int turn = state.turn();
         return new PlayerViewState(turn, List.copyOf(state.players()), revealedSystems(state),
                 List.copyOf(state.fleets()), null, state.gameOver(), state.winnerId(),
-                List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled(), roundStatus(state), state.outcome());
+                List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled(), roundStatus(state), state.outcome(),
+                SkyMarks.of(state.cosmic()));
     }
 
     @Override

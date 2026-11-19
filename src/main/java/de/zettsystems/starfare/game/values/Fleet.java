@@ -88,6 +88,17 @@ public record Fleet(
         return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn,
                 new FlightJourney(route.stations(), route.legIndex(), FlightJourney.Phase.BLOCKED, Math.max(1, route.readyTurn()), route.finalArrivalTurn(), true), beneficiaryId, composition);
     }
+    /** A space-time quake shortens the flight; only SectorForces fleets without an itinerary are affected. */
+    public Fleet acceleratedTo(int arrival) {
+        if (journey != null || arrival > arrivalTurn) { return this; }
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrival, null, beneficiaryId, composition);
+    }
+
+    /** The target exploded: the navigation computer panics and jumps from there to another system. */
+    public Fleet panicJump(int newTarget, int newArrival) {
+        return new Fleet(globalId, ownerId, localNo, toSystemId, newTarget, ships, launchTurn, newArrival, null, beneficiaryId, composition);
+    }
+
     /**
      * Slips the fleet by one turn (used by the "wait this turn" order).
      */

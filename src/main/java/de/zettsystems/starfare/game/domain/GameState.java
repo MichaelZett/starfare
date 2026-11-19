@@ -98,6 +98,27 @@ public class GameState {
     /** Seats whose player gave up for good: the computer keeps them and the player cannot reclaim them. */
     private final Set<Integer> resignedSeats = new HashSet<>();
     public Set<Integer> resignedSeats() { return resignedSeats; }
+    /** Random-event state of SectorForces games: home systems, unstable suns, destroyed systems and pirates. */
+    private CosmicState cosmic = CosmicState.EMPTY;
+    public CosmicState cosmic() { return cosmic; }
+    public void updateCosmic(UnaryOperator<CosmicState> change) { cosmic = change.apply(cosmic); }
+    /** Whether a supernova destroyed the system; nothing can fly there any more. */
+    public boolean destroyed(int systemId) { return cosmic.destroyed(systemId); }
+    /** Systems that still exist; the victory threshold no longer counts destroyed ones. */
+    public int livingSystemCount() { return systems.size() - cosmic.destroyedSystems().size(); }
+
+    /**
+     * A fleet that events create after this round's arrivals, such as refugees of a supernova. It leaves
+     * with the coming round and arrives at {@code arrivalTurn}.
+     *
+     * @return the fleet's number for its owner
+     */
+    public int launchEventFleet(int ownerId, int from, int to, int ships, int arrivalTurn) {
+        if (arrivalTurn <= turn + 1) { throw new IllegalArgumentException("This round's arrivals are already resolved"); }
+        int localNo = nextLocalNoFor(ownerId);
+        fleets.add(new Fleet(nextGlobalFleetId++, ownerId, localNo, from, to, ships, turn + 1, arrivalTurn));
+        return localNo;
+    }
     private @Nullable MetalEconomy metals;
     public Optional<MetalEconomy> metals() { return Optional.ofNullable(metals); }
     public MetalProduction metalPreview() {
@@ -731,6 +752,7 @@ public class GameState {
         colonies.clear();
         miningAutomation.clear();
         resignedSeats.clear();
+        cosmic = CosmicState.EMPTY;
         metals = null;
         navigation = null;
         diplomacy = DiplomacyState.EMPTY;
@@ -932,7 +954,7 @@ public class GameState {
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
                   new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome(), new HashMap<>(s.colonies), s.metals, Map.copyOf(s.miningAutomation),
-                Set.copyOf(s.resignedSeats));
+                Set.copyOf(s.resignedSeats), s.cosmic);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -951,6 +973,7 @@ public class GameState {
         if (automation != null) { c.miningAutomation.putAll(automation); }
         var resigned = s.resignedSeats();
         if (resigned != null) { c.resignedSeats.addAll(resigned); }
+        c.cosmic = CosmicState.orEmpty(s.cosmic());
         restoreTravel(c, s);
         restoreOrders(c, s);
         restoreSettings(c, s);
@@ -1142,6 +1165,7 @@ public class GameState {
         c.metals = s.metals;
         c.miningAutomation.putAll(s.miningAutomation);
         c.resignedSeats.addAll(s.resignedSeats);
+        c.cosmic = s.cosmic;
         c.navigation = s.navigation;
         c.diplomacy = s.diplomacy;
         c.originalSetup = s.originalSetup;

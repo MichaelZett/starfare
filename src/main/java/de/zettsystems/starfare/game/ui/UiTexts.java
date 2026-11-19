@@ -717,4 +717,23 @@ public final class UiTexts {
     public static final String SECTOR_ROUND_LIMIT_LAST = "sector.roundLimit.last";
     public static final String SECTOR_ROUND_LIMIT_HINT = "sector.roundLimit.hint";
     public static final String SECTOR_ROUND_LIMIT_VALUE = "sector.roundLimit.value";
+    public static final String SECTOR_NEWS_STORM = "sector.news.storm";
+    public static final String SECTOR_NEWS_SPACETIME_QUAKE = "sector.news.spacetimeQuake";
+    public static final String SECTOR_NEWS_DISAPPEARANCE = "sector.news.disappearance";
+    public static final String SECTOR_NEWS_DISAPPEARANCE_ALL = "sector.news.disappearance.all";
+    public static final String SECTOR_NEWS_QUAKE_LIGHT = "sector.news.quake.light";
+    public static final String SECTOR_NEWS_QUAKE_HEAVY = "sector.news.quake.heavy";
+    public static final String SECTOR_NEWS_SUN_UNSTABLE = "sector.news.sunUnstable";
+    public static final String SECTOR_NEWS_SUPERNOVA = "sector.news.supernova";
+    public static final String SECTOR_NEWS_REFUGEES = "sector.news.refugees";
+    public static final String SECTOR_NEWS_PIRATES_FLEE = "sector.news.piratesFlee";
+    public static final String SECTOR_NEWS_PANIC_JUMP = "sector.news.panicJump";
+    public static final String SECTOR_NEWS_RAID_WON = "sector.news.raidWon";
+    public static final String SECTOR_NEWS_RAID_REPELLED = "sector.news.raidRepelled";
+    public static final String SECTOR_NEWS_ROUND_LIMIT = "sector.news.roundLimit";
+    public static final String SECTOR_SCORE_TITLE = "sector.score.title";
+    public static final String SECTOR_SCORE_LINE = "sector.score.line";
+    public static final String ROUND_EVENT_VICTORY_SCORE = "round.event.victory.score";
+    public static final String SECTOR_MAP_DESTROYED = "sector.map.destroyed";
+    public static final String SECTOR_MAP_UNSTABLE = "sector.map.unstable";
 }

@@ -28,7 +28,9 @@ import java.util.OptionalInt;
         @JsonSubTypes.Type(value = TurnEvent.DefenseHeld.class, name = "defenseHeld"),
         @JsonSubTypes.Type(value = TurnEvent.CoalitionBattle.class, name = "coalitionBattle"),
         @JsonSubTypes.Type(value = TurnEvent.Victory.class, name = "victory"),
-        @JsonSubTypes.Type(value = TurnEvent.Defeat.class, name = "defeat")
+        @JsonSubTypes.Type(value = TurnEvent.Defeat.class, name = "defeat"),
+        @JsonSubTypes.Type(value = TurnEvent.Cosmic.class, name = "cosmic"),
+        @JsonSubTypes.Type(value = TurnEvent.FinalScore.class, name = "finalScore")
 })
 public sealed interface TurnEvent {
 
@@ -43,7 +45,8 @@ public sealed interface TurnEvent {
             case SystemLost event -> OptionalInt.of(event.systemId());
             case DefenseHeld event -> OptionalInt.of(event.systemId());
             case CoalitionBattle event -> OptionalInt.of(event.systemId());
-            case Victory _, Defeat _, EconomySummary _, ResearchCompleted _ -> OptionalInt.empty();
+            case Cosmic event -> event.system();
+            case Victory _, Defeat _, EconomySummary _, ResearchCompleted _, FinalScore _ -> OptionalInt.empty();
         };
     }
 
@@ -55,7 +58,8 @@ public sealed interface TurnEvent {
             case SystemLost event -> OptionalInt.of(event.systemId());
             case DefenseHeld event -> OptionalInt.of(event.systemId());
             case CoalitionBattle event -> OptionalInt.of(event.systemId());
-            case Recycling _, Production _, Reinforcement _, Victory _, Defeat _, EconomySummary _, ResearchCompleted _ -> OptionalInt.empty();
+            case Recycling _, Production _, Reinforcement _, Victory _, Defeat _, EconomySummary _, ResearchCompleted _,
+                 Cosmic _, FinalScore _ -> OptionalInt.empty();
         };
     }
 
@@ -268,7 +272,10 @@ public sealed interface TurnEvent {
 
     record Victory(int winnerId, int systemPercent, @Nullable Integer allianceId,
                    @Nullable List<String> winnerNames) implements TurnEvent {
+        /** Threshold of a victory decided by the score after the last round, not by systems. */
+        public static final int BY_SCORE = 0;
         public Victory { winnerNames = winnerNames == null ? List.of() : List.copyOf(winnerNames); }
+        public boolean byScore() { return systemPercent == BY_SCORE; }
         public Victory(int winnerId, int systemPercent) { this(winnerId, systemPercent, null, List.of()); }
         public Victory(int winnerId) {
             this(winnerId, GameConfig.VICTORY_SYSTEM_PERCENT);
@@ -282,6 +289,47 @@ public sealed interface TurnEvent {
                                  @JsonProperty("winnerNames") @Nullable List<String> winnerNames) {
             return new Victory(winnerId, systemPercent != null ? systemPercent : GameConfig.VICTORY_SYSTEM_PERCENT, allianceId, winnerNames);
         }
+    }
+
+    /**
+     * SectorForces news after Galactic Empire's ticker: storms, quakes, supernovae, pirates and the coming end.
+     * Which fields matter depends on {@link CosmicNews}; unused numbers are 0 and unused names empty.
+     *
+     * @param fleetNo    the owner's fleet number, 0 without a fleet
+     * @param ships      ships involved: lost, fleeing, attacking pirates
+     * @param remaining  ships left afterwards
+     * @param round      round of an announced explosion, arrival or end of the game
+     * @param targetName where refugees, pirates or a panicking fleet are heading
+     */
+    record Cosmic(CosmicNews news, @Nullable Integer systemId, String systemName, int fleetNo, int ships,
+                  int remaining, int round, String targetName) implements TurnEvent {
+        public Cosmic {
+            systemName = Objects.requireNonNullElse(systemName, "");
+            targetName = Objects.requireNonNullElse(targetName, "");
+        }
+
+        public OptionalInt system() {
+            Integer id = systemId;
+            return id == null ? OptionalInt.empty() : OptionalInt.of(id);
+        }
+
+        /** News about the whole galaxy, without a system. */
+        public static Cosmic news(CosmicNews news) {
+            return new Cosmic(news, null, "", 0, 0, 0, 0, "");
+        }
+    }
+
+    /**
+     * Score after the last round of a game with a round limit, best first.
+     *
+     * @param round the last round
+     */
+    record FinalScore(int round, List<ScoreLine> lines) implements TurnEvent {
+        public FinalScore { lines = List.copyOf(lines); }
+    }
+
+    /** One empire's score: 400 per system, 25 per stationed ship, 20 per ship in flight. */
+    record ScoreLine(int playerId, String name, int systems, int stationed, int inFlight, int points) {
     }
 
     /** End-of-game notice sent to every player other than the winner. */

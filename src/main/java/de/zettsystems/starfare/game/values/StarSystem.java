@@ -149,6 +149,22 @@ public record StarSystem(int id, String name, double x, double y,
         return new StarSystem(id, name, x, y, newOwner, startGarrison, startProduction, false, 0);
     }
 
+    /** A spaceport quake destroys part of the garrison; the owner stays. */
+    public StarSystem loseShips(int lost) {
+        return afterDefense(Math.max(0, garrison - Math.max(0, lost)));
+    }
+
+    /** A supernova: the system keeps its place on the map but has no owner, ships or production any more. */
+    public StarSystem explode() {
+        return new StarSystem(id, name, x, y, null, 0, 0, true, 0);
+    }
+
+    /** Pirates won: the system turns neutral and the surviving pirates stay as its garrison. */
+    public StarSystem fallToPirates(int pirates) {
+        if (pirates < 0) { throw new IllegalArgumentException("pirates must be >= 0"); }
+        return new StarSystem(id, name, x, y, null, pirates, productionPerTurn, true, 0);
+    }
+
     /** Repositions the system on the map (used by the layout space-out pass). */
     public StarSystem relocateTo(double nx, double ny) {
         return new StarSystem(id, name, nx, ny, ownerId, garrison, productionPerTurn, neutral, garrisonReserve, composition);

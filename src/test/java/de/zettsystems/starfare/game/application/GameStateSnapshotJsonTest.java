@@ -74,6 +74,21 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
                 .isEqualTo(SectorOptions.none());
     }
 
+    @Test
+    void cosmicStateSurvivesJsonAndOldSnapshotsHaveNone() {
+        GameState state = sampleState(true);
+        state.updateCosmic(cosmic -> cosmic.rememberHomes(List.of(1)).destabilize(2, 5).explode(3)
+                .launchPirates(3, 1, 12, 9));
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+        GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+        assertThat(restored.cosmic()).isEqualTo(state.cosmic());
+        assertThat(restored.destroyed(3)).isTrue();
+        assertThat(GameState.copyOf(restored).cosmic()).isEqualTo(state.cosmic());
+        json.remove("cosmic");
+        assertThat(GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class)).cosmic())
+                .isEqualTo(CosmicState.EMPTY);
+    }
+
     @Autowired
     private ObjectMapper objectMapper;
 

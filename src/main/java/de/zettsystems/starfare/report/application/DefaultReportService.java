@@ -61,6 +61,7 @@ public class DefaultReportService implements ReportService {
             case TurnEvent.DefenseHeld d ->
                     "Gehalten: %s. %d Verteidiger verbleiben.".formatted(d.systemName(), d.defendersLeft());
             case TurnEvent.CoalitionBattle battle -> "Schlacht bei %s: %d Seiten.".formatted(battle.systemName(), battle.sides().size());
+            case TurnEvent.Victory victory when victory.byScore() -> "Sieg nach Wertung: die meisten Punkte nach der letzten Runde.";
             case TurnEvent.Victory victory -> victory.allianceId() == null
                     ? "Sieg: mindestens %d%% Systeme unter Kontrolle.".formatted(victory.systemPercent())
                     : "Bündnissieg %d: %s, mindestens %d%% Systeme unter Kontrolle."
@@ -68,6 +69,9 @@ public class DefaultReportService implements ReportService {
             case TurnEvent.Defeat defeat -> "Niederlage: %s gewinnt die Partie.".formatted(defeat.winnerName());
             case TurnEvent.ResearchCompleted research -> "Schiffsforschung: Technikstufe %d erreicht.".formatted(research.level());
             case TurnEvent.EconomySummary _ -> null;
+            case TurnEvent.Cosmic news -> "Hyperraum-Ticker: %s %s".formatted(news.news(), news.systemName()).strip();
+            case TurnEvent.FinalScore score -> "Wertung nach Runde %d: %s".formatted(score.round(), score.lines().stream()
+                    .map(line -> line.name() + " " + line.points()).collect(java.util.stream.Collectors.joining(", ")));
         };
     }
 }

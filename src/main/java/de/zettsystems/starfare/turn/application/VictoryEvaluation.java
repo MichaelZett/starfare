@@ -21,7 +21,7 @@ final class VictoryEvaluation {
         if (!state.ruleset().usesConfigurableVictory()) {
             // Preserve the historical evaluation of simultaneous low-threshold individual wins.
             counts.forEach((player, count) -> {
-                if (count * 100 >= (long) state.systems().size() * state.victorySystemPercent()) {
+                if (count * 100 >= (long) state.livingSystemCount() * state.victorySystemPercent()) {
                     state.endGame(player);
                     announce(state, reports, List.of(player), state.victorySystemPercent());
                 }
@@ -29,7 +29,7 @@ final class VictoryEvaluation {
             return;
         }
         var individual = counts.entrySet().stream()
-                .filter(entry -> entry.getValue() * 100 >= (long) state.systems().size() * state.victorySystemPercent())
+                .filter(entry -> entry.getValue() * 100 >= (long) state.livingSystemCount() * state.victorySystemPercent())
                 .sorted(java.util.Map.Entry.comparingByKey()).findFirst();
         if (individual.isPresent()) {
             int winner = java.util.Objects.requireNonNull(individual.orElseThrow().getKey()); state.endGame(winner);
@@ -38,7 +38,7 @@ final class VictoryEvaluation {
         if (!state.victoryRules().allianceVictoryAllowed()) { return; }
         var group = state.diplomacy().groups().stream()
                 .filter(g -> g.members().size() >= 2 && controlled(g.members(), counts) * 100
-                        >= (long) state.systems().size() * state.victoryRules().allianceSystemPercent())
+                        >= (long) state.livingSystemCount() * state.victoryRules().allianceSystemPercent())
                 .sorted(Comparator.comparingLong((de.zettsystems.starfare.diplomacy.values.AllianceGroup g) -> controlled(g.members(), counts))
                         .reversed().thenComparingInt(de.zettsystems.starfare.diplomacy.values.AllianceGroup::id)).findFirst();
         group.ifPresent(g -> {

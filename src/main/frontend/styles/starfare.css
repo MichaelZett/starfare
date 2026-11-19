@@ -1316,6 +1316,32 @@ html[data-gp-game="starfare"] {
     background: rgba(86, 211, 100, 0.08);
 }
 
+/* SectorForces supernovae on the map: an unstable sun pulses, a destroyed system is a dark husk. */
+.sys-unstable {
+    outline: 2px dashed #f0883e;
+    outline-offset: 3px;
+    animation: sys-unstable-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes sys-unstable-pulse {
+    from { outline-color: #f0883e; }
+    to { outline-color: #ff4d4d; }
+}
+
+.sys-destroyed {
+    background: #1a1a1a !important;
+    color: #6e7681 !important;
+    border-color: #3a3a3a !important;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+/* SectorForces news ticker: storms, quakes, supernovae and pirates. */
+.event-cosmic {
+    border-left-color: #f0883e;
+    background: rgba(240, 136, 62, 0.08);
+}
+
 .event-victory {
     border-left-color: #bc8cff;
     background: rgba(188, 140, 255, 0.10);

@@ -947,7 +947,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
         return switch (event) {
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
-            case TurnEvent.Victory _, TurnEvent.Defeat _ -> 2;
+            case TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.FinalScore _ -> 2;
+            case TurnEvent.Cosmic _ -> 3;
             case TurnEvent.Reinforcement _ -> 3;
             case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _ -> 4;
         };
@@ -992,7 +993,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.BattleLost _ -> EventCategory.BATTLE_LOST;
             case TurnEvent.SystemLost _ -> EventCategory.SYSTEM_LOST;
             case TurnEvent.DefenseHeld _ -> EventCategory.DEFENSE_HELD;
-            case TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _ -> null;
+            case TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _, TurnEvent.Cosmic _,
+                 TurnEvent.FinalScore _ -> null;
         });
     }
 
@@ -1106,6 +1108,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.DefenseHeld _ -> "🛡";
             case TurnEvent.Victory _ -> "🏆";
             case TurnEvent.Defeat _ -> "☠";
+            case TurnEvent.Cosmic _ -> "☄";
+            case TurnEvent.FinalScore _ -> "🏁";
         };
     }
 
@@ -1124,6 +1128,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.DefenseHeld _ -> "event-defense-held";
             case TurnEvent.Victory _ -> "event-victory";
             case TurnEvent.Defeat _ -> "event-system-lost";
+            case TurnEvent.Cosmic _ -> "event-cosmic";
+            case TurnEvent.FinalScore _ -> "event-victory";
         };
     }
 

@@ -1229,8 +1229,9 @@ public class DefaultGameService implements GameService {
             case TurnEvent.BattleLost battle -> battle.systemName();
             case TurnEvent.SystemLost conquest -> conquest.systemName();
             case TurnEvent.DefenseHeld battle -> battle.systemName();
+            case TurnEvent.Cosmic news -> news.systemName();
             case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
-                 TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _ -> "";
+                 TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _, TurnEvent.FinalScore _ -> "";
         };
     }
 
@@ -1409,7 +1410,7 @@ public class DefaultGameService implements GameService {
                     }
                     case TurnEvent.Recycling _, TurnEvent.Reinforcement _,
                             TurnEvent.Victory _, TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _,
-                            TurnEvent.Defeat _ -> { }
+                            TurnEvent.Defeat _, TurnEvent.Cosmic _, TurnEvent.FinalScore _ -> { }
                 }
             }
         }
