@@ -11,13 +11,13 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public interface GameService {
-    default Optional<de.zettsystems.starfare.economy.values.MiningAutomationView> miningAutomationFor(GameId id, String account) { return Optional.empty(); }
-    default Optional<de.zettsystems.starfare.economy.values.MiningPlan> previewMining(GameId id, String account,
-            de.zettsystems.starfare.economy.values.MiningRequest request) { return Optional.empty(); }
-    default boolean configureMining(GameId id, String account, de.zettsystems.starfare.economy.values.MiningRequest request) { return false; }
-    default boolean protectMiningSystem(GameId id, String account, int turn, int system, boolean protect) { return false; }
-    default Optional<de.zettsystems.starfare.research.values.ResearchView> shipResearchFor(GameId id, String account) { return Optional.empty(); }
-    default boolean planShipResearch(GameId id, String account, int turn, int expectedPercent, int percent) { return false; }
+    Optional<de.zettsystems.starfare.economy.values.MiningAutomationView> miningAutomationFor(GameId id, String account);
+    Optional<de.zettsystems.starfare.economy.values.MiningPlan> previewMining(GameId id, String account,
+            de.zettsystems.starfare.economy.values.MiningRequest request);
+    boolean configureMining(GameId id, String account, de.zettsystems.starfare.economy.values.MiningRequest request);
+    boolean protectMiningSystem(GameId id, String account, int turn, int system, boolean protect);
+    Optional<de.zettsystems.starfare.research.values.ResearchView> shipResearchFor(GameId id, String account);
+    boolean planShipResearch(GameId id, String account, int turn, int expectedPercent, int percent);
 
     Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview> previewProduction(
             GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan);
@@ -25,16 +25,14 @@ public interface GameService {
     de.zettsystems.starfare.economy.values.ProductionCommit commitProduction(
             GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan);
 
-    default Optional<DiplomacyView> diplomacyFor(GameId id, String account) { return Optional.empty(); }
-    default boolean diplomacyOrder(GameId id, String account, int turn, DiplomacyOrder order) { return false; }
-    default boolean planRecycling(GameId id, int player, int turn, int system, int ships) { return false; }
+    Optional<DiplomacyView> diplomacyFor(GameId id, String account);
+    boolean diplomacyOrder(GameId id, String account, int turn, DiplomacyOrder order);
+    boolean planRecycling(GameId id, int player, int turn, int system, int ships);
 
-    default boolean allocateProduction(GameId id, int playerId, int expectedTurn, int systemId, int expansion, int mining) { return false; }
-    default boolean allocateExpansion(GameId id, int playerId, int expectedTurn, int systemId, int points) { return false; }
+    boolean allocateProduction(GameId id, int playerId, int expectedTurn, int systemId, int expansion, int mining);
+    boolean allocateExpansion(GameId id, int playerId, int expectedTurn, int systemId, int points);
 
-    default de.zettsystems.starfare.game.values.RulesetCatalog rulesets() {
-        return de.zettsystems.starfare.game.values.RulesetCatalog.builtIn();
-    }
+    de.zettsystems.starfare.game.values.RulesetCatalog rulesets();
 
     boolean editOrder(GameId gameId, int playerId, int expectedTurn, PlannedOrder expected, int target, int ships);
     boolean undoOrders(GameId gameId, int playerId, int expectedTurn);
@@ -72,9 +70,7 @@ public interface GameService {
 
     List<GameId> listGames();
 
-    default List<GameId> loadedGames() {
-        return listGames();
-    }
+    List<GameId> loadedGames();
 
     String gameNameOf(GameId gameId);
 
@@ -143,21 +139,15 @@ public interface GameService {
     GameSummary summaryOf(GameId gameId);
 
     int travelTurns(GameId gameId, int fromId, int toId);
-    default java.util.Optional<RoutePreview> routeFor(GameId id, int player, int from, int to) { return java.util.Optional.empty(); }
+    java.util.Optional<RoutePreview> routeFor(GameId id, int player, int from, int to);
 
     /** Direct range and target reachability around a source during target selection; empty without range rules. */
-    default java.util.Optional<de.zettsystems.starfare.navigation.values.RangeView> rangeFor(GameId id, int player, int from) {
-        return java.util.Optional.empty();
-    }
+    java.util.Optional<de.zettsystems.starfare.navigation.values.RangeView> rangeFor(GameId id, int player, int from);
 
     boolean sendFleet(GameId gameId, int playerId, int fromId, int toId, int ships);
 
-    default boolean sendFleet(GameId gameId, int playerId, int expectedTurn, int fromId, int toId, int ships, int beneficiary) {
-        return sendFleet(gameId, playerId, fromId, toId, ships);
-    }
-    default List<Player> conquestCandidates(GameId gameId, int playerId) {
-        return viewFor(gameId, playerId).players().stream().filter(player -> player.id() == playerId).toList();
-    }
+    boolean sendFleet(GameId gameId, int playerId, int expectedTurn, int fromId, int toId, int ships, int beneficiary);
+    List<Player> conquestCandidates(GameId gameId, int playerId);
 
     /** Sets the permanent garrison that remains at an owned system. */
     boolean setGarrisonReserve(GameId gameId, int playerId, int systemId, int reserve);
