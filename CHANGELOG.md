@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.11 - 2026-11-19
 
 - Die alten Sozial- und Ergebnistabellen (Freundschaften, Direktnachrichten, Sichtbarkeit, Teilnehmer,
   Sieger und Gegner der Ergebnisse) werden gelöscht; Ergebnisse, Statistik und Kontakte führt die
