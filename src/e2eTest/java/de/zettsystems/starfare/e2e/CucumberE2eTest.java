@@ -12,7 +12,7 @@ import static io.cucumber.junit.platform.engine.Constants.PLUGIN_PROPERTY_NAME;
  * Runs the browser journeys from {@code src/e2eTest/resources/features/}.
  *
  * <p>Exercises account registration, lobby access, rounds, battle playback,
- * map interactions and multiplayer chat and continuation. Core game logic is
+ * map interactions and multiplayer chat. Core game logic is
  * covered by unit and integration tests under {@code src/test}.
  */
 @Suite

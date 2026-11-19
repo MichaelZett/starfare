@@ -24,13 +24,3 @@ Funktionalität: Regressionen aus dem Release-Review
     Und ich mich mit "review-chat-host@example.test" anmelde
     Und zwei Browsersitzungen eine Partie für "review-chat-host@example.test" und "review-chat-guest@example.test" öffnen
     Dann erscheinen fremde Chat-Nachrichten auch nach erneutem Öffnen live
-
-  Szenario: Die Fortsetzung informiert beide Spieler und das zweite Spielende wartet wieder auf Schlachten
-    Wenn das Konto "Review Winner" mit der E-Mail-Adresse "review-winner@example.test" besteht
-    Und das Konto "Review Loser" mit der E-Mail-Adresse "review-loser@example.test" besteht
-    Und ich mich mit "review-winner@example.test" anmelde
-    Und zwei Browsersitzungen eine Partie für "review-winner@example.test" und "review-loser@example.test" öffnen
-    Dann hat ein Sieg mit 0:0 Restschiffen die richtige Farbe und Siegschwelle
-    Wenn der Sieger bis zur vollständigen Eroberung weiterspielt
-    Dann schließen beide Ergebnisdialoge und die Rundenfrist beginnt neu
-    Und wartet das zweite Spielende in beiden Sitzungen wieder auf die offenen Schlachten

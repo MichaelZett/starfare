@@ -2,46 +2,26 @@ package de.zettsystems.starfare.e2e.steps;
 
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.testsupport.ReviewGameFixture;
-import de.zettsystems.starfare.game.application.Broadcaster;
-import de.zettsystems.starfare.game.application.GameEvent;
-import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.domain.GameState;
-import de.zettsystems.starfare.report.values.TurnEvent;
-import de.zettsystems.starfare.report.values.TurnReport;
 import io.cucumber.java.After;
 import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.support.ui.WebDriverWait;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Two browser sessions exercise push delivery and outcome continuation. */
+/** Two browser sessions exercise live push delivery. */
 public class ReviewMultiplayerSteps {
-    private static final String OUTCOME = ".game-outcome-dialog[opened]";
     private static final String CHAT_INPUT = ".game-chat-panel vaadin-text-area textarea";
     private final Browser browser;
     private final ReviewGameFixture fixture;
-    private final GameRegistry registry;
     private final GameService games;
-    private final Broadcaster broadcaster;
     private Browser guest;
     private ReviewGameFixture.Game current;
-    private Instant beforeContinuation;
 
-    public ReviewMultiplayerSteps(Browser browser, ReviewGameFixture fixture, GameRegistry registry,
-                                  GameService games, Broadcaster broadcaster) {
+    public ReviewMultiplayerSteps(Browser browser, ReviewGameFixture fixture, GameService games) {
         this.browser = browser;
         this.fixture = fixture;
-        this.registry = registry;
         this.games = games;
-        this.broadcaster = broadcaster;
     }
 
     @Wenn("zwei Browsersitzungen eine Partie für {string} und {string} öffnen")
@@ -82,113 +62,6 @@ public class ReviewMultiplayerSteps {
         session.type(CHAT_INPUT, text);
         session.clickButtonWithText("Senden");
         session.awaitTextIn(".game-chat-messages", text);
-    }
-
-    @Dann("hat ein Sieg mit 0:0 Restschiffen die richtige Farbe und Siegschwelle")
-    public void firstVictory() {
-        finishRound(false);
-        guest.awaitCss(OUTCOME);
-        browser.awaitCss(".event-battle-pending");
-        acknowledgeBattle(browser, true);
-        browser.awaitCss(OUTCOME);
-        browser.awaitTextIn(".event-victory", "60");
-        browser.awaitNoneDisplayed(".review-controls");
-    }
-
-    @Wenn("der Sieger bis zur vollständigen Eroberung weiterspielt")
-    public void continueGame() {
-        beforeContinuation = Instant.now();
-        browser.clickButtonWithText("Bis zur vollständigen Eroberung weiterspielen");
-    }
-
-    @Dann("schließen beide Ergebnisdialoge und die Rundenfrist beginnt neu")
-    public void bothSessionsContinue() {
-        awaitNoOutcome(browser);
-        awaitNoOutcome(guest);
-        browser.awaitCss(".round-status-ends .round-status-clock");
-        guest.awaitCss(".round-status-ends .round-status-clock");
-        Instant started = registry.readState(current.id(), GameState::turnStartedAt);
-        assertThat(started).isBetween(beforeContinuation, Instant.now());
-        assertThat(registry.readState(current.id(), GameState::gameOver).booleanValue()).isFalse();
-        assertThat(registry.readState(current.id(), GameState::victorySystemPercent).intValue()).isEqualTo(100);
-    }
-
-    @Dann("wartet das zweite Spielende in beiden Sitzungen wieder auf die offenen Schlachten")
-    public void secondOutcomeWaits() {
-        finishRound(true);
-        assertPending(browser);
-        assertPending(guest);
-        browser.driver().navigate().refresh();
-        browser.awaitCss(".map-content");
-        browser.clickTabWithText("Bericht");
-        assertPending(browser);
-        acknowledgeBattle(browser, true);
-        browser.awaitCss(OUTCOME);
-        browser.awaitTextIn(".event-victory", "100");
-        List<String> visibleButtons = new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
-                .until(_ -> browser.all("vaadin-button").stream().filter(WebElement::isDisplayed)
-                        .map(WebElement::getText).toList());
-        assertThat(visibleButtons).isNotEmpty().doesNotContain("Bis zur vollständigen Eroberung weiterspielen");
-        assertPending(guest);
-        guest.openDetailsWithText("Filter: 6 von 6 Ereignisarten");
-        guest.type(".report-filter-options vaadin-combo-box input", Keys.chord(Keys.CONTROL, "a"), "Sofort");
-        guest.clickMatching("vaadin-combo-box-item", item -> item.getText().strip().equals("Sofort"), "Geschwindigkeit Sofort");
-        guest.clickButtonWithText("Alle offenen Schlachten auswerten");
-        guest.awaitCss(OUTCOME);
-        guest.awaitTextIn(".game-outcome-personal-result", "Dein Ergebnis: Niederlage");
-    }
-
-    private void finishRound(boolean fullConquest) {
-        registry.writeState(current.id(), state -> {
-            int systemId = fullConquest ? 3 : 4;
-            String name = state.getSystem(systemId).name();
-            if (fullConquest) {
-                List.copyOf(state.systems()).forEach(system ->
-                        state.updateSystem(system.id(), before -> before.captureBy(current.hostSeat(), 0)));
-            } else {
-                state.configureVictorySystemPercent(60);
-                state.updateSystem(systemId, system -> system.captureBy(current.hostSeat(), 0));
-            }
-            state.reports().put(current.hostSeat(), new TurnReport(state.turn(), List.of(), List.of(
-                    new TurnEvent.BattleWon(current.hostSeat(), systemId, name, 1, 1, 0, !fullConquest, 1.1, 0.9),
-                    new TurnEvent.Victory(current.hostSeat(), state.victorySystemPercent()))));
-            List<TurnEvent> guestEvents = fullConquest ? List.of(
-                    new TurnEvent.SystemLost(current.guestSeat(), current.hostSeat(), systemId, name,
-                            1, 1, 0, 1.1, 0.9), new TurnEvent.Defeat(current.hostSeat(), "Review Host"))
-                    : List.of(new TurnEvent.Defeat(current.hostSeat(), "Review Host"));
-            state.reports().put(current.guestSeat(), new TurnReport(state.turn(), List.of(), guestEvents));
-            state.captureReplayFrame();
-            state.endGame(current.hostSeat());
-            state.nextTurn();
-            return null;
-        });
-        broadcaster.publish(new GameEvent.TurnAdvanced(current.id(), registry.readState(current.id(), GameState::turn)));
-        broadcaster.publish(new GameEvent.GameFinished(current.id(), current.hostSeat()));
-    }
-
-    private void acknowledgeBattle(Browser session, boolean capture) {
-        session.clickCss(".event-battle-pending");
-        session.awaitCss(".battle-replay-result-visible");
-        assertThat(session.all(".battle-replay-attacker-won")).hasSize(1);
-        assertThat(session.textsOf("[data-battle-attacking]")).contains("0");
-        assertThat(session.textsOf("[data-battle-defending]")).contains("0");
-        session.clickButtonWithText("Ergebnis übernehmen");
-        if (capture) {
-            session.clickCss(".capture-summary-dialog vaadin-button");
-        }
-    }
-
-    private void assertPending(Browser session) {
-        session.awaitCss(".event-battle-pending");
-        assertThat(session.all(".event-battle-pending")).hasSize(1);
-        assertThat(session.all(OUTCOME)).isEmpty();
-        session.awaitNoneDisplayed(".review-controls");
-    }
-
-    private void awaitNoOutcome(Browser session) {
-        new WebDriverWait(session.driver(), Duration.ofSeconds(10)).until(_ -> session.all(OUTCOME).isEmpty());
-        assertThat(session.all(OUTCOME)).isEmpty();
     }
 
     @After

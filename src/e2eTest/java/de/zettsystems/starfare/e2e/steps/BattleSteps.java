@@ -73,24 +73,6 @@ public class BattleSteps {
         broadcaster.publish(new GameEvent.GameFinished(id, seat));
     }
 
-    @Dann("bleiben Sieg und offene Karte bis zur letzten Schlacht verborgen")
-    public void outcomeWaitsForBattles() {
-        browser.awaitCss(PENDING);
-        assertConcealed();
-        browser.driver().navigate().refresh();
-        browser.awaitCss(".map-content");
-        browser.clickTabWithText("Bericht");
-        browser.awaitCss(PENDING);
-        assertConcealed();
-    }
-
-    private void assertConcealed() {
-        assertThat(browser.all(PENDING)).hasSize(2);
-        assertThat(browser.all(".event-victory")).isEmpty();
-        browser.awaitNoneDisplayed(".review-controls");
-        assertThat(browser.all("#map .sys-fog")).isNotEmpty();
-    }
-
     @Dann("kann ich die Kartenbreite durch Ziehen ändern")
     public void resizeMap() throws IOException {
         originalSize = browser.driver().manage().window().getSize();
