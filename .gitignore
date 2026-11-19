@@ -18,6 +18,7 @@ vite.generated.ts
 # Frontend generated
 frontend/generated/
 src/main/frontend/generated/
+src/main/bundles/
 
 # Java/Maven
 /target/
