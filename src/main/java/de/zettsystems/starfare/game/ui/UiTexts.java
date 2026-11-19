@@ -697,4 +697,24 @@ public final class UiTexts {
     public static final String RECYCLING_SHIPS = "economy.recycling.ships";
     public static final String RECYCLING_APPLY = "economy.recycling.apply";
     public static final String RECYCLING_EVENT = "economy.recycling.event";
+    public static final String SECTOR_SECTION = "sector.section";
+    public static final String SECTOR_SECTION_HINT = "sector.section.hint";
+    public static final String SECTOR_EVENTS = "sector.events";
+    public static final String SECTOR_EVENTS_OFF = "sector.events.off";
+    public static final String SECTOR_EVENTS_RARE = "sector.events.rare";
+    public static final String SECTOR_EVENTS_NORMAL = "sector.events.normal";
+    public static final String SECTOR_EVENTS_CHOICE = "sector.events.choice";
+    public static final String SECTOR_EVENTS_HINT = "sector.events.hint";
+    public static final String SECTOR_EVENT_STORM = "sector.event.storm";
+    public static final String SECTOR_EVENT_SPACETIME_QUAKE = "sector.event.spacetimeQuake";
+    public static final String SECTOR_EVENT_DISAPPEARANCE = "sector.event.disappearance";
+    public static final String SECTOR_EVENT_SPACEPORT_QUAKE = "sector.event.spaceportQuake";
+    public static final String SECTOR_EVENT_SUPERNOVA = "sector.event.supernova";
+    public static final String SECTOR_EVENT_PIRATES = "sector.event.pirates";
+    public static final String SECTOR_POSITIONAL_BALANCE = "sector.positionalBalance";
+    public static final String SECTOR_POSITIONAL_BALANCE_HINT = "sector.positionalBalance.hint";
+    public static final String SECTOR_ROUND_LIMIT = "sector.roundLimit";
+    public static final String SECTOR_ROUND_LIMIT_LAST = "sector.roundLimit.last";
+    public static final String SECTOR_ROUND_LIMIT_HINT = "sector.roundLimit.hint";
+    public static final String SECTOR_ROUND_LIMIT_VALUE = "sector.roundLimit.value";
 }

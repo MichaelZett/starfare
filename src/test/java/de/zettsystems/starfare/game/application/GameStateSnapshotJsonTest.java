@@ -60,6 +60,20 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
         assertThat(old.undoOrders(1)).isFalse();
     }
 
+    @Test
+    void sectorOptionsSurviveJsonAndOldSetupsReadAsOff() {
+        var chosen = new SectorOptions(EventFrequency.RARE,
+                java.util.EnumSet.of(CosmicEvent.SUPERNOVA, CosmicEvent.PIRATES), true, 45);
+        GameState state = new GameState();
+        state.rememberSetup(GameSetup.defaults().withSectorOptions(chosen));
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+        assertThat(GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class)).sectorOptions())
+                .isEqualTo(chosen);
+        ((ObjectNode) json.get("originalSetup")).remove("sectorOptions");
+        assertThat(GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class)).sectorOptions())
+                .isEqualTo(SectorOptions.none());
+    }
+
     @Autowired
     private ObjectMapper objectMapper;
 

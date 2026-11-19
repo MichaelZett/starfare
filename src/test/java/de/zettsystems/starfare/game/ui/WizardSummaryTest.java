@@ -75,7 +75,8 @@ class WizardSummaryTest {
 
         descendants(summary).filter(Button.class::isInstance).map(Button.class::cast).forEach(Button::click);
 
-        assertThat(requested).containsExactly(UiTexts.UX_GALAXY, UiTexts.UX_PARTICIPANTS, UiTexts.UX_VICTORY, UiTexts.UX_ACCESS);
+        assertThat(requested).containsExactly(UiTexts.UX_GALAXY, UiTexts.UX_PARTICIPANTS, UiTexts.UX_VICTORY, UiTexts.UX_ACCESS,
+                UiTexts.SECTOR_SECTION);
     }
 
     @Test

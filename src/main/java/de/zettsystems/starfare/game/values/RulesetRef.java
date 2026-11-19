@@ -34,6 +34,8 @@ public record RulesetRef(String variant, String version) {
     public boolean sharesMetalEqually() { return SPACEWARD_EQUAL_METAL.equals(this) || usesCheapEarlyIndustry(); }
     public boolean usesMetals() { return SPACEWARD_METALS.equals(this) || usesRecycling(); }
     public boolean usesColonies() { return SPACEWARD_COLONIES.equals(this) || usesMetals(); }
+    /** Random events, positional start balance and the round limit belong to SectorForces only. */
+    public boolean usesSectorOptions() { return SECTOR_FORCES.equals(this); }
     public boolean usesConfigurableVictory() { return SPACEWARD_ALLIANCE.equals(this) || usesColonies(); }
 
     public boolean isSpaceward() { return variant.equals(SPACEWARD.variant()); }

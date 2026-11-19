@@ -379,6 +379,11 @@ public class GameState {
 
     public Optional<GameSetup> originalSetup() { return Optional.ofNullable(originalSetup); }
 
+    /** SectorForces options of this game; games without them, or other variants, have everything off. */
+    public SectorOptions sectorOptions() {
+        return originalSetup == null ? SectorOptions.none() : originalSetup.sectorOptions();
+    }
+
     public void rememberSetup(GameSetup setup) {
         if (started || originalSetup != null) {
             throw new IllegalStateException("Game rules are fixed at creation");

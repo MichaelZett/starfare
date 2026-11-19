@@ -77,6 +77,7 @@ final class CreateGameWizardDialog {
         RulesetSelector rulesets = new RulesetSelector(catalog, usable);
         VictorySettings victorySettings = new VictorySettings();
         AiStrategyFields aiStrategies = new AiStrategyFields();
+        SectorOptionsFields sectorOptions = new SectorOptionsFields();
         IntegerField systems = intField(I18n.t(UiTexts.LOBBY_FIELD_SYSTEMS),
                 GameConfig.MIN_SYSTEM_COUNT, GameConfig.MAX_SYSTEM_COUNT, GameConfig.DEFAULT_SYSTEM_COUNT);
         IntegerField humans = intField(I18n.t(UiTexts.LOBBY_FIELD_HUMANS),
@@ -184,8 +185,11 @@ final class CreateGameWizardDialog {
                 valueOrDefault(humans.getValue(), GameConfig.DEFAULT_HUMAN_PLAYERS) > 1);
         humans.addValueChangeListener(_ -> updateRoundTimerVisibility.run());
         updateRoundTimerVisibility.run();
+        Div sectorSection = wizardSection(WizardEmblem.GALAXY, I18n.t(UiTexts.SECTOR_SECTION),
+                I18n.t(UiTexts.SECTOR_SECTION_HINT), sectorOptions);
         rulesets.onRulesetChange(ruleset -> {
             victorySettings.select(ruleset);
+            sectorSection.setVisible(ruleset.usesSectorOptions());
             aiStrategies.selectRuleset(ruleset);
             combatSection.setVisible(!ruleset.resolvesCoalitionBattles());
         });
@@ -215,7 +219,7 @@ final class CreateGameWizardDialog {
                 wizardSection(WizardEmblem.TUNING, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETTINGS),
                         I18n.t(UiTexts.LOBBY_WIZARD_SECTION_SETTINGS_HINT), settingsGrid),
                 wizardSection(WizardEmblem.PLANET, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL),
-                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid), timerSection, combatSection);
+                        I18n.t(UiTexts.LOBBY_WIZARD_SECTION_NEUTRAL_HINT), neutralGrid), timerSection, combatSection, sectorSection);
         sideSections.addClassName("wizard-overview-side");
         Div advancedContent = new Div(sideSections,
                 wizardSection(WizardEmblem.FLEET, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_START),
@@ -262,7 +266,8 @@ final class CreateGameWizardDialog {
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
                 observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout,
-                combatRandomness, roundLimit, stragglerLimit, attackOrder, victoryPercent, rulesets, victorySettings, aiStrategies);
+                combatRandomness, roundLimit, stragglerLimit, attackOrder, victoryPercent, rulesets, victorySettings, aiStrategies,
+                sectorOptions);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_REVIEW));
         createButton.set(create);
         WizardActionContext actionContext = new WizardActionContext(game, onCreated, hostName, gameName, empireName,
@@ -310,6 +315,7 @@ final class CreateGameWizardDialog {
                 case UiTexts.UX_PARTICIPANTS -> context.formInputs().humans();
                 case UiTexts.UX_VICTORY -> context.formInputs().victoryPercent();
                 case UiTexts.UX_ACCESS -> context.formInputs().observersAllowed();
+                case UiTexts.SECTOR_SECTION -> context.formInputs().sectorOptions();
                 default -> context.formInputs().systems();
             };
             context.body().getChildren().filter(Details.class::isInstance).map(Details.class::cast)
@@ -403,7 +409,8 @@ final class CreateGameWizardDialog {
                               ComboBox<GalaxyLayout> galaxyLayout,
                               Input combatRandomness,
                               ComboBox<Duration> roundLimit, ComboBox<Duration> stragglerLimit,
-                              ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent, RulesetSelector rulesets, VictorySettings victorySettings, AiStrategyFields aiStrategies) {
+                              ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent, RulesetSelector rulesets, VictorySettings victorySettings, AiStrategyFields aiStrategies,
+                              SectorOptionsFields sectorOptions) {
     }
 
     private static GameSetup buildSetup(FormInputs in) {
@@ -436,7 +443,8 @@ final class CreateGameWizardDialog {
                 valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)
         ).normalized().selectRuleset(ruleset)
                 .chooseVictoryRules(in.victorySettings().chosen(valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)))
-                .chooseAiStrategies(in.aiStrategies().strategies());
+                .chooseAiStrategies(in.aiStrategies().strategies())
+                .withSectorOptions(in.sectorOptions().chosen());
     }
 
     private static void applyNormalizedColors(List<ComboBox<ColorOption>> inputs, GameSetup setup) {

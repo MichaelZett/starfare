@@ -15,6 +15,7 @@ import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.ProductionDistribution;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
+import de.zettsystems.starfare.game.values.SectorOptions;
 import de.zettsystems.starfare.game.values.VictoryRules;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
@@ -36,6 +37,9 @@ final class WizardSummary extends Div {
         addClassName("wizard-confirmation-content");
         Div groups = new Div(galaxy(setup, edit), participants(setup, edit, ownSeat), victory(setup, edit),
                 access(setup, edit, visibility));
+        if (setup.ruleset().usesSectorOptions()) {
+            groups.add(sector(setup.sectorOptions(), edit));
+        }
         groups.addClassName("wizard-summary-groups");
         add(hero(setup, name, catalog), groups);
     }
@@ -132,6 +136,29 @@ final class WizardSummary extends Div {
                         ? fact(VaadinIcon.SWORD, UiTexts.UX_SUMMARY_COMBAT_FLOW, I18n.t(UiTexts.UX_SUMMARY_COALITION_COMBAT))
                         : fact(VaadinIcon.SWORD, UiTexts.UX_SUMMARY_ATTACK_ORDER, I18n.t(attackOrderKey(setup))));
         return group(UiTexts.UX_VICTORY, WizardEmblem.VICTORY, edit, facts);
+    }
+
+    /** Names every active random event, so nobody is surprised by a supernova. */
+    private static Div sector(SectorOptions options, Consumer<String> edit) {
+        Div facts = new Div();
+        facts.addClassName(FACTS_CLASS);
+        var active = options.activeEvents();
+        if (active.isEmpty()) {
+            facts.add(toggle(VaadinIcon.BOLT, UiTexts.SECTOR_EVENTS, false));
+        } else {
+            facts.add(fact(VaadinIcon.BOLT, UiTexts.SECTOR_EVENTS, SectorOptionsFields.label(options.eventFrequency())));
+            Div names = new Div();
+            names.setId("wizard-summary-events");
+            active.forEach(event -> names.add(new Span(SectorOptionsFields.label(event))));
+            names.addClassName("wizard-summary-events");
+            facts.add(names);
+        }
+        facts.add(toggle(VaadinIcon.SCALE, UiTexts.SECTOR_POSITIONAL_BALANCE, options.positionalBalance()),
+                options.hasRoundLimit()
+                        ? fact(VaadinIcon.FLAG_CHECKERED, UiTexts.SECTOR_ROUND_LIMIT,
+                                I18n.t(UiTexts.SECTOR_ROUND_LIMIT_VALUE, options.roundLimit()))
+                        : toggle(VaadinIcon.FLAG_CHECKERED, UiTexts.SECTOR_ROUND_LIMIT, false));
+        return group(UiTexts.SECTOR_SECTION, WizardEmblem.GALAXY, edit, facts);
     }
 
     private static void addAllianceFacts(Div facts, VictoryRules rules) {
