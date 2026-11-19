@@ -592,6 +592,9 @@ reads it from the request or from the `query`/`location` of Vaadin's init reques
 For phones it adds the static stylesheet `META-INF/resources/styles/starfare-mobile.css`
 and the class `starfare-mobile` on `<html>`. The stylesheet lies outside the frontend
 bundle, so desktops never load it; all its rules are scoped to that class.
+These static stylesheets (`starfare-navigation.css`, `starfare-wizard.css` and the phone
+stylesheet) are loaded on entering a route of a `de.zettsystems.starfare` view and removed on
+leaving it, so a platform host's own pages and other games never carry Starfare's rules.
 
 Lobby, archive and dialogs share their components with the desktop
 and adapt through that stylesheet. The map does not: `MainView` builds either the
