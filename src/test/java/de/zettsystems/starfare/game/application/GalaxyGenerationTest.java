@@ -24,6 +24,25 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
         return registry.readState(id, state -> List.copyOf(state.systems()));
     }
 
+    @Test
+    void startBalanceChangesOnlyHomeGarrisonsWithinBounds() {
+        GameSetup plain = setup(GalaxyLayout.RANDOM, ProductionDistribution.UNIFORM);
+        GameSetup balanced = plain.withSectorOptions(new SectorOptions(EventFrequency.OFF, null, true, 0));
+
+        assertThat(homesOf(systemsOf(plain))).extracting(StarSystem::garrison).containsOnly(8);
+        boolean differs = false;
+        for (int attempt = 0; attempt < 3 && !differs; attempt++) {
+            GameId id = registry.createGame(balanced);
+            List<StarSystem> homes = registry.readState(id, state -> {
+                assertThat(state.cosmic().homeSystems()).hasSize(4);
+                return homesOf(List.copyOf(state.systems()));
+            });
+            assertThat(homes).extracting(StarSystem::garrison).allSatisfy(garrison -> assertThat(garrison).isBetween(4, 16));
+            differs = homes.stream().map(StarSystem::garrison).distinct().count() > 1;
+        }
+        assertThat(differs).as("positions differ, so garrisons should too").isTrue();
+    }
+
     /** Kleinster Abstand zwischen zwei Systemen der Menge. */
     private static double closestPair(List<StarSystem> systems) {
         double best = Double.MAX_VALUE;
