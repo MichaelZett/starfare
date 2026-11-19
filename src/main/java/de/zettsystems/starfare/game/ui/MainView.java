@@ -152,13 +152,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         fleetsPanel.onProductionAllocation(this::allocateExpansion);
         fleetsPanel.onEconomySelected(this::openEconomicSystem);
         fleetsPanel.onProductionPreview(plan -> game.previewProduction(gameId, UserContext.currentPlayerId().orElse(""), plan));
-        fleetsPanel.onRecycling(order -> {
-            int player = currentSeat();
-            if (player < 0 || !game.planRecycling(gameId, player, order.turn(), order.systemId(), order.ships())) {
-                Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
-                refresh();
-            }
-        });
+        fleetsPanel.onRecycling(this::planRecycling);
         planningActions.addClassName("planning-actions");
         planningActions.add(iconAction(VaadinIcon.ROTATE_LEFT, UiTexts.PLAN_UNDO, () -> {
             if (!game.undoOrders(gameId, currentSeat(), Objects.requireNonNull(displayedTurn))) {
@@ -201,20 +195,29 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             badgesShowingFleetNo.clear();
             refresh();
         });
-        if (phone) {
-            mobile = new MobileMapLayout(List.of(header, roundStatus, spectatorControls, reviewControls), gameOverBanner,
-                    mapCanvas, fleetsPanel, chatHost, this::cancelTargetSelectionAndRefresh, this::hideGameChat);
-            if (frame != null) {
-                mobile.addBelowPanel(frame.legalFooter());
-            }
+        mobile = phone ? new MobileMapLayout(List.of(header, roundStatus, spectatorControls, reviewControls), gameOverBanner,
+                mapCanvas, fleetsPanel, chatHost, this::cancelTargetSelectionAndRefresh, this::hideGameChat) : null;
+        layOut(frame);
+    }
+
+    /** Phones get the sheet layout, wider screens the sidebar beside the map; the own start adds its footer. */
+    private void layOut(@Nullable OwnFrameParts frame) {
+        MobileMapLayout phoneLayout = mobile;
+        if (phoneLayout != null) {
+            if (frame != null) { phoneLayout.addBelowPanel(frame.legalFooter()); }
             addClassName("map-root-mobile");
-            add(mobile);
-        } else {
-            mobile = null;
-            add(header, roundStatus, spectatorControls, reviewControls, buildContent());
-            if (frame != null) {
-                add(frame.legalFooter());
-            }
+            add(phoneLayout);
+            return;
+        }
+        add(header, roundStatus, spectatorControls, reviewControls, buildContent());
+        if (frame != null) { add(frame.legalFooter()); }
+    }
+
+    private void planRecycling(de.zettsystems.starfare.economy.values.RecyclingOrder order) {
+        int player = currentSeat();
+        if (player < 0 || !game.planRecycling(gameId, player, order.turn(), order.systemId(), order.ships())) {
+            Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
+            refresh();
         }
     }
 
