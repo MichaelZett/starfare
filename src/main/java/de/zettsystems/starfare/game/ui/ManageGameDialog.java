@@ -157,16 +157,19 @@ public class ManageGameDialog extends Dialog {
             humansList.add(empty);
             return;
         }
+        // One lookup for the whole list instead of one per row.
+        Map<String, String> names = players.displayNames(rows.stream().map(HumanRow::playerId)
+                .filter(java.util.Objects::nonNull).toList());
         for (HumanRow row : rows) {
-            humansList.add(renderHumanRow(row));
+            humansList.add(renderHumanRow(row, names));
         }
     }
 
-    private Div renderHumanRow(HumanRow row) {
+    private Div renderHumanRow(HumanRow row, Map<String, String> names) {
         Div container = new Div();
         container.addClassName("manage-row");
         String playerId = row.playerId();
-        String displayName = playerId != null ? players.displayName(playerId) : row.seatName();
+        String displayName = playerId != null ? names.getOrDefault(playerId, playerId) : row.seatName();
         Span label = new Span(displayName);
         label.addClassName("manage-row-label");
         container.add(label);
@@ -191,13 +194,15 @@ public class ManageGameDialog extends Dialog {
             invitesList.add(empty);
             return;
         }
-        invited.keySet().stream().sorted().forEach(inviteePlayerId -> invitesList.add(renderInviteRow(inviteePlayerId)));
+        Map<String, String> names = players.displayNames(invited.keySet());
+        invited.keySet().stream().sorted()
+                .forEach(inviteePlayerId -> invitesList.add(renderInviteRow(inviteePlayerId, names)));
     }
 
-    private Div renderInviteRow(String inviteePlayerId) {
+    private Div renderInviteRow(String inviteePlayerId, Map<String, String> names) {
         Div row = new Div();
         row.addClassName("manage-row");
-        Span label = new Span(players.displayName(inviteePlayerId));
+        Span label = new Span(names.getOrDefault(inviteePlayerId, inviteePlayerId));
         label.addClassName("manage-row-label");
         Button revoke = new Button(I18n.t(UiTexts.MANAGE_INVITES_REVOKE),
                 _ -> invitations.revokeInvite(gameId, host, inviteePlayerId));

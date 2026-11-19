@@ -22,6 +22,7 @@ import org.jspecify.annotations.Nullable;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 /** Game-local chat; hiding it preserves the draft without retaining an event subscription. */
 final class GameChatPanel extends Div {
@@ -144,9 +145,12 @@ final class GameChatPanel extends Div {
         boolean appended = latest.size() >= rendered.size() && latest.subList(0, rendered.size()).equals(rendered);
         int start = appended ? rendered.size() : 0;
         if (!appended) { messages.removeAll(); }
+        Map<String, String> senders = players.displayNames(latest.subList(start, latest.size()).stream()
+                .map(GameChatMessage::senderPlayerId).distinct().toList());
         for (int index = start; index < latest.size(); index++) {
             GameChatMessage message = latest.get(index);
-            Span meta = new Span(players.displayName(message.senderPlayerId()) + " · " + TIME.format(message.sentAt()));
+            Span meta = new Span(senders.getOrDefault(message.senderPlayerId(), message.senderPlayerId())
+                    + " · " + TIME.format(message.sentAt()));
             Span body = new Span(message.text());
             messages.add(new Div(meta, body));
         }

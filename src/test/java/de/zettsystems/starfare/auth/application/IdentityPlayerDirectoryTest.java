@@ -2,38 +2,25 @@ package de.zettsystems.starfare.auth.application;
 
 import de.zettsystems.gamesplatformapi.AccountId;
 import de.zettsystems.gamesplatformapi.PlatformAccounts;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class IdentityPlayerDirectoryTest {
 
-    private static final Instant START = Instant.parse("2026-08-28T10:00:00Z");
-
     private final PlatformAccounts accounts = mock(PlatformAccounts.class);
-    private final AtomicReference<Instant> now = new AtomicReference<>(START);
-    private IdentityPlayerDirectory directory;
-
-    @BeforeEach
-    void setUp() {
-        Clock clock = mock(Clock.class);
-        when(clock.instant()).thenAnswer(_ -> now.get());
-        when(clock.getZone()).thenReturn(ZoneOffset.UTC);
-        directory = new IdentityPlayerDirectory(accounts, clock);
-    }
+    private final IdentityPlayerDirectory directory = new IdentityPlayerDirectory(accounts);
 
     @Test
     void resolvesDisplayNameOfKnownAccount() {
@@ -53,27 +40,31 @@ class IdentityPlayerDirectoryTest {
     void fallsBackToIdForIdsThatAreNoAccounts() {
         assertThat(directory.displayName("legacy-name")).isEqualTo("legacy-name");
         assertThat(directory.displayName("0")).isEqualTo("0");
-        verify(accounts, times(0)).displayName(any());
+        verify(accounts, never()).displayName(any());
     }
 
     @Test
-    void cachesWithinTtlAndRefreshesAfterwards() {
-        when(accounts.displayName(AccountId.of(1))).thenReturn(Optional.empty());
+    void asksThePlatformEveryTimeSoRenamesShowAtOnce() {
+        when(accounts.displayName(AccountId.of(1))).thenReturn(Optional.of("Old"), Optional.of("New"));
 
-        directory.displayName("1");
-        directory.displayName("1");
-        verify(accounts, times(1)).displayName(AccountId.of(1));
-
-        now.set(START.plus(IdentityPlayerDirectory.TTL).plusSeconds(1));
-        directory.displayName("1");
-        verify(accounts, times(2)).displayName(AccountId.of(1));
+        assertThat(directory.displayName("1")).isEqualTo("Old");
+        assertThat(directory.displayName("1")).isEqualTo("New");
     }
 
     @Test
-    void resolvesSeveralIdsKeepingOrder() {
-        when(accounts.displayName(any())).thenReturn(Optional.empty());
+    void resolvesAListWithOneLookupKeepingOrderAndFallingBackToTheId() {
+        when(accounts.displayNames(anyCollection())).thenReturn(Map.of(AccountId.of(3), "Carol", AccountId.of(1), "Alice"));
 
-        assertThat(directory.displayNames(List.of("3", "1", "2")).keySet())
-                .containsExactly("3", "1", "2");
+        assertThat(directory.displayNames(List.of("3", "ai-2", "1", "9")))
+                .containsExactly(Map.entry("3", "Carol"), Map.entry("ai-2", "ai-2"), Map.entry("1", "Alice"),
+                        Map.entry("9", "9"));
+        verify(accounts, times(1)).displayNames(List.of(AccountId.of(3), AccountId.of(1), AccountId.of(9)));
+        verify(accounts, never()).displayName(any());
+    }
+
+    @Test
+    void anEmptyListNeedsNoLookup() {
+        assertThat(directory.displayNames(List.of("ai-1"))).containsExactly(Map.entry("ai-1", "ai-1"));
+        verify(accounts, never()).displayNames(anyCollection());
     }
 }
