@@ -62,4 +62,25 @@ class GameChatServiceTest extends AbstractIntegrationTest {
         });
         return id;
     }
+
+    @Test
+    void whoLeftAndEverybodyAfterTheEndOnlyRead() {
+        GameId id = runningGame();
+        assertThat(chat.send(id, "alice", "before")).isTrue();
+        registry.writeState(id, state -> {
+            state.joinedHumanPlayerIds().remove(1);
+            return null;
+        });
+
+        assertThat(chat.mayWrite(id, "alice")).isFalse();
+        assertThat(chat.send(id, "alice", "after leaving")).isFalse();
+        assertThat(chat.messagesFor(id, "alice")).extracting(GameChatMessage::text).containsExactly("before");
+
+        GameId ended = runningGame();
+        registry.writeState(ended, state -> {
+            state.endGame(1);
+            return null;
+        });
+        assertThat(chat.mayWrite(ended, "alice")).isFalse();
+    }
 }

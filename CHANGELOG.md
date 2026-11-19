@@ -8,6 +8,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Partie-Chat nur noch lesen:** Wer eine Partie verlassen oder aufgegeben oder seinen Sitz durch
+  verpasste Runden an den Computer verloren hat, liest den Chat weiter, schreibt aber nicht mehr.
+  Nach dem Ende der Partie ist der Chat für alle nur noch lesbar. Der Chat zeigt dann einen Hinweis
+  statt des Eingabefelds.
 - **Plattform-Einbindung aufgeräumt:** Starfare meldet seine Einstellungen selbst an, ein Host
   braucht keinen Einstellungs-Scan der Starfare-Pakete mehr. Lobby, Sprachwahl, Kontomenü,
   Rechtshinweise und das Merken der Sprache gehören nur noch zum eigenen Start und fehlen im

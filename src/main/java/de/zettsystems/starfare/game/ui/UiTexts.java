@@ -28,6 +28,7 @@ public final class UiTexts {
     public static final String CHAT_FINISH_TARGET = "chat.finishTarget";
     public static final String CHAT_NEW_MESSAGES = "chat.newMessages";
     public static final String CHAT_SEND_FAILED = "chat.sendFailed";
+    public static final String CHAT_READ_ONLY = "chat.readOnly";
     public static final String ARCHIVE_VIEW_BLOCKED = "archive.viewBlocked";
     public static final String RESEARCH_TITLE = "research.title";
     public static final String RESEARCH_HEADER_LABEL = "research.header.label";

@@ -264,8 +264,10 @@ als eigener Bereich. **Schließen** oder Escape führt zurück. Ein ungesendeter
 Entwurf bleibt beim Schließen und Wiederöffnen derselben Kartenansicht erhalten;
 ein Seitenwechsel oder Neuladen verwirft ihn. Beim Lesen älterer Nachrichten bleibt
 die Position erhalten; **Neue Nachrichten** führt ans Ende. Eine laufende Zielwahl
-musst du vor dem Öffnen abschließen oder abbrechen. Der Chat ist nur für
-Sitzinhaber aktiver gestarteter Partien verfügbar. **Zur Lobby** verlässt nur die
+musst du vor dem Öffnen abschließen oder abbrechen. Den Chat lesen alle, die einen Sitz in der
+Partie haben oder hatten. Schreiben kann nur, wer noch mitspielt: Wer verlassen oder aufgegeben
+hat oder seinen Sitz durch verpasste Runden an die KI verloren hat, liest nur noch mit, und nach
+dem Ende der Partie ist der Chat für alle nur noch lesbar. Zuschauer haben keinen Chat. **Zur Lobby** verlässt nur die
 Kartenansicht. **Partie verlassen** übergibt deinen Sitz an die KI. Erlaubt die Partie
 den Wiedereinstieg, kannst du später zurückkehren.
 

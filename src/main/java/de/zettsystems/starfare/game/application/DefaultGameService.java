@@ -48,9 +48,8 @@ public class DefaultGameService implements GameService {
     @Override
     public Optional<MiningAutomationView> miningAutomationFor(GameId id, String account) {
         return registry.find(id).flatMap(session -> registry.readState(id, state -> {
-            Integer player = state.seatByUser().get(account);
-            if (player == null || !state.started() || !state.ruleset().usesMetals()
-                    || !state.joinedHumanPlayerIds().contains(player)
+            Integer player = state.activeSeat(account);
+            if (player == null || !access.mayCommand(state, account) || !state.ruleset().usesMetals()
                     || !access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
             Map<Integer, String> systems = state.systems().stream().filter(system -> Objects.equals(system.ownerId(), player))
                     .collect(Collectors.toMap(StarSystem::id, StarSystem::name));
@@ -72,7 +71,7 @@ public class DefaultGameService implements GameService {
     }
 
     private static Optional<MiningAutomation> miningConfiguration(GameState state, String account, MiningRequest request) {
-        Integer player = state.seatByUser().get(account);
+        Integer player = state.activeSeat(account);
         if (player == null || !state.ruleset().usesMetals() || !canPlan(state, player, request.turn())
                 || request.reserveRounds() < 0 || request.reserveRounds() > 10
                 || !request.expected().equals(miningPolicy(state, player, account))
@@ -89,7 +88,7 @@ public class DefaultGameService implements GameService {
         return registry.find(id).flatMap(session -> registry.readState(id, state -> {
             if (!access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
             return miningConfiguration(state, account, request)
-                    .map(policy -> MiningPlanner.plan(state, Objects.requireNonNull(state.seatByUser().get(account)), policy));
+                    .map(policy -> MiningPlanner.plan(state, Objects.requireNonNull(state.activeSeat(account)), policy));
         }));
     }
 
@@ -99,7 +98,7 @@ public class DefaultGameService implements GameService {
         boolean accepted = registry.writeState(id, state -> {
             var policy = miningConfiguration(state, account, request);
             if (policy.isEmpty() || request.reviewed() == null) { return false; }
-            int player = Objects.requireNonNull(state.seatByUser().get(account));
+            int player = Objects.requireNonNull(state.activeSeat(account));
             MiningAutomation configuration = policy.orElseThrow();
             MiningPlan plan = MiningPlanner.plan(state, player, configuration);
             if (!plan.equals(request.reviewed())) { return false; }
@@ -118,7 +117,7 @@ public class DefaultGameService implements GameService {
     public boolean protectMiningSystem(GameId id, String account, int turn, int system, boolean protect) {
         if (!isRunningGame(id)) { return false; }
         boolean accepted = registry.writeState(id, state -> {
-            Integer player = state.seatByUser().get(account);
+            Integer player = state.activeSeat(account);
             if (player == null || !state.ruleset().usesMetals() || !canPlan(state, player, turn)
                     || state.systems().stream().noneMatch(candidate -> candidate.id() == system && Objects.equals(candidate.ownerId(), player))) { return false; }
             var policy = miningPolicy(state, player, account);
@@ -143,9 +142,9 @@ public class DefaultGameService implements GameService {
     @Override
     public Optional<de.zettsystems.starfare.research.values.ResearchView> shipResearchFor(GameId id, String account) {
         return registry.find(id).flatMap(session -> registry.readState(id, state -> {
-            Integer seat = state.seatByUser().get(account);
-            if (!state.ruleset().usesShipResearch() || !state.started() || seat == null
-                    || !state.joinedHumanPlayerIds().contains(seat) || !access.visible(state, session.hostPlayerId(), account)) {
+            Integer seat = state.activeSeat(account);
+            if (!state.ruleset().usesShipResearch() || seat == null || !access.mayCommand(state, account)
+                    || !access.visible(state, session.hostPlayerId(), account)) {
                 return Optional.empty();
             }
             var research = Objects.requireNonNull(state.metals().orElseThrow().research());
@@ -160,7 +159,7 @@ public class DefaultGameService implements GameService {
     public boolean planShipResearch(GameId id, String account, int turn, int expectedPercent, int percent) {
         if (percent < 0 || percent > 100 || !isRunningGame(id)) { return false; }
         boolean accepted = registry.writeState(id, state -> {
-            Integer seat = state.seatByUser().get(account);
+            Integer seat = state.activeSeat(account);
             if (!state.ruleset().usesShipResearch() || seat == null || !canPlan(state, seat, turn)) { return false; }
             var research = Objects.requireNonNull(state.metals().orElseThrow().research());
             if (Objects.requireNonNull(research.empires().get(seat)).percent() != expectedPercent) { return false; }
@@ -178,7 +177,7 @@ public class DefaultGameService implements GameService {
     public Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview> previewProduction(
             GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan) {
         return registry.find(id).flatMap(session -> registry.readState(id, state -> {
-            Integer player = state.seatByUser().get(account);
+            Integer player = state.activeSeat(account);
             if (player == null || !canPlan(state, player, plan.turn())
                     || !access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
             GameState draft = GameState.copyOf(state);
@@ -198,7 +197,7 @@ public class DefaultGameService implements GameService {
         var rejected = de.zettsystems.starfare.economy.values.ProductionCommit.REJECTED;
         if (!isRunningGame(id)) { return rejected; }
         var result = registry.writeState(id, state -> {
-            Integer player = state.seatByUser().get(account);
+            Integer player = state.activeSeat(account);
             if (player == null || !canPlan(state, player, plan.turn()) || plan.expected() == null) { return rejected; }
             var visible = playerViewBuilder.forPlayer(state, player).systems().stream()
                     .filter(system -> system.id() == plan.systemId() && java.util.Objects.equals(system.ownerId(), player))
@@ -276,8 +275,9 @@ public class DefaultGameService implements GameService {
     @Override
     public Optional<DiplomacyView> diplomacyFor(GameId id, String account) {
         return registry.find(id).flatMap(session -> registry.readState(id, state -> {
-            Integer seat = state.seatByUser().get(account);
-            if (!state.victoryRules().alliancesAllowed() || !Routes.limited(state) || !state.started() || seat == null || !state.joinedHumanPlayerIds().contains(seat)
+            Integer seat = state.activeSeat(account);
+            if (!state.victoryRules().alliancesAllowed() || !Routes.limited(state) || seat == null
+                    || !access.mayCommand(state, account)
                     || !access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
             return Optional.of(new DiplomacyView(state.turn(), seat,
                     canPlan(state, seat, state.turn()), state.players(), new DiplomacyState(
@@ -290,7 +290,7 @@ public class DefaultGameService implements GameService {
     public boolean diplomacyOrder(GameId id, String account, int turn, DiplomacyOrder order) {
         if (!isRunningGame(id)) { return false; }
         boolean accepted = registry.writeState(id, state -> {
-            Integer seat = state.seatByUser().get(account);
+            Integer seat = state.activeSeat(account);
             return seat != null && canPlan(state, seat, turn)
                     && diplomacy.act(state, seat, order);
         });
@@ -1256,8 +1256,8 @@ public class DefaultGameService implements GameService {
         Optional<PlayerViewState> live = registry.find(id).flatMap(session -> registry.readState(id, state -> {
             if (state.gameOver()) { return reviewFor(id, account); }
             if (!access.visible(state, session.hostPlayerId(), account)) { return Optional.empty(); }
-            Integer seat = state.seatByUser().get(account);
-            if (state.started() && seat != null && state.joinedHumanPlayerIds().contains(seat)) {
+            Integer seat = state.activeSeat(account);
+            if (seat != null && access.mayCommand(state, account)) {
                 return Optional.of(playerViewBuilder.forPlayer(state, seat));
             }
             if (state.observers().contains(account) && access.canObserve(state, session.hostPlayerId(), account)) {

@@ -546,6 +546,14 @@ public class GameState {
         return changed;
     }
 
+    /**
+     * The seat through which the account still plays: seated and joined. Whoever left, resigned or lost the
+     * seat to the computer keeps the seat binding (for reading the chat and the review) but has no active seat.
+     */
+    public @Nullable Integer activeSeat(String account) {
+        Integer seat = seatByUser.get(account);
+        return seat != null && joinedHumanPlayerIds.contains(seat) ? seat : null;
+    }
     public Map<String, Integer> seatByUser() {
         return seatByUser;
     }

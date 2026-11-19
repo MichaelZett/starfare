@@ -57,4 +57,23 @@ class GameChatPanelTest {
     private static Stream<Component> descendants(Component component) {
         return component.getChildren().flatMap(child -> Stream.concat(Stream.of(child), descendants(child)));
     }
+
+    @Test
+    void readersSeeTheHistoryWithoutAnInputWritersWithOne() {
+        var chat = mock(GameChatService.class);
+        var panel = panel(chat, new AtomicInteger());
+        TextArea input = descendants(panel).filter(TextArea.class::isInstance).map(TextArea.class::cast).findFirst().orElseThrow();
+        Component hint = descendants(panel).filter(component -> component.getElement().getText()
+                .equals(I18n.t(UiTexts.CHAT_READ_ONLY))).findFirst().orElseThrow();
+
+        panel.open();
+        assertThat(input.getParent().orElseThrow().isVisible()).isFalse();
+        assertThat(hint.isVisible()).isTrue();
+
+        panel.close();
+        when(chat.mayWrite(GameId.of("chat-test"), "")).thenReturn(true);
+        panel.open();
+        assertThat(input.getParent().orElseThrow().isVisible()).isTrue();
+        assertThat(hint.isVisible()).isFalse();
+    }
 }

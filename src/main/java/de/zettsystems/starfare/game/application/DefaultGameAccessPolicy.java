@@ -35,6 +35,18 @@ public class DefaultGameAccessPolicy implements GameAccessPolicy {
                 && (state.visibility() == GameVisibility.PUBLIC || related(state, host, account));
     }
     @Override
+    public boolean mayReadChat(GameState state, String account) {
+        return !account.isBlank() && state.seatByUser().containsKey(account);
+    }
+    @Override
+    public boolean mayWriteChat(GameState state, String account) {
+        return !account.isBlank() && !state.gameOver() && state.activeSeat(account) != null;
+    }
+    @Override
+    public boolean mayCommand(GameState state, String account) {
+        return !account.isBlank() && state.started() && !state.gameOver() && state.activeSeat(account) != null;
+    }
+    @Override
     public boolean canReview(GameState state, @Nullable String host, String account) {
         return state.gameOver() && visible(state, host, account)
                 && (related(state, host, account) || state.observersAllowed());

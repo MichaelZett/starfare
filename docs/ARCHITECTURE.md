@@ -561,6 +561,15 @@ and removes its subscription on close or detach. Leaving the map closes the
 dialog as well. Chat events refresh only the messages, preserving the draft
 and the map sidebar's current inputs.
 
+Viewing, chatting and giving orders are separate rights in `GameAccessPolicy`
+(platform decision E2, 19.11.2026). `GameState.activeSeat(account)` is the seat through
+which an account still plays: seated and joined. Leaving, resigning and losing the
+seat to the computer keep the seat binding (`seatByUser`) but end the active seat.
+`mayReadChat` needs a seat binding, so former players keep reading and observers do
+not; `mayWriteChat` needs an active seat and a game that is not over (the waiting room
+counts); `mayCommand` needs an active seat in a started, running game. Orders go
+through `activeSeat`, never through the bare seat binding.
+
 `reviewFor(id, account, perspective, fogOfWar)` checks completed-game access and
 participant existence inside the read lock. `PlayerViewBuilder.forReview` reuses
 the normal sensor/intel filter even after completion when fog is enabled; without

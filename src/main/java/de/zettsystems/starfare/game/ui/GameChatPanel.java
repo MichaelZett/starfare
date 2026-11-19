@@ -64,6 +64,8 @@ final class GameChatPanel extends Div {
     private final TextArea input = new TextArea();
     private final Button newMessages = new Button(I18n.t(UiTexts.CHAT_NEW_MESSAGES));
     private final Span feedback = new Span();
+    private final Span readOnly = new Span(I18n.t(UiTexts.CHAT_READ_ONLY));
+    private final HorizontalLayout footer;
     private List<GameChatMessage> rendered = List.of();
     private boolean opened;
 
@@ -91,14 +93,16 @@ final class GameChatPanel extends Div {
         input.setWidthFull();
         Button send = new Button(I18n.t(UiTexts.CHAT_SEND), _ -> send());
         send.addThemeVariants(ButtonVariant.PRIMARY);
-        HorizontalLayout footer = new HorizontalLayout(input, send);
+        footer = new HorizontalLayout(input, send);
         footer.setAlignItems(FlexComponent.Alignment.END);
         footer.setWidthFull();
         footer.setFlexGrow(1, input);
         feedback.getElement().setAttribute("role", "status");
         newMessages.getElement().setProperty("hidden", true);
         newMessages.addClickListener(_ -> followLatest());
-        add(heading, new Span(I18n.t(UiTexts.GAME_CHAT_HINT)), messages, newMessages, feedback, footer);
+        readOnly.addClassName("game-chat-read-only");
+        readOnly.setVisible(false);
+        add(heading, new Span(I18n.t(UiTexts.GAME_CHAT_HINT)), messages, newMessages, feedback, readOnly, footer);
         addAttachListener(_ -> {
             getElement().executeJs(TAB_TRAP_JS);
             messages.getElement().executeJs(FOLLOW_SCROLL_JS, newMessages.getElement());
@@ -113,7 +117,11 @@ final class GameChatPanel extends Div {
         setVisible(true);
         subscribe();
         reload(false);
-        input.focus();
+        // Who left, resigned or lost the seat, and everybody after the end, still reads but no longer writes.
+        boolean writable = chat.mayWrite(gameId, UserContext.currentPlayerId().orElse(""));
+        footer.setVisible(writable);
+        readOnly.setVisible(!writable);
+        if (writable) { input.focus(); }
     }
 
     void close() {

@@ -96,4 +96,36 @@ class GameAccessPolicyTest {
         state.resetForNewGame();
         assertThat(state.finishedAt()).isNull();
     }
+
+    @Test
+    void whoLeftReadsTheChatButNeitherWritesNorCommands() {
+        state.seatByUser().put("player", 1);
+        state.seatByUser().put("former", 2);
+        state.joinedHumanPlayerIds().add(1);
+        state.observers().add("watcher");
+
+        assertThat(policy.mayWriteChat(state, "player")).as("waiting room").isTrue();
+        assertThat(policy.mayCommand(state, "player")).as("not started").isFalse();
+        state.start();
+        assertThat(policy.mayCommand(state, "player")).isTrue();
+        assertThat(policy.mayReadChat(state, "former")).isTrue();
+        assertThat(policy.mayWriteChat(state, "former")).isFalse();
+        assertThat(policy.mayCommand(state, "former")).isFalse();
+        assertThat(policy.mayReadChat(state, "watcher")).isFalse();
+        assertThat(policy.mayWriteChat(state, "watcher")).isFalse();
+        assertThat(policy.mayReadChat(state, "")).isFalse();
+    }
+
+    @Test
+    void afterTheEndTheChatCanOnlyBeRead() {
+        state.seatByUser().put("player", 1);
+        state.joinedHumanPlayerIds().add(1);
+        state.start();
+
+        state.endGame(1);
+
+        assertThat(policy.mayReadChat(state, "player")).isTrue();
+        assertThat(policy.mayWriteChat(state, "player")).isFalse();
+        assertThat(policy.mayCommand(state, "player")).isFalse();
+    }
 }

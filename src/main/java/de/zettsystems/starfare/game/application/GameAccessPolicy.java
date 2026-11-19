@@ -9,4 +9,10 @@ public interface GameAccessPolicy {
     boolean related(GameState state, @Nullable String host, String account);
     boolean canObserve(GameState state, @Nullable String host, String account);
     boolean canReview(GameState state, @Nullable String host, String account);
+    /** Everybody seated reads the chat, also after leaving, resigning or losing the seat; observers do not. */
+    boolean mayReadChat(GameState state, String account);
+    /** Only who still plays writes, from the waiting room until the game ends. */
+    boolean mayWriteChat(GameState state, String account);
+    /** Orders come only from a seat that still plays a started game that is not over. */
+    boolean mayCommand(GameState state, String account);
 }
