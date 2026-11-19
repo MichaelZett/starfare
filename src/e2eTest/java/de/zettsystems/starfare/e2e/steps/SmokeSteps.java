@@ -137,20 +137,6 @@ public class SmokeSteps {
                         .orElse(null));
     }
 
-    @Dann("zeigt der Verwalten-Dialog den Spieler {string}")
-    public void manageDialogShowsPlayer(String displayName) {
-        browser.openDetailsWithText("Weitere Aktionen");
-        browser.clickButtonWithText("Verwalten");
-        browser.awaitTextIn(".manage-row-label", displayName);
-        browser.clickButtonWithText("Schließen");
-    }
-
-    @Wenn("ich das Spiel starte und zur Karte wechsle")
-    public void startGameAndOpenMap() {
-        browser.clickButtonWithText("Starten");
-        browser.awaitUrl(url -> url.contains("/map/"), "Die Karte wurde nicht geöffnet.");
-    }
-
     @Dann("zeigen die Empire-Stats {int} System, Produktion {int} und {int} Schiffe")
     public void empireStatsShow(int systems, int production, int ships) {
         List<String> expected = List.of(String.valueOf(systems), String.valueOf(production), String.valueOf(ships));

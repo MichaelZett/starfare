@@ -327,7 +327,6 @@ jacoco {
 def jacocoExclusions = [
         'de/zettsystems/starfare/StarfareApplication.class',
         'de/zettsystems/starfare/AppShell.class',
-        '**/ui/**',
         '**/config/**',
         '**/*Entity.class',
         '**/*Repository.class',
@@ -429,7 +428,6 @@ sonar {
         property 'sonar.coverage.exclusions', [
                 'src/main/java/de/zettsystems/starfare/StarfareApplication.java',
                 'src/main/java/de/zettsystems/starfare/AppShell.java',
-                '**/ui/**/*',
                 '**/config/**/*',
                 '**/*Entity.java',
                 '**/*Repository.java',

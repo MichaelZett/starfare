@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -41,7 +40,6 @@ public class TestPlatformAccounts implements PlatformAccounts {
     private final AtomicLong ids = new AtomicLong(1_000);
     private final Map<String, Account> byEmail = new ConcurrentHashMap<>();
     private final Map<Long, Account> byId = new ConcurrentHashMap<>();
-    private final Set<Long> testers = ConcurrentHashMap.newKeySet();
 
     /** Creates the account for this address, or returns the one that already exists. */
     public Account createAccount(String email, String displayName) {
@@ -56,17 +54,8 @@ public class TestPlatformAccounts implements PlatformAccounts {
         return Optional.ofNullable(byEmail.get(email));
     }
 
-    public Optional<Account> findByDisplayName(String displayName) {
-        return byId.values().stream().filter(account -> account.displayName().equals(displayName)).findFirst();
-    }
-
     public Account require(String email) {
         return findByEmail(email).orElseThrow(() -> new IllegalArgumentException("No test account " + email));
-    }
-
-    /** Gives the account the tester role for every game. */
-    public void grantTester(String email) {
-        testers.add(require(email).id());
     }
 
     /** A security context holding the account's sign-in token. */
@@ -89,8 +78,9 @@ public class TestPlatformAccounts implements PlatformAccounts {
         return Optional.ofNullable(byId.get(account.value())).map(Account::displayName);
     }
 
+    /** No test account is a tester; {@code DefaultRulesetAccessTest} covers the tester role. */
     @Override
     public boolean isTester(AccountId account, String gameKey) {
-        return testers.contains(account.value());
+        return false;
     }
 }

@@ -540,14 +540,14 @@ and coalition ownership, concealed results and persistent battle acknowledgement
 Game-end journeys cover alliance proposals, notice periods and departures with two
 accounts, continuing a won game towards full conquest, and victory staying hidden
 until the last battle has been evaluated, also after reloading.
-They need neither Chrome nor a running HTTP server. `./gradlew e2eTest` runs Cucumber/Selenium journeys
-against the real application in headless Chrome: sign-in of a test account and one round,
-lobby access, round submission, battle playback, native relocation dragging,
-route geometry and separate map viewports. An emulated iPhone checks the phone
-interface by real taps next to a desktop session. Two browser sessions verify live chat
-and draft preservation. It is not part of
-`build`; keyboard interaction and preserved inputs during external updates also
-remain in the browser. CI runs it as a separate job
+They need neither Chrome nor a running HTTP server. `./gradlew e2eTest` runs the
+Cucumber/Selenium journeys that need a real browser against the real application in
+headless Chrome: sign-in of a test account and one round, round submission pushed between
+two sessions, battle playback with audio, native relocation dragging, hit areas, keyboard
+use and separate map viewports, route and range geometry, and layout screenshots at
+desktop widths. An emulated iPhone checks the phone interface by real taps next to a
+desktop session. Two browser sessions verify live chat and draft preservation. It is not
+part of `build`. CI runs it as a separate job
 (`[skip e2e]` in the commit message skips it). Failures leave page text in the
 test output and a screenshot in `build/e2e-failures/`.
 

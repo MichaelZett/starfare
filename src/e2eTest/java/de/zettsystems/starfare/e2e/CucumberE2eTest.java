@@ -11,9 +11,11 @@ import static io.cucumber.junit.platform.engine.Constants.PLUGIN_PROPERTY_NAME;
 /**
  * Runs the browser journeys from {@code src/e2eTest/resources/features/}.
  *
- * <p>Exercises account registration, lobby access, rounds, battle playback,
- * map interactions and multiplayer chat. Core game logic is
- * covered by unit and integration tests under {@code src/test}.
+ * <p>Keeps only what needs a real browser: sign-in and a first round, push between two
+ * sessions, battle playback with audio, dragging, hit areas, keyboard use, touch on the
+ * phone layout, route geometry and layout screenshots. Journeys that need no JavaScript run
+ * as Vaadin Browserless tests under {@code src/test}, together with the unit and
+ * integration tests.
  */
 @Suite
 @IncludeEngines("cucumber")
