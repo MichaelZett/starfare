@@ -4,7 +4,8 @@ import com.vaadin.flow.i18n.I18NProvider;
 import de.zettsystems.starfare.i18n.StarfareI18NProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import de.zettsystems.starfare.legal.values.LegalContact;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -13,7 +14,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * Spring Boot entry point for the Starfare application.
  */
 @SpringBootApplication
-@ConfigurationPropertiesScan
+// The game registers its own settings (GamePropertiesConfiguration); only the imprint is the own start's.
+@EnableConfigurationProperties(LegalContact.class)
 @EnableAsync
 @EnableScheduling
 public class StarfareApplication {
