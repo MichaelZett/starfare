@@ -616,6 +616,23 @@ public class GameState {
         return stragglerSince;
     }
 
+    /**
+     * Whether the seat timed out: it missed {@link GameConfig#MAX_MISSED_ROUNDS}
+     * rounds in this game, counted over the whole game, not only in a row. A timed-out seat stays with the
+     * computer for good, unlike a seat that was left and may be taken back.
+     */
+    public boolean timedOut(int seat) {
+        return missedRounds.getOrDefault(seat, 0) >= GameConfig.MAX_MISSED_ROUNDS;
+    }
+
+    /** Seats nobody may take back: resigned (RESIGNED) or timed out (TIMED_OUT), kept apart from a seat that was left. */
+    public Set<Integer> closedSeats() {
+        Set<Integer> closed = new HashSet<>(resignedSeats);
+        missedRounds.keySet().stream().filter(this::timedOut).forEach(closed::add);
+        return Set.copyOf(closed);
+    }
+
+    /** Missed rounds per seat over the whole game. */
     public Map<Integer, Integer> missedRounds() {
         return missedRounds;
     }

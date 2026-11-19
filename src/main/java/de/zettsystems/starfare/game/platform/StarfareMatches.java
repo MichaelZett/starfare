@@ -144,6 +144,7 @@ public final class StarfareMatches {
     private static Departure departure(GameState state, int seat, Map<Integer, Long> systems,
                                        Set<Integer> fleetOwners) {
         if (!state.joinedHumanPlayerIds().contains(seat)) {
+            // Until games-platform-api 0.4.0 brings Departure.TIMED_OUT, a timed-out seat counts as resigned.
             return Departure.RESIGNED;
         }
         return systems.containsKey(seat) || fleetOwners.contains(seat) ? Departure.NONE : Departure.ELIMINATED;

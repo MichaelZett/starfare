@@ -99,6 +99,6 @@ class StarfareMatchDirectoryTest {
                 summary.started(), summary.gameOver(), summary.observersAllowed(), summary.reentryAllowed(),
                 summary.players(), summary.joinedHumanSeats(), summary.seatByPlayer(), summary.invitedSeats(),
                 summary.visibility(), summary.outcome(), summary.ruleset(), summary.victoryRules(),
-                summary.submittedSeats(), lastChange);
+                summary.submittedSeats(), lastChange, summary.closedSeats());
     }
 }

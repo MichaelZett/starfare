@@ -254,7 +254,9 @@ Produktion, Ankünfte und Kämpfe ausgewertet.
 Bei mindestens zwei Menschen gelten zwei Uhren: das Rundenlimit ab Rundenbeginn
 (Vorgabe fünf Minuten) und das Nachzüglerlimit, sobald nur noch eine Abgabe fehlt
 (Vorgabe eine Minute). Die frühere Frist beendet die Runde. Säumige spielen mit
-ihren vorhandenen Befehlen; nach drei versäumten Abgaben in Folge übernimmt die KI.
+ihren vorhandenen Befehlen. Versäumte Abgaben zählen über die ganze Partie: Beim zweiten Mal
+fliegst du hinaus, die KI übernimmt deinen Sitz endgültig, und ein Wiedereinstieg ist auch dann
+nicht möglich, wenn die Partie ihn sonst erlaubt. Den Chat kannst du weiter lesen.
 Der Gastgeber kann über das Kartenmenü die **Rundenfristen** anpassen.
 Eine Partie mit nur einem Menschen hat keine automatische Rundenfrist.
 

@@ -116,7 +116,7 @@ class RoundDeadlineTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void seatGoesToTheAiAfterTooManyMissedRoundsInARow() {
+    void secondMissedRoundTimesTheSeatOut() {
         GameId id = runningGameWithTwoHumans();
 
         seatTwoMissesRounds(id, GameConfig.MAX_MISSED_ROUNDS - 1);
@@ -130,27 +130,41 @@ class RoundDeadlineTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void submittingResetsTheMissedRoundCounter() {
+    void missedRoundsCountOverTheWholeGameNotOnlyInARow() {
         GameId id = runningGameWithTwoHumans();
         seatTwoMissesRounds(id, GameConfig.MAX_MISSED_ROUNDS - 1);
 
         game.submitTurn(id, 1);
         game.submitTurn(id, 2);
+        assertThat(isAi(id, 2)).isFalse();
         seatTwoMissesRounds(id, 1);
 
-        assertThat(isAi(id, 2)).isFalse();
+        assertThat(isAi(id, 2)).as("submitting in between does not reset the count").isTrue();
     }
 
     @Test
-    void handedOverSeatCanBeReclaimedWhenReentryIsAllowed() {
+    void timedOutSeatCannotBeReclaimedEvenWhenReentryIsAllowed() {
         GameId id = runningGameWithTwoHumans();
         seatTwoMissesRounds(id, GameConfig.MAX_MISSED_ROUNDS);
 
         Map<String, Integer> seats = registry.readState(id, GameState::seatByUser);
-        assertThat(seats).as("die Sitzzuordnung bleibt, sonst greift kein Wiedereinstieg")
+        assertThat(seats).as("the seat binding stays: the former player still reads chat and review")
                 .containsEntry("bob", 2);
+        assertThat(registry.claimSeat(id, "bob")).isEmpty();
+        assertThat(isAi(id, 2)).isTrue();
+        assertThat(registry.require(id).summary().canJoin("bob")).isFalse();
+        boolean timedOutNotResigned = registry.readState(id, state -> state.timedOut(2) && !state.resignedSeats().contains(2));
+        assertThat(timedOutNotResigned).as("TIMED_OUT stays apart from RESIGNED").isTrue();
+    }
+
+    @Test
+    void leftSeatCanStillBeReclaimedWhenReentryIsAllowed() {
+        GameId id = runningGameWithTwoHumans();
+        seatTwoMissesRounds(id, 1);
+        assertThat(game.leaveGame(id, 2)).isTrue();
+
         assertThat(registry.claimSeat(id, "bob")).contains(2);
-        assertThat(isAi(id, 2)).as("Sitz ist wieder menschlich").isFalse();
+        assertThat(isAi(id, 2)).as("leaving is not a timeout").isFalse();
     }
 
     @Test

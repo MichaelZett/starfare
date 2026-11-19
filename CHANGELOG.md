@@ -8,6 +8,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Verpasste Runden zählen über die ganze Partie:** Wer zum zweiten Mal eine Rundenfrist verpasst,
+  fliegt hinaus; der Computer übernimmt den Sitz endgültig, ohne Wiedereinstieg. Bisher übernahm
+  der Computer erst nach drei verpassten Runden in Folge, und der Sitz ließ sich zurückholen.
+- **Kein falsches Angebot zum Wiedereinstieg:** Die Lobby bietet aufgegebene und hinausgeworfene
+  Sitze nicht mehr zum Beitreten an.
 - **Partie-Chat nur noch lesen:** Wer eine Partie verlassen oder aufgegeben oder seinen Sitz durch
   verpasste Runden an den Computer verloren hat, liest den Chat weiter, schreibt aber nicht mehr.
   Nach dem Ende der Partie ist der Chat für alle nur noch lesbar. Der Chat zeigt dann einen Hinweis

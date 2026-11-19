@@ -166,7 +166,8 @@ public interface GameService {
     /**
      * Beendet die Runde, wenn ihre Frist (Runden- oder Nachzügler-Limit) abgelaufen ist. Wer nicht
      * abgegeben hat, zieht mit den bis dahin erteilten Befehlen; nach
-     * {@link GameConfig#MAX_MISSED_ROUNDS} verpassten Fristen in Folge übernimmt die KI den Sitz.
+     * {@link GameConfig#MAX_MISSED_ROUNDS} verpassten Fristen in derselben Partie (nicht nur in Folge)
+     * übernimmt die KI den Sitz endgültig, ohne Wiedereinstieg.
      */
     boolean enforceRoundDeadline(GameId gameId, Instant now);
 

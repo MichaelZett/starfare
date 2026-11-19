@@ -446,8 +446,10 @@ In the header:
   straggler limit (default 1 min) as soon as only one player is missing —
   their chip then shows the countdown. Both are set per game in the
   wizard, from 30 seconds up to several days. Whoever misses the deadline
-  moves with the orders given so far; after three missed rounds in a row
-  the AI takes over the seat.
+  moves with the orders given so far. Missed rounds count over the whole game:
+  the second one times the seat out, the AI takes it over for good and there is
+  no way back, even if the game allows rejoining. The former player still reads
+  the chat.
   The host can adjust deadlines during play through **Round deadlines** in the
   map menu. A game with only one human has no automatic round deadline.
 - **Leave game** — your seat becomes AI. If rejoining is allowed, you

@@ -165,7 +165,7 @@ public class DefaultGameRegistry implements GameRegistry {
         }
         if (state.started()) {
             if (!state.reentryAllowed() || !state.originalHumanPlayerIds().contains(existing)
-                    || state.resignedSeats().contains(existing)) {
+                    || state.closedSeats().contains(existing)) {
                 return null;
             }
             state.updatePlayer(existing, Player::asHuman);
@@ -228,7 +228,7 @@ public class DefaultGameRegistry implements GameRegistry {
             if (!state.reentryAllowed()) {
                 return false;
             }
-            if (!state.originalHumanPlayerIds().contains(playerId) || state.resignedSeats().contains(playerId)) {
+            if (!state.originalHumanPlayerIds().contains(playerId) || state.closedSeats().contains(playerId)) {
                 return false;
             }
             state.updatePlayer(playerId, Player::asHuman);

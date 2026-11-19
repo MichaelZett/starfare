@@ -462,9 +462,14 @@ persistent **Submitted — waiting for …** notice below the header. Both deriv
 from the current server state, including after reload or a pushed round change.
 AI-only spectators retain **Next turn** as an advance action.
 `RoundDeadlineRunner` checks every `starfare.game.round-check-interval` (5 s).
-At the deadline, late players move with the orders they had queued; after
-`GameConfig.MAX_MISSED_ROUNDS` (3) missed deadlines in a row the AI takes the
-seat, which can be reclaimed if the game allows re-entry.
+At the deadline, late players move with the orders they had queued. `missedRounds`
+counts per seat over the whole game and is never reset by submitting; at
+`GameConfig.MAX_MISSED_ROUNDS` (2) the seat times out (`GameState.timedOut`): the AI
+takes it for good. A timed-out seat stays apart from a resigned one (`resignedSeats`)
+and from one that was left; both timed-out and resigned seats are `closedSeats()`,
+which neither `claimSeat` nor `GameSummary.canJoin` reopens. The seat binding stays,
+so the former player still reads chat and review. Until games-platform-api 0.4.0
+brings `Departure.TIMED_OUT`, `StarfareMatches` reports it as `RESIGNED`.
 
 ## Lifecycle and lobby
 

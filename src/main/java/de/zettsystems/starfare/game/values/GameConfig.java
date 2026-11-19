@@ -41,8 +41,11 @@ public final class GameConfig {
     public static final int VICTORY_SYSTEM_PERCENT = 70;
     public static final int MIN_VICTORY_SYSTEM_PERCENT = 10;
     public static final int MAX_VICTORY_SYSTEM_PERCENT = 100;
-    /** Verpasste Rundenfristen in Folge, nach denen die KI einen menschlichen Sitz übernimmt. */
-    public static final int MAX_MISSED_ROUNDS = 3;
+    /**
+     * Verpasste Rundenfristen in einer Partie (nicht nur in Folge), nach denen der Sitz endgültig an die KI geht
+     * (TIMED_OUT, kein Wiedereinstieg). Das zweite Verpassen wirft hinaus (Plattformentscheidung 19.11.2026).
+     */
+    public static final int MAX_MISSED_ROUNDS = 2;
     /**
      * Abstand, den Systemmittelpunkte zum Kartenrand halten. Die Punkte werden per
      * CSS um den halben Durchmesser zentriert (86-94 px), ohne Rand ragt ein System

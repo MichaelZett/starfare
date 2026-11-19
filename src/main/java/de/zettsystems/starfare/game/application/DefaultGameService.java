@@ -828,7 +828,6 @@ public class DefaultGameService implements GameService {
                 return new SubmitResult(false, TurnResult.REJECTED);
             }
             state.submittedThisTurn().add(playerId);
-            state.missedRounds().remove(playerId);
             TurnResult turn = maybeAdvance(state);
             return new SubmitResult(true, turn);
         });
@@ -853,7 +852,8 @@ public class DefaultGameService implements GameService {
             Set<Integer> late = Set.copyOf(state.pendingHumanPlayerIds());
             Set<Integer> handedOver = new HashSet<>();
             for (int id : late) {
-                if (state.missedRounds().merge(id, 1, Integer::sum) >= GameConfig.MAX_MISSED_ROUNDS) {
+                state.missedRounds().merge(id, 1, Integer::sum);
+                if (state.timedOut(id)) {
                     handedOver.add(id);
                 }
             }
@@ -868,9 +868,8 @@ public class DefaultGameService implements GameService {
                 state.joinedHumanPlayerIds().remove(id);
             state.miningAutomation().remove(id);
                 state.pendingOrders().remove(id);
-                state.missedRounds().remove(id);
-                // seatByUser bleibt bewusst stehen: nur so greift tryReclaimExistingSeat
-                // spaeter wieder. Ein Timeout darf nicht haerter sein als freiwilliges Verlassen.
+                // The count stays, so the seat stays timed out: no way back (TIMED_OUT, platform decision
+                // 19.11.2026). seatByUser stays as well, so the former player still reads chat and review.
             });
             // Wer die Frist verpasst, zieht mit den bis dahin erteilten Befehlen.
             return new DeadlineResult(late, handedOver, abandonedBy, advance(state));

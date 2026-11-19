@@ -534,4 +534,17 @@ class GameStateTest {
                     .isEqualTo(state.travelRounds(1, target) <= 4);
         }
     }
+
+    @Test
+    void closedSeatsAreResignedOrTimedOutButNotMerelyLate() {
+        GameState state = new GameState();
+        state.resignedSeats().add(1);
+        state.missedRounds().put(2, de.zettsystems.starfare.game.values.GameConfig.MAX_MISSED_ROUNDS);
+        state.missedRounds().put(3, de.zettsystems.starfare.game.values.GameConfig.MAX_MISSED_ROUNDS - 1);
+
+        assertThat(state.closedSeats()).containsExactlyInAnyOrder(1, 2);
+        assertThat(state.timedOut(2)).isTrue();
+        assertThat(state.timedOut(3)).isFalse();
+        assertThat(state.timedOut(1)).isFalse();
+    }
 }
