@@ -779,7 +779,7 @@ Run the saved-game Browserless journey with:
 
 Choose Spaceward in the ordinary new-game wizard. Every new game uses the current
 **1.3.0-r1** rules, including mining, recycling, industry expansion and ship
-research. There is no version selector and no preview profile is required.
+research. There is no version selector.
 SectorForces remains a separate variant using its own current rules.
 
 The current rules use installed industry without a labor limit. They share scarce
@@ -879,7 +879,6 @@ W6 prices remain unchanged. Other interventions remain test-only.
 ### Ship research: 1.3.0-r1
 
 Ship research is included in the current Spaceward rules for every new game.
-The retained `research-preview` profile no longer changes creation availability.
 Older saved games retain their original rules.
 
 Open **Research** in the map header or **Ship research** in the map menu. One empire-wide percentage reserves

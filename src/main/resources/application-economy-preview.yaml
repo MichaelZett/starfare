@@ -1,4 +1,0 @@
-# Retained for existing launch commands; W6/W7 are also selectable without this profile.
-starfare:
-  rules:
-    economy-preview: true

@@ -28,7 +28,7 @@ class ResearchPersistenceTest extends AbstractIntegrationTest {
 
     @Test void previewCreationEstablishesResearchBeforeTheFirstSave() {
         var preview = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(),
-                de.zettsystems.starfare.game.values.RulesetCatalog.withShipResearch());
+                de.zettsystems.starfare.game.values.RulesetCatalog.builtIn());
         var id = preview.createGame(de.zettsystems.starfare.game.values.GameSetup.defaults()
                 .selectRuleset(RulesetRef.SPACEWARD_SHIP_RESEARCH), "owner", "Research preview");
         try {

@@ -6,6 +6,13 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Die wirkungslosen Startprofile `economy-preview` und `research-preview` sind entfernt; neue
+  Partien nutzen ohnehin immer die aktuellen Regeln.
+- Diplomatie, Fortsetzung nach dem Sieg und offene Schlachten am Spielende werden ohne Browser
+  bei jedem Build geprüft; die Oberfläche zählt jetzt zur Testabdeckung.
+
 ## 0.2.11 - 2026-11-19
 
 - Die alten Sozial- und Ergebnistabellen (Freundschaften, Direktnachrichten, Sichtbarkeit, Teilnehmer,

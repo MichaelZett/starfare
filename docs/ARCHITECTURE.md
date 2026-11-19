@@ -888,11 +888,9 @@ order list. `RecyclingSnapshotTest` covers corrupt totals and combined budgets.
 ## Economy acceptance candidate: Spaceward 1.2.0-w4
 
 `SPACEWARD_ECONOMY_PREVIEW` dispatches through its own provider and shares the
-frozen W3 material formulas. `RulesetProperties.economyPreview` is false by default;
-the `economy-preview` application profile enables only the current candidate.
-The catalog always supports its saved reference, but creation requires the
-opt-in catalog default. Older checkpoints remain creation-disabled. This is
-an acceptance switch, not migration of existing snapshots or a public release.
+frozen W3 material formulas. The catalog always supports its saved reference for
+restoring and continuing games; new games use the current Spaceward rules. Older
+checkpoints remain creation-disabled. Existing snapshots are not migrated.
 
 The registry initializes industry, colony geology and resources before saving
 any new candidate. Initial material includes all neutral and player ships.
@@ -1037,9 +1035,8 @@ the current 1.3.0-r1 (it permitted W6 and W7 before 0.2.1); SectorForces keeps i
 existing entry and default.
 `creationChoices()` returns the default first with stable ordering. Catalog
 validation rejects unsupported choices and a non-creatable enabled default.
-`requireCreatable` applies the same choices to registry creation. The retained
-`economy-preview` profile and `builtIn(boolean)` compatibility overload no longer
-gate availability. Earlier opt-in-profile descriptions above record past stages.
+`requireCreatable` applies the same choices to registry creation. The former
+opt-in profiles for acceptance candidates were removed in 0.2.12.
 
 `RulesetSelector` keeps variant selection separate from a version radio group,
 shown only when multiple versions can be created. Version changes notify the
@@ -1052,9 +1049,8 @@ new templates. No snapshot migration or stored-rule rewrite is performed.
 ## Shared ship research: Spaceward 1.3.0-r1
 
 R1 inherits W7 economics and navigation under its own stored rule reference and
-round provider. `research-preview` enables creation via `RulesetCatalog.withShipResearch`;
-normal W6/W7 creation is unchanged. The ordinary catalog still supports R1 for
-restoration and round dispatch. No saved W6/W7 reference is migrated.
+round provider and is the Spaceward default for new games. Saved W6/W7 games keep
+their rules; no saved reference is migrated.
 
 `ResearchEconomy` is an immutable optional component of `MetalEconomy`, which
 already travels through snapshots, copies and replay frames. R1 requires exactly

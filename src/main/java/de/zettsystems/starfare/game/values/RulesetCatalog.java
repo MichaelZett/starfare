@@ -29,9 +29,6 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
                         Set.of(ECONOMY_CANDIDATE.version())).forTesters()));
     }
 
-    /** Compatibility for retained research-preview launch profiles. */
-    public static RulesetCatalog withShipResearch() { return builtIn(); }
-
     public Optional<RulesetDefinition> find(String variant) {
         return definitions.stream().filter(entry -> entry.defaultRef().variant().equals(variant)).findFirst();
     }
