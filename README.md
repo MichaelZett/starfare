@@ -219,7 +219,7 @@ All game commands remain available only in a running game.
 - **Vaadin 25 (Flow)** — server-driven UI, language switcher, fog of
   war on an SVG map.
 - **Spring Modulith** — module boundaries verified on every test run.
-- **PostgreSQL 17** via Flyway migrations and Testcontainers in tests.
+- **PostgreSQL 18** via Flyway migrations and Testcontainers in tests.
 - **Gradle (Groovy DSL)** with quality gates: ErrorProne + NullAway,
   SpotBugs, JaCoCo, SonarQube, OpenRewrite.
 

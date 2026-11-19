@@ -6,6 +6,12 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- Lokale Datenbank und Tests laufen auf PostgreSQL 18.7 (Version zentral als `postgresVersion` in
+  `gradle.properties`, geprüft durch `verifyPostgresVersion`). Die lokale Compose-Datenbank nutzt das
+  neue Volume `postgres_data18`; vorhandene Daten per Dump und Restore umziehen (Skill `postgres-lokal`).
+
 ## 0.2.10 - 2026-11-18
 
 - Starfare fasst die alten Sozial- und Ergebnistabellen nicht mehr an; ein späteres Release löscht

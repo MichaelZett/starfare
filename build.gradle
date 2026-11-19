@@ -177,6 +177,7 @@ test {
     jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}"
     systemProperty 'user.language', 'en'
     systemProperty 'user.country', 'US'
+    systemProperty 'postgres.version', postgresVersion
     finalizedBy jacocoTestReport
 }
 
@@ -222,6 +223,7 @@ tasks.register('e2eTest', Test) {
     classpath = sourceSets.e2eTest.runtimeClasspath
     useJUnitPlatform()
     jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}"
+    systemProperty 'postgres.version', postgresVersion
     systemProperty 'e2e.headless', System.getProperty('e2e.headless', 'true')
     // Nur zur Diagnose (-De2e.lang=en-US): Die Steps erwarten die deutsche Oberfläche.
     systemProperty 'e2e.lang', System.getProperty('e2e.lang', 'de-DE')
@@ -370,6 +372,29 @@ jacocoTestCoverageVerification {
 }
 
 check.dependsOn jacocoTestCoverageVerification
+
+// `postgresVersion` in gradle.properties is the single source. Docker Compose cannot read it, and
+// the fallback in PostgresTestImage only serves IDE runs (Gradle passes -Dpostgres.version), so
+// this guard pins both to that source.
+tasks.register('verifyPostgresVersion') {
+    group = 'verification'
+    description = 'Checks that docker-compose.yml and PostgresTestImage match postgresVersion.'
+    def composeFile = file('docker-compose.yml')
+    def fallbackFile = file('src/test/java/de/zettsystems/starfare/testsupport/PostgresTestImage.java')
+    def expectedImage = "postgres:${postgresVersion}-alpine"
+    def expectedLiteral = "\"${postgresVersion}\""
+    inputs.files(composeFile, fallbackFile)
+    inputs.property('postgresVersion', postgresVersion)
+    doLast {
+        if (!composeFile.text.contains(expectedImage)) {
+            throw new GradleException("docker-compose.yml does not use ${expectedImage}; update it or postgresVersion.")
+        }
+        if (!fallbackFile.text.contains(expectedLiteral)) {
+            throw new GradleException("PostgresTestImage.java does not fall back to ${expectedLiteral}; update it or postgresVersion.")
+        }
+    }
+}
+check.dependsOn verifyPostgresVersion
 
 // SONAR_ORGANIZATION (set in CI) switches to SonarQube Cloud; without it the
 // analysis goes to the local instance. Cloud derives the project key from owner

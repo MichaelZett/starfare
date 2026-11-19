@@ -1,5 +1,6 @@
 package de.zettsystems.starfare;
 
+import de.zettsystems.starfare.testsupport.PostgresTestImage;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
@@ -11,7 +12,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 final class TestcontainersPostgres {
 
     @SuppressWarnings("rawtypes")
-    static final PostgreSQLContainer INSTANCE = new PostgreSQLContainer("postgres:17");
+    static final PostgreSQLContainer INSTANCE = new PostgreSQLContainer(PostgresTestImage.dockerImage());
 
     static {
         INSTANCE.start();

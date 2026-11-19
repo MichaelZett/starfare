@@ -1,14 +1,18 @@
+# KEEP IN SYNC with gradle.properties `postgresVersion` — verified by task `verifyPostgresVersion`.
 services:
   postgres:
-    image: postgres:17
+    image: postgres:18.7-alpine
     environment:
       POSTGRES_DB: starfare
       POSTGRES_USER: starfare
       POSTGRES_PASSWORD: starfare
     ports:
       - "127.0.0.1:5432:5432"
+    # From PostgreSQL 18 on the image keeps its data below /var/lib/postgresql/18/docker and refuses
+    # to start with a mount on …/data. A new major version therefore needs a new volume plus dump
+    # and restore (skill postgres-lokal).
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data18:/var/lib/postgresql
 
 volumes:
-  postgres_data:
+  postgres_data18:

@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.e2e;
 
+import de.zettsystems.starfare.testsupport.PostgresTestImage;
 import de.zettsystems.starfare.testsupport.TestPlatformSocial;
 import io.cucumber.spring.CucumberContextConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +24,7 @@ public class CucumberSpringConfiguration {
 
     @ServiceConnection
     @SuppressWarnings("rawtypes")
-    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:17")
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer(PostgresTestImage.dockerImage())
             .withDatabaseName("starfare_e2e");
 
     static {
