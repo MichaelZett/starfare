@@ -10,7 +10,7 @@ services:
       - "127.0.0.1:5432:5432"
     # From PostgreSQL 18 on the image keeps its data below /var/lib/postgresql/18/docker and refuses
     # to start with a mount on …/data. A new major version therefore needs a new volume plus dump
-    # and restore (skill postgres-lokal).
+    # and restore.
     volumes:
       - postgres_data18:/var/lib/postgresql
 
