@@ -925,6 +925,16 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean leaveGame(GameId gameId, int playerId) {
+        return handOverToComputer(gameId, playerId, false);
+    }
+
+    @Override
+    public boolean resignGame(GameId gameId, int playerId) {
+        return handOverToComputer(gameId, playerId, true);
+    }
+
+    /** Leaving keeps the way back open where re-entry is allowed; resigning closes it for good. */
+    private boolean handOverToComputer(GameId gameId, int playerId, boolean resign) {
         SubmitResult result = registry.writeState(gameId, state -> {
             if (!state.started() || state.gameOver()) {
                 return new SubmitResult(false, TurnResult.REJECTED);
@@ -932,6 +942,7 @@ public class DefaultGameService implements GameService {
             if (!state.joinedHumanPlayerIds().contains(playerId)) {
                 return new SubmitResult(false, TurnResult.REJECTED);
             }
+            if (resign) { state.resignedSeats().add(playerId); }
             state.updatePlayer(playerId, Player::asAi);
             state.joinedHumanPlayerIds().remove(playerId);
             state.miningAutomation().remove(playerId);

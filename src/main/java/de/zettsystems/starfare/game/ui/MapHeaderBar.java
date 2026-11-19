@@ -33,10 +33,11 @@ final class MapHeaderBar extends HorizontalLayout {
     private final @Nullable MenuItem logisticsItem;
     private final MenuItem researchItem;
     private final MenuItem leaveItem;
+    private final MenuItem resignItem;
     private final MenuItem roundRulesItem;
 
     record Actions(Runnable onNext, Runnable onToggleLogistics, Runnable onLeave, Runnable onLobby,
-                   Runnable onChat, Runnable onEditRoundRules, Runnable onResearch) { }
+                   Runnable onChat, Runnable onEditRoundRules, Runnable onResearch, Runnable onResign) { }
 
     MapHeaderBar(Actions actions, boolean compact) {
         empireStats = new EmpireStatsBar(actions.onResearch());
@@ -74,6 +75,8 @@ final class MapHeaderBar extends HorizontalLayout {
         roundRulesItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_ROUND_RULES),
                 _ -> actions.onEditRoundRules().run());
         leaveItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LEAVE), _ -> actions.onLeave().run());
+        resignItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_RESIGN), _ -> actions.onResign().run());
+        resignItem.setVisible(false);
         menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LOBBY), _ -> actions.onLobby().run());
 
         var headerLeft = compact
@@ -129,6 +132,9 @@ final class MapHeaderBar extends HorizontalLayout {
     }
 
     void setLeaveVisible(boolean visible) { leaveItem.setVisible(visible); }
+
+    /** Only a seated player of a running game can resign. */
+    void setResignVisible(boolean visible) { resignItem.setVisible(visible); }
 
     /** Without research there is neither the header button nor the menu entry. */
     void setResearch(@Nullable ResearchView research) {

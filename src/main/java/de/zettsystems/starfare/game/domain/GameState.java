@@ -95,6 +95,9 @@ public class GameState {
     private final Map<Integer, ColonyEconomy> colonies = new HashMap<>();
     private final Map<Integer, de.zettsystems.starfare.economy.values.MiningAutomation> miningAutomation = new HashMap<>();
     public Map<Integer, de.zettsystems.starfare.economy.values.MiningAutomation> miningAutomation() { return miningAutomation; }
+    /** Seats whose player gave up for good: the computer keeps them and the player cannot reclaim them. */
+    private final Set<Integer> resignedSeats = new HashSet<>();
+    public Set<Integer> resignedSeats() { return resignedSeats; }
     private @Nullable MetalEconomy metals;
     public Optional<MetalEconomy> metals() { return Optional.ofNullable(metals); }
     public MetalProduction metalPreview() {
@@ -722,6 +725,7 @@ public class GameState {
         this.industries.clear();
         colonies.clear();
         miningAutomation.clear();
+        resignedSeats.clear();
         metals = null;
         navigation = null;
         diplomacy = DiplomacyState.EMPTY;
@@ -922,7 +926,8 @@ public class GameState {
                 ordersCopy, standingCopy, new HashMap<>(s.nextStandingOrderId),
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
-                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome(), new HashMap<>(s.colonies), s.metals, Map.copyOf(s.miningAutomation));
+                  new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome(), new HashMap<>(s.colonies), s.metals, Map.copyOf(s.miningAutomation),
+                Set.copyOf(s.resignedSeats));
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -939,6 +944,8 @@ public class GameState {
         restoreEconomy(c, s);
         var automation = s.miningAutomation();
         if (automation != null) { c.miningAutomation.putAll(automation); }
+        var resigned = s.resignedSeats();
+        if (resigned != null) { c.resignedSeats.addAll(resigned); }
         restoreTravel(c, s);
         restoreOrders(c, s);
         restoreSettings(c, s);
@@ -1129,6 +1136,7 @@ public class GameState {
         c.colonies.putAll(s.colonies);
         c.metals = s.metals;
         c.miningAutomation.putAll(s.miningAutomation);
+        c.resignedSeats.addAll(s.resignedSeats);
         c.navigation = s.navigation;
         c.diplomacy = s.diplomacy;
         c.originalSetup = s.originalSetup;

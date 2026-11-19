@@ -174,6 +174,9 @@ public interface GameService {
 
     boolean kickHuman(GameId gameId, @Nullable String actorPlayerId, int seatId);
 
+    /** Gives up for good: the computer takes over the seat and the player cannot reclaim it. */
+    boolean resignGame(GameId gameId, int playerId);
+
     boolean leaveGame(GameId gameId, int playerId);
 
     boolean hasSignificantEventsFor(GameId gameId, int playerId);

@@ -7,6 +7,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -163,7 +164,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         treatyActions.add(iconAction(VaadinIcon.HANDSHAKE, UiTexts.DIP_TITLE, this::openDiplomacy));
         boolean phone = Devices.mobile();
         header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
-                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, this::openShipResearch), phone);
+                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, this::openShipResearch, this::confirmResign), phone);
 
         gameOverBanner.setVisible(false);
         gameOverBanner.getStyle().set(CssProperties.FONT_WEIGHT, "600");
@@ -542,6 +543,29 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
     }
 
+    private void confirmResign() {
+        ConfirmDialog confirm = new ConfirmDialog();
+        confirm.setId("resign-confirm");
+        confirm.setHeader(I18n.t(UiTexts.MAP_RESIGN_TITLE));
+        confirm.setText(I18n.t(UiTexts.MAP_RESIGN_TEXT));
+        confirm.setCancelable(true);
+        confirm.setCancelText(I18n.t(UiTexts.MAP_DIALOG_CANCEL));
+        confirm.setConfirmText(I18n.t(UiTexts.MAP_RESIGN_CONFIRM));
+        confirm.setConfirmButtonTheme("error primary");
+        confirm.addConfirmListener(_ -> resignNow());
+        confirm.open();
+    }
+
+    private void resignNow() {
+        int pid = currentSeat();
+        if (pid < 0 || !game.resignGame(gameId, pid)) {
+            Notification.show(I18n.t(UiTexts.MAP_LEAVE_FAILED));
+            return;
+        }
+        Notification.show(I18n.t(UiTexts.MAP_RESIGNED));
+        getUI().ifPresent(ui -> ui.navigate(LobbyView.class));
+    }
+
     private int currentSeat() {
         String playerId = UserContext.currentPlayerId().orElse(null);
         return playerId == null ? -1 : game.seatFor(gameId, playerId).orElse(-1);
@@ -649,6 +673,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         fleetsPanel.setReportAvailable(currentSeat() >= 0);
         header.setNextVisible(!reviewing && (!observer || game.isAiOnly(gameId)));
         header.setLeaveVisible(!reviewing);
+        header.setResignVisible(!reviewing && !observer && !view.gameOver() && currentSeat() >= 0);
         header.setRoundRulesVisible(!reviewing && UserContext.currentPlayerId()
                 .flatMap(account -> game.hostPlayerIdOf(gameId).filter(account::equals)).isPresent());
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));

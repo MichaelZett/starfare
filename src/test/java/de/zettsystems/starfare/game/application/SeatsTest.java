@@ -72,6 +72,39 @@ class SeatsTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void resignHandsTheSeatToTheComputerForGoodEvenWhenReentryAllowed() {
+        GameId id = setupRunningGame(true);
+
+        assertThat(game.resignGame(id, 1)).isTrue();
+        assertThat(playerIsAi(id, 1)).isTrue();
+        assertThat(isJoined(id, 1)).isFalse();
+        assertThat(registry.<Boolean>readState(id, state -> state.resignedSeats().contains(1))).isTrue();
+
+        assertThat(game.joinGame(id, 1)).isFalse();
+        assertThat(playerIsAi(id, 1)).isTrue();
+    }
+
+    @Test
+    void aResignedAccountCannotReclaimItsSeat() {
+        GameId id = setupRunningGame(true);
+        registry.writeState(id, state -> { state.seatByUser().put("resigner", 1); return null; });
+
+        assertThat(game.resignGame(id, 1)).isTrue();
+
+        assertThat(game.joinGame(id, "resigner", "P1", "Empire")).isEmpty();
+        assertThat(playerIsAi(id, 1)).isTrue();
+    }
+
+    @Test
+    void onlyAJoinedPlayerOfARunningGameCanResign() {
+        GameId id = setupRunningGame(true);
+        assertThat(game.resignGame(id, 3)).as("computer seat").isFalse();
+        registry.writeState(id, state -> { state.endGame(2); return null; });
+        assertThat(game.resignGame(id, 1)).as("finished game").isFalse();
+        assertThat(registry.<Boolean>readState(id, state -> state.resignedSeats().isEmpty())).isTrue();
+    }
+
+    @Test
     void rejoinByForeignIdRejectedEvenWithReentryAllowed() {
         GameId id = setupRunningGame(true);
         game.leaveGame(id, 1);

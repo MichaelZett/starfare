@@ -376,6 +376,11 @@ public final class UiTexts {
     public static final String MAP_GAME_OVER = "map.gameOver";
     public static final String MAP_ACTION_LOBBY = "map.action.lobby";
     public static final String MAP_ACTION_LEAVE = "map.action.leave";
+    public static final String MAP_ACTION_RESIGN = "map.action.resign";
+    public static final String MAP_RESIGN_TITLE = "map.resign.title";
+    public static final String MAP_RESIGN_TEXT = "map.resign.text";
+    public static final String MAP_RESIGN_CONFIRM = "map.resign.confirm";
+    public static final String MAP_RESIGNED = "map.resigned";
     public static final String MAP_ACTION_LEAVE_OBSERVE = "map.action.leaveObserve";
     public static final String MAP_ACTION_ROUND_RULES = "map.action.roundRules";
     public static final String MAP_LEAVE_FAILED = "map.leaveFailed";

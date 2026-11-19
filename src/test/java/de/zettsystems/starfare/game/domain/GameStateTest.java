@@ -265,6 +265,7 @@ class GameStateTest {
     void copyAndSnapshotRoundTripKeepEveryField() {
         GameState state = populated();
         state.makePrivate();
+        state.resignedSeats().add(2);
         GameStateSnapshot snapshot = GameState.toSnapshot(state);
 
         assertThat(snapshot.intel()).isEqualTo(state.intel());
@@ -274,11 +275,13 @@ class GameStateTest {
         GameState restored = GameState.fromSnapshot(snapshot);
         assertThat(GameState.toSnapshot(restored)).isEqualTo(snapshot);
         assertThat(restored.intel()).isEqualTo(state.intel());
+        assertThat(restored.resignedSeats()).containsExactly(2);
     }
 
     @Test
     void resetForNewGameStartsAnEmptyPrivateLobby() {
         GameState state = populated();
+        state.resignedSeats().add(1);
 
         state.resetForNewGame();
 
@@ -295,6 +298,7 @@ class GameStateTest {
         assertThat(state.replayFrames()).isEmpty();
         assertThat(state.industries()).isEmpty();
         assertThat(state.miningAutomation()).isEmpty();
+        assertThat(state.resignedSeats()).isEmpty();
         assertPerMatchDataCleared(state);
     }
 
