@@ -43,7 +43,7 @@ class CreateGameWizardTest extends AbstractBrowserlessTest {
     }
 
     @Test
-    void aiStrategiesFollowTheVariantSurviveSeatChangesAndAreSavedWithTheGame() {
+    void aiStrategiesFollowTheVariantAndSurviveSeatChanges() {
         loginAsNewPlayer("Strategist");
         openWizard();
         assertThat(variants().getValue().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
@@ -64,8 +64,15 @@ class CreateGameWizardTest extends AbstractBrowserlessTest {
         assertThat(choices(1)).hasSize(5);
         assertSelection(1, AiStrategy.BASELINE);
         assertSelection(2, AiStrategy.DEFENSE);
+    }
+
+    @Test
+    void aiStrategiesAppearInTheSummaryAndAreSavedWithTheGame() {
+        loginAsNewPlayer("Strategist");
+        openWizard();
         chooseVariant(RulesetRef::isSpaceward);
         choose(1, "Adaptiver Industrieausbau");
+        choose(2, "Verteidigung");
 
         test(find(Checkbox.class).withId("host-only").single()).click();
         test(button("Zusammenfassung prüfen")).click();
@@ -110,11 +117,7 @@ class CreateGameWizardTest extends AbstractBrowserlessTest {
 
     @Test
     void allianceOptionsDependOnTheVariantAndOnEachOther() {
-        loginAsNewPlayer("Commander");
-        // Every variant creatable, as the tester preview offered it; alliances belong to Spaceward.
-        CreateGameWizardDialog.open(games, players, () -> { }, new RulesetCatalog(games.rulesets().definitions().stream()
-                .map(entry -> new RulesetDefinition(entry.defaultRef(), entry.nameKey(), entry.descriptionKey(),
-                        entry.supportedVersions(), true, entry.creatableVersions())).toList()));
+        openWizardWithEveryVariant();
         assertThat(checkbox("alliances-allowed").isEnabled()).as("SectorForces has no alliances").isFalse();
 
         chooseVariant(RulesetRef::isSpaceward);
@@ -134,12 +137,28 @@ class CreateGameWizardTest extends AbstractBrowserlessTest {
         assertEnabled(true, "alliance-victory-allowed", "ai-alliances-allowed");
         test(checkbox("alliance-victory-allowed")).click();
         assertThat(percent().isEnabled()).isTrue();
+    }
+
+    @Test
+    void theSummaryNamesTheAllianceVictoryAndAiAlliances() {
+        openWizardWithEveryVariant();
+        chooseVariant(RulesetRef::isSpaceward);
+        test(checkbox("alliance-victory-allowed")).click();
 
         test(button("Zusammenfassung prüfen")).click();
         List<String> lines = find(Component.class).withClassName("wizard-summary-line").all().stream()
                 .map(line -> elementText(line.getElement())).toList();
-        assertThat(lines).anyMatch(line -> line.contains("Bündnissieg") && line.contains("70 %"));
-        assertThat(lines).anyMatch(line -> line.contains("KI-Bündnisse") && line.contains("aktiv"));
+        assertThat(lines)
+                .anyMatch(line -> line.contains("Bündnissieg") && line.contains("70 %"))
+                .anyMatch(line -> line.contains("KI-Bündnisse") && line.contains("aktiv"));
+    }
+
+    /** Every variant creatable, as the tester preview offered it; alliances belong to Spaceward. */
+    private void openWizardWithEveryVariant() {
+        loginAsNewPlayer("Commander");
+        CreateGameWizardDialog.open(games, players, () -> { }, new RulesetCatalog(games.rulesets().definitions().stream()
+                .map(entry -> new RulesetDefinition(entry.defaultRef(), entry.nameKey(), entry.descriptionKey(),
+                        entry.supportedVersions(), true, entry.creatableVersions())).toList()));
     }
 
     private void openWizard() {
