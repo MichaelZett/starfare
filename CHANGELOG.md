@@ -8,6 +8,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- Die alten Sozial- und Ergebnistabellen (Freundschaften, Direktnachrichten, Sichtbarkeit, Teilnehmer,
+  Sieger und Gegner der Ergebnisse) werden gelöscht; Ergebnisse, Statistik und Kontakte führt die
+  Plattform. Starfare merkt sich je Partie nur noch, wann sie zuerst endete.
 - Lokale Datenbank und Tests laufen auf PostgreSQL 18.7 (Version zentral als `postgresVersion` in
   `gradle.properties`, geprüft durch `verifyPostgresVersion`). Die lokale Compose-Datenbank nutzt das
   neue Volume `postgres_data18`; vorhandene Daten per Dump und Restore umziehen (Skill `postgres-lokal`).
