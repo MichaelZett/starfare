@@ -1,8 +1,6 @@
 package de.zettsystems.starfare.economy.ui;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.textfield.IntegerField;
 import de.zettsystems.starfare.game.domain.GameState;
@@ -85,11 +83,8 @@ class MetalJourneyTest extends AbstractEconomyUiTest {
         return find(Input.class).withAriaLabel("Metall fördern").single();
     }
 
-    @SuppressWarnings("unchecked") // rationale: the language switcher contains a ComboBox<Locale>.
     private void changeLanguage(Locale locale) {
-        var switcher = find(Component.class).withClassName("lang-switcher").single();
-        ComboBox<Locale> combo = find(ComboBox.class, switcher).single();
-        test(combo).selectItem(locale.equals(Locale.ENGLISH) ? "Englisch" : "German");
+        switchLanguage(locale);
         reloadMap();
     }
 }

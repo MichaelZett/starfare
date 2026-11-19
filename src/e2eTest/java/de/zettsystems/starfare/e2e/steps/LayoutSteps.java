@@ -45,6 +45,8 @@ public class LayoutSteps {
                 browser.awaitCss("#map .sys-own");
                 browser.clickMatching("#map .sys-own", element -> element.getText().startsWith("Alpha"), "Alpha");
                 browser.awaitCss(".system-metric");
+                assertThat(browser.awaitCss(".system-orrery").getSize().getWidth())
+                        .as("system diagram at %d px", width).isGreaterThan(180);
                 capture("system-details", width);
             }
             registry.writeState(game.id(), state -> { state.endGame(game.hostSeat()); return null; });

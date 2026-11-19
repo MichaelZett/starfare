@@ -539,7 +539,8 @@ saved filters after a new sign-in, rematches, relocation limits, station routes
 and coalition ownership, concealed results and persistent battle acknowledgements.
 Game-end journeys cover alliance proposals, notice periods and departures with two
 accounts, continuing a won game towards full conquest, and victory staying hidden
-until the last battle has been evaluated, also after reloading.
+until the last battle has been evaluated, also after reloading. The home system view
+keeps its stars and worlds across reloads and follows a language change.
 They need neither Chrome nor a running HTTP server. `./gradlew e2eTest` runs the
 Cucumber/Selenium journeys that need a real browser against the real application in
 headless Chrome: sign-in of a test account and one round, round submission pushed between

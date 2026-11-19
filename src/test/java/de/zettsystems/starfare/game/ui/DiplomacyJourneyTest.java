@@ -1,8 +1,6 @@
 package de.zettsystems.starfare.game.ui;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -158,11 +156,8 @@ class DiplomacyJourneyTest extends AbstractMapJourneyTest {
         click("Bündnisse");
     }
 
-    @SuppressWarnings("unchecked") // rationale: the language switcher contains a ComboBox<Locale>.
     private void changeLanguage(Locale locale) {
-        var switcher = find(Component.class).withClassName("lang-switcher").single();
-        ComboBox<Locale> combo = find(ComboBox.class, switcher).single();
-        test(combo).selectItem(locale.equals(Locale.ENGLISH) ? "Englisch" : "German");
+        switchLanguage(locale);
         reloadMap();
     }
 

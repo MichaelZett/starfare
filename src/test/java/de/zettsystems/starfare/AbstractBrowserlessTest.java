@@ -88,6 +88,15 @@ public abstract class AbstractBrowserlessTest extends SpringBrowserlessTest {
         return systems.getFirst();
     }
 
+    /** Picks the language in the header switcher; callers reload the view they want to inspect. */
+    @SuppressWarnings("unchecked") // rationale: the language switcher contains a ComboBox<Locale>.
+    protected void switchLanguage(Locale locale) {
+        var switcher = find(com.vaadin.flow.component.Component.class).withClassName("lang-switcher").single();
+        com.vaadin.flow.component.combobox.ComboBox<Locale> combo =
+                find(com.vaadin.flow.component.combobox.ComboBox.class, switcher).single();
+        test(combo).selectItem(locale.equals(Locale.ENGLISH) ? "Englisch" : "German");
+    }
+
     protected Button button(String text) {
         return find(Button.class).withText(text).single();
     }
