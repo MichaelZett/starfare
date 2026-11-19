@@ -13,8 +13,20 @@ import java.util.stream.Collectors;
 @org.springframework.stereotype.Component
 final class VictoryEvaluation {
     private final ReportService reports;
-    VictoryEvaluation(ReportService reports) { this.reports = reports; }
+    private final RoundLimit roundLimit;
+    VictoryEvaluation(ReportService reports) {
+        this.reports = reports;
+        this.roundLimit = new RoundLimit(reports);
+    }
     void resolve(GameState state) {
+        resolveThreshold(state);
+        if (state.gameOver()) { return; }
+        roundLimit.resolve(state).ifPresent(winner -> {
+            state.endGame(winner);
+            announce(state, reports, List.of(winner), TurnEvent.Victory.BY_SCORE);
+        });
+    }
+    private void resolveThreshold(GameState state) {
         if (state.gameOver() || state.systems().isEmpty()) { return; }
         var counts = state.systems().stream().filter(s -> s.ownerId() != null)
                 .collect(Collectors.groupingBy(StarSystem::ownerId, Collectors.counting()));

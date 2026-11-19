@@ -405,6 +405,12 @@ public class GameState {
         return originalSetup == null ? SectorOptions.none() : originalSetup.sectorOptions();
     }
 
+    /** Whether the round limit of a SectorForces game is reached; such a game cannot be continued. */
+    public boolean roundLimitReached() {
+        SectorOptions options = sectorOptions();
+        return ruleset.usesSectorOptions() && options.hasRoundLimit() && turn >= options.roundLimit();
+    }
+
     public void rememberSetup(GameSetup setup) {
         if (started || originalSetup != null) {
             throw new IllegalStateException("Game rules are fixed at creation");

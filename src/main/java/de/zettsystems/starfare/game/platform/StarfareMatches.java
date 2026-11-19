@@ -7,6 +7,7 @@ import de.zettsystems.gamesplatformapi.MatchStatus;
 import de.zettsystems.gamesplatformapi.MatchSummary;
 import de.zettsystems.gamesplatformapi.Placement;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.domain.SectorScore;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSummary;
@@ -99,8 +100,8 @@ public final class StarfareMatches {
     /**
      * The result of a finished game, or empty if no account took part.
      *
-     * <p>Winners share place 1. The others follow by the number of systems they hold at the end;
-     * computer opponents count, so an account behind a winning computer opponent is on place 2.
+     * <p>Winners share place 1. The others follow by the number of systems they hold at the end, or by
+     * their {@link SectorScore} when a SectorForces game reached its round limit; computer opponents count, so an account behind a winning computer opponent is on place 2.
      * An account whose seat a computer opponent took over (left, removed or too many missed
      * deadlines) has resigned; an account without systems and fleets was eliminated. A game that
      * ended without a winner has no ranking and counts as aborted.
@@ -117,14 +118,20 @@ public final class StarfareMatches {
         Map<Integer, Long> systems = state.systems().stream().map(StarSystem::ownerId).filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(owner -> owner, Collectors.counting()));
         Set<Integer> fleetOwners = state.fleets().stream().map(Fleet::ownerId).collect(Collectors.toSet());
+        Map<Integer, Long> standing = state.roundLimitReached() ? scores(state) : systems;
         List<Placement> placements = accounts.entrySet().stream().map(entry -> {
             int seat = entry.getKey();
             long better = state.players().stream()
-                    .filter(other -> ranksBefore(other.id(), seat, winners, systems)).count();
+                    .filter(other -> ranksBefore(other.id(), seat, winners, standing)).count();
             return new Placement(entry.getValue(), 1 + (int) better,
                     departure(state, seat, systems, fleetOwners));
         }).toList();
         return Optional.of(MatchResult.ranked(placements));
+    }
+
+    private static Map<Integer, Long> scores(GameState state) {
+        return state.players().stream().collect(Collectors.toMap(player -> player.id(),
+                player -> (long) SectorScore.of(state, player.id()).points()));
     }
 
     private static boolean ranksBefore(int other, int seat, Set<Integer> winners, Map<Integer, Long> systems) {

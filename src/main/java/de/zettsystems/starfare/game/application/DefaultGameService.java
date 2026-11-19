@@ -1309,7 +1309,8 @@ public class DefaultGameService implements GameService {
     }
 
     private static boolean continuable(GameState state, String account) {
-        return state.gameOver() && state.outcome().wonBy(state.seatByUser().get(account)) && !state.requiresFullConquest();
+        return state.gameOver() && state.outcome().wonBy(state.seatByUser().get(account)) && !state.requiresFullConquest()
+                && !state.roundLimitReached();
     }
 
     @Override

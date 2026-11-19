@@ -147,6 +147,35 @@ class StarfareMatchesTest {
         }
 
         @Test
+        void ranksByScoreWhenTheRoundLimitEndedTheGame() {
+            GameState state = new GameState();
+            state.rememberSetup(de.zettsystems.starfare.game.values.GameSetup.defaults().withSectorOptions(
+                    new de.zettsystems.starfare.game.values.SectorOptions(
+                            de.zettsystems.starfare.game.values.EventFrequency.OFF, null, false, 10)));
+            state.players().add(new Player(1, "P1", false, "#111111"));
+            state.players().add(new Player(2, "P2", false, "#222222"));
+            state.players().add(new Player(3, "AI", true, "#333333"));
+            state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 10, 2, false));
+            state.systems().add(new StarSystem(2, "S2", 1000, 0, 2, 60, 2, false));
+            state.systems().add(new StarSystem(4, "S4", 0, 500, 3, 1, 2, false));
+            state.systems().add(new StarSystem(5, "S5", 0, 900, 3, 1, 2, false));
+            state.seatByUser().put("17", 1);
+            state.seatByUser().put("23", 2);
+            state.joinedHumanPlayerIds().addAll(List.of(1, 2));
+            state.originalHumanPlayerIds().addAll(List.of(1, 2));
+            state.start();
+            while (state.turn() < 10) {
+                state.nextTurn();
+            }
+            state.endGame(1);
+
+            // By systems the AI (two systems) would come before P2 (one system with 60 ships).
+            assertThat(StarfareMatches.result(state).orElseThrow()).isInstanceOfSatisfying(MatchResult.Ranked.class,
+                    ranked -> assertThat(ranked.placements()).containsExactly(
+                            new Placement(SEVENTEEN, 1), new Placement(TWENTY_THREE, 2)));
+        }
+
+        @Test
         void putsEveryAccountBehindAWinningComputerOpponent() {
             GameState state = runningGame();
             state.players().add(new Player(3, "AI", true, "#333333"));
