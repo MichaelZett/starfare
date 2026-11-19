@@ -66,7 +66,8 @@ class SectorForcesStateTest {
         state.launchEventFleet(1, 2, 4, 1, state.turn() + 3);
         state.addFleet(1, 1, 4, 1);
         assertThat(state.fleets()).extracting(Fleet::globalId).doesNotHaveDuplicates();
-        assertThatThrownBy(() -> state.launchEventFleet(1, 2, 4, 3, state.turn() + 1))
+        int thisRound = state.turn() + 1;
+        assertThatThrownBy(() -> state.launchEventFleet(1, 2, 4, 3, thisRound))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

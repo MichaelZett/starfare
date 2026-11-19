@@ -193,7 +193,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         });
         if (phone) {
             mobile = new MobileMapLayout(List.of(header, roundStatus, spectatorControls, reviewControls), gameOverBanner,
-                    mapCanvas, fleetsPanel, chatHost, this::cancelTargetSelectionAndRefresh, this::hideGameChat, frame);
+                    mapCanvas, fleetsPanel, chatHost, this::cancelTargetSelectionAndRefresh, this::hideGameChat);
+            if (frame != null) {
+                mobile.addBelowPanel(frame.legalFooter());
+            }
             addClassName("map-root-mobile");
             add(mobile);
         } else {

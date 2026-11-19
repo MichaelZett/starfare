@@ -9,7 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 /**
  * Runtime state of the SectorForces random events: home systems (never explode), suns that explode
@@ -68,15 +69,15 @@ public record CosmicState(Set<Integer> homeSystems, Set<Integer> destroyedSystem
         return new CosmicState(homeSystems, destroyedSystems, unstableSystems, next, nextPirateId + 1);
     }
 
-    /** Applies a change to every pirate fleet; a fleet mapped to {@code null} has landed. */
-    public CosmicState movePirates(Function<PirateFleet, @Nullable PirateFleet> change) {
-        List<PirateFleet> next = new ArrayList<>();
-        for (PirateFleet fleet : pirates) {
-            PirateFleet moved = change.apply(fleet);
-            if (moved != null) {
-                next.add(moved);
-            }
-        }
-        return new CosmicState(homeSystems, destroyedSystems, unstableSystems, next, nextPirateId);
+    /** Applies a change to every pirate fleet. */
+    public CosmicState movePirates(UnaryOperator<PirateFleet> change) {
+        return new CosmicState(homeSystems, destroyedSystems, unstableSystems, pirates.stream().map(change).toList(),
+                nextPirateId);
+    }
+
+    /** Removes the pirate fleets that landed or lost their way. */
+    public CosmicState dropPirates(Predicate<PirateFleet> gone) {
+        return new CosmicState(homeSystems, destroyedSystems, unstableSystems,
+                pirates.stream().filter(gone.negate()).toList(), nextPirateId);
     }
 }

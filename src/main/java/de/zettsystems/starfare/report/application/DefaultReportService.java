@@ -69,7 +69,8 @@ public class DefaultReportService implements ReportService {
             case TurnEvent.Defeat defeat -> "Niederlage: %s gewinnt die Partie.".formatted(defeat.winnerName());
             case TurnEvent.ResearchCompleted research -> "Schiffsforschung: Technikstufe %d erreicht.".formatted(research.level());
             case TurnEvent.EconomySummary _ -> null;
-            case TurnEvent.Cosmic news -> "Hyperraum-Ticker: %s %s".formatted(news.news(), news.systemName()).strip();
+            case TurnEvent.Cosmic(var kind, var _, var systemName, var _, var _, var _, var _, var _) ->
+                    "Hyperraum-Ticker: %s %s".formatted(kind, systemName).strip();
             case TurnEvent.FinalScore score -> "Wertung nach Runde %d: %s".formatted(score.round(), score.lines().stream()
                     .map(line -> line.name() + " " + line.points()).collect(java.util.stream.Collectors.joining(", ")));
         };

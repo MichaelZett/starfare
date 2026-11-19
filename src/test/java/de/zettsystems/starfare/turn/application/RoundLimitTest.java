@@ -80,7 +80,7 @@ class RoundLimitTest {
     @Test
     void shipsDecideWhenSystemsAreEven() {
         GameState state = galaxy(SectorOptions.MIN_ROUND_LIMIT);
-        state.updateSystem(2, system -> system.explode());
+        state.updateSystem(2, StarSystem::explode);
         state.updateSystem(1, system -> system.loseShips(10));
 
         List<TurnEvent.ScoreLine> lines = RoundLimit.score(state);

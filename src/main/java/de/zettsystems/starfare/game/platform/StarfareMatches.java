@@ -130,7 +130,7 @@ public final class StarfareMatches {
     }
 
     private static Map<Integer, Long> scores(GameState state) {
-        return state.players().stream().collect(Collectors.toMap(player -> player.id(),
+        return state.players().stream().collect(Collectors.toMap(Player::id,
                 player -> (long) SectorScore.of(state, player.id()).points()));
     }
 

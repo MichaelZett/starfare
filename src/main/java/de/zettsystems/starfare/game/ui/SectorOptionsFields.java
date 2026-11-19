@@ -67,7 +67,10 @@ final class SectorOptionsFields extends VerticalLayout {
         Set<CosmicEvent> chosenEvents = events.getValue().isEmpty()
                 ? EnumSet.noneOf(CosmicEvent.class) : EnumSet.copyOf(events.getValue());
         Integer last = roundLimit.getValue();
-        int limit = roundLimitEnabled.getValue() ? (last == null ? DEFAULT_ROUND_LIMIT : last) : 0;
+        int limit = 0;
+        if (Boolean.TRUE.equals(roundLimitEnabled.getValue())) {
+            limit = last == null ? DEFAULT_ROUND_LIMIT : last;
+        }
         return new SectorOptions(chosenFrequency, chosenEvents, positionalBalance.getValue(), limit);
     }
 

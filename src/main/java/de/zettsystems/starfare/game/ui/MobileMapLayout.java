@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.game.ui;
 
-import org.jspecify.annotations.Nullable;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -23,8 +22,7 @@ final class MobileMapLayout extends Div {
     private final Button panelTab;
 
     MobileMapLayout(List<Component> top, Component gameOverBanner, MapCanvas canvas,
-                    FleetAndOrdersPanel panel, Component chat, Runnable onCancelTarget, Runnable onCloseChat,
-                    @Nullable OwnFrameParts frame) {
+                    FleetAndOrdersPanel panel, Component chat, Runnable onCancelTarget, Runnable onCloseChat) {
         addClassName("mobile-map");
         var head = new Div(top.toArray(Component[]::new));
         head.addClassName("mobile-map-top");
@@ -44,9 +42,6 @@ final class MobileMapLayout extends Div {
         targetBanner.setVisible(false);
 
         sheet.add(panel);
-        if (frame != null) {
-            sheet.add(frame.legalFooter());
-        }
         sheet.addClassName("mobile-map-sheet");
 
         gameOverBanner.getElement().getClassList().add("mobile-map-banner");
@@ -97,5 +92,10 @@ final class MobileMapLayout extends Div {
         button.setTooltipText(I18n.t(key));
         button.addThemeVariants(ButtonVariant.TERTIARY);
         return button;
+    }
+
+    /** Adds a part below the panel, such as the legal footer of the own start. */
+    void addBelowPanel(Component part) {
+        sheet.add(part);
     }
 }

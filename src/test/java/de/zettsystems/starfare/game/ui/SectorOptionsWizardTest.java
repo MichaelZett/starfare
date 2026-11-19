@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.ui;
 
+import de.zettsystems.starfare.game.domain.GameState;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -81,7 +82,7 @@ class SectorOptionsWizardTest extends AbstractBrowserlessTest {
         assertThat(elementText(openedDialog().getElement())).contains("Selten", "nach Runde 40");
 
         GameId id = create();
-        SectorOptions saved = registry.readState(id, state -> state.sectorOptions());
+        SectorOptions saved = registry.readState(id, GameState::sectorOptions);
         assertThat(saved).isEqualTo(new SectorOptions(EventFrequency.RARE,
                 EnumSet.of(CosmicEvent.COSMIC_STORM, CosmicEvent.SUPERNOVA, CosmicEvent.PIRATES), true, 40));
     }
@@ -93,7 +94,7 @@ class SectorOptionsWizardTest extends AbstractBrowserlessTest {
         test(checkbox("host-only")).click();
         test(button("Zusammenfassung prüfen")).click();
         GameId id = create();
-        SectorOptions saved = registry.readState(id, state -> state.sectorOptions());
+        SectorOptions saved = registry.readState(id, GameState::sectorOptions);
         assertThat(saved.isDefault()).isTrue();
     }
 

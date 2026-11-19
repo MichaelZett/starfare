@@ -160,16 +160,24 @@ final class CosmicEvents {
                         name(state, destroyed), fleet.localNo(), fleet.ships(), 0, arrival, name(state, target)));
             });
         }
-        state.updateCosmic(cosmic -> cosmic.movePirates(pirates -> pirates.toSystemId() != destroyed ? pirates
-                : randomTarget(state, rng, destroyed).map(target -> pirates.panicJump(target,
-                        pirates.arrivalTurn() + state.travelRounds(destroyed, target))).orElse(null)));
+        if (state.systems().stream().noneMatch(system -> system.id() != destroyed && !state.destroyed(system.id()))) {
+            state.updateCosmic(cosmic -> cosmic.dropPirates(pirates -> pirates.toSystemId() == destroyed));
+            return;
+        }
+        state.updateCosmic(cosmic -> cosmic.movePirates(pirates -> pirates.toSystemId() == destroyed
+                ? jumpOn(state, rng, destroyed, pirates) : pirates));
+    }
+
+    private static PirateFleet jumpOn(GameState state, Random rng, int destroyed, PirateFleet pirates) {
+        int target = randomTarget(state, rng, destroyed).orElseThrow();
+        return pirates.panicJump(target, pirates.arrivalTurn() + state.travelRounds(destroyed, target));
     }
 
     private void landPirates(GameState state, Random rng) {
         int next = state.turn() + 1;
         List<PirateFleet> landing = new ArrayList<>(state.cosmic().pirates().stream()
                 .filter(pirates -> pirates.arrivalTurn() <= next).toList());
-        state.updateCosmic(cosmic -> cosmic.movePirates(pirates -> pirates.arrivalTurn() <= next ? null : pirates));
+        state.updateCosmic(cosmic -> cosmic.dropPirates(pirates -> pirates.arrivalTurn() <= next));
         landing.forEach(pirates -> raid(state, rng, pirates));
     }
 
