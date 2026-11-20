@@ -721,11 +721,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         header.setNextVisible(!reviewing && (!observer || game.isAiOnly(gameId)));
         header.setLeaveVisible(!reviewing);
         header.setResignVisible(!reviewing && !observer && !view.gameOver() && currentSeat() >= 0);
-        // A tempo fixes the deadlines, so only games without one offer the change.
-        header.setRoundRulesVisible(!reviewing && UserContext.currentPlayerId()
-                .flatMap(account -> game.hostPlayerIdOf(gameId).filter(account::equals))
-                .flatMap(account -> game.roundRulesFor(gameId, account))
-                .filter(rules -> rules.tempo() == null).isPresent());
+        header.setRoundRulesVisible(!reviewing && hostMayChangeRoundRules());
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer && pendingBattleSystemIds(view).isEmpty());
         header.setResearch(reviewing || observer || !pendingBattleSystemIds(view).isEmpty() ? null
@@ -738,12 +734,25 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 .map(de.zettsystems.starfare.game.values.Player::empireNameOrName).findFirst().orElse(""));
         header.updateTurnAction(status, playerId, observer, view.gameOver());
         header.setLogisticsActive(logisticsMode);
-        gameOverBanner.setVisible(view.gameOver() && reviewing);
-        if (view.gameOver() && reviewing) {
-            gameOverBanner.setText(I18n.t(UiTexts.MAP_GAME_OVER, winnerName(view)));
-        }
+        showGameOverBanner(view);
         if (!observer) {
             header.updateEmpireStats(view);
+        }
+    }
+
+    /** A tempo fixes the deadlines, so only the host of a game without one may change them. */
+    private boolean hostMayChangeRoundRules() {
+        return UserContext.currentPlayerId()
+                .flatMap(account -> game.hostPlayerIdOf(gameId).filter(account::equals))
+                .flatMap(account -> game.roundRulesFor(gameId, account))
+                .filter(rules -> rules.tempo() == null).isPresent();
+    }
+
+    private void showGameOverBanner(PlayerViewState view) {
+        boolean shown = view.gameOver() && reviewing;
+        gameOverBanner.setVisible(shown);
+        if (shown) {
+            gameOverBanner.setText(I18n.t(UiTexts.MAP_GAME_OVER, winnerName(view)));
         }
     }
 
