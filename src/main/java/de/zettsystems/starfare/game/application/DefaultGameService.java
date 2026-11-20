@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.starfare.diplomacy.application.DefaultDiplomacyService;
 import de.zettsystems.starfare.diplomacy.application.DiplomacyService;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyView;
@@ -18,6 +19,7 @@ import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.config.GameTimingProperties;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.platform.StarfareMatches;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.navigation.domain.Routes;
 import de.zettsystems.starfare.navigation.values.RoutePreview;
@@ -26,6 +28,7 @@ import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.turn.application.TurnEngine;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1126,6 +1129,17 @@ public class DefaultGameService implements GameService {
         return Stream.concat(live.stream().filter(GameSummary::gameOver), archived.stream())
                 .collect(Collectors.toMap(GameSummary::gameId, summary -> summary, (first, _) -> first)).values().stream().toList();
     }
+    @Override
+    public List<FinishedMatch> finishedMatchesOf(String account) {
+        Set<GameId> running = visibleGamesFor(account, GameListScope.LOBBY).stream()
+                .map(GameSummary::gameId).collect(Collectors.toSet());
+        return archives.all().stream().filter(game -> !running.contains(game.id()))
+                .map(game -> StarfareMatches.finished(game.id(), game.name(), game.finishedAt(), game.state(), account))
+                .flatMap(Optional::stream)
+                .sorted(Comparator.comparing(FinishedMatch::endedAt).reversed().thenComparing(FinishedMatch::matchId))
+                .toList();
+    }
+
     @Override
     public Optional<GameSummary> summaryFor(GameId id, String account) {
         // An unloaded game keeps the summary taken when it was unloaded; listing it must not load it again.

@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.platform;
 
 import de.zettsystems.gamesplatformapi.AccountId;
 import de.zettsystems.gamesplatformapi.Departure;
+import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.gamesplatformapi.MatchResult;
 import de.zettsystems.gamesplatformapi.MatchStatus;
 import de.zettsystems.gamesplatformapi.MatchSummary;
@@ -16,6 +17,7 @@ import de.zettsystems.starfare.game.values.StarSystem;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -83,6 +85,19 @@ public final class StarfareMatches {
         return Optional.of(new MatchSummary(GAME_KEY, game.gameId().value(), title, status,
                 List.copyOf(accounts.values()), seats, seats - (int) humanSeats, toMove, game.roundStartedAt(),
                 status == MatchStatus.OPEN ? waitingRoomPath(game.gameId()) : viewPath(game.gameId())));
+    }
+
+    /**
+     * The platform's entry for a finished game the account held a seat in, with the given end; empty if the
+     * account had no seat or no account of the game is a platform account.
+     */
+    public static Optional<FinishedMatch> finished(GameId id, String name, Instant endedAt, GameState state,
+                                                   String account) {
+        if (!state.seatByUser().containsKey(account)) {
+            return Optional.empty();
+        }
+        return result(state).map(result -> new FinishedMatch(GAME_KEY, id.value(), name.isBlank() ? id.value() : name,
+                endedAt, result, false, viewPath(id)));
     }
 
     private static MatchStatus status(GameSummary game) {

@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyView;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyOrder;
 import de.zettsystems.starfare.game.values.*;
@@ -40,6 +41,13 @@ public interface GameService {
                           List<de.zettsystems.starfare.fleet.values.FleetDispatch> dispatches);
     boolean setReserves(GameId gameId, int playerId, int expectedTurn, List<Integer> systems, int reserve, boolean production);
     List<GameSummary> visibleGamesFor(String account, GameListScope scope);
+
+    /**
+     * The finished games the account held a seat in, for the platform's list of finished matches: latest
+     * end first, then by id. The end is the one stored when the game was archived first; a game its winner
+     * continued runs again and is not listed until it ends anew.
+     */
+    List<FinishedMatch> finishedMatchesOf(String account);
     Optional<GameSummary> summaryFor(GameId id, String account);
     boolean changeVisibility(GameId id, String actor, GameVisibility visibility);
     Optional<PlayerViewState> reviewFor(GameId id, String account);

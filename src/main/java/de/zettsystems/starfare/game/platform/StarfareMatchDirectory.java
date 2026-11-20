@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.game.platform;
 
 import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.gamesplatformapi.MatchDirectory;
 import de.zettsystems.gamesplatformapi.MatchInvitation;
 import de.zettsystems.gamesplatformapi.MatchSummary;
@@ -15,9 +16,9 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
- * Starfare's matches for the platform. Both queries start from Starfare's own lobby list, so
- * the platform sees exactly what Starfare's lobby shows the account: games of a variant in
- * testing only for its testers, finished games not at all.
+ * Starfare's matches for the platform. The queries for open and running matches start from Starfare's
+ * own lobby list, so the platform sees exactly what Starfare's lobby shows the account: games of a
+ * variant in testing only for its testers. Finished games come from the archive, only the account's own.
  */
 @Component
 class StarfareMatchDirectory implements MatchDirectory {
@@ -60,6 +61,15 @@ class StarfareMatchDirectory implements MatchDirectory {
                         .stream())
                 .sorted(Comparator.comparing((MatchInvitation invitation) -> invitation.match().lastChange()).reversed())
                 .toList();
+    }
+
+    /** One page of {@link GameService#finishedMatchesOf(String)}: the account's finished games, latest first. */
+    @Override
+    public List<FinishedMatch> finishedMatchesOf(AccountId account, int offset, int limit) {
+        if (offset < 0 || limit < 1) {
+            throw new IllegalArgumentException("offset must be at least 0 and limit at least 1, got " + offset + " and " + limit);
+        }
+        return games.finishedMatchesOf(StarfareMatches.accountName(account)).stream().skip(offset).limit(limit).toList();
     }
 
     /** Seated, or the host who organises a game without a seat of their own (M12.1). */

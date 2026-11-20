@@ -1,6 +1,8 @@
 package de.zettsystems.starfare.game.platform;
 
 import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.FinishedMatch;
+import de.zettsystems.gamesplatformapi.MatchResult;
 import de.zettsystems.gamesplatformapi.MatchSummary;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.domain.GameSession;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -82,6 +85,26 @@ class StarfareMatchDirectoryTest {
         when(games.visibleGamesFor("17", GameListScope.LOBBY)).thenReturn(List.of(running));
 
         assertThat(directory.openMatches(VIEWER)).isEmpty();
+    }
+
+    @Test
+    void pagesThroughTheFinishedGamesOfTheAccount() {
+        when(games.finishedMatchesOf("17")).thenReturn(List.of(finished("c"), finished("b"), finished("a")));
+
+        assertThat(directory.finishedMatchesOf(VIEWER, 1, 5)).extracting(FinishedMatch::matchId).containsExactly("b", "a");
+        assertThat(directory.finishedMatchesOf(VIEWER, 0, 1)).extracting(FinishedMatch::matchId).containsExactly("c");
+        assertThat(directory.finishedMatchesOf(VIEWER, 3, 1)).isEmpty();
+    }
+
+    @Test
+    void rejectsANegativeOffsetAndAnEmptyPage() {
+        assertThatIllegalArgumentException().isThrownBy(() -> directory.finishedMatchesOf(VIEWER, -1, 1));
+        assertThatIllegalArgumentException().isThrownBy(() -> directory.finishedMatchesOf(VIEWER, 0, 0));
+    }
+
+    private static FinishedMatch finished(String id) {
+        return new FinishedMatch("starfare", id, id, Instant.parse("2026-11-01T10:00:00Z"),
+                MatchResult.aborted(List.of(VIEWER)), false, "/starfare/map/" + id);
     }
 
     private static GameSummary game(String name, Instant lastChange, Consumer<GameState> setup) {

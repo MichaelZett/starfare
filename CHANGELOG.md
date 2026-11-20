@@ -12,6 +12,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Runden hinausfliegt, erscheint im Ergebnis als „wegen Nichtzug ausgeschieden“ (`TIMED_OUT`) mit
   dem Platz, den er beim Rauswurf hielt; gewinnt danach der Computer mit seinem Reich, zählt das
   nicht als sein Sieg. Bisher galt er als aufgegeben und wurde nach dem Endstand eingeordnet.
+- **Beendete Partien für die Plattform:** Die Plattform kann die eigenen beendeten Partien eines
+  Kontos seitenweise abfragen, neueste zuerst, mit Ende, Ergebnis und Link zur Nachbetrachtung.
+  Fremde öffentliche Partien gehören nicht dazu.
 - **Als Vorlage in der Nachbetrachtung:** „Als Vorlage / Revanche“ steht bei beendeten Partien jetzt
   in der Leiste über der Karte statt auf der Archivkarte. Das Archiv ist nur noch Teil des eigenen
   Starts; in der Plattform listet künftig die Plattform die beendeten Partien.

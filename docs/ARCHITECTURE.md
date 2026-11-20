@@ -521,6 +521,11 @@ The optional `GameArchiveCleanupRunner` removes only operative `game_sessions`
 older than `starfare.game.archive-cleanup.retention` (90 days by default), and
 only when cleanup is enabled. It rechecks that the session is completed before
 deleting it; archive review and replay then read from their durable store.
+The platform lists an account's finished games from the same store
+(`MatchDirectory.finishedMatchesOf`, games-platform-api 0.4.0): only games the
+account held a seat in, latest end first (the `finished_at` of the first
+archiving), each with its ranking from `StarfareMatches.result` and the map as
+review link. A game continued after its victory runs again and is left out.
 
 `GameState.replayFrames` stores immutable systems, fleets and reports at game
 start and after every resolved turn. It is optional in `GameStateSnapshot` so

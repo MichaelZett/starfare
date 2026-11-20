@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.platform;
 
 import de.zettsystems.gamesplatformapi.AccountId;
 import de.zettsystems.gamesplatformapi.Departure;
+import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.gamesplatformapi.MatchResult;
 import de.zettsystems.gamesplatformapi.MatchStatus;
 import de.zettsystems.gamesplatformapi.MatchSummary;
@@ -15,6 +16,7 @@ import de.zettsystems.starfare.game.values.StarSystem;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -267,6 +269,43 @@ class StarfareMatchesTest {
         private Placement placementOf(GameState state, AccountId account) {
             MatchResult.Ranked ranked = (MatchResult.Ranked) StarfareMatches.result(state).orElseThrow();
             return ranked.placements().stream().filter(p -> p.account().equals(account)).findFirst().orElseThrow();
+        }
+    }
+
+    @Nested
+    class Finished {
+
+        private static final Instant ENDED = Instant.parse("2026-11-19T20:00:00Z");
+
+        @Test
+        void describesAFinishedGameOfTheAccountWithItsResult() {
+            GameState state = runningGame();
+            state.endGame(1);
+
+            FinishedMatch match = StarfareMatches.finished(ID, "Andromeda", ENDED, state, "23").orElseThrow();
+
+            assertThat(match).isEqualTo(new FinishedMatch("starfare", ID.value(), "Andromeda", ENDED,
+                    StarfareMatches.result(state).orElseThrow(), false, "/starfare/map/" + ID.value()));
+            assertThat(match.placementOf(TWENTY_THREE)).hasValueSatisfying(placement -> assertThat(placement.place()).isEqualTo(2));
+        }
+
+        @Test
+        void fallsBackToTheIdWithoutAName() {
+            GameState state = runningGame();
+            state.endGame(null);
+
+            FinishedMatch match = StarfareMatches.finished(ID, " ", ENDED, state, "17").orElseThrow();
+
+            assertThat(match.title()).isEqualTo(ID.value());
+            assertThat(match.isAborted()).isTrue();
+        }
+
+        @Test
+        void leavesOutAGameWithoutASeatOfTheAccount() {
+            GameState state = runningGame();
+            state.endGame(1);
+
+            assertThat(StarfareMatches.finished(ID, "Andromeda", ENDED, state, "42")).isEmpty();
         }
     }
 

@@ -1,7 +1,9 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameListScope;
 import de.zettsystems.starfare.game.values.GameOutcomeStatistics;
 import de.zettsystems.starfare.game.values.GameSetup;
@@ -61,6 +63,32 @@ class GameArchiveTest extends AbstractIntegrationTest {
         assertThat(games.reviewFor(id, "stranger")).isEmpty();
         assertThat(registry.readState(id, GameState::toSnapshot)).isEqualTo(before);
         assertThat(repository.findById(id.value()).orElseThrow().getVersion()).isEqualTo(version);
+    }
+
+    @Test
+    void listsOnlyTheFinishedGamesTheAccountHeldASeatInLatestFirst() {
+        var first = finishedGameOf("17", "First");
+        var second = finishedGameOf("17", "Second");
+        finishedGameOf("23", "Foreign");
+        var running = games.newGame(GameSetup.defaults(), "17", "Running");
+        games.joinGame(running, "17");
+        games.startGame(running);
+        sessions.delete(first);
+
+        assertThat(games.finishedMatchesOf("17"))
+                .as("from the archive even without the operative session; neither foreign nor running games")
+                .extracting(FinishedMatch::matchId).containsExactly(second.value(), first.value());
+        var ended = java.util.Objects.requireNonNull(registry.readState(second, GameState::finishedAt));
+        assertThat(games.finishedMatchesOf("17").getFirst().endedAt()).as("the end stored when archived")
+                .isEqualTo(ended.truncatedTo(java.time.temporal.ChronoUnit.MICROS));
+    }
+
+    private GameId finishedGameOf(String account, String name) {
+        var id = games.newGame(GameSetup.defaults(), account, name);
+        games.joinGame(id, account);
+        games.startGame(id);
+        registry.writeState(id, state -> { state.endGame(1); return null; });
+        return id;
     }
 
     @Test
