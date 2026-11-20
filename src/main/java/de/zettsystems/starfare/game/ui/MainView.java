@@ -28,6 +28,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import de.zettsystems.starfare.game.application.GameTemplateService;
 import de.zettsystems.starfare.game.application.RulesetAccess;
 import de.zettsystems.gamesplatformapi.MatchView;
+import de.zettsystems.gamesplatformapi.PlatformSettings;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.TurnEvent;
@@ -107,7 +108,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     @Autowired
     public MainView(GameService service, Broadcaster broadcaster, BattleAcknowledgementService battleAcknowledgements,
                     GameChatService gameChat, PlayerDirectory players,
-                    de.zettsystems.starfare.game.application.DisplaySettingsService preferences,
+                    @Nullable PlatformSettings preferences,
                     GameTemplateService templates, RulesetAccess rulesetAccess,
                     @Nullable OwnFrameParts frame) {
         DisplayPreferences.load(preferences);

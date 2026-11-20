@@ -649,8 +649,8 @@ logic and callbacks stay in `MainView`; only the arrangement differs.
   production 1–20 and starting garrison 1–50. The system count is raised to
   the participant count when necessary.
   The setup also persists the default for battle presentation. An explicit
-  personal speed choice overrides it across rounds and sessions via
-  `user_display_settings`; until then the game default applies.
+  personal speed choice overrides it across rounds and sessions via the
+  platform's settings; until then the game default applies.
   Combat randomness (0–30%, default ±10%) and the victory threshold (10–100%,
   default 70%) are game rules. Only the winner's full-conquest continuation
   changes the victory threshold after the start, to 100%.
@@ -784,11 +784,17 @@ start lists finished games; the game module has no `/starfare/archive` route and
 `game.properties` no archive link. In a host, the platform will list finished
 games and link to the review (plan S.4).
 
-`user_display_settings` (Flyway V2_8) belongs to the game; deleting an account
-removes its rows (`GameAccountDeletionListener`). Its enum keys store speed, sound, event/logistics filters, route search
-and sidebar position. `DisplayPreferences` loads an account-bound session cache;
-each explicit changed choice is saved transactionally. Reopening a map refreshes
-the cache. These values never modify game setup or game state.
+Display choices are kept by the platform (`PlatformSettings`, games-platform-api
+0.4.0) for the signed-in account under the game key `starfare`; the keys are the
+names of `DisplaySetting`: speed, sound, event/logistics filters, route search and
+sidebar position. `DisplayPreferences` reads them in one call while the map is
+built and caches them in the session; each explicit changed choice is written at
+once, a blank one resets the key (the platform keeps no blank values, so "no
+event category" is stored as `-`). Reopening a map refreshes the cache. Without a
+`PlatformSettings` bean the choices last for the session. Starfare's own start
+keeps them in `user_display_settings` (Flyway V2_8, `SoloPlatformSettings`), which
+a host takes over once; deleting an account still removes those rows
+(`GameAccountDeletionListener`). These values never modify game setup or game state.
 
 Map and sidebar rendering skip unchanged content. Route filters are stable Vaadin
 components while their result containers are replaced independently. Custom click

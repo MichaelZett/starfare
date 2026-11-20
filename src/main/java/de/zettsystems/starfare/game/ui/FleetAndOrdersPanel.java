@@ -138,6 +138,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     void onEditOrder(Consumer<PlannedOrder> action) { onEditOrder = action; }
 
+    private static final String NO_EVENT_CATEGORY = "-";
+
     private void restoreFilters() {
         routeFilter = DisplayPreferences.get(de.zettsystems.starfare.game.values.DisplaySetting.ROUTE_FILTER, "");
         String events = DisplayPreferences.get(de.zettsystems.starfare.game.values.DisplaySetting.EVENT_FILTERS, "*");
@@ -152,8 +154,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private void saveFilters() {
         DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.ROUTE_FILTER, routeFilter);
+        String events = enabledEventCategories.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(","));
+        // Blank would mean the default (every category); no category is kept as a name no category has.
         DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.EVENT_FILTERS,
-                enabledEventCategories.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(",")));
+                events.isEmpty() ? NO_EVENT_CATEGORY : events);
         DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.LOGISTICS_FILTERS,
                 enabledLogisticsFilters.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(",")));
     }

@@ -18,6 +18,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - **Chat-Rechte für die Plattform:** Die Plattform fragt Starfare, wer im Chat einer Partie lesen
   oder schreiben darf, nach denselben Regeln wie Starfares eigener Chat. Karte und Warteraum
   melden, welche Partie sie zeigen.
+- **Einstellungen über die Plattform:** Geschwindigkeit, Ton, Filter und Seitenleistenbreite hält
+  künftig die Plattform je Konto, damit sie auf jedem Gerät gelten. Der eigene Start speichert sie
+  weiter in seiner Datenbank.
 - **Als Vorlage in der Nachbetrachtung:** „Als Vorlage / Revanche“ steht bei beendeten Partien jetzt
   in der Leiste über der Karte statt auf der Archivkarte. Das Archiv ist nur noch Teil des eigenen
   Starts; in der Plattform listet künftig die Plattform die beendeten Partien.

@@ -8,7 +8,7 @@ import com.vaadin.flow.component.html.Div;
 import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.report.values.TurnEvent;
-import de.zettsystems.starfare.game.application.DisplaySettingsService;
+import de.zettsystems.gamesplatformapi.PlatformSettings;
 import de.zettsystems.starfare.game.values.DisplaySetting;
 import de.zettsystems.starfare.testsupport.DomEvents;
 import de.zettsystems.starfare.testsupport.FleetUiStates;
@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CoalitionJourneyTest extends AbstractMapJourneyTest {
-    @Autowired private DisplaySettingsService preferences;
+    @Autowired private PlatformSettings preferences;
     @Autowired private BattleAcknowledgementService acknowledgements;
 
     @Test
@@ -27,7 +27,7 @@ class CoalitionJourneyTest extends AbstractMapJourneyTest {
         var state = FleetUiStates.coalition();
         int arrival = state.turn() + state.travelRounds(1, 3);
         openGame(state, "Coalition Browserless");
-        preferences.chooseDisplaySetting(account, DisplaySetting.SOUND, "false");
+        preferences.set("starfare", DisplaySetting.SOUND.name(), "false");
         reloadMap();
         chooseBeneficiary();
         while (view().turn() < arrival) {

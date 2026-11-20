@@ -8,7 +8,7 @@ import de.zettsystems.starfare.game.application.GameSessionStore;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.report.values.TurnEvent;
-import de.zettsystems.starfare.game.application.DisplaySettingsService;
+import de.zettsystems.gamesplatformapi.PlatformSettings;
 import de.zettsystems.starfare.game.values.DisplaySetting;
 import de.zettsystems.starfare.testsupport.FleetUiStates;
 import io.cucumber.java.After;
@@ -17,6 +17,7 @@ import io.cucumber.java.de.Wenn;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -33,12 +34,12 @@ public class CoalitionRenderingSteps {
     private final GameService games;
     private final GameSessionStore store;
     private final TestPlatformAccounts accounts;
-    private final DisplaySettingsService preferences;
+    private final PlatformSettings preferences;
     private final BattleAcknowledgementService acknowledgements;
     private final List<GameId> created = new ArrayList<>();
 
     public CoalitionRenderingSteps(Browser browser, GameService games, GameSessionStore store,
-                                    TestPlatformAccounts accounts, DisplaySettingsService preferences,
+                                    TestPlatformAccounts accounts, PlatformSettings preferences,
                                     BattleAcknowledgementService acknowledgements) {
         this.browser = browser;
         this.games = games;
@@ -52,8 +53,14 @@ public class CoalitionRenderingSteps {
     public void prepareResolvedBattles() {
         String email = "coalition-rendering-" + UUID.randomUUID() + "@example.test";
         String host = String.valueOf(accounts.createAccount(email, "Commander").id());
-        preferences.chooseDisplaySetting(host, DisplaySetting.SOUND, "false");
-        preferences.chooseDisplaySetting(host, DisplaySetting.SPEED, "1.0");
+        // Settings belong to the signed-in account, so sign the host in just for writing them.
+        SecurityContextHolder.setContext(accounts.signedIn(email));
+        try {
+            preferences.set("starfare", DisplaySetting.SOUND.name(), "false");
+            preferences.set("starfare", DisplaySetting.SPEED.name(), "1.0");
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
         var state = FleetUiStates.coalition();
         state.seatByUser().put(host, 1);
         int arrival = state.turn() + state.travelRounds(1, 3);
