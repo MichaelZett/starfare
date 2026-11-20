@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.12 - 2026-11-20
 
 - **Abgabe zur Fristgrenze:** Wer „Runde beenden“ für eine Runde klickt, die die Frist gerade beendet hat,
   gibt nicht mehr ungesehen die nächste Runde ab; der Klick wird abgelehnt.
