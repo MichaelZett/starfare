@@ -18,6 +18,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - **Chat-Rechte für die Plattform:** Die Plattform fragt Starfare, wer im Chat einer Partie lesen
   oder schreiben darf, nach denselben Regeln wie Starfares eigener Chat. Karte und Warteraum
   melden, welche Partie sie zeigen.
+- **Hinweise der Plattform:** Starfare meldet der Plattform, wer in welcher Runde bis wann
+  abgeben muss, den Start einer Partie, Einladungen und jede verpasste Rundenfrist (mit Zähler und
+  ob sie zum Rauswurf führte). Daraus macht die Plattform Hinweise und Erinnerungsmails.
 - **Einstellungen über die Plattform:** Geschwindigkeit, Ton, Filter und Seitenleistenbreite hält
   künftig die Plattform je Konto, damit sie auf jedem Gerät gelten. Der eigene Start speichert sie
   weiter in seiner Datenbank.

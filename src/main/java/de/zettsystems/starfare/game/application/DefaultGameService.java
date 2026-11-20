@@ -876,14 +876,20 @@ public class DefaultGameService implements GameService {
                 // The count stays, so the seat stays timed out: no way back (TIMED_OUT, platform decision
                 // 19.11.2026). seatByUser stays as well, so the former player still reads chat and review.
             });
+            List<GameEvent.RoundMissed> missed = state.seatByUser().entrySet().stream()
+                    .filter(entry -> late.contains(entry.getValue()))
+                    .map(entry -> new GameEvent.RoundMissed(gameId, entry.getKey(), state.turn(),
+                            state.missedRounds().getOrDefault(entry.getValue(), 0), handedOver.contains(entry.getValue()), now))
+                    .toList();
             // Wer die Frist verpasst, zieht mit den bis dahin erteilten Befehlen.
-            return new DeadlineResult(late, handedOver, abandonedBy, advance(state));
+            return new DeadlineResult(late, handedOver, abandonedBy, missed, advance(state));
         });
         if (result.late().isEmpty()) {
             return false;
         }
         LOG.info("Round deadline passed in game {}: seat(s) {} missed it, seat(s) {} handed to the AI",
                 gameId, result.late(), result.handedOver());
+        result.missed().forEach(broadcaster::publish);
         result.handedOver().forEach(seatId -> broadcaster.publish(new GameEvent.SeatAbandoned(gameId, seatId)));
         publishTurnResult(gameId, result.turnResult());
         result.abandonedBy().forEach(playerId -> transferHostIfNeeded(gameId, playerId));
@@ -904,9 +910,9 @@ public class DefaultGameService implements GameService {
     }
 
     private record DeadlineResult(Set<Integer> late, Set<Integer> handedOver, List<String> abandonedBy,
-                                  TurnResult turnResult) {
+                                  List<GameEvent.RoundMissed> missed, TurnResult turnResult) {
         static DeadlineResult none() {
-            return new DeadlineResult(Set.of(), Set.of(), List.of(), TurnResult.REJECTED);
+            return new DeadlineResult(Set.of(), Set.of(), List.of(), List.of(), TurnResult.REJECTED);
         }
     }
 

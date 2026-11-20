@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.application;
 
+import de.zettsystems.gamesplatformapi.InvitationSent;
 import de.zettsystems.gamesplatformapi.PlatformPresence;
 import de.zettsystems.starfare.game.platform.StarfareMatches;
 
@@ -7,8 +8,10 @@ import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.values.EmpireNameGenerator;
 import de.zettsystems.starfare.game.values.GameId;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -19,14 +22,18 @@ public class DefaultInvitationService implements InvitationService {
     private final GameService games;
     private final PlatformPresence presence;
     private final PlayerDirectory players;
+    private final ApplicationEventPublisher events;
 
     /**
      * @param presence who may see whom; the platform's in a host, Starfare's own in its own start
+     * @param events   receives {@link InvitationSent} for the platform's notice to the invited account
      */
-    public DefaultInvitationService(GameService games, PlatformPresence presence, PlayerDirectory players) {
+    public DefaultInvitationService(GameService games, PlatformPresence presence, PlayerDirectory players,
+                                    ApplicationEventPublisher events) {
         this.games = games;
         this.presence = presence;
         this.players = players;
+        this.events = events;
     }
 
     @Override
@@ -40,7 +47,11 @@ public class DefaultInvitationService implements InvitationService {
         if (!canSee(hostPlayerId, inviteePlayerId)) {
             return Optional.empty();
         }
-        return games.inviteUser(gameId, inviteePlayerId);
+        Optional<Integer> seat = games.inviteUser(gameId, inviteePlayerId);
+        seat.ifPresent(_ -> StarfareMatches.account(inviteePlayerId).ifPresent(invited ->
+                StarfareMatches.account(hostPlayerId).ifPresent(host -> events.publishEvent(new InvitationSent(
+                        StarfareMatches.GAME_KEY, gameId.value(), invited, host, Instant.now())))));
+        return seat;
     }
 
     @Override

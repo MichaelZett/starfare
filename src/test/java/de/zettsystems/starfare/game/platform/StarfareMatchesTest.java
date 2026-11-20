@@ -1,6 +1,8 @@
 package de.zettsystems.starfare.game.platform;
 
 import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.DecisionKind;
+import de.zettsystems.gamesplatformapi.PendingDecision;
 import de.zettsystems.gamesplatformapi.Departure;
 import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.gamesplatformapi.MatchResult;
@@ -83,6 +85,11 @@ class StarfareMatchesTest {
             assertThat(summary.participants()).containsExactly(SEVENTEEN, TWENTY_THREE);
             assertThat(summary.toMove()).containsExactly(TWENTY_THREE);
             assertThat(summary.viewPath()).as("a running game opens its map").isEqualTo("/starfare/map/" + ID.value());
+            assertThat(summary.pendingDecisions()).as("one turn per person still to submit, due by the round deadline")
+                    .containsExactly(new PendingDecision(TWENTY_THREE, "round-1", DecisionKind.TURN, state.roundDeadline()));
+            assertThat(summary.pendingDecisions().getFirst().deadline()).isNotNull();
+            assertThat(summary.tutorial()).isFalse();
+            assertThat(summary.tempo()).isNull();
         }
 
         @Test
@@ -96,6 +103,8 @@ class StarfareMatchesTest {
             assertThat(summary.computerSeats()).isZero();
             assertThat(summary.participants()).containsExactly(SEVENTEEN, TWENTY_THREE);
             assertThat(summary.toMove()).containsExactly(SEVENTEEN);
+            assertThat(summary.pendingDecisions()).as("one person left playing: no deadline")
+                    .containsExactly(PendingDecision.unlimited(SEVENTEEN, "round-1", DecisionKind.TURN));
         }
 
         @Test

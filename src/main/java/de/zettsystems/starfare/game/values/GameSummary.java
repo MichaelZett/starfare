@@ -13,6 +13,8 @@ import java.util.Set;
  * {@code submittedSeats} are the seats that have submitted the current round, and
  * {@code roundStartedAt} is when the current round began (creation time while the game is open).
  * {@code closedSeats} are seats nobody may take back: resigned or timed out.
+ * {@code roundDeadline} is when the current round ends at the latest, {@code null} without a deadline
+ * (fewer than two people playing, not started or over).
  */
 public record GameSummary(
         GameId gameId,
@@ -33,10 +35,37 @@ public record GameSummary(
         @Nullable VictoryRules victoryRules,
         Set<Integer> submittedSeats,
         java.time.Instant roundStartedAt,
-        Set<Integer> closedSeats) {
+        Set<Integer> closedSeats,
+        java.time.@Nullable Instant roundDeadline) {
     public GameSummary {
         submittedSeats = Set.copyOf(submittedSeats);
         closedSeats = Set.copyOf(closedSeats);
+    }
+
+    /** A summary without a round deadline. */
+    public GameSummary(
+        GameId gameId,
+        String name,
+        @Nullable String hostPlayerId,
+        int turn,
+        boolean started,
+        boolean gameOver,
+        boolean observersAllowed,
+        boolean reentryAllowed,
+        List<Player> players,
+        Set<Integer> joinedHumanSeats,
+        Map<String, Integer> seatByPlayer,
+        Map<String, Integer> invitedSeats,
+        GameVisibility visibility,
+        GameOutcome outcome,
+        RulesetRef ruleset,
+        @Nullable VictoryRules victoryRules,
+        Set<Integer> submittedSeats,
+        java.time.Instant roundStartedAt,
+        Set<Integer> closedSeats) {
+        this(gameId, name, hostPlayerId, turn, started, gameOver, observersAllowed, reentryAllowed, players,
+                joinedHumanSeats, seatByPlayer, invitedSeats, visibility, outcome, ruleset, victoryRules, submittedSeats,
+                roundStartedAt, closedSeats, null);
     }
 
     public GameSummary(

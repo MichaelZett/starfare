@@ -14,10 +14,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 /**
  * Rundenlimit (Standard 5 min) und Nachzügler-Limit (Standard 1 min). Die Tests rufen
@@ -30,6 +33,9 @@ class RoundDeadlineTest extends AbstractIntegrationTest {
 
     @Autowired
     private GameService game;
+
+    @Autowired
+    private Broadcaster broadcaster;
 
     private GameId runningGameWithTwoHumans() {
         return runningGameWithTwoHumans(null);
@@ -140,6 +146,24 @@ class RoundDeadlineTest extends AbstractIntegrationTest {
         seatTwoMissesRounds(id, 1);
 
         assertThat(isAi(id, 2)).as("submitting in between does not reset the count").isTrue();
+    }
+
+    @Test
+    void reportsEveryMissedRoundWithTheCountAndWhetherItRemovedTheSeat() {
+        GameId id = runningGameWithTwoHumans();
+        List<GameEvent> events = new ArrayList<>();
+        var subscription = broadcaster.subscribeAll(events::add);
+        try {
+            seatTwoMissesRounds(id, GameConfig.MAX_MISSED_ROUNDS);
+        } finally {
+            subscription.remove();
+        }
+
+        assertThat(events).filteredOn(GameEvent.RoundMissed.class::isInstance)
+                .extracting(event -> (GameEvent.RoundMissed) event)
+                .extracting(GameEvent.RoundMissed::account, GameEvent.RoundMissed::round,
+                        GameEvent.RoundMissed::missed, GameEvent.RoundMissed::removed)
+                .containsExactly(tuple("bob", 1, 1, false), tuple("bob", 2, 2, true));
     }
 
     @Test

@@ -1,11 +1,13 @@
 package de.zettsystems.starfare.game.platform;
 
 import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.DecisionKind;
 import de.zettsystems.gamesplatformapi.Departure;
 import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.gamesplatformapi.MatchResult;
 import de.zettsystems.gamesplatformapi.MatchStatus;
 import de.zettsystems.gamesplatformapi.MatchSummary;
+import de.zettsystems.gamesplatformapi.PendingDecision;
 import de.zettsystems.gamesplatformapi.Placement;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.SectorScore;
@@ -68,6 +70,10 @@ public final class StarfareMatches {
      * The platform's view of a game, or empty for a game without a seat for people (computer
      * opponents only). Seats held by a person count as seats for people even after the person
      * left and a computer opponent took over, because the person may come back.
+     *
+     * <p>A running game waits for one decision per account still to submit: its turn in the current
+     * round ({@link #decisionId(int)}), due by the round deadline, which moves earlier when only one
+     * person is missing; without a deadline (fewer than two people playing) the turn has no time limit.
      */
     public static Optional<MatchSummary> summary(GameSummary game) {
         long humanSeats = game.players().stream().filter(player -> humanSeat(game, player)).count();
@@ -82,9 +88,18 @@ public final class StarfareMatches {
                         && !game.submittedSeats().contains(entry.getKey()))
                 .map(Map.Entry::getValue).toList() : List.of();
         String title = game.name().isBlank() ? game.gameId().value() : game.name();
+        List<PendingDecision> decisions = toMove.stream()
+                .map(account -> new PendingDecision(account, decisionId(game.turn()), DecisionKind.TURN, game.roundDeadline()))
+                .toList();
         return Optional.of(new MatchSummary(GAME_KEY, game.gameId().value(), title, status,
                 List.copyOf(accounts.values()), seats, seats - (int) humanSeats, toMove, game.roundStartedAt(),
-                status == MatchStatus.OPEN ? waitingRoomPath(game.gameId()) : viewPath(game.gameId())));
+                status == MatchStatus.OPEN ? waitingRoomPath(game.gameId()) : viewPath(game.gameId()),
+                false, null, decisions));
+    }
+
+    /** The id of the decision for a round: stable while the round is open, unique within the game. */
+    public static String decisionId(int round) {
+        return "round-" + round;
     }
 
     /**

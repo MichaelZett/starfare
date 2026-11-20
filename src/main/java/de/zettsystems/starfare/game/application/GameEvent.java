@@ -15,6 +15,13 @@ public sealed interface GameEvent {
 
     record PlayerSubmitted(GameId gameId, int playerId) implements GameEvent {}
 
+    /**
+     * A person let the deadline of a round pass; {@code missed} counts the missed rounds of the seat in
+     * this game, this one included, and {@code removed} tells whether the computer took the seat for good.
+     */
+    record RoundMissed(GameId gameId, String account, int round, int missed, boolean removed, Instant missedAt)
+            implements GameEvent {}
+
     record TurnAdvanced(GameId gameId, int turn) implements GameEvent {}
 
     record GameFinished(GameId gameId, @Nullable Integer winnerId, java.util.List<Integer> winnerIds,

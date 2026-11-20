@@ -456,6 +456,13 @@ A round ends once every human has submitted, or at the round deadline
 round, the straggler limit from the moment only one human is still missing;
 whichever comes first. Both are chosen per game in the wizard (defaults 5 min
 and 1 min). Games with fewer than two humans have no deadline.
+For the platform each person still to submit has an open decision `round-<n>`
+due by that deadline (`MatchSummary.pendingDecisions`, games-platform-api 0.4.0).
+`MatchEventPublisher` announces the start (`MatchStarted`), the open turns with a
+deadline (`DecisionsOpened`, again after each submission or lost seat, since the
+deadline may move earlier) and each missed deadline (`TurnMissed`, from
+`GameEvent.RoundMissed`); `DefaultInvitationService` announces invitations
+(`InvitationSent`). The platform turns them into notices and reminder mails.
 The header uses **Submit turn** for human players and disables the action after
 submission. `RoundStatus.hasSubmitted` and `pendingPlayerLabels` drive the
 persistent **Submitted — waiting for …** notice below the header. Both derive

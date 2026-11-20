@@ -7,11 +7,14 @@ import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.values.Subscription;
 import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.InvitationSent;
 import de.zettsystems.starfare.testsupport.TestPlatformSocial;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +23,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** Players are account ids as text: the platform answers who may see whom only for accounts (plan M13). */
+@RecordApplicationEvents
 class InvitationServiceTest extends AbstractIntegrationTest {
     private static final String HOST = "910001";
     private static final String BOB = "910002";
@@ -41,6 +45,9 @@ class InvitationServiceTest extends AbstractIntegrationTest {
 
     @Autowired
     private PlayerDirectory players;
+
+    @Autowired
+    private ApplicationEvents platformEvents;
 
     private final List<GameEvent> events = new ArrayList<>();
     private Subscription subscription;
@@ -75,6 +82,11 @@ class InvitationServiceTest extends AbstractIntegrationTest {
         assertThat(seat).isPresent();
         assertThat(games.invitedSeatsOf(id)).containsEntry(BOB, seat.get());
         assertThat(events).contains(new GameEvent.InvitationChanged(id));
+        assertThat(platformEvents.stream(InvitationSent.class)).singleElement().satisfies(sent -> {
+            assertThat(sent.matchId()).isEqualTo(id.value());
+            assertThat(sent.invited()).isEqualTo(AccountId.of(Long.parseLong(BOB)));
+            assertThat(sent.invitedBy()).isEqualTo(AccountId.of(Long.parseLong(HOST)));
+        });
     }
 
     @Test
