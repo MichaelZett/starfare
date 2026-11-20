@@ -1,11 +1,14 @@
 package de.zettsystems.starfare.game.platform;
 
 import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.ChatAccess;
 import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.gamesplatformapi.MatchDirectory;
 import de.zettsystems.gamesplatformapi.MatchInvitation;
 import de.zettsystems.gamesplatformapi.MatchSummary;
+import de.zettsystems.starfare.game.application.GameChatService;
 import de.zettsystems.starfare.game.application.GameService;
+import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameListScope;
 import de.zettsystems.starfare.game.values.GameSummary;
 import org.springframework.stereotype.Component;
@@ -27,9 +30,11 @@ class StarfareMatchDirectory implements MatchDirectory {
             Comparator.comparing(MatchSummary::lastChange).reversed();
 
     private final GameService games;
+    private final GameChatService chat;
 
-    StarfareMatchDirectory(GameService games) {
+    StarfareMatchDirectory(GameService games, GameChatService chat) {
         this.games = games;
+        this.chat = chat;
     }
 
     @Override
@@ -70,6 +75,24 @@ class StarfareMatchDirectory implements MatchDirectory {
             throw new IllegalArgumentException("offset must be at least 0 and limit at least 1, got " + offset + " and " + limit);
         }
         return games.finishedMatchesOf(StarfareMatches.accountName(account)).stream().skip(offset).limit(limit).toList();
+    }
+
+    /**
+     * The chat rules of {@link GameChatService}: who still holds a seat writes, in the waiting room and
+     * while the game runs; who left, resigned or timed out and everybody after the end only reads;
+     * spectators, invited accounts and strangers have no chat.
+     */
+    @Override
+    public ChatAccess chatAccess(String matchId, AccountId account) {
+        if (matchId.isBlank()) {
+            return ChatAccess.NONE;
+        }
+        GameId id = GameId.of(matchId);
+        String name = StarfareMatches.accountName(account);
+        if (chat.mayWrite(id, name)) {
+            return ChatAccess.WRITE;
+        }
+        return chat.mayRead(id, name) ? ChatAccess.READ : ChatAccess.NONE;
     }
 
     /** Seated, or the host who organises a game without a seat of their own (M12.1). */

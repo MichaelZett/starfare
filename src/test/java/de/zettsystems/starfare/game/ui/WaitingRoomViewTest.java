@@ -67,6 +67,8 @@ class WaitingRoomViewTest extends AbstractBrowserlessTest {
 
         assertThat(viewText()).contains("Room Guest Empire (Room Guest)",
                 "Wartet auf den Start durch den Gastgeber");
+        assertThat(((WaitingRoomView) getCurrentView()).shownMatchId()).as("the platform's chat follows the room")
+                .contains(id.value());
         assertThat(find(Button.class).withText("Starten").all()).as("only the host starts").isEmpty();
 
         navigate(ImprintView.class);
@@ -78,6 +80,7 @@ class WaitingRoomViewTest extends AbstractBrowserlessTest {
 
         assertThat(games.hasStartedGame(id)).isTrue();
         assertThat(getCurrentView()).isInstanceOf(MainView.class);
+        assertThat(((MainView) getCurrentView()).shownMatchId()).contains(id.value());
     }
 
     @Test

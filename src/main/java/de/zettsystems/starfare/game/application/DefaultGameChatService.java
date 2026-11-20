@@ -28,12 +28,17 @@ class DefaultGameChatService implements GameChatService {
 
     @Override
     public List<GameChatMessage> messagesFor(GameId gameId, String account) {
-        if (!allowed(gameId, account, access::mayReadChat)) {
+        if (!mayRead(gameId, account)) {
             return List.of();
         }
         return repository.findByGameIdOrderBySentAtAscIdAsc(gameId.value()).stream()
                 .map(message -> new GameChatMessage(gameId, message.getSenderPlayerId(), message.getText(), message.getSentAt()))
                 .toList();
+    }
+
+    @Override
+    public boolean mayRead(GameId gameId, String account) {
+        return allowed(gameId, account, access::mayReadChat);
     }
 
     @Override

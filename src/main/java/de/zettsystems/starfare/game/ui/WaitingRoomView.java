@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.ui;
 
+import de.zettsystems.gamesplatformapi.MatchView;
 import de.zettsystems.gamesplatformapi.PlatformFriends;
 import de.zettsystems.gamesplatformapi.PlatformPresence;
 import com.vaadin.flow.component.AttachEvent;
@@ -48,7 +49,7 @@ import java.util.Optional;
 @Route(StarfareRoutes.MATCH)
 @CssImport("./styles/starfare.css")
 @PermitAll
-public class WaitingRoomView extends VerticalLayout implements BeforeEnterObserver {
+public class WaitingRoomView extends VerticalLayout implements BeforeEnterObserver, MatchView {
     private static final String GAME_ID_PARAMETER = "gameId";
 
     private final GameService game;
@@ -99,8 +100,15 @@ public class WaitingRoomView extends VerticalLayout implements BeforeEnterObserv
         return new RouteParameters(GAME_ID_PARAMETER, id.value());
     }
 
+    /** The waiting game once {@link #beforeEnter} found it visible; the platform puts its chat around it (E19). */
+    @Override
+    public Optional<String> shownMatchId() {
+        return Optional.ofNullable(gameId).map(GameId::value);
+    }
+
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        gameId = null;
         String parameter = event.getRouteParameters().get(GAME_ID_PARAMETER).orElse("");
         if (parameter.isBlank()) {
             event.forwardTo(LobbyView.class);

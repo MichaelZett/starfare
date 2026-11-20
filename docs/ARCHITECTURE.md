@@ -582,6 +582,12 @@ seat to the computer keep the seat binding (`seatByUser`) but end the active sea
 not; `mayWriteChat` needs an active seat and a game that is not over (the waiting room
 counts); `mayCommand` needs an active seat in a started, running game. Orders go
 through `activeSeat`, never through the bare seat binding.
+The platform asks the same chat rules through `MatchDirectory.chatAccess`
+(games-platform-api 0.4.0): `GameChatService.mayWrite` gives `WRITE`, `mayRead`
+`READ`, anything else `NONE`. `MainView` and `WaitingRoomView` implement `MatchView`
+and name the game they show once `beforeEnter` let the account in, so the
+platform can put the chat around them; Starfare's own chat stays until the host
+shows it in full screen and on phones.
 
 `reviewFor(id, account, perspective, fogOfWar)` checks completed-game access and
 participant existence inside the read lock. `PlayerViewBuilder.forReview` reuses

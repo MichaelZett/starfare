@@ -1,9 +1,11 @@
 package de.zettsystems.starfare.game.platform;
 
 import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.ChatAccess;
 import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.gamesplatformapi.MatchResult;
 import de.zettsystems.gamesplatformapi.MatchSummary;
+import de.zettsystems.starfare.game.application.GameChatService;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
@@ -29,7 +31,8 @@ class StarfareMatchDirectoryTest {
     private static final AccountId VIEWER = AccountId.of(17);
 
     private final GameService games = mock(GameService.class);
-    private final StarfareMatchDirectory directory = new StarfareMatchDirectory(games);
+    private final GameChatService chat = mock(GameChatService.class);
+    private final StarfareMatchDirectory directory = new StarfareMatchDirectory(games, chat);
 
     @Test
     void belongsToStarfare() {
@@ -100,6 +103,18 @@ class StarfareMatchDirectoryTest {
     void rejectsANegativeOffsetAndAnEmptyPage() {
         assertThatIllegalArgumentException().isThrownBy(() -> directory.finishedMatchesOf(VIEWER, -1, 1));
         assertThatIllegalArgumentException().isThrownBy(() -> directory.finishedMatchesOf(VIEWER, 0, 0));
+    }
+
+    @Test
+    void answersChatAccessFromTheChatRulesOfTheGame() {
+        when(chat.mayWrite(GameId.of("playing"), "17")).thenReturn(true);
+        when(chat.mayRead(GameId.of("playing"), "17")).thenReturn(true);
+        when(chat.mayRead(GameId.of("left"), "17")).thenReturn(true);
+
+        assertThat(directory.chatAccess("playing", VIEWER)).isEqualTo(ChatAccess.WRITE);
+        assertThat(directory.chatAccess("left", VIEWER)).isEqualTo(ChatAccess.READ);
+        assertThat(directory.chatAccess("watched", VIEWER)).isEqualTo(ChatAccess.NONE);
+        assertThat(directory.chatAccess(" ", VIEWER)).isEqualTo(ChatAccess.NONE);
     }
 
     private static FinishedMatch finished(String id) {

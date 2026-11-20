@@ -15,6 +15,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - **Beendete Partien für die Plattform:** Die Plattform kann die eigenen beendeten Partien eines
   Kontos seitenweise abfragen, neueste zuerst, mit Ende, Ergebnis und Link zur Nachbetrachtung.
   Fremde öffentliche Partien gehören nicht dazu.
+- **Chat-Rechte für die Plattform:** Die Plattform fragt Starfare, wer im Chat einer Partie lesen
+  oder schreiben darf, nach denselben Regeln wie Starfares eigener Chat. Karte und Warteraum
+  melden, welche Partie sie zeigen.
 - **Als Vorlage in der Nachbetrachtung:** „Als Vorlage / Revanche“ steht bei beendeten Partien jetzt
   in der Leiste über der Karte statt auf der Archivkarte. Das Archiv ist nur noch Teil des eigenen
   Starts; in der Plattform listet künftig die Plattform die beendeten Partien.

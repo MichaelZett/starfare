@@ -73,6 +73,9 @@ class GameChatServiceTest extends AbstractIntegrationTest {
         });
 
         assertThat(chat.mayWrite(id, "alice")).isFalse();
+        assertThat(chat.mayRead(id, "alice")).isTrue();
+        assertThat(chat.mayRead(id, "eve")).as("strangers and spectators have no chat").isFalse();
+        assertThat(chat.mayRead(GameId.of("missing"), "alice")).isFalse();
         assertThat(chat.send(id, "alice", "after leaving")).isFalse();
         assertThat(chat.messagesFor(id, "alice")).extracting(GameChatMessage::text).containsExactly("before");
 

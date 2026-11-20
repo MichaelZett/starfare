@@ -27,6 +27,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import de.zettsystems.starfare.game.application.GameTemplateService;
 import de.zettsystems.starfare.game.application.RulesetAccess;
+import de.zettsystems.gamesplatformapi.MatchView;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.TurnEvent;
@@ -40,6 +41,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -53,7 +55,7 @@ import java.util.stream.Collectors;
 @CssImport("./styles/starfare.css")
 @JsModule("./battle-replay.js")
 @PermitAll
-public class MainView extends VerticalLayout implements BeforeEnterObserver {
+public class MainView extends VerticalLayout implements BeforeEnterObserver, MatchView {
 
     private enum TargetSelection { NONE, FLEET, RELOCATION }
     private static final String GAME_ID_PARAMETER = "gameId";
@@ -451,6 +453,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             return;
         }
         SendFleetDialog.editRelocation(game, gameId, pid, from, to, order.ships(), new SendDialogOutcome(this::refresh, this::refresh));
+    }
+
+    /** The game shown once {@link #beforeEnter} let the account see it; the platform puts its chat around it. */
+    @Override
+    public Optional<String> shownMatchId() {
+        return Optional.ofNullable(gameId).map(GameId::value);
     }
 
     @Override

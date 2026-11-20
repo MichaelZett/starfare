@@ -8,6 +8,8 @@ import java.time.Instant;
 
 public interface GameChatService {
     List<GameChatMessage> messagesFor(GameId gameId, String account);
+    /** Whether the account may read the chat: it holds or held a seat in the game. */
+    boolean mayRead(GameId gameId, String account);
     /** Whether the account may write now; who may only read sees the history without an input. */
     boolean mayWrite(GameId gameId, String account);
     boolean send(GameId gameId, String account, String text);

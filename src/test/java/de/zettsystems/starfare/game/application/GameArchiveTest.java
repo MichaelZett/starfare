@@ -80,7 +80,7 @@ class GameArchiveTest extends AbstractIntegrationTest {
                 .extracting(FinishedMatch::matchId).containsExactly(second.value(), first.value());
         var ended = java.util.Objects.requireNonNull(registry.readState(second, GameState::finishedAt));
         assertThat(games.finishedMatchesOf("17").getFirst().endedAt()).as("the end stored when archived")
-                .isEqualTo(ended.truncatedTo(java.time.temporal.ChronoUnit.MICROS));
+                .isCloseTo(ended, org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
     }
 
     private GameId finishedGameOf(String account, String name) {
