@@ -460,7 +460,11 @@ whichever comes first. A game with several humans picks a tempo in the wizard
 platform learns the tempo from `MatchSummary.tempo` and the levels from
 `tempos` in `game.properties`. Games with fewer than two humans have no tempo
 and no deadline; older games keep their stored limits, which the host may
-still change.
+still change. All state changes of a game run under the session's write lock,
+so a deadline and the last submission give exactly one round change; the map
+submits with the round it shows (`submitTurn(id, seat, expectedTurn)`), so a
+click that arrives after the deadline ended that round is refused instead of
+submitting the next one.
 For the platform each person still to submit has an open decision `round-<n>`
 due by that deadline (`MatchSummary.pendingDecisions`, games-platform-api 0.4.0).
 `MatchEventPublisher` announces the start (`MatchStarted`), the open turns with a
@@ -801,7 +805,9 @@ Display choices are kept by the platform (`PlatformSettings`, games-platform-api
 names of `DisplaySetting`: speed, sound, event/logistics filters, route search and
 sidebar position. `DisplayPreferences` reads them in one call while the map is
 built and caches them in the session; each explicit changed choice is written at
-once, a blank one resets the key (the platform keeps no blank values, so "no
+once, and only its own key, so an open map never overwrites what another device
+chose meanwhile (the fleet panel saves its three filters separately); a blank one
+resets the key (the platform keeps no blank values, so "no
 event category" is stored as `-`). Reopening a map refreshes the cache. Without a
 `PlatformSettings` bean the choices last for the session. Starfare's own start
 keeps them in `user_display_settings` (Flyway V2_8, `SoloPlatformSettings`), which
