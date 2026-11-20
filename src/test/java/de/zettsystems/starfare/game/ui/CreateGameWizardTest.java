@@ -12,6 +12,7 @@ import de.zettsystems.starfare.ai.values.AiStrategy;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.GameSessionStore;
+import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameTempo;
 import de.zettsystems.starfare.game.values.GameVisibility;
@@ -110,7 +111,7 @@ class CreateGameWizardTest extends AbstractBrowserlessTest {
         GameId id = create();
 
         assertThat(games.summaryOf(id).tempo()).isEqualTo(GameTempo.DAILY);
-        RoundRules rules = store.load(id).orElseThrow().readState(state -> state.roundRules());
+        RoundRules rules = store.load(id).orElseThrow().readState(GameState::roundRules);
         assertThat(rules.roundLimit()).isEqualTo(java.time.Duration.ofHours(24));
         assertThat(rules.stragglerLimit()).isEqualTo(java.time.Duration.ofHours(6));
     }

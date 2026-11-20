@@ -39,12 +39,16 @@ class SoloPlatformSettings implements PlatformSettings {
     @Override
     @Transactional(readOnly = true)
     public Optional<String> value(String gameKey, String key) {
-        return Optional.ofNullable(values(gameKey, List.of(key)).get(key));
+        return Optional.ofNullable(read(gameKey, List.of(key)).get(key));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<String, String> values(String gameKey, Collection<String> keys) {
+        return read(gameKey, keys);
+    }
+
+    private Map<String, String> read(String gameKey, Collection<String> keys) {
         Optional<AccountId> account = accounts.current();
         if (account.isEmpty() || !GAME_KEY.equals(gameKey)) {
             return Map.of();

@@ -32,6 +32,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
@@ -425,9 +426,9 @@ public final class CreateGameWizardDialog {
         AttackOrder attackOrder = ruleset.resolvesCoalitionBattles()
                 ? RoundRules.DEFAULT_ATTACK_ORDER : in.attackOrder().getValue();
         int humans = valueOrDefault(in.humans().getValue(), GameConfig.DEFAULT_HUMAN_PLAYERS);
-        GameTempo tempo = in.tempo().getValue();
+        GameTempo tempo = Objects.requireNonNullElse(in.tempo().getValue(), GameTempo.DEFAULT);
         // Only games with several people run against deadlines, so only they get a tempo.
-        RoundRules roundRules = humans > 1 ? RoundRules.forTempo(tempo == null ? GameTempo.DEFAULT : tempo, attackOrder)
+        RoundRules roundRules = humans > 1 ? RoundRules.forTempo(tempo, attackOrder)
                 : new RoundRules(null, null, attackOrder);
         return new GameSetup(
                 valueOrDefault(in.systems().getValue(), GameConfig.DEFAULT_SYSTEM_COUNT),
