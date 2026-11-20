@@ -8,6 +8,7 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Spring Boot 4.1.3:** gleiche Version wie die Plattform und Frontier Lords.
 - **Plattform-Vertrag 0.4.0:** Starfare baut gegen games-platform-api 0.4.0. Wer wegen verpasster
   Runden hinausfliegt, erscheint im Ergebnis als „wegen Nichtzug ausgeschieden“ (`TIMED_OUT`) mit
   dem Platz, den er beim Rauswurf hielt; gewinnt danach der Computer mit seinem Reich, zählt das
