@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.game.platform;
 
+import de.zettsystems.gamesplatformapi.Tempo;
 import de.zettsystems.gamesplatformapi.AccountId;
 import de.zettsystems.gamesplatformapi.DecisionKind;
 import de.zettsystems.gamesplatformapi.PendingDecision;
@@ -11,6 +12,8 @@ import de.zettsystems.gamesplatformapi.MatchSummary;
 import de.zettsystems.gamesplatformapi.Placement;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.RoundRules;
+import de.zettsystems.starfare.game.values.GameTempo;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.Player;
@@ -90,6 +93,14 @@ class StarfareMatchesTest {
             assertThat(summary.pendingDecisions().getFirst().deadline()).isNotNull();
             assertThat(summary.tutorial()).isFalse();
             assertThat(summary.tempo()).isNull();
+        }
+
+        @Test
+        void namesTheTempoChosenAtCreation() {
+            GameState state = runningGame();
+            state.configureRoundRules(RoundRules.forTempo(GameTempo.DAILY, null));
+
+            assertThat(summaryOf(state).tempo()).isEqualTo(Tempo.DAILY);
         }
 
         @Test

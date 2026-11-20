@@ -30,7 +30,6 @@ import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.style.CssProperties;
 import org.jspecify.annotations.Nullable;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -167,15 +166,16 @@ public final class CreateGameWizardDialog {
                 observersAllowed, reentryAllowed, battlePresentation, victoryPercent, victorySettings);
         FormLayout neutralGrid = grid(3, "16em", neutralMinProduction, neutralMaxProduction, productionDistribution);
 
-        ComboBox<Duration> roundLimit = durationCombo(I18n.t(UiTexts.LOBBY_FIELD_ROUND_LIMIT),
-                RoundRules.ROUND_LIMIT_CHOICES, RoundRules.DEFAULT_ROUND_LIMIT);
-        ComboBox<Duration> stragglerLimit = durationCombo(I18n.t(UiTexts.LOBBY_FIELD_STRAGGLER_LIMIT),
-                RoundRules.STRAGGLER_LIMIT_CHOICES, RoundRules.DEFAULT_STRAGGLER_LIMIT);
+        ComboBox<GameTempo> tempo = new ComboBox<>(I18n.t(UiTexts.LOBBY_FIELD_TEMPO));
+        tempo.setId("wizard-tempo");
+        tempo.setItems(GameTempo.values());
+        tempo.setItemLabelGenerator(TempoLabels::label);
+        tempo.setValue(GameTempo.DEFAULT);
         ComboBox<AttackOrder> attackOrder = new ComboBox<>(I18n.t(UiTexts.LOBBY_FIELD_ATTACK_ORDER));
         attackOrder.setItems(AttackOrder.values());
         attackOrder.setItemLabelGenerator(CreateGameWizardDialog::labelFor);
         attackOrder.setValue(RoundRules.DEFAULT_ATTACK_ORDER);
-        FormLayout timerGrid = grid(2, "16em", roundLimit, stragglerLimit);
+        FormLayout timerGrid = grid(1, "24em", tempo);
         Div timerSection = wizardSection(WizardEmblem.ROUNDS, I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS),
                 I18n.t(UiTexts.LOBBY_WIZARD_SECTION_ROUNDS_HINT, GameConfig.MAX_MISSED_ROUNDS), timerGrid);
         FormLayout combatGrid = grid(1, "16em", attackOrder);
@@ -266,7 +266,7 @@ public final class CreateGameWizardDialog {
         FormInputs formInputs = new FormInputs(systems, humans, ai, startProductionInputs, seatColorInputs,
                 neutralMinProduction, neutralMaxProduction, startGarrison,
                 observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout,
-                combatRandomness, roundLimit, stragglerLimit, attackOrder, victoryPercent, rulesets, victorySettings, aiStrategies,
+                combatRandomness, tempo, attackOrder, victoryPercent, rulesets, victorySettings, aiStrategies,
                 sectorOptions);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_REVIEW));
         createButton.set(create);
@@ -408,7 +408,7 @@ public final class CreateGameWizardDialog {
                               ComboBox<ProductionDistribution> productionDistribution,
                               ComboBox<GalaxyLayout> galaxyLayout,
                               Input combatRandomness,
-                              ComboBox<Duration> roundLimit, ComboBox<Duration> stragglerLimit,
+                              ComboBox<GameTempo> tempo,
                               ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent, RulesetSelector rulesets, VictorySettings victorySettings, AiStrategyFields aiStrategies,
                               SectorOptionsFields sectorOptions) {
     }
@@ -424,6 +424,11 @@ public final class CreateGameWizardDialog {
         // The hidden choice must not leak into a coalition game's stored rules.
         AttackOrder attackOrder = ruleset.resolvesCoalitionBattles()
                 ? RoundRules.DEFAULT_ATTACK_ORDER : in.attackOrder().getValue();
+        int humans = valueOrDefault(in.humans().getValue(), GameConfig.DEFAULT_HUMAN_PLAYERS);
+        GameTempo tempo = in.tempo().getValue();
+        // Only games with several people run against deadlines, so only they get a tempo.
+        RoundRules roundRules = humans > 1 ? RoundRules.forTempo(tempo == null ? GameTempo.DEFAULT : tempo, attackOrder)
+                : new RoundRules(null, null, attackOrder);
         return new GameSetup(
                 valueOrDefault(in.systems().getValue(), GameConfig.DEFAULT_SYSTEM_COUNT),
                 valueOrDefault(in.humans().getValue(), GameConfig.DEFAULT_HUMAN_PLAYERS),
@@ -439,7 +444,7 @@ public final class CreateGameWizardDialog {
                 in.galaxyLayout().getValue(),
                 in.battlePresentation().getValue(),
                 sliderValue(in.combatRandomness(), GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT),
-                new RoundRules(in.roundLimit().getValue(), in.stragglerLimit().getValue(), attackOrder),
+                roundRules,
                 valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)
         ).normalized().selectRuleset(ruleset)
                 .chooseVictoryRules(in.victorySettings().chosen(valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)))
@@ -474,13 +479,6 @@ public final class CreateGameWizardDialog {
                 : UiTexts.LOBBY_ATTACK_ORDER_RANDOM);
     }
 
-    private static ComboBox<Duration> durationCombo(String label, List<Duration> choices, Duration value) {
-        ComboBox<Duration> combo = new ComboBox<>(label);
-        combo.setItems(choices);
-        combo.setItemLabelGenerator(DurationLabels::label);
-        combo.setValue(value);
-        return combo;
-    }
 
     private static ComboBox<ColorOption> buildColorCombo() {
         ComboBox<ColorOption> color = new ComboBox<>(I18n.t(UiTexts.LOBBY_FIELD_COLOR));

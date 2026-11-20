@@ -341,6 +341,12 @@ public final class UiTexts {
     public static final String LOBBY_WIZARD_SECTION_COMBAT_HINT = "lobby.wizard.section.combat.hint";
     public static final String LOBBY_FIELD_ROUND_LIMIT = "lobby.field.roundLimit";
     public static final String LOBBY_FIELD_STRAGGLER_LIMIT = "lobby.field.stragglerLimit";
+    public static final String LOBBY_FIELD_TEMPO = "lobby.field.tempo";
+    public static final String LOBBY_TEMPO_OPTION = "lobby.tempo.option";
+    public static final String LOBBY_TEMPO_LIVE = "lobby.tempo.LIVE";
+    public static final String LOBBY_TEMPO_BRISK = "lobby.tempo.BRISK";
+    public static final String LOBBY_TEMPO_DAILY = "lobby.tempo.DAILY";
+    public static final String LOBBY_TEMPO_RELAXED = "lobby.tempo.RELAXED";
     public static final String LOBBY_FIELD_ATTACK_ORDER = "lobby.field.attackOrder";
     public static final String LOBBY_ATTACK_ORDER_RANDOM = "lobby.attackOrder.random";
     public static final String LOBBY_ATTACK_ORDER_STRONGEST_FIRST = "lobby.attackOrder.strongestFirst";

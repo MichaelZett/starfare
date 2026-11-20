@@ -454,8 +454,13 @@ held systems.
 A round ends once every human has submitted, or at the round deadline
 (`GameState.roundDeadline`): the round limit counts from the start of the
 round, the straggler limit from the moment only one human is still missing;
-whichever comes first. Both are chosen per game in the wizard (defaults 5 min
-and 1 min). Games with fewer than two humans have no deadline.
+whichever comes first. A game with several humans picks a tempo in the wizard
+(`GameTempo`: Live 5 min / 1 min, Brisk 1 h / 15 min, Daily 24 h / 6 h, Relaxed
+72 h / 12 h), which sets both limits and fixes them for the whole game; the
+platform learns the tempo from `MatchSummary.tempo` and the levels from
+`tempos` in `game.properties`. Games with fewer than two humans have no tempo
+and no deadline; older games keep their stored limits, which the host may
+still change.
 For the platform each person still to submit has an open decision `round-<n>`
 due by that deadline (`MatchSummary.pendingDecisions`, games-platform-api 0.4.0).
 `MatchEventPublisher` announces the start (`MatchStarted`), the open turns with a

@@ -721,8 +721,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         header.setNextVisible(!reviewing && (!observer || game.isAiOnly(gameId)));
         header.setLeaveVisible(!reviewing);
         header.setResignVisible(!reviewing && !observer && !view.gameOver() && currentSeat() >= 0);
+        // A tempo fixes the deadlines, so only games without one offer the change.
         header.setRoundRulesVisible(!reviewing && UserContext.currentPlayerId()
-                .flatMap(account -> game.hostPlayerIdOf(gameId).filter(account::equals)).isPresent());
+                .flatMap(account -> game.hostPlayerIdOf(gameId).filter(account::equals))
+                .flatMap(account -> game.roundRulesFor(gameId, account))
+                .filter(rules -> rules.tempo() == null).isPresent());
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer && pendingBattleSystemIds(view).isEmpty());
         header.setResearch(reviewing || observer || !pendingBattleSystemIds(view).isEmpty() ? null

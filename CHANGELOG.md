@@ -18,6 +18,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - **Chat-Rechte für die Plattform:** Die Plattform fragt Starfare, wer im Chat einer Partie lesen
   oder schreiben darf, nach denselben Regeln wie Starfares eigener Chat. Karte und Warteraum
   melden, welche Partie sie zeigen.
+- **Tempostufen:** Wer eine Partie für mehrere Menschen anlegt, wählt statt zweier Fristen ein
+  Tempo: Live (5 Minuten je Runde, 1 Minute für den Letzten), Zügig (1 Stunde / 15 Minuten),
+  Täglich (1 Tag / 6 Stunden) oder Gemütlich (3 Tage / 12 Stunden). Das Tempo steht nach dem Anlegen
+  fest; die Plattform zeigt es in den Partielisten. Ältere Partien behalten ihre Fristen.
 - **Hinweise der Plattform:** Starfare meldet der Plattform, wer in welcher Runde bis wann
   abgeben muss, den Start einer Partie, Einladungen und jede verpasste Rundenfrist (mit Zähler und
   ob sie zum Rauswurf führte). Daraus macht die Plattform Hinweise und Erinnerungsmails.

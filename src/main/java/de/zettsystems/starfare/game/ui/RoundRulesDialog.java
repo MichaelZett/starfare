@@ -13,14 +13,14 @@ import de.zettsystems.starfare.i18n.I18n;
 
 import java.time.Duration;
 
-/** Lets the host adjust the two deadlines while a game is running. */
+/** Lets the host adjust the two deadlines of a running game without a tempo; a tempo fixes them. */
 final class RoundRulesDialog {
     private RoundRulesDialog() {}
 
     static void open(GameService game, GameId gameId, Runnable onSaved) {
         String account = UserContext.currentPlayerId().orElse("");
         RoundRules current = game.roundRulesFor(gameId, account).orElse(null);
-        if (current == null) return;
+        if (current == null || current.tempo() != null) return;
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(I18n.t(UiTexts.ROUND_RULES_TITLE));
         ComboBox<Duration> roundLimit = field(UiTexts.LOBBY_FIELD_ROUND_LIMIT,

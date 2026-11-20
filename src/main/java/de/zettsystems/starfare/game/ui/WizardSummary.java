@@ -12,6 +12,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import de.zettsystems.starfare.game.values.AttackOrder;
 import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.GameTempo;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.ProductionDistribution;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
@@ -180,9 +181,14 @@ final class WizardSummary extends Div {
             note.addClassName("wizard-summary-note");
             facts.add(note);
         } else {
-            facts.add(fact(VaadinIcon.CLOCK, UiTexts.LOBBY_FIELD_ROUND_LIMIT, DurationLabels.label(setup.roundRules().roundLimit())),
-                    fact(VaadinIcon.HOURGLASS, UiTexts.LOBBY_FIELD_STRAGGLER_LIMIT,
-                            DurationLabels.label(setup.roundRules().stragglerLimit())));
+            GameTempo tempo = setup.roundRules().tempo();
+            if (tempo != null) {
+                facts.add(fact(VaadinIcon.CLOCK, UiTexts.LOBBY_FIELD_TEMPO, TempoLabels.label(tempo)));
+            } else {
+                facts.add(fact(VaadinIcon.CLOCK, UiTexts.LOBBY_FIELD_ROUND_LIMIT, DurationLabels.label(setup.roundRules().roundLimit())),
+                        fact(VaadinIcon.HOURGLASS, UiTexts.LOBBY_FIELD_STRAGGLER_LIMIT,
+                                DurationLabels.label(setup.roundRules().stragglerLimit())));
+            }
         }
         boolean open = visibility == GameVisibility.PUBLIC;
         facts.add(fact(open ? VaadinIcon.UNLOCK : VaadinIcon.LOCK, UiTexts.UX_SUMMARY_VISIBILITY,

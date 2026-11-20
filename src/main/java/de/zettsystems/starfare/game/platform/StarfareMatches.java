@@ -9,13 +9,17 @@ import de.zettsystems.gamesplatformapi.MatchStatus;
 import de.zettsystems.gamesplatformapi.MatchSummary;
 import de.zettsystems.gamesplatformapi.PendingDecision;
 import de.zettsystems.gamesplatformapi.Placement;
+import de.zettsystems.gamesplatformapi.Tempo;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.SectorScore;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameTempo;
 import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
+
+import org.jspecify.annotations.Nullable;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -94,7 +98,13 @@ public final class StarfareMatches {
         return Optional.of(new MatchSummary(GAME_KEY, game.gameId().value(), title, status,
                 List.copyOf(accounts.values()), seats, seats - (int) humanSeats, toMove, game.roundStartedAt(),
                 status == MatchStatus.OPEN ? waitingRoomPath(game.gameId()) : viewPath(game.gameId()),
-                false, null, decisions));
+                false, tempo(game), decisions));
+    }
+
+    /** The platform's tempo of the game; Starfare's tempos carry the platform's names. */
+    private static @Nullable Tempo tempo(GameSummary game) {
+        GameTempo tempo = game.tempo();
+        return tempo == null ? null : Tempo.valueOf(tempo.name());
     }
 
     /** The id of the decision for a round: stable while the round is open, unique within the game. */

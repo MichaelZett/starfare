@@ -13,8 +13,10 @@ import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.GameSessionStore;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameTempo;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.Player;
+import de.zettsystems.starfare.game.values.RoundRules;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
 import de.zettsystems.starfare.game.values.RulesetDefinition;
 import de.zettsystems.starfare.game.values.RulesetRef;
@@ -90,6 +92,37 @@ class CreateGameWizardTest extends AbstractBrowserlessTest {
                 .containsExactly(AiStrategy.BASELINE, AiStrategy.INDUSTRY_ADAPTIVE, AiStrategy.DEFENSE);
         assertThat(store.load(id).orElseThrow().readState(state -> state.originalSetup().orElseThrow()).aiStrategies())
                 .containsExactly(AiStrategy.INDUSTRY_ADAPTIVE, AiStrategy.DEFENSE);
+    }
+
+    @Test
+    void aGameWithSeveralPeopleRunsAtTheChosenTempoWhoseDeadlinesAreFixed() {
+        loginAsNewPlayer("Tempo Host");
+        openWizard();
+        test(find(IntegerField.class).withId("wizard-humans").single()).setValue(2);
+        assertThat(tempo().getValue()).isEqualTo(GameTempo.LIVE);
+        assertThat(tempo().getGenericDataView().getItems().toList()).containsExactly(GameTempo.values());
+        String daily = TempoLabels.label(GameTempo.DAILY);
+        assertThat(daily).startsWith("Täglich: ").contains("je Runde", "für den Letzten");
+        test(tempo()).selectItem(daily);
+
+        test(button("Zusammenfassung prüfen")).click();
+        assertThat(elementText(openedDialog().getElement())).contains(daily);
+        GameId id = create();
+
+        assertThat(games.summaryOf(id).tempo()).isEqualTo(GameTempo.DAILY);
+        RoundRules rules = store.load(id).orElseThrow().readState(state -> state.roundRules());
+        assertThat(rules.roundLimit()).isEqualTo(java.time.Duration.ofHours(24));
+        assertThat(rules.stragglerLimit()).isEqualTo(java.time.Duration.ofHours(6));
+    }
+
+    @Test
+    void aGameForOnePersonHasNoTempo() {
+        loginAsNewPlayer("Solo Host");
+        openWizard();
+        test(button("Zusammenfassung prüfen")).click();
+        GameId id = create();
+
+        assertThat(games.summaryOf(id).tempo()).isNull();
     }
 
     @Test
@@ -184,6 +217,11 @@ class CreateGameWizardTest extends AbstractBrowserlessTest {
         RadioButtonGroup<RulesetDefinition> variants = variants();
         variants.setValue(variants.getListDataView().getItems()
                 .filter(definition -> wanted.test(definition.defaultRef())).findFirst().orElseThrow());
+    }
+
+    @SuppressWarnings("unchecked") // rationale: the finder is not typed, the tempo field holds GameTempo.
+    private ComboBox<GameTempo> tempo() {
+        return find(ComboBox.class).withId("wizard-tempo").single();
     }
 
     private IntegerField aiPlayers() {

@@ -138,6 +138,24 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void aTempoSurvivesJsonRoundTripAndOlderRulesStayWithoutOne() {
+        GameState state = sampleState();
+        state.configureRoundRules(RoundRules.forTempo(GameTempo.RELAXED, AttackOrder.RANDOM));
+
+        String json = objectMapper.writeValueAsString(GameState.toSnapshot(state));
+        GameState restored = GameState.fromSnapshot(objectMapper.readValue(json, GameStateSnapshot.class));
+        assertThat(restored.roundRules().tempo()).isEqualTo(GameTempo.RELAXED);
+        assertThat(restored.roundRules().roundLimit()).isEqualTo(Duration.ofHours(72));
+
+        ObjectNode older = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+        ((ObjectNode) older.get("roundRules")).remove("tempo");
+        ((ObjectNode) older.get("roundRules")).put("roundLimit", Duration.ofMinutes(10).toString());
+        GameState old = GameState.fromSnapshot(objectMapper.treeToValue(older, GameStateSnapshot.class));
+        assertThat(old.roundRules().tempo()).isNull();
+        assertThat(old.roundRules().roundLimit()).isEqualTo(Duration.ofMinutes(10));
+    }
+
+    @Test
     void snapshotJsonWithoutRoundRulesUsesDefaults() {
         ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(sampleState()));
         json.remove(List.of("roundRules", "stragglerSince", "missedRounds"));

@@ -1350,7 +1350,9 @@ public class DefaultGameService implements GameService {
             return false;
         }
         boolean changed = registry.find(gameId).map(session -> registry.writeState(gameId, state -> {
-            if (!state.started() || state.gameOver() || !actor.equals(session.hostPlayerId())) {
+            // A tempo fixes the deadlines from the creation on; who joins has agreed to them.
+            if (!state.started() || state.gameOver() || !actor.equals(session.hostPlayerId())
+                    || state.roundRules().tempo() != null || rules.tempo() != null) {
                 return false;
             }
             state.configureRoundRules(rules);

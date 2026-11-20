@@ -10,8 +10,12 @@ import java.util.List;
  *
  * <p>{@code roundLimit} läuft ab Rundenbeginn. {@code stragglerLimit} startet, sobald nur noch
  * ein menschlicher Spieler fehlt. Die Runde endet mit der ersten der beiden Fristen.
+ * {@code tempo} ist die beim Anlegen gewählte Tempostufe, aus der beide Fristen stammen; sie steht ab
+ * dann fest. Ohne Tempo ({@code null}: Partien mit einem Menschen und ältere Partien) gelten die
+ * Fristen, wie sie gespeichert sind, und der Gastgeber darf sie ändern.
  */
-public record RoundRules(Duration roundLimit, Duration stragglerLimit, AttackOrder attackOrder) {
+public record RoundRules(Duration roundLimit, Duration stragglerLimit, AttackOrder attackOrder,
+                         @Nullable GameTempo tempo) {
 
     public static final Duration DEFAULT_ROUND_LIMIT = Duration.ofMinutes(5);
     public static final Duration DEFAULT_STRAGGLER_LIMIT = Duration.ofMinutes(1);
@@ -30,10 +34,22 @@ public record RoundRules(Duration roundLimit, Duration stragglerLimit, AttackOrd
             Duration.ofHours(12), Duration.ofDays(1), Duration.ofDays(2));
 
     public RoundRules(@Nullable Duration roundLimit, @Nullable Duration stragglerLimit,
-                      @Nullable AttackOrder attackOrder) {
-        this.roundLimit = bounded(roundLimit, DEFAULT_ROUND_LIMIT);
-        this.stragglerLimit = bounded(stragglerLimit, DEFAULT_STRAGGLER_LIMIT);
+                      @Nullable AttackOrder attackOrder, @Nullable GameTempo tempo) {
+        this.roundLimit = tempo != null ? tempo.roundLimit() : bounded(roundLimit, DEFAULT_ROUND_LIMIT);
+        this.stragglerLimit = tempo != null ? tempo.stragglerLimit() : bounded(stragglerLimit, DEFAULT_STRAGGLER_LIMIT);
         this.attackOrder = attackOrder == null ? DEFAULT_ATTACK_ORDER : attackOrder;
+        this.tempo = tempo;
+    }
+
+    /** Rules without a tempo: the deadlines as given. */
+    public RoundRules(@Nullable Duration roundLimit, @Nullable Duration stragglerLimit,
+                      @Nullable AttackOrder attackOrder) {
+        this(roundLimit, stragglerLimit, attackOrder, null);
+    }
+
+    /** Rules whose deadlines come from the tempo. */
+    public static RoundRules forTempo(GameTempo tempo, @Nullable AttackOrder attackOrder) {
+        return new RoundRules(null, null, attackOrder, tempo);
     }
 
     public static RoundRules defaults() {

@@ -4,6 +4,7 @@ import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.GameTempo;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.game.values.RoundRules;
@@ -135,6 +136,24 @@ class GameServiceHostTest extends AbstractIntegrationTest {
 
         assertThat(game.roundRulesFor(id, "alice")).contains(changed);
         assertThat(game.roundRulesFor(id, "outsider")).isEmpty();
+    }
+
+    @Test
+    void aTempoFixesTheDeadlinesForGood() {
+        GameId id = createGameWithHost("alice");
+        seedTwoHumanSeats(id, "alice", "bob");
+        RoundRules daily = RoundRules.forTempo(GameTempo.DAILY, RoundRules.DEFAULT_ATTACK_ORDER);
+        registry.writeState(id, state -> {
+            state.configureRoundRules(daily);
+            return null;
+        });
+
+        assertThat(game.updateRoundRules(id, "alice",
+                new RoundRules(Duration.ofMinutes(15), Duration.ofMinutes(2), RoundRules.DEFAULT_ATTACK_ORDER))).isFalse();
+        assertThat(game.updateRoundRules(id, "alice", RoundRules.forTempo(GameTempo.LIVE, null))).isFalse();
+        assertThat(game.roundRulesFor(id, "alice")).contains(daily);
+        assertThat(daily.roundLimit()).isEqualTo(Duration.ofHours(24));
+        assertThat(daily.stragglerLimit()).isEqualTo(Duration.ofHours(6));
     }
 
     @Test
