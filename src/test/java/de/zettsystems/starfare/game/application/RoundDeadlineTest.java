@@ -155,6 +155,8 @@ class RoundDeadlineTest extends AbstractIntegrationTest {
         assertThat(registry.require(id).summary().canJoin("bob")).isFalse();
         boolean timedOutNotResigned = registry.readState(id, state -> state.timedOut(2) && !state.resignedSeats().contains(2));
         assertThat(timedOutNotResigned).as("TIMED_OUT stays apart from RESIGNED").isTrue();
+        assertThat(registry.readState(id, GameState::timedOutPlaces)).as("the place held at the removal is kept")
+                .containsOnlyKeys(2);
     }
 
     @Test

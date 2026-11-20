@@ -9,6 +9,7 @@ import de.zettsystems.gamesplatformapi.Placement;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
 import org.junit.jupiter.api.Nested;
@@ -196,6 +197,33 @@ class StarfareMatchesTest {
             state.endGame(1);
 
             assertThat(placementOf(state, TWENTY_THREE).departure()).isEqualTo(Departure.RESIGNED);
+        }
+
+        @Test
+        void reportsATimedOutPersonOnThePlaceHeldThenAndNeverAsWinner() {
+            GameState state = runningGame();
+            state.missedRounds().put(2, GameConfig.MAX_MISSED_ROUNDS);
+            state.keepTimedOutPlace(2);
+            state.updatePlayer(2, Player::asAi);
+            state.joinedHumanPlayerIds().remove(2);
+            state.updateSystem(1, system -> new StarSystem(1, "S1", 0, 0, 2, 10, 2, false));
+            state.endGame(2);
+
+            Placement removed = placementOf(state, TWENTY_THREE);
+            assertThat(removed).isEqualTo(new Placement(TWENTY_THREE, 1, Departure.TIMED_OUT));
+            assertThat(removed.isWin()).as("the computer won with the seat, not the removed account").isFalse();
+            assertThat(placementOf(state, SEVENTEEN)).isEqualTo(new Placement(SEVENTEEN, 2, Departure.ELIMINATED));
+        }
+
+        @Test
+        void ranksATimedOutPersonWithoutAKeptPlaceByTheEnd() {
+            GameState state = runningGame();
+            state.missedRounds().put(2, GameConfig.MAX_MISSED_ROUNDS);
+            state.updatePlayer(2, Player::asAi);
+            state.joinedHumanPlayerIds().remove(2);
+            state.endGame(1);
+
+            assertThat(placementOf(state, TWENTY_THREE)).isEqualTo(new Placement(TWENTY_THREE, 2, Departure.TIMED_OUT));
         }
 
         @Test

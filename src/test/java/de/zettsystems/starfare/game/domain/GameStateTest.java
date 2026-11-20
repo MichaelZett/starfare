@@ -266,6 +266,7 @@ class GameStateTest {
         GameState state = populated();
         state.makePrivate();
         state.resignedSeats().add(2);
+        state.timedOutPlaces().put(1, 3);
         GameStateSnapshot snapshot = GameState.toSnapshot(state);
 
         assertThat(snapshot.intel()).isEqualTo(state.intel());
@@ -276,12 +277,34 @@ class GameStateTest {
         assertThat(GameState.toSnapshot(restored)).isEqualTo(snapshot);
         assertThat(restored.intel()).isEqualTo(state.intel());
         assertThat(restored.resignedSeats()).containsExactly(2);
+        assertThat(restored.timedOutPlaces()).containsExactly(Map.entry(1, 3));
+    }
+
+    @Test
+    void keepsThePlaceATimedOutSeatHeldByTheSystemsOfAllPlayers() {
+        GameState state = new GameState();
+        state.players().add(new Player(1, "P1", false, "#111111"));
+        state.players().add(new Player(2, "P2", false, "#222222"));
+        state.players().add(new Player(3, "AI", true, "#333333"));
+        state.systems().add(new StarSystem(1, "A", 0, 0, 1, 10, 2, false));
+        state.systems().add(new StarSystem(2, "B", 100, 0, 3, 10, 2, false));
+        state.systems().add(new StarSystem(3, "C", 200, 0, 3, 10, 2, false));
+        state.systems().add(new StarSystem(4, "D", 300, 0, 2, 10, 2, false));
+
+        state.keepTimedOutPlace(1);
+        state.keepTimedOutPlace(2);
+        state.systems().removeIf(system -> system.id() == 2 || system.id() == 3);
+        state.keepTimedOutPlace(1);
+
+        assertThat(state.timedOutPlaces()).as("the computer opponent counts; a tie shares the place; a kept place stays")
+                .containsOnly(Map.entry(1, 2), Map.entry(2, 2));
     }
 
     @Test
     void resetForNewGameStartsAnEmptyPrivateLobby() {
         GameState state = populated();
         state.resignedSeats().add(1);
+        state.timedOutPlaces().put(2, 1);
 
         state.resetForNewGame();
 
@@ -299,6 +322,7 @@ class GameStateTest {
         assertThat(state.industries()).isEmpty();
         assertThat(state.miningAutomation()).isEmpty();
         assertThat(state.resignedSeats()).isEmpty();
+        assertThat(state.timedOutPlaces()).isEmpty();
         assertPerMatchDataCleared(state);
     }
 

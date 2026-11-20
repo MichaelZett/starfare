@@ -450,7 +450,8 @@ In the header:
   moves with the orders given so far. Missed rounds count over the whole game:
   the second one times the seat out, the AI takes it over for good and there is
   no way back, even if the game allows rejoining. The former player still reads
-  the chat.
+  the chat. The result reports them as removed for missed turns, on the place
+  they held at the removal; a win of the AI with their empire is not theirs.
   The host can adjust deadlines during play through **Round deadlines** in the
   map menu. A game with only one human has no automatic round deadline.
 - **Leave game** — your seat becomes AI. If rejoining is allowed, you

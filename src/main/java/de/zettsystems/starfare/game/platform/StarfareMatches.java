@@ -102,9 +102,10 @@ public final class StarfareMatches {
      *
      * <p>Winners share place 1. The others follow by the number of systems they hold at the end, or by
      * their {@link SectorScore} when a SectorForces game reached its round limit; computer opponents count, so an account behind a winning computer opponent is on place 2.
-     * An account whose seat a computer opponent took over (left, removed or too many missed
-     * deadlines) has resigned; an account without systems and fleets was eliminated. A game that
-     * ended without a winner has no ranking and counts as aborted.
+     * An account removed for missed deadlines keeps the place it held then ({@link Departure#TIMED_OUT}),
+     * so a computer opponent winning with its seat is not its win. An account whose seat a computer
+     * opponent took over otherwise (left or removed) has resigned; an account without systems and
+     * fleets was eliminated. A game that ended without a winner has no ranking and counts as aborted.
      */
     public static Optional<MatchResult> result(GameState state) {
         Map<Integer, AccountId> accounts = accountsBySeat(state.seatByUser());
@@ -121,10 +122,14 @@ public final class StarfareMatches {
         Map<Integer, Long> standing = state.roundLimitReached() ? scores(state) : systems;
         List<Placement> placements = accounts.entrySet().stream().map(entry -> {
             int seat = entry.getKey();
+            Departure departure = departure(state, seat, systems, fleetOwners);
+            Integer timedOutPlace = state.timedOutPlaces().get(seat);
+            if (departure == Departure.TIMED_OUT && timedOutPlace != null) {
+                return new Placement(entry.getValue(), timedOutPlace, departure);
+            }
             long better = state.players().stream()
                     .filter(other -> ranksBefore(other.id(), seat, winners, standing)).count();
-            return new Placement(entry.getValue(), 1 + (int) better,
-                    departure(state, seat, systems, fleetOwners));
+            return new Placement(entry.getValue(), 1 + (int) better, departure);
         }).toList();
         return Optional.of(MatchResult.ranked(placements));
     }
@@ -143,8 +148,10 @@ public final class StarfareMatches {
 
     private static Departure departure(GameState state, int seat, Map<Integer, Long> systems,
                                        Set<Integer> fleetOwners) {
+        if (state.timedOut(seat)) {
+            return Departure.TIMED_OUT;
+        }
         if (!state.joinedHumanPlayerIds().contains(seat)) {
-            // Until games-platform-api 0.4.0 brings Departure.TIMED_OUT, a timed-out seat counts as resigned.
             return Departure.RESIGNED;
         }
         return systems.containsKey(seat) || fleetOwners.contains(seat) ? Departure.NONE : Departure.ELIMINATED;

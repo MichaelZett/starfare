@@ -8,6 +8,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Plattform-Vertrag 0.4.0:** Starfare baut gegen games-platform-api 0.4.0. Wer wegen verpasster
+  Runden hinausfliegt, erscheint im Ergebnis als „wegen Nichtzug ausgeschieden“ (`TIMED_OUT`) mit
+  dem Platz, den er beim Rauswurf hielt; gewinnt danach der Computer mit seinem Reich, zählt das
+  nicht als sein Sieg. Bisher galt er als aufgegeben und wurde nach dem Endstand eingeordnet.
 - **Als Vorlage in der Nachbetrachtung:** „Als Vorlage / Revanche“ steht bei beendeten Partien jetzt
   in der Leiste über der Karte statt auf der Archivkarte. Das Archiv ist nur noch Teil des eigenen
   Starts; in der Plattform listet künftig die Plattform die beendeten Partien.

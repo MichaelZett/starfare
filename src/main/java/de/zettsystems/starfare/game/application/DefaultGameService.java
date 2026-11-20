@@ -863,6 +863,8 @@ public class DefaultGameService implements GameService {
                             .map(Map.Entry::getKey).findFirst().orElse(null))
                     .filter(Objects::nonNull)
                     .toList();
+            // Places count before any seat changes hands, so that two seats removed together rank alike.
+            handedOver.forEach(state::keepTimedOutPlace);
             handedOver.forEach(id -> {
                 state.updatePlayer(id, Player::asAi);
                 state.joinedHumanPlayerIds().remove(id);

@@ -468,8 +468,11 @@ counts per seat over the whole game and is never reset by submitting; at
 takes it for good. A timed-out seat stays apart from a resigned one (`resignedSeats`)
 and from one that was left; both timed-out and resigned seats are `closedSeats()`,
 which neither `claimSeat` nor `GameSummary.canJoin` reopens. The seat binding stays,
-so the former player still reads chat and review. Until games-platform-api 0.4.0
-brings `Departure.TIMED_OUT`, `StarfareMatches` reports it as `RESIGNED`.
+so the former player still reads chat and review. At the removal the seat keeps the place
+it holds then (`GameState.keepTimedOutPlace`: one more than the players holding more systems,
+computer opponents included; stored in `timedOutPlaces`). `StarfareMatches` reports that place
+with `Departure.TIMED_OUT` (games-platform-api 0.4.0), so a computer opponent winning with the
+seat is no win of the removed account.
 
 ## Lifecycle and lobby
 

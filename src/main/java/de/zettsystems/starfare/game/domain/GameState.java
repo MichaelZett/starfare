@@ -18,6 +18,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -98,6 +99,9 @@ public class GameState {
     /** Seats whose player gave up for good: the computer keeps them and the player cannot reclaim them. */
     private final Set<Integer> resignedSeats = new HashSet<>();
     public Set<Integer> resignedSeats() { return resignedSeats; }
+    /** Seat → the place it held when it timed out; reported with that departure when the game ends. */
+    private final Map<Integer, Integer> timedOutPlaces = new HashMap<>();
+    public Map<Integer, Integer> timedOutPlaces() { return timedOutPlaces; }
     /** Random-event state of SectorForces games: home systems, unstable suns, destroyed systems and pirates. */
     private CosmicState cosmic = CosmicState.EMPTY;
     public CosmicState cosmic() { return cosmic; }
@@ -625,6 +629,18 @@ public class GameState {
         return missedRounds.getOrDefault(seat, 0) >= GameConfig.MAX_MISSED_ROUNDS;
     }
 
+    /**
+     * Keeps the place the seat holds now for its timed-out departure: one more than the number of
+     * players holding more systems, computer opponents included. A place kept earlier stays.
+     */
+    public void keepTimedOutPlace(int seat) {
+        Map<Integer, Long> held = systems.stream().map(StarSystem::ownerId).filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(owner -> owner, Collectors.counting()));
+        long own = held.getOrDefault(seat, 0L);
+        long better = players.stream().filter(player -> held.getOrDefault(player.id(), 0L) > own).count();
+        timedOutPlaces.putIfAbsent(seat, 1 + (int) better);
+    }
+
     /** Seats nobody may take back: resigned (RESIGNED) or timed out (TIMED_OUT), kept apart from a seat that was left. */
     public Set<Integer> closedSeats() {
         Set<Integer> closed = new HashSet<>(resignedSeats);
@@ -783,6 +799,7 @@ public class GameState {
         colonies.clear();
         miningAutomation.clear();
         resignedSeats.clear();
+        timedOutPlaces.clear();
         cosmic = CosmicState.EMPTY;
         metals = null;
         navigation = null;
@@ -985,7 +1002,7 @@ public class GameState {
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
                   new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome(), new HashMap<>(s.colonies), s.metals, Map.copyOf(s.miningAutomation),
-                Set.copyOf(s.resignedSeats), s.cosmic);
+                Set.copyOf(s.resignedSeats), s.cosmic, Map.copyOf(s.timedOutPlaces));
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -1004,6 +1021,8 @@ public class GameState {
         if (automation != null) { c.miningAutomation.putAll(automation); }
         var resigned = s.resignedSeats();
         if (resigned != null) { c.resignedSeats.addAll(resigned); }
+        var timedOutPlaces = s.timedOutPlaces();
+        if (timedOutPlaces != null) { c.timedOutPlaces.putAll(timedOutPlaces); }
         c.cosmic = CosmicState.orEmpty(s.cosmic());
         restoreTravel(c, s);
         restoreOrders(c, s);
@@ -1196,6 +1215,7 @@ public class GameState {
         c.metals = s.metals;
         c.miningAutomation.putAll(s.miningAutomation);
         c.resignedSeats.addAll(s.resignedSeats);
+        c.timedOutPlaces.putAll(s.timedOutPlaces);
         c.cosmic = s.cosmic;
         c.navigation = s.navigation;
         c.diplomacy = s.diplomacy;
