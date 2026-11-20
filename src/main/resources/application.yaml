@@ -29,7 +29,6 @@ spring:
           provider_disables_autocommit: true
         jdbc:
           time_zone: UTC
-        # SqlStatementRecorder (PageTiming) registers itself: SqlStatementRecorderConfiguration.
     open-in-view: false
   flyway:
     enabled: true
@@ -39,13 +38,9 @@ spring:
 
 starfare:
   timing:
-    # Page builds/UI actions and round resolutions at least this long are logged
-    # at WARN (PageTiming, RulesetTurnEngine; prod-langsam.sh). 0 disables.
-    slow-page-ms: 500
+    # Round resolutions at least this long are logged at WARN (RulesetTurnEngine).
+    # 0 disables. Page timings and query counts come from the host (/admin/timings).
     slow-round-ms: 1000
-    # A faster request is still logged ("Viele Abfragen") from this many statements
-    # or when one statement runs three times or more.
-    many-statements: 20
   legal:
     operator-name: ${STARFARE_LEGAL_OPERATOR_NAME:}
     postal-address: ${STARFARE_LEGAL_POSTAL_ADDRESS:}
