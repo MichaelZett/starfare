@@ -97,6 +97,37 @@ class RoundDeadlineTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void aSubmissionForARoundTheDeadlineAlreadyEndedIsRefusedInsteadOfCountingForTheNextOne() {
+        GameId id = runningGameWithTwoHumans();
+        int seen = turn(id);
+        assertThat(game.submitTurn(id, 1, seen)).isTrue();
+
+        assertThat(game.enforceRoundDeadline(id, Instant.now().plus(FAR_BEYOND_ANY_LIMIT))).isTrue();
+        assertThat(game.submitTurn(id, 2, seen)).as("the click came for the round the deadline ended").isFalse();
+
+        assertThat(turn(id)).isEqualTo(seen + 1);
+        java.util.Set<Integer> submitted = registry.readState(id, state -> java.util.Set.copyOf(state.submittedThisTurn()));
+        Map<Integer, Integer> missed = registry.readState(id, state -> Map.copyOf(state.missedRounds()));
+        assertThat(submitted).as("nothing counts for the round nobody has seen yet").isEmpty();
+        assertThat(missed).containsOnly(Map.entry(2, 1));
+    }
+
+    @Test
+    void theRoundEndsOnceWhenTheLastSubmissionAndTheDeadlineMeet() {
+        GameId id = runningGameWithTwoHumans();
+        int seen = turn(id);
+        Instant deadline = java.util.Objects.requireNonNull(registry.readState(id, GameState::roundDeadline));
+        assertThat(game.submitTurn(id, 1, seen)).isTrue();
+
+        assertThat(game.submitTurn(id, 2, seen)).isTrue();
+        assertThat(game.enforceRoundDeadline(id, deadline)).as("the submission already ended the round").isFalse();
+
+        assertThat(turn(id)).isEqualTo(seen + 1);
+        Map<Integer, Integer> missed = registry.readState(id, state -> Map.copyOf(state.missedRounds()));
+        assertThat(missed).isEmpty();
+    }
+
+    @Test
     void stragglerLimitStartsOnceOnlyOnePlayerIsMissing() {
         GameId id = runningGameWithTwoHumans();
         Instant soon = Instant.now().plus(Duration.ofSeconds(90));

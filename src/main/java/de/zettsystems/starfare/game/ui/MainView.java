@@ -296,11 +296,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             return;
         }
         int pid = currentSeat();
-        if (pid < 0) {
+        Integer shownTurn = displayedTurn;
+        if (pid < 0 || shownTurn == null) {
             Notification.show(I18n.t(UiTexts.MAP_SUBMIT_FAILED));
             return;
         }
-        if (!game.submitTurn(gameId, pid)) {
+        // The shown round: a deadline that ended it first must not turn the click into a submission of the next one.
+        if (!game.submitTurn(gameId, pid, shownTurn)) {
             Notification.show(I18n.t(UiTexts.MAP_SUBMIT_FAILED));
             return;
         }

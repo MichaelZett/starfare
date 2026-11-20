@@ -172,6 +172,12 @@ public interface GameService {
     boolean submitTurn(GameId gameId, int playerId);
 
     /**
+     * Submits the round the person saw. A deadline that ended that round first wins: the submission is
+     * then refused instead of counting for the next round, which the person has not seen yet.
+     */
+    boolean submitTurn(GameId gameId, int playerId, int expectedTurn);
+
+    /**
      * Beendet die Runde, wenn ihre Frist (Runden- oder Nachzügler-Limit) abgelaufen ist. Wer nicht
      * abgegeben hat, zieht mit den bis dahin erteilten Befehlen; nach
      * {@link GameConfig#MAX_MISSED_ROUNDS} verpassten Fristen in derselben Partie (nicht nur in Folge)

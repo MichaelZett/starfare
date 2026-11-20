@@ -152,12 +152,20 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
     }
 
-    private void saveFilters() {
+    // Each change writes only its own filter: the others may still show what this map read when it was
+    // built, and writing them would overwrite a choice made meanwhile on another device.
+    private void saveRouteFilter() {
         DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.ROUTE_FILTER, routeFilter);
+    }
+
+    private void saveEventFilters() {
         String events = enabledEventCategories.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(","));
         // Blank would mean the default (every category); no category is kept as a name no category has.
         DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.EVENT_FILTERS,
                 events.isEmpty() ? NO_EVENT_CATEGORY : events);
+    }
+
+    private void saveLogisticsFilters() {
         DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.LOGISTICS_FILTERS,
                 enabledLogisticsFilters.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(",")));
     }
@@ -433,7 +441,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             } else {
                 enabledLogisticsFilters.remove(filter);
             }
-            saveFilters();
+            saveLogisticsFilters();
             PlayerViewState view = currentView;
             if (view != null) {
                 renderLogistics(view);
@@ -932,7 +940,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             } else {
                 enabledEventCategories.remove(category);
             }
-            saveFilters();
+            saveEventFilters();
             PlayerViewState view = currentView;
             if (view != null) {
                 renderReport(view);
@@ -1186,7 +1194,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             if (!event.isFromClient()) { return; }
             routeFilter = event.getValue();
             routeFilters.stream().filter(other -> !other.equals(filter)).forEach(other -> other.setValue(routeFilter));
-            saveFilters();
+            saveRouteFilter();
             PlayerViewState view = currentView;
             if (view != null) {
                 renderTravelCards(view);

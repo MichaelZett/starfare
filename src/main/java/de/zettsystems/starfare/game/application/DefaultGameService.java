@@ -823,8 +823,20 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean submitTurn(GameId gameId, int playerId) {
+        return submit(gameId, playerId, null);
+    }
+
+    @Override
+    public boolean submitTurn(GameId gameId, int playerId, int expectedTurn) {
+        return submit(gameId, playerId, expectedTurn);
+    }
+
+    private boolean submit(GameId gameId, int playerId, @Nullable Integer expectedTurn) {
         SubmitResult result = registry.writeState(gameId, state -> {
             if (!state.started() || state.gameOver()) {
+                return new SubmitResult(false, TurnResult.REJECTED);
+            }
+            if (expectedTurn != null && state.turn() != expectedTurn) {
                 return new SubmitResult(false, TurnResult.REJECTED);
             }
             if (!state.joinedHumanPlayerIds().contains(playerId)) {

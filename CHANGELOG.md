@@ -8,6 +8,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Abgabe zur Fristgrenze:** Wer „Runde beenden“ für eine Runde klickt, die die Frist gerade beendet hat,
+  gibt nicht mehr ungesehen die nächste Runde ab; der Klick wird abgelehnt.
+- **Filter über mehrere Geräte:** Ändert man einen Filter, schreibt Starfare nur noch diesen. Eine auf einem
+  anderen Gerät gewählte Einstellung der übrigen Filter bleibt erhalten.
 - **Eigene Seitenmessung entfernt:** Seitenzeiten und Abfragezahlen misst die Plattform für alle
   Spiele; Starfare protokolliert nur noch langsame Rundenauswertungen.
 - **Spring Boot 4.1.3:** gleiche Version wie die Plattform und Frontier Lords.
