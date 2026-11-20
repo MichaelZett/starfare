@@ -320,7 +320,7 @@ The landing route `/` is the lobby. From there:
     - Allow observers? Allow rejoining?
     - Victory threshold: 10–100% of all systems, default 70%
     - Combat strength variation: 0–30%, default ±10%, fixed for the game
-    - Round and straggler deadlines, and attack order for multiple attackers
+    - Tempo for games with two or more humans, and attack order for multiple attackers
     - Battle presentation on by default; each account's saved speed choice overrides it
 - **Search / filter** — narrow the list by game or player name, and by
   status: all, mine, open or running games. Finished games are in **Archive**.
@@ -443,17 +443,20 @@ In the header:
   orders → arrivals/combat → victory check → next round).
   A bar below the header shows every human with a check mark once they
   have submitted. With two or more humans each round has a deadline: the
-  round limit (default 5 min) from the start of the round, and the
-  straggler limit (default 1 min) as soon as only one player is missing —
-  their chip then shows the countdown. Both are set per game in the
-  wizard, from 30 seconds up to several days. Whoever misses the deadline
+  round limit from the start of the round, and the straggler limit as soon as
+  only one player is missing — their chip then shows the countdown. The tempo
+  chosen in the wizard sets both and stays fixed for the whole game: Live
+  (5 min / 1 min), Brisk (1 h / 15 min), Daily (1 day / 6 h) or Relaxed
+  (3 days / 12 h). A click on submit that arrives after the deadline ended the
+  round is refused instead of submitting the next round. Whoever misses the deadline
   moves with the orders given so far. Missed rounds count over the whole game:
   the second one times the seat out, the AI takes it over for good and there is
   no way back, even if the game allows rejoining. The former player still reads
   the chat. The result reports them as removed for missed turns, on the place
   they held at the removal; a win of the AI with their empire is not theirs.
-  The host can adjust deadlines during play through **Round deadlines** in the
-  map menu. A game with only one human has no automatic round deadline.
+  Games created before tempos keep their deadlines, which the host can still
+  adjust through **Round deadlines** in the map menu. A game with only one human
+  has no tempo and no automatic round deadline.
 - **Leave game** — your seat becomes AI. If rejoining is allowed, you
   can come back later.
 - **Back to lobby** — exit the map view; the game keeps running.
