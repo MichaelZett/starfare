@@ -6,6 +6,10 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- **Spring Boot 4.2.0 und Spring Modulith 2.2.0:** gleiche Versionen wie die Plattform und Frontier Lords.
+
 ## 0.2.12 - 2026-11-20
 
 - **Abgabe zur Fristgrenze:** Wer „Runde beenden“ für eine Runde klickt, die die Frist gerade beendet hat,
