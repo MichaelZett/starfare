@@ -19,52 +19,17 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Header actions (chat, leaving) and clicks on the empty map. */
+/** Header actions (leaving) and clicks on the empty map; the platform shows the chat around the map. */
 class MapHeaderActionsJourneyTest extends AbstractMapJourneyTest {
     private static final String CHAT = "Partie-Chat";
     private static final String LEAVE = "Partie verlassen";
     private static final String RESIGN = "Aufgeben";
 
     @Test
-    void theChatOpensBesideTheMapAndReopensTheSamePanel() {
+    void theMapHasNoChatOfItsOwnBecauseThePlatformShowsIt() {
         createReviewGame();
-        assertThat(find(GameChatPanel.class).all()).isEmpty();
 
-        click(CHAT);
-        GameChatPanel chat = find(GameChatPanel.class).single();
-        Component host = chat.getParent().orElseThrow();
-        assertThat(host.hasClassName("map-chat-host")).isTrue();
-        assertThat(host.isVisible()).isTrue();
-
-        test(find(Button.class, chat).withText("Schließen").single()).click();
-        assertThat(chat.isVisible()).isFalse();
-        assertThat(host.isVisible()).isFalse();
-
-        click(CHAT);
-        assertThat(find(GameChatPanel.class).single()).isSameAs(chat);
-        assertThat(chat.isVisible()).isTrue();
-        assertThat(host.isVisible()).isTrue();
-    }
-
-    @Test
-    void theChatStaysClosedWhenTheGameWasRemovedMeanwhile() {
-        createReviewGame();
-        // Removed behind the view's back: no event, so the chat button is still offered.
-        registry.abortGame(id);
-
-        test(button(CHAT)).click();
-
-        assertThat(find(GameChatPanel.class).all()).isEmpty();
-    }
-
-    @Test
-    void theChatStaysClosedWhenTheAccountBecameAnObserverMeanwhile() {
-        createReviewGame();
-        registry.writeState(id, state -> state.observers().add(account));
-
-        test(button(CHAT)).click();
-
-        assertThat(find(GameChatPanel.class).all()).isEmpty();
+        assertThat(find(Button.class).all()).noneMatch(button -> CHAT.equals(button.getText()));
     }
 
     @Test
@@ -158,11 +123,10 @@ class MapHeaderActionsJourneyTest extends AbstractMapJourneyTest {
         createReviewGame();
         select("Alpha");
         click("Flotte senden");
-        assertThat(button(CHAT).isEnabled()).as("chat waits for the target").isFalse();
+        assertThat(find(Component.class).withClassName("sys-selected").all()).as("source picked").isNotEmpty();
 
         clickBackground();
 
-        assertThat(button(CHAT).isEnabled()).isTrue();
         assertThat(find(Component.class).withClassName("sys-selected").all()).as("no source").isEmpty();
         select("Beta");
         assertThat(find(Dialog.class).all().stream().filter(Dialog::isOpened)).as("no send dialog").isEmpty();
@@ -204,7 +168,6 @@ class MapHeaderActionsJourneyTest extends AbstractMapJourneyTest {
         clickBackground();
 
         assertThat(text("system-details-heading")).contains("Alpha");
-        assertThat(button(CHAT).isEnabled()).isTrue();
     }
 
     /** Host and a second human, so leaving does not hand the whole game to the AI. */

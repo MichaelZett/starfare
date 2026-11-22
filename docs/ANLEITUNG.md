@@ -128,7 +128,7 @@ Mit `?layout=mobile` oder `?layout=desktop` an einer beliebigen Adresse legst du
 sie für die restliche Sitzung selbst fest.
 
 Auf der Karte zeigt das Handy oben einen kompakten Kopf mit Partie, Runde,
-Reichsübersicht, **Runde abgeben**, dem direkten Chatknopf und dem Menü (Logistik, Legende, Rundenregeln,
+Reichsübersicht, **Runde abgeben** und dem Menü (Logistik, Legende, Rundenregeln,
 Verlassen, Lobby). Darunter füllt die Karte den Bildschirm; unten wechselt eine
 Leiste zwischen **Karte** und **Übersicht**. Die Übersicht ist die Seitenleiste
 als Vollbild, dazu Bündnisse und Sammelbefehle.
@@ -149,7 +149,7 @@ Logistik und Bericht**. Bei wenig Platz ersetzt das Auswahlfeld **Ansicht** die
 Reiter; es bietet dieselben Bereiche. Sammelversand, Sammelreserve und **Rückgängig** stehen direkt am Kopf der Seitenleiste. Die kurzen Knopfbeschriftungen
 zeigen den vollständigen Aktionsnamen als Hilfetext. Einzelversand und Verlegungen behalten den aktuellen
 Reiter; Sammelbefehle öffnen den Befehlsreiter, eine ausgewertete Runde den Bericht. Aktualisierungen unveränderter Inhalte erhalten Eingaben und
-Fokus; neue Chat-Nachrichten löschen keinen begonnenen Nachrichtenentwurf.
+Fokus.
 
 In den Systemdetails stehen versendbare Schiffe, Gesamtbestand und Reserve oben;
 außerdem die erwartete Schiffproduktion pro Runde. **Flotte senden** und
@@ -260,13 +260,8 @@ nicht möglich, wenn die Partie ihn sonst erlaubt. Den Chat kannst du weiter les
 Der Gastgeber kann über das Kartenmenü die **Rundenfristen** anpassen.
 Eine Partie mit nur einem Menschen hat keine automatische Rundenfrist.
 
-**Partie-Chat** öffnest du direkt im Kartenkopf. Auf breiten Ansichten bleibt die
-Karte daneben bedienbar, auf schmalen Ansichten und dem Handy öffnet sich der Chat
-als eigener Bereich. **Schließen** oder Escape führt zurück. Ein ungesendeter
-Entwurf bleibt beim Schließen und Wiederöffnen derselben Kartenansicht erhalten;
-ein Seitenwechsel oder Neuladen verwirft ihn. Beim Lesen älterer Nachrichten bleibt
-die Position erhalten; **Neue Nachrichten** führt ans Ende. Eine laufende Zielwahl
-musst du vor dem Öffnen abschließen oder abbrechen. Den Chat lesen alle, die einen Sitz in der
+Den **Partie-Chat** stellt die Plattform: Sein Knopf sitzt in ihrer schmalen Leiste über der Karte
+und im Warteraum, auch auf dem Handy. Den Chat lesen alle, die einen Sitz in der
 Partie haben oder hatten. Schreiben kann nur, wer noch mitspielt: Wer verlassen oder aufgegeben
 hat oder seinen Sitz durch verpasste Runden an die KI verloren hat, liest nur noch mit, und nach
 dem Ende der Partie ist der Chat für alle nur noch lesbar. Zuschauer haben keinen Chat. **Zur Lobby** verlässt nur die

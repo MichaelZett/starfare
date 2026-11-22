@@ -68,7 +68,6 @@ class MatchEventPublisherTest {
 
     @Test
     void ignoresWhatTheLobbyDoesNotShow() {
-        broadcaster.publish(new GameEvent.ChatMessage(ID, "17", "hello", java.time.Instant.now()));
         broadcaster.publish(new GameEvent.DiplomacyChanged(ID));
         broadcaster.publish(new GameEvent.ObserverJoined(ID, "23"));
         broadcaster.publish(new GameEvent.GameFinished(ID, 1));

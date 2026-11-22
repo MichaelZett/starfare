@@ -17,11 +17,9 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import de.zettsystems.starfare.auth.ui.UserContext;
-import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
-import de.zettsystems.starfare.game.application.GameChatService;
 import de.zettsystems.starfare.game.application.GameEvent;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -61,8 +59,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private enum TargetSelection { NONE, FLEET, RELOCATION }
     private static final String GAME_ID_PARAMETER = "gameId";
     private final GameService game;
-    private final GameChatService gameChat;
-    private final PlayerDirectory players;
     private final Broadcaster broadcaster;
     private @Nullable Subscription broadcasterSubscription;
     private final MapCanvas mapCanvas;
@@ -75,7 +71,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private final Div planningActions = new Div();
     private final Div treatyActions = new Div();
     private final Div actionBar = new Div();
-    private final Div chatHost = new Div();
     private @Nullable DiplomacyDialog diplomacyDialog;
     /** Present only on phones; desktops get the split layout instead, never both. */
     private final @Nullable MobileMapLayout mobile;
@@ -96,7 +91,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private boolean outcomeAcknowledged;
     private boolean outcomeDialogOpen;
     private @Nullable Dialog outcomeDialog;
-    private @Nullable GameChatPanel chatPanel;
     private boolean logisticsMode;
     private @Nullable PlayerViewState economicView;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
@@ -107,7 +101,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
 
     @Autowired
     public MainView(GameService service, Broadcaster broadcaster, BattleAcknowledgementService battleAcknowledgements,
-                    GameChatService gameChat, PlayerDirectory players,
                     @Nullable PlatformSettings preferences,
                     GameTemplateService templates, RulesetAccess rulesetAccess,
                     @Nullable OwnFrameParts frame) {
@@ -115,8 +108,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         this.game = service;
         this.templates = templates;
         this.rulesetAccess = rulesetAccess;
-        this.gameChat = gameChat;
-        this.players = players;
         this.broadcaster = broadcaster;
         this.acknowledgements = new BattleAcknowledgements(battleAcknowledgements);
         setWidthFull();
@@ -167,12 +158,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         actionBar.addClassName("map-controls");
         actionBar.add(treatyActions, planningActions);
         fleetsPanel.setActions(actionBar);
-        chatHost.addClassName("map-chat-host");
-        chatHost.setVisible(false);
         treatyActions.add(iconAction(VaadinIcon.HANDSHAKE, UiTexts.DIP_TITLE, this::openDiplomacy));
         boolean phone = Devices.mobile();
         header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
-                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openGameChat, this::openRoundRules, this::openShipResearch, this::confirmResign), phone, frame);
+                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openRoundRules, this::openShipResearch, this::confirmResign), phone, frame);
 
         gameOverBanner.setVisible(false);
         gameOverBanner.getStyle().set(CssProperties.FONT_WEIGHT, "600");
@@ -199,7 +188,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             refresh();
         });
         mobile = phone ? new MobileMapLayout(List.of(header, roundStatus, spectatorControls, reviewControls), gameOverBanner,
-                mapCanvas, fleetsPanel, chatHost, this::cancelTargetSelectionAndRefresh, this::hideGameChat) : null;
+                mapCanvas, fleetsPanel, this::cancelTargetSelectionAndRefresh) : null;
         layOut(frame);
     }
 
@@ -276,7 +265,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         content.addSplitterDragEndListener(_ -> DisplayPreferences.choose(
                 de.zettsystems.starfare.game.values.DisplaySetting.SIDEBAR, String.valueOf(content.getSplitterPosition())));
         content.addClassName("map-content");
-        var workspace = new com.vaadin.flow.component.orderedlayout.HorizontalLayout(content, chatHost);
+        var workspace = new com.vaadin.flow.component.orderedlayout.HorizontalLayout(content);
         workspace.setPadding(false);
         workspace.setSpacing(false);
         workspace.setSizeFull();
@@ -484,7 +473,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         }
         this.gameId = candidate;
         mapCanvas.useGame(candidate);
-        closeGameChat();
         if (diplomacyDialog != null) { diplomacyDialog.close(); diplomacyDialog = null; }
         displayedTurn = null;
         witnessedRunningGame = false;
@@ -513,9 +501,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         }
         UI ui = attachEvent.getUI();
         broadcasterSubscription = broadcaster.subscribe(gameId, event -> ui.access(() -> {
-            if (event instanceof GameEvent.ChatMessage) {
-                return;
-            }
             if (event instanceof GameEvent.GameContinued) {
                 witnessedRunningGame = true;
                 resetOutcomePresentation();
@@ -548,7 +533,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     @Override
     protected void onDetach(DetachEvent detachEvent) {
         detachEvent.getUI().getPage().executeJs("window.__starfareProductionDirty = false");
-        closeGameChat();
         resetOutcomePresentation();
         if (diplomacyDialog != null) { diplomacyDialog.close(); diplomacyDialog = null; }
         if (broadcasterSubscription != null) {
@@ -758,37 +742,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         }
     }
 
-    /** The header disables or hides the button during target selection and review; account and game may change meanwhile. */
-    private void openGameChat() {
-        if (isObserver() || !game.hasActiveGame(gameId)) { return; }
-        GameChatPanel current = chatPanel;
-        if (current == null) {
-            current = new GameChatPanel(gameChat, players, gameId, broadcaster, () -> {
-                chatHost.setVisible(false);
-                header.getElement().executeJs("this.querySelector('.map-chat-toggle')?.focus()");
-            });
-            chatPanel = current;
-            chatHost.add(current);
-        }
-        chatHost.setVisible(true);
-        current.open();
-    }
-
-    private void closeGameChat() {
-        GameChatPanel current = chatPanel;
-        chatPanel = null;
-        if (current != null) {
-            current.close();
-        }
-        chatHost.removeAll();
-        chatHost.setVisible(false);
-    }
-
-    private void hideGameChat() {
-        GameChatPanel current = chatPanel;
-        if (current != null) { current.close(); }
-    }
-
     private void openShipResearch() {
         if (!reviewing) {
             de.zettsystems.starfare.research.ui.ResearchDialog.open(game, gameId, UserContext.currentPlayerId().orElse(""), this::refresh);
@@ -878,9 +831,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
         if (mobile != null) { mobile.targetSelection(targetSelection != TargetSelection.NONE); }
-        boolean chatPermitted = !observer && !view.gameOver();
-        header.setChatAvailable(chatPermitted, targetSelection != TargetSelection.NONE);
-        if ((!chatPermitted || targetSelection != TargetSelection.NONE) && chatPanel != null) { chatPanel.close(); }
         economicView = view;
         updateEconomyNotices();
     }

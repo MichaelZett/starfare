@@ -28,7 +28,6 @@ final class MapHeaderBar extends HorizontalLayout {
     private final de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices = new de.zettsystems.starfare.economy.ui.EconomyNoticeBar();
     de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices() { return economyNotices; }
     private final Button next;
-    private final Button chat;
     private final @Nullable Button logistics;
     private final @Nullable MenuItem logisticsItem;
     private final MenuItem researchItem;
@@ -37,7 +36,7 @@ final class MapHeaderBar extends HorizontalLayout {
     private final MenuItem roundRulesItem;
 
     record Actions(Runnable onNext, Runnable onToggleLogistics, Runnable onLeave, Runnable onLobby,
-                   Runnable onChat, Runnable onEditRoundRules, Runnable onResearch, Runnable onResign) { }
+                   Runnable onEditRoundRules, Runnable onResearch, Runnable onResign) { }
 
     MapHeaderBar(Actions actions, boolean compact, @Nullable OwnFrameParts frame) {
         empireStats = new EmpireStatsBar(actions.onResearch());
@@ -66,10 +65,6 @@ final class MapHeaderBar extends HorizontalLayout {
             logistics = new Button(I18n.t(UiTexts.MAP_LOGISTICS_MODE), _ -> actions.onToggleLogistics().run());
             logistics.addThemeVariants(ButtonVariant.TERTIARY);
         }
-        chat = new Button(I18n.t(UiTexts.GAME_CHAT_TITLE), VaadinIcon.CHAT.create(), _ -> actions.onChat().run());
-        chat.addThemeVariants(ButtonVariant.TERTIARY);
-        chat.addClassName("map-chat-toggle");
-        chat.setAriaLabel(I18n.t(UiTexts.GAME_CHAT_TITLE));
         researchItem = menuRoot.getSubMenu().addItem(I18n.t(de.zettsystems.starfare.game.ui.UiTexts.RESEARCH_TITLE), _ -> actions.onResearch().run());
         researchItem.setVisible(false);
         roundRulesItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_ROUND_RULES),
@@ -88,11 +83,11 @@ final class MapHeaderBar extends HorizontalLayout {
 
         HorizontalLayout headerRight;
         if (logistics == null) {
-            headerRight = new HorizontalLayout(chat, next, headerMenu);
+            headerRight = new HorizontalLayout(next, headerMenu);
         } else if (frame != null) {
-            headerRight = new HorizontalLayout(frame.languageSwitcher(), logistics, chat, next, headerMenu);
+            headerRight = new HorizontalLayout(frame.languageSwitcher(), logistics, next, headerMenu);
         } else {
-            headerRight = new HorizontalLayout(logistics, chat, next, headerMenu);
+            headerRight = new HorizontalLayout(logistics, next, headerMenu);
         }
         headerRight.setAlignItems(Alignment.CENTER);
         headerRight.setSpacing(true);
@@ -114,12 +109,6 @@ final class MapHeaderBar extends HorizontalLayout {
 
     void setGameName(String name) {
         gameNameLabel.setText(name);
-    }
-
-    void setChatAvailable(boolean permitted, boolean targetSelection) {
-        chat.setVisible(permitted);
-        chat.setEnabled(permitted && !targetSelection);
-        chat.setTooltipText(I18n.t(targetSelection ? UiTexts.CHAT_FINISH_TARGET : UiTexts.GAME_CHAT_TITLE));
     }
 
     void setEmpireName(String name) {
