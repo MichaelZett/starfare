@@ -25,10 +25,6 @@ public final class UiTexts {
     public static final String SYSTEM_MODEL_MOON_RADIUS = "system.modelMoonRadius";
     public static final String MAP_VIEW = "map.navigation.view";
     public static final String MAP_HELP = "map.navigation.help";
-    public static final String CHAT_FINISH_TARGET = "chat.finishTarget";
-    public static final String CHAT_NEW_MESSAGES = "chat.newMessages";
-    public static final String CHAT_SEND_FAILED = "chat.sendFailed";
-    public static final String CHAT_READ_ONLY = "chat.readOnly";
     public static final String ARCHIVE_VIEW_BLOCKED = "archive.viewBlocked";
     public static final String RESEARCH_TITLE = "research.title";
     public static final String RESEARCH_HEADER_LABEL = "research.header.label";
@@ -547,8 +543,6 @@ public final class UiTexts {
     public static final String GAME_OUTCOME_VICTORY = "gameOutcome.victory";
     public static final String GAME_OUTCOME_DEFEAT = "gameOutcome.defeat";
     public static final String GAME_OUTCOME_CONTINUE = "gameOutcome.continue";
-    public static final String GAME_CHAT_TITLE = "gameChat.title";
-    public static final String GAME_CHAT_HINT = "gameChat.hint";
     public static final String ROUND_RULES_TITLE = "roundRules.title";
     public static final String ROUND_RULES_SAVE = "roundRules.save";
     public static final String GAME_OUTCOME_ROUNDS = "gameOutcome.rounds";
@@ -598,9 +592,6 @@ public final class UiTexts {
     public static final String INVITATIONS_DECLINE = "invitations.decline";
     public static final String INVITATIONS_ACCEPT_FAILED = "invitations.acceptFailed";
 
-    // Chat drawer / direct messages
-    public static final String CHAT_INPUT_PLACEHOLDER = "chat.input.placeholder";
-    public static final String CHAT_SEND = "chat.send";
     public static final String LEGAL_PRIVACY = "legal.privacy";
     public static final String LEGAL_IMPRINT = "legal.imprint";
     public static final String LEGAL_IMPRINT_TITLE = "legal.imprint.title";

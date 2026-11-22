@@ -2,7 +2,6 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.values.GameId;
-import de.zettsystems.starfare.game.values.GameChatMessage;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
@@ -16,7 +15,7 @@ class GameChatServiceTest extends AbstractIntegrationTest {
     private GameChatService chat;
 
     @Test
-    void onlyParticipantsCanReadAndSendGameChatMessages() {
+    void onlyParticipantsReadAndWriteTheChat() {
         GameId id = registry.createGame(GameSetup.defaults(), "alice", "chat");
         registry.writeState(id, state -> {
             state.resetForNewGame();
@@ -32,21 +31,10 @@ class GameChatServiceTest extends AbstractIntegrationTest {
             return null;
         });
 
-        assertThat(chat.send(id, "alice", "  hello team  ")).isTrue();
-        assertThat(chat.send(id, "eve", "sneak in")).isFalse();
-        assertThat(chat.messagesFor(id, "bob")).extracting(GameChatMessage::text).containsExactly("hello team");
-        assertThat(chat.messagesFor(id, "eve")).isEmpty();
-    }
-
-    @Test
-    void rejectsBlankMessagesAndTruncatesLongMessages() {
-        GameId id = runningGame();
-
-        assertThat(chat.send(id, "alice", "   ")).isFalse();
-        assertThat(chat.send(id, "alice", "x".repeat(GameChatMessage.MAX_LENGTH + 1))).isTrue();
-
-        assertThat(chat.messagesFor(id, "alice")).extracting(GameChatMessage::text)
-                .containsExactly("x".repeat(GameChatMessage.MAX_LENGTH));
+        assertThat(chat.mayWrite(id, "alice")).isTrue();
+        assertThat(chat.mayWrite(id, "bob")).isTrue();
+        assertThat(chat.mayRead(id, "eve")).isFalse();
+        assertThat(chat.mayWrite(id, "eve")).isFalse();
     }
 
     private GameId runningGame() {
@@ -66,7 +54,6 @@ class GameChatServiceTest extends AbstractIntegrationTest {
     @Test
     void whoLeftAndEverybodyAfterTheEndOnlyRead() {
         GameId id = runningGame();
-        assertThat(chat.send(id, "alice", "before")).isTrue();
         registry.writeState(id, state -> {
             state.joinedHumanPlayerIds().remove(1);
             return null;
@@ -76,8 +63,6 @@ class GameChatServiceTest extends AbstractIntegrationTest {
         assertThat(chat.mayRead(id, "alice")).isTrue();
         assertThat(chat.mayRead(id, "eve")).as("strangers and spectators have no chat").isFalse();
         assertThat(chat.mayRead(GameId.of("missing"), "alice")).isFalse();
-        assertThat(chat.send(id, "alice", "after leaving")).isFalse();
-        assertThat(chat.messagesFor(id, "alice")).extracting(GameChatMessage::text).containsExactly("before");
 
         GameId ended = runningGame();
         registry.writeState(ended, state -> {

@@ -69,5 +69,4 @@ public sealed interface GameEvent {
 
     record RoundRulesChanged(GameId gameId) implements GameEvent {}
 
-    record ChatMessage(GameId gameId, String senderPlayerId, String text, Instant sentAt) implements GameEvent {}
 }

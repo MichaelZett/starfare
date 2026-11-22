@@ -17,10 +17,3 @@ Funktionalität: Regressionen aus dem Release-Review
     Und kann ich eine Verlegung per Ziehen erstellen
     Und bleiben Zoom und Kartenposition für beide Partien getrennt
     Und bleiben Eingaben bei Aktualisierungen erhalten und ist die Karte per Tastatur bedienbar
-
-  Szenario: Fremde Chat-Nachrichten erscheinen live und ein Entwurf bleibt erhalten
-    Wenn das Konto "Review Chat Host" mit der E-Mail-Adresse "review-chat-host@example.test" besteht
-    Und das Konto "Review Chat Guest" mit der E-Mail-Adresse "review-chat-guest@example.test" besteht
-    Und ich mich mit "review-chat-host@example.test" anmelde
-    Und zwei Browsersitzungen eine Partie für "review-chat-host@example.test" und "review-chat-guest@example.test" öffnen
-    Dann erscheinen fremde Chat-Nachrichten auch nach erneutem Öffnen live

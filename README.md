@@ -141,13 +141,11 @@ is disabled by default and retains archive replay.
 Map controls provide zoom, whole-galaxy and own-empire views. **Map help** contains
 reset and the legend. Narrow sidebars use a labelled **View** selector for the same
 seven sections. Bulk send, bulk reserves and undo remain directly available at
-the top of the sidebar. **Game chat** opens directly from the header: beside the
-map on wide screens and in a separate panel on narrow screens and phones. Closing
-and reopening it preserves the draft within the same map view; navigation or a
-reload discards it. Reading older messages no longer jumps to the latest message.
-Complete or cancel target selection before opening chat. Everyone who holds or held a seat
-reads the chat; only those still playing write. Whoever left, resigned or lost the seat to the
-computer, and everyone after the game ended, only reads. Observers have no chat.
+the top of the sidebar. The **game chat** belongs to the platform: its button sits in the
+platform's strip above the map and in the waiting room, on phones as well. Starfare only says
+who may read and write: everyone who holds or held a seat reads the chat; only those still
+playing write. Whoever left, resigned or lost the seat to the computer, and everyone after the
+game ended, only reads. Observers have no chat. The own start has no game chat.
 Focusable map objects and action cards accept Enter and Space. Background updates
 preserve unchanged input controls and focus. In the own start, **My account** leads to
 lobby and archive; imprint and privacy share a footer.
@@ -336,8 +334,8 @@ The landing route `/` is the lobby. From there:
 ## Privacy
 
 Accounts and their deletion belong to the platform host; a deleted account reaches
-Starfare as `AccountRemoved`, and Starfare removes what belongs to it. Party-chat
-messages are removed after 365 days. The own start still serves `/privacy` and
+Starfare as `AccountRemoved`, and Starfare removes what belongs to it. The platform keeps the
+game chat; the messages of Starfare's former own chat stay for 365 days until its table is dropped. The own start still serves `/privacy` and
 `/imprint` from its former public operation until plan M19 removes them.
 
 ## Map view (`/starfare/map/:gameId`)
@@ -380,7 +378,7 @@ interface. `?layout=mobile` or `?layout=desktop` on any page overrides the choic
 for the rest of the session.
 
 On the map, the phone layout shows a compact header (game, round, empire summary,
-**End round**, a direct chat button and the menu with logistics and legend), the map across the
+**End round** and the menu with logistics and legend), the map across the
 whole screen and a bottom bar switching between **Map** and **Overview**. The
 overview is the sidebar as a full-screen sheet, together with alliances and bulk
 orders. Swipe to pan; zoom with two fingers or the round buttons, which also fit
@@ -581,7 +579,7 @@ headless Chrome: sign-in of a test account and one round, round submission pushe
 two sessions, battle playback with audio, native relocation dragging, hit areas, keyboard
 use and separate map viewports, route and range geometry, and layout screenshots at
 desktop widths. An emulated iPhone checks the phone interface by real taps next to a
-desktop session. Two browser sessions verify live chat and draft preservation. It is not
+desktop session. It is not
 part of `build`. CI runs it as a separate job
 (`[skip e2e]` in the commit message skips it). Failures leave page text in the
 test output and a screenshot in `build/e2e-failures/`.
