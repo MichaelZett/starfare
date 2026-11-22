@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.13 - 2026-11-22
 
 - **Spring Boot 4.2.0 und Spring Modulith 2.2.0:** gleiche Versionen wie die Plattform und Frontier Lords.
 - **Partie-Chat in der Plattform:** Den Chat zeigt jetzt die Plattform über der Karte und im Warteraum, auch am Telefon; der bisherige Verlauf zieht mit um. Starfare sagt nur noch, wer lesen und schreiben darf. Der eigene Start hat keinen Partie-Chat mehr.
