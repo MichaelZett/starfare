@@ -599,7 +599,7 @@ The platform asks the same chat rules through `MatchDirectory.chatAccess`
 and name the game they show once `beforeEnter` let the account in, so the
 platform can put the chat around them. Starfare shows and stores no chat itself
 (since 0.2.13); 0.2.14 removed the code for the old table `game_chat_messages`,
-which the following release drops.
+and 0.2.15 dropped the table and its sequence (`V2_15`).
 
 `reviewFor(id, account, perspective, fogOfWar)` checks completed-game access and
 participant existence inside the read lock. `PlayerViewBuilder.forReview` reuses

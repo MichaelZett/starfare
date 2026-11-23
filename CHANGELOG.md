@@ -6,6 +6,11 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## 0.2.15 - 2026-11-23
+
+- **Alte Chat-Tabelle entfernt:** Die Tabelle des früheren eigenen Partie-Chats und ihr Zähler sind
+  gelöscht. Der Chat liegt seit 0.2.13 bei der Plattform; am Spiel ändert sich nichts.
+
 ## 0.2.14 - 2026-11-23
 
 - **Alter Partie-Chat ausgebaut:** Starfare liest und schreibt die Tabelle seines früheren eigenen Chats
