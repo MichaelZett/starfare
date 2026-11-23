@@ -23,6 +23,32 @@ class UiMapperTest {
     }
 
     @Test
+    void systemLabelShowsTheShipsLeftAfterRelocations() {
+        assertThat(UiMapper.systemLabel(visible(5, 2))).isEqualTo("S1 G:4 P:5 (3 frei)");
+        assertThat(UiMapper.systemLabel(visible(2, 3))).as("never below zero").isEqualTo("S1 G:4 P:2 (0 frei)");
+    }
+
+    @Test
+    void systemLabelOmitsTheFreeShipsWithoutRelocationOrProduction() {
+        assertThat(UiMapper.systemLabel(visible(5, 0))).isEqualTo("S1 G:4 P:5");
+        assertThat(UiMapper.systemLabel(visible(5, null))).isEqualTo("S1 G:4 P:5");
+        assertThat(UiMapper.systemLabel(visible(null, 2))).doesNotContain("frei");
+    }
+
+    @Test
+    void systemLabelMarksEstimatesAndRemembersTheLastSeenGarrison() {
+        VisibleSystem estimate = new VisibleSystem(3, "S3", 0, 0, 2, 7, null, false, null, 4, true, null, List.of());
+        VisibleSystem remembered = new VisibleSystem(4, "S4", 0, 0, 2, 6, null, false, null, 4, false, null, List.of());
+
+        assertThat(UiMapper.systemLabel(estimate)).isEqualTo("S3 ~G:7");
+        assertThat(UiMapper.systemLabel(remembered)).isEqualTo("S4 G:6");
+    }
+
+    private static VisibleSystem visible(Integer production, Integer routed) {
+        return new VisibleSystem(1, "S1", 0, 0, 1, 4, production, true, "#fff", 1, false, routed, List.of());
+    }
+
+    @Test
     void systemTooltipUsesLastSeenOrNoSight() {
         VisibleSystem visible = new VisibleSystem(1, "S1", 0, 0, 1, 4, 2, true, "#fff", 3, false, null, List.of());
         VisibleSystem lastSeen = new VisibleSystem(2, "S2", 0, 0, null, null, null, false, null, 5, false, null, List.of());

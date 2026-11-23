@@ -162,6 +162,8 @@ class GameArchiveTest extends AbstractIntegrationTest {
         TurnReport secondReport = new TurnReport(9, List.of(), List.of(
                 new TurnEvent.SystemLost(seat, 2, 13, "Gamma", 5, 6, 1),
                 new TurnEvent.DefenseHeld(seat, 14, "Delta", 4, 7, 5),
+                new TurnEvent.CoalitionBattle(15, "Epsilon", 2, seat, "Host", List.of()),
+                new TurnEvent.CoalitionBattle(16, "Zeta", seat, seat, "Host", List.of()),
                 new TurnEvent.Victory(seat)));
         registry.writeState(id, state -> {
             state.replayFrames().put(9, new ReplayFrame(9, state.systems(), state.fleets(), Map.of(seat, secondReport)));
@@ -174,7 +176,9 @@ class GameArchiveTest extends AbstractIntegrationTest {
                 new ReplayEventMarker(4, 11, "Alpha", 1, true),
                 new ReplayEventMarker(4, 12, "Beta", 2, false),
                 new ReplayEventMarker(9, 13, "Gamma", 0, true),
-                new ReplayEventMarker(9, 14, "Delta", 1, false));
+                new ReplayEventMarker(9, 14, "Delta", 1, false),
+                new ReplayEventMarker(9, 15, "Epsilon", 2, true),
+                new ReplayEventMarker(9, 16, "Zeta", 3, false));
         assertThat(games.replayEventMarkers(id, "host", seat)).containsExactlyElementsOf(expected);
         assertThat(games.replayEventMarkers(id, "stranger", seat)).isEmpty();
         assertThat(games.replayEventMarkers(id, "host", 999)).isEmpty();

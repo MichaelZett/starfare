@@ -1,13 +1,17 @@
 package de.zettsystems.starfare.game.ui;
 
+import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Input;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.ReplayEventMarker;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +24,8 @@ class ReviewControlsTest {
     private static final ReplayEventMarker CONQUEST = new ReplayEventMarker(3, 6, "Beta", 1, true);
 
     private final List<ReplayEventMarker> selected = new ArrayList<>();
-    private final ReviewControls controls = new ReviewControls(() -> { }, selected::add);
+    private final AtomicInteger changes = new AtomicInteger();
+    private final ReviewControls controls = new ReviewControls(changes::incrementAndGet, selected::add);
 
     @Test
     void fromTheFinalStateNextEventStepsThroughAllEventsAndStopsAfterTheLast() {
@@ -85,6 +90,82 @@ class ReviewControlsTest {
         nextEvent();
 
         assertThat(selected).containsExactly(BATTLE, CONQUEST);
+    }
+
+    @Test
+    void aTurnBeyondTheShorterHistoryReturnsToTheFinalState() {
+        controls.show(PLAYERS, 1, TURNS, List.of());
+        assertThat(timeline().getValue()).isEqualTo("5");
+
+        controls.show(PLAYERS, 1, List.of(1, 2, 3), List.of());
+
+        assertThat(timeline().getValue()).isEqualTo("4");
+        assertThat(controls.replayTurn()).isNegative();
+    }
+
+    @Test
+    void aTurnMissingFromTheHistorySnapsToTheNearestRecordedTurn() {
+        controls.show(PLAYERS, 1, TURNS, List.of());
+        button("Zurück").click();
+        button("Zurück").click();
+        assertThat(controls.replayTurn()).isEqualTo(3);
+
+        controls.show(PLAYERS, 1, List.of(2, 6), List.of());
+
+        assertThat(controls.replayTurn()).isEqualTo(2);
+    }
+
+    @Test
+    void aRecordedTurnStaysSelected() {
+        controls.show(PLAYERS, 1, TURNS, List.of());
+        button("Zurück").click();
+
+        controls.show(PLAYERS, 1, TURNS, List.of());
+
+        assertThat(controls.replayTurn()).isEqualTo(4);
+    }
+
+    @Test
+    void anUnreadableTimelineValueFallsBackToTheFinalState() {
+        controls.show(PLAYERS, 1, TURNS, List.of());
+
+        clientMovesTimelineTo("later");
+
+        assertThat(timeline().getValue()).isEqualTo("5");
+        assertThat(controls.replayTurn()).isNegative();
+        assertThat(changes).hasValue(1);
+    }
+
+    @Test
+    void aClientMoveOnTheTimelineSnapsToARecordedTurnAndNotifies() {
+        controls.show(PLAYERS, 1, List.of(2, 6), List.of());
+
+        clientMovesTimelineTo("3");
+
+        assertThat(controls.replayTurn()).isEqualTo(2);
+        assertThat(changes).hasValue(1);
+    }
+
+    @Test
+    void aTimelineEventBeforeAnyHistoryIsKnownKeepsTheValue() {
+        clientMovesTimelineTo("7");
+
+        assertThat(timeline().getValue()).isEqualTo("7");
+        assertThat(controls.replayTurn()).as("no recorded turn yet").isNegative();
+        assertThat(changes).hasValue(1);
+    }
+
+    /** Without a UI the range input cannot receive a browser event; the listener sees the same flag. */
+    private void clientMovesTimelineTo(String value) {
+        Input timeline = timeline();
+        String old = timeline.getValue();
+        timeline.setValue(value);
+        ComponentUtil.fireEvent(timeline, new AbstractField.ComponentValueChangeEvent<>(timeline, timeline, old, true));
+    }
+
+    private Input timeline() {
+        return all(controls).filter(Input.class::isInstance).map(Input.class::cast)
+                .filter(input -> input.getId().filter("review-timeline"::equals).isPresent()).findFirst().orElseThrow();
     }
 
     private void nextEvent() {
