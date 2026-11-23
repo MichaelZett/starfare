@@ -6,6 +6,15 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## 0.2.16 - 2026-11-23
+
+- **Tutorialmodus:** Beim Anlegen einer Partie lässt sie sich als Tutorial kennzeichnen. Zusammenfassung,
+  Warteraum und Kopfzeile der Karte zeigen das für alle Teilnehmer; die Plattform markiert die Partie in
+  Lobby und „Beendete Partien“ und lässt sie aus der Statistik. Ältere Partien sind keine Tutorials.
+- **„Schiffe frei“ nur im Tutorial:** Der Hinweis auf freie Schiffe an den Systemen der Karte ist eine
+  Lernhilfe und erscheint nur noch in Tutorialpartien, als gestrichelte Raute oben rechts am System.
+  Die Zahl steht weiter in Systemauswahl und Seitenleiste.
+
 ## 0.2.15 - 2026-11-23
 
 - **Alte Chat-Tabelle entfernt:** Die Tabelle des früheren eigenen Partie-Chats und ihr Zähler sind
