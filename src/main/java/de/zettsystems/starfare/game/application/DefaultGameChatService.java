@@ -4,20 +4,16 @@ import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.function.BiPredicate;
 import org.jspecify.annotations.Nullable;
 
 @Service
 class DefaultGameChatService implements GameChatService {
     private final GameRegistry registry;
-    private final GameChatMessageRepository repository;
     private final GameAccessPolicy access;
 
-    DefaultGameChatService(GameRegistry registry, GameChatMessageRepository repository,
-                           GameAccessPolicy access) {
+    DefaultGameChatService(GameRegistry registry, GameAccessPolicy access) {
         this.registry = registry;
-        this.repository = repository;
         this.access = access;
     }
 
@@ -29,11 +25,6 @@ class DefaultGameChatService implements GameChatService {
     @Override
     public boolean mayWrite(GameId gameId, String account) {
         return allowed(gameId, account, access::mayWriteChat);
-    }
-
-    @Override
-    public long removeMessagesOlderThan(Instant cutoff) {
-        return repository.deleteBySentAtBefore(cutoff);
     }
 
     private boolean allowed(GameId gameId, @Nullable String account, BiPredicate<GameState, String> rule) {

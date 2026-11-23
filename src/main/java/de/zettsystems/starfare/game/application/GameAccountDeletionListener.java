@@ -20,7 +20,6 @@ import tools.jackson.databind.ObjectMapper;
 public class GameAccountDeletionListener {
     private static final List<String> DELETE_BINDINGS = List.of(
             "DELETE FROM battle_acknowledgements WHERE player_id = ?",
-            "DELETE FROM game_chat_messages WHERE sender_player_id = ?",
             "DELETE FROM user_display_settings WHERE player_id = ?");
     private final GameSessionRepository sessions;
     private final GameArchiveRepository archives;

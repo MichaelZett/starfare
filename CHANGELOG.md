@@ -6,6 +6,12 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- **Alter Partie-Chat ausgebaut:** Starfare liest und schreibt die Tabelle seines früheren eigenen Chats
+  nicht mehr; der nächtliche Aufräumlauf und das Löschen mit dem Konto entfallen. Der Verlauf liegt seit
+  0.2.13 bei der Plattform, die ihn auch mit dem Konto löscht. Die Tabelle selbst entfernt das nächste Release.
+
 ## 0.2.13 - 2026-11-22
 
 - **Spring Boot 4.2.0 und Spring Modulith 2.2.0:** gleiche Versionen wie die Plattform und Frontier Lords.

@@ -585,11 +585,6 @@ Fleet selection clears the previous system selection and opens fleet details.
 before installing browser handlers. Delayed storage writes are discarded if
 the canvas has since switched to another game.
 
-The game chat subscribes to `ChatMessage` while its dialog is open and attached,
-and removes its subscription on close or detach. Leaving the map closes the
-dialog as well. Chat events refresh only the messages, preserving the draft
-and the map sidebar's current inputs.
-
 Viewing, chatting and giving orders are separate rights in `GameAccessPolicy`
 (platform decision E2, 19.11.2026). `GameState.activeSeat(account)` is the seat through
 which an account still plays: seated and joined. Leaving, resigning and losing the
@@ -602,8 +597,9 @@ The platform asks the same chat rules through `MatchDirectory.chatAccess`
 (games-platform-api 0.4.0): `GameChatService.mayWrite` gives `WRITE`, `mayRead`
 `READ`, anything else `NONE`. `MainView` and `WaitingRoomView` implement `MatchView`
 and name the game they show once `beforeEnter` let the account in, so the
-platform can put the chat around them; Starfare's own chat stays until the host
-shows it in full screen and on phones.
+platform can put the chat around them. Starfare shows and stores no chat itself
+(since 0.2.13); 0.2.14 removed the code for the old table `game_chat_messages`,
+which the following release drops.
 
 `reviewFor(id, account, perspective, fogOfWar)` checks completed-game access and
 participant existence inside the read lock. `PlayerViewBuilder.forReview` reuses

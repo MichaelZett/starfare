@@ -335,7 +335,8 @@ The landing route `/` is the lobby. From there:
 
 Accounts and their deletion belong to the platform host; a deleted account reaches
 Starfare as `AccountRemoved`, and Starfare removes what belongs to it. The platform keeps the
-game chat; the messages of Starfare's former own chat stay for 365 days until its table is dropped. The own start still serves `/privacy` and
+game chat and took over the messages of Starfare's former own chat; Starfare no longer reads or
+writes its old table, which the next release drops. The own start still serves `/privacy` and
 `/imprint` from its former public operation until plan M19 removes them.
 
 ## Map view (`/starfare/map/:gameId`)
