@@ -77,8 +77,16 @@ class LogisticsJourneyTest extends AbstractMapJourneyTest {
     }
 
     @Test
-    void idleShipsHintGoesAwayWhenAHigherReserveMakesThemIntentional() {
+    void aNormalGameDoesNotPointAtFreeShips() {
         createReviewGame();
+        assertThat(idleShipsHint("Beta")).isEmpty();
+        assertThat(find(Component.class).withClassName(TutorialMark.CLASS_NAME).all()).as("no visible mark").isEmpty();
+    }
+
+    @Test
+    void idleShipsHintGoesAwayWhenAHigherReserveMakesThemIntentional() {
+        createReviewGame(true);
+        assertThat(find(Component.class).withClassName(TutorialMark.CLASS_NAME).all()).hasSize(1);
         assertThat(idleShipsHint("Beta")).contains("3");
         assertThat(idleShipsHint("Alpha")).isEmpty();
         select("Beta");

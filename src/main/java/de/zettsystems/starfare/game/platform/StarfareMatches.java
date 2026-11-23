@@ -98,7 +98,7 @@ public final class StarfareMatches {
         return Optional.of(new MatchSummary(GAME_KEY, game.gameId().value(), title, status,
                 List.copyOf(accounts.values()), seats, seats - (int) humanSeats, toMove, game.roundStartedAt(),
                 status == MatchStatus.OPEN ? waitingRoomPath(game.gameId()) : viewPath(game.gameId()),
-                false, tempo(game), decisions));
+                game.tutorial(), tempo(game), decisions));
     }
 
     /** The platform's tempo of the game; Starfare's tempos carry the platform's names. */
@@ -122,7 +122,7 @@ public final class StarfareMatches {
             return Optional.empty();
         }
         return result(state).map(result -> new FinishedMatch(GAME_KEY, id.value(), name.isBlank() ? id.value() : name,
-                endedAt, result, false, viewPath(id)));
+                endedAt, result, state.tutorial(), viewPath(id)));
     }
 
     private static MatchStatus status(GameSummary game) {

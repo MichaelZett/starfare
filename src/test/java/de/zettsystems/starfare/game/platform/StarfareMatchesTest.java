@@ -16,6 +16,7 @@ import de.zettsystems.starfare.game.values.RoundRules;
 import de.zettsystems.starfare.game.values.GameTempo;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameConfig;
+import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
 import org.junit.jupiter.api.Nested;
@@ -93,6 +94,11 @@ class StarfareMatchesTest {
             assertThat(summary.pendingDecisions().getFirst().deadline()).isNotNull();
             assertThat(summary.tutorial()).isFalse();
             assertThat(summary.tempo()).isNull();
+        }
+
+        @Test
+        void marksATutorialSoThePlatformKeepsItOutOfTheStatistics() {
+            assertThat(summaryOf(runningGame(true)).tutorial()).isTrue();
         }
 
         @Test
@@ -310,6 +316,15 @@ class StarfareMatchesTest {
         }
 
         @Test
+        void marksAFinishedTutorial() {
+            GameState state = runningGame(true);
+            state.endGame(1);
+
+            assertThat(StarfareMatches.finished(ID, "Andromeda", ENDED, state, "17"))
+                    .hasValueSatisfying(match -> assertThat(match.tutorial()).isTrue());
+        }
+
+        @Test
         void fallsBackToTheIdWithoutAName() {
             GameState state = runningGame();
             state.endGame(null);
@@ -330,7 +345,14 @@ class StarfareMatchesTest {
     }
 
     private static GameState runningGame() {
+        return runningGame(false);
+    }
+
+    private static GameState runningGame(boolean tutorial) {
         GameState state = new GameState();
+        if (tutorial) {
+            state.rememberSetup(GameSetup.defaults().chooseTutorial(true));
+        }
         state.players().add(new Player(1, "P1", false, "#111111"));
         state.players().add(new Player(2, "P2", false, "#222222"));
         state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 10, 2, false));

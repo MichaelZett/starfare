@@ -409,6 +409,11 @@ public class GameState {
         return originalSetup == null ? SectorOptions.none() : originalSetup.sectorOptions();
     }
 
+    /** Whether the game was created as a tutorial; games from before the choice existed are none. */
+    public boolean tutorial() {
+        return originalSetup != null && originalSetup.tutorial();
+    }
+
     /** Whether the round limit of a SectorForces game is reached; such a game cannot be continued. */
     public boolean roundLimitReached() {
         SectorOptions options = sectorOptions();

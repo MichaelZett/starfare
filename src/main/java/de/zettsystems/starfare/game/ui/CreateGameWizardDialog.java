@@ -156,9 +156,14 @@ public final class CreateGameWizardDialog {
         empireName.setValue(EmpireNameGenerator.forHuman(hostName));
         empireName.setRequiredIndicatorVisible(true);
         hostOnly.addValueChangeListener(event -> empireName.setEnabled(!Boolean.TRUE.equals(event.getValue())));
+        // Aids for learning the game show only in a tutorial; every seat sees that the game is one.
+        Checkbox tutorial = new Checkbox(I18n.t(UiTexts.LOBBY_FIELD_TUTORIAL));
+        tutorial.setId("wizard-tutorial");
+        tutorial.setHelperText(I18n.t(UiTexts.LOBBY_FIELD_TUTORIAL_HINT));
+        tutorial.setValue(false);
 
         FormLayout setupGrid = grid(3, "13em", gameName, empireName, galaxyLayout, systems, humans, ai,
-                visibility, hostOnly);
+                visibility, hostOnly, tutorial);
         GalaxyPreview galaxyPreview = new GalaxyPreview(GameConfig.DEFAULT_GALAXY_LAYOUT);
         galaxyLayout.addValueChangeListener(event -> galaxyPreview.show(event.getValue()));
         Div setupLayout = new Div(setupGrid, galaxyPreview);
@@ -268,7 +273,7 @@ public final class CreateGameWizardDialog {
                 neutralMinProduction, neutralMaxProduction, startGarrison,
                 observersAllowed, reentryAllowed, battlePresentation, productionDistribution, galaxyLayout,
                 combatRandomness, tempo, attackOrder, victoryPercent, rulesets, victorySettings, aiStrategies,
-                sectorOptions);
+                sectorOptions, tutorial);
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_REVIEW));
         createButton.set(create);
         WizardActionContext actionContext = new WizardActionContext(game, onCreated, hostName, gameName, empireName,
@@ -411,7 +416,7 @@ public final class CreateGameWizardDialog {
                               Input combatRandomness,
                               ComboBox<GameTempo> tempo,
                               ComboBox<AttackOrder> attackOrder, IntegerField victoryPercent, RulesetSelector rulesets, VictorySettings victorySettings, AiStrategyFields aiStrategies,
-                              SectorOptionsFields sectorOptions) {
+                              SectorOptionsFields sectorOptions, Checkbox tutorial) {
     }
 
     private static GameSetup buildSetup(FormInputs in) {
@@ -450,7 +455,8 @@ public final class CreateGameWizardDialog {
         ).normalized().selectRuleset(ruleset)
                 .chooseVictoryRules(in.victorySettings().chosen(valueOrDefault(in.victoryPercent().getValue(), GameConfig.VICTORY_SYSTEM_PERCENT)))
                 .chooseAiStrategies(in.aiStrategies().strategies())
-                .withSectorOptions(in.sectorOptions().chosen());
+                .withSectorOptions(in.sectorOptions().chosen())
+                .chooseTutorial(Boolean.TRUE.equals(in.tutorial().getValue()));
     }
 
     private static void applyNormalizedColors(List<ComboBox<ColorOption>> inputs, GameSetup setup) {

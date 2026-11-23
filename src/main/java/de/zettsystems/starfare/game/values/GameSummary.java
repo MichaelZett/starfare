@@ -15,7 +15,7 @@ import java.util.Set;
  * {@code closedSeats} are seats nobody may take back: resigned or timed out.
  * {@code roundDeadline} is when the current round ends at the latest, {@code null} without a deadline
  * (fewer than two people playing, not started or over); {@code tempo} is the tempo chosen at creation,
- * {@code null} for a game without one.
+ * {@code null} for a game without one; {@code tutorial} whether it was created as a tutorial.
  */
 public record GameSummary(
         GameId gameId,
@@ -38,7 +38,8 @@ public record GameSummary(
         java.time.Instant roundStartedAt,
         Set<Integer> closedSeats,
         java.time.@Nullable Instant roundDeadline,
-        @Nullable GameTempo tempo) {
+        @Nullable GameTempo tempo,
+        boolean tutorial) {
     public GameSummary {
         submittedSeats = Set.copyOf(submittedSeats);
         closedSeats = Set.copyOf(closedSeats);
@@ -67,7 +68,7 @@ public record GameSummary(
         Set<Integer> closedSeats) {
         this(gameId, name, hostPlayerId, turn, started, gameOver, observersAllowed, reentryAllowed, players,
                 joinedHumanSeats, seatByPlayer, invitedSeats, visibility, outcome, ruleset, victoryRules, submittedSeats,
-                roundStartedAt, closedSeats, null, null);
+                roundStartedAt, closedSeats, null, null, false);
     }
 
     public GameSummary(

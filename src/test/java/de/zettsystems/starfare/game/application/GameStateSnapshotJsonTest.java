@@ -75,6 +75,17 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void theTutorialChoiceSurvivesJsonAndOldSetupsAreNoTutorial() {
+        GameState state = new GameState();
+        state.rememberSetup(GameSetup.defaults().chooseTutorial(true));
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+        assertThat(GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class)).tutorial()).isTrue();
+        ((ObjectNode) json.get("originalSetup")).remove("tutorial");
+        assertThat(GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class)).tutorial()).isFalse();
+        assertThat(new GameState().tutorial()).as("a game without its setup").isFalse();
+    }
+
+    @Test
     void cosmicStateSurvivesJsonAndOldSnapshotsHaveNone() {
         GameState state = sampleState(true);
         state.updateCosmic(cosmic -> cosmic.rememberHomes(List.of(1)).destabilize(2, 5).explode(3)

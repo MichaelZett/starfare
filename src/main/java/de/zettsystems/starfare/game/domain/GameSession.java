@@ -76,7 +76,7 @@ public class GameSession {
                 Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats()),
                 state.visibility(), state.outcome(), state.ruleset(), state.victoryRules(),
                 Set.copyOf(state.submittedThisTurn()), state.turnStartedAt(), state.closedSeats(), state.roundDeadline(),
-                state.roundRules().tempo());
+                state.roundRules().tempo(), state.tutorial());
     }
 
     public <T> T readState(Function<GameState, T> fn) {

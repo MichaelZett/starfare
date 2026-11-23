@@ -716,6 +716,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         RoundStatus status = reviewing ? RoundStatus.NONE : view.roundStatus();
         roundStatus.update(status, playerId);
         header.setGameName(game.gameNameOf(gameId));
+        header.setTutorial(game.isTutorial(gameId));
         header.setEmpireName(observer ? "" : view.players().stream().filter(player -> player.id() == playerId)
                 .map(de.zettsystems.starfare.game.values.Player::empireNameOrName).findFirst().orElse(""));
         header.updateTurnAction(status, playerId, observer, view.gameOver());
@@ -817,7 +818,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         mapCanvas.render(new MapRenderer.Inputs(
                 game, gameId, view, playerId, observer, selectedFrom, targetSelection == TargetSelection.RELOCATION,
                 highlightedFleetId, highlightedStandingOrderId, reportedSystemIds(view), highlightedReportSystemId,
-                pendingBattleSystemIds(view), logisticsMode,
+                pendingBattleSystemIds(view), logisticsMode, game.isTutorial(gameId),
                 badgesShowingFleetNo, systems,
                 this::inspectSystem,
                 this::selectSource,

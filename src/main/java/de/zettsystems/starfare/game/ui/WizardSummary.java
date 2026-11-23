@@ -49,6 +49,9 @@ final class WizardSummary extends Div {
         Span variant = new Span(RulesetLabels.label(catalog, setup.ruleset()));
         variant.addClassName("wizard-hero-variant");
         Div heading = new Div(new H2(name), variant);
+        if (setup.tutorial()) {
+            heading.add(TutorialMark.create());
+        }
         heading.addClassName("wizard-hero-heading");
         Span systems = new Span(String.valueOf(setup.systemCount()));
         systems.setId(SYSTEMS_ID);

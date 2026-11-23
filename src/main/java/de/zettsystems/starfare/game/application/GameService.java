@@ -139,6 +139,9 @@ public interface GameService {
 
     boolean isAiOnly(GameId gameId);
 
+    /** Whether the game was created as a tutorial and so shows aids for learning the game. */
+    boolean isTutorial(GameId gameId);
+
     boolean isObserver(GameId gameId, @Nullable String playerId);
 
     boolean observersAllowed(GameId gameId);

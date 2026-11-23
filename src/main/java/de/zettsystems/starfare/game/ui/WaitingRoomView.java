@@ -61,6 +61,7 @@ public class WaitingRoomView extends VerticalLayout implements BeforeEnterObserv
     private final PlatformFriends friends;
     private final PlayerDirectory players;
     private final H1 title = new H1();
+    private final Span tutorialMark = TutorialMark.create();
     private final Span facts = new Span();
     private final Span status = new Span();
     private final Div seats = new Div();
@@ -92,7 +93,8 @@ public class WaitingRoomView extends VerticalLayout implements BeforeEnterObserv
         seats.addClassName("waiting-room-seats");
         seats.setId("waiting-room-seats");
         actions.addClassName("waiting-room-actions");
-        add(back, title, facts, status, seats, actions);
+        tutorialMark.setVisible(false);
+        add(back, title, tutorialMark, facts, status, seats, actions);
     }
 
     /** Route parameters of the waiting room of {@code id}. */
@@ -170,6 +172,7 @@ public class WaitingRoomView extends VerticalLayout implements BeforeEnterObserv
 
     private void show(GameSummary summary, String account) {
         title.setText(summary.name().isBlank() ? GameConfig.DEFAULT_GAME_NAME : summary.name());
+        tutorialMark.setVisible(summary.tutorial());
         facts.setText(RulesetLabels.label(game.rulesets(), summary.ruleset()) + " · "
                 + I18n.t(summary.visibility() == GameVisibility.PUBLIC ? UiTexts.GAME_PUBLIC : UiTexts.GAME_PRIVATE)
                 + " · " + I18n.t(UiTexts.WAITING_HOST, hostName(summary)));

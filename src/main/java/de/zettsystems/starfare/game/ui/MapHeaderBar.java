@@ -22,6 +22,7 @@ import org.jspecify.annotations.Nullable;
 final class MapHeaderBar extends HorizontalLayout {
 
     private final Span gameNameLabel = new Span();
+    private final Span tutorialMark = TutorialMark.create();
     private final Span empireNameLabel = new Span();
     private final Span roundLabel = new Span();
     private final EmpireStatsBar empireStats;
@@ -41,6 +42,7 @@ final class MapHeaderBar extends HorizontalLayout {
     MapHeaderBar(Actions actions, boolean compact, @Nullable OwnFrameParts frame) {
         empireStats = new EmpireStatsBar(actions.onResearch());
         gameNameLabel.addClassName("app-header-game");
+        tutorialMark.setVisible(false);
         empireNameLabel.addClassName("app-header-empire");
         empireNameLabel.setVisible(false);
         roundLabel.addClassName("app-header-round");
@@ -75,8 +77,8 @@ final class MapHeaderBar extends HorizontalLayout {
         menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LOBBY), _ -> actions.onLobby().run());
 
         var headerLeft = compact
-                ? new HorizontalLayout(gameNameLabel, roundLabel, empireStats, economyNotices)
-                : new HorizontalLayout(title(), gameNameLabel, empireNameLabel, roundLabel, empireStats, economyNotices);
+                ? new HorizontalLayout(gameNameLabel, tutorialMark, roundLabel, empireStats, economyNotices)
+                : new HorizontalLayout(title(), gameNameLabel, tutorialMark, empireNameLabel, roundLabel, empireStats, economyNotices);
         headerLeft.setAlignItems(Alignment.BASELINE);
         headerLeft.setSpacing(true);
         headerLeft.addClassName("app-header-left");
@@ -109,6 +111,11 @@ final class MapHeaderBar extends HorizontalLayout {
 
     void setGameName(String name) {
         gameNameLabel.setText(name);
+    }
+
+    /** Every seat and every observer sees that the game is a tutorial. */
+    void setTutorial(boolean tutorial) {
+        tutorialMark.setVisible(tutorial);
     }
 
     void setEmpireName(String name) {

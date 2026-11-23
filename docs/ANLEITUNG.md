@@ -61,6 +61,11 @@ Im Assistenten wählst du unter anderem:
 - Zufall bei der Kampfstärke: 0–30 %, Vorgabe ±10 % je Seite.
 - Ob Schlachten zunächst mit Wiedergabe dargestellt werden. Eine gespeicherte
   persönliche Geschwindigkeitswahl hat Vorrang vor dieser Vorgabe.
+- **Tutorial**: Die Partie zeigt Hilfen zum Lernen, die es im normalen Spiel nicht
+  gibt. Zurzeit ist das eine gestrichelte Raute am System mit der Zahl freier Schiffe,
+  wenn dort mehr Schiffe stehen, als das System in einer Runde baut. Eine höhere
+  Reserve lässt die Raute verschwinden. Alle Teilnehmer sehen in Warteraum und Kopfzeile,
+  dass es ein Tutorial ist; es zählt nicht in der Statistik der Plattform.
 
 Neue Partien sind **privat**. Der Gastgeber kann vor dem Start Spieler einladen
 oder die Partie veröffentlichen. Eine Einladung reserviert einen Platz; der

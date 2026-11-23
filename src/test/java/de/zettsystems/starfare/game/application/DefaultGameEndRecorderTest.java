@@ -51,7 +51,24 @@ class DefaultGameEndRecorderTest {
             assertThat(ended.matchId()).isEqualTo(id.value());
             assertThat(ended.endedAt()).isEqualTo(finishedAt);
             assertThat(ended.participants()).containsExactlyInAnyOrder(AccountId.of(17), AccountId.of(23));
+            assertThat(ended.tutorial()).isFalse();
         });
+    }
+
+    @Test
+    void announcesTheEndOfATutorialAsSuch() {
+        GameRegistry registry = mock(GameRegistry.class);
+        GameId id = new GameId("tutorial");
+        GameState state = finishedState(Instant.parse("2026-11-23T10:00:00Z"), Map.of("17", 1));
+        when(state.tutorial()).thenReturn(true);
+        GameSession session = session(state);
+        when(registry.find(id)).thenReturn(Optional.of(session));
+        List<Object> published = new ArrayList<>();
+
+        new DefaultGameEndRecorder(registry, mock(GameEndRepository.class), published::add).recordFinishedGame(id);
+
+        assertThat(published).singleElement().isInstanceOfSatisfying(MatchEnded.class,
+                ended -> assertThat(ended.tutorial()).isTrue());
     }
 
     @Test

@@ -32,9 +32,13 @@ abstract class AbstractMapJourneyTest extends AbstractBrowserlessTest {
     protected String account = "";
 
     protected void createReviewGame() {
+        createReviewGame(false);
+    }
+
+    protected void createReviewGame(boolean tutorial) {
         email = loginAsNewPlayer("Map Tester");
         account = String.valueOf(accounts.findByEmail(email).orElseThrow().id());
-        var fixture = reviewGames.create(email, null);
+        var fixture = reviewGames.create(email, null, tutorial);
         id = fixture.id();
         player = fixture.hostSeat();
         registry.writeState(id, state -> { state.addFleet(player, 1, 2, 2); return null; });

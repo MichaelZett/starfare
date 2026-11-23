@@ -18,6 +18,19 @@ class GameSetupTest {
     }
 
     @Test
+    void theTutorialChoiceSurvivesEveryLaterChoice() {
+        GameSetup plain = setup(1, 1, false);
+        assertThat(plain.tutorial()).isFalse();
+
+        GameSetup tutorial = plain.chooseTutorial(true).normalized().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE)
+                .chooseVictoryRules(VictoryRules.defaults(RulesetRef.SPACEWARD_ALLIANCE, 60))
+                .chooseAiStrategies(List.of()).withSectorOptions(SectorOptions.none());
+
+        assertThat(tutorial.tutorial()).isTrue();
+        assertThat(tutorial.chooseTutorial(false).tutorial()).isFalse();
+    }
+
+    @Test
     void multipleHumansSurviveNormalization() {
         GameSetup setup = new GameSetup(
                 24, 3, 1,

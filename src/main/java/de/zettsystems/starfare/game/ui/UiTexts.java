@@ -361,6 +361,10 @@ public final class UiTexts {
     public static final String LOBBY_FIELD_START_GARRISON = "lobby.field.startGarrison";
     public static final String LOBBY_FIELD_OBSERVERS_ALLOWED = "lobby.field.observersAllowed";
     public static final String LOBBY_FIELD_REENTRY_ALLOWED = "lobby.field.reentryAllowed";
+    public static final String LOBBY_FIELD_TUTORIAL = "lobby.field.tutorial";
+    public static final String LOBBY_FIELD_TUTORIAL_HINT = "lobby.field.tutorial.hint";
+    public static final String TUTORIAL_MARK = "tutorial.mark";
+    public static final String TUTORIAL_MARK_HINT = "tutorial.mark.hint";
     public static final String LOBBY_FIELD_BATTLE_PRESENTATION = "lobby.field.battlePresentation";
     public static final String LOBBY_FIELD_COMBAT_RANDOMNESS = "lobby.field.combatRandomness";
     public static final String LOBBY_FIELD_COMBAT_RANDOMNESS_VALUE = "lobby.field.combatRandomness.value";

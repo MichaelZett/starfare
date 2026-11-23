@@ -458,6 +458,12 @@ html, body, #outlet {
     background: color-mix(in srgb, var(--gp-warn) 14%, transparent);
 }
 
+/* Tutorials: the mark of a tutorial match (with .gp-badge), as in the host's platform.css. */
+.gp-tutorial {
+    color: var(--gp-game-accent, var(--gp-area-accent));
+    background: color-mix(in srgb, var(--gp-game-accent, var(--gp-area-accent)) 14%, transparent);
+}
+
 /* Welcome on the start page */
 .gp-welcome {
     max-width: 46rem;

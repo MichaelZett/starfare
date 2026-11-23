@@ -66,25 +66,32 @@
 .app-header-research vaadin-icon { width: 14px; height: 14px; color: var(--sf-accent-2); }
 .app-header-research [slot="suffix"] { font-weight: 700; color: var(--sf-accent-2); }
 
-/* Free ships read like a parked fleet badge: muted, on the rim, never an alert. */
+/* Free ships are a tutorial aid: the platform's dashed diamond at the upper rim, away from the fleet
+   badges, so it never reads as a fleet. A normal game does not show it. */
 #map .sys-idle-ships {
     position: absolute;
-    left: 50%;
-    bottom: 0;
+    right: 0;
+    top: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    min-width: 20px;
-    height: 18px;
-    padding: 0 6px;
-    transform: translate(-50%, 50%) scale(var(--map-inverse-zoom, 1));
-    border: 1px solid rgba(169, 182, 199, .55);
-    border-radius: 9px;
-    background: rgba(13, 17, 23, .88);
-    color: #c6d2df;
-    font-size: 11px;
-    font-weight: 600;
+    width: 24px;
+    height: 24px;
+    transform: translate(50%, -50%) scale(var(--map-inverse-zoom, 1));
+    color: var(--sf-accent-2);
+    font-size: 10px;
+    font-weight: 700;
     line-height: 1;
     white-space: nowrap;
+}
+
+#map .sys-idle-ships::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    z-index: -1;
+    transform: rotate(45deg);
+    border: 1px dashed var(--sf-accent-2);
+    background: rgba(13, 17, 23, .88);
 }

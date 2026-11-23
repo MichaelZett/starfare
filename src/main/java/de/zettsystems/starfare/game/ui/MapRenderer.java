@@ -41,6 +41,7 @@ final class MapRenderer {
                   @Nullable Integer highlightedReportSystemId,
                   Set<Integer> pendingBattleSystemIds,
                   boolean logisticsMode,
+                  boolean tutorial,
                   Set<Integer> badgesShowingFleetNo,
                   List<VisibleSystem> systems,
                   Consumer<VisibleSystem> onInspectSystem,
@@ -269,12 +270,15 @@ final class MapRenderer {
                 .ifPresent(source -> in.onOpenRelocation().accept(source, target)));
     }
 
-    /** The hint needs a plan to act on and must not reveal anything before battles are viewed. */
+    /**
+     * Free ships point at a chance the player has not used, so only a tutorial names them (an aid, not state). The
+     * hint needs a plan to act on and must not reveal anything before battles are viewed.
+     */
     private static boolean showsIdleShips(Inputs in) {
-        return !in.observer() && !in.view().gameOver() && !in.logisticsMode() && in.pendingBattleSystemIds().isEmpty();
+        return in.tutorial() && !in.observer() && !in.view().gameOver() && !in.logisticsMode() && in.pendingBattleSystemIds().isEmpty();
     }
 
-    /** Looks like a fleet badge on purpose: it says a fleet is here, not that something is wrong. */
+    /** A tutorial aid: a diamond outside the row of fleet badges, so it never reads as a fleet. */
     private static Div buildIdleShipsHint(int ships) {
         Div hint = new Div();
         hint.addClassName("sys-idle-ships");

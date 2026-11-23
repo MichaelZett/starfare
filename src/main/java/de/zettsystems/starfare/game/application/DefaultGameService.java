@@ -432,7 +432,7 @@ public class DefaultGameService implements GameService {
         // Taken before the game is deleted: the platform learns who took part in an aborted match.
         GameEvent.GameAborted aborted = registry.find(gameId)
                 .map(session -> session.readState(state -> new GameEvent.GameAborted(gameId,
-                        state.started() && !state.gameOver(), accountsInSeatOrder(state))))
+                        state.started() && !state.gameOver(), accountsInSeatOrder(state), state.tutorial())))
                 .orElseGet(() -> new GameEvent.GameAborted(gameId));
         registry.abortGame(gameId);
         battleAcknowledgements.forgetGame(gameId);
@@ -716,6 +716,11 @@ public class DefaultGameService implements GameService {
         return registry.find(gameId)
                 .map(s -> s.readState(state -> state.joinedHumanPlayerIds().isEmpty()))
                 .orElse(false);
+    }
+
+    @Override
+    public boolean isTutorial(GameId gameId) {
+        return registry.find(gameId).map(s -> s.readState(GameState::tutorial)).orElse(false);
     }
 
     @Override

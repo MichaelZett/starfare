@@ -29,10 +29,14 @@ public class ReviewGameFixture {
     }
 
     public Game create(String hostEmail, @Nullable String guestEmail) {
+        return create(hostEmail, guestEmail, false);
+    }
+
+    public Game create(String hostEmail, @Nullable String guestEmail, boolean tutorial) {
         GameSetup defaults = GameSetup.defaults();
         GameSetup setup = new GameSetup(8, guestEmail == null ? 1 : 2, 0, List.of(20, 2),
                 1, 2, 5, true, true, defaults.seatColorHexes(), defaults.productionDistribution(),
-                defaults.galaxyLayout(), true, defaults.roundRules());
+                defaults.galaxyLayout(), true, defaults.roundRules()).chooseTutorial(tutorial);
         String host = accountId(hostEmail);
         GameId id = games.newGame(setup, host, "Review regression");
         if (guestEmail != null) {

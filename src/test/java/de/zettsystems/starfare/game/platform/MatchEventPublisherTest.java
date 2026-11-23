@@ -163,7 +163,16 @@ class MatchEventPublisherTest {
         assertThat(published).singleElement().isInstanceOfSatisfying(MatchEnded.class, ended -> {
             assertThat(ended.matchId()).isEqualTo("game-1");
             assertThat(ended.result()).isEqualTo(MatchResult.aborted(List.of(AccountId.of(23), AccountId.of(17))));
+            assertThat(ended.tutorial()).isFalse();
         });
+    }
+
+    @Test
+    void marksAnAbortedTutorialSoItStaysOutOfTheStatistics() {
+        broadcaster.publish(new GameEvent.GameAborted(ID, true, List.of("17"), true));
+
+        assertThat(published).singleElement().isInstanceOfSatisfying(MatchEnded.class,
+                ended -> assertThat(ended.tutorial()).isTrue());
     }
 
     @Test
