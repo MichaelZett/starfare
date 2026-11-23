@@ -436,6 +436,61 @@ class GameStateTest {
     }
 
     @Test
+    void anAllianceVictoryNeedsAtLeastTwoMembers() {
+        GameState state = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE, new VictoryRules(100, true, true, 70));
+        state.agreeTreaties(new DiplomacyState(2, List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of()));
+
+        assertThatThrownBy(() -> state.winAsAlliance(1, Set.of(1))).isInstanceOf(IllegalArgumentException.class);
+        assertThat(state.gameOver()).isFalse();
+    }
+
+    @Test
+    void spacewardActionsAreRejectedInSectorForces() {
+        GameState state = new GameState();
+        state.players().addAll(List.of(new Player(1, "P1", false, "#fff"), new Player(2, "P2", false, "#000")));
+        state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 2, false));
+        DiplomacyState alliance = new DiplomacyState(2, List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of());
+
+        assertThatThrownBy(() -> state.agreeTreaties(alliance)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> state.winAsAlliance(1, Set.of(1, 2))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> state.configureNavigation(new NavigationSettings(100))).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> state.planRecycling(1, 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> state.planShipResearch(1, 50)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> state.establishColonies(Map.of())).isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(state.allied(1, 2)).isFalse();
+        assertThat(state.diplomacy()).isEqualTo(DiplomacyState.EMPTY);
+        assertThat(state.navigationSettings()).isEmpty();
+        assertThat(state.colonies()).isEmpty();
+    }
+
+    @Test
+    void creationSettingsAreFixedOnceEstablished() {
+        GameState prepared = ColonyStates.ready(RulesetRef.SPACEWARD_METALS);
+        var metals = prepared.metals().orElseThrow();
+        var colonies = prepared.colonies();
+
+        assertThatThrownBy(() -> prepared.establishMetals(metals)).hasMessage("Metal economy is fixed at creation");
+        assertThatThrownBy(() -> prepared.establishColonies(colonies)).hasMessageContaining("established once");
+        assertThatThrownBy(() -> prepared.configureNavigation(new NavigationSettings(200)))
+                .as("navigation already configured").isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> NavigationStates.running().configureNavigation(new NavigationSettings(200)))
+                .as("game already started").isInstanceOf(IllegalStateException.class);
+        assertThat(prepared.metals()).containsSame(metals);
+    }
+
+    @Test
+    void industryChangesNeedAKnownSystem() {
+        GameState state = ColonyStates.ready();
+        var industry = state.industries().get(1);
+
+        assertThatThrownBy(() -> state.planIndustrialExpansion(99, industry)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> state.completeIndustrialProduction(99, industry, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> state.usableIndustrialCapacity(99)).hasMessage("Unknown industry");
+        assertThat(state.industries()).doesNotContainKey(99);
+    }
+
+    @Test
     void unknownIdsAreRejectedAsArgumentErrors() {
         GameState state = new GameState();
         state.players().add(new Player(1, "P1", false, "#fff"));

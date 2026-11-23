@@ -4,9 +4,14 @@ import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.Player;
+import de.zettsystems.starfare.game.values.StandingOrder;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.testsupport.NavigationStates;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -385,6 +390,113 @@ class FleetServiceTest {
         assertThat(service.removeStandingOrderFrom(state, 1, 1)).isFalse();
         assertThat(state.standingOrders().get(1)).singleElement().satisfies(order ->
                 assertThat(order.id()).isEqualTo(second));
+    }
+
+    // --- rejected inputs ---
+
+    @Test
+    void ordersWithinOneSystemOrToADestroyedSystemAreRejected() {
+        state.updateCosmic(cosmic -> cosmic.explode(2));
+        int[][] routes = {{1, 1}, {1, 2}};
+
+        for (int[] route : routes) {
+            assertThat(service.queueSend(state, 1, route[0], route[1], 1)).as("queue %s", route).isFalse();
+            assertThat(service.sendFleet(state, 1, route[0], route[1], 1)).as("send %s", route).isFalse();
+            assertThat(service.addStandingOrder(state, 1, route[0], route[1], 1)).as("relocate %s", route).isEqualTo(-1);
+        }
+
+        assertThat(state.pendingOrders()).isEmpty();
+        assertThat(state.fleets()).isEmpty();
+        assertThat(state.standingOrders()).isEmpty();
+        assertThat(state.getSystem(1).garrison()).isEqualTo(10);
+    }
+
+    @Test
+    void ordersBeyondTheFlightRangeAreRejected() {
+        GameState spaceward = NavigationStates.running();
+        int fleets = spaceward.fleets().size();
+
+        assertThat(service.queueSend(spaceward, 1, 1, 5, 1)).isFalse();
+        assertThat(service.sendFleet(spaceward, 1, 1, 5, 1)).isFalse();
+        assertThat(service.addStandingOrder(spaceward, 1, 1, 5, 1)).isEqualTo(-1);
+
+        assertThat(spaceward.pendingOrders().getOrDefault(1, List.of())).isEmpty();
+        assertThat(spaceward.fleets()).hasSize(fleets);
+        assertThat(spaceward.standingOrders().getOrDefault(1, List.of())).isEmpty();
+    }
+
+    @Test
+    void aRelocationWithoutRouteSendsNothingButIsKept() {
+        GameState spaceward = NavigationStates.running();
+        int fleets = spaceward.fleets().size();
+        spaceward.standingOrders().put(1, new ArrayList<>(List.of(new StandingOrder(1, 1, 1, 5, 2))));
+
+        var routed = service.applyStandingOrdersForProduction(spaceward);
+
+        assertThat(routed).isEmpty();
+        assertThat(spaceward.fleets()).hasSize(fleets);
+        assertThat(spaceward.standingOrders().get(1)).hasSize(1);
+    }
+
+    @Test
+    void relocationsFromANeutralSourceAreDropped() {
+        state.systems().add(new StarSystem(3, "S3", 50, 0, 1, 5, 1, true));
+        state.standingOrders().put(1, new ArrayList<>(List.of(new StandingOrder(1, 1, 3, 1, 1))));
+
+        var routed = service.applyStandingOrdersForProduction(state);
+
+        assertThat(routed).isEmpty();
+        assertThat(state.standingOrders().get(1)).isEmpty();
+        assertThat(state.fleets()).isEmpty();
+    }
+
+    @Test
+    void withoutRelocationsNothingCanBeRemovedOrTrimmed() {
+        assertThat(service.removeStandingOrder(state, 1, 1)).isFalse();
+        assertThat(service.removeStandingOrderFrom(state, 1, 1)).isFalse();
+        assertThat(service.trimRelocations(state, 1, 1)).isEmpty();
+        assertThat(state.standingOrders()).isEmpty();
+    }
+
+    @Test
+    void disbandingIsLimitedToOwnFleetsJustLaunchedFromAnOwnedSystem() {
+        state.players().add(new Player(2, "P2", false, "#000"));
+        service.sendFleet(state, 1, 1, 2, 3);
+        Fleet launched = state.fleets().getFirst();
+
+        assertThat(service.disbandFleet(state, 2, launched.globalId())).as("foreign fleet").isFalse();
+        assertThat(service.disbandFleet(state, 1, 999)).as("unknown fleet").isFalse();
+        state.fleets().set(0, new Fleet(launched.globalId(), 1, launched.localNo(), 1, 2, 3,
+                launched.launchTurn() - 1, launched.arrivalTurn()));
+        assertThat(service.disbandFleet(state, 1, launched.globalId())).as("launched earlier").isFalse();
+        state.fleets().set(0, launched);
+        state.updateSystem(1, system -> system.captureBy(2, system.garrison()));
+        assertThat(service.disbandFleet(state, 1, launched.globalId())).as("source lost").isFalse();
+        assertThat(service.queueDisband(state, 1, launched.globalId())).as("source lost").isFalse();
+
+        assertThat(state.fleets()).hasSize(1);
+    }
+
+    @Test
+    void disbandingAJustLaunchedFleetReturnsItsShips() {
+        service.sendFleet(state, 1, 1, 2, 3);
+        int fleetId = state.fleets().getFirst().globalId();
+        assertThat(service.setFleetWait(state, 1, fleetId)).isTrue();
+
+        assertThat(service.disbandFleet(state, 1, fleetId)).isTrue();
+
+        assertThat(state.fleets()).isEmpty();
+        assertThat(state.waitThisTurn()).isEmpty();
+        assertThat(state.getSystem(1).garrison()).isEqualTo(10);
+    }
+
+    @Test
+    void waitOrdersDoNotCountAgainstTheShipsLeftToSend() {
+        service.sendFleet(state, 1, 1, 2, 3);
+        assertThat(service.queueWait(state, 1, state.fleets().getFirst().globalId())).isTrue();
+
+        assertThat(service.queueSend(state, 1, 1, 2, 7)).isTrue();
+        assertThat(service.queueSend(state, 1, 1, 2, 1)).isFalse();
     }
 
     @Test

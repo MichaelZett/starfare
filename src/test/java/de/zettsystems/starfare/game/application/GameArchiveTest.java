@@ -189,6 +189,32 @@ class GameArchiveTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void replayIsOnlyForAuthorizedAccountsKnownPerspectivesAndRecordedTurns() {
+        var id = games.newGame(GameSetup.defaults(), "host", "Replay access");
+        games.joinGame(id, "host");
+        games.startGame(id);
+        int seat = games.seatFor(id, "host").orElseThrow();
+        registry.writeState(id, state -> {
+            state.replayFrames().put(4, new ReplayFrame(4, state.systems(), state.fleets(), Map.of()));
+            state.endGame(seat);
+            return null;
+        });
+
+        assertReplayAccess(id, seat);
+        sessions.delete(id);
+        assertReplayAccess(id, seat);
+    }
+
+    private void assertReplayAccess(GameId id, int seat) {
+        assertThat(games.replayTurns(id, "host")).contains(4);
+        assertThat(games.replayTurns(id, "stranger")).isEmpty();
+        assertThat(games.replayFor(id, "host", seat, 4)).isPresent();
+        assertThat(games.replayFor(id, "stranger", seat, 4)).isEmpty();
+        assertThat(games.replayFor(id, "host", 999, 4)).isEmpty();
+        assertThat(games.replayFor(id, "host", seat, 999)).as("no recorded frame").isEmpty();
+    }
+
+    @Test
     void staleCommandsCannotChangeFinishedGame() {
         var id = games.newGame(GameSetup.defaults(), "host", "Finished");
         games.joinGame(id, "host");
