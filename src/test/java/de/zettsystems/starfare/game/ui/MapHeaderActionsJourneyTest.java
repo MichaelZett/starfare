@@ -15,7 +15,6 @@ import de.zettsystems.starfare.testsupport.DomEvents;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,6 +23,7 @@ class MapHeaderActionsJourneyTest extends AbstractMapJourneyTest {
     private static final String CHAT = "Partie-Chat";
     private static final String LEAVE = "Partie verlassen";
     private static final String RESIGN = "Aufgeben";
+    private static final String ROUND_RULES = "Rundenfristen";
 
     @Test
     void theMapHasNoChatOfItsOwnBecauseThePlatformShowsIt() {
@@ -41,6 +41,36 @@ class MapHeaderActionsJourneyTest extends AbstractMapJourneyTest {
         assertThat(notifications()).containsExactly(LEAVE);
         assertThat(getCurrentView()).isInstanceOf(LobbyView.class);
         assertThat(registry.readState(id, state -> state.joinedHumanPlayerIds().contains(player)).booleanValue()).isFalse();
+    }
+
+    @Test
+    void whenTheHostLeavesTheRemainingPlayerBecomesHost() {
+        createSharedGame();
+        assertThat(menuEntries()).as("the host's menu").contains(ROUND_RULES);
+        switchTo(guestEmail);
+        String guest = UserContext.currentPlayerId().orElseThrow();
+        assertThat(menuEntries()).as("a guest's menu").doesNotContain(ROUND_RULES);
+
+        switchTo(email);
+        leave();
+        assertThat(getCurrentView()).isInstanceOf(LobbyView.class);
+        switchTo(guestEmail);
+
+        assertThat(games.hostPlayerIdOf(id)).hasValue(guest);
+        assertThat(menuEntries()).as("the new host's menu").contains(ROUND_RULES);
+    }
+
+    @Test
+    void whenAGuestLeavesTheHostStays() {
+        createSharedGame();
+        switchTo(guestEmail);
+
+        leave();
+
+        assertThat(getCurrentView()).isInstanceOf(LobbyView.class);
+        assertThat(games.hostPlayerIdOf(id)).hasValue(account);
+        switchTo(email);
+        assertThat(menuEntries()).contains(ROUND_RULES);
     }
 
     @Test
@@ -170,15 +200,9 @@ class MapHeaderActionsJourneyTest extends AbstractMapJourneyTest {
         assertThat(text("system-details-heading")).contains("Alpha");
     }
 
-    /** Host and a second human, so leaving does not hand the whole game to the AI. */
-    private void createSharedGame() {
-        String guest = "browserless-" + UUID.randomUUID() + "@example.test";
-        accounts.createAccount(guest, "Shared Guest");
-        email = loginAsNewPlayer("Shared Host");
-        account = UserContext.currentPlayerId().orElseThrow();
-        var fixture = reviewGames.create(email, guest);
-        id = fixture.id();
-        player = fixture.hostSeat();
+    private void switchTo(String accountEmail) {
+        navigate(ImprintView.class);
+        loginAs(accountEmail);
         openMap();
     }
 

@@ -8,6 +8,7 @@ import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.tabs.Tabs;
 import de.zettsystems.starfare.AbstractBrowserlessTest;
+import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.GameSessionStore;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +32,7 @@ abstract class AbstractMapJourneyTest extends AbstractBrowserlessTest {
     protected int player = 1;
     protected String email = "";
     protected String account = "";
+    protected String guestEmail = "";
 
     protected void createReviewGame() {
         createReviewGame(false);
@@ -42,6 +45,18 @@ abstract class AbstractMapJourneyTest extends AbstractBrowserlessTest {
         id = fixture.id();
         player = fixture.hostSeat();
         registry.writeState(id, state -> { state.addFleet(player, 1, 2, 2); return null; });
+        openMap();
+    }
+
+    /** Host and a second human, so leaving does not hand the whole game to the AI; the host is signed in. */
+    protected void createSharedGame() {
+        guestEmail = "browserless-" + UUID.randomUUID() + "@example.test";
+        accounts.createAccount(guestEmail, "Shared Guest");
+        email = loginAsNewPlayer("Shared Host");
+        account = UserContext.currentPlayerId().orElseThrow();
+        var fixture = reviewGames.create(email, guestEmail);
+        id = fixture.id();
+        player = fixture.hostSeat();
         openMap();
     }
 
