@@ -64,7 +64,7 @@ public class DefaultFleetService implements FleetService {
         Fleet f = state.fleets().stream()
                 .filter(x -> x.globalId() == fleetId && x.ownerId() == playerId && canDisband(state, x))
                 .findFirst().orElse(null);
-        if (f == null || f.evacuating()) {
+        if (f == null) {
             return false;
         }
         List<FleetOrder> orders = pendingFor(state, playerId);
