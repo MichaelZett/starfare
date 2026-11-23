@@ -440,7 +440,9 @@ class GameStateTest {
         GameState state = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE, new VictoryRules(100, true, true, 70));
         state.agreeTreaties(new DiplomacyState(2, List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of()));
 
-        assertThatThrownBy(() -> state.winAsAlliance(1, Set.of(1))).isInstanceOf(IllegalArgumentException.class);
+        Set<Integer> alone = Set.of(1);
+
+        assertThatThrownBy(() -> state.winAsAlliance(1, alone)).isInstanceOf(IllegalArgumentException.class);
         assertThat(state.gameOver()).isFalse();
     }
 
@@ -450,10 +452,12 @@ class GameStateTest {
         state.players().addAll(List.of(new Player(1, "P1", false, "#fff"), new Player(2, "P2", false, "#000")));
         state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 2, false));
         DiplomacyState alliance = new DiplomacyState(2, List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of());
+        Set<Integer> members = Set.of(1, 2);
+        NavigationSettings navigation = new NavigationSettings(100);
 
         assertThatThrownBy(() -> state.agreeTreaties(alliance)).isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> state.winAsAlliance(1, Set.of(1, 2))).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> state.configureNavigation(new NavigationSettings(100))).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> state.winAsAlliance(1, members)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> state.configureNavigation(navigation)).isInstanceOf(IllegalStateException.class);
         assertThatThrownBy(() -> state.planRecycling(1, 1)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> state.planShipResearch(1, 50)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> state.establishColonies(Map.of())).isInstanceOf(IllegalArgumentException.class);
@@ -469,12 +473,14 @@ class GameStateTest {
         GameState prepared = ColonyStates.ready(RulesetRef.SPACEWARD_METALS);
         var metals = prepared.metals().orElseThrow();
         var colonies = prepared.colonies();
+        NavigationSettings navigation = new NavigationSettings(200);
+        GameState started = NavigationStates.running();
 
         assertThatThrownBy(() -> prepared.establishMetals(metals)).hasMessage("Metal economy is fixed at creation");
         assertThatThrownBy(() -> prepared.establishColonies(colonies)).hasMessageContaining("established once");
-        assertThatThrownBy(() -> prepared.configureNavigation(new NavigationSettings(200)))
+        assertThatThrownBy(() -> prepared.configureNavigation(navigation))
                 .as("navigation already configured").isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> NavigationStates.running().configureNavigation(new NavigationSettings(200)))
+        assertThatThrownBy(() -> started.configureNavigation(navigation))
                 .as("game already started").isInstanceOf(IllegalStateException.class);
         assertThat(prepared.metals()).containsSame(metals);
     }
