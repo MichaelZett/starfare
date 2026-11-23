@@ -24,8 +24,8 @@ public class DefaultFleetService implements FleetService {
     public boolean queueSend(GameState state, int playerId, int fromId, int toId, int ships,
                              @Nullable Integer beneficiary) {
         if (!ConquestOrders.allowed(state, playerId, beneficiary)) { return false; }
-        StarSystem from = state.getSystem(fromId);
-        if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)
+        StarSystem from = state.findSystem(fromId).orElse(null);
+        if (from == null || fromId == toId || state.findSystem(toId).isEmpty() || !Objects.equals(from.ownerId(), playerId)
                 || state.destroyed(toId)) {
             return false;
         }
@@ -86,8 +86,8 @@ public class DefaultFleetService implements FleetService {
                              @Nullable Integer beneficiary) {
         // A treaty can expire after planning. Preserve the launch, but fall back to the fleet's owner.
         Integer claim = ConquestOrders.allowed(state, playerId, beneficiary) ? beneficiary : null;
-        StarSystem from = state.getSystem(fromId);
-        if (from == null || fromId == toId || state.getSystem(toId) == null || !Objects.equals(from.ownerId(), playerId)
+        StarSystem from = state.findSystem(fromId).orElse(null);
+        if (from == null || fromId == toId || state.findSystem(toId).isEmpty() || !Objects.equals(from.ownerId(), playerId)
                 || state.destroyed(toId)) {
             return false;
         }
@@ -135,11 +135,11 @@ public class DefaultFleetService implements FleetService {
         if (fromId == toId || ships <= 0) {
             return -1;
         }
-        StarSystem from = state.getSystem(fromId);
+        StarSystem from = state.findSystem(fromId).orElse(null);
         if (from == null || !Objects.equals(from.ownerId(), playerId)) {
             return -1;
         }
-        if (state.getSystem(toId) == null || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
+        if (state.findSystem(toId).isEmpty() || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
             return -1;
         }
         StandingOrder replaced = standingFor(state, playerId).stream()
@@ -160,7 +160,7 @@ public class DefaultFleetService implements FleetService {
 
     @Override
     public int routingCapacity(GameState state, int playerId, int systemId) {
-        StarSystem system = state.getSystem(systemId);
+        StarSystem system = state.findSystem(systemId).orElse(null);
         if (system == null || !Objects.equals(system.ownerId(), playerId)) {
             return 0;
         }
@@ -241,7 +241,7 @@ public class DefaultFleetService implements FleetService {
         Iterator<StandingOrder> it = list.iterator();
         while (it.hasNext()) {
             StandingOrder o = it.next();
-            StarSystem from = state.getSystem(o.fromSystemId());
+            StarSystem from = state.findSystem(o.fromSystemId()).orElse(null);
             if (from == null || !Objects.equals(from.ownerId(), playerId) || from.neutral()) {
                 it.remove();
             } else {

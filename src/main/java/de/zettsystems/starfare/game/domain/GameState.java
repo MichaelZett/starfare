@@ -909,6 +909,11 @@ public class GameState {
         return byId(id);
     }
 
+    /** Looks up a system by an id from outside, such as an order: empty if this map has no such system. */
+    public Optional<StarSystem> findSystem(int id) {
+        return systems.stream().filter(s -> s.id() == id).findFirst();
+    }
+
     public void updateSystem(int id, UnaryOperator<StarSystem> updater) {
         for (int i = 0; i < systems.size(); i++) {
             StarSystem current = systems.get(i);

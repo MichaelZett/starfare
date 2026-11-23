@@ -446,7 +446,7 @@ public class DefaultGameService implements GameService {
 
     @Override
     public boolean abortGame(GameId gameId, @Nullable String actorPlayerId) {
-        if (!canAbort(gameId, actorPlayerId) || registry.readState(gameId, GameState::gameOver).booleanValue()) {
+        if (!canAbort(gameId, actorPlayerId)) {
             return false;
         }
         abortGame(gameId);
@@ -790,7 +790,7 @@ public class DefaultGameService implements GameService {
             return false;
         }
         return registry.writeState(gameId, state -> {
-            var system = state.getSystem(systemId);
+            var system = state.findSystem(systemId).orElse(null);
             if (state.gameOver() || system == null || !Objects.equals(system.ownerId(), playerId)) {
                 return false;
             }
@@ -1248,29 +1248,17 @@ public class DefaultGameService implements GameService {
                 .flatMap(frame -> {
                     var report = frame.reports().get(perspective);
                     if (report == null) { return Stream.empty(); }
-                    return java.util.stream.IntStream.range(0, report.events().size()).mapToObj(index -> {
+                    return java.util.stream.IntStream.range(0, report.events().size()).boxed().flatMap(index -> {
                         TurnEvent event = report.events().get(index);
-                        return event.battleSystemId().isPresent()
-                                ? new ReplayEventMarker(frame.turn(), event.battleSystemId().getAsInt(),
-                                        battleSystemName(event), index,
-                                        event instanceof TurnEvent.BattleWon || event instanceof TurnEvent.SystemLost
-                                                || (event instanceof TurnEvent.CoalitionBattle battle && !Objects.equals(battle.owner(), battle.previousOwner())))
-                                : null;
-                    }).filter(Objects::nonNull);
+                        return event.battleSite().stream().map(site -> new ReplayEventMarker(frame.turn(),
+                                site.systemId(), site.systemName(), index, changedOwner(event)));
+                    });
                 }).toList();
     }
 
-    private String battleSystemName(TurnEvent event) {
-        return switch (event) {
-            case TurnEvent.CoalitionBattle battle -> battle.systemName();
-            case TurnEvent.BattleWon battle -> battle.systemName();
-            case TurnEvent.BattleLost battle -> battle.systemName();
-            case TurnEvent.SystemLost conquest -> conquest.systemName();
-            case TurnEvent.DefenseHeld battle -> battle.systemName();
-            case TurnEvent.Cosmic news -> news.systemName();
-            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
-                 TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _, TurnEvent.FinalScore _ -> "";
-        };
+    private static boolean changedOwner(TurnEvent event) {
+        return event instanceof TurnEvent.BattleWon || event instanceof TurnEvent.SystemLost
+                || (event instanceof TurnEvent.CoalitionBattle battle && !Objects.equals(battle.owner(), battle.previousOwner()));
     }
 
     @Override

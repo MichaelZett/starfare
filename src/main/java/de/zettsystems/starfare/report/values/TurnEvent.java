@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.OptionalInt;
 
 /**
@@ -52,16 +53,24 @@ public sealed interface TurnEvent {
 
     /** Returns the system for events that deserve a map marker: resolved combat only. */
     default OptionalInt battleSystemId() {
+        return battleSite().map(site -> OptionalInt.of(site.systemId())).orElseGet(OptionalInt::empty);
+    }
+
+    /** Returns where a resolved battle took place; empty for every other event. */
+    default Optional<BattleSite> battleSite() {
         return switch (this) {
-            case BattleWon event -> OptionalInt.of(event.systemId());
-            case BattleLost event -> OptionalInt.of(event.systemId());
-            case SystemLost event -> OptionalInt.of(event.systemId());
-            case DefenseHeld event -> OptionalInt.of(event.systemId());
-            case CoalitionBattle event -> OptionalInt.of(event.systemId());
+            case BattleWon event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
+            case BattleLost event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
+            case SystemLost event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
+            case DefenseHeld event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
+            case CoalitionBattle event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
             case Recycling _, Production _, Reinforcement _, Victory _, Defeat _, EconomySummary _, ResearchCompleted _,
-                 Cosmic _, FinalScore _ -> OptionalInt.empty();
+                 Cosmic _, FinalScore _ -> Optional.empty();
         };
     }
+
+    /** The system of a resolved battle, as shown on the map and in the replay. */
+    record BattleSite(int systemId, String systemName) { }
 
     record ResearchCompleted(int playerId, int level) implements TurnEvent { }
 

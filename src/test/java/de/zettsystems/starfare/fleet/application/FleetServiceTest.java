@@ -77,6 +77,32 @@ class FleetServiceTest {
     }
 
     @Test
+    void ordersWithAnUnknownSystemAreRejectedInsteadOfThrowing() {
+        int unknown = 99;
+
+        assertThat(service.queueSend(state, 1, unknown, 2, 1)).isFalse();
+        assertThat(service.queueSend(state, 1, 1, unknown, 1)).isFalse();
+        assertThat(service.sendFleet(state, 1, unknown, 2, 1)).isFalse();
+        assertThat(service.sendFleet(state, 1, 1, unknown, 1)).isFalse();
+        assertThat(service.addStandingOrder(state, 1, unknown, 2, 1)).isEqualTo(-1);
+        assertThat(service.addStandingOrder(state, 1, 1, unknown, 1)).isEqualTo(-1);
+        assertThat(service.routingCapacity(state, 1, unknown)).isZero();
+        assertThat(state.pendingOrders()).isEmpty();
+        assertThat(state.fleets()).isEmpty();
+        assertThat(state.standingOrders()).isEmpty();
+        assertThat(state.getSystem(1).garrison()).isEqualTo(10);
+    }
+
+    @Test
+    void standingOrdersFromAnUnknownSystemAreDroppedAtProduction() {
+        state.standingOrders().put(1, new ArrayList<>(List.of(new StandingOrder(1, 1, 99, 2, 1))));
+
+        assertThat(service.applyStandingOrdersForProduction(state)).isEmpty();
+        assertThat(state.standingOrders().get(1)).isEmpty();
+        assertThat(state.fleets()).isEmpty();
+    }
+
+    @Test
     void queueSendRejectsNonOwner() {
         assertThat(service.queueSend(state, 99, 1, 2, 3)).isFalse();
         assertThat(state.pendingOrders().get(99)).isNull();

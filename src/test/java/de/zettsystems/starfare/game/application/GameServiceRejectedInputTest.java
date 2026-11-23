@@ -69,6 +69,7 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
         assertThat(games.planShipResearch(id, HOST, 1, 0, 50)).as("SectorForces has no research").isFalse();
         assertThat(games.setGarrisonReserve(id, seat, own, -1)).isFalse();
         assertThat(games.setGarrisonReserve(id, seat, foreign, 1)).isFalse();
+        assertThat(games.setGarrisonReserve(id, seat, 9_999, 1)).as("an unknown system").isFalse();
         assertThat(games.removeStandingOrder(id, seat, 1)).as("no relocation yet").isFalse();
         assertThat(games.removeStandingOrderFrom(id, seat, own)).as("no relocation yet").isFalse();
         assertThat(snapshot(id)).isEqualTo(before);

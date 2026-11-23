@@ -151,14 +151,17 @@ class TurnEventJsonTest {
         assertThat(battles).isNotEmpty().allSatisfy(event -> {
             assertThat(event.affectedSystemId()).hasValue(8);
             assertThat(event.battleSystemId()).hasValue(8);
+            assertThat(event.battleSite()).contains(new TurnEvent.BattleSite(8, "Vega"));
         });
         assertThat(systemOnly).isNotEmpty().allSatisfy(event -> {
             assertThat(event.affectedSystemId()).hasValue(8);
             assertThat(event.battleSystemId()).isEmpty();
+            assertThat(event.battleSite()).isEmpty();
         });
         assertThat(gameEnd).isNotEmpty().allSatisfy(event -> {
             assertThat(event.affectedSystemId()).isEmpty();
             assertThat(event.battleSystemId()).isEmpty();
+            assertThat(event.battleSite()).isEmpty();
         });
     }
 }

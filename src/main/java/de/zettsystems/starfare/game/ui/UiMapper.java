@@ -15,25 +15,6 @@ import java.util.stream.Collectors;
 public final class UiMapper {
     private UiMapper() {}
 
-    public static String systemLabel(VisibleSystem system) {
-        if (system.fullyVisible()) {
-            Integer production = system.productionPerTurn();
-            Integer routed = system.routedProduction();
-            if (production != null && routed != null && routed > 0) {
-                return "%s G:%d P:%d (%d frei)".formatted(system.name(), system.garrison(),
-                        production, Math.max(0, production - routed));
-            }
-            return "%s G:%d P:%d".formatted(system.name(), system.garrison(), production);
-        }
-        if (system.approximate()) {
-            return "%s ~G:%d".formatted(system.name(), system.garrison());
-        }
-        if (system.garrison() != null) {
-            return "%s G:%d".formatted(system.name(), system.garrison());
-        }
-        return system.name();
-    }
-
     public static String systemTooltip(VisibleSystem system, int currentTurn) {
         if (system.fullyVisible()) {
             return I18n.t(UiTexts.MAP_TOOLTIP_LIVE, system.name(), currentTurn);
@@ -72,24 +53,5 @@ public final class UiMapper {
         Integer arrival = de.zettsystems.starfare.navigation.values.RouteState
                 .forFleet(fleet, view.waitingFleetIds().contains(fleet.globalId())).arrivalTurn();
         return arrival == null ? -1 : Math.max(0, arrival - view.turn());
-    }
-
-    public static List<FleetView> standingAsFleetRows(PlayerViewState view) {
-        if (view.standingOrders() == null || view.standingOrders().isEmpty()) {
-            return List.of();
-        }
-        return view.standingOrders().stream()
-                .map(so -> new FleetView(
-                        0,
-                        so.fromSystem(),
-                        so.toSystem(),
-                        so.productionPerTurn(),
-                        -1,
-                        -1,
-                        so.fromSystemId(),
-                        so.toSystemId(),
-                        true
-                ))
-                .toList();
     }
 }
