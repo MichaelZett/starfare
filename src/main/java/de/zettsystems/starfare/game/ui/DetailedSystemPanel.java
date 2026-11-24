@@ -26,6 +26,8 @@ final class DetailedSystemPanel extends Div {
     private static final String BODY_TARGET = "system-body-target";
     private static final String COLONY_TARGET = "system-colony-target";
     private static final String WORLD = "system-world";
+    /** Where the major moons sit around their planet, in degrees clockwise from the right; clear of the label below. */
+    private static final double[] MOON_ANGLES = {-38, 28, 202};
     private final Div description = new Div();
     private final Div background = new Div();
     private Runnable onInspect = () -> { };
@@ -122,14 +124,22 @@ final class DetailedSystemPanel extends Div {
             target.setAriaLabel(I18n.t(UiTexts.SYSTEM_COLONY_PLANET));
             applyEnvironment(target, quality);
         }
-        for (int index = 0; index < (quality == null ? body.majorMoons() : 0); index++) {
+        int moons = quality == null ? body.majorMoons() : 0;
+        int planetDiameter = moons == 0 ? 0 : PhysicalSystemSize.bodyDiameter(PhysicalSystemSize.bodyRadius(game, system, body));
+        double orbit = planetDiameter / 2.0 + 3;
+        for (int index = 0; index < moons; index++) {
             Span moon = new Span();
             moon.addClassNames("system-moon", "system-moon-" + index);
             int radius = PhysicalSystemSize.moonRadius(game, system, body.orbit(), index);
-            String diameter = PhysicalSystemSize.bodyDiameter(radius) + "px";
-            moon.getStyle().set(CssProperties.WIDTH, diameter).set(CssProperties.HEIGHT, diameter);
+            int diameter = PhysicalSystemSize.moonDiameter(radius, planetDiameter);
+            orbit += diameter / 2.0;
+            double angle = Math.toRadians(MOON_ANGLES[index % MOON_ANGLES.length]);
+            moon.getStyle().set(CssProperties.WIDTH, diameter + "px").set(CssProperties.HEIGHT, diameter + "px")
+                    .set(CssProperties.LEFT, offset(orbit * Math.cos(angle)))
+                    .set(CssProperties.TOP, offset(orbit * Math.sin(angle)));
             moon.getElement().setAttribute(HtmlAttributes.TITLE, radiusText(radius));
             target.getElement().appendChild(moon.getElement());
+            orbit += diameter / 2.0 + 2;
         }
         double x = SystemDiagramLayout.orbitPosition(composition, body);
         position(target, x, SystemDiagramLayout.bodyHeight(composition, body));
@@ -242,6 +252,8 @@ final class DetailedSystemPanel extends Div {
     private static String radiusText(int radius) { return I18n.t(UiTexts.SYSTEM_MODEL_RADIUS, radius); }
 
     private static String percent(double value) { return String.format(Locale.ROOT, "%.3f%%", value); }
+    /** Position relative to the planet's centre, which is the middle of its target. */
+    private static String offset(double pixels) { return String.format(Locale.ROOT, "calc(50%% + %.1fpx)", pixels); }
     private static void position(Button button, double x, double y) {
         button.getStyle().set(CssProperties.LEFT, percent(x));
         button.getStyle().set(CssProperties.TOP, percent(y));

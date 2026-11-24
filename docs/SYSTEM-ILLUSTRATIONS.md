@@ -77,6 +77,9 @@ measurement or an astrophysical inference from a colony's suitability.
 Values are rounded to 100 km and explicitly labelled fictional model values.
 Asteroid belts have no single-body radius. Planets and moons use the same fixed
 logarithmic compression across all systems; stars have their own separate scale.
+A major moon is drawn at two fifths of its size on that scale and never larger than
+two fifths of its planet, shaded and placed close beside the planet, so it reads as a
+companion; a colonised moon keeps the full scale because it is a target.
 Pixel rounding can make nearby radii appear equal. No per-system normalisation
 is used. Colony moons retain their own size and environment rather than borrowing
 those of the parent gas giant. No measured radii, mass, orbital physics or new

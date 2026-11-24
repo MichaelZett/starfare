@@ -2254,10 +2254,14 @@ vaadin-button.system-star-white { background: radial-gradient(circle at 38% 35%,
 .system-surface-2 .system-body-sphere { filter: hue-rotate(18deg); }
 .system-surface-3 .system-body-sphere { filter: saturate(0.6); }
 .system-world-ringed::after { content: ""; position: absolute; width: 165%; height: 48%; left: -33%; top: 24%; border: 3px solid #e3d4b980; border-radius: 50%; transform: rotate(-25deg); }
-.system-moon { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #d0d8de; box-shadow: 0 0 3px #e0edff66; pointer-events: none; }
-.system-moon-0 { left: 80%; top: 15%; }
-.system-moon-1 { left: 85%; top: 75%; }
-.system-moon-2 { left: 5%; top: 65%; }
+.system-moon {
+    position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; transform: translate(-50%, -50%);
+    border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle at 34% 30%, #e8ebee, #a2a9b0 48%, #4c535a 100%);
+    box-shadow: inset -1px -1px 2px #0009, 0 0 2px #000a;
+}
+.system-moon-1 { background: radial-gradient(circle at 34% 30%, #ece3d6, #ae9f8c 48%, #574c40 100%); }
+.system-moon-2 { background: radial-gradient(circle at 34% 30%, #dfe7ec, #8f9ea8 48%, #3f4a52 100%); }
 .system-colony-target::after { content: "◆"; position: absolute; top: -4px; right: -1px; color: #76e3cf; font-size: 12px; pointer-events: none; }
 .system-colony-target .system-body-label { color: #a7f1e5; }
 .system-atmosphere-none .system-body-sphere { background: radial-gradient(circle at 30% 32%, #c5b6a0 0 13%, transparent 14%), radial-gradient(circle at 58% 62%, #77695e 0 23%, transparent 24%), #a39787; }

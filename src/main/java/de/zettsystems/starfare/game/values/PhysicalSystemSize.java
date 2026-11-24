@@ -37,6 +37,15 @@ public final class PhysicalSystemSize {
         return (int) Math.round(8 + 32 * Math.log1p(radiusKm / 200.0) / Math.log1p(400));
     }
 
+    /**
+     * A moon drawn beside its planet: its own size on the body scale, reduced, and never more than two fifths
+     * of the planet, so a large moon of a small world still reads as a companion.
+     */
+    public static int moonDiameter(int moonRadiusKm, int planetDiameter) {
+        int own = (int) Math.round(bodyDiameter(moonRadiusKm) * 0.4);
+        return Math.max(3, Math.min(own, (int) Math.round(planetDiameter * 0.4)));
+    }
+
     /** Stars use their own common scale, separate from planetary bodies. */
     public static int starDiameter(int radiusKm) {
         if (radiusKm < 100_000 || radiusKm > 1_800_000) { throw new IllegalArgumentException("Invalid model star radius"); }

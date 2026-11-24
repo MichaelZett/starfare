@@ -27,6 +27,19 @@ class PhysicalSystemSizeTest {
     }
 
     @Test
+    void moonsStayCompanionsOfTheirPlanet() {
+        int earthLike = PhysicalSystemSize.bodyDiameter(6_400);
+        int dwarf = PhysicalSystemSize.bodyDiameter(600);
+        for (int radius = 300; radius <= 3_500; radius += 100) {
+            assertThat(PhysicalSystemSize.moonDiameter(radius, earthLike)).isBetween(3, earthLike * 2 / 5 + 1);
+            assertThat(PhysicalSystemSize.moonDiameter(radius, dwarf)).isLessThan(dwarf);
+        }
+        assertThat(PhysicalSystemSize.moonDiameter(3_500, earthLike))
+                .isGreaterThan(PhysicalSystemSize.moonDiameter(300, earthLike));
+        assertThat(PhysicalSystemSize.moonDiameter(300, 4)).isEqualTo(3);
+    }
+
+    @Test
     void starsUseTheirSeparateScaleAndBeltsHaveNoFabricatedSingleRadius() {
         var game = GameId.of("radii-fixture");
         assertThat(PhysicalSystemSize.starRadius(game, 17, SystemComposition.StarType.RED, 0)).isBetween(100_000, 400_000);
