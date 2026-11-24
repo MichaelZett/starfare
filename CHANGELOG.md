@@ -3,7 +3,10 @@
 Alle nennenswerten Änderungen an Starfare. Format nach
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach
 [SemVer](https://semver.org/lang/de/). Beim Release wird der Abschnitt
-`## 0.2.17 - 2026-11-24
+`## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
+verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
+
+## 0.2.17 - 2026-11-24
 
 - **Bündnisanfragen erscheinen bei den offenen Entscheidungen:** Wartet ein Bündnisvorschlag auf deine
   Stimme, zeigt die Plattform ihn neben deinem Zug als offene Antwort, mit Rundenfrist, Hinweis und
