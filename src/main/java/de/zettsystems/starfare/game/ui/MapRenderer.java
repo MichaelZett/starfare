@@ -26,6 +26,7 @@ import org.jspecify.annotations.Nullable;
  */
 final class MapRenderer {
     private static final String FLEET_ROUTE = "fleet-";
+    private static final String STOP_PROPAGATION = "event.stopPropagation()";
 
     private MapRenderer() {
     }
@@ -322,7 +323,7 @@ final class MapRenderer {
             case LATE -> I18n.t(UiTexts.MAP_ARRIVAL_LATE, target, arrival, gap);
             default -> I18n.t(UiTexts.MAP_ARRIVAL_OPEN, target, arrival);
         });
-        badge.getElement().addEventListener("click", _ -> { }).addEventData("event.stopPropagation()");
+        badge.getElement().addEventListener("click", _ -> { }).addEventData(STOP_PROPAGATION);
         dot.add(badge);
     }
 
@@ -357,7 +358,7 @@ final class MapRenderer {
         KeyboardActions.enable(marker);
         marker.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.MAP_REPORT_MARKER_HINT));
         marker.getElement().addEventListener("click", _ -> in.onReportSystemSelected().accept(sys.id()))
-                .addEventData("event.stopPropagation()");
+                .addEventData(STOP_PROPAGATION);
         return marker;
     }
 
@@ -432,7 +433,7 @@ final class MapRenderer {
         if (!in.observer() && in.playerId() >= 0 && sys.fullyVisible()) {
             dot.getElement().addEventListener("contextmenu", _ -> in.onSelectSource().accept(sys))
                     .addEventData("event.preventDefault()")
-                    .addEventData("event.stopPropagation()");
+                    .addEventData(STOP_PROPAGATION);
         }
     }
 

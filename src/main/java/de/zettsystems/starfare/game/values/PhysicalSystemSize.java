@@ -43,7 +43,8 @@ public final class PhysicalSystemSize {
      */
     public static int moonDiameter(int moonRadiusKm, int planetDiameter) {
         int own = (int) Math.round(bodyDiameter(moonRadiusKm) * 0.4);
-        return Math.max(3, Math.min(own, (int) Math.round(planetDiameter * 0.4)));
+        int cap = Math.max(3, (int) Math.round(planetDiameter * 0.4));
+        return Math.clamp(own, 3, cap);
     }
 
     /** Stars use their own common scale, separate from planetary bodies. */

@@ -848,8 +848,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         if (observer || playerId < 0 || view.gameOver() || targetSelection != TargetSelection.NONE) { return null; }
         Integer fleet = highlightedFleetId;
         VisibleSystem system = selectedSystem;
-        JointArrival.Aim aim = fleet != null ? JointArrival.forFleet(view, fleet)
-                : system != null && !Objects.equals(system.ownerId(), playerId) ? JointArrival.forSystem(view, system.id()) : null;
+        JointArrival.Aim aim = null;
+        if (fleet != null) {
+            aim = JointArrival.forFleet(view, fleet);
+        } else if (system != null && !Objects.equals(system.ownerId(), playerId)) {
+            aim = JointArrival.forSystem(view, system.id());
+        }
         if (aim == null) { return null; }
         String key = aim.targetId() + "/" + view.turn() + "/" + playerId;
         if (!key.equals(arrivalKey)) {
