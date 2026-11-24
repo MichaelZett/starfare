@@ -135,8 +135,10 @@ For newly completed games, the timeline can rewind to every resolved round;
 **Final state** returns to the perspective and fog controls.
 Private archives remain restricted to the host and seat holders. For public
 archives, outsiders can open the map only when spectators are allowed. Games
-are copied to an independent archive. Optional cleanup of the operative session
-is disabled by default and retains archive replay.
+are copied to an independent archive. A finished game stays reviewable for 90 days
+after its end; then a daily cleanup deletes the game and its archive entry together
+(`starfare.game.archive-cleanup.enabled`, default `true`; `.retention`, default `P90D`).
+Who played whom and the result stay in the platform's statistics.
 
 ## Map sidebar
 
@@ -990,8 +992,9 @@ out, account deletion), the game navigation and the legal footer; Starfare's
 pages then leave out their own account menu, language switch and footer. The
 standalone start keeps them. `games/starfare/game.properties` additionally names
 the frame's look (`scheme=dark`, `accent`, `icon`), the game navigation
-(`navigation=<id>:<path>, ...`, texts `game.navigation.<id>`) and the full-screen
-map (`fullscreenPaths`). `src/main/frontend/styles/platform.css` is Starfare's own
+(`navigation=<id>:<path>, ...`, texts `game.navigation.<id>`), the variants of the
+rules with their stage at first start (`variants=classic:PRODUCTION, spaceward:ALPHA`,
+names `game.variant.<key>`) and the full-screen map (`fullscreenPaths`). `src/main/frontend/styles/platform.css` is Starfare's own
 copy of the host's platform stylesheet for the standalone start; it is neither
 synchronised nor part of the game artifact, a host serves its own.
 Starfare's own stylesheets style only Starfare's classes and the scope

@@ -3,22 +3,22 @@
 Alle nennenswerten Änderungen an Starfare. Format nach
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach
 [SemVer](https://semver.org/lang/de/). Beim Release wird der Abschnitt
-`## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
-verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
+`## 0.2.17 - 2026-11-24
 
-## Unreleased
-
-- **Bündnisanfragen auf der Plattform:** Wartet ein Bündnisvorschlag auf die eigene Stimme, zeigt die
-  Plattform das als offene Antwort mit der Rundenfrist, samt Hinweis und Erinnerung. Eine verpasste
-  Antwort zählt nicht als verpasster Zug; der Vorschlag bleibt in der nächsten Runde offen.
-- **Beendete Partien 90 Tage:** Eine beendete Partie bleibt 90 Tage nach ihrem Ende zur Nachbetrachtung,
-  dann löscht Starfare Spielstand und Archiveintrag zusammen. Wer gegen wen gespielt hat und wie es
-  ausging, behält die Statistik der Plattform. Abgesagte Warteräume verschwinden wie bisher sofort.
-- **Stufen je Spielvariante:** Die Plattform führt für SectorForces und Spaceward je eine eigene Stufe
-  (Spaceward bleibt Alpha) und entscheidet, wer eine Variante nutzen darf. Der Assistent kennzeichnet
-  Alpha- und Beta-Varianten. Wer eine Variante nicht mehr nutzen darf, kommt auch an ihre laufenden und
-  beendeten Partien nicht mehr heran. Partien und Ergebnisse tragen ihre Variante zur Plattform.
-- Abhängigkeiten aktualisiert: Vaadin 25.3.6, games-platform-api 0.5.0.
+- **Bündnisanfragen erscheinen bei den offenen Entscheidungen:** Wartet ein Bündnisvorschlag auf deine
+  Stimme, zeigt die Plattform ihn neben deinem Zug als offene Antwort, mit Rundenfrist, Hinweis und
+  Erinnerung. Abstimmen kannst du, solange du die Runde noch nicht abgegeben hast. Lässt du die Frist
+  verstreichen, zählt das nicht als verpasster Zug, und der Vorschlag wartet in der nächsten Runde weiter.
+- **Beendete Partien bleiben 90 Tage:** Eine beendete Partie kannst du 90 Tage nach ihrem Ende noch
+  nachbetrachten, danach wird sie gelöscht. Wer gegen wen gespielt hat und wie es ausging, bleibt in
+  deiner Statistik. Abgesagte Warteräume verschwinden wie bisher sofort.
+- **Spielvarianten mit eigener Stufe:** SectorForces und Spaceward haben auf der Plattform jetzt je eine
+  eigene Stufe. Spaceward ist weiter in Alpha und damit nur für Tester. Bei der Wahl der Variante
+  steht „Alpha“ oder „Beta“ an Varianten, die noch nicht für alle freigegeben sind. Wer eine Variante
+  nicht mehr nutzen darf, kommt auch an ihre laufenden und beendeten Partien nicht mehr heran.
+- **Robuster gegen fehlerhafte Befehle:** Befehle an Systeme, die es in der Partie nicht gibt, lehnt
+  Starfare ab, statt mit einem Fehler abzubrechen.
+- Technisch: Vaadin 25.3.6 und games-platform-api 0.5.0.
 
 ## 0.2.16 - 2026-11-23
 
