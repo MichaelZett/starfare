@@ -31,7 +31,12 @@ class BulkPlanningJourneyTest extends AbstractMapJourneyTest {
         ComboBox<VisibleSystem> target = find(ComboBox.class, openedDialog()).single();
         assertThat(target.getValue().name()).as("the target comes from the map").isEqualTo("Gamma");
         selectSources();
+        test(find(Checkbox.class, openedDialog()).single()).click();
+        enterAmount(1);
+        assertThat(elementText(openedDialog().getElement())).as("one arrival line per round with the fixed amount")
+                .contains("Gamma · Runde");
         dialogClick("Flotten gesammelt senden");
+        assertThat(view().plannedOrders()).allMatch(order -> Integer.valueOf(1).equals(order.ships()));
         assertTab("Befehle");
         assertThat(view().plannedOrders()).hasSize(2);
         cardAction("fleet-travel-card-planned", "Alpha → Gamma", "Befehl bearbeiten");
@@ -41,7 +46,7 @@ class BulkPlanningJourneyTest extends AbstractMapJourneyTest {
         assertThat(view().plannedOrders().getFirst().ships()).isEqualTo(2);
         assertThat(viewText()).contains("Alpha → Beta");
         click("Letzten Befehlschritt zurücknehmen");
-        assertThat(view().plannedOrders().getFirst().ships()).isEqualTo(4);
+        assertThat(view().plannedOrders().getFirst().ships()).isEqualTo(1);
         assertThat(viewText()).contains("Alpha → Gamma");
         selectTab("Flotten");
         assertThat(viewText()).contains("Gemeinsame Ankünfte");
