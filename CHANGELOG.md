@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.18 - 2026-11-24
 
 - **Gleichzeitig ankommen, direkt auf der Karte:** Wählst du ein fremdes System oder eine eigene fliegende
   Flotte, zeigen deine Systeme mit freien Schiffen, in welcher Runde eine jetzt gesendete Flotte dort ankäme.
