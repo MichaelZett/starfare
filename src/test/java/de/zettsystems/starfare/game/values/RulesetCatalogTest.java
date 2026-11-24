@@ -23,17 +23,10 @@ class RulesetCatalogTest {
         }
     }
 
-    @Test void spacewardIsATestVariantWhileSectorForcesStaysPublicAndStoredGamesStaySupported() {
-        assertThat(catalog.testing(RulesetRef.SPACEWARD_SHIP_RESEARCH)).isTrue();
-        assertThat(catalog.testing(RulesetRef.SPACEWARD)).isTrue();
-        assertThat(catalog.testing(RulesetRef.SECTOR_FORCES)).isFalse();
-        assertThat(catalog.testing(new RulesetRef("orion", "0.1.0"))).isFalse();
+    @Test void spacewardCanBeCreatedAndStoredGamesStaySupported() {
         var spaceward = catalog.find("spaceward").orElseThrow();
-        assertThat(spaceward.testing()).isTrue();
         assertThat(spaceward.creationEnabled()).isTrue();
-        assertThat(spaceward.forTesters()).isEqualTo(spaceward);
         assertThatCode(() -> catalog.requireSupported(RulesetRef.SPACEWARD)).doesNotThrowAnyException();
-        assertThat(new RulesetDefinition(RulesetRef.SECTOR_FORCES, "n", "d", Set.of("1.0.0"), true).testing()).isFalse();
     }
 
     @Test void directEconomyCandidatesDropTheLaborLimitAndLaterCandidatesShareMetalEqually() {

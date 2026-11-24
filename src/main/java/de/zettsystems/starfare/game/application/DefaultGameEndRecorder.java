@@ -47,7 +47,8 @@ class DefaultGameEndRecorder implements GameEndRecorder {
             return;
         }
         FinishedGame game = session.readState(state -> state.gameOver() && !state.seatByUser().isEmpty()
-                ? new FinishedGame(state.finishedAt(), StarfareMatches.result(state).orElse(null), state.tutorial())
+                ? new FinishedGame(state.finishedAt(), StarfareMatches.result(state).orElse(null), state.tutorial(),
+                        state.ruleset().variant())
                 : null);
         if (game == null) {
             return;
@@ -58,10 +59,11 @@ class DefaultGameEndRecorder implements GameEndRecorder {
         MatchResult platformResult = game.platformResult();
         if (platformResult != null) {
             events.publishEvent(new MatchEnded(StarfareMatches.GAME_KEY, gameId.value(), finishedAt, platformResult,
-                    game.tutorial()));
+                    game.tutorial(), game.variant()));
         }
     }
 
-    private record FinishedGame(@Nullable Instant finishedAt, @Nullable MatchResult platformResult, boolean tutorial) {
+    private record FinishedGame(@Nullable Instant finishedAt, @Nullable MatchResult platformResult, boolean tutorial,
+                                String variant) {
     }
 }

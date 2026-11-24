@@ -195,10 +195,13 @@ class MatchEventPublisherTest {
 
     @Test
     void marksAnAbortedTutorialSoItStaysOutOfTheStatistics() {
-        broadcaster.publish(new GameEvent.GameAborted(ID, true, List.of("17"), true));
+        broadcaster.publish(new GameEvent.GameAborted(ID, true, List.of("17"), true, "spaceward"));
 
         assertThat(published).singleElement().isInstanceOfSatisfying(MatchEnded.class,
-                ended -> assertThat(ended.tutorial()).isTrue());
+                ended -> {
+                    assertThat(ended.tutorial()).isTrue();
+                    assertThat(ended.variant()).isEqualTo("spaceward");
+                });
     }
 
     @Test

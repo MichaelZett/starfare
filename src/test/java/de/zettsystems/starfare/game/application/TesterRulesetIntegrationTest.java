@@ -9,6 +9,9 @@ import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -19,9 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Starfare im Plattform-Host: Die Dienste setzen die Testvariante Spaceward selbst durch, nicht nur
- * die Oberfläche. Die Rollenregel prüft {@link DefaultRulesetAccessTest}; hier gilt jedes Konto,
- * das mit {@code tester} beginnt, als Tester.
+ * Starfare im Plattform-Host: Die Dienste setzen die Stufe einer Variante selbst durch, nicht nur
+ * die Oberfläche. Die Frage an die Plattform prüft {@link DefaultRulesetAccessTest}; hier darf jedes
+ * Konto, das mit {@code tester} beginnt, die Alpha-Variante Spaceward nutzen.
  */
 class TesterRulesetIntegrationTest extends AbstractIntegrationTest {
     private static final String TESTER = "tester";
@@ -30,13 +33,22 @@ class TesterRulesetIntegrationTest extends AbstractIntegrationTest {
     private static final GameSetup CLASSIC = twoHumans();
     private static final GameSetup SPACEWARD = twoHumans().selectRuleset(RulesetCatalog.ECONOMY_CANDIDATE);
 
+    /** Accounts whose Alpha role the platform took away during the test. */
+    private static final Set<String> REVOKED = ConcurrentHashMap.newKeySet();
+
     @TestConfiguration
     static class HostAccess {
         @Bean
         @Primary
-        RulesetAccess hostRulesetAccess(RulesetCatalog catalog) {
-            return (ruleset, account) -> !catalog.testing(ruleset) || (account != null && account.startsWith(TESTER));
+        RulesetAccess hostRulesetAccess() {
+            return (ruleset, account) -> !ruleset.isSpaceward()
+                    || (account != null && account.startsWith(TESTER) && !REVOKED.contains(account));
         }
+    }
+
+    @AfterEach
+    void restoreRoles() {
+        REVOKED.clear();
     }
 
     @Autowired private GameService games;
@@ -73,20 +85,33 @@ class TesterRulesetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void existingParticipationInASpacewardGameKeepsWorking() {
-        GameId id = games.newGame(SPACEWARD, TESTER, "Before the restriction");
-        assertThat(games.joinGame(id, TESTER)).isPresent();
-        int seat = registry.writeState(id, state -> {
-            int free = state.players().stream().filter(player -> !player.ai()
-                    && !state.joinedHumanPlayerIds().contains(player.id())).findFirst().orElseThrow().id();
-            state.seatByUser().put(PLAYER, free);
-            return free;
-        });
-        assertThat(lobbyOf(PLAYER)).containsExactly(id);
-        assertThat(games.joinGame(id, PLAYER)).hasValue(seat);
+    void anAccountThatLosesTheVariantLosesItsRunningGameToo() {
+        GameId id = publicGame(SPACEWARD, "Running Spaceward");
+        int own = games.seatFor(id, TESTER).orElseThrow();
+        int other = games.joinGame(id, OTHER_TESTER).orElseThrow();
         assertThat(games.startGame(id)).isTrue();
-        assertThat(games.viewForAccount(id, PLAYER)).isPresent();
-        assertThat(lobbyOf(PLAYER)).containsExactly(id);
+        assertThat(games.viewForAccount(id, OTHER_TESTER)).isPresent();
+
+        REVOKED.add(OTHER_TESTER);
+
+        assertThat(games.viewForAccount(id, OTHER_TESTER)).as("no map").isEmpty();
+        assertThat(games.summaryFor(id, OTHER_TESTER)).isEmpty();
+        assertThat(games.diplomacyFor(id, OTHER_TESTER)).isEmpty();
+        assertThat(games.undoOrders(id, other, 1)).as("no planning").isFalse();
+        assertThat(games.submitTurn(id, other, 1)).as("no turn").isFalse();
+        assertThat(lobbyOf(OTHER_TESTER)).isEmpty();
+        assertThat(games.viewForAccount(id, TESTER)).as("the others play on").isPresent();
+        assertThat(games.submitTurn(id, own, 1)).isTrue();
+
+        registry.writeState(id, state -> { state.endGame(own); return null; });
+        assertThat(games.reviewFor(id, OTHER_TESTER)).as("no review").isEmpty();
+        assertThat(games.reviewFor(id, TESTER)).isPresent();
+        assertThat(games.visibleGamesFor(OTHER_TESTER, GameListScope.ARCHIVE)).extracting(GameSummary::gameId)
+                .doesNotContain(id);
+
+        REVOKED.remove(OTHER_TESTER);
+
+        assertThat(games.reviewFor(id, OTHER_TESTER)).as("back with the role").isPresent();
     }
 
     @Test

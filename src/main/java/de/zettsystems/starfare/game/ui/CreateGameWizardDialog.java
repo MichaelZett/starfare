@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
 
 /**
  * Multi-section dialog for creating a new game: system/player counts, neutral-system
@@ -46,23 +45,23 @@ public final class CreateGameWizardDialog {
     private CreateGameWizardDialog() {
     }
 
-    /** Bietet nur Varianten an, die {@code usable} dem aktuellen Konto erlaubt. */
-    public static void open(GameService game, PlayerDirectory players, Runnable onCreated, Predicate<RulesetRef> usable) {
-        open(game, players, onCreated, game.rulesets(), usable, () -> { });
+    /** Bietet nur Varianten an, die {@code offer} dem aktuellen Konto erlaubt, mit ihrer Kennzeichnung. */
+    public static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetOffer offer) {
+        open(game, players, onCreated, game.rulesets(), offer, () -> { });
     }
 
-    /** Like {@link #open(GameService, PlayerDirectory, Runnable, Predicate)}; {@code onCancel} runs when the person gives up. */
-    static void open(GameService game, PlayerDirectory players, Runnable onCreated, Predicate<RulesetRef> usable,
+    /** Like {@link #open(GameService, PlayerDirectory, Runnable, RulesetOffer)}; {@code onCancel} runs when the person gives up. */
+    static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetOffer offer,
                      Runnable onCancel) {
-        open(game, players, onCreated, game.rulesets(), usable, onCancel);
+        open(game, players, onCreated, game.rulesets(), offer, onCancel);
     }
 
     static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetCatalog catalog) {
-        open(game, players, onCreated, catalog, _ -> true, () -> { });
+        open(game, players, onCreated, catalog, RulesetOffer.everything(), () -> { });
     }
 
     private static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetCatalog catalog,
-                             Predicate<RulesetRef> usable, Runnable onCancel) {
+                             RulesetOffer offer, Runnable onCancel) {
         Dialog dialog = new Dialog();
         dialog.addClassName("create-game-dialog");
         // A stray click next to the wizard must not throw away every choice; "Cancel" and Esc close it.
@@ -74,7 +73,7 @@ public final class CreateGameWizardDialog {
         dialog.setHeaderTitle(I18n.t(UiTexts.LOBBY_WIZARD_TITLE));
         dialog.setWidth("min(1380px, 96vw)");
 
-        RulesetSelector rulesets = new RulesetSelector(catalog, usable);
+        RulesetSelector rulesets = new RulesetSelector(catalog, offer);
         VictorySettings victorySettings = new VictorySettings();
         AiStrategyFields aiStrategies = new AiStrategyFields();
         SectorOptionsFields sectorOptions = new SectorOptionsFields();

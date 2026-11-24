@@ -87,7 +87,7 @@ class MatchEventPublisher implements InitializingBean {
         List<AccountId> participants = StarfareMatches.accounts(aborted.accounts());
         if (aborted.running() && !participants.isEmpty()) {
             events.publishEvent(new MatchEnded(StarfareMatches.GAME_KEY, aborted.gameId().value(), Instant.now(),
-                    MatchResult.aborted(participants), aborted.tutorial()));
+                    MatchResult.aborted(participants), aborted.tutorial(), aborted.variant()));
         } else {
             // An open game that is cancelled never started; it just leaves the lobby.
             changed(aborted.gameId());

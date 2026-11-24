@@ -73,7 +73,7 @@ public class DefaultGameService implements GameService {
                         Objects.requireNonNull(state.industries().get(system.id())).expansionAllocation())));
     }
 
-    private static Optional<MiningAutomation> miningConfiguration(GameState state, String account, MiningRequest request) {
+    private Optional<MiningAutomation> miningConfiguration(GameState state, String account, MiningRequest request) {
         Integer player = state.activeSeat(account);
         if (player == null || !state.ruleset().usesMetals() || !canPlan(state, player, request.turn())
                 || request.reserveRounds() < 0 || request.reserveRounds() > 10
@@ -233,9 +233,20 @@ public class DefaultGameService implements GameService {
         return fleetService.trimRelocations(state, player, plan.systemId());
     }
 
-    private static boolean canPlan(GameState state, int player, int expectedTurn) {
+    private boolean canPlan(GameState state, int player, int expectedTurn) {
         return state.started() && !state.gameOver() && state.turn() == expectedTurn
-                && state.joinedHumanPlayerIds().contains(player) && !state.submittedThisTurn().contains(player);
+                && state.joinedHumanPlayerIds().contains(player) && !state.submittedThisTurn().contains(player)
+                && seatMayUseVariant(state, player);
+    }
+
+    /**
+     * Whether the person on the seat may still use the game's variant; after a downgrade of the variant
+     * the platform takes away its games too, the running ones included. A seat without an account
+     * (a computer opponent) has nobody to ask.
+     */
+    private boolean seatMayUseVariant(GameState state, int seat) {
+        return state.seatByUser().entrySet().stream().filter(entry -> entry.getValue() == seat)
+                .allMatch(entry -> rulesetAccess.mayUse(state.ruleset(), entry.getKey()));
     }
 
     @Override
@@ -432,7 +443,8 @@ public class DefaultGameService implements GameService {
         // Taken before the game is deleted: the platform learns who took part in an aborted match.
         GameEvent.GameAborted aborted = registry.find(gameId)
                 .map(session -> session.readState(state -> new GameEvent.GameAborted(gameId,
-                        state.started() && !state.gameOver(), accountsInSeatOrder(state), state.tutorial())))
+                        state.started() && !state.gameOver(), accountsInSeatOrder(state), state.tutorial(),
+                        state.ruleset().variant())))
                 .orElseGet(() -> new GameEvent.GameAborted(gameId));
         registry.abortGame(gameId);
         battleAcknowledgements.forgetGame(gameId);
@@ -844,7 +856,7 @@ public class DefaultGameService implements GameService {
             if (expectedTurn != null && state.turn() != expectedTurn) {
                 return new SubmitResult(false, TurnResult.REJECTED);
             }
-            if (!state.joinedHumanPlayerIds().contains(playerId)) {
+            if (!state.joinedHumanPlayerIds().contains(playerId) || !seatMayUseVariant(state, playerId)) {
                 return new SubmitResult(false, TurnResult.REJECTED);
             }
             state.submittedThisTurn().add(playerId);
@@ -1141,7 +1153,7 @@ public class DefaultGameService implements GameService {
     public List<GameSummary> visibleGamesFor(String account, GameListScope scope) {
         List<GameSummary> live = registry.listIds().stream().map(id -> summaryFor(id, account)).flatMap(Optional::stream).toList();
         if (scope == GameListScope.LOBBY) {
-            // Fremde Partien einer Testvariante bleiben für Nicht-Tester unsichtbar; eigene laufen weiter.
+            // Fremde Partien einer Variante, die das Konto nicht nutzen darf, bleiben unsichtbar; eigene laufen weiter.
             var usable = rulesetAccess.usableBy(account);
             return live.stream().filter(summary -> !summary.gameOver())
                     .filter(summary -> summary.belongsTo(account) || usable.test(summary.ruleset())).toList();

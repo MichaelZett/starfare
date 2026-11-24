@@ -14,7 +14,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - **Beendete Partien 90 Tage:** Eine beendete Partie bleibt 90 Tage nach ihrem Ende zur Nachbetrachtung,
   dann löscht Starfare Spielstand und Archiveintrag zusammen. Wer gegen wen gespielt hat und wie es
   ausging, behält die Statistik der Plattform. Abgesagte Warteräume verschwinden wie bisher sofort.
-- Abhängigkeiten aktualisiert: Vaadin 25.3.6.
+- **Stufen je Spielvariante:** Die Plattform führt für SectorForces und Spaceward je eine eigene Stufe
+  (Spaceward bleibt Alpha) und entscheidet, wer eine Variante nutzen darf. Der Assistent kennzeichnet
+  Alpha- und Beta-Varianten. Wer eine Variante nicht mehr nutzen darf, kommt auch an ihre laufenden und
+  beendeten Partien nicht mehr heran. Partien und Ergebnisse tragen ihre Variante zur Plattform.
+- Abhängigkeiten aktualisiert: Vaadin 25.3.6, games-platform-api 0.5.0.
 
 ## 0.2.16 - 2026-11-23
 

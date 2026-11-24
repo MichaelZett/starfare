@@ -22,7 +22,7 @@ variant and rule version, so rules can evolve without changing running games.
 | Variant | Inspired by | Status |
 |---|---|---|
 | **SectorForces** | *Sector Forces* (Commodore 64) | Playable, rules 1.0.0 |
-| **Spaceward** | *Spaceward Ho!* | Playable, rules 1.3.0-r1 with colonies, metal, recycling and ship research; testers only inside the platform host |
+| **Spaceward** | *Spaceward Ho!* | Playable, rules 1.3.0-r1 with colonies, metal, recycling and ship research; alpha stage inside the platform host |
 | *(not named yet)* | *Master of Orion II: Battle at Antares* | An idea, not planned |
 
 The steps build on each other: SectorForces is the compact core of conquest and
@@ -64,9 +64,11 @@ complete game.
 
 Choose a game variant before its settings in the new-game dialog. SectorForces
 (rules **1.0.0**) is preselected. **Spaceward** (rules **1.2.0-w7**, with **1.2.0-w6** also selectable), inspired by
-Spaceward Ho!, is available for new games as well (inside the games platform
-host only for testers: global `SYSTEM_ADMIN` or `GAME_TESTER` scoped to
-`game:starfare`; games someone already takes part in stay playable). It adds
+Spaceward Ho!, is available for new games as well. Inside the games platform host
+each variant has a stage the platform keeps (alpha, beta, production; Spaceward starts
+in alpha): the platform decides who may use it, the wizard marks alpha and beta
+variants, and an account that may no longer use a variant loses access to its games,
+running ones included. In Starfare's own start every variant is open. It adds
 production allocation between ships and industrial expansion, plus limited flight range,
 automatically planned routes through owned or allied systems and refuelling stops.
 Diplomacy adds unanimous alliance groups, agreed notice periods and

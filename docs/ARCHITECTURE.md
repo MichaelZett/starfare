@@ -28,8 +28,14 @@ application release. SectorForces uses `classic / 1.0.0`; the display name does
 not change its stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
 Spaceward supports stored versions 1.0.0, 1.1.0, W1–W7 and 1.3.0-r1. New games
-use only the current `spaceward / 1.3.0-r1`; inside the platform host the variant is
-reserved for testers. Older versions remain restoration-only. Versioned implementations share economy, navigation, diplomacy
+use only the current `spaceward / 1.3.0-r1`. Inside the platform host each variant has a
+stage the platform keeps (games-platform-api 0.5.0; `variants=classic:PRODUCTION,
+spaceward:ALPHA` in `game.properties` is the stage at first start): `RulesetAccess` asks
+`PlatformAccounts.mayUseVariant` and marks alpha and beta variants in the wizard
+(`variantStage`). An account that may not use a variant reaches none of its games, running
+and finished ones included: `DefaultGameAccessPolicy` and the planning and submission
+checks refuse map, review, chat and orders. `MatchSummary.variant` and `MatchEnded.variant`
+carry `classic` or `spaceward`. Older versions remain restoration-only. Versioned implementations share economy, navigation, diplomacy
 and coalition combat services;
 Spaceward is enabled for new games since M7. Orion has
 no implementation or selectable entry.

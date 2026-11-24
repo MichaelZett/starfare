@@ -97,6 +97,7 @@ class StarfareMatchesTest {
             assertThat(summary.pendingDecisions().getFirst().deadline()).isNotNull();
             assertThat(summary.tutorial()).isFalse();
             assertThat(summary.tempo()).isNull();
+            assertThat(summary.variant()).as("SectorForces").isEqualTo("classic");
         }
 
         @Test
@@ -113,6 +114,7 @@ class StarfareMatchesTest {
                                     state.roundDeadline()));
             assertThat(state.roundDeadline()).isNotNull();
             assertThat(summary.toMove()).as("an answer is no turn").containsExactly(SEVENTEEN, TWENTY_THREE);
+            assertThat(summary.variant()).isEqualTo("spaceward");
         }
 
         @Test

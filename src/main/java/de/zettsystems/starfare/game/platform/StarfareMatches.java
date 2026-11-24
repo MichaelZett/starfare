@@ -104,7 +104,7 @@ public final class StarfareMatches {
         return Optional.of(new MatchSummary(GAME_KEY, game.gameId().value(), title, status,
                 List.copyOf(accounts.values()), seats, seats - (int) humanSeats, toMove, game.roundStartedAt(),
                 status == MatchStatus.OPEN ? waitingRoomPath(game.gameId()) : viewPath(game.gameId()),
-                game.tutorial(), tempo(game), decisions));
+                game.tutorial(), tempo(game), decisions, game.ruleset().variant()));
     }
 
     private static List<PendingDecision> decisions(GameSummary game, Map<Integer, AccountId> accounts) {

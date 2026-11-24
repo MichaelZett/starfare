@@ -1,55 +1,58 @@
 package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.LifecycleStage;
 import de.zettsystems.gamesplatformapi.PlatformAccounts;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-/** Who counts as a tester is the platform's rule; see the host's tests and IdentityPlatformAccountsTest. */
+/** Who may use a variant is the platform's rule (stage of the variant and role); see the host's tests. */
 class DefaultRulesetAccessTest {
     private static final RulesetRef SPACEWARD = RulesetCatalog.ECONOMY_CANDIDATE;
     private static final RulesetRef SECTOR_FORCES = RulesetRef.SECTOR_FORCES;
 
     private final PlatformAccounts accounts = mock(PlatformAccounts.class);
-    private final RulesetAccess host = new DefaultRulesetAccess(RulesetCatalog.builtIn(), accounts, false);
+    private final RulesetAccess host = new DefaultRulesetAccess(accounts, false);
 
     @Test
-    void sectorForcesStaysOpenForEveryoneWithoutAskingThePlatform() {
-        assertThat(host.mayUse(SECTOR_FORCES, "1")).isTrue();
-        assertThat(host.mayUse(SECTOR_FORCES, null)).isTrue();
+    void asksThePlatformForTheVariantOfTheRules() {
+        when(accounts.mayUseVariant(AccountId.of(2), "starfare", "spaceward")).thenReturn(true);
+        when(accounts.mayUseVariant(AccountId.of(2), "starfare", "classic")).thenReturn(true);
+
+        assertThat(host.mayUse(SPACEWARD, "2")).isTrue();
+        assertThat(host.mayUse(RulesetRef.SPACEWARD, "2")).as("stored older Spaceward versions count as Spaceward").isTrue();
+        assertThat(host.mayUse(SECTOR_FORCES, "2")).isTrue();
+    }
+
+    @Test
+    void followsTheRefusalOfThePlatform() {
+        when(accounts.mayUseVariant(AccountId.of(7), "starfare", "classic")).thenReturn(true);
+
+        assertThat(host.mayUse(SPACEWARD, "7")).isFalse();
+        assertThat(host.mayUse(SECTOR_FORCES, "7")).isTrue();
+    }
+
+    @Test
+    void refusesEveryVariantWithoutAPlatformAccount() {
+        assertThat(host.mayUse(SECTOR_FORCES, null)).isFalse();
+        assertThat(host.mayUse(SPACEWARD, "")).isFalse();
+        assertThat(host.mayUse(SPACEWARD, "host")).as("no numeric account id").isFalse();
+        assertThat(host.mayUse(SPACEWARD, "0")).as("no positive account id").isFalse();
+        assertThat(host.usableBy(null).test(SECTOR_FORCES)).isFalse();
         verifyNoInteractions(accounts);
     }
 
     @Test
-    void testersOfStarfareMayUseTheTestVariant() {
-        when(accounts.isTester(AccountId.of(2), "starfare")).thenReturn(true);
-        assertThat(host.mayUse(SPACEWARD, "2")).isTrue();
-        assertThat(host.mayUse(RulesetRef.SPACEWARD, "2")).as("stored older Spaceward versions count as Spaceward").isTrue();
-    }
-
-    @Test
-    void othersAndAnonymousAccountsAreRefused() {
-        assertThat(host.mayUse(SPACEWARD, "7")).isFalse();
-        assertThat(host.mayUse(SPACEWARD, null)).isFalse();
-        assertThat(host.mayUse(SPACEWARD, "")).isFalse();
-        assertThat(host.mayUse(SPACEWARD, "host")).as("no numeric account id").isFalse();
-        assertThat(host.mayUse(SPACEWARD, "0")).as("no positive account id").isFalse();
-        verify(accounts, times(1)).isTester(any(), anyString());
-    }
-
-    @Test
     void ownStartLeavesEveryVariantOpen() {
-        RulesetAccess standalone = new DefaultRulesetAccess(RulesetCatalog.builtIn(), accounts, true);
+        RulesetAccess standalone = new DefaultRulesetAccess(accounts, true);
         assertThat(standalone.mayUse(SPACEWARD, null)).isTrue();
         assertThat(standalone.mayUse(SPACEWARD, "7")).isTrue();
         assertThat(standalone.usableBy(null).test(SPACEWARD)).isTrue();
@@ -57,12 +60,34 @@ class DefaultRulesetAccessTest {
     }
 
     @Test
-    void listingAsksThePlatformAtMostOnceAndOnlyWhenNeeded() {
-        var usable = host.usableBy("9");
-        assertThat(usable.test(SECTOR_FORCES)).isTrue();
+    void marksVariantsInAlphaOrBetaOnly() {
+        when(accounts.variantStage("starfare", "spaceward")).thenReturn(LifecycleStage.ALPHA);
+        when(accounts.variantStage("starfare", "classic")).thenReturn(LifecycleStage.PRODUCTION);
+
+        assertThat(host.marking(SPACEWARD)).contains(LifecycleStage.ALPHA);
+        assertThat(host.marking(SECTOR_FORCES)).isEmpty();
+
+        when(accounts.variantStage("starfare", "spaceward")).thenReturn(LifecycleStage.BETA);
+        assertThat(host.marking(SPACEWARD)).contains(LifecycleStage.BETA);
+    }
+
+    @Test
+    void ownStartMarksNothing() {
+        assertThat(new DefaultRulesetAccess(accounts, true).marking(SPACEWARD)).isEmpty();
         verifyNoInteractions(accounts);
+    }
+
+    @Test
+    void listingAsksThePlatformOncePerVariant() {
+        when(accounts.mayUseVariant(AccountId.of(9), "starfare", "classic")).thenReturn(true);
+        var usable = host.usableBy("9");
+
+        assertThat(usable.test(SECTOR_FORCES)).isTrue();
         assertThat(usable.test(SPACEWARD)).isFalse();
-        assertThat(usable.test(SPACEWARD)).isFalse();
-        verify(accounts, times(1)).isTester(AccountId.of(9), "starfare");
+        assertThat(usable.test(RulesetRef.SPACEWARD)).isFalse();
+        assertThat(usable.test(SECTOR_FORCES)).isTrue();
+
+        verify(accounts, times(1)).mayUseVariant(AccountId.of(9), "starfare", "classic");
+        verify(accounts, times(1)).mayUseVariant(AccountId.of(9), "starfare", "spaceward");
     }
 }

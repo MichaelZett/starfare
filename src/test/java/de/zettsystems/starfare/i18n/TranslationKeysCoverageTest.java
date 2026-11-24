@@ -33,10 +33,11 @@ class TranslationKeysCoverageTest {
 
     /**
      * Keys read by a host (games-platform) rather than by Starfare itself: the catalog title and
-     * description and the texts of the game navigation named in games/starfare/game.properties.
+     * description, the texts of the game navigation and the names of the variants named in
+     * games/starfare/game.properties.
      */
     private static final Set<String> HOST_KEYS = Set.of("game.title", "game.description",
-            "game.navigation.lobby", "game.navigation.new");
+            "game.navigation.lobby", "game.navigation.new", "game.variant.classic", "game.variant.spaceward");
 
     @Test
     void everyNavigationEntryOfTheGameDescriptionHasAHostKey() throws Exception {
@@ -48,6 +49,19 @@ class TranslationKeysCoverageTest {
                 .map(entry -> "game.navigation." + entry.strip().split(":")[0])
                 .collect(Collectors.toCollection(TreeSet::new));
         assertThat(keys).isEqualTo(HOST_KEYS.stream().filter(key -> key.startsWith("game.navigation."))
+                .collect(Collectors.toCollection(TreeSet::new)));
+    }
+
+    @Test
+    void everyVariantOfTheGameDescriptionHasAName() throws Exception {
+        Properties description = new Properties();
+        try (InputStream in = TranslationKeysCoverageTest.class.getResourceAsStream("/games/starfare/game.properties")) {
+            description.load(in);
+        }
+        Set<String> keys = java.util.Arrays.stream(description.getProperty("variants").split(","))
+                .map(entry -> "game.variant." + entry.strip().split(":")[0])
+                .collect(Collectors.toCollection(TreeSet::new));
+        assertThat(keys).isEqualTo(HOST_KEYS.stream().filter(key -> key.startsWith("game.variant."))
                 .collect(Collectors.toCollection(TreeSet::new)));
     }
 

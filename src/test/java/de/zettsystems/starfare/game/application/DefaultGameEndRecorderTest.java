@@ -8,6 +8,7 @@ import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameOutcome;
 import de.zettsystems.starfare.game.values.Player;
+import de.zettsystems.starfare.game.values.RulesetRef;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -52,6 +53,7 @@ class DefaultGameEndRecorderTest {
             assertThat(ended.endedAt()).isEqualTo(finishedAt);
             assertThat(ended.participants()).containsExactlyInAnyOrder(AccountId.of(17), AccountId.of(23));
             assertThat(ended.tutorial()).isFalse();
+            assertThat(ended.variant()).as("the variant of the rules goes with the result").isEqualTo("classic");
         });
     }
 
@@ -121,6 +123,7 @@ class DefaultGameEndRecorderTest {
         when(state.outcome()).thenReturn(new GameOutcome(2, null));
         when(state.winnerId()).thenReturn(2);
         when(state.finishedAt()).thenReturn(finishedAt);
+        when(state.ruleset()).thenReturn(RulesetRef.SECTOR_FORCES);
         when(state.players()).thenReturn(seats.values().stream()
                 .map(seat -> new Player(seat, "P" + seat, false, "#ffffff")).toList());
         return state;

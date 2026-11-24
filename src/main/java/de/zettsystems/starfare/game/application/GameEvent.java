@@ -48,15 +48,16 @@ public sealed interface GameEvent {
     /**
      * The game was aborted and deleted. {@code running} tells whether it had started and not yet
      * ended; {@code accounts} are the accounts that held a seat, in seat order; {@code tutorial} whether the game
-     * was a tutorial.
+     * was a tutorial; {@code variant} the variant of its rules, {@code null} when the game was already gone.
      */
-    record GameAborted(GameId gameId, boolean running, java.util.List<String> accounts, boolean tutorial)
+    record GameAborted(GameId gameId, boolean running, java.util.List<String> accounts, boolean tutorial,
+                       @org.jspecify.annotations.Nullable String variant)
             implements GameEvent {
         public GameAborted(GameId gameId) {
             this(gameId, false, java.util.List.of());
         }
         public GameAborted(GameId gameId, boolean running, java.util.List<String> accounts) {
-            this(gameId, running, accounts, false);
+            this(gameId, running, accounts, false, null);
         }
         public GameAborted { accounts = java.util.List.copyOf(accounts); }
     }

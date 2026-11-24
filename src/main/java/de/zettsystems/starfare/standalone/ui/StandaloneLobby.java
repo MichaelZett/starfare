@@ -24,6 +24,7 @@ import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.application.RulesetAccess;
+import de.zettsystems.starfare.game.ui.RulesetOffer;
 import de.zettsystems.starfare.game.ui.CreateGameWizardDialog;
 import de.zettsystems.starfare.game.ui.GameTemplateDialog;
 import de.zettsystems.starfare.game.ui.JoinGameDialog;
@@ -455,7 +456,7 @@ public class StandaloneLobby extends VerticalLayout {
 
     private void openCreateGameWizard() {
         CreateGameWizardDialog.open(game, players, this::refresh,
-                rulesetAccess.usableBy(UserContext.currentPlayerId().orElse(null)));
+                RulesetOffer.of(rulesetAccess, UserContext.currentPlayerId().orElse(null)));
     }
 
     private void openManageDialog(LobbyGameRow row) {
