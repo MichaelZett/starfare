@@ -46,9 +46,6 @@ starfare:
     postal-address: ${STARFARE_LEGAL_POSTAL_ADDRESS:}
     contact-email: ${STARFARE_LEGAL_CONTACT_EMAIL:}
   game:
-    archive-cleanup:
-      enabled: false
-      retention: P90D
     single-player-unload-after: 30m
     round-check-interval: 5s
 

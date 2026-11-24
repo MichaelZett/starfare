@@ -15,12 +15,12 @@ class GamePropertiesConfigurationTest {
     @Test
     void bindsTheGameSettingsWithoutAPropertyScan() {
         host.withPropertyValues("starfare.game.single-player-unload-after=45m",
-                        "starfare.game.archive-cleanup.enabled=true", "starfare.game.archive-cleanup.retention=10d")
+                        "starfare.game.archive-cleanup.enabled=false", "starfare.game.archive-cleanup.retention=10d")
                 .run(context -> {
                     assertThat(context.getBean(GameTimingProperties.class).singlePlayerUnloadAfter())
                             .isEqualTo(Duration.ofMinutes(45));
                     GameArchiveCleanupProperties cleanup = context.getBean(GameArchiveCleanupProperties.class);
-                    assertThat(cleanup.enabled()).isTrue();
+                    assertThat(cleanup.enabled()).isFalse();
                     assertThat(cleanup.retention()).isEqualTo(Duration.ofDays(10));
                 });
     }
@@ -29,7 +29,9 @@ class GamePropertiesConfigurationTest {
     void fallsBackToDefaultsWithoutStarfareLinesInTheHostConfiguration() {
         host.run(context -> {
             assertThat(context.getBean(GameTimingProperties.class).singlePlayerUnloadAfter()).isEqualTo(Duration.ofMinutes(30));
-            assertThat(context.getBean(GameArchiveCleanupProperties.class).retention()).isEqualTo(Duration.ofDays(90));
+            GameArchiveCleanupProperties cleanup = context.getBean(GameArchiveCleanupProperties.class);
+            assertThat(cleanup.enabled()).as("finished games are deleted after their retention in the host").isTrue();
+            assertThat(cleanup.retention()).isEqualTo(Duration.ofDays(90));
         });
     }
 }

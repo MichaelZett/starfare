@@ -6,6 +6,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -76,7 +78,17 @@ public class GameSession {
                 Map.copyOf(state.seatByUser()), Map.copyOf(state.invitedSeats()),
                 state.visibility(), state.outcome(), state.ruleset(), state.victoryRules(),
                 Set.copyOf(state.submittedThisTurn()), state.turnStartedAt(), state.closedSeats(), state.roundDeadline(),
-                state.roundRules().tempo(), state.tutorial());
+                state.roundRules().tempo(), state.tutorial(), pendingAnswers(state));
+    }
+
+    /** The treaty proposals each seat still has to vote on. */
+    private static Map<Integer, List<Integer>> pendingAnswers(GameState state) {
+        Map<Integer, List<Integer>> answers = new HashMap<>();
+        for (var proposal : state.diplomacy().proposals()) {
+            proposal.voters().stream().filter(voter -> !proposal.approvals().contains(voter))
+                    .forEach(voter -> answers.computeIfAbsent(voter, _ -> new ArrayList<>()).add(proposal.id()));
+        }
+        return answers;
     }
 
     public <T> T readState(Function<GameState, T> fn) {

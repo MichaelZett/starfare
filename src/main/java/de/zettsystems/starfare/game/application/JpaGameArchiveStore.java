@@ -46,7 +46,8 @@ class JpaGameArchiveStore implements GameArchiveStore {
     }
     @Override public Optional<GameArchiveStore.ArchivedGame> load(GameId id) { return repository.findById(id.value()).flatMap(this::read); }
     @Override public List<GameArchiveStore.ArchivedGame> all() { return repository.findAll().stream().map(this::read).flatMap(Optional::stream).toList(); }
-    @Override public List<GameArchiveStore.ArchivedGame> finishedBefore(Instant cutoff) { return repository.findAllByFinishedAtBeforeOrderByFinishedAtAsc(cutoff).stream().map(this::read).flatMap(Optional::stream).toList(); }
+    @Override public List<GameId> idsFinishedBefore(Instant cutoff) { return repository.findIdsFinishedBefore(cutoff).stream().map(GameId::of).toList(); }
+    @Override public void delete(GameId id) { repository.deleteById(id.value()); }
     private Optional<GameArchiveStore.ArchivedGame> read(GameArchiveEntity entity) {
         try {
             GameStateSnapshot snapshot = objectMapper.readValue(entity.getStateJson(), GameStateSnapshot.class);

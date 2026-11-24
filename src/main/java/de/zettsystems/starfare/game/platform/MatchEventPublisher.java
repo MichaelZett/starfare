@@ -28,10 +28,11 @@ import java.util.Optional;
  * A regular end is announced by the game end recorder, once, when it records the end.
  *
  * <p>For the platform's notices: {@link MatchStarted} at the start, {@link TurnMissed} for each missed
- * round deadline, and {@link DecisionsOpened} with the open turns that have a deadline, when a round
- * opens and again after a submission or a lost seat, because the deadline may then move earlier; the
- * platform keeps one notice per decision, so publishing a decision again only plans its reminder anew.
- * Turns without a deadline (fewer than two people playing) open no notice.
+ * round deadline, and {@link DecisionsOpened} with the open turns and answers to treaty proposals that
+ * have a deadline, when a round opens, when a treaty proposal opens or settles, and again after a
+ * submission or a lost seat, because the deadline may then move earlier; the platform keeps one notice
+ * per decision, so publishing a decision again only plans its reminder anew. Decisions without a
+ * deadline (fewer than two people playing) open no notice.
  */
 @Component
 class MatchEventPublisher implements InitializingBean {
@@ -66,7 +67,8 @@ class MatchEventPublisher implements InitializingBean {
                 matchStarted(started.gameId());
                 decisionsOpened(started.gameId());
             }
-            case GameEvent.PlayerSubmitted _, GameEvent.SeatAbandoned _ -> {
+            // A treaty proposal opens or settles answers.
+            case GameEvent.PlayerSubmitted _, GameEvent.SeatAbandoned _, GameEvent.DiplomacyChanged _ -> {
                 changed(event.gameId());
                 decisionsOpened(event.gameId());
             }
@@ -76,7 +78,7 @@ class MatchEventPublisher implements InitializingBean {
             case GameEvent.GameCreated _, GameEvent.PlayerJoined _, GameEvent.GameContinued _,
                  GameEvent.VisibilityChanged _, GameEvent.InvitationChanged _ -> changed(event.gameId());
             default -> {
-                // Chat, diplomacy, production, observers, host and round rules are not part of a match summary.
+                // Chat, production, observers, host and round rules are not part of a match summary.
             }
         }
     }

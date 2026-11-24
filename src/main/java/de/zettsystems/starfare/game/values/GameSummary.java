@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Immutable lobby-level view of one game: lifecycle flags plus who sits where. Seats are
@@ -16,6 +17,8 @@ import java.util.Set;
  * {@code roundDeadline} is when the current round ends at the latest, {@code null} without a deadline
  * (fewer than two people playing, not started or over); {@code tempo} is the tempo chosen at creation,
  * {@code null} for a game without one; {@code tutorial} whether it was created as a tutorial.
+ * {@code pendingAnswers} lists per seat the treaty proposals (by id, ascending) that still wait for that
+ * seat's vote; empty without diplomacy.
  */
 public record GameSummary(
         GameId gameId,
@@ -39,10 +42,43 @@ public record GameSummary(
         Set<Integer> closedSeats,
         java.time.@Nullable Instant roundDeadline,
         @Nullable GameTempo tempo,
-        boolean tutorial) {
+        boolean tutorial,
+        Map<Integer, List<Integer>> pendingAnswers) {
     public GameSummary {
         submittedSeats = Set.copyOf(submittedSeats);
         closedSeats = Set.copyOf(closedSeats);
+        pendingAnswers = pendingAnswers.entrySet().stream().filter(entry -> !entry.getValue().isEmpty())
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey,
+                        entry -> entry.getValue().stream().sorted().toList()));
+    }
+
+    /** A summary without open treaty proposals. */
+    public GameSummary(
+        GameId gameId,
+        String name,
+        @Nullable String hostPlayerId,
+        int turn,
+        boolean started,
+        boolean gameOver,
+        boolean observersAllowed,
+        boolean reentryAllowed,
+        List<Player> players,
+        Set<Integer> joinedHumanSeats,
+        Map<String, Integer> seatByPlayer,
+        Map<String, Integer> invitedSeats,
+        GameVisibility visibility,
+        GameOutcome outcome,
+        RulesetRef ruleset,
+        @Nullable VictoryRules victoryRules,
+        Set<Integer> submittedSeats,
+        java.time.Instant roundStartedAt,
+        Set<Integer> closedSeats,
+        java.time.@Nullable Instant roundDeadline,
+        @Nullable GameTempo tempo,
+        boolean tutorial) {
+        this(gameId, name, hostPlayerId, turn, started, gameOver, observersAllowed, reentryAllowed, players,
+                joinedHumanSeats, seatByPlayer, invitedSeats, visibility, outcome, ruleset, victoryRules, submittedSeats,
+                roundStartedAt, closedSeats, roundDeadline, tempo, tutorial, Map.of());
     }
 
     /** A summary without a round deadline and tempo. */

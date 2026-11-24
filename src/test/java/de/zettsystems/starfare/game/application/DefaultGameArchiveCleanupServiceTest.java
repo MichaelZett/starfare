@@ -22,47 +22,59 @@ class DefaultGameArchiveCleanupServiceTest {
 
     private static final Instant FINISHED_AT = Instant.parse("2026-01-01T00:00:00Z");
 
+    private final GameArchiveStore archives = mock(GameArchiveStore.class);
+    private final GameSessionStore sessions = mock(GameSessionStore.class);
+    private final BattleAcknowledgementService acknowledgements = mock(BattleAcknowledgementService.class);
+
     @Test
-    void previewReturnsOnlyArchivedGamesWithAnOperativeSession() {
-        GameArchiveStore archives = mock(GameArchiveStore.class);
-        GameSessionStore sessions = mock(GameSessionStore.class);
-        GameId present = new GameId("present");
-        GameId alreadyRemoved = new GameId("removed");
-        when(archives.finishedBefore(any())).thenReturn(List.of(archived(present), archived(alreadyRemoved)));
-        when(sessions.load(present)).thenReturn(Optional.of(session(present, true)));
-        when(sessions.load(alreadyRemoved)).thenReturn(Optional.empty());
+    void previewsFinishedGamesAndArchiveEntriesWithoutAStoredGame() {
+        GameId finished = new GameId("finished");
+        GameId archiveOnly = new GameId("archive-only");
+        GameId continued = new GameId("continued");
+        when(archives.idsFinishedBefore(any())).thenReturn(List.of(finished, archiveOnly, continued));
+        when(sessions.load(finished)).thenReturn(Optional.of(session(finished, true)));
+        when(sessions.load(archiveOnly)).thenReturn(Optional.empty());
+        when(sessions.load(continued)).thenReturn(Optional.of(session(continued, false)));
 
-        var service = service(archives, sessions);
-
-        assertThat(service.preview()).containsExactly(present);
+        assertThat(service().preview()).containsExactly(finished, archiveOnly);
     }
 
     @Test
-    void removesOnlySessionsThatAreStillCompleted() {
-        GameArchiveStore archives = mock(GameArchiveStore.class);
-        GameSessionStore sessions = mock(GameSessionStore.class);
-        GameId completed = new GameId("completed");
-        GameId noLongerCompleted = new GameId("active");
-        when(archives.finishedBefore(any())).thenReturn(List.of(archived(completed), archived(noLongerCompleted)));
-        when(sessions.load(completed)).thenReturn(Optional.of(session(completed, true)));
-        when(sessions.load(noLongerCompleted)).thenReturn(Optional.of(session(noLongerCompleted, false)));
+    void removesTheStoredGameItsArchiveEntryAndItsAcknowledgementsTogether() {
+        GameId finished = new GameId("finished");
+        GameId archiveOnly = new GameId("archive-only");
+        GameId continued = new GameId("continued");
+        when(archives.idsFinishedBefore(any())).thenReturn(List.of(finished, archiveOnly, continued));
+        when(sessions.load(finished)).thenReturn(Optional.of(session(finished, true)));
+        when(sessions.load(archiveOnly)).thenReturn(Optional.empty());
+        when(sessions.load(continued)).thenReturn(Optional.of(session(continued, false)));
 
-        int removed = service(archives, sessions).removeExpired();
+        int removed = service().removeExpired();
 
-        assertThat(removed).isOne();
-        verify(sessions).delete(completed);
-        verify(sessions, never()).delete(noLongerCompleted);
+        assertThat(removed).isEqualTo(2);
+        for (GameId id : List.of(finished, archiveOnly)) {
+            verify(sessions).delete(id);
+            verify(archives).delete(id);
+            verify(acknowledgements).forgetGame(id);
+        }
+        verify(sessions, never()).delete(continued);
+        verify(archives, never()).delete(continued);
     }
 
-    private static DefaultGameArchiveCleanupService service(GameArchiveStore archives, GameSessionStore sessions) {
-        return new DefaultGameArchiveCleanupService(archives, sessions,
+    @Test
+    void looksBackByTheRetention() {
+        when(archives.idsFinishedBefore(any())).thenReturn(List.of());
+        Instant before = Instant.now().minus(Duration.ofDays(90));
+
+        service().preview();
+
+        verify(archives).idsFinishedBefore(org.mockito.ArgumentMatchers.argThat(cutoff ->
+                !cutoff.isBefore(before) && !cutoff.isAfter(Instant.now().minus(Duration.ofDays(90)))));
+    }
+
+    private DefaultGameArchiveCleanupService service() {
+        return new DefaultGameArchiveCleanupService(archives, sessions, acknowledgements,
                 new GameArchiveCleanupProperties(true, Duration.ofDays(90)));
-    }
-
-    private static GameArchiveStore.ArchivedGame archived(GameId id) {
-        GameState state = new GameState();
-        state.endGame(null, FINISHED_AT);
-        return new GameArchiveStore.ArchivedGame(id, id.value(), "host", FINISHED_AT, state);
     }
 
     private static GameSession session(GameId id, boolean completed) {

@@ -24,6 +24,7 @@ import org.jspecify.annotations.Nullable;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -78,6 +79,13 @@ public final class StarfareMatches {
      * <p>A running game waits for one decision per account still to submit: its turn in the current
      * round ({@link #decisionId(int)}), due by the round deadline, which moves earlier when only one
      * person is missing; without a deadline (fewer than two people playing) the turn has no time limit.
+     *
+     * <p>Besides, it waits for an answer to every treaty proposal that still lacks the account's vote
+     * ({@link #answerId(int, int)}). Starfare's proposals do not lapse: they stay open until every
+     * voter agreed, one rejected or the alliances they concern changed. A vote is part of planning
+     * the round, though, so the answer is due by the same round deadline and only while the account
+     * has not submitted; a proposal still open in the next round is a new decision there. A missed
+     * answer never counts as a missed turn.
      */
     public static Optional<MatchSummary> summary(GameSummary game) {
         long humanSeats = game.players().stream().filter(player -> humanSeat(game, player)).count();
@@ -92,13 +100,26 @@ public final class StarfareMatches {
                         && !game.submittedSeats().contains(entry.getKey()))
                 .map(Map.Entry::getValue).toList() : List.of();
         String title = game.name().isBlank() ? game.gameId().value() : game.name();
-        List<PendingDecision> decisions = toMove.stream()
-                .map(account -> new PendingDecision(account, decisionId(game.turn()), DecisionKind.TURN, game.roundDeadline()))
-                .toList();
+        List<PendingDecision> decisions = status == MatchStatus.RUNNING ? decisions(game, accounts) : List.of();
         return Optional.of(new MatchSummary(GAME_KEY, game.gameId().value(), title, status,
                 List.copyOf(accounts.values()), seats, seats - (int) humanSeats, toMove, game.roundStartedAt(),
                 status == MatchStatus.OPEN ? waitingRoomPath(game.gameId()) : viewPath(game.gameId()),
                 game.tutorial(), tempo(game), decisions));
+    }
+
+    private static List<PendingDecision> decisions(GameSummary game, Map<Integer, AccountId> accounts) {
+        List<PendingDecision> turns = new ArrayList<>();
+        List<PendingDecision> answers = new ArrayList<>();
+        accounts.forEach((seat, account) -> {
+            if (!game.joinedHumanSeats().contains(seat) || game.submittedSeats().contains(seat)) {
+                return;
+            }
+            turns.add(new PendingDecision(account, decisionId(game.turn()), DecisionKind.TURN, game.roundDeadline()));
+            game.pendingAnswers().getOrDefault(seat, List.of()).forEach(proposal -> answers.add(
+                    new PendingDecision(account, answerId(game.turn(), proposal), DecisionKind.ANSWER, game.roundDeadline())));
+        });
+        turns.addAll(answers);
+        return List.copyOf(turns);
     }
 
     /** The platform's tempo of the game; Starfare's tempos carry the platform's names. */
@@ -110,6 +131,14 @@ public final class StarfareMatches {
     /** The id of the decision for a round: stable while the round is open, unique within the game. */
     public static String decisionId(int round) {
         return "round-" + round;
+    }
+
+    /**
+     * The id of the answer to a treaty proposal in a round: stable while the round is open, unique within
+     * the game, and new in every round the proposal stays open.
+     */
+    public static String answerId(int round, int proposal) {
+        return decisionId(round) + "-answer-" + proposal;
     }
 
     /**

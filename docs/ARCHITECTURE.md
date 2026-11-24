@@ -467,9 +467,14 @@ click that arrives after the deadline ended that round is refused instead of
 submitting the next one.
 For the platform each person still to submit has an open decision `round-<n>`
 due by that deadline (`MatchSummary.pendingDecisions`, games-platform-api 0.4.0).
-`MatchEventPublisher` announces the start (`MatchStarted`), the open turns with a
-deadline (`DecisionsOpened`, again after each submission or lost seat, since the
-deadline may move earlier) and each missed deadline (`TurnMissed`, from
+Each treaty proposal that still lacks a person's vote adds an `ANSWER`
+`round-<n>-answer-<proposal>` with the same deadline (`GameSummary.pendingAnswers`).
+Proposals do not lapse in Starfare, but a vote is part of planning the round: the
+answer disappears with the submission and comes back as a new decision in the next
+round while the proposal stays open; a missed answer never counts as a missed turn.
+`MatchEventPublisher` announces the start (`MatchStarted`), the open turns and
+answers with a deadline (`DecisionsOpened`, again after each submission, lost seat
+or treaty change, since the deadline may move earlier) and each missed deadline (`TurnMissed`, from
 `GameEvent.RoundMissed`); `DefaultInvitationService` announces invitations
 (`InvitationSent`). The platform turns them into notices and reminder mails.
 The header uses **Submit turn** for human players and disables the action after
@@ -533,10 +538,12 @@ waits for its own pending battles before opening the result or review again.
 The first end remains the reported one when play continues.
 
 `JpaGameSessionStore` also writes a complete idempotent copy to `game_archives`.
-The optional `GameArchiveCleanupRunner` removes only operative `game_sessions`
-older than `starfare.game.archive-cleanup.retention` (90 days by default), and
-only when cleanup is enabled. It rechecks that the session is completed before
-deleting it; archive review and replay then read from their durable store.
+`GameArchiveCleanupRunner` (daily, `starfare.game.archive-cleanup.enabled`, on by
+default) deletes a game `starfare.game.archive-cleanup.retention` (90 days) after
+its end: `game_sessions`, `game_archives` and the battle acknowledgements go together,
+so the archive lists only what can still be reviewed. A game continued after its
+victory runs again and stays. The deletion publishes no platform event; who played
+whom and the result stay in the platform's statistics.
 The platform lists an account's finished games from the same store
 (`MatchDirectory.finishedMatchesOf`, games-platform-api 0.4.0): only games the
 account held a seat in, latest end first (the `finished_at` of the first

@@ -10,6 +10,8 @@ import de.zettsystems.gamesplatformapi.MatchResult;
 import de.zettsystems.gamesplatformapi.MatchStatus;
 import de.zettsystems.gamesplatformapi.MatchSummary;
 import de.zettsystems.gamesplatformapi.Placement;
+import de.zettsystems.starfare.diplomacy.application.DefaultDiplomacyService;
+import de.zettsystems.starfare.diplomacy.values.DiplomacyOrder;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.RoundRules;
@@ -19,6 +21,7 @@ import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
+import de.zettsystems.starfare.testsupport.NavigationStates;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -94,6 +97,72 @@ class StarfareMatchesTest {
             assertThat(summary.pendingDecisions().getFirst().deadline()).isNotNull();
             assertThat(summary.tutorial()).isFalse();
             assertThat(summary.tempo()).isNull();
+        }
+
+        @Test
+        void waitsForAnAnswerToATreatyProposalUntilTheRoundDeadline() {
+            GameState state = treatyGame();
+            int proposal = propose(state);
+
+            MatchSummary summary = summaryOf(state);
+
+            assertThat(summary.pendingDecisions()).as("the proposer has voted, the partner still has to answer")
+                    .containsExactly(new PendingDecision(SEVENTEEN, "round-1", DecisionKind.TURN, state.roundDeadline()),
+                            new PendingDecision(TWENTY_THREE, "round-1", DecisionKind.TURN, state.roundDeadline()),
+                            new PendingDecision(TWENTY_THREE, "round-1-answer-" + proposal, DecisionKind.ANSWER,
+                                    state.roundDeadline()));
+            assertThat(state.roundDeadline()).isNotNull();
+            assertThat(summary.toMove()).as("an answer is no turn").containsExactly(SEVENTEEN, TWENTY_THREE);
+        }
+
+        @Test
+        void dropsTheAnswerOnceGiven() {
+            GameState state = treatyGame();
+            int proposal = propose(state);
+
+            assertThat(DIPLOMACY.act(state, 2, new DiplomacyOrder(DiplomacyOrder.Action.APPROVE, proposal, 0))).isTrue();
+
+            assertThat(summaryOf(state).pendingDecisions()).extracting(PendingDecision::kind)
+                    .containsOnly(DecisionKind.TURN);
+        }
+
+        @Test
+        void dropsTheAnswerWhenTheProposerWithdraws() {
+            GameState state = treatyGame();
+            int proposal = propose(state);
+
+            assertThat(DIPLOMACY.act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.REJECT, proposal, 0))).isTrue();
+
+            assertThat(summaryOf(state).pendingDecisions()).extracting(PendingDecision::kind)
+                    .containsOnly(DecisionKind.TURN);
+        }
+
+        @Test
+        void asksForTheAnswerOnlyWhileTheRoundIsStillOpenForTheAccount() {
+            GameState state = treatyGame();
+            int proposal = propose(state);
+            state.submittedThisTurn().add(2);
+
+            assertThat(summaryOf(state).pendingDecisions()).as("after submitting, the vote waits for the next round")
+                    .extracting(PendingDecision::account).containsExactly(SEVENTEEN);
+
+            state.submittedThisTurn().clear();
+            state.nextTurn();
+
+            assertThat(summaryOf(state).pendingDecisions()).as("a proposal still open is a new answer in the next round")
+                    .contains(new PendingDecision(TWENTY_THREE, "round-2-answer-" + proposal, DecisionKind.ANSWER,
+                            state.roundDeadline()));
+        }
+
+        @Test
+        void asksNoComputerOpponentForAnAnswer() {
+            GameState state = treatyGame();
+            propose(state);
+            state.updatePlayer(2, Player::asAi);
+            state.joinedHumanPlayerIds().remove(2);
+
+            assertThat(summaryOf(state).pendingDecisions()).extracting(PendingDecision::kind)
+                    .containsOnly(DecisionKind.TURN);
         }
 
         @Test
@@ -346,6 +415,22 @@ class StarfareMatchesTest {
 
     private static GameState runningGame() {
         return runningGame(false);
+    }
+
+    private static final DefaultDiplomacyService DIPLOMACY = new DefaultDiplomacyService();
+
+    /** A running Spaceward game of the accounts 17 (seat 1) and 23 (seat 2), where alliances are allowed. */
+    private static GameState treatyGame() {
+        GameState state = NavigationStates.running();
+        state.seatByUser().put("17", 1);
+        state.seatByUser().put("23", 2);
+        return state;
+    }
+
+    /** Seat 1 proposes an alliance to seat 2; returns the proposal's id. */
+    private static int propose(GameState state) {
+        assertThat(DIPLOMACY.act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 2))).isTrue();
+        return state.diplomacy().proposals().getFirst().id();
     }
 
     private static GameState runningGame(boolean tutorial) {

@@ -6,6 +6,15 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- **Bündnisanfragen auf der Plattform:** Wartet ein Bündnisvorschlag auf die eigene Stimme, zeigt die
+  Plattform das als offene Antwort mit der Rundenfrist, samt Hinweis und Erinnerung. Eine verpasste
+  Antwort zählt nicht als verpasster Zug; der Vorschlag bleibt in der nächsten Runde offen.
+- **Beendete Partien 90 Tage:** Eine beendete Partie bleibt 90 Tage nach ihrem Ende zur Nachbetrachtung,
+  dann löscht Starfare Spielstand und Archiveintrag zusammen. Wer gegen wen gespielt hat und wie es
+  ausging, behält die Statistik der Plattform. Abgesagte Warteräume verschwinden wie bisher sofort.
+
 ## 0.2.16 - 2026-11-23
 
 - **Tutorialmodus:** Beim Anlegen einer Partie lässt sie sich als Tutorial kennzeichnen. Zusammenfassung,

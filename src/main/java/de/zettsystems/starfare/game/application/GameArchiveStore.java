@@ -25,5 +25,7 @@ interface GameArchiveStore {
     void save(GameSession session, GameStateSnapshot snapshot);
     Optional<ArchivedGame> load(GameId id);
     List<ArchivedGame> all();
-    List<ArchivedGame> finishedBefore(Instant cutoff);
+    /** The games that ended before the cutoff, oldest first; reads no snapshot. */
+    List<GameId> idsFinishedBefore(Instant cutoff);
+    void delete(GameId id);
 }

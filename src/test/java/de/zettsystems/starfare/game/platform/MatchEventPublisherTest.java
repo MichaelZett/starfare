@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.game.platform;
 
 import de.zettsystems.gamesplatformapi.AccountId;
+import de.zettsystems.gamesplatformapi.DecisionKind;
 import de.zettsystems.gamesplatformapi.DecisionsOpened;
 import de.zettsystems.gamesplatformapi.MatchStarted;
 import de.zettsystems.gamesplatformapi.PendingDecision;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +56,7 @@ class MatchEventPublisherTest {
         List<GameEvent> events = List.of(new GameEvent.GameCreated(ID), new GameEvent.PlayerJoined(ID, 1),
                 new GameEvent.PlayerSubmitted(ID, 1), new GameEvent.SeatAbandoned(ID, 2), new GameEvent.GameStarted(ID),
                 new GameEvent.GameContinued(ID), new GameEvent.VisibilityChanged(ID),
-                new GameEvent.InvitationChanged(ID));
+                new GameEvent.InvitationChanged(ID), new GameEvent.DiplomacyChanged(ID));
 
         when(session.summary()).thenReturn(game(0, false));
         events.forEach(broadcaster::publish);
@@ -68,7 +70,6 @@ class MatchEventPublisherTest {
 
     @Test
     void ignoresWhatTheLobbyDoesNotShow() {
-        broadcaster.publish(new GameEvent.DiplomacyChanged(ID));
         broadcaster.publish(new GameEvent.ObserverJoined(ID, "23"));
         broadcaster.publish(new GameEvent.GameFinished(ID, 1));
 
@@ -115,6 +116,23 @@ class MatchEventPublisherTest {
     }
 
     @Test
+    void announcesTheAnswersToATreatyProposalWhenItOpens() {
+        GameSummary running = game(2, true);
+        when(session.summary()).thenReturn(withAnswers(running, Map.of(2, List.of(5))));
+
+        broadcaster.publish(new GameEvent.DiplomacyChanged(ID));
+
+        assertThat(published).hasSize(2);
+        assertThat(published.getFirst()).isInstanceOf(MatchChanged.class);
+        assertThat(published.get(1)).isInstanceOfSatisfying(DecisionsOpened.class, opened ->
+                assertThat(opened.decisions()).extracting(PendingDecision::account, PendingDecision::decisionId,
+                                PendingDecision::kind, PendingDecision::deadline)
+                        .containsExactly(tuple(SEVENTEEN, "round-1", DecisionKind.TURN, running.roundDeadline()),
+                                tuple(TWENTY_THREE, "round-1", DecisionKind.TURN, running.roundDeadline()),
+                                tuple(TWENTY_THREE, "round-1-answer-5", DecisionKind.ANSWER, running.roundDeadline())));
+    }
+
+    @Test
     void opensNoNoticeForTurnsWithoutDeadline() {
         when(session.summary()).thenReturn(game(1, true));
         when(session.readState(any())).thenReturn(false);
@@ -154,6 +172,14 @@ class MatchEventPublisherTest {
             state.start();
         }
         return GameSession.summaryOf(ID, "Andromeda", "17", state);
+    }
+
+    private static GameSummary withAnswers(GameSummary game, Map<Integer, List<Integer>> answers) {
+        return new GameSummary(game.gameId(), game.name(), game.hostPlayerId(), game.turn(), game.started(),
+                game.gameOver(), game.observersAllowed(), game.reentryAllowed(), game.players(), game.joinedHumanSeats(),
+                game.seatByPlayer(), game.invitedSeats(), game.visibility(), game.outcome(), game.ruleset(),
+                game.victoryRules(), game.submittedSeats(), game.roundStartedAt(), game.closedSeats(),
+                game.roundDeadline(), game.tempo(), game.tutorial(), answers);
     }
 
     @Test
