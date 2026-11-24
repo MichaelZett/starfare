@@ -77,6 +77,16 @@ class NavigationIntegrationTest extends AbstractIntegrationTest {
         assertThat(view.systems().get(1).industry()).isNull(); assertThat(ArrivalPreview.from(view)).isEmpty();
         assertThat(registry.readState(id, GameState::toSnapshot)).isEqualTo(before);
     }
+    @Test void arrivalRoundsAtATargetFollowTheRoutesOfTheOwnSystems() {
+        GameState state = NavigationStates.running(); GameId id = save(state);
+        int turn = registry.readState(id, GameState::turn);
+        var arrivals = games.arrivalTurnsTo(id, 1, 4);
+        assertThat(arrivals).containsEntry(1, turn + 8).doesNotContainKey(4);
+        arrivals.forEach((source, arrival) ->
+                assertThat(arrival).isEqualTo(turn + games.routeFor(id, 1, source, 4).orElseThrow().rounds()));
+        registry.writeState(id, current -> { current.updateSystem(2, system -> system.captureBy(2, 1)); return null; });
+        assertThat(games.arrivalTurnsTo(id, 1, 4)).as("no route across a lost station").doesNotContainKey(1);
+    }
     @Test void aiCanUseOwnedStopsButCannotFlyAcrossALostStation() {
         GameState state = NavigationStates.running(); state.updatePlayer(1, Player::asAi);
         ai.plan(state, fleets);

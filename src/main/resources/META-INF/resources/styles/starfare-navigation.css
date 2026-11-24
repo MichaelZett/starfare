@@ -95,3 +95,47 @@
     border: 1px dashed var(--sf-accent-2);
     background: rgba(13, 17, 23, .88);
 }
+
+/* Joint arrival: the round in which ships sent now from an own system would reach the chosen target. Left of
+   the dot, clear of the free-ships diamond and the fleet badges. The text carries the meaning, colour repeats it. */
+#map .sys-arrival {
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    z-index: 3;
+    transform: translate(-4px, -50%) scale(var(--map-inverse-zoom, 1));
+    transform-origin: right center;
+    padding: 1px 7px;
+    border: 1px solid #7c86a6;
+    border-radius: 999px;
+    background: rgba(13, 17, 23, .9);
+    color: #c3cae0;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+#map .sys-arrival-match { border-color: #5be38a; background: rgba(18, 58, 36, .94); color: #c9ffd9; }
+#map .sys-arrival-early { border-color: #ffc857; background: rgba(58, 48, 16, .94); color: #ffe7a8; }
+#map .sys-arrival-open { border-color: #4aa3ff; color: #dfe6f7; }
+#map .sys-joint-target { outline: 2px dashed #ff6b5e; outline-offset: 6px; }
+
+#map vaadin-button.sys-joint-send {
+    position: absolute;
+    z-index: 6;
+    transform: translate(-50%, -100%) scale(var(--map-inverse-zoom, 1));
+    transform-origin: center bottom;
+    height: 28px;
+    margin: 0;
+    padding: 0 10px;
+    border: 1px solid #5be38a;
+    border-radius: 6px;
+    background: #1d6b3c;
+    color: #eafff1;
+    font-size: 12px;
+    font-weight: 650;
+    white-space: nowrap;
+    --vaadin-button-background: #1d6b3c;
+    --vaadin-button-text-color: #eafff1;
+}

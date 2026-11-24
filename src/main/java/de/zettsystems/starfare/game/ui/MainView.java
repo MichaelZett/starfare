@@ -82,6 +82,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private @Nullable VisibleSystem selectedFrom;
     private TargetSelection targetSelection = TargetSelection.NONE;
     private @Nullable Integer highlightedFleetId;
+    /** Arrival rounds at the last badge target, asked again only for a new target or round. */
+    private String arrivalKey = "";
+    private java.util.Map<Integer, Integer> arrivalTurns = java.util.Map.of();
     private @Nullable Integer highlightedStandingOrderId;
     private @Nullable Integer highlightedReportSystemId;
     private @Nullable ReplayEventMarker pendingReplayEvent;
@@ -153,8 +156,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
             }
             refresh();
-        }), iconAction(VaadinIcon.PAPERPLANE, UiTexts.PLAN_DISPATCH, () -> planningDialogs().dispatch()),
-                iconAction(VaadinIcon.LOCK, UiTexts.PLAN_RESERVES, () -> planningDialogs().reserves()));
+        }), iconAction(VaadinIcon.LOCK, UiTexts.PLAN_RESERVES, () -> planningDialogs().reserves()));
         actionBar.addClassName("map-controls");
         actionBar.add(treatyActions, planningActions);
         fleetsPanel.setActions(actionBar);
@@ -828,12 +830,33 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 this::onFleetHighlight,
                 this::onReportMarkerSelected,
                 this::refresh,
-                rangeForSelection(playerId, observer)));
+                rangeForSelection(playerId, observer),
+                jointArrival(view, playerId, observer),
+                joint -> planningDialogs().dispatch(joint.targetId(), joint.matchingSources())));
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
         if (mobile != null) { mobile.targetSelection(targetSelection != TargetSelection.NONE); }
         economicView = view;
         updateEconomyNotices();
+    }
+
+    /**
+     * Arrival badges for the selected fleet's destination, or for a selected system that is not the player's own;
+     * the routes are asked once per target and round.
+     */
+    private @Nullable JointArrival jointArrival(PlayerViewState view, int playerId, boolean observer) {
+        if (observer || playerId < 0 || view.gameOver() || targetSelection != TargetSelection.NONE) { return null; }
+        Integer fleet = highlightedFleetId;
+        VisibleSystem system = selectedSystem;
+        JointArrival.Aim aim = fleet != null ? JointArrival.forFleet(view, fleet)
+                : system != null && !Objects.equals(system.ownerId(), playerId) ? JointArrival.forSystem(view, system.id()) : null;
+        if (aim == null) { return null; }
+        String key = aim.targetId() + "/" + view.turn() + "/" + playerId;
+        if (!key.equals(arrivalKey)) {
+            arrivalTurns = game.arrivalTurnsTo(gameId, playerId, aim.targetId());
+            arrivalKey = key;
+        }
+        return JointArrival.of(view, aim, arrivalTurns, !view.roundStatus().hasSubmitted(playerId));
     }
 
     private de.zettsystems.starfare.navigation.values.@Nullable RangeView rangeForSelection(int playerId, boolean observer) {

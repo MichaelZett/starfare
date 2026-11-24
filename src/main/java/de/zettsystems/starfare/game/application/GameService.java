@@ -152,6 +152,12 @@ public interface GameService {
     int travelTurns(GameId gameId, int fromId, int toId);
     java.util.Optional<RoutePreview> routeFor(GameId id, int player, int from, int to);
 
+    /**
+     * Round in which a fleet sent now from each own system would reach the target, along the same routes the
+     * game uses for orders; systems that cannot reach it are left out.
+     */
+    java.util.Map<Integer, Integer> arrivalTurnsTo(GameId id, int player, int target);
+
     /** Direct range and target reachability around a source during target selection; empty without range rules. */
     java.util.Optional<de.zettsystems.starfare.navigation.values.RangeView> rangeFor(GameId id, int player, int from);
 

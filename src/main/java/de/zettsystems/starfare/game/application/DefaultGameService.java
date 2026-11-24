@@ -767,6 +767,20 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
+    public Map<Integer, Integer> arrivalTurnsTo(GameId id, int player, int target) {
+        return registry.readState(id, state -> {
+            Map<Integer, Integer> arrivals = new java.util.HashMap<>();
+            for (StarSystem system : state.systems()) {
+                if (Objects.equals(system.ownerId(), player) && system.id() != target) {
+                    Routes.plan(state, player, system.id(), target)
+                            .ifPresent(route -> arrivals.put(system.id(), state.turn() + route.rounds()));
+                }
+            }
+            return Map.copyOf(arrivals);
+        });
+    }
+
+    @Override
     public java.util.Optional<de.zettsystems.starfare.navigation.values.RangeView> rangeFor(GameId id, int player, int from) {
         return registry.readState(id, state -> Routes.rangeFrom(state, player, from));
     }

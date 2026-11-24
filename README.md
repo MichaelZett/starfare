@@ -180,8 +180,14 @@ amount. **Undo last order change** reverses your most recent queue change in the
 same round, including after a reload or server restart. It cannot override a newer
 garrison reserve or undo a resolved turn.
 
-**Send fleets together** previews arrivals from multiple selected sources before
-queuing the batch. **Set reserves together** retains a fixed amount or one round
+Select a foreign system or one of your flying fleets on the map, and each of your
+systems with ships to spare shows the round a fleet sent from there now would arrive
+(along the same routes the game uses, so Spaceward range and stopovers count). Next
+to a fleet already on its way, or the earliest own arrival at the system, the badge
+marks arriving together (✓), too early by n rounds (`+n ⏸`) or later. **Send
+together** above the target opens the joint send with the target and the systems
+arriving together preselected; it previews arrivals per round before queuing the
+batch. **Set reserves together** retains a fixed amount or one round
 of production, capped at the current garrison. Both actions validate the entire
 selection and reject stale turns or unavailable ships without partial changes.
 
@@ -949,7 +955,8 @@ editors remain later work. Desktop and phone browser checks and the initial bala
 
 System inspectors show stable, fictional radii in kilometres for stars, planets
 and moons. These are explicitly labelled model values, not catalogue measurements.
-All planetary bodies share one compressed scale; stars use a separate scale.
+Planets share one compressed scale; stars use a separate scale. Major moons are
+drawn smaller on it, at most two fifths of their planet, close beside it.
 Asteroid belts have no single radius. Production, environment and visibility
 rules are unchanged; model sizes are shown only with the existing full visibility.
 See [System illustrations](docs/SYSTEM-ILLUSTRATIONS.md).

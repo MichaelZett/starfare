@@ -6,6 +6,19 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- **Gleichzeitig ankommen, direkt auf der Karte:** Wählst du ein fremdes System oder eine eigene fliegende
+  Flotte, zeigen deine Systeme mit freien Schiffen, in welcher Runde eine jetzt gesendete Flotte dort ankäme.
+  Grün heißt gleichzeitig mit der Flotte, die schon unterwegs ist, gelb zu früh (mit der Zahl der Runden zum
+  Warten), grau später. Gerechnet wird über die echten Routen, in Spaceward also mit Reichweite und
+  Zwischenhalten. **Gemeinsam senden** über dem Ziel öffnet das gemeinsame Senden mit Ziel und passenden
+  Systemen schon ausgewählt; der bisherige Knopf über den Reitern entfällt.
+- **Gemeinsames Senden rechnet Routen:** Die Vorschau der Ankunftsrunden folgt in Spaceward jetzt der Route
+  statt der Luftlinie, ebenso beim Bearbeiten eines Befehls.
+- **Monde im Systembild:** Hauptmonde sind kleiner als ihr Planet, schattiert und stehen dicht an ihm statt
+  als große weiße Scheiben daneben.
+
 ## 0.2.17 - 2026-11-24
 
 - **Bündnisanfragen erscheinen bei den offenen Entscheidungen:** Wartet ein Bündnisvorschlag auf deine

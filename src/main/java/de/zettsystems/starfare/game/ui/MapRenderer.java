@@ -52,7 +52,9 @@ final class MapRenderer {
                   IntConsumer onFleetHighlight,
                   IntConsumer onReportSystemSelected,
                   Runnable onRefresh,
-                  de.zettsystems.starfare.navigation.values.@Nullable RangeView range) {
+                  de.zettsystems.starfare.navigation.values.@Nullable RangeView range,
+                  @Nullable JointArrival joint,
+                  Consumer<JointArrival> onJointSend) {
     }
 
     static void render(Div map, Inputs in) {
@@ -64,6 +66,8 @@ final class MapRenderer {
         for (VisibleSystem sys : in.systems()) {
             map.add(buildSystemDot(sys, in));
         }
+        JointArrival joint = in.joint();
+        if (joint != null && joint.mayDispatch()) { addJointSend(map, joint, in); }
         for (PlannedOrder order : in.view().plannedOrders()) {
             renderPlannedOrder(map, order, in);
         }
@@ -197,6 +201,7 @@ final class MapRenderer {
         if (showsIdleShips(in)) {
             IdleShips.of(sys).ifPresent(ships -> dot.add(buildIdleShipsHint(ships)));
         }
+        markJointArrival(dot, sys, in);
 
         if (!pendingBattle) {
             attachSystemInteraction(dot, sys, in);
@@ -286,6 +291,61 @@ final class MapRenderer {
         hint.getElement().setAttribute("aria-hidden", "true");
         hint.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.MAP_IDLE_SHIPS_HINT, ships));
         return hint;
+    }
+
+    /**
+     * Arrival round at the chosen target if this system sent its ships now, against the round to meet there:
+     * a tick for together, the rounds to wait for too early, the plain round otherwise. The text carries the
+     * meaning, the colour only repeats it.
+     */
+    private static void markJointArrival(Div dot, VisibleSystem sys, Inputs in) {
+        JointArrival joint = in.joint();
+        if (joint == null) { return; }
+        if (sys.id() == joint.targetId()) { dot.addClassName("sys-joint-target"); return; }
+        Integer arrival = joint.arrivalFrom(sys.id());
+        if (arrival == null) { return; }
+        JointArrival.Fit fit = joint.fit(arrival);
+        int gap = joint.gap(arrival);
+        Div badge = new Div();
+        badge.addClassNames("sys-arrival", "sys-arrival-" + fit.name().toLowerCase(java.util.Locale.ROOT));
+        String round = I18n.t(UiTexts.MAP_ARRIVAL_ROUND, arrival);
+        badge.setText(switch (fit) {
+            case MATCH -> round + " ✓";
+            case EARLY -> round + " · +" + gap + " ⏸";
+            default -> round;
+        });
+        String target = in.systems().stream().filter(system -> system.id() == joint.targetId())
+                .map(VisibleSystem::name).findFirst().orElse("?");
+        badge.getElement().setProperty(HtmlAttributes.TITLE, switch (fit) {
+            case MATCH -> I18n.t(UiTexts.MAP_ARRIVAL_MATCH, target, arrival);
+            case EARLY -> I18n.t(UiTexts.MAP_ARRIVAL_EARLY, target, arrival, gap);
+            case LATE -> I18n.t(UiTexts.MAP_ARRIVAL_LATE, target, arrival, gap);
+            default -> I18n.t(UiTexts.MAP_ARRIVAL_OPEN, target, arrival);
+        });
+        badge.getElement().addEventListener("click", _ -> { }).addEventData("event.stopPropagation()");
+        dot.add(badge);
+    }
+
+    /** Above the target: opens the joint send with the systems that arrive together already chosen. */
+    private static void addJointSend(Div map, JointArrival joint, Inputs in) {
+        VisibleSystem target = in.systems().stream().filter(system -> system.id() == joint.targetId()).findFirst().orElse(null);
+        if (target == null) { return; }
+        List<String> together = joint.matchingSources().stream().map(id -> in.systems().stream()
+                .filter(system -> system.id() == id).map(VisibleSystem::name).findFirst().orElse("?")).toList();
+        String label = I18n.t(UiTexts.MAP_JOINT_SEND);
+        if (!together.isEmpty()) {
+            label += " (" + (together.size() <= 3 ? String.join(", ", together)
+                    : String.join(", ", together.subList(0, 2)) + " +" + (together.size() - 2)) + ")";
+        }
+        var send = new com.vaadin.flow.component.button.Button(label, _ -> in.onJointSend().accept(joint));
+        send.addClassName("sys-joint-send");
+        send.setAriaLabel(I18n.t(UiTexts.MAP_JOINT_SEND_TO, target.name())
+                + (together.isEmpty() ? "" : ": " + String.join(", ", together)));
+        double half = label.length() * 3.4 + 12;
+        double left = Math.clamp(target.x(), half, Math.max(half, GameConfig.MAX_X - half));
+        send.getStyle().set(CssProperties.LEFT, left + "px")
+                .set(CssProperties.TOP, (target.y() - SystemDisplaySize.pixelsFor(target) / 2.0 - 8) + "px");
+        map.add(send);
     }
 
     /** Only unseen battles earn a marker; seen ones stay in the report list for rewatching. */

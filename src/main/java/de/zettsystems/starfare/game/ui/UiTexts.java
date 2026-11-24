@@ -493,6 +493,13 @@ public final class UiTexts {
     public static final String MAP_HINT_DRAG_RELOCATION = "map.hint.dragRelocation";
     public static final String MAP_REPORT_MARKER_HINT = "map.reportMarker.hint";
     public static final String MAP_IDLE_SHIPS_HINT = "map.idleShips.hint";
+    public static final String MAP_ARRIVAL_ROUND = "map.arrival.round";
+    public static final String MAP_ARRIVAL_OPEN = "map.arrival.open";
+    public static final String MAP_ARRIVAL_MATCH = "map.arrival.match";
+    public static final String MAP_ARRIVAL_EARLY = "map.arrival.early";
+    public static final String MAP_ARRIVAL_LATE = "map.arrival.late";
+    public static final String MAP_JOINT_SEND = "map.jointSend";
+    public static final String MAP_JOINT_SEND_TO = "map.jointSend.to";
 
     // Map — fleet badge
     public static final String MAP_FLEET_BADGE_BASE = "map.fleetBadge.base";

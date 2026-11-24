@@ -199,12 +199,31 @@ erhalten, endet aber mit dem Rundenwechsel. Eine inzwischen erhöhte Reserve wir
 dabei weiterhin eingehalten. Reserveänderungen und Verlegungen selbst gehören
 nicht zu dieser Befehlsrücknahme.
 
-### Flotten gesammelt senden
+### Gleichzeitig ankommen und gemeinsam senden
 
-1. Öffne **Flotten gesammelt senden** und wähle mehrere eigene Systeme.
-2. Wähle ein gemeinsames Ziel, das keines der ausgewählten Ausgangssysteme ist.
-3. Nutze **Alle verfügbaren Schiffe** oder gib eine feste Menge **je System** an.
-4. Prüfe die Vorschau mit den Summen je Ankunftsrunde und bestätige den Versand.
+Klickst du auf der Karte ein fremdes System oder eine eigene fliegende Flotte an,
+zeigt jedes eigene System mit freien Schiffen links ein Abzeichen mit der Runde,
+in der eine jetzt gesendete Flotte dort ankäme (`R14`). Gerechnet wird über
+dieselben Routen wie beim Senden, in Spaceward also mit Reichweite und
+Zwischenhalten; Systeme ohne Weg dorthin bekommen kein Abzeichen.
+
+Gibt es schon eine Ankunft, nach der du dich richten kannst, vergleichen die
+Abzeichen damit: bei einer gewählten Flotte ihre Ankunft, bei einem gewählten
+System die früheste eigene Flotte oder vorgemerkte Sendung dorthin.
+
+- **Grün mit ✓:** kommt in derselben Runde an.
+- **Gelb mit `+1 ⏸`:** käme so viele Runden zu früh; eine Runde später senden
+  oder die Flotte unterwegs warten lassen.
+- **Grau:** käme später an.
+
+Über dem Ziel steht **Gemeinsam senden**, in Klammern die Systeme, die
+gleichzeitig ankommen. Der Knopf öffnet das gemeinsame Senden mit Ziel und
+diesen Systemen vorausgewählt:
+
+1. Passe die Auswahl der eigenen Systeme bei Bedarf an.
+2. Nutze **Alle verfügbaren Schiffe** oder gib eine feste Menge **je System** an.
+3. Prüfe die Vorschau mit den Summen je Ankunftsrunde und bestätige mit
+   **Flotten gesammelt senden**.
 
 Die Aktion wird als Ganzes geprüft. Ist eine Menge ungültig oder inzwischen die
 Runde gewechselt, wird keine Teilmenge der Befehle übernommen.
@@ -278,8 +297,10 @@ den Wiedereinstieg, kannst du später zurückkehren.
 Sterne, Planeten und Monde besitzen reproduzierbare **fiktive Modellradien**.
 Sie stehen in den Körperdetails mit der Einheit km und Herkunftshinweis; ein
 Asteroidengürtel hat keinen erfundenen Einzelradius. Derselbe Körper behält
-seinen Wert nach Neuladen und Neustart. Planeten und Monde verwenden überall
-dieselbe komprimierte Größenskala; Sterne eine eigene. Größen sind keine
+seinen Wert nach Neuladen und Neustart. Planeten verwenden überall dieselbe
+komprimierte Größenskala, Sterne eine eigene. Hauptmonde sind darauf verkleinert,
+höchstens zwei Fünftel ihres Planeten groß, und stehen dicht an ihm, damit sie als
+Begleiter zu lesen sind; ihr Modellradius steht weiter in den Körperdetails. Größen sind keine
 Messungen und ändern weder Produktion noch Umwelt oder Reichweite.
 
 ## Schlachten ansehen oder sofort auswerten

@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class BulkPlanningJourneyTest extends AbstractMapJourneyTest {
     @Test
-    void reservesBulkDispatchEditingAndUndoUseBothSelectedSystems() {
+    void reservesJointSendFromTheMapEditingAndUndoUseBothSelectedSystems() {
         createReviewGame();
         click("Reserven gesammelt setzen");
         selectSources();
@@ -23,9 +23,14 @@ class BulkPlanningJourneyTest extends AbstractMapJourneyTest {
         dialogClick("Speichern");
         assertThat(view().systems().stream().filter(s -> s.id() == 1 || s.id() == 2))
                 .allMatch(s -> Integer.valueOf(1).equals(s.garrisonReserve()));
-        click("Flotten gesammelt senden");
+        select("Gamma");
+        assertThat(find(com.vaadin.flow.component.html.Div.class).withClassName("sys-arrival").all())
+                .as("a badge with the arrival round at each own system with ships").hasSize(2);
+        click("Gemeinsam senden");
+        @SuppressWarnings("unchecked") // rationale: the planning target is a ComboBox<VisibleSystem>.
+        ComboBox<VisibleSystem> target = find(ComboBox.class, openedDialog()).single();
+        assertThat(target.getValue().name()).as("the target comes from the map").isEqualTo("Gamma");
         selectSources();
-        selectTarget("Gamma");
         dialogClick("Flotten gesammelt senden");
         assertTab("Befehle");
         assertThat(view().plannedOrders()).hasSize(2);

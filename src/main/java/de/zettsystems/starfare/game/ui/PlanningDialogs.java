@@ -13,8 +13,10 @@ import de.zettsystems.starfare.fleet.values.FleetDispatch;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Editors keep a turn token so a delayed confirmation cannot change the next turn. */
 final class PlanningDialogs {
@@ -42,8 +44,9 @@ final class PlanningDialogs {
         Runnable update = () -> {
             VisibleSystem destination = target.getValue();
             Integer source = order.fromSystemId();
-            preview.setText(destination == null || source == null ? "" : I18n.t(UiTexts.PLAN_ARRIVAL,
-                    destination.name(), view.turn() + games.travelTurns(id, source, destination.id()), amount.getValue()));
+            Integer arrival = destination == null || source == null ? null : arrivalTurn(source, destination.id());
+            preview.setText(destination == null || arrival == null ? "" : I18n.t(UiTexts.PLAN_ARRIVAL,
+                    destination.name(), arrival, amount.getValue()));
         };
         target.addValueChangeListener(_ -> update.run());
         amount.addValueChangeListener(_ -> update.run());
@@ -63,10 +66,14 @@ final class PlanningDialogs {
         footer(dialog, save);
     }
 
-    void dispatch() {
+    /** Joint send to one target, opened from the map with the systems that arrive together already chosen. */
+    void dispatch(int targetId, Collection<Integer> sourceIds) {
         Dialog dialog = dialog(UiTexts.PLAN_DISPATCH);
         MultiSelectComboBox<VisibleSystem> sources = sources();
         ComboBox<VisibleSystem> target = targets();
+        view.systems().stream().filter(system -> system.id() == targetId).findFirst().ifPresent(target::setValue);
+        sources.setValue(view.systems().stream().filter(system -> sourceIds.contains(system.id())
+                && Objects.equals(system.ownerId(), player)).toList());
         IntegerField amount = amount();
         Checkbox all = new Checkbox(I18n.t(UiTexts.PLAN_ALL_AVAILABLE), true);
         amount.setEnabled(false);
@@ -95,16 +102,28 @@ final class PlanningDialogs {
         preview.removeAll();
         VisibleSystem destination = target.getValue();
         var dispatches = dispatches(sources, amount, all);
+        var arrivals = new java.util.HashMap<Integer, Integer>();
+        if (destination != null) {
+            dispatches.forEach(dispatch -> {
+                Integer arrival = arrivalTurn(dispatch.sourceId(), destination.id());
+                if (arrival != null) { arrivals.put(dispatch.sourceId(), arrival); }
+            });
+        }
         boolean valid = destination != null && !dispatches.isEmpty() && dispatches.stream().allMatch(dispatch ->
-                dispatch.sourceId() != destination.id() && dispatch.ships() > 0
+                dispatch.sourceId() != destination.id() && dispatch.ships() > 0 && arrivals.containsKey(dispatch.sourceId())
                         && sources.getValue().stream().filter(s -> s.id() == dispatch.sourceId())
                         .anyMatch(s -> hasEnoughShips(s, dispatch.ships())));
         save.setEnabled(valid);
         if (destination == null) { return; }
         var totals = new java.util.TreeMap<Integer, Long>();
-        dispatches.forEach(dispatch -> totals.merge(view.turn() + games.travelTurns(id, dispatch.sourceId(), destination.id()),
-                (long) dispatch.ships(), Long::sum));
+        dispatches.stream().filter(dispatch -> arrivals.containsKey(dispatch.sourceId()))
+                .forEach(dispatch -> totals.merge(arrivals.get(dispatch.sourceId()), (long) dispatch.ships(), Long::sum));
         totals.forEach((turn, ships) -> preview.add(new Paragraph(I18n.t(UiTexts.PLAN_ARRIVAL, destination.name(), turn, ships))));
+    }
+
+    /** Arrival along the route the order would take, as the game plans it; none if the target is out of reach. */
+    private @Nullable Integer arrivalTurn(int source, int target) {
+        return games.routeFor(id, player, source, target).map(route -> view.turn() + route.rounds()).orElse(null);
     }
 
     private static List<FleetDispatch> dispatches(MultiSelectComboBox<VisibleSystem> sources, IntegerField amount, Checkbox all) {
