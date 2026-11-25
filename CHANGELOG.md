@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.2.19 - 2026-11-25
 
 - **Neue Namen der Varianten:** Starfare setzt SectorForces um, mit klassischen und erweiterten Regeln.
   Die Varianten heißen jetzt **Klassisch** und **Erweitert** (bisher „SectorForces“ und „Spaceward“),
