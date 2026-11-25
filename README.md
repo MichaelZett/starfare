@@ -110,9 +110,9 @@ filter your games and open a completed map without issuing further orders.
 **View** opens the review. Returning to
 the archive within the same account session restores filters and scrolls to the
 last viewed game.
-When the final round contains a battle, the normal round report remains open first.
-Resolve every battle from that report, individually or together in **Instant** mode;
-only then does the victory or defeat dialog appear,
+When the final round contains located events, the round report walks through them first.
+Resolve every battle from that report, individually or together in **Instant** mode, and
+confirm the other events; only then does the victory or defeat dialog appear,
 with personal totals for built, destroyed and lost ships. Spaceward also lists
 the game's economy: industry built in capacity points and, with metal, metal mined
 and consumed. Totals come from per-round summaries captured at the production step;
@@ -191,7 +191,11 @@ garrison, production, round of last contact), own systems their known ownership 
 fleets their owner, launch turn, travel time and ETA. The report entry contains
 the complete filterable round timeline, including victory and defeat reports.
 Single sends and relocations retain the current tab; bulk planning opens Fleets.
-Resolving a new round opens Report.
+Resolving a new round opens Report and walks through its located events one by one
+(battles, conquests, losses, cosmic news with a system): the map centres on each, a battle
+offers its playback, every other event continues. Until the last one is confirmed the map
+offers no orders and **Submit turn** stays locked; the progress is stored per account.
+Spectators and the review are never held up.
 Systems mentioned in a report carry a gold marker on the map. Select a report
 entry to centre the map on it, or select the marker to return to its report
 entry.

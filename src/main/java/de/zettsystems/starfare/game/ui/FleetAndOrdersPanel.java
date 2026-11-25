@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.ui;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -50,6 +51,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private boolean reportAvailable = true;
 
     private boolean readOnly;
+    /** The open event of the round walkthrough; while there is one, the panel offers no orders. */
+    private RoundWalkthrough.@Nullable Step walkthrough;
     private final de.zettsystems.starfare.economy.values.ProductionInputs productionInputs = new de.zettsystems.starfare.economy.values.ProductionInputs();
     private boolean battlePresentationEnabled;
     private @Nullable GameId gameId;
@@ -194,7 +197,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 .filter(candidate -> candidate.id() == system.id()).findFirst().orElse(null);
         selectedFleetId = fleetId;
         selectedStandingOrderId = standingOrderId;
-        readOnly = view.gameOver() || spectator;
+        readOnly = view.gameOver() || spectator || walkthrough != null;
         productionInputs.reconcile(gameId.value(), view.turn(), view.systems().stream()
                 .filter(candidate -> !spectator && candidate.fullyVisible() && candidate.industry() != null
                         && candidate.availableShips() != null && !isBattlePending(candidate.id()))
@@ -208,10 +211,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         boolean industryLocked = detailOwner != null && view.roundStatus().hasSubmitted(detailOwner);
         Object details = java.util.Arrays.asList(gameId, selectedSystem, fleetId, view.ownFleets(), view.plannedOrders(),
                 view.empire(),
-                view.waitingFleetIds(), view.standingOrders(), view.turn(), industryLocked, view.roundStatus(), readOnly, targetSelectionActive,
+                view.waitingFleetIds(), view.standingOrders(), view.turn(), industryLocked, view.roundStatus(), readOnly,
+                walkthrough != null, targetSelectionActive,
                 selectedSystem != null && isBattlePending(selectedSystem.id()));
         if (!details.equals(lastDetails)) { renderDetails(view, targetSelectionActive); lastDetails = details; }
-        Object reportState = java.util.Arrays.asList(report, battlePresentationEnabled,
+        Object reportState = java.util.Arrays.asList(report, battlePresentationEnabled, walkthrough,
                 report == null ? List.of() : pendingBattleIndices(report.events()));
         if (!reportState.equals(lastReport)) { renderReport(view); lastReport = reportState; }
     }
@@ -252,6 +256,31 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     void showRelocations() {
         select(Section.RELOCATIONS);
+    }
+
+    /** Set before {@link #update}: the open walkthrough event, or null once the map is free for orders. */
+    void walkthrough(RoundWalkthrough.@Nullable Step step) {
+        walkthrough = step;
+    }
+
+    /** A new walkthrough event: the report shows and marks it on the next {@link #update}. */
+    void focusReportSystem(int systemId) {
+        selectedReportSystemId = systemId;
+        lastReport = null;
+        showReport();
+    }
+
+    /** A fresh card of the open walkthrough event; phones show it over the map. */
+    Optional<Div> walkthroughCard() {
+        RoundWalkthrough.Step step = walkthrough;
+        PlayerViewState view = currentView;
+        TurnReport report = view == null ? null : view.report();
+        if (step == null || report == null) {
+            return Optional.empty();
+        }
+        boolean replay = battlePresentationEnabled && BattleReplay.from(step.event()).isPresent();
+        List<TurnEvent> events = report.events();
+        return Optional.of(RoundWalkthrough.card(step, replay, () -> openNextPendingBattle(events, step.eventIndex())));
     }
 
     private static int valueOrZero(@Nullable Integer value) {
@@ -398,6 +427,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     private void renderSystemActions(VisibleSystem system, boolean targetSelectionActive) {
+        if (walkthrough != null && system.availableShips() != null) {
+            Paragraph locked = new Paragraph(I18n.t(UiTexts.ROUND_WALKTHROUGH_HINT));
+            locked.addClassName("round-walkthrough-locked");
+            detailsPage.add(locked);
+        }
         if (readOnly || system.availableShips() == null) {
             return;
         }
@@ -455,6 +489,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private void renderReport(PlayerViewState view) {
         reportPage.removeAll();
         reportPage.add(header(UiTexts.MAP_SIDEBAR_REPORT));
+        walkthroughCard().ifPresent(reportPage::add);
         Div filters = new Div();
         filters.addClassName("report-filter-bar");
         TurnReport report = view.report();
@@ -497,11 +532,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         filters.add(filterDetails);
         List<Integer> pendingBattles = pendingBattleIndices(events);
         if (!pendingBattles.isEmpty()) {
-            Button nextBattle = new Button(I18n.t(UiTexts.ROUND_NEXT_OPEN_BATTLE),
-                    _ -> openNextPendingBattle(events, pendingBattles.getFirst()));
-            nextBattle.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
-            nextBattle.setTooltipText(I18n.t(UiTexts.ROUND_OPEN_BATTLES, pendingBattles.size()));
-            filters.add(nextBattle);
+            if (walkthrough == null) {
+                Button nextBattle = new Button(I18n.t(UiTexts.ROUND_NEXT_OPEN_BATTLE),
+                        _ -> openNextPendingBattle(events, pendingBattles.getFirst()));
+                nextBattle.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
+                nextBattle.setTooltipText(I18n.t(UiTexts.ROUND_OPEN_BATTLES, pendingBattles.size()));
+                filters.add(nextBattle);
+            }
             if (!battlePresentationEnabled && report != null && presentationGame != null) {
                 Button all = new Button(I18n.t(UiTexts.PLAN_ACK_ALL), _ -> {
                     pendingBattles.forEach(index -> acknowledgements.acknowledge(presentationGame, report, index));
@@ -587,9 +624,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (event instanceof TurnEvent.EconomySummary) { return false; }
         PlayerViewState view = currentView;
         TurnReport report = view == null ? null : view.report();
-        if ((event instanceof TurnEvent.Victory || event instanceof TurnEvent.Defeat)
-                && gameId != null && report != null
-                && !acknowledgements.pending(gameId, report).isEmpty()) {
+        // The result of the game follows the walkthrough of the final round, never before it.
+        boolean battlesOpen = gameId != null && report != null && !acknowledgements.pending(gameId, report).isEmpty();
+        if (((event instanceof TurnEvent.Victory || event instanceof TurnEvent.Defeat) && (walkthrough != null || battlesOpen))
+                || (event instanceof TurnEvent.FinalScore && walkthrough != null)) {
             return false;
         }
         return categoryOf(event).map(enabledEventCategories::contains).orElse(true);
@@ -616,8 +654,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
         card.add(new Span(eventIcon(event, eventIndex)), new Span(RoundEventTexts.text(event, isEventPending(eventIndex))));
         BattleReplay replay = BattleReplay.from(event).orElse(null);
-        if (event.battleSystemId().isPresent()) { KeyboardActions.enable(card); }
-        event.battleSystemId().ifPresent(systemId -> {
+        java.util.OptionalInt site = RoundWalkthrough.siteOf(event);
+        if (site.isPresent()) { KeyboardActions.enable(card); }
+        RoundWalkthrough.Step step = walkthrough;
+        if (step != null && step.eventIndex() == eventIndex) { card.addClassName("event-walkthrough-current"); }
+        site.ifPresent(systemId -> {
             card.addClassName("event-map-linked");
             if (Objects.equals(selectedReportSystemId, systemId)) {
                 card.addClassName("event-map-selected");

@@ -134,6 +134,28 @@ final class MapCanvas extends Div {
                 viewportKey, homeX, homeY);
     }
 
+    /**
+     * Like {@link #restoreViewportOrCenterOn}, but keeps only the saved zoom and centres on the given point: a fresh
+     * view of a round walkthrough opens at its event, not where the player last looked.
+     */
+    void restoreZoomAndCenterOn(double x, double y) {
+        getElement().executeJs("""
+                const el = this;
+                const map = el.querySelector('#map');
+                let saved = null;
+                try { saved = JSON.parse(sessionStorage.getItem($0) || 'null'); } catch (e) { saved = null; }
+                let tries = 0;
+                const apply = () => {
+                  if (!el.clientHeight && tries++ < 30) { setTimeout(apply, 100); return; }
+                  const zoom = saved && saved.zoom ? Number(saved.zoom) : 1;
+                  if (map) map.style.zoom = zoom;
+                  requestAnimationFrame(() => el.scrollTo({left: $1 * zoom - el.clientWidth / 2,
+                      top: $2 * zoom - el.clientHeight / 2}));
+                };
+                apply();
+                """, viewportKey, x, y);
+    }
+
     void centerOn(double x, double y) {
         getElement().executeJs(
                 "const el = this; const map = el.querySelector('#map');"

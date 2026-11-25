@@ -1029,6 +1029,39 @@ html[data-gp-game="starfare"] {
 .event-battle-interactive { cursor: pointer; user-select: none; }
 .event-battle-interactive:hover { filter: brightness(1.16); }
 
+.round-walkthrough {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .45rem;
+    width: 100%;
+    box-sizing: border-box;
+    padding: .7rem .9rem;
+    border: 1px solid #ffc14f;
+    border-radius: 12px;
+    background: var(--sf-surface-2);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .4);
+}
+
+.round-walkthrough-heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: .25rem .75rem;
+    width: 100%;
+    font-size: .85rem;
+    color: var(--sf-text-muted);
+}
+
+.round-walkthrough-progress { font-weight: 600; color: #ffc14f; }
+.round-walkthrough-text { font-size: 1rem; line-height: 1.4; color: var(--sf-text); }
+.round-walkthrough-locked { margin: .25rem 0; font-size: .9rem; color: var(--sf-text-muted); }
+
+.event-walkthrough-current {
+    outline: 2px solid #ffc14f;
+    outline-offset: -2px;
+}
+
 .battle-replay-dialog::part(content) {
     background: var(--sf-surface);
     overflow: hidden;

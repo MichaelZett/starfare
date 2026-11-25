@@ -24,7 +24,8 @@ Kontaktadresse im Impressum.
    Lege die Schiffsanzahl fest und merke den Sendebefehl vor.
 5. Prüfe den Reiter **Flotten** und klicke auf **Runde abgeben**.
 6. Sobald alle Menschen abgegeben haben oder die Frist abläuft, wird die Runde
-   ausgewertet. Sieh dir anschließend den **Bericht** an und bestätige offene Schlachten.
+   ausgewertet. Der **Bericht** führt dich danach durch die Ereignisse der Runde; erst
+   dann sind neue Befehle möglich (Abschnitt „Rundenbeginn: Ereignisse durchgehen“).
 
 ## Partie erstellen und beitreten
 
@@ -319,6 +320,18 @@ dem Ende der Partie ist der Chat für alle nur noch lesbar. Zuschauer haben kein
 Kartenansicht. **Partie verlassen** übergibt deinen Sitz an die KI. Erlaubt die Partie
 den Wiedereinstieg, kannst du später zurückkehren.
 
+## Rundenbeginn: Ereignisse durchgehen
+
+Nach dem Rundenwechsel wechselt die Seitenleiste zum **Bericht**. Er zeigt oben das erste
+noch offene Ereignis mit Ort (Schlachten, Eroberungen, Verluste und kosmische Meldungen wie
+Supernova, Beben oder Piraten) und zentriert die Karte auf dessen System. Eine Schlacht bietet
+**Schlacht ansehen** mit der Wiedergabe, jedes andere Ereignis **Weiter**; danach folgt das
+nächste. Produktion, eintreffende Verstärkungen und Meldungen ohne Ort gehören nicht dazu.
+Solange Ereignisse offen sind, gibt es keine Befehle: kein Senden, keine Zielwahl, keine
+Verlegung und kein **Runde abgeben**. Der Fortschritt bleibt beim Neuladen und auf anderen
+Geräten erhalten. Zuschauer und die Nachbetrachtung durchlaufen nichts. Auf dem Handy liegt
+das offene Ereignis als Karte am unteren Rand über der zentrierten Karte.
+
 ## Schlachten ansehen oder sofort auswerten
 
 Eine offene Kampfmeldung zeigt zunächst den Ort. Besitzer und Ergebnis am
@@ -352,8 +365,9 @@ weder die Kampfstärke noch Rundenfristen oder Ergebnisse.
 
 Gewonnen hat, wer 70 % aller Systeme kontrolliert; neutrale Systeme zählen zur
 Gesamtzahl. Wenn die letzte Runde noch
-offene Schlachten enthält, erscheint zunächst der Bericht. Erst nach deren
-Bestätigung öffnet sich das Ergebnis mit persönlichen Schiffssummen. Erweitert
+offene Ereignisse enthält, führt zunächst der Bericht durch sie. Erst danach
+öffnet sich das Ergebnis mit persönlichen Schiffssummen; Befehle gibt es nach
+der Entscheidung keine mehr. Erweitert
 zeigt zusätzlich die Wirtschaft der Partie: gebaute Industrie in Kapazitätspunkten
 und, mit Metall, gefördertes und verbrauchtes Metall. Recycling zählt nicht als
 Förderung. Fehlt die Erfassung für ältere Partien, steht dort „nicht erfasst“;

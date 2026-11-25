@@ -90,7 +90,8 @@ public class BattleSteps {
     @Wenn("ich beide Schlachten mit Ton auswerte")
     public void playBattles() throws IOException {
         for (int battle = 0; battle < 2; battle++) {
-            browser.clickCss(PENDING);
+            // The round walkthrough offers the first battle; the second comes from its report card.
+            browser.clickCss(battle == 0 ? ".round-walkthrough-action" : PENDING);
             browser.awaitCss(".battle-replay");
             browser.awaitTexts(".battle-condition", texts -> texts.size() == 2, "Zwei Zustandsangaben in der Schlacht");
             assertThat(js().executeScript("""
