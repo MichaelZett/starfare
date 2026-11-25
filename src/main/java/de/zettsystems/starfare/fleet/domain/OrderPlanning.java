@@ -91,11 +91,13 @@ public final class OrderPlanning {
     /**
      * Orders of this round and planned later starts together never commit more ships than a garrison holds. Only
      * new sends and new later starts are checked: a start planned earlier stays even if a battle has since thinned
-     * the garrison below it, and it then only blocks further sends from that system.
+     * the garrison below it, and it then only blocks further sends from that system. A start counts as planned earlier
+     * only once: the same attack planned again books its ships a second time and is checked.
      */
     public static boolean valid(GameState state, int player, List<FleetOrder> orders, List<ScheduledDeparture> departures) {
         Map<Integer, Long> committed = new HashMap<>();
         java.util.Set<Integer> checked = new java.util.HashSet<>();
+        List<ScheduledDeparture> plannedEarlier = new ArrayList<>(state.scheduledDepartures());
         for (FleetOrder order : orders) {
             if (order instanceof FleetOrder.Send(int owner, int from, int to, int ships, Integer beneficiary)) {
                 if (owner != player || !ConquestOrders.allowed(state, player, beneficiary)
@@ -105,7 +107,7 @@ public final class OrderPlanning {
             }
         }
         for (ScheduledDeparture departure : departures) {
-            boolean known = state.scheduledDepartures().contains(departure);
+            boolean known = plannedEarlier.remove(departure);
             if (departure.ownerId() != player || (!known && (departure.departureTurn() <= state.turn()
                     || !ConquestOrders.allowed(state, player, departure.beneficiaryId())
                     || !sendable(state, player, departure.fromSystemId(), departure.toSystemId(), departure.ships())))) {
