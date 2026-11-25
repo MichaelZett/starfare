@@ -120,7 +120,8 @@ final class MapHeaderBar extends HorizontalLayout {
         leaveItem.setText(text);
     }
 
-    void updateTurnAction(RoundStatus status, int playerId, boolean observer, boolean gameOver) {
+    /** {@code locked}: the game is over, or the round walkthrough still has events open. */
+    void updateTurnAction(RoundStatus status, int playerId, boolean observer, boolean locked) {
         boolean submitted = status.hasSubmitted(playerId);
         String key = UiTexts.MAP_SUBMIT_TURN;
         if (observer) {
@@ -129,7 +130,7 @@ final class MapHeaderBar extends HorizontalLayout {
             key = UiTexts.MAP_TURN_SUBMITTED;
         }
         next.setText(I18n.t(key));
-        next.setEnabled(!gameOver && !submitted);
+        next.setEnabled(!locked && !submitted);
     }
 
     void setNextVisible(boolean visible) {

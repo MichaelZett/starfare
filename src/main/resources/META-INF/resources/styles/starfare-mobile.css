@@ -373,6 +373,23 @@ html.starfare-mobile[data-gp-game="starfare"] .mobile-map-target {
     box-shadow: 0 6px 16px rgba(0, 0, 0, .55);
 }
 
+/* The open walkthrough event at the foot of the map, left of the zoom buttons. */
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-walkthrough {
+    position: absolute;
+    left: 8px;
+    right: calc(var(--sf-touch) + 18px);
+    bottom: 12px;
+    z-index: 5;
+}
+
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-walkthrough .round-walkthrough {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .55);
+}
+
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-walkthrough .round-walkthrough-action {
+    min-height: var(--sf-touch);
+}
+
 html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet {
     position: absolute;
     inset: 0;

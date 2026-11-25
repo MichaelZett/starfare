@@ -29,7 +29,6 @@ import de.zettsystems.gamesplatformapi.MatchView;
 import de.zettsystems.gamesplatformapi.PlatformSettings;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
-import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.report.values.TurnReport;
 import de.zettsystems.starfare.style.CssProperties;
 import de.zettsystems.starfare.style.ui.Devices;
@@ -89,6 +88,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private @Nullable Integer highlightedReportSystemId;
     private @Nullable ReplayEventMarker pendingReplayEvent;
     private @Nullable Integer displayedTurn;
+    /** The walkthrough event the view last centred on, as game, round and report index. */
+    private @Nullable String walkthroughFocus;
+    private @Nullable VisibleSystem walkthroughSystem;
+    /** Seated players go through the located events of the round before they may give orders. */
+    private boolean walkthroughOpen;
+    /** No orders: the walkthrough is open or the game is decided. */
+    private boolean planningLocked;
     /** Remember the pending outcome even when the view was reloaded during the final battles. */
     private boolean witnessedRunningGame;
     private boolean outcomeAcknowledged;
@@ -269,6 +275,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         }
         int pid = currentSeat();
         Integer shownTurn = displayedTurn;
+        if (walkthroughOpen) {
+            Notification.show(I18n.t(UiTexts.ROUND_WALKTHROUGH_HINT));
+            refresh();
+            return;
+        }
         if (pid < 0 || shownTurn == null) {
             Notification.show(I18n.t(UiTexts.MAP_SUBMIT_FAILED));
             return;
@@ -419,6 +430,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         mapCanvas.useGame(candidate);
         if (diplomacyDialog != null) { diplomacyDialog.close(); diplomacyDialog = null; }
         displayedTurn = null;
+        walkthroughFocus = null;
         witnessedRunningGame = false;
         resetOutcomePresentation();
         reviewControls.reset();
@@ -453,9 +465,16 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             }
             refresh();
         }));
+        // A fresh view centres on the open walkthrough event again instead of the last viewport.
+        walkthroughFocus = null;
         refresh();
         mapCanvas.installDragToPan();
-        restoreViewport();
+        VisibleSystem focus = walkthroughSystem;
+        if (focus != null) {
+            mapCanvas.restoreZoomAndCenterOn(focus.x(), focus.y());
+        } else {
+            restoreViewport();
+        }
     }
 
     private void restoreViewport() {
@@ -571,16 +590,62 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 .map(de.zettsystems.starfare.diplomacy.values.AllianceGroup::members).orElse(java.util.Set.of()));
         var treaties = diplomacyDialog;
         if (treaties != null && treaties.isOpened()) { treaties.refresh(); }
-        planningActions.setVisible(!observer && !view.gameOver() && !view.roundStatus().hasSubmitted(playerId));
+        RoundWalkthrough.Step step = observer ? null : walkthroughStep(view);
+        walkthroughOpen = step != null;
+        planningLocked = walkthroughOpen || view.gameOver();
+        if (planningLocked) { cancelTargetSelection(); }
+        planningActions.setVisible(!observer && !planningLocked && !view.roundStatus().hasSubmitted(playerId));
         actionBar.setVisible(treatyActions.isVisible() || planningActions.isVisible());
         selectPendingReplayEvent(view);
+        boolean newFocus = focusWalkthrough(view, step);
+        fleetsPanel.walkthrough(step);
         configureHeader(view, observer, playerId);
         renderMapAndSidebar(view, playerId, observer);
         if (advancedTurn) {
             fleetsPanel.showReport();
             revealPanel();
         }
+        MobileMapLayout phoneLayout = mobile;
+        if (phoneLayout != null) {
+            phoneLayout.walkthrough(fleetsPanel.walkthroughCard().orElse(null));
+            if (newFocus) { phoneLayout.showMap(); }
+        }
         showOutcomeWhenDue(view);
+    }
+
+    /** The open event of the round walkthrough for the seated player; spectators and the review are never held up. */
+    private RoundWalkthrough.@Nullable Step walkthroughStep(PlayerViewState view) {
+        TurnReport report = view.report();
+        if (reviewing || report == null || currentSeat() < 0) {
+            return null;
+        }
+        return acknowledgements.walkthrough(gameId, report).orElse(null);
+    }
+
+    /**
+     * Selects a new walkthrough event in the report and centres the map on it. Returns whether the event changed, so
+     * phones can bring the map to the front; the same event on a later refresh leaves the view alone.
+     */
+    private boolean focusWalkthrough(PlayerViewState view, RoundWalkthrough.@Nullable Step step) {
+        if (step == null) {
+            walkthroughFocus = null;
+            walkthroughSystem = null;
+            return false;
+        }
+        String focus = gameId.value() + ":" + step.turn() + ":" + step.eventIndex();
+        if (focus.equals(walkthroughFocus)) {
+            return false;
+        }
+        walkthroughFocus = focus;
+        highlightedReportSystemId = step.systemId();
+        walkthroughSystem = view.systems().stream().filter(system -> system.id() == step.systemId())
+                .findFirst().orElse(null);
+        VisibleSystem system = walkthroughSystem;
+        if (system != null) {
+            mapCanvas.centerOn(system.x(), system.y());
+        }
+        fleetsPanel.focusReportSystem(step.systemId());
+        return true;
     }
 
     private @Nullable PlayerViewState viewForCurrentMode() {
@@ -593,12 +658,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             resetOutcomePresentation();
         }
         TurnReport report = view.report();
-        boolean hasPendingBattles = report != null && !acknowledgements.pending(gameId, report).isEmpty();
-        if (hasPendingBattles) {
+        boolean hasOpenEvents = report != null && acknowledgements.walkthrough(gameId, report).isPresent();
+        if (hasOpenEvents) {
             witnessedRunningGame = true;
         }
         boolean awaitingOutcome = view.gameOver() && !outcomeAcknowledged && currentSeat() >= 0
-                && (witnessedRunningGame || hasPendingBattles);
+                && (witnessedRunningGame || hasOpenEvents);
         reviewing = view.gameOver() && !awaitingOutcome;
         spectatorControls.setVisible(false);
         if (!reviewing) {
@@ -659,7 +724,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         header.setTutorial(game.isTutorial(gameId));
         header.setEmpireName(observer ? "" : view.players().stream().filter(player -> player.id() == playerId)
                 .map(de.zettsystems.starfare.game.values.Player::empireNameOrName).findFirst().orElse(""));
-        header.updateTurnAction(status, playerId, observer, view.gameOver());
+        header.updateTurnAction(status, playerId, observer, view.gameOver() || walkthroughOpen);
         showGameOverBanner(view);
         if (!observer) {
             header.updateEmpireStats(view);
@@ -687,16 +752,15 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     }
 
     /**
-     * Opens the outcome dialog once the last battle of the final round is acknowledged. A final
-     * round without own battles (a defeat decided elsewhere) opens it right away; otherwise the
+     * Opens the outcome dialog once the walkthrough of the final round is done, its battles included. A final
+     * round without own located events (a defeat decided elsewhere) opens it right away; otherwise the
      * player would stay in the waiting state with no way into the review.
      */
     private void showOutcomeWhenDue(PlayerViewState view) {
         if (reviewing || !view.gameOver() || outcomeDialogOpen) {
             return;
         }
-        TurnReport report = view.report();
-        if (report != null && !acknowledgements.pending(gameId, report).isEmpty()) {
+        if (walkthroughOpen) {
             return;
         }
         String account = UserContext.currentPlayerId().orElse("");
@@ -748,8 +812,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         }
         List<VisibleSystem> systems = view.systems().stream()
                 .sorted(Comparator.comparingInt(VisibleSystem::id)).toList();
+        // A locked map still inspects systems and fleets, but offers no orders.
+        boolean ordersOffered = !observer && !planningLocked;
         mapCanvas.render(new MapRenderer.Inputs(
-                game, gameId, view, playerId, observer, selectedFrom, targetSelection == TargetSelection.RELOCATION,
+                game, gameId, view, playerId, !ordersOffered, selectedFrom, targetSelection == TargetSelection.RELOCATION,
                 highlightedFleetId, highlightedStandingOrderId, reportedSystemIds(view), highlightedReportSystemId,
                 pendingBattleSystemIds(view), game.isTutorial(gameId),
                 badgesShowingFleetNo, systems,
@@ -762,7 +828,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 this::onReportMarkerSelected,
                 this::refresh,
                 rangeForSelection(playerId, observer),
-                jointArrival(view, playerId, observer),
+                jointArrival(view, playerId, !ordersOffered),
                 joint -> planningDialogs().dispatch(joint.targetId(), joint.matchingSources())));
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
@@ -808,6 +874,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     }
 
     private void selectSource(VisibleSystem system) {
+        if (planningLocked) { return; }
         selectedFrom = selectedFrom != null && selectedFrom.id() == system.id() ? null : system;
         targetSelection = selectedFrom == null ? TargetSelection.NONE : TargetSelection.FLEET;
         selectedSystem = system;
@@ -825,6 +892,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     }
 
     private void selectTarget(VisibleSystem system, TargetSelection selection) {
+        if (planningLocked) { return; }
         selectedSystem = system;
         selectedFrom = system;
         targetSelection = selection;
@@ -849,7 +917,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             return Set.of();
         }
         return report.events().stream()
-                .map(TurnEvent::battleSystemId)
+                .map(RoundWalkthrough::siteOf)
                 .filter(OptionalInt::isPresent)
                 .map(OptionalInt::getAsInt)
                 .collect(Collectors.toUnmodifiableSet());
@@ -897,7 +965,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     }
 
     private void openSend(VisibleSystem from, VisibleSystem to) {
-        if (reviewing) { return; }
+        if (reviewing || planningLocked) { return; }
         int pid = currentSeat();
         if (pid < 0) {
             return;
@@ -910,7 +978,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     }
 
     private void openRelocation(VisibleSystem from, VisibleSystem to) {
-        if (reviewing) {
+        if (reviewing || planningLocked) {
             return;
         }
         int pid = currentSeat();

@@ -8,12 +8,13 @@ import de.zettsystems.starfare.report.values.TurnReport;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
- * Welche Schlachten des aktuellen Rundenberichts der Spieler schon ausgewertet hat.
- * Gespeichert wird je Konto über {@link BattleAcknowledgementService}, damit Neuladen,
- * eine neue Sitzung oder ein anderes Gerät die Auswertung weder umgeht noch wiederholt.
+ * Which battles and other located events ({@link RoundWalkthrough}) of the current round report the player has
+ * confirmed. Stored per account through {@link BattleAcknowledgementService}, so a reload, a new session or another
+ * device neither skips nor repeats them.
  *
  * <p>Eine Instanz gehört zu einer View. Sie lädt den Stand je Partie und Runde einmal und
  * hält ihn bis {@link #reload()}; die Views rufen das zu Beginn jedes Neuaufbaus, damit
@@ -42,9 +43,15 @@ final class BattleAcknowledgements {
         return isPending(report, eventIndex, acknowledged(gameId, report.turn()));
     }
 
+    /** The first located event of the round the player has not gone through yet. */
+    Optional<RoundWalkthrough.Step> walkthrough(GameId gameId, TurnReport report) {
+        return RoundWalkthrough.current(report, acknowledged(gameId, report.turn()));
+    }
+
+    /** Confirms a battle or another located event; any other event, or one already confirmed, is left alone. */
     void acknowledge(GameId gameId, TurnReport report, int eventIndex) {
         Set<Integer> acknowledged = acknowledged(gameId, report.turn());
-        if (!isPending(report, eventIndex, acknowledged)) {
+        if (!RoundWalkthrough.isOpen(report, eventIndex, acknowledged)) {
             return;
         }
         UserContext.currentPlayerId()

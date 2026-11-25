@@ -366,6 +366,11 @@ public final class UiTexts {
     public static final String ROUND_EVENT_BATTLE_READY = "round.event.battleReady";
     public static final String ROUND_NEXT_OPEN_BATTLE = "round.nextOpenBattle";
     public static final String ROUND_OPEN_BATTLES = "round.openBattles";
+    // Round-start walkthrough
+    public static final String ROUND_WALKTHROUGH_HINT = "round.walkthrough.hint";
+    public static final String ROUND_WALKTHROUGH_PROGRESS = "round.walkthrough.progress";
+    public static final String ROUND_WALKTHROUGH_NEXT = "round.walkthrough.next";
+    public static final String ROUND_WALKTHROUGH_BATTLE = "round.walkthrough.battle";
     public static final String BATTLE_REPLAY_TITLE = "battleReplay.title";
     public static final String BATTLE_REPLAY_ATTACKERS = "battleReplay.attackers";
     public static final String BATTLE_REPLAY_DEFENDERS = "battleReplay.defenders";
