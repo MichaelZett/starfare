@@ -9,9 +9,8 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 ## Unreleased
 
 - **Neue Namen der Varianten:** Starfare setzt SectorForces um, mit klassischen und erweiterten Regeln.
-  Die Varianten heißen jetzt **SectorForces klassisch** und **SectorForces erweitert** (bisher
-  „SectorForces“ und „Spaceward“). Regeln, gespeicherte Partien und die Stufe Alpha der erweiterten
-  Regeln bleiben unverändert.
+  Die Varianten heißen jetzt **Klassisch** und **Erweitert** (bisher „SectorForces“ und „Spaceward“),
+  in der Oberfläche ohne Versionsnummer. Die erweiterten Regeln bleiben in der Stufe Alpha.
 - **Garnisonsreserve entfällt:** Die Reserve je System, das Feld in den Systemdetails und der Dialog
   „Reserven gesammelt setzen“ fallen weg. Versendbar ist jetzt die ganze Garnison abzüglich bereits
   vorgemerkter Sendungen; Produktionsverlegungen dürfen in beiden Regelwerken auf die ganze Garnison
@@ -19,7 +18,7 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Reserve wird dabei verworfen.
 - **Grafische Systemsicht entfällt:** Das Bild mit Sternen, Planeten, Monden und Werft sowie die
   Himmelskörperbeschreibungen und Modellradien fallen aus den Systemdetails weg. Die Systemdetails
-  zeigen weiter Produktion, Garnison, Flotten und Verlegungen. In SectorForces erweitert stehen die
+  zeigen weiter Produktion, Garnison, Flotten und Verlegungen. In erweiterten Partien stehen die
   Kolonieangaben im Bereich **Kolonie & Logistik** der Systemdetails.
 - **Neuer Dialog „Neue Partie“:** Eine Seite mit Bildkarten und Klapplisten ersetzt den Assistenten
   mit Zusammenfassung. Abschnitte: Partie (zufälliger Name mit Neu-würfeln, Regeln **Klassisch** oder
@@ -27,8 +26,7 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Spieltempo nur bei mehreren Menschen, „Nur auf Einladung“, Tutorial), Karte (Kartenform,
   Galaxiegröße, höchste Produktion), Zufall und aufklappbare Details (Ereignisse einzeln,
   Rundenlimit). Sind alle anderen Sitze Computer, startet die Partie sofort. Neue Partien sind
-  öffentlich, außer bei „Nur auf Einladung“. Die Varianten heißen in der Oberfläche nur noch
-  **Klassisch** und **Erweitert**, ohne Versionsnummer.
+  öffentlich, außer bei „Nur auf Einladung“.
 - **Computerstärke:** **Einfach**, **Normal** und **Anspruchsvoll** ersetzen die Strategiewahl je Sitz.
   In klassischen Partien mit dem Prüfstand abgestimmt: Einfach spielt die Basisstrategie mit halbem
   Start (Produktion 2, 4 Schiffe), Normal die Basisstrategie mit gleichem Start, Anspruchsvoll mit
@@ -54,7 +52,7 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Liste, gruppiert nach Ankunftsrunde; der Routenfilter bleibt. Der Reiter **Kontakte** entfällt, die
   letzte Aufklärung steht in den Systemdetails. **Logistik** entfällt als Kartenmodus und als Reiter samt
   Filtern, Quelle/Senke und Lieferengpass: Die Routen stehen unter **Verlegungen**, die Verlegungsbilanz
-  (eingehend, Produktion, ausgehend) in den Systemdetails. In SectorForces erweitert stehen Förderautomatik
+  (eingehend, Produktion, ausgehend) in den Systemdetails. In erweiterten Partien stehen Förderautomatik
   und die eigenen Systeme nach Fördereignung in den Details eines eigenen Fördersystems; die Reichshinweise
   öffnen ihre gefilterte Liste im Reiter **Details**. Im Senden-Dialog entfällt **Doppelt**, in der
   Kampfwiedergabe **Ton testen**. Der Dialog „… erobert“ nach einer gewonnenen Schlacht entfällt; die

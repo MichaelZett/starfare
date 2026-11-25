@@ -12,7 +12,7 @@ human has submitted.
 create an account on the platform and start a game against the AI or invite
 friends. **Spielanleitung auf Deutsch:** [Anleitung](docs/ANLEITUNG.md).
 
-## The goal: SectorForces, classic and extended
+## The goal: SectorForces, classic and extended rules
 
 Starfare rebuilds *Sector Forces*, a Commodore 64 strategy game that can no longer
 be found, most likely a German clone of *Galactic Empire* (1983). Lobby, AI
@@ -22,8 +22,8 @@ changing running games.
 
 | Variant | Status |
 |---|---|
-| **SectorForces classic** (`classic`) | Playable, rules 1.0.0 |
-| **SectorForces extended** (`spaceward`) | Playable, rules 1.3.0-r1 with colonies, metal, recycling and ship research; alpha stage inside the platform host |
+| **Classic** (`classic`) | Playable, rules 1.0.0 |
+| **Extended** (`spaceward`) | Playable, rules 1.3.0-r1 with colonies, metal, recycling and ship research; alpha stage inside the platform host. Being rebuilt around industrial expansion, flight range and alliances |
 
 The classic rules are the compact core of conquest and fleet movement. The
 extended rules, which started out inspired by *Spaceward Ho!*, add an economy,
@@ -63,10 +63,9 @@ complete game.
 
 ## Game variants and rule versions
 
-Choose the rules first in the new-game dialog: **Classic** (SectorForces classic, rules
-**1.0.0**) is preselected, **Extended** is SectorForces extended. **SectorForces extended** (always the
-current rules **1.3.0-r1**) is available for new games as well. Inside the games platform host
-each variant has a stage the platform keeps (alpha, beta, production; SectorForces extended starts
+Choose the rules first in the new-game dialog: **Classic** (rules **1.0.0**) is preselected,
+**Extended** always uses the current rules **1.3.0-r1**. Inside the games platform host
+each variant has a stage the platform keeps (alpha, beta, production; Extended starts
 in alpha): the platform decides who may use it, the rules card marks alpha and beta
 variants, and an account that may no longer use a variant loses access to its games,
 running ones included. In Starfare's own start every variant is open. It adds
@@ -76,23 +75,21 @@ Diplomacy adds unanimous alliance groups, agreed notice periods and
 automatic non-combat returns after departure. Coalition combat resolves all hostile
 sides simultaneously, including stationed support. Ships retain their empire; a conquest
 beneficiary is selected before launch.
-The planned variant inspired by Master of Orion II is not available yet.
 
 Every game keeps its variant and rule version independently of the application
-release. Existing games default to SectorForces; their Classic behavior remains
-unchanged. Lobby, joining, management and archive show the selected rules.
+release. Existing games without a variant are Classic games. Lobby, joining, management and archive show the selected rules.
 Templates and rematches retain them.
 
 ## Computer strength
 
 The new-game dialog offers one computer strength for all computer seats
-(named constants in `ComputerStrength`, calibrated later):
+(named constants in `ComputerStrength`; Classic values calibrated with the strategy benchmark):
 
 | Strength | Play | Computer start |
 | --- | --- | --- |
-| Easy | Baseline | production and ships ×0.75 |
-| Normal (default) | each computer secretly draws Rush, Expansion, Concentration or Defense | as humans |
-| Challenging | the strongest benchmark profiles: Classic duels Rush or Expansion, else Baseline; Extended Adaptive industry (in larger games also Baseline) | production and ships ×1.25 |
+| Easy | Baseline | Classic ×0.5 (production 2, 4 ships); Extended ×0.75 |
+| Normal (default) | Classic: Baseline; Extended: each computer secretly draws Rush, Expansion, Concentration or Defense | as humans |
+| Challenging | Classic: Baseline, in duels secretly Baseline or Rush; Extended: Adaptive industry (in larger games also Baseline) | Classic ×1.5 (production 6, 12 ships); Extended ×1.25 |
 
 Rush commits ships early; Expansion favors nearby neutral systems; Concentration
 moves spare forces toward the front; Defense keeps larger local reserves; Adaptive

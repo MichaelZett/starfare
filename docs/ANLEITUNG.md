@@ -199,7 +199,7 @@ In den Systemdetails stehen versendbare Schiffe und Gesamtbestand oben;
 außerdem die erwartete Schiffproduktion pro Runde. **Flotte senden** und
 **Verlegung anlegen** stehen direkt darunter, danach die ein- und ausgehenden
 Verlegungen des Systems. **Logistik** öffnet die Verlegungsbilanz (eingehend,
-Produktion, ausgehend) und die Ankünfte; bei Kolonien in SectorForces erweitert
+Produktion, ausgehend) und die Ankünfte; bei Kolonien in erweiterten Partien
 heißt dieser Bereich **Kolonie & Logistik** und enthält auch die Kolonieangaben.
 Für fremde Systeme außerhalb der eigenen Sicht zeigen die Details die **Letzte
 Aufklärung**: Besitzer, gezählte oder geschätzte Schiffe, Produktion und die Runde
@@ -239,7 +239,7 @@ Befehlsrücknahme.
 Klickst du auf der Karte ein fremdes System oder eine eigene fliegende Flotte an,
 zeigt jedes eigene System mit freien Schiffen links ein Abzeichen mit der Runde,
 in der eine jetzt gesendete Flotte dort ankäme (`R14`). Gerechnet wird über
-dieselben Routen wie beim Senden, in SectorForces erweitert also mit Reichweite und
+dieselben Routen wie beim Senden, in erweiterten Partien also mit Reichweite und
 Zwischenhalten; Systeme ohne Weg dorthin bekommen kein Abzeichen.
 
 Gibt es schon eine Ankunft, nach der du dich richten kannst, vergleichen die
@@ -353,7 +353,7 @@ weder die Kampfstärke noch Rundenfristen oder Ergebnisse.
 Gewonnen hat, wer 70 % aller Systeme kontrolliert; neutrale Systeme zählen zur
 Gesamtzahl. Wenn die letzte Runde noch
 offene Schlachten enthält, erscheint zunächst der Bericht. Erst nach deren
-Bestätigung öffnet sich das Ergebnis mit persönlichen Schiffssummen. SectorForces erweitert
+Bestätigung öffnet sich das Ergebnis mit persönlichen Schiffssummen. Erweitert
 zeigt zusätzlich die Wirtschaft der Partie: gebaute Industrie in Kapazitätspunkten
 und, mit Metall, gefördertes und verbrauchtes Metall. Recycling zählt nicht als
 Förderung. Fehlt die Erfassung für ältere Partien, steht dort „nicht erfasst“;
@@ -370,7 +370,7 @@ durch ihr Rundenlimit, gibt es keine Fortsetzung.
 der Computer dein Reich bis zum Ende der Partie. Anders als beim Verlassen kannst du
 nicht zurückkehren, auch wenn die Partie Wiedereinstieg erlaubt.
 
-## Galaxie-Ereignisse und Wertung (SectorForces klassisch)
+## Galaxie-Ereignisse und Wertung (Klassisch)
 
 Nach dem C64-Klassiker Galactic Empire (1983). Wie oft Ereignisse eintreten, folgt der
 **Zufallsstufe** der Partie (Kein: nie, Wenig: selten, Mittel: normal, Viel: häufig). Unter
@@ -411,7 +411,7 @@ Spiele; Starfare selbst führt keine eigene Statistik.
 
 ## Erweiterte Regeln: Wirtschaft
 
-SectorForces erweitert verteilt die Kapazität eines Systems zwischen Schiffbau und Industrieausbau.
+Erweitert verteilt die Kapazität eines Systems zwischen Schiffbau und Industrieausbau.
 Der Ausbau sammelt Punkte; eine zusätzliche Kapazitätseinheit kostet das Doppelte
 der aktuellen Kapazität. Das Maximum ist 50. Neue Kapazität wirkt ab der folgenden
 Runde. Fortschritt bleibt bei Umschaltung und Eroberung erhalten; ein Eroberer
@@ -421,7 +421,7 @@ Die Systemdetails zeigen Industriegebäude, Verteilung, Fortschritt und die
 voraussichtliche nächste Lieferung. Bestehende Verlegungen bleiben erhalten;
 reicht der Schiffbau nicht, können sie auf die Garnison zugreifen.
 Engpässe werden angezeigt. Rohstoffe, Forschung und Schiffstypen folgen später.
-SectorForces klassisch verwendet weiterhin seine bisherigen Regeln.
+Klassisch verwendet weiterhin seine bisherigen Regeln.
 
 Die nächste Wirtschaftsfassung wird zunächst intern geprüft. Der Zwischenstand
 **1.2.0-w1** ergänzt eine gespeicherte Hauptkolonie je System. Bevölkerung und
@@ -472,7 +472,7 @@ Reichweite. Ziele tragen einen Zustand: durchgezogener Rahmen für direkt erreic
 gestrichelter Rahmen für „nur über Stationen“, abgeblendet für „kein Weg“. Der
 Hinweistext und der Versanddialog nennen den Zustand samt Entfernung als Anteil der
 direkten Reichweite, etwa „90 % der direkten Reichweite“. Knapp außerhalb liegende
-Ziele erscheinen nie als genau 100 %. SectorForces klassisch hat keine Reichweitengrenze und
+Ziele erscheinen nie als genau 100 %. Klassisch hat keine Reichweitengrenze und
 zeigt keinen Kreis.
 
 Für ein entferntes Ziel sucht der Flottenversand automatisch den schnellsten
@@ -506,7 +506,7 @@ erhalten. Verbündete Stationen verwenden dieselbe Reichweitenprüfung.
 Ist bereits vor dem Abflug die nächste Zwischenstation verloren, bleibt die
 Flotte an ihrer aktuellen Station, bis dieser Reiseabschnitt wieder zulässig ist.
 
-SectorForces klassisch verwendet weiterhin direkte Flüge ohne Reichweitengrenze.
+Klassisch verwendet weiterhin direkte Flüge ohne Reichweitengrenze.
 
 ## Vorlagen und Revanche
 
@@ -536,7 +536,7 @@ Datenschutz gehören der Spieleplattform und stehen in ihrem Rahmen.
 Die Regelfassung 1.1.0 ergänzt zwei Partieeigenschaften: **Bündnisse erlaubt** und
 **Bündnissiege erlaubt**. Neue Partien mit erweiterten Regeln haben beide eingeschaltet,
 dazu Bündnisse der Computer; Einzel- und Bündnisschwelle liegen fest bei 70 %. Ältere
-Partien behalten ihre gespeicherten Einstellungen. SectorForces klassisch bietet keine
+Partien behalten ihre gespeicherten Einstellungen. Klassisch bietet keine
 Bündnisse.
 
 Einzelsieg wird zuerst geprüft. Danach kann eine wirksame Gruppe mit mindestens
@@ -607,7 +607,7 @@ wirkungslos; ältere Partien behalten die bisherige KI-Teilnahme.
 
 ## Erweiterte Regeln: Kampf
 
-SectorForces erweitert wertet Kämpfe für ganze Bündnisgruppen gemeinsam aus; SectorForces klassisch
+Erweitert wertet Kämpfe für ganze Bündnisgruppen gemeinsam aus; Klassisch
 verwendet weiter seinen bisherigen Kampf.
 
 An einem System kämpfen Besitzer, eintreffende Verbündete und dort stationierte
@@ -681,7 +681,7 @@ keine Recyclingbefehle. W3 bleibt nur fortsetzbar; neue Partien mit erweiterten 
 Im Dialog **Neue Partie** die Regelkarte **Erweitert** auswählen. Neue Partien verwenden
 stets die aktuelle Regelfassung **1.3.0-r1**, einschließlich Metallförderung,
 Recycling, Industrieausbau und Schiffsforschung. Eine Versionsauswahl oder ein
-besonderes Startprofil ist nicht erforderlich. „SectorForces klassisch“ bleibt eine eigene
+besonderes Startprofil ist nicht erforderlich. „Klassisch“ bleibt eine eigene
 Spielvariante und verwendet ebenfalls ihre aktuelle Fassung.
 
 Seit 1.2.0-w5 ist die Bevölkerung vorerst Atmosphäre: Sie wächst und beschreibt die
@@ -783,7 +783,7 @@ Reisedauer und Ankunftsrunde. Die Gesamtzeit enthält die Aufenthalte. Ohne verf
 Weg ist Senden gesperrt. **Für Bündnispartner erobern** erscheint nur, wenn eine
 Eroberungsentscheidung mit anderen zulässigen Partnern möglich ist; eigene oder
 verbündete Verstärkung benötigt diese Wahl nicht. Die eigene Partei bleibt Vorgabe.
-SectorForces klassisch nutzt denselben Versandaufbau ohne erweiterte Wirtschaft und Bündniswahl.
+Klassisch nutzt denselben Versandaufbau ohne erweiterte Wirtschaft und Bündniswahl.
 
 Impressum und Datenschutz stehen im Seitenfuß und öffnen in einem neuen Tab,
 damit laufende Eingaben erhalten bleiben.
