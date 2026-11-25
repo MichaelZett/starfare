@@ -43,8 +43,8 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
 
     @Test void aiAllianceChoiceSurvivesJsonTemplatesAndContinuationWhileOldDataKeepsParticipation() {
         var state = new GameState(); state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE)
-                .chooseVictoryRules(new VictoryRules(70, true, false, 70, false)));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE));
+        state.configureVictoryRules(new VictoryRules(70, true, false, 70, false));
         state.players().add(new Player(1, "P1", false, GameConfig.PLAYER_PALETTE.getFirst()));
         state.systems().add(new StarSystem(1, "S1", 100, 100, 1, 5, 2, false));
         state.start();
@@ -52,14 +52,11 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
         var json = (ObjectNode) mapper.valueToTree(GameState.toSnapshot(state));
         var restored = GameState.fromSnapshot(mapper.treeToValue(json, GameStateSnapshot.class));
         assertThat(restored.victoryRules().aiAlliancesAllowed()).isFalse();
-        assertThat(restored.originalSetup().orElseThrow().victoryRules().aiAlliancesAllowed()).isFalse();
         restored.endGame(1); restored.resumeForFullConquest(Instant.now());
         assertThat(restored.victoryRules().aiAlliancesAllowed()).isFalse();
         ((ObjectNode) json.get("victoryRules")).remove("aiAlliancesAllowed");
-        ((ObjectNode) ((ObjectNode) json.get("originalSetup")).get("victoryRules")).remove("aiAlliancesAllowed");
         var legacy = GameState.fromSnapshot(mapper.treeToValue(json, GameStateSnapshot.class));
         assertThat(legacy.victoryRules().aiAlliancesAllowed()).isTrue();
-        assertThat(legacy.originalSetup().orElseThrow().victoryRules().aiAlliancesAllowed()).isTrue();
         assertThat(new VictoryRules(70, false, false, 70, true).aiAlliancesAllowed()).isFalse();
     }
 
@@ -91,9 +88,8 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
         assertThat(games.summaryFor(id, "ally-two").orElseThrow().outcome().wonBy(2)).isTrue();
         var copiedSetup = templates.template(id, "ally-two").orElseThrow().setup();
         assertThat(copiedSetup.ruleset()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
-        assertThat(copiedSetup.victoryRules()).isEqualTo(state.victoryRules());
-        var storedVictory = registry.readState(id, s -> s.originalSetup().orElseThrow().victoryRules());
-        assertThat(storedVictory).isEqualTo(state.victoryRules());
+        // A rematch gets the fixed rules of a new extended game: alliances and an alliance victory at 70 %.
+        assertThat(copiedSetup.victoryRules()).isEqualTo(new VictoryRules(70, true, true, 70, true));
         assertThat(games.reviewFor(id, "ally-two", 2, true).orElseThrow().wonBy(2)).isTrue();
         assertThat(games.continueAfterVictory(id, "loser")).isFalse();
         assertThat(games.continueAfterVictory(id, "ally-two")).isTrue();
@@ -111,9 +107,8 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
 
     private static GameState sample(RulesetRef ref, boolean group) {
         var state = new GameState(); state.resetForNewGame();
-        var setup = GameSetup.defaults().selectRuleset(ref);
-        if (group) { setup = setup.chooseVictoryRules(new VictoryRules(90, true, true, 80)); }
-        state.rememberSetup(setup);
+        state.rememberSetup(GameSetup.defaults().selectRuleset(ref));
+        if (group) { state.configureVictoryRules(new VictoryRules(90, true, true, 80)); }
         for (int player = 1; player <= 3; player++) {
             state.players().add(new Player(player, "P" + player, false, GameConfig.PLAYER_PALETTE.get(player - 1)));
             state.systems().add(new StarSystem(player, "S" + player, player * 100, 100, player, 5, 2, false));

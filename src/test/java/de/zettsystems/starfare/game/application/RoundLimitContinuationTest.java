@@ -20,8 +20,7 @@ class RoundLimitContinuationTest extends AbstractIntegrationTest {
     private GameId finishedAfter(int rounds, int roundLimit) {
         GameState state = new GameState();
         state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().withSectorOptions(
-                new SectorOptions(EventFrequency.OFF, null, false, roundLimit)));
+        state.rememberSetup(GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE).limitRounds(roundLimit));
         state.players().add(new Player(1, "P1", false, GameConfig.PLAYER_PALETTE.getFirst()));
         state.players().add(new Player(2, "P2", true, GameConfig.PLAYER_PALETTE.get(1)));
         state.systems().add(new StarSystem(1, "S1", 100, 100, 1, 5, 2, false));

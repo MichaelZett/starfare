@@ -33,12 +33,13 @@ record Scenario(RulesetRef rules, GalaxyLayout layout, int systems, long mapSeed
 
     GameState create(int seats, EconomyMaps.Environment environment) {
         if (seats < 2 || seats > 7 || seats > systems) { throw new IllegalArgumentException("Expected 2..7 seats"); }
-        var setup = new GameSetup(systems, 0, seats, Collections.nCopies(seats, 5),
-                1, 10, 20, true, false, GameConfig.PLAYER_PALETTE,
-                ProductionDistribution.UNIFORM, layout, false, randomness, RoundRules.defaults(), victoryRules.individualSystemPercent(), rules, victoryRules);
+        // No cosmic events; the scenario sets the combat deviation and the victory rules itself.
+        var setup = GameSetup.defaults().seatPlayers(0, seats).chooseGalaxy(systems, layout).selectRuleset(rules)
+                .chooseRandomness(RandomnessLevel.NONE);
         var state = new GameState();
         state.resetForNewGame();
         state.rememberSetup(setup);
+        state.configureVictoryRules(victoryRules);
         state.configureLobby(true, false, false, randomness);
         var random = new Random(mapSeed);
         var positions = GalaxyPlacement.positionsFor(setup, random);

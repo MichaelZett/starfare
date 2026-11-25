@@ -16,16 +16,14 @@ class GalaxyPlacementTest {
             for (int count : List.of(8, 24, 60, 120)) {
                 DoubleSummaryStatistics stats = new DoubleSummaryStatistics();
                 for (int seed = 0; seed < 20; seed++) {
-                    GameSetup base = GameSetup.defaults();
-                    GameSetup setup = new GameSetup(count, 2, 0, List.of(10, 10), 1, 20, 10,
-                            base.observersAllowed(), base.reentryAllowed(), base.seatColorHexes(), base.productionDistribution(), layout);
+                    GameSetup setup = GameSetup.defaults().seatPlayers(2, 0).chooseGalaxy(count, layout);
                     List<double[]> points = GalaxyPlacement.positionsFor(setup, new Random(seed));
                     assertThat(points).hasSize(count);
                     List<StarSystem> systems = new ArrayList<>();
                     for (int i = 0; i < points.size(); i++) {
                         double[] point = points.get(i);
-                        assertThat(point[0]).isBetween(0.0, (double) GameConfig.MAX_X);
-                        assertThat(point[1]).isBetween(0.0, (double) GameConfig.MAX_Y);
+                        assertThat(point[0]).isBetween(0.0, (double) GalaxyExtent.forSystems(count).width());
+                        assertThat(point[1]).isBetween(0.0, (double) GalaxyExtent.forSystems(count).height());
                         systems.add(new StarSystem(i, "S" + i, point[0], point[1], null, 1, 1, true));
                     }
                     double range = RangeCalibration.forGalaxy(systems).range(); stats.accept(range);
@@ -48,14 +46,13 @@ class GalaxyPlacementTest {
     }
     @Test void evenLayoutPlacesEverySystemInTheCentralHalfOfItsOwnCell() {
         for (int count : List.of(8, 24, 60, 120)) {
-            GameSetup base = GameSetup.defaults();
-            GameSetup setup = new GameSetup(count, 2, 0, List.of(10, 10), 1, 20, 10,
-                    base.observersAllowed(), base.reentryAllowed(), base.seatColorHexes(), base.productionDistribution(), GalaxyLayout.EVEN);
-            int cols = (int) Math.ceil(Math.sqrt(count * (double) GameConfig.MAX_X / GameConfig.MAX_Y));
+            GameSetup setup = GameSetup.defaults().seatPlayers(2, 0).chooseGalaxy(count, GalaxyLayout.EVEN);
+            GalaxyExtent extent = GalaxyExtent.forSystems(count);
+            int cols = (int) Math.ceil(Math.sqrt(count * (double) extent.width() / extent.height()));
             int rows = (int) Math.ceil((double) count / cols);
             double margin = GameConfig.SYSTEM_MARGIN;
-            double width = (GameConfig.MAX_X - 2 * margin) / cols;
-            double height = (GameConfig.MAX_Y - 2 * margin) / rows;
+            double width = (extent.width() - 2 * margin) / cols;
+            double height = (extent.height() - 2 * margin) / rows;
             Set<List<Integer>> cells = new HashSet<>();
             for (double[] point : GalaxyPlacement.positionsFor(setup, new Random(count))) {
                 double column = (point[0] - margin) / width;

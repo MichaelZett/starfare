@@ -14,7 +14,7 @@ class HostPagesTest extends AbstractBrowserlessTest {
         loginAsNewPlayer("New Page");
         navigate(NewMatchView.class);
         var dialog = openedDialog();
-        assertThat(dialog.getHeaderTitle()).isEqualTo("Spiel anlegen");
+        assertThat(dialog.getHeaderTitle()).isEqualTo("Neue Partie");
 
         test(find(Button.class, dialog).withText("Abbrechen").single()).click();
 

@@ -44,7 +44,7 @@ class ManageGameDialogTest extends AbstractBrowserlessTest {
         loginAsNewPlayer("Manage Host");
         host = UserContext.currentPlayerId().orElseThrow();
         social.befriend(AccountId.of(Long.parseLong(host)), AccountId.of(Long.parseLong(friend)));
-        GameSetup setup = new GameSetup(20, 2, 0, List.of(5, 5), 2, 5, 6, false, false, List.of(), null, null);
+        GameSetup setup = GameSetup.defaults().seatPlayers(2, 0).chooseGalaxy(20, de.zettsystems.starfare.game.values.GalaxyLayout.EVEN);
         id = games.newGame(setup, host, "Managed game");
         String name = players.displayName(host);
         assertThat(games.joinGame(id, host, name, name + " Empire")).isPresent();

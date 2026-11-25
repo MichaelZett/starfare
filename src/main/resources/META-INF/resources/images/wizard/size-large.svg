@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100">
+  <defs>
+    <radialGradient id="space" cx=".5" cy=".45" r=".75">
+      <stop offset="0" stop-color="#1b2a4d"/>
+      <stop offset="1" stop-color="#070b15"/>
+    </radialGradient>
+  </defs>
+  <rect width="160" height="100" fill="url(#space)"/>
+  <circle cx="16.6" cy="19.2" r="2.1" fill="#f0e4a0"/>
+  <circle cx="30.3" cy="13.5" r="2.1" fill="#9fd3f0"/>
+  <circle cx="57.7" cy="17.2" r="2.1" fill="#9fd3f0"/>
+  <circle cx="67.3" cy="14.1" r="2.1" fill="#f0e4a0"/>
+  <circle cx="92.8" cy="15.0" r="2.1" fill="#ffb48a"/>
+  <circle cx="102.2" cy="19.4" r="2.1" fill="#9fd3f0"/>
+  <circle cx="121.3" cy="17.0" r="2.1" fill="#f0e4a0"/>
+  <circle cx="144.2" cy="15.2" r="2.1" fill="#9fd3f0"/>
+  <circle cx="21.7" cy="29.7" r="2.1" fill="#ffb48a"/>
+  <circle cx="36.1" cy="29.1" r="2.1" fill="#f0e4a0"/>
+  <circle cx="57.7" cy="29.4" r="2.1" fill="#9fd3f0"/>
+  <circle cx="71.1" cy="36.0" r="2.1" fill="#9fd3f0"/>
+  <circle cx="92.9" cy="28.9" r="2.1" fill="#f0e4a0"/>
+  <circle cx="110.8" cy="36.1" r="2.1" fill="#9fd3f0"/>
+  <circle cx="123.1" cy="35.3" r="2.1" fill="#9fd3f0"/>
+  <circle cx="140.2" cy="29.5" r="2.1" fill="#f0e4a0"/>
+  <circle cx="13.6" cy="48.2" r="2.1" fill="#ffb48a"/>
+  <circle cx="38.3" cy="49.6" r="2.1" fill="#9fd3f0"/>
+  <circle cx="57.9" cy="53.8" r="2.1" fill="#f0e4a0"/>
+  <circle cx="68.1" cy="49.4" r="2.1" fill="#9fd3f0"/>
+  <circle cx="84.6" cy="50.8" r="2.1" fill="#ffb48a"/>
+  <circle cx="108.1" cy="50.8" r="2.1" fill="#f0e4a0"/>
+  <circle cx="120.9" cy="51.1" r="2.1" fill="#9fd3f0"/>
+  <circle cx="139.1" cy="53.3" r="2.1" fill="#9fd3f0"/>
+  <circle cx="16.6" cy="63.3" r="2.1" fill="#f0e4a0"/>
+  <circle cx="39.8" cy="71.5" r="2.1" fill="#9fd3f0"/>
+  <circle cx="51.3" cy="71.3" r="2.1" fill="#9fd3f0"/>
+  <circle cx="68.8" cy="67.5" r="2.1" fill="#f0e4a0"/>
+  <circle cx="89.7" cy="70.0" r="2.1" fill="#ffb48a"/>
+  <circle cx="102.7" cy="62.7" r="2.1" fill="#9fd3f0"/>
+  <circle cx="121.5" cy="66.1" r="2.1" fill="#f0e4a0"/>
+  <circle cx="146.0" cy="69.4" r="2.1" fill="#9fd3f0"/>
+  <circle cx="13.0" cy="86.7" r="2.1" fill="#ffb48a"/>
+  <circle cx="31.9" cy="79.8" r="2.1" fill="#f0e4a0"/>
+  <circle cx="52.8" cy="88.3" r="2.1" fill="#9fd3f0"/>
+  <circle cx="75.1" cy="83.8" r="2.1" fill="#9fd3f0"/>
+  <circle cx="92.0" cy="81.4" r="2.1" fill="#f0e4a0"/>
+  <circle cx="103.6" cy="88.8" r="2.1" fill="#9fd3f0"/>
+  <circle cx="126.7" cy="81.2" r="2.1" fill="#9fd3f0"/>
+  <circle cx="141.4" cy="87.0" r="2.1" fill="#f0e4a0"/>
+</svg>

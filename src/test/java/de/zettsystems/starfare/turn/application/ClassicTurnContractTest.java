@@ -48,7 +48,8 @@ class ClassicTurnContractTest {
         assertThat(fleets.queueSend(state, 1, 1, 2, 7)).isFalse();
         assertThat(state.getSystem(1).garrison()).isEqualTo(10);
         assertThat(state.travelRounds(1, 2)).isEqualTo(2);
-        assertThat(state.travelRounds(1, 4)).isEqualTo(20);
+        // Fixed speed of 160 map pixels per round instead of a twentieth of the map diagonal (K3).
+        assertThat(state.travelRounds(1, 4)).isEqualTo(13);
 
         engine.advanceTurn(state);
         assertRound(state, 2, 6, 6, 12, 7);

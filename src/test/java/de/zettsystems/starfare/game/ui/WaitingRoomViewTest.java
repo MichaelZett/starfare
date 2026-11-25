@@ -1,9 +1,8 @@
 package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
-import com.vaadin.flow.component.textfield.IntegerField;
 import de.zettsystems.starfare.AbstractBrowserlessTest;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
@@ -27,19 +26,15 @@ class WaitingRoomViewTest extends AbstractBrowserlessTest {
     private PlayerDirectory players;
 
     @Test
-    @SuppressWarnings("unchecked") // rationale: the wizard's radio group is typed, the finder is not.
     void creatingAnOpenMultiplayerGameSeatsTheCreatorAndOpensTheWaitingRoom() {
         loginAsNewPlayer("Wizard Host");
         navigate(LobbyView.class);
         test(find(Button.class).withText("Neues Spiel").atIndex(1)).click();
         var dialog = openedDialog();
-        assertThat(dialog.isCloseOnOutsideClick()).as("a stray click keeps the wizard").isFalse();
-        find(IntegerField.class, dialog).withLabel("Menschliche Spieler").single().setValue(2);
-        find(IntegerField.class, dialog).withLabel("KI-Spieler").single().setValue(0);
-        find(RadioButtonGroup.class, dialog).withId("wizard-visibility").single().setValue(GameVisibility.PUBLIC);
-        assertThat(find(Checkbox.class, dialog).withId("host-only").single().getValue()).isFalse();
-        test(find(Button.class, dialog).withText("Zusammenfassung prüfen").single()).click();
-        assertThat(elementText(dialog.getElement())).contains("Wizard Host (du)", "Öffentlich", "Mensch 2");
+        assertThat(dialog.isCloseOnOutsideClick()).as("a stray click keeps the dialog").isFalse();
+        test(find(ComboBox.class, dialog).withId("wizard-players").single()).selectItem("2");
+        test(find(ComboBox.class, dialog).withId("wizard-ai").single()).selectItem("0");
+        assertThat(find(Checkbox.class, dialog).withId("wizard-invite-only").single().getValue()).isFalse();
         test(find(Button.class, dialog).withText("Spiel anlegen").single()).click();
         runPendingUiAccess();
 
@@ -159,7 +154,7 @@ class WaitingRoomViewTest extends AbstractBrowserlessTest {
 
     /** Two seats for people, the host on the first; new games are private. */
     private GameId twoSeatGame(String host) {
-        GameSetup setup = new GameSetup(20, 2, 0, List.of(5, 5), 2, 5, 6, false, false, List.of(), null, null);
+        GameSetup setup = GameSetup.defaults().seatPlayers(2, 0).chooseGalaxy(20, de.zettsystems.starfare.game.values.GalaxyLayout.EVEN);
         GameId id = games.newGame(setup, host, "Waiting test");
         String name = players.displayName(host);
         assertThat(games.joinGame(id, host, name, name + " Empire")).isPresent();

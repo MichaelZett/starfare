@@ -1,13 +1,13 @@
 package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import de.zettsystems.starfare.game.values.RandomnessLevel;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridTester;
 import de.zettsystems.starfare.AbstractBrowserlessTest;
-import de.zettsystems.starfare.testsupport.DomEvents;
 import de.zettsystems.starfare.legal.ui.ImprintView;
 import org.junit.jupiter.api.Test;
 
@@ -75,11 +75,9 @@ class BrowserlessFoundationTest extends AbstractBrowserlessTest {
         navigate(LobbyView.class);
         test(find(Button.class).withText("Neues Spiel").atIndex(1)).click();
         var dialog = openedDialog();
-        find(IntegerField.class, dialog).withLabel("Menschliche Spieler").single().setValue(1);
-        find(IntegerField.class, dialog).withLabel("KI-Spieler").single().setValue(1);
+        test(find(ComboBox.class, dialog).withId("wizard-players").single()).selectItem("2");
         find(TextField.class, dialog).withLabel("Name des Imperiums").single().setValue("Test Empire");
-        DomEvents.changeRange(find(Input.class, dialog).single(), 17);
-        test(find(Button.class, dialog).withText("Zusammenfassung prüfen").single()).click();
+        find(RadioButtonGroup.class, dialog).withId("randomness").single().setValue(RandomnessLevel.HIGH);
         test(find(Button.class, dialog).withText("Spiel anlegen").single()).click();
         runPendingUiAccess();
 
@@ -88,6 +86,6 @@ class BrowserlessFoundationTest extends AbstractBrowserlessTest {
         assertThat(viewText()).contains("Runde 1", "Test Empire");
         int randomness = registry.readState(games.listGames().getLast(),
                 state -> state.originalSetup().orElseThrow().combatRandomnessPercent());
-        assertThat(randomness).isEqualTo(17);
+        assertThat(randomness).isEqualTo(20);
     }
 }

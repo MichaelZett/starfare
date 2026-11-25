@@ -7,7 +7,7 @@ import de.zettsystems.starfare.game.values.EventFrequency;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
-import de.zettsystems.starfare.game.values.SectorOptions;
+import de.zettsystems.starfare.game.values.RandomnessLevel;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.report.application.DefaultReportService;
 import de.zettsystems.starfare.report.values.CosmicNews;
@@ -68,13 +68,13 @@ class CosmicEventsTest {
     }
 
     private static GameState galaxy(Set<CosmicEvent> enabled) {
-        return galaxy(new SectorOptions(EventFrequency.NORMAL, enabled, false, 0));
+        return galaxy(GameSetup.defaults().chooseRandomness(RandomnessLevel.MEDIUM).chooseEvents(enabled));
     }
 
-    private static GameState galaxy(SectorOptions options) {
+    private static GameState galaxy(GameSetup setup) {
         GameState state = new GameState();
         state.configureLobby(true, true, true, 0);
-        state.rememberSetup(GameSetup.defaults().withSectorOptions(options));
+        state.rememberSetup(setup);
         for (int id = 1; id <= 2; id++) {
             state.players().add(new Player(id, "P" + id, false, "#ffffff"));
             state.intel().put(id, new HashMap<>());
@@ -101,7 +101,7 @@ class CosmicEventsTest {
 
     @Test
     void nothingHappensWhenEventsAreOff() {
-        GameState state = galaxy(SectorOptions.none());
+        GameState state = galaxy(GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE));
         state.addFleet(1, 1, 3, 5);
         int arrival = fleet(state, 1).arrivalTurn();
 
@@ -253,7 +253,7 @@ class CosmicEventsTest {
 
     @Test
     void sunsAndPiratesUnderwayFinishEvenWithEventsSwitchedOff() {
-        GameState state = galaxy(SectorOptions.none());
+        GameState state = galaxy(GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE));
         state.updateCosmic(cosmic -> cosmic.destabilize(4, state.turn()).launchPirates(4, 2, 50, state.turn() + 1));
 
         events.resolve(state);
@@ -357,7 +357,7 @@ class CosmicEventsTest {
 
     @Test
     void anEmptySunExplodesWithoutRefugees() {
-        GameState state = galaxy(SectorOptions.none());
+        GameState state = galaxy(GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE));
         state.systems().set(1, new StarSystem(2, "Colony", 100, 0, 1, 0, 2, false));
         state.updateCosmic(cosmic -> cosmic.destabilize(2, state.turn()));
 
@@ -369,7 +369,7 @@ class CosmicEventsTest {
 
     @Test
     void refugeesLeaveWithTheComingRoundAsTheOwnersNextFleet() {
-        GameState state = galaxy(SectorOptions.none());
+        GameState state = galaxy(GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE));
         state.addFleet(1, 1, 3, 2);
         state.updateCosmic(cosmic -> cosmic.destabilize(2, state.turn()));
         int arrival = state.turn() + 1 + state.travelRounds(2, 1);
@@ -391,7 +391,7 @@ class CosmicEventsTest {
 
     @Test
     void fleetsAndPiratesBoundForAnExplodedSunJumpOnToALivingSystem() {
-        GameState state = galaxy(SectorOptions.none());
+        GameState state = galaxy(GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE));
         state.updateCosmic(cosmic -> cosmic.explode(1));
         state.addFleet(2, 3, 2, 4);
         state.addFleet(2, 3, 4, 3);
@@ -414,7 +414,7 @@ class CosmicEventsTest {
 
     @Test
     void aStrongGarrisonRepelsPiratesAndLaterPiratesKeepFlying() {
-        GameState state = galaxy(SectorOptions.none());
+        GameState state = galaxy(GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE));
         state.updateCosmic(cosmic -> cosmic.launchPirates(4, 3, 1, state.turn() + 1)
                 .launchPirates(4, 2, 3, state.turn() + 4));
 

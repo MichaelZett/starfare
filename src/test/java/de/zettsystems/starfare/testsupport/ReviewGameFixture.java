@@ -3,6 +3,8 @@ package de.zettsystems.starfare.testsupport;
 import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GalaxyLayout;
+import de.zettsystems.starfare.game.values.GalaxySize;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.StarSystem;
@@ -33,10 +35,9 @@ public class ReviewGameFixture {
     }
 
     public Game create(String hostEmail, @Nullable String guestEmail, boolean tutorial) {
-        GameSetup defaults = GameSetup.defaults();
-        GameSetup setup = new GameSetup(8, guestEmail == null ? 1 : 2, 0, List.of(20, 2),
-                1, 2, 5, true, true, defaults.seatColorHexes(), defaults.productionDistribution(),
-                defaults.galaxyLayout(), true, defaults.roundRules()).chooseTutorial(tutorial);
+        // A medium map leaves room for the hand-placed systems below, which replace the generated ones.
+        GameSetup setup = GameSetup.defaults().seatPlayers(guestEmail == null ? 1 : 2, 0)
+                .chooseGalaxy(GalaxySize.MEDIUM.systems(), GalaxyLayout.EVEN).chooseTutorial(tutorial);
         String host = accountId(hostEmail);
         GameId id = games.newGame(setup, host, "Review regression");
         if (guestEmail != null) {

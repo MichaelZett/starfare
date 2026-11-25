@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameListScope;
+import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.GameVisibility;
@@ -143,9 +144,6 @@ class TesterRulesetIntegrationTest extends AbstractIntegrationTest {
     }
 
     private static GameSetup twoHumans() {
-        GameSetup defaults = GameSetup.defaults();
-        return new GameSetup(12, 2, 0, List.of(4, 7), 2, 5, 15, true, true,
-                defaults.seatColorHexes(), defaults.productionDistribution(), defaults.galaxyLayout(), false,
-                20, defaults.roundRules(), 90).normalized();
+        return GameSetup.defaults().seatPlayers(2, 0).chooseGalaxy(12, GalaxyLayout.EVEN).normalized();
     }
 }

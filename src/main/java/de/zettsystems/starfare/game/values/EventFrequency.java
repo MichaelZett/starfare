@@ -1,10 +1,12 @@
 package de.zettsystems.starfare.game.values;
 
-/** How often random cosmic events strike a SectorForces game. */
+/** How often random cosmic events strike a SectorForces game; the randomness level of the game chooses it. */
 public enum EventFrequency {
     OFF(0.0),
     RARE(0.5),
-    NORMAL(1.0);
+    NORMAL(1.0),
+    /** Twice the base chance of every event. */
+    FREQUENT(2.0);
 
     private final double factor;
 

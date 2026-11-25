@@ -18,8 +18,7 @@ class EconomyLaunchJourneyTest extends AbstractEconomyUiTest {
         navigate(LobbyView.class);
         test(find(Button.class).withText("Neues Spiel").atIndex(1)).click();
         chooseSpaceward();
-        test(button("Zusammenfassung prüfen")).click();
-        assertThat(elementText(openedDialog().getElement())).contains("SectorForces erweitert · Regeln 1.3.0-r1");
+        assertThat(elementText(openedDialog().getElement())).contains("Erweitert").doesNotContain("1.3.0-r1");
         test(button("Spiel anlegen")).click();
         runPendingUiAccess();
         assertThat(getCurrentView()).isInstanceOf(MainView.class);
@@ -55,11 +54,10 @@ class EconomyLaunchJourneyTest extends AbstractEconomyUiTest {
         assertThat(after.turn()).isEqualTo(before.turn() + 1);
     }
 
-    @SuppressWarnings("unchecked") // rationale: the wizard's group contains RulesetDefinition values.
+    @SuppressWarnings("unchecked") // rationale: the rules cards contain RulesetDefinition values.
     private void chooseSpaceward() {
         RadioButtonGroup<RulesetDefinition> choices = find(RadioButtonGroup.class).withId("ruleset-selection").single();
         assertThat(choices.getValue().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
         choices.setValue(registry.rulesets().find("spaceward").orElseThrow());
-        assertThat(find(RadioButtonGroup.class).withId("ruleset-version-selection").all()).isEmpty();
     }
 }

@@ -36,7 +36,7 @@ class RoundRulesDialogTest extends AbstractBrowserlessTest {
     void aRunningGameWithHostAndGuest() {
         hostEmail = loginAsNewPlayer("Rules Host");
         String host = UserContext.currentPlayerId().orElseThrow();
-        GameSetup setup = new GameSetup(20, 2, 0, List.of(5, 5), 2, 5, 6, false, false, List.of(), null, null);
+        GameSetup setup = GameSetup.defaults().seatPlayers(2, 0).chooseGalaxy(20, de.zettsystems.starfare.game.values.GalaxyLayout.EVEN);
         id = games.newGame(setup, host, "Rules test");
         join(host);
         assertThat(games.changeVisibility(id, host, GameVisibility.PUBLIC)).isTrue();

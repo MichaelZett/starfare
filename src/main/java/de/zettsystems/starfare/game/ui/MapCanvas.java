@@ -2,12 +2,10 @@ package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.html.Div;
+import de.zettsystems.starfare.game.values.GalaxyExtent;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.style.CssProperties;
 import de.zettsystems.starfare.style.HtmlAttributes;
-
-import static de.zettsystems.starfare.game.values.GameConfig.MAX_X;
-import static de.zettsystems.starfare.game.values.GameConfig.MAX_Y;
 
 /**
  * Scrollable container for the game map. Wraps the scroll Div + inner map Div,
@@ -18,6 +16,7 @@ final class MapCanvas extends Div {
 
     private final Div map = new Div();
     private String viewportKey = "";
+    private GalaxyExtent extent = GalaxyExtent.LEGACY;
     private Object lastRender = "";
     private java.util.List<de.zettsystems.starfare.game.values.VisibleSystem> ownSystems = java.util.List.of();
 
@@ -29,8 +28,7 @@ final class MapCanvas extends Div {
 
         map.setId("map");
         map.getStyle().set(CssProperties.POSITION, "relative");
-        map.setWidth(MAX_X, Unit.PIXELS);
-        map.setHeight(MAX_Y, Unit.PIXELS);
+        size(extent);
         map.getElement().addEventListener("click", _ -> onBackgroundClick.run())
                 .setFilter("event.target === event.currentTarget");
         add(map);
@@ -42,7 +40,15 @@ final class MapCanvas extends Div {
         getElement().executeJs("this.__starfareViewportKey = $0;", viewportKey);
     }
 
+    /** The map is as large as the galaxy of the game; every game has its own size. */
+    private void size(GalaxyExtent galaxy) {
+        extent = galaxy;
+        map.setWidth(galaxy.width(), Unit.PIXELS);
+        map.setHeight(galaxy.height(), Unit.PIXELS);
+    }
+
     void render(MapRenderer.Inputs inputs) {
+        if (!inputs.view().extent().equals(extent)) { size(inputs.view().extent()); }
         ownSystems = inputs.systems().stream()
                 .filter(system -> java.util.Objects.equals(system.ownerId(), inputs.playerId())).toList();
         Object rendering = java.util.Arrays.asList(inputs.systems(), inputs.view().ownFleets(),
@@ -92,7 +98,7 @@ final class MapCanvas extends Div {
     void resetViewport() {
         getElement().executeJs("this.querySelector('#map').style.zoom = '1';");
         if (ownSystems.isEmpty()) {
-            centerOn(MAX_X / 2.0, MAX_Y / 2.0);
+            centerOn(extent.width() / 2.0, extent.height() / 2.0);
         } else {
             centerOn(ownSystems.getFirst().x(), ownSystems.getFirst().y());
         }
@@ -102,8 +108,8 @@ final class MapCanvas extends Div {
         var systems = ownOnly ? ownSystems : java.util.List.<de.zettsystems.starfare.game.values.VisibleSystem>of();
         double minX = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::x).min().orElse(0);
         double minY = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::y).min().orElse(0);
-        double maxX = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::x).max().orElse(MAX_X);
-        double maxY = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::y).max().orElse(MAX_Y);
+        double maxX = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::x).max().orElse(extent.width());
+        double maxY = systems.stream().mapToDouble(de.zettsystems.starfare.game.values.VisibleSystem::y).max().orElse(extent.height());
         getElement().executeJs("""
                 const zoom = Math.max(0.1, Math.min(1.5,
                     Math.min(this.clientWidth / ($2 - $0 + 180), this.clientHeight / ($3 - $1 + 180))));

@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.domain;
 import de.zettsystems.starfare.game.values.EventFrequency;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.RandomnessLevel;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.SectorOptions;
 import de.zettsystems.starfare.game.values.StarSystem;
@@ -19,8 +20,7 @@ class SectorForcesStateTest {
 
     private static GameState galaxy(int roundLimit) {
         GameState state = new GameState();
-        state.rememberSetup(GameSetup.defaults().withSectorOptions(
-                new SectorOptions(EventFrequency.OFF, null, false, roundLimit)));
+        state.rememberSetup(GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE).limitRounds(roundLimit));
         for (int id = 1; id <= 2; id++) {
             state.players().add(new Player(id, "P" + id, false, "#ffffff"));
             state.intel().put(id, new HashMap<>());

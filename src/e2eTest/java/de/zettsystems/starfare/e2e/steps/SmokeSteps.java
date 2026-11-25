@@ -94,53 +94,29 @@ public class SmokeSteps {
     public void createDefaultGameAndJoin() throws IOException {
         browser.captureUiAcceptance("lobby");
         browser.openNewGameWizard();
-        browser.clickButtonWithText("Zusammenfassung prüfen");
-        browser.awaitCss(".wizard-summary-group");
-        browser.captureUiAcceptance("wizard-summary");
-        browser.clickCss(".wizard-summary-group vaadin-button");
-        String original = wizardSystems().getDomProperty("value");
-        int corrected = Integer.parseInt(original) + 1;
-        typeWizardSystems(String.valueOf(corrected));
-        browser.clickButtonWithText("Zusammenfassung prüfen");
-        browser.awaitTextIn("#wizard-summary-systems", String.valueOf(corrected));
-        assertThat(browser.textsOf("#wizard-summary-systems")).containsExactly(String.valueOf(corrected));
-        browser.captureUiAcceptance("wizard-corrected");
-        // Restore the standard fixture after verifying the correction round trip.
-        browser.clickCss(".wizard-summary-group vaadin-button");
-        typeWizardSystems(original);
-        browser.clickButtonWithText("Zusammenfassung prüfen");
-        browser.awaitTextIn("#wizard-summary-systems", original);
+        // Picture cards are radio buttons: a click on a card chooses it, the check mark follows.
+        chooseCard("#galaxy-size", "Klein");
+        chooseCard("#galaxy-size", "Mittel");
+        browser.captureUiAcceptance("wizard");
         browser.clickButtonWithText("Spiel anlegen");
         browser.awaitUrl(url -> url.contains("/map/"), "Die KI-Partie wurde nicht automatisch gestartet.");
     }
 
-    /** The wizard page is rebuilt when it opens; retry the input until the visible field accepts it. */
-    private void typeWizardSystems(String value) {
-        new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
-                .ignoring(org.openqa.selenium.ElementNotInteractableException.class)
-                .until(_ -> {
-                    WebElement systems = wizardSystems();
-                    systems.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"));
-                    systems.sendKeys(value, org.openqa.selenium.Keys.TAB);
-                    return true;
-                });
+    private void chooseCard(String group, String title) {
+        browser.clickMatching(group + " vaadin-radio-button", card -> title.equals(
+                card.findElement(org.openqa.selenium.By.cssSelector(".setup-card-title")).getText()),
+                "Karte „" + title + "“ in " + group);
+        browser.awaitTexts(group + " vaadin-radio-button[checked] .setup-card-title", List.of(title)::equals,
+                "Karte „" + title + "“ in " + group + " ist nicht gewählt");
     }
 
-    private WebElement wizardSystems() {
-        return new org.openqa.selenium.support.ui.WebDriverWait(browser.driver(), java.time.Duration.ofSeconds(10))
-                .ignoring(org.openqa.selenium.StaleElementReferenceException.class)
-                .until(_ -> browser.all(".create-game-dialog vaadin-integer-field").stream()
-                        .filter(WebElement::isDisplayed)
-                        .filter(field -> "Galaxiegröße (Systeme)".equals(field.getDomProperty("label")))
-                        .findFirst().map(field -> field.findElement(org.openqa.selenium.By.cssSelector("input")))
-                        .orElse(null));
-    }
-
-    @Dann("zeigen die Empire-Stats {int} System, Produktion {int} und {int} Schiffe")
-    public void empireStatsShow(int systems, int production, int ships) {
-        List<String> expected = List.of(String.valueOf(systems), String.valueOf(production), String.valueOf(ships));
-        browser.awaitTexts(".app-header-stat-value", expected::equals, "Empire-Stats zeigen nicht " + expected);
+    @Dann("zeigen die Empire-Stats {int} System und Produktion {int}")
+    public void empireStatsShow(int systems, int production) {
+        // The start balance sets the home garrison by position, so the ship count varies from game to game.
+        browser.awaitTexts(".app-header-stat-value", texts -> texts.size() == 3
+                        && texts.get(0).equals(String.valueOf(systems)) && texts.get(1).equals(String.valueOf(production))
+                        && Integer.parseInt(texts.get(2)) > 0,
+                "Empire-Stats zeigen nicht " + systems + " System und Produktion " + production);
     }
 
     @Dann("kann ich im Systeminspektor eine Flotte oder Verlegung vorbereiten und abbrechen")

@@ -8,7 +8,7 @@ Funktionalität: Handy-Oberfläche
     Und das Konto "Handy Gast" mit der E-Mail-Adresse "mobile-guest@example.test" besteht
     Und eine laufende Handy-Partie für "mobile-host@example.test" und "mobile-guest@example.test" bereitsteht
     Wenn ich mich auf dem Handy mit "mobile-host@example.test" anmelde
-    Dann lässt sich der Spielassistent auf dem Handy bis zur Fußleiste bedienen
+    Dann lässt sich der Dialog „Neue Partie“ auf dem Handy bis zur Fußleiste bedienen
     Wenn ich die Partie auf dem Handy öffne
     Dann zeigt das Handy die eigene Kartenansicht und der Desktop die geteilte Ansicht
     Wenn ich auf dem Handy mein Heimatsystem antippe

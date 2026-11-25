@@ -343,7 +343,7 @@ final class MapRenderer {
         send.setAriaLabel(I18n.t(UiTexts.MAP_JOINT_SEND_TO, target.name())
                 + (together.isEmpty() ? "" : ": " + String.join(", ", together)));
         double half = label.length() * 3.4 + 12;
-        double left = Math.clamp(target.x(), half, Math.max(half, GameConfig.MAX_X - half));
+        double left = Math.clamp(target.x(), half, Math.max(half, in.view().extent().width() - half));
         send.getStyle().set(CssProperties.LEFT, left + "px")
                 .set(CssProperties.TOP, (target.y() - SystemDisplaySize.pixelsFor(target) / 2.0 - 8) + "px");
         map.add(send);

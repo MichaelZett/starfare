@@ -69,7 +69,9 @@ public record GameStateSnapshot(
         @Nullable Map<Integer, de.zettsystems.starfare.economy.values.MiningAutomation> miningAutomation,
         @Nullable Set<Integer> resignedSeats,
         @Nullable CosmicState cosmic,
-        @Nullable Map<Integer, Integer> timedOutPlaces) {
+        @Nullable Map<Integer, Integer> timedOutPlaces,
+        // Games created before the map grew with the system count have no extent and keep the earlier fixed map.
+        @Nullable GalaxyExtent extent) {
     /** Snapshots written before {@code timedOutPlaces} existed. */
     public GameStateSnapshot(
         int turn,
@@ -119,7 +121,7 @@ public record GameStateSnapshot(
         @Nullable Map<Integer, de.zettsystems.starfare.economy.values.MiningAutomation> miningAutomation,
         @Nullable Set<Integer> resignedSeats,
         @Nullable CosmicState cosmic) {
-        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, victoryRules, outcome, colonies, metals, miningAutomation, resignedSeats, cosmic, null);
+        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, victoryRules, outcome, colonies, metals, miningAutomation, resignedSeats, cosmic, null, null);
     }
     /** Snapshots written before {@code cosmic} existed. */
     public GameStateSnapshot(
@@ -169,7 +171,7 @@ public record GameStateSnapshot(
         @Nullable MetalEconomy metals,
         @Nullable Map<Integer, de.zettsystems.starfare.economy.values.MiningAutomation> miningAutomation,
         @Nullable Set<Integer> resignedSeats) {
-        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, victoryRules, outcome, colonies, metals, miningAutomation, resignedSeats, null, null);
+        this(turn, nextGlobalFleetId, nextLocalFleetNo, players, systems, fleets, reports, intel, waitThisTurn, submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds, observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId, observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory, replayFrames, battlePresentationEnabled, combatRandomnessPercent, roundRules, stragglerSince, missedRounds, victorySystemPercent, originalSetup, previousOrders, ruleset, industries, navigation, diplomacy, victoryRules, outcome, colonies, metals, miningAutomation, resignedSeats, null, null, null);
     }
     /** Snapshots written before {@code resignedSeats} existed. */
     public GameStateSnapshot(int turn,

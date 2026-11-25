@@ -191,17 +191,18 @@ class DiplomacyJourneyTest extends AbstractMapJourneyTest {
         state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
         state.players().addAll(List.of(new Player(1, "Diplomat", false, "#56b4e9"),
                 new Player(2, "Partner", false, "#d55e00")));
-        state.systems().addAll(List.of(new StarSystem(1, "Alpha", 400, 350, 1, 50, 4, false),
-                new StarSystem(2, "Beta", 850, 350, 2, 5, 4, false), new StarSystem(3, "Gamma", 1300, 350, 1, 5, 4, false),
-                new StarSystem(4, "Delta", 1750, 350, 2, 100, 4, false)));
+        // Neighbours 495 map pixels apart: four rounds at 160 pixels per round, within the 495 range.
+        state.systems().addAll(List.of(new StarSystem(1, "Alpha", 440, 385, 1, 50, 4, false),
+                new StarSystem(2, "Beta", 935, 385, 2, 5, 4, false), new StarSystem(3, "Gamma", 1430, 385, 1, 5, 4, false),
+                new StarSystem(4, "Delta", 1925, 385, 2, 100, 4, false)));
         for (int index = 5; index <= 8; index++) {
-            state.systems().add(new StarSystem(index, "Remote " + index, 2500 + index * 60, 1300 + index * 50, null, 200, 4, true));
+            state.systems().add(new StarSystem(index, "Remote " + index, 2750 + index * 66, 1430 + index * 55, null, 200, 4, true));
         }
         state.joinedHumanPlayerIds().addAll(List.of(1, 2));
         state.originalHumanPlayerIds().addAll(List.of(1, 2));
         state.intel().put(1, new HashMap<>());
         state.intel().put(2, new HashMap<>());
-        state.configureNavigation(new NavigationSettings(450));
+        state.configureNavigation(new NavigationSettings(495));
         state.start();
         return state;
     }

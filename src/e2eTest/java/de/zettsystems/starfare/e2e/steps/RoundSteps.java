@@ -39,11 +39,7 @@ public class RoundSteps {
     @Wenn("eine laufende Partie für {string} und {string} mit Standardfristen bereitsteht")
     public void runningGameForTwo(String hostEmail, String guestEmail) {
         guestAccountEmail = guestEmail;
-        GameSetup d = GameSetup.defaults();
-        GameSetup setup = new GameSetup(d.systemCount(), 2, 1, List.of(4, 4, 4), d.neutralMinProduction(),
-                d.neutralMaxProduction(), d.startGarrison(), d.observersAllowed(), d.reentryAllowed(),
-                d.seatColorHexes(), d.productionDistribution(), d.galaxyLayout(), d.battlePresentationEnabled(),
-                d.roundRules());
+        GameSetup setup = GameSetup.defaults().seatPlayers(2, 1);
         String host = accountId(hostEmail);
         String guest = accountId(guestEmail);
         id = games.newGame(setup, host, "Rundentest");

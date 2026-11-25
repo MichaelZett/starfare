@@ -6,35 +6,37 @@ import java.util.List;
  * Centralized game configuration values for default setup and tuning knobs.
  */
 public final class GameConfig {
-    /** Map extent in pixels; star systems are placed within [0, MAX_X) x [0, MAX_Y). */
-    public static final float MAX_X = 3200.0F;
-    public static final float MAX_Y = 2000.0F;
-    public static final int DEFAULT_SYSTEM_COUNT = 24;
+    /**
+     * Map pixels a fleet covers per round, the same on every map: with the fixed density of {@link GalaxyExtent}
+     * most jumps to the nearest neighbour take three rounds.
+     */
+    public static final double TRAVEL_SPEED = 160.0;
+    /** Shortest journey; even an adjacent system is never reached in the round of departure or the next. */
+    public static final int MIN_TRAVEL_ROUNDS = 2;
+    /** Longest journey; the diagonal of the largest offered galaxy (64 systems) takes 37 rounds. */
+    public static final int MAX_TRAVEL_ROUNDS = 40;
+    public static final int DEFAULT_SYSTEM_COUNT = GalaxySize.DEFAULT.systems();
     public static final int DEFAULT_HUMAN_PLAYERS = 1;
     public static final int DEFAULT_AI_PLAYERS = 2;
-    public static final int DEFAULT_START_SYSTEM_PRODUCTION = 4;
-    public static final int DEFAULT_NEUTRAL_MIN_PRODUCTION = 2;
-    public static final int DEFAULT_NEUTRAL_MAX_PRODUCTION = 10;
-    public static final int DEFAULT_START_GARRISON = 8;
+    /** Production of every person's home system; computers start with a share of it by their strength. */
+    public static final int START_PRODUCTION = 4;
+    /** Ships in every person's home system, at least its production; the start balance adjusts it. */
+    public static final int START_GARRISON = 8;
+    /** Highest production of a neutral system offered for a new game; the lowest is always 1. */
+    public static final List<Integer> MAX_PRODUCTION_CHOICES = List.of(6, 10, 15, 20);
+    public static final int DEFAULT_MAX_PRODUCTION = 10;
     public static final int MIN_SYSTEM_COUNT = 8;
     public static final int MAX_SYSTEM_COUNT = 120;
     public static final int MIN_PRODUCTION = 1;
     public static final int MAX_PRODUCTION = 20;
-    public static final int MIN_START_GARRISON = 1;
-    public static final int MAX_START_GARRISON = 50;
-    public static final int MIN_AI_PLAYERS = 0;
-    public static final int MAX_AI_PLAYERS = 7;
-    public static final int MIN_HUMAN_PLAYERS = 1;
-    public static final int MAX_HUMAN_PLAYERS = 8;
+    /** Empires of a new game, people and computers together; at least one of them is a person. */
+    public static final int MIN_TOTAL_PLAYERS = 2;
     public static final int MAX_TOTAL_PLAYERS = 10;
-    public static final boolean DEFAULT_OBSERVERS_ALLOWED = true;
-    public static final boolean DEFAULT_REENTRY_ALLOWED = true;
     public static final boolean DEFAULT_BATTLE_PRESENTATION_ENABLED = true;
     public static final int MIN_COMBAT_RANDOMNESS_PERCENT = 0;
     public static final int MAX_COMBAT_RANDOMNESS_PERCENT = 30;
     public static final int DEFAULT_COMBAT_RANDOMNESS_PERCENT = 10;
     public static final String DEFAULT_GAME_NAME = "Standardspiel";
-    public static final ProductionDistribution DEFAULT_PRODUCTION_DISTRIBUTION = ProductionDistribution.GAUSSIAN;
     public static final GalaxyLayout DEFAULT_GALAXY_LAYOUT = GalaxyLayout.EVEN;
 
     /** Anteil aller Systeme (neutrale eingeschlossen), ab dem eine Partie gewonnen ist. */

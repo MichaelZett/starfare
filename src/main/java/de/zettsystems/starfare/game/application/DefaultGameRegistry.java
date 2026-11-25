@@ -276,8 +276,8 @@ public class DefaultGameRegistry implements GameRegistry {
     private void initializeState(GameState state, GameSetup setup) {
         state.resetForNewGame();
         state.rememberSetup(setup);
-        state.configureLobby(setup.observersAllowed(), setup.reentryAllowed(), setup.battlePresentationEnabled(),
-                setup.combatRandomnessPercent());
+        // Observers, re-entry and the battle presentation are always allowed; the randomness level sets the dice.
+        state.configureLobby(true, true, true, setup.combatRandomnessPercent());
         state.configureVictoryRules(setup.victoryRules());
         state.configureRoundRules(setup.roundRules());
         state.players().clear();
@@ -286,27 +286,28 @@ public class DefaultGameRegistry implements GameRegistry {
         state.reports().clear();
         state.intel().clear();
 
+        var r = new Random(System.nanoTime());
         int pid = 1;
         for (int i = 1; i <= setup.humanPlayers(); i++) {
             int seatId = pid++;
             state.players().add(new Player(seatId, "P" + i, false, setup.colorForSeat(i - 1)));
             state.originalHumanPlayerIds().add(seatId);
         }
+        ComputerStrength strength = setup.computerStrength();
         for (int i = 1; i <= setup.aiPlayers(); i++) {
             String aiName = aiName(i);
-            state.players().add(new Player(pid++, aiName, true,
-                    setup.colorForSeat(setup.humanPlayers() + i - 1), EmpireNameGenerator.forAi(i), setup.strategyForAi(i - 1)));
+            state.players().add(new Player(pid++, aiName, true, setup.colorForSeat(setup.humanPlayers() + i - 1),
+                    EmpireNameGenerator.forAi(i), strength.strategy(setup.ruleset(), setup.totalPlayers(), r)));
         }
         for (Player p : state.players()) {
             state.intel().put(p.id(), new HashMap<>());
         }
 
-        var r = new Random(System.nanoTime());
         List<String> names = SystemNameGenerator.sample(setup.systemCount(), r);
-        List<double[]> positions = GalaxyPlacement.positionsFor(setup, r);
+        List<double[]> positions = GalaxyPlacement.positionsFor(setup.systemCount(), setup.galaxyLayout(), state.extent(), r);
         for (int i = 1; i <= setup.systemCount(); i++) {
             double[] pos = positions.get(i - 1);
-            int prod = neutralProduction(setup, r);
+            int prod = neutralProduction(setup.maxProduction(), r);
             int garrison = Math.max(1, prod - 1);
             state.systems().add(new StarSystem(i, names.get(i - 1), pos[0], pos[1], null, garrison, prod, true));
         }
@@ -315,8 +316,9 @@ public class DefaultGameRegistry implements GameRegistry {
         for (int playerSeat = 0; playerSeat < state.players().size(); playerSeat++) {
             Player p = state.players().get(playerSeat);
             StarSystem s = homes.get(playerSeat);
-            int startProduction = setup.startProductionForSeat(playerSeat);
-            int startGarrison = Math.max(setup.startGarrison(), startProduction);
+            int startProduction = p.ai() ? strength.computerStart(GameConfig.START_PRODUCTION) : GameConfig.START_PRODUCTION;
+            int startGarrison = Math.max(p.ai() ? strength.computerStart(GameConfig.START_GARRISON)
+                    : GameConfig.START_GARRISON, startProduction);
             state.updateSystem(s.id(), current -> current.colonize(p.id(), startGarrison, startProduction));
         }
         List<Integer> homeIds = homes.stream().limit(state.players().size()).map(StarSystem::id).toList();
@@ -334,17 +336,15 @@ public class DefaultGameRegistry implements GameRegistry {
         return series == 0 ? name : name + " " + (series + 1);
     }
 
-    private static int neutralProduction(GameSetup setup, Random r) {
-        int min = setup.neutralMinProduction();
-        int max = setup.neutralMaxProduction();
+    /**
+     * Bell curve from 1 to the highest production: the middle of the range is the expectation, two sigma reach the
+     * edges. Outliers are drawn again instead of clamped, otherwise they would pile up on the edges.
+     */
+    private static int neutralProduction(int max, Random r) {
+        int min = GameConfig.MIN_PRODUCTION;
         if (max <= min) {
             return min;
         }
-        if (setup.productionDistribution() == ProductionDistribution.UNIFORM) {
-            return min + r.nextInt(max - min + 1);
-        }
-        // Mitte der Spanne als Erwartungswert, 2 Sigma bis zum Rand. Ausreisser werden
-        // neu gezogen statt geklemmt, sonst haeufen sie sich genau auf min und max.
         double mean = (min + max) / 2.0;
         double sigma = (max - min) / 4.0;
         for (int attempt = 0; attempt < 10; attempt++) {
@@ -386,10 +386,11 @@ public class DefaultGameRegistry implements GameRegistry {
     }
 
     private static void spaceOut(GameState state, int iterations, double minDist) {
-        double minX = Math.min(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_X / 4);
-        double maxX = GameConfig.MAX_X - minX;
-        double minY = Math.min(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_Y / 4);
-        double maxY = GameConfig.MAX_Y - minY;
+        GalaxyExtent extent = state.extent();
+        double minX = extent.marginX();
+        double maxX = extent.width() - minX;
+        double minY = extent.marginY();
+        double maxY = extent.height() - minY;
         for (int it = 0; it < iterations; it++) {
             for (int i = 0; i < state.systems().size(); i++) {
                 for (int j = i + 1; j < state.systems().size(); j++) {

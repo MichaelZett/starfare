@@ -17,7 +17,6 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,11 +56,7 @@ public class MobileSteps {
     @Wenn("eine laufende Handy-Partie für {string} und {string} bereitsteht")
     public void runningGame(String hostEmail, String guestEmail) {
         this.guestEmail = guestEmail;
-        GameSetup d = GameSetup.defaults();
-        GameSetup setup = new GameSetup(d.systemCount(), 2, 1, List.of(4, 4, 4), d.neutralMinProduction(),
-                d.neutralMaxProduction(), d.startGarrison(), d.observersAllowed(), d.reentryAllowed(),
-                d.seatColorHexes(), d.productionDistribution(), d.galaxyLayout(), d.battlePresentationEnabled(),
-                d.roundRules());
+        GameSetup setup = GameSetup.defaults().seatPlayers(2, 1);
         String host = accountId(hostEmail);
         id = games.newGame(setup, host, "Handytest");
         assertThat(games.changeVisibility(id, host, GameVisibility.PUBLIC)).isTrue();
@@ -77,7 +72,7 @@ public class MobileSteps {
         phone().awaitLobby();
     }
 
-    @Dann("lässt sich der Spielassistent auf dem Handy bis zur Fußleiste bedienen")
+    @Dann("lässt sich der Dialog „Neue Partie“ auf dem Handy bis zur Fußleiste bedienen")
     public void wizardIsUsable() {
         assertPhoneLayout();
         if (phone().awaitLobby()) {
@@ -85,8 +80,7 @@ public class MobileSteps {
         } else {
             phone().open(Browser.LOBBY + "/new");
         }
-        phone().awaitCss("vaadin-dialog[opened]");
-        tap("Zusammenfassung prüfen");
+        phone().awaitCss("vaadin-dialog[opened] .setup-section");
         assertTappable(button("Spiel anlegen"));
         tap("Abbrechen");
         phone().awaitNoneDisplayed("vaadin-dialog[opened]");

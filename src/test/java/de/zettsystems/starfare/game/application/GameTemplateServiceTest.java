@@ -14,10 +14,8 @@ class GameTemplateServiceTest {
 
     @Test
     void rematchRetainsRulesAndReservesSeatsWithoutJoiningPeople() {
-        GameSetup defaults = GameSetup.defaults();
-        GameSetup setup = new GameSetup(12, 2, 0, List.of(4, 7), 2, 5, 15, true, true,
-                defaults.seatColorHexes(), defaults.productionDistribution(), defaults.galaxyLayout(), false,
-                20, defaults.roundRules(), 90).normalized();
+        GameSetup setup = GameSetup.defaults().seatPlayers(2, 0).chooseGalaxy(12, GalaxyLayout.RANDOM)
+                .chooseMaxProduction(15).chooseRandomness(RandomnessLevel.HIGH).limitRounds(90).normalized();
         GameId source = registry.createGame(setup, "host", "Original");
         registry.writeState(source, state -> {
             state.seatByUser().put("host", 1);
@@ -47,9 +45,6 @@ class GameTemplateServiceTest {
             var oldRegistry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(),
                     new RulesetCatalog(List.of(historical)));
             var setup = GameSetup.defaults().selectRuleset(rules);
-            if (rules.usesConfigurableVictory() && !rules.equals(RulesetRef.SPACEWARD_COLONIES)) {
-                setup = setup.chooseVictoryRules(new VictoryRules(75, true, true, 85, false));
-            }
             GameId source;
             if (rules.equals(RulesetRef.SPACEWARD_COLONIES)) {
                 var historicalState = de.zettsystems.starfare.testsupport.ColonyStates.ready(rules);
@@ -67,14 +62,16 @@ class GameTemplateServiceTest {
             var currentTemplates = new DefaultGameTemplateService(current, mock(GameArchiveStore.class),
                     new DefaultGameAccessPolicy(), mock(Broadcaster.class));
             var before = current.readState(source, GameState::toSnapshot);
-            var sourceVictory = setup.victoryRules();
+            // Copies get the fixed rules of a new extended game, whatever their source allowed.
+            var newVictory = VictoryRules.forNewGame(RulesetRef.SPACEWARD_SHIP_RESEARCH);
             assertThat(currentTemplates.template(source, "host").orElseThrow().setup().ruleset())
                     .isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
             for (boolean rematch : new boolean[] {false, true}) {
                 var copy = currentTemplates.create(source, "host", "Copy", rematch).orElseThrow();
                 assertThat(current.readState(copy, GameState::ruleset)).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
                 var copiedVictory = current.readState(copy, state -> state.originalSetup().orElseThrow().victoryRules());
-                assertThat(copiedVictory).isEqualTo(sourceVictory);
+                assertThat(copiedVictory).isEqualTo(newVictory);
+                assertThat(current.readState(copy, GameState::victoryRules)).isEqualTo(newVictory);
                 assertThat(current.readState(copy, state -> state.invitedSeats().containsKey("host")).booleanValue())
                         .isEqualTo(rematch);
             }

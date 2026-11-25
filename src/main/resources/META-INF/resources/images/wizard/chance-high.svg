@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <g transform="rotate(-14 10.5 30.5)"><rect x="2" y="22" width="17" height="17" rx="3.1" fill="#e6edf3" stroke="#81bedf" stroke-width="1.5"/><circle cx="5.9" cy="25.9" r="1.4" fill="#0f1a26"/><circle cx="15.1" cy="25.9" r="1.4" fill="#0f1a26"/><circle cx="5.9" cy="30.5" r="1.4" fill="#0f1a26"/><circle cx="15.1" cy="30.5" r="1.4" fill="#0f1a26"/><circle cx="5.9" cy="35.1" r="1.4" fill="#0f1a26"/><circle cx="15.1" cy="35.1" r="1.4" fill="#0f1a26"/></g>
+  <g transform="rotate(8 24.5 12.5)"><rect x="16" y="4" width="17" height="17" rx="3.1" fill="#e6edf3" stroke="#81bedf" stroke-width="1.5"/><circle cx="19.9" cy="7.9" r="1.4" fill="#0f1a26"/><circle cx="29.1" cy="7.9" r="1.4" fill="#0f1a26"/><circle cx="19.9" cy="17.1" r="1.4" fill="#0f1a26"/><circle cx="29.1" cy="17.1" r="1.4" fill="#0f1a26"/></g>
+  <g transform="rotate(18 37.5 28.5)"><rect x="29" y="20" width="17" height="17" rx="3.1" fill="#e6edf3" stroke="#81bedf" stroke-width="1.5"/><circle cx="32.9" cy="23.9" r="1.4" fill="#0f1a26"/><circle cx="42.1" cy="33.1" r="1.4" fill="#0f1a26"/></g>
+</svg>

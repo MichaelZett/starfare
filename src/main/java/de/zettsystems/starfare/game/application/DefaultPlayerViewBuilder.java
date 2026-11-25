@@ -71,7 +71,8 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         var report = state.reports().getOrDefault(playerId, new TurnReport(turn - 1, List.of()));
         return new PlayerViewState(turn, players, vis, ownFleets, report, state.gameOver(), state.winnerId(),
                 plannedOrders, standing, empireStats(state, playerId, ownFleets), waitingFleetIds(state, orders),
-                state.battlePresentationEnabled(), roundStatus(state), state.outcome(), SkyMarks.of(state.cosmic()));
+                state.battlePresentationEnabled(), roundStatus(state), state.outcome(), SkyMarks.of(state.cosmic()),
+                state.extent());
     }
 
     @Override
@@ -80,7 +81,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         return new PlayerViewState(turn, List.copyOf(state.players()), revealedSystems(state),
                 List.copyOf(state.fleets()), null, state.gameOver(), state.winnerId(),
                 List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled(), roundStatus(state), state.outcome(),
-                SkyMarks.of(state.cosmic()));
+                SkyMarks.of(state.cosmic()), state.extent());
     }
 
     @Override
@@ -102,7 +103,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         TurnReport report = frame.reports().getOrDefault(playerId, new TurnReport(frame.turn(), List.of()));
         return new PlayerViewState(frame.turn(), List.copyOf(state.players()), systems, ownFleets, report,
                 true, state.winnerId(), List.of(), List.of(), EmpireStats.NONE, Set.of(), state.battlePresentationEnabled(),
-                RoundStatus.NONE, frame.outcome() == null ? state.outcome() : frame.outcome());
+                RoundStatus.NONE, frame.outcome() == null ? state.outcome() : frame.outcome(), SkyMarks.NONE, state.extent());
     }
 
     /** Alle Systeme ohne Nebel: fuer Zuschauer und fuer die entschiedene Partie. */

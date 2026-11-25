@@ -1,7 +1,7 @@
 package de.zettsystems.starfare.game.domain;
 
+import de.zettsystems.starfare.game.values.GalaxyExtent;
 import de.zettsystems.starfare.game.values.GalaxyLayout;
-import de.zettsystems.starfare.game.values.GameConfig;
 import de.zettsystems.starfare.game.values.GameSetup;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,25 +11,30 @@ import java.util.Random;
 /** Seeded placement, shared by generation and range calibration checks. */
 public final class GalaxyPlacement {
     private GalaxyPlacement() { }
+
+    /** Positions on the map that belongs to the setup's system count. */
     public static List<double[]> positionsFor(GameSetup setup, Random r) {
-        int count = setup.systemCount();
+        return positionsFor(setup.systemCount(), setup.galaxyLayout(), GalaxyExtent.forSystems(setup.systemCount()), r);
+    }
+
+    public static List<double[]> positionsFor(int count, GalaxyLayout layout, GalaxyExtent extent, Random r) {
         var out = new ArrayList<double[]>(count);
-        double marginX = Math.min(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_X / 4);
-        double marginY = Math.min(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_Y / 4);
-        if (setup.galaxyLayout() == GalaxyLayout.RANDOM) {
+        double marginX = extent.marginX();
+        double marginY = extent.marginY();
+        if (layout == GalaxyLayout.RANDOM) {
             for (int i = 0; i < count; i++) {
                 out.add(new double[]{
-                        marginX + r.nextDouble(GameConfig.MAX_X - 2 * marginX),
-                        marginY + r.nextDouble(GameConfig.MAX_Y - 2 * marginY)});
+                        marginX + r.nextDouble(extent.width() - 2 * marginX),
+                        marginY + r.nextDouble(extent.height() - 2 * marginY)});
             }
             return out;
         }
         // Ein System je Rasterzelle, innerhalb der Zelle versetzt: verhindert die
         // Ballungen und Leerraeume, die rein zufaellige Punkte zwangslaeufig bilden.
-        int cols = (int) Math.ceil(Math.sqrt(count * (double) GameConfig.MAX_X / GameConfig.MAX_Y));
+        int cols = (int) Math.ceil(Math.sqrt(count * (double) extent.width() / extent.height()));
         int rows = (int) Math.ceil((double) count / cols);
-        double cellWidth = (GameConfig.MAX_X - 2 * marginX) / cols;
-        double cellHeight = (GameConfig.MAX_Y - 2 * marginY) / rows;
+        double cellWidth = (extent.width() - 2 * marginX) / cols;
+        double cellHeight = (extent.height() - 2 * marginY) / rows;
         var cells = new ArrayList<int[]>(cols * rows);
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {

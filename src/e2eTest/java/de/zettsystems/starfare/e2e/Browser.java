@@ -106,7 +106,7 @@ public class Browser {
     }
 
     /**
-     * Opens the wizard from the lobby the page shows: the button of Starfare's own lobby, in a host
+     * Opens the new-game dialog from the lobby the page shows: the button of Starfare's own lobby, in a host
      * Starfare's page for a new match (the platform lobby links there).
      */
     public void openNewGameWizard() {
@@ -115,7 +115,7 @@ public class Browser {
         } else {
             open(LOBBY + "/new");
         }
-        awaitCss("vaadin-dialog[opened] .wizard-section");
+        awaitCss("vaadin-dialog[opened] .setup-section");
     }
 
     public WebElement awaitCss(String css) {

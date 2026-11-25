@@ -33,7 +33,7 @@ class JoinGameDialogTest extends AbstractBrowserlessTest {
     void openTheJoinDialog() {
         loginAsNewPlayer("Join Host");
         String host = UserContext.currentPlayerId().orElseThrow();
-        GameSetup setup = new GameSetup(20, 2, 0, List.of(5, 5), 2, 5, 6, false, false, List.of(), null, null);
+        GameSetup setup = GameSetup.defaults().seatPlayers(2, 0).chooseGalaxy(20, de.zettsystems.starfare.game.values.GalaxyLayout.EVEN);
         id = games.newGame(setup, host, "Join test");
         String hostName = players.displayName(host);
         assertThat(games.joinGame(id, host, hostName, hostName + " Empire")).isPresent();

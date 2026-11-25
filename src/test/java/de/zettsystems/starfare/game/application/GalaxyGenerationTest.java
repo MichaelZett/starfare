@@ -11,12 +11,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GalaxyGenerationTest extends AbstractIntegrationTest {
 
     private static final int SYSTEMS = 24;
-    private static final int MIN_PROD = 2;
+    private static final int MIN_PROD = 1;
     private static final int MAX_PROD = 6;
 
-    private GameSetup setup(GalaxyLayout layout, ProductionDistribution spread) {
-        return new GameSetup(SYSTEMS, 2, 2, List.of(4, 4, 4, 4),
-                MIN_PROD, MAX_PROD, 8, true, true, List.of(), spread, layout).normalized();
+    private GameSetup setup(GalaxyLayout layout) {
+        return GameSetup.defaults().seatPlayers(2, 2).chooseGalaxy(SYSTEMS, layout).chooseMaxProduction(MAX_PROD)
+                .normalized();
     }
 
     private List<StarSystem> systemsOf(GameSetup setup) {
@@ -25,11 +25,9 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void startBalanceChangesOnlyHomeGarrisonsWithinBounds() {
-        GameSetup plain = setup(GalaxyLayout.RANDOM, ProductionDistribution.UNIFORM);
-        GameSetup balanced = plain.withSectorOptions(new SectorOptions(EventFrequency.OFF, null, true, 0));
+    void classicGamesBalanceHomeGarrisonsWithinBounds() {
+        GameSetup balanced = setup(GalaxyLayout.RANDOM);
 
-        assertThat(homesOf(systemsOf(plain))).extracting(StarSystem::garrison).containsOnly(8);
         boolean differs = false;
         for (int attempt = 0; attempt < 3 && !differs; attempt++) {
             GameId id = registry.createGame(balanced);
@@ -60,14 +58,26 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void productionStaysInsideTheConfiguredRangeForBothSpreads() {
-        for (ProductionDistribution spread : ProductionDistribution.values()) {
-            List<StarSystem> systems = systemsOf(setup(GalaxyLayout.RANDOM, spread));
+    void neutralProductionStaysBetweenOneAndTheChosenHighest() {
+        List<StarSystem> systems = systemsOf(setup(GalaxyLayout.RANDOM));
 
-            assertThat(systems).hasSize(SYSTEMS);
-            assertThat(systems.stream().filter(s -> s.ownerId() == null))
-                    .as("Verteilung %s", spread)
-                    .allSatisfy(s -> assertThat(s.productionPerTurn()).isBetween(MIN_PROD, MAX_PROD));
+        assertThat(systems).hasSize(SYSTEMS);
+        assertThat(systems.stream().filter(s -> s.ownerId() == null))
+                .allSatisfy(s -> assertThat(s.productionPerTurn()).isBetween(MIN_PROD, MAX_PROD));
+    }
+
+    @Test
+    void theComputerStrengthScalesTheComputersStartProduction() {
+        for (ComputerStrength strength : ComputerStrength.values()) {
+            GameId id = registry.createGame(setup(GalaxyLayout.EVEN).chooseComputerStrength(strength));
+            List<Integer> computerHomes = registry.readState(id, state -> state.players().stream().filter(Player::ai)
+                    .map(player -> state.systems().stream().filter(s -> Integer.valueOf(player.id()).equals(s.ownerId()))
+                            .findFirst().orElseThrow().productionPerTurn()).toList());
+            List<Integer> humanHomes = registry.readState(id, state -> state.players().stream().filter(p -> !p.ai())
+                    .map(player -> state.systems().stream().filter(s -> Integer.valueOf(player.id()).equals(s.ownerId()))
+                            .findFirst().orElseThrow().productionPerTurn()).toList());
+            assertThat(humanHomes).containsOnly(GameConfig.START_PRODUCTION);
+            assertThat(computerHomes).as("%s", strength).containsOnly(strength.computerStart(GameConfig.START_PRODUCTION));
         }
     }
 
@@ -77,7 +87,7 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
         int edges = 0;
         // Ueber mehrere Partien, damit einzelne Ausreisser den Test nicht kippen.
         for (int run = 0; run < 12; run++) {
-            for (StarSystem s : systemsOf(setup(GalaxyLayout.RANDOM, ProductionDistribution.GAUSSIAN))) {
+            for (StarSystem s : systemsOf(setup(GalaxyLayout.RANDOM))) {
                 if (s.ownerId() != null) {
                     continue;
                 }
@@ -96,8 +106,8 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
         double even = 0;
         double random = 0;
         for (int run = 0; run < 8; run++) {
-            even += closestPair(systemsOf(setup(GalaxyLayout.EVEN, ProductionDistribution.UNIFORM)));
-            random += closestPair(systemsOf(setup(GalaxyLayout.RANDOM, ProductionDistribution.UNIFORM)));
+            even += closestPair(systemsOf(setup(GalaxyLayout.EVEN)));
+            random += closestPair(systemsOf(setup(GalaxyLayout.RANDOM)));
         }
 
         assertThat(even).as("gleichmaessiges Layout haelt groesseren Mindestabstand").isGreaterThan(random);
@@ -107,16 +117,16 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
     void homeSystemsRemainSeparatedForEveryLayout() {
         for (GalaxyLayout layout : GalaxyLayout.values()) {
             for (int run = 0; run < 8; run++) {
-                double closestHomes = closestPair(homesOf(systemsOf(setup(layout, ProductionDistribution.UNIFORM))));
+                double closestHomes = closestPair(homesOf(systemsOf(setup(layout))));
                 assertThat(closestHomes).as("%s: Heimatsysteme sollen nicht gehäuft starten", layout)
-                        .isGreaterThan(GameConfig.MAX_Y * 0.15);
+                        .isGreaterThan(GalaxyExtent.forSystems(SYSTEMS).height() * 0.15);
             }
         }
     }
 
     @Test
     void everyPlayerGetsExactlyOneHomeSystem() {
-        GameSetup setup = setup(GalaxyLayout.EVEN, ProductionDistribution.GAUSSIAN);
+        GameSetup setup = setup(GalaxyLayout.EVEN);
         GameId id = registry.createGame(setup);
 
         int players = registry.readState(id, state -> state.players().size());
@@ -128,30 +138,23 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void defaultsUseCenteredProductionAndEvenSystems() {
-        GameSetup defaults = GameSetup.defaults().normalized();
-
-        assertThat(defaults.productionDistribution()).isEqualTo(ProductionDistribution.GAUSSIAN);
-        assertThat(defaults.galaxyLayout()).isEqualTo(GalaxyLayout.EVEN);
-    }
-
-    @Test
     void nullChoicesFallBackToDefaults() {
-        GameSetup normalized = new GameSetup(SYSTEMS, 1, 1, List.of(4, 4),
-                MIN_PROD, MAX_PROD, 8, true, true, List.of(), null, null).normalized();
+        GameSetup normalized = new GameSetup(SYSTEMS, 1, 1, 0, null, null, null, null, null, null, 0, false)
+                .normalized();
 
-        assertThat(normalized.productionDistribution()).isEqualTo(ProductionDistribution.GAUSSIAN);
         assertThat(normalized.galaxyLayout()).isEqualTo(GalaxyLayout.EVEN);
+        assertThat(normalized.maxProduction()).isEqualTo(GameConfig.DEFAULT_MAX_PRODUCTION);
+        assertThat(normalized.ruleset()).isEqualTo(RulesetRef.SECTOR_FORCES);
     }
 
     @Test
     void systemsKeepClearOfTheMapEdges() {
         for (GalaxyLayout layout : GalaxyLayout.values()) {
-            for (StarSystem s : systemsOf(setup(layout, ProductionDistribution.UNIFORM))) {
+            for (StarSystem s : systemsOf(setup(layout))) {
                 assertThat(s.x()).as("%s: x von %s", layout, s.name())
-                        .isBetween(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_X - GameConfig.SYSTEM_MARGIN);
+                        .isBetween(GameConfig.SYSTEM_MARGIN, GalaxyExtent.forSystems(SYSTEMS).width() - GameConfig.SYSTEM_MARGIN);
                 assertThat(s.y()).as("%s: y von %s", layout, s.name())
-                        .isBetween(GameConfig.SYSTEM_MARGIN, GameConfig.MAX_Y - GameConfig.SYSTEM_MARGIN);
+                        .isBetween(GameConfig.SYSTEM_MARGIN, GalaxyExtent.forSystems(SYSTEMS).height() - GameConfig.SYSTEM_MARGIN);
             }
         }
     }

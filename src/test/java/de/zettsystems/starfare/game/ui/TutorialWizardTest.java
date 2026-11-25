@@ -34,10 +34,7 @@ class TutorialWizardTest extends AbstractBrowserlessTest {
         loginAsNewPlayer("Tutorial Host");
         openWizard();
         test(checkbox("wizard-tutorial")).click();
-        test(checkbox("host-only")).click();
-
-        test(button("Zusammenfassung prüfen")).click();
-        assertThat(marks()).as("the summary names the choice").hasSize(1);
+        waitForAPerson();
 
         GameId id = create();
         assertThat(registry.readState(id, GameState::tutorial)).isTrue();
@@ -49,14 +46,18 @@ class TutorialWizardTest extends AbstractBrowserlessTest {
         loginAsNewPlayer("Tutorial Host");
         openWizard();
         assertThat(checkbox("wizard-tutorial").getValue()).isFalse();
-        test(checkbox("host-only")).click();
-
-        test(button("Zusammenfassung prüfen")).click();
-        assertThat(marks()).isEmpty();
+        waitForAPerson();
 
         GameId id = create();
         assertThat(registry.readState(id, GameState::tutorial)).isFalse();
         assertThat(marks()).as("the waiting room shows no mark").isEmpty();
+    }
+
+    /** A second person keeps the new game in its waiting room. */
+    @SuppressWarnings("unchecked") // rationale: the computer count holds Integer values.
+    private void waitForAPerson() {
+        test((com.vaadin.flow.component.combobox.ComboBox<Integer>) find(com.vaadin.flow.component.combobox.ComboBox.class)
+                .withId("wizard-ai").single()).selectItem("1");
     }
 
     private List<Component> marks() {

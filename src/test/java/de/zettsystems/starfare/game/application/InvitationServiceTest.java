@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
@@ -64,11 +65,7 @@ class InvitationServiceTest extends AbstractIntegrationTest {
     }
 
     private GameId newTwoHumanGame(String host) {
-        GameSetup setup = new GameSetup(
-                20, 2, 0,
-                List.of(5, 5),
-                2, 5, 6,
-                false, false, List.of(), null, null);
+        GameSetup setup = GameSetup.defaults().seatPlayers(2, 0).chooseGalaxy(20, GalaxyLayout.EVEN);
         return games.newGame(setup, host, "test-game");
     }
 
@@ -210,11 +207,7 @@ class InvitationServiceTest extends AbstractIntegrationTest {
 
     @Test
     void cannotInviteAfterGameStarted() {
-        GameSetup setup = new GameSetup(
-                20, 1, 0,
-                List.of(5),
-                2, 5, 6,
-                false, false, List.of(), null, null);
+        GameSetup setup = GameSetup.defaults().seatPlayers(1, 0).chooseGalaxy(20, GalaxyLayout.EVEN);
         GameId id = games.newGame(setup, HOST, "t");
         games.joinGame(id, HOST);
         games.startGame(id);

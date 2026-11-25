@@ -1,311 +1,164 @@
 package de.zettsystems.starfare.game.values;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
-import de.zettsystems.starfare.ai.values.AiStrategy;
 import org.jspecify.annotations.Nullable;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.Objects;
+import java.util.Set;
 
 /**
- * Wizard input used to create a new game session.
+ * The choices of the new-game dialog. Everything else is fixed: start values, colours from the palette,
+ * observers, re-entry and battle presentation always on, victory at 70 % of the systems, the start balance in
+ * classic games. Setups stored by earlier versions keep only what this record still knows.
+ *
+ * @param systemCount    systems of the galaxy; the dialog offers the {@link GalaxySize} steps
+ * @param maxProduction  highest production of a neutral system; neutral production follows a bell curve from 1
+ * @param computerStrength planning profile and start values of the computer empires
+ * @param randomness     combat deviation, event frequency and the order of several attackers
+ * @param enabledEvents  the cosmic events the host left on; they strike only with randomness and classic rules
+ * @param roundLimit     last round of a classic game, scored when nobody has won before; 0 means no limit
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record GameSetup(
         int systemCount,
         int humanPlayers,
         int aiPlayers,
-        List<Integer> startProductionPerPlayer,
-        int neutralMinProduction,
-        int neutralMaxProduction,
-        int startGarrison,
-        boolean observersAllowed,
-        boolean reentryAllowed,
-        List<String> seatColorHexes,
-        ProductionDistribution productionDistribution,
-        GalaxyLayout galaxyLayout,
-        boolean battlePresentationEnabled,
-        int combatRandomnessPercent,
-        RoundRules roundRules,
-        int victorySystemPercent,
-        RulesetRef ruleset,
-        @Nullable VictoryRules victoryRules, List<AiStrategy> aiStrategies,
-        @Nullable SectorOptions sectorOptions,
+        @JsonSetter(nulls = Nulls.AS_EMPTY) int maxProduction,
+        @Nullable GalaxyLayout galaxyLayout,
+        @Nullable RoundRules roundRules,
+        @Nullable RulesetRef ruleset,
+        @Nullable ComputerStrength computerStrength,
+        @Nullable RandomnessLevel randomness,
+        @Nullable Set<CosmicEvent> enabledEvents,
+        @JsonSetter(nulls = Nulls.AS_EMPTY) int roundLimit,
         // Setups stored before the choice existed have no value and are no tutorial.
         @JsonSetter(nulls = Nulls.AS_EMPTY) boolean tutorial) {
-    /** Setups written before the SectorForces options existed. */
-    public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
-            int neutralMinProduction, int neutralMaxProduction, int startGarrison, boolean observersAllowed,
-            boolean reentryAllowed, List<String> seatColorHexes, ProductionDistribution productionDistribution,
-            GalaxyLayout galaxyLayout, boolean battlePresentationEnabled, int combatRandomnessPercent,
-            RoundRules roundRules, int victorySystemPercent, RulesetRef ruleset, @Nullable VictoryRules victoryRules,
-            List<AiStrategy> aiStrategies) {
-        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction,
-                neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes,
-                productionDistribution, galaxyLayout, battlePresentationEnabled, combatRandomnessPercent,
-                roundRules, victorySystemPercent, ruleset, victoryRules, aiStrategies, null, false);
-    }
-    public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
-            int neutralMinProduction, int neutralMaxProduction, int startGarrison, boolean observersAllowed,
-            boolean reentryAllowed, List<String> seatColorHexes, ProductionDistribution productionDistribution,
-            GalaxyLayout galaxyLayout, boolean battlePresentationEnabled, int combatRandomnessPercent,
-            RoundRules roundRules, int victorySystemPercent, RulesetRef ruleset, @Nullable VictoryRules victoryRules) {
-        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction,
-                neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes,
-                productionDistribution, galaxyLayout, battlePresentationEnabled, combatRandomnessPercent,
-                roundRules, victorySystemPercent, ruleset, victoryRules, List.of());
-    }
-    public GameSetup(
-        int systemCount,
-        int humanPlayers,
-        int aiPlayers,
-        List<Integer> startProductionPerPlayer,
-        int neutralMinProduction,
-        int neutralMaxProduction,
-        int startGarrison,
-        boolean observersAllowed,
-        boolean reentryAllowed,
-        List<String> seatColorHexes,
-        ProductionDistribution productionDistribution,
-        GalaxyLayout galaxyLayout,
-        boolean battlePresentationEnabled,
-        int combatRandomnessPercent,
-        RoundRules roundRules,
-        int victorySystemPercent,
-        RulesetRef ruleset
-) {
-        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled, combatRandomnessPercent, roundRules, victorySystemPercent, ruleset, null);
-    }
-
-    public GameSetup(int systemCount,
-            int humanPlayers,
-            int aiPlayers,
-            List<Integer> startProductionPerPlayer,
-            int neutralMinProduction,
-            int neutralMaxProduction,
-            int startGarrison,
-            boolean observersAllowed,
-            boolean reentryAllowed,
-            List<String> seatColorHexes,
-            ProductionDistribution productionDistribution,
-            GalaxyLayout galaxyLayout,
-            boolean battlePresentationEnabled,
-            int combatRandomnessPercent,
-            RoundRules roundRules,
-            int victorySystemPercent) {
-        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction,
-                neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes,
-                productionDistribution, galaxyLayout, battlePresentationEnabled, combatRandomnessPercent,
-                roundRules, victorySystemPercent, RulesetRef.SECTOR_FORCES);
-    }
-
-    public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
-                     int neutralMinProduction, int neutralMaxProduction, int startGarrison,
-                     boolean observersAllowed, boolean reentryAllowed, List<String> seatColorHexes,
-                     ProductionDistribution productionDistribution, GalaxyLayout galaxyLayout,
-                     boolean battlePresentationEnabled, int combatRandomnessPercent, RoundRules roundRules) {
-        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction, neutralMaxProduction,
-                startGarrison, observersAllowed, reentryAllowed, seatColorHexes, productionDistribution, galaxyLayout,
-                battlePresentationEnabled, combatRandomnessPercent, roundRules, GameConfig.VICTORY_SYSTEM_PERCENT);
-    }
-    public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
-                     int neutralMinProduction, int neutralMaxProduction, int startGarrison,
-                     boolean observersAllowed, boolean reentryAllowed, List<String> seatColorHexes,
-                     ProductionDistribution productionDistribution, GalaxyLayout galaxyLayout,
-                     boolean battlePresentationEnabled) {
-        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction,
-                neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes,
-                productionDistribution, galaxyLayout, battlePresentationEnabled,
-                GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT, RoundRules.defaults());
-    }
-
-    public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
-                     int neutralMinProduction, int neutralMaxProduction, int startGarrison,
-                     boolean observersAllowed, boolean reentryAllowed, List<String> seatColorHexes,
-                     ProductionDistribution productionDistribution, GalaxyLayout galaxyLayout,
-                     boolean battlePresentationEnabled, RoundRules roundRules) {
-        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction,
-                neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes,
-                productionDistribution, galaxyLayout, battlePresentationEnabled,
-                GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT, roundRules);
-    }
-
-    public GameSetup(int systemCount, int humanPlayers, int aiPlayers, List<Integer> startProductionPerPlayer,
-                     int neutralMinProduction, int neutralMaxProduction, int startGarrison,
-                     boolean observersAllowed, boolean reentryAllowed, List<String> seatColorHexes,
-                     ProductionDistribution productionDistribution, GalaxyLayout galaxyLayout) {
-        this(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer, neutralMinProduction,
-                neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed, seatColorHexes,
-                productionDistribution, galaxyLayout, GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED);
-    }
-    public static GameSetup defaults() {
-        int totalPlayers = GameConfig.DEFAULT_HUMAN_PLAYERS + GameConfig.DEFAULT_AI_PLAYERS;
-        List<Integer> startProductions = new ArrayList<>();
-        for (int i = 0; i < totalPlayers; i++) {
-            startProductions.add(GameConfig.DEFAULT_START_SYSTEM_PRODUCTION);
-        }
-        return new GameSetup(
-                GameConfig.DEFAULT_SYSTEM_COUNT,
-                GameConfig.DEFAULT_HUMAN_PLAYERS,
-                GameConfig.DEFAULT_AI_PLAYERS,
-                List.copyOf(startProductions),
-                GameConfig.DEFAULT_NEUTRAL_MIN_PRODUCTION,
-                GameConfig.DEFAULT_NEUTRAL_MAX_PRODUCTION,
-                GameConfig.DEFAULT_START_GARRISON,
-                GameConfig.DEFAULT_OBSERVERS_ALLOWED,
-                GameConfig.DEFAULT_REENTRY_ALLOWED,
-                GameConfig.PLAYER_PALETTE,
-                GameConfig.DEFAULT_PRODUCTION_DISTRIBUTION,
-                GameConfig.DEFAULT_GALAXY_LAYOUT,
-                GameConfig.DEFAULT_BATTLE_PRESENTATION_ENABLED,
-                GameConfig.DEFAULT_COMBAT_RANDOMNESS_PERCENT,
-                RoundRules.defaults(),
-                GameConfig.VICTORY_SYSTEM_PERCENT
-        );
-    }
 
     public GameSetup {
-        aiStrategies = aiStrategies == null ? List.of() : List.copyOf(aiStrategies);
-        if (ruleset == null) { ruleset = RulesetRef.SECTOR_FORCES; }
-        victoryRules = (victoryRules == null ? VictoryRules.defaults(ruleset, victorySystemPercent) : victoryRules).forRuleset(ruleset);
-        victorySystemPercent = victoryRules.individualSystemPercent();
-        sectorOptions = ruleset.usesSectorOptions() ? SectorOptions.orNone(sectorOptions) : SectorOptions.none();
+        maxProduction = maxProduction <= 0 ? GameConfig.DEFAULT_MAX_PRODUCTION : maxProduction;
+        galaxyLayout = galaxyLayout == null ? GameConfig.DEFAULT_GALAXY_LAYOUT : galaxyLayout;
+        ruleset = ruleset == null ? RulesetRef.SECTOR_FORCES : ruleset;
+        computerStrength = computerStrength == null ? ComputerStrength.DEFAULT : computerStrength;
+        randomness = randomness == null ? RandomnessLevel.DEFAULT : randomness;
+        enabledEvents = enabledEvents == null ? Set.copyOf(EnumSet.allOf(CosmicEvent.class))
+                : enabledEvents.isEmpty() ? Set.of() : Set.copyOf(EnumSet.copyOf(enabledEvents));
+        RoundRules deadlines = roundRules == null ? RoundRules.defaults() : roundRules;
+        // The randomness level decides the order of several attackers; coalition battles have none to store.
+        AttackOrder order = ruleset.resolvesCoalitionBattles() ? RoundRules.DEFAULT_ATTACK_ORDER : randomness.attackOrder();
+        roundRules = new RoundRules(deadlines.roundLimit(), deadlines.stragglerLimit(), order, deadlines.tempo());
+        roundLimit = roundLimit <= 0 ? 0
+                : Math.clamp(roundLimit, SectorOptions.MIN_ROUND_LIMIT, SectorOptions.MAX_ROUND_LIMIT);
     }
 
-    @Override public SectorOptions sectorOptions() { return java.util.Objects.requireNonNull(sectorOptions); }
+    /** What the dialog proposes: one person against two normal computers on a medium even galaxy. */
+    public static GameSetup defaults() {
+        return new GameSetup(GameConfig.DEFAULT_SYSTEM_COUNT, GameConfig.DEFAULT_HUMAN_PLAYERS,
+                GameConfig.DEFAULT_AI_PLAYERS, GameConfig.DEFAULT_MAX_PRODUCTION, GameConfig.DEFAULT_GALAXY_LAYOUT,
+                RoundRules.defaults(), RulesetRef.SECTOR_FORCES, ComputerStrength.DEFAULT, RandomnessLevel.DEFAULT,
+                EnumSet.allOf(CosmicEvent.class), 0, false);
+    }
 
-    public GameSetup withSectorOptions(SectorOptions chosen) {
-        return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
-                neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
-                seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
-                combatRandomnessPercent, roundRules, victorySystemPercent, ruleset, victoryRules, aiStrategies, chosen, tutorial);
+    @Override public GalaxyLayout galaxyLayout() { return Objects.requireNonNull(galaxyLayout); }
+    @Override public RoundRules roundRules() { return Objects.requireNonNull(roundRules); }
+    @Override public RulesetRef ruleset() { return Objects.requireNonNull(ruleset); }
+    @Override public ComputerStrength computerStrength() { return Objects.requireNonNull(computerStrength); }
+    @Override public RandomnessLevel randomness() { return Objects.requireNonNull(randomness); }
+    @Override public Set<CosmicEvent> enabledEvents() { return Objects.requireNonNull(enabledEvents); }
+
+    public GameSetup seatPlayers(int humans, int computers) {
+        return new GameSetup(systemCount, humans, computers, maxProduction, galaxyLayout, roundRules, ruleset,
+                computerStrength, randomness, enabledEvents, roundLimit, tutorial);
+    }
+
+    public GameSetup chooseGalaxy(int systems, GalaxyLayout layout) {
+        return new GameSetup(systems, humanPlayers, aiPlayers, maxProduction, layout, roundRules, ruleset,
+                computerStrength, randomness, enabledEvents, roundLimit, tutorial);
+    }
+
+    public GameSetup chooseMaxProduction(int highest) {
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, highest, galaxyLayout, roundRules, ruleset,
+                computerStrength, randomness, enabledEvents, roundLimit, tutorial);
+    }
+
+    public GameSetup chooseRoundRules(RoundRules rules) {
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, maxProduction, galaxyLayout, rules, ruleset,
+                computerStrength, randomness, enabledEvents, roundLimit, tutorial);
+    }
+
+    public GameSetup selectRuleset(RulesetRef selected) {
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, maxProduction, galaxyLayout, roundRules, selected,
+                computerStrength, randomness, enabledEvents, roundLimit, tutorial);
+    }
+
+    public GameSetup chooseComputerStrength(ComputerStrength strength) {
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, maxProduction, galaxyLayout, roundRules, ruleset,
+                strength, randomness, enabledEvents, roundLimit, tutorial);
+    }
+
+    public GameSetup chooseRandomness(RandomnessLevel level) {
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, maxProduction, galaxyLayout, roundRules, ruleset,
+                computerStrength, level, enabledEvents, roundLimit, tutorial);
+    }
+
+    /** The cosmic events that may strike; the randomness level decides how often. */
+    public GameSetup chooseEvents(Set<CosmicEvent> events) {
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, maxProduction, galaxyLayout, roundRules, ruleset,
+                computerStrength, randomness, events, roundLimit, tutorial);
+    }
+
+    /** Ends a classic game after this round with a score; 0 plays until someone wins. */
+    public GameSetup limitRounds(int lastRound) {
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, maxProduction, galaxyLayout, roundRules, ruleset,
+                computerStrength, randomness, enabledEvents, lastRound, tutorial);
     }
 
     /** A tutorial shows aids that are left out of a normal game; chosen at creation, visible to every seat. */
     public GameSetup chooseTutorial(boolean chosen) {
-        return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
-                neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
-                seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
-                combatRandomnessPercent, roundRules, victorySystemPercent, ruleset, victoryRules, aiStrategies, sectorOptions, chosen);
+        return new GameSetup(systemCount, humanPlayers, aiPlayers, maxProduction, galaxyLayout, roundRules, ruleset,
+                computerStrength, randomness, enabledEvents, roundLimit, chosen);
     }
 
-    public GameSetup selectRuleset(RulesetRef selected) {
-        return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
-                neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
-                seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
-                combatRandomnessPercent, roundRules, victorySystemPercent, selected, VictoryRules.defaults(selected, victorySystemPercent), aiStrategies,
-                sectorOptions, tutorial);
-    }
-
-    @Override public VictoryRules victoryRules() { return java.util.Objects.requireNonNull(victoryRules); }
-
-    public GameSetup chooseVictoryRules(VictoryRules chosen) {
-        return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
-                neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
-                seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
-                combatRandomnessPercent, roundRules, chosen.individualSystemPercent(), ruleset, chosen, aiStrategies, sectorOptions, tutorial);
-    }
-
+    /** Keeps every count within the supported bounds; a galaxy has at least one system per empire. */
     public GameSetup normalized() {
-        int humanLowerBound = observersAllowed ? 0 : GameConfig.MIN_HUMAN_PLAYERS;
-        int humans = clamp(humanPlayers, humanLowerBound, GameConfig.MAX_HUMAN_PLAYERS);
-        int ai = clamp(aiPlayers, GameConfig.MIN_AI_PLAYERS, GameConfig.MAX_AI_PLAYERS);
-        if (humans + ai > GameConfig.MAX_TOTAL_PLAYERS) {
-            ai = Math.max(GameConfig.MIN_AI_PLAYERS, GameConfig.MAX_TOTAL_PLAYERS - humans);
-        }
-        int totalPlayers = humans + ai;
-        int systems = clamp(systemCount, Math.max(GameConfig.MIN_SYSTEM_COUNT, totalPlayers),
+        int humans = Math.clamp(humanPlayers, 0, GameConfig.MAX_TOTAL_PLAYERS);
+        int computers = Math.clamp(aiPlayers, 0, GameConfig.MAX_TOTAL_PLAYERS - humans);
+        int systems = Math.clamp(systemCount, Math.max(GameConfig.MIN_SYSTEM_COUNT, humans + computers),
                 GameConfig.MAX_SYSTEM_COUNT);
-        List<Integer> startProductions = normalizeStartProductions(startProductionPerPlayer, totalPlayers);
-        int neutralMin = clamp(neutralMinProduction, GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION);
-        int neutralMax = clamp(neutralMaxProduction, GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION);
-        if (neutralMin > neutralMax) {
-            int tmp = neutralMin;
-            neutralMin = neutralMax;
-            neutralMax = tmp;
-        }
-        int garrison = clamp(startGarrison, GameConfig.MIN_START_GARRISON, GameConfig.MAX_START_GARRISON);
-        List<String> seatColors = normalizeSeatColors(seatColorHexes, totalPlayers);
-        return new GameSetup(systems, humans, ai, startProductions, neutralMin, neutralMax, garrison,
-                observersAllowed, reentryAllowed, seatColors,
-                productionDistribution == null ? GameConfig.DEFAULT_PRODUCTION_DISTRIBUTION : productionDistribution,
-                galaxyLayout == null ? GameConfig.DEFAULT_GALAXY_LAYOUT : galaxyLayout,
-                battlePresentationEnabled,
-                clamp(combatRandomnessPercent, GameConfig.MIN_COMBAT_RANDOMNESS_PERCENT,
-                        GameConfig.MAX_COMBAT_RANDOMNESS_PERCENT),
-                roundRules == null ? RoundRules.defaults() : roundRules,
-                clamp(victorySystemPercent, GameConfig.MIN_VICTORY_SYSTEM_PERCENT,
-                        GameConfig.MAX_VICTORY_SYSTEM_PERCENT), ruleset, victoryRules, java.util.stream.IntStream.range(0, ai)
-                        .mapToObj(this::strategyForAi).toList(), sectorOptions, tutorial);
-    }
-
-    public GameSetup chooseAiStrategies(List<AiStrategy> selected) {
-        return new GameSetup(systemCount, humanPlayers, aiPlayers, startProductionPerPlayer,
-                neutralMinProduction, neutralMaxProduction, startGarrison, observersAllowed, reentryAllowed,
-                seatColorHexes, productionDistribution, galaxyLayout, battlePresentationEnabled,
-                combatRandomnessPercent, roundRules, victorySystemPercent, ruleset, victoryRules, selected, sectorOptions, tutorial).normalized();
-    }
-
-    public AiStrategy strategyForAi(int index) {
-        AiStrategy selected = index >= 0 && index < aiStrategies.size() ? aiStrategies.get(index) : AiStrategy.BASELINE;
-        return selected.supports(ruleset) ? selected : AiStrategy.BASELINE;
+        int highest = Math.clamp(maxProduction, GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION);
+        return new GameSetup(systems, humans, computers, highest, galaxyLayout, roundRules, ruleset,
+                computerStrength, randomness, enabledEvents, roundLimit, tutorial);
     }
 
     public int totalPlayers() {
         return humanPlayers + aiPlayers;
     }
 
-    public int startProductionForSeat(int seatIndex) {
-        if (seatIndex < 0 || seatIndex >= startProductionPerPlayer.size()) {
-            return GameConfig.DEFAULT_START_SYSTEM_PRODUCTION;
-        }
-        return clamp(startProductionPerPlayer.get(seatIndex), GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION);
-    }
-
+    /** Seat colours come from the palette in seat order. */
     public String colorForSeat(int seatIndex) {
-        if (seatIndex >= 0 && seatIndex < seatColorHexes.size()) {
-            return seatColorHexes.get(seatIndex);
-        }
         return GameConfig.PLAYER_PALETTE.get(Math.floorMod(seatIndex, GameConfig.PLAYER_PALETTE.size()));
     }
 
-    private static int clamp(int value, int min, int max) {
-        return Math.clamp(value, min, max);
+    /** Largest deviation of a side's strength before a battle, from the randomness level. */
+    public int combatRandomnessPercent() {
+        return randomness().combatRandomnessPercent();
     }
 
-    private static List<Integer> normalizeStartProductions(List<Integer> values, int totalPlayers) {
-        if (totalPlayers <= 0) {
-            return List.of();
-        }
-        List<Integer> source = values == null ? Collections.emptyList() : values;
-        List<Integer> out = new ArrayList<>(totalPlayers);
-        for (int i = 0; i < totalPlayers; i++) {
-            int value = i < source.size() ? source.get(i) : GameConfig.DEFAULT_START_SYSTEM_PRODUCTION;
-            out.add(clamp(value, GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION));
-        }
-        return List.copyOf(out);
+    /** Fixed victory and diplomacy rules of the chosen rules. */
+    public VictoryRules victoryRules() {
+        return VictoryRules.forNewGame(ruleset());
     }
 
-    private static String normalizeColor(@Nullable String color) {
-        Set<String> palette = new HashSet<>(GameConfig.PLAYER_PALETTE);
-        if (color != null && palette.contains(color)) {
-            return color;
+    /**
+     * Classic options after Galactic Empire: the events at the frequency of the randomness level, the start
+     * balance and the round limit. Other rules have none of them.
+     */
+    public SectorOptions sectorOptions() {
+        if (!ruleset().usesSectorOptions()) {
+            return SectorOptions.none();
         }
-        return GameConfig.PLAYER_PALETTE.getFirst();
-    }
-
-    private static List<String> normalizeSeatColors(@Nullable List<String> values, int totalPlayers) {
-        List<String> requested = values == null ? List.of() : values;
-        List<String> result = new ArrayList<>(totalPlayers);
-        Set<String> used = new HashSet<>();
-        for (int i = 0; i < totalPlayers; i++) {
-            String color = normalizeColor(i < requested.size() ? requested.get(i) : null);
-            if (used.contains(color)) {
-                color = GameConfig.PLAYER_PALETTE.stream().filter(candidate -> !used.contains(candidate))
-                        .findFirst().orElse(color);
-            }
-            result.add(color);
-            used.add(color);
-        }
-        return List.copyOf(result);
+        return new SectorOptions(randomness().eventFrequency(), enabledEvents(), true, roundLimit);
     }
 }

@@ -25,7 +25,7 @@ import de.zettsystems.starfare.game.application.Broadcaster;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.application.RulesetAccess;
 import de.zettsystems.starfare.game.ui.RulesetOffer;
-import de.zettsystems.starfare.game.ui.CreateGameWizardDialog;
+import de.zettsystems.starfare.game.ui.NewGameDialog;
 import de.zettsystems.starfare.game.ui.GameTemplateDialog;
 import de.zettsystems.starfare.game.ui.JoinGameDialog;
 import de.zettsystems.starfare.game.ui.MainView;
@@ -108,7 +108,7 @@ public class StandaloneLobby extends VerticalLayout {
 
         Div toolbarAction = new Div();
         toolbarAction.addClassName("lobby-toolbar-action");
-        Button newGameTopButton = new Button(I18n.t(UiTexts.LOBBY_NEW_GAME), _ -> openCreateGameWizard());
+        Button newGameTopButton = new Button(I18n.t(UiTexts.LOBBY_NEW_GAME), _ -> openNewGameDialog());
         newGameTopButton.addThemeVariants(ButtonVariant.PRIMARY);
         toolbarAction.add(new LanguageSwitcher(), new AccountNavigation(), newGameTopButton);
 
@@ -253,7 +253,7 @@ public class StandaloneLobby extends VerticalLayout {
 
         newGameButton = new Button(I18n.t(UiTexts.LOBBY_NEW_GAME));
         newGameButton.addThemeVariants(ButtonVariant.PRIMARY);
-        newGameButton.addClickListener(_ -> openCreateGameWizard());
+        newGameButton.addClickListener(_ -> openNewGameDialog());
 
         emptyState.add(textBlock, newGameButton);
     }
@@ -454,8 +454,8 @@ public class StandaloneLobby extends VerticalLayout {
         return manage;
     }
 
-    private void openCreateGameWizard() {
-        CreateGameWizardDialog.open(game, players, this::refresh,
+    private void openNewGameDialog() {
+        NewGameDialog.open(game, players, this::refresh,
                 RulesetOffer.of(rulesetAccess, UserContext.currentPlayerId().orElse(null)));
     }
 

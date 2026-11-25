@@ -122,7 +122,8 @@ class EconomyBenchmarkTest {
             assertThat(EconomyBenchmark.play(scenario, EconomyMaps.Environment.NATURAL, profiles, 1, repeatedMetrics, repeatedOrders)).isEqualTo(first);
             assertThat(repeatedMetrics).hasToString(metrics.toString());
             assertThat(repeatedOrders).hasToString(orders.toString());
-            assertThat(first.rounds()).isGreaterThanOrEqualTo(25);
+            // Eight systems make a small map at the fixed travel speed (K3); the duel still lasts beyond the opening.
+            assertThat(first.rounds()).isGreaterThanOrEqualTo(12);
         }
     }
 }

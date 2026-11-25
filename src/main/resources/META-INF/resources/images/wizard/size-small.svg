@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100">
+  <defs>
+    <radialGradient id="space" cx=".5" cy=".45" r=".75">
+      <stop offset="0" stop-color="#1b2a4d"/>
+      <stop offset="1" stop-color="#070b15"/>
+    </radialGradient>
+  </defs>
+  <rect width="160" height="100" fill="url(#space)"/>
+  <circle cx="20.2" cy="17.5" r="3.2" fill="#f0e4a0"/>
+  <circle cx="49.9" cy="17.1" r="3.2" fill="#9fd3f0"/>
+  <circle cx="78.5" cy="19.6" r="3.2" fill="#9fd3f0"/>
+  <circle cx="104.9" cy="19.4" r="3.2" fill="#f0e4a0"/>
+  <circle cx="129.7" cy="15.4" r="3.2" fill="#ffb48a"/>
+  <circle cx="19.7" cy="34.9" r="3.2" fill="#9fd3f0"/>
+  <circle cx="55.1" cy="37.0" r="3.2" fill="#f0e4a0"/>
+  <circle cx="84.7" cy="44.7" r="3.2" fill="#9fd3f0"/>
+  <circle cx="104.8" cy="44.0" r="3.2" fill="#ffb48a"/>
+  <circle cx="142.6" cy="41.3" r="3.2" fill="#f0e4a0"/>
+  <circle cx="14.8" cy="60.2" r="3.2" fill="#9fd3f0"/>
+  <circle cx="53.2" cy="58.3" r="3.2" fill="#9fd3f0"/>
+  <circle cx="75.6" cy="58.5" r="3.2" fill="#f0e4a0"/>
+  <circle cx="104.9" cy="64.2" r="3.2" fill="#9fd3f0"/>
+  <circle cx="135.1" cy="59.8" r="3.2" fill="#9fd3f0"/>
+  <circle cx="24.7" cy="87.6" r="3.2" fill="#f0e4a0"/>
+</svg>

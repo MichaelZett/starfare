@@ -49,8 +49,8 @@ class AllianceVictoryJourneyTest extends AbstractMapJourneyTest {
     private static GameState allianceAboutToWin() {
         GameState state = new GameState();
         state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE)
-                .chooseVictoryRules(new VictoryRules(70, true, true, 70)));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE));
+        state.configureVictoryRules(new VictoryRules(70, true, true, 70));
         state.players().addAll(List.of(new Player(1, "Commander", false, "#56b4e9"),
                 new Player(2, "Partner", false, "#d55e00"), new Player(3, "Opponent", true, "#009e73")));
         for (int system = 1; system <= 16; system++) {

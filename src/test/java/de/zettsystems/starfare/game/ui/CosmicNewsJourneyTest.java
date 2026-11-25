@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.ui;
 import com.vaadin.flow.component.html.Div;
 import de.zettsystems.starfare.game.values.EventFrequency;
 import de.zettsystems.starfare.game.values.GameSetup;
+import de.zettsystems.starfare.game.values.RandomnessLevel;
 import de.zettsystems.starfare.game.values.SectorOptions;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.report.values.CosmicNews;
@@ -21,7 +22,7 @@ class CosmicNewsJourneyTest extends AbstractMapJourneyTest {
     void supernovaShowsInTheReportAndOnTheMap() {
         email = loginAsNewPlayer("Ticker Reader");
         account = String.valueOf(accounts.findByEmail(email).orElseThrow().id());
-        GameSetup setup = GameSetup.defaults().withSectorOptions(new SectorOptions(EventFrequency.NORMAL, null, false, 0));
+        GameSetup setup = GameSetup.defaults().chooseRandomness(RandomnessLevel.MEDIUM);
         id = games.newGame(setup, account, "Supernova");
         player = games.joinGame(id, account, "Ticker Reader", "Ticker Empire").orElseThrow();
         assertThat(games.startGame(id)).isTrue();

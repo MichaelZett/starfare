@@ -249,9 +249,8 @@ class StarfareMatchesTest {
         @Test
         void ranksByScoreWhenTheRoundLimitEndedTheGame() {
             GameState state = new GameState();
-            state.rememberSetup(de.zettsystems.starfare.game.values.GameSetup.defaults().withSectorOptions(
-                    new de.zettsystems.starfare.game.values.SectorOptions(
-                            de.zettsystems.starfare.game.values.EventFrequency.OFF, null, false, 10)));
+            state.rememberSetup(de.zettsystems.starfare.game.values.GameSetup.defaults()
+                    .chooseRandomness(de.zettsystems.starfare.game.values.RandomnessLevel.NONE).limitRounds(10));
             state.players().add(new Player(1, "P1", false, "#111111"));
             state.players().add(new Player(2, "P2", false, "#222222"));
             state.players().add(new Player(3, "AI", true, "#333333"));

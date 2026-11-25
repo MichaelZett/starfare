@@ -1,211 +1,172 @@
 package de.zettsystems.starfare.game.values;
 
+import de.zettsystems.starfare.ai.values.AiStrategy;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 
-import java.util.List;
+import java.util.EnumSet;
+import java.util.Random;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/** The slim setup of the new-game dialog and the values it derives. */
 class GameSetupTest {
 
-    private static GameSetup setup(int humans, int ai, boolean observersAllowed) {
-        return new GameSetup(
-                24, humans, ai,
-                List.of(),
-                2, 6, 8,
-                observersAllowed, true, List.of(), null, null
-        );
+    @Test
+    void defaultsAreOnePersonAgainstTwoNormalComputersOnAMediumEvenGalaxyWithLittleChance() {
+        GameSetup setup = GameSetup.defaults();
+
+        assertThat(setup.systemCount()).isEqualTo(GalaxySize.MEDIUM.systems());
+        assertThat(setup.humanPlayers()).isOne();
+        assertThat(setup.aiPlayers()).isEqualTo(2);
+        assertThat(setup.maxProduction()).isEqualTo(10);
+        assertThat(setup.galaxyLayout()).isEqualTo(GalaxyLayout.EVEN);
+        assertThat(setup.computerStrength()).isEqualTo(ComputerStrength.NORMAL);
+        assertThat(setup.randomness()).isEqualTo(RandomnessLevel.LOW);
+        assertThat(setup.enabledEvents()).containsExactlyInAnyOrder(CosmicEvent.values());
+        assertThat(setup.roundLimit()).isZero();
+        assertThat(setup.tutorial()).isFalse();
     }
 
     @Test
-    void theTutorialChoiceSurvivesEveryLaterChoice() {
-        GameSetup plain = setup(1, 1, false);
-        assertThat(plain.tutorial()).isFalse();
+    void everyChoiceSurvivesEveryLaterChoice() {
+        GameSetup setup = GameSetup.defaults().chooseTutorial(true).seatPlayers(2, 3)
+                .chooseGalaxy(40, GalaxyLayout.RANDOM).chooseMaxProduction(15)
+                .chooseComputerStrength(ComputerStrength.HARD).chooseRandomness(RandomnessLevel.HIGH)
+                .chooseEvents(EnumSet.of(CosmicEvent.SUPERNOVA)).limitRounds(80)
+                .chooseRoundRules(RoundRules.forTempo(GameTempo.BRISK, AttackOrder.RANDOM))
+                .selectRuleset(RulesetRef.SECTOR_FORCES).normalized();
 
-        GameSetup tutorial = plain.chooseTutorial(true).normalized().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE)
-                .chooseVictoryRules(VictoryRules.defaults(RulesetRef.SPACEWARD_ALLIANCE, 60))
-                .chooseAiStrategies(List.of()).withSectorOptions(SectorOptions.none());
-
-        assertThat(tutorial.tutorial()).isTrue();
-        assertThat(tutorial.chooseTutorial(false).tutorial()).isFalse();
+        assertThat(setup.tutorial()).isTrue();
+        assertThat(setup.totalPlayers()).isEqualTo(5);
+        assertThat(setup.systemCount()).isEqualTo(40);
+        assertThat(setup.galaxyLayout()).isEqualTo(GalaxyLayout.RANDOM);
+        assertThat(setup.maxProduction()).isEqualTo(15);
+        assertThat(setup.computerStrength()).isEqualTo(ComputerStrength.HARD);
+        assertThat(setup.enabledEvents()).containsExactly(CosmicEvent.SUPERNOVA);
+        assertThat(setup.roundLimit()).isEqualTo(80);
+        assertThat(setup.roundRules().tempo()).isEqualTo(GameTempo.BRISK);
+        assertThat(setup.chooseTutorial(false).tutorial()).isFalse();
     }
 
     @Test
-    void multipleHumansSurviveNormalization() {
-        GameSetup setup = new GameSetup(
-                24, 3, 1,
-                List.of(4, 4, 4, 4),
-                2, 6, 8,
-                true, true, List.of(), null, null
-        ).normalized();
+    void theRandomnessLevelSetsCombatDeviationEventsAndAttackOrder() {
+        GameSetup none = GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE);
+        assertThat(none.combatRandomnessPercent()).isZero();
+        assertThat(none.sectorOptions().eventFrequency()).isEqualTo(EventFrequency.OFF);
+        assertThat(none.roundRules().attackOrder()).isEqualTo(AttackOrder.STRONGEST_FIRST);
 
-        assertThat(setup.humanPlayers()).isEqualTo(3);
-        assertThat(setup.aiPlayers()).isOne();
-        assertThat(setup.totalPlayers()).isEqualTo(4);
+        assertThat(GameSetup.defaults().combatRandomnessPercent()).isEqualTo(5);
+        assertThat(GameSetup.defaults().sectorOptions().eventFrequency()).isEqualTo(EventFrequency.RARE);
+        assertThat(GameSetup.defaults().roundRules().attackOrder()).isEqualTo(AttackOrder.RANDOM);
+
+        GameSetup medium = GameSetup.defaults().chooseRandomness(RandomnessLevel.MEDIUM);
+        assertThat(medium.combatRandomnessPercent()).isEqualTo(10);
+        assertThat(medium.sectorOptions().eventFrequency()).isEqualTo(EventFrequency.NORMAL);
+
+        GameSetup high = GameSetup.defaults().chooseRandomness(RandomnessLevel.HIGH);
+        assertThat(high.combatRandomnessPercent()).isEqualTo(20);
+        assertThat(high.sectorOptions().eventFrequency()).isEqualTo(EventFrequency.FREQUENT);
+        assertThat(EventFrequency.FREQUENT.scale(0.05)).isEqualTo(0.1);
     }
 
     @Test
-    void humansClampedToMinimumWhenObserversNotAllowed() {
-        GameSetup setup = setup(0, 2, false).normalized();
+    void aClassicGameAlwaysBalancesItsStartAndKeepsItsEventsAndRoundLimit() {
+        GameSetup classic = GameSetup.defaults().chooseEvents(Set.of(CosmicEvent.COSMIC_STORM)).limitRounds(5);
 
-        assertThat(setup.humanPlayers()).isEqualTo(GameConfig.MIN_HUMAN_PLAYERS);
+        assertThat(classic.sectorOptions().positionalBalance()).isTrue();
+        assertThat(classic.sectorOptions().enabledEvents()).containsExactly(CosmicEvent.COSMIC_STORM);
+        assertThat(classic.roundLimit()).isEqualTo(SectorOptions.MIN_ROUND_LIMIT);
+        assertThat(classic.limitRounds(9999).roundLimit()).isEqualTo(SectorOptions.MAX_ROUND_LIMIT);
+        assertThat(classic.limitRounds(-3).roundLimit()).isZero();
     }
 
     @Test
-    void humansMayBeZeroWhenObserversAllowed() {
-        GameSetup setup = setup(0, 2, true).normalized();
+    void extendedGamesHaveNoClassicOptionsNoAttackOrderAndFixedAlliances() {
+        GameSetup extended = GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE)
+                .selectRuleset(RulesetCatalog.ECONOMY_CANDIDATE);
 
-        assertThat(setup.humanPlayers()).isZero();
-        assertThat(setup.observersAllowed()).isTrue();
+        assertThat(extended.sectorOptions()).isEqualTo(SectorOptions.none());
+        assertThat(extended.roundRules().attackOrder()).isEqualTo(RoundRules.DEFAULT_ATTACK_ORDER);
+        assertThat(extended.victoryRules()).isEqualTo(new VictoryRules(70, true, true, 70, true));
+        assertThat(GameSetup.defaults().victoryRules()).isEqualTo(VictoryRules.defaults(RulesetRef.SECTOR_FORCES, 70));
+        assertThat(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD).victoryRules())
+                .isEqualTo(VictoryRules.defaults(RulesetRef.SPACEWARD, 70));
     }
 
     @Test
-    void humansClampedToMaximum() {
-        GameSetup setup = setup(99, 0, true).normalized();
+    void normalizationKeepsEveryCountWithinItsBounds() {
+        GameSetup crowded = GameSetup.defaults().seatPlayers(12, 9).chooseGalaxy(4, GalaxyLayout.EVEN)
+                .chooseMaxProduction(99).normalized();
 
-        assertThat(setup.humanPlayers()).isEqualTo(GameConfig.MAX_HUMAN_PLAYERS);
+        assertThat(crowded.humanPlayers()).isEqualTo(GameConfig.MAX_TOTAL_PLAYERS);
+        assertThat(crowded.aiPlayers()).isZero();
+        assertThat(crowded.systemCount()).isEqualTo(GameConfig.MAX_TOTAL_PLAYERS);
+        assertThat(crowded.maxProduction()).isEqualTo(GameConfig.MAX_PRODUCTION);
+
+        GameSetup tiny = GameSetup.defaults().seatPlayers(1, 1).chooseGalaxy(500, GalaxyLayout.EVEN).normalized();
+        assertThat(tiny.systemCount()).isEqualTo(GameConfig.MAX_SYSTEM_COUNT);
+        assertThat(GameSetup.defaults().chooseGalaxy(1, GalaxyLayout.EVEN).normalized().systemCount())
+                .isEqualTo(GameConfig.MIN_SYSTEM_COUNT);
     }
 
     @Test
-    void totalPlayersCannotExceedMaxTotal() {
-        GameSetup setup = setup(GameConfig.MAX_HUMAN_PLAYERS, GameConfig.MAX_AI_PLAYERS, true).normalized();
+    void seatColoursFollowThePalette() {
+        GameSetup setup = GameSetup.defaults();
 
-        assertThat(setup.totalPlayers()).isLessThanOrEqualTo(GameConfig.MAX_TOTAL_PLAYERS);
+        assertThat(setup.colorForSeat(0)).isEqualTo(GameConfig.PLAYER_PALETTE.getFirst());
+        assertThat(setup.colorForSeat(GameConfig.PLAYER_PALETTE.size())).isEqualTo(GameConfig.PLAYER_PALETTE.getFirst());
     }
 
     @Test
-    void systemsAlwaysCoverEveryParticipant() {
-        GameSetup setup = new GameSetup(
-                GameConfig.MIN_SYSTEM_COUNT, GameConfig.MAX_HUMAN_PLAYERS, GameConfig.MAX_AI_PLAYERS,
-                List.of(), 2, 6, 8, true, true, List.of(), null, null
-        ).normalized();
-
-        assertThat(setup.systemCount()).isGreaterThanOrEqualTo(setup.totalPlayers());
+    void galaxySizesNeedTwoSystemsPerEmpire() {
+        assertThat(GalaxySize.SMALL.fits(8)).isTrue();
+        assertThat(GalaxySize.SMALL.fits(9)).isFalse();
+        assertThat(GalaxySize.fitting(GalaxySize.SMALL, 10)).isEqualTo(GalaxySize.MEDIUM);
+        assertThat(GalaxySize.fitting(GalaxySize.LARGE, 10)).isEqualTo(GalaxySize.LARGE);
+        assertThat(GalaxySize.of(64)).contains(GalaxySize.HUGE);
+        assertThat(GalaxySize.of(25)).isEmpty();
     }
 
     @Test
-    void productionAndStartingGarrisonStayWithinSetupLimits() {
-        GameSetup setup = new GameSetup(
-                24, 1, 1, List.of(-3, 999), -2, 999, 999,
-                true, true, List.of(), null, null
-        ).normalized();
+    void computerStrengthScalesTheStartAndPicksProfiles() {
+        assertThat(ComputerStrength.EASY.computerStart(4)).isEqualTo(3);
+        assertThat(ComputerStrength.NORMAL.computerStart(8)).isEqualTo(8);
+        assertThat(ComputerStrength.HARD.computerStart(8)).isEqualTo(10);
+        assertThat(ComputerStrength.EASY.computerStart(1)).isOne();
 
-        assertThat(setup.startProductionPerPlayer())
-                .containsExactly(GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION);
-        assertThat(setup.neutralMinProduction()).isEqualTo(GameConfig.MIN_PRODUCTION);
-        assertThat(setup.neutralMaxProduction()).isEqualTo(GameConfig.MAX_PRODUCTION);
-        assertThat(setup.startGarrison()).isEqualTo(GameConfig.MAX_START_GARRISON);
+        Random random = new Random(3);
+        assertThat(ComputerStrength.EASY.strategy(RulesetRef.SECTOR_FORCES, 2, random)).isEqualTo(AiStrategy.BASELINE);
+        for (int draw = 0; draw < 20; draw++) {
+            assertThat(ComputerStrength.NORMAL.strategy(RulesetRef.SECTOR_FORCES, 4, random))
+                    .isIn(ComputerStrength.NORMAL_PROFILES);
+            assertThat(ComputerStrength.HARD.strategy(RulesetRef.SECTOR_FORCES, 2, random))
+                    .isIn(AiStrategy.RUSH, AiStrategy.EXPANSION);
+            assertThat(ComputerStrength.HARD.strategy(RulesetCatalog.ECONOMY_CANDIDATE, 5, random))
+                    .isIn(AiStrategy.INDUSTRY_ADAPTIVE, AiStrategy.BASELINE);
+        }
+        assertThat(ComputerStrength.HARD.strategy(RulesetRef.SECTOR_FORCES, 3, random)).isEqualTo(AiStrategy.BASELINE);
+        assertThat(ComputerStrength.HARD.strategy(RulesetCatalog.ECONOMY_CANDIDATE, 2, random))
+                .isEqualTo(AiStrategy.INDUSTRY_ADAPTIVE);
     }
 
     @Test
-    void startProductionListMatchesTotalPlayers() {
-        GameSetup setup = new GameSetup(
-                24, 2, 1,
-                List.of(5),
-                2, 6, 8,
-                true, true, List.of(), null, null
-        ).normalized();
+    void storedSetupsOfEarlierVersionsKeepWhatTheSetupStillKnows() {
+        String earlier = """
+                {"systemCount":30,"humanPlayers":2,"aiPlayers":1,"startProductionPerPlayer":[4,4,4],
+                 "neutralMinProduction":2,"neutralMaxProduction":9,"startGarrison":8,"observersAllowed":true,
+                 "seatColorHexes":["#0072B2"],"productionDistribution":"UNIFORM","galaxyLayout":"RANDOM",
+                 "combatRandomnessPercent":12,"victorySystemPercent":60,"ruleset":{"variant":"classic","version":"1.0.0"}}
+                """;
 
-        assertThat(setup.startProductionPerPlayer()).hasSize(setup.totalPlayers());
-        assertThat(setup.startProductionForSeat(0)).isEqualTo(5);
-        assertThat(setup.startProductionForSeat(1)).isEqualTo(GameConfig.DEFAULT_START_SYSTEM_PRODUCTION);
-        assertThat(setup.startProductionForSeat(2)).isEqualTo(GameConfig.DEFAULT_START_SYSTEM_PRODUCTION);
-    }
+        GameSetup restored = JsonMapper.builder().build().readValue(earlier, GameSetup.class);
 
-    @Test
-    void defaultsHaveObserversAllowedAndReentryAllowed() {
-        GameSetup defaults = GameSetup.defaults();
-
-        assertThat(defaults.observersAllowed()).isTrue();
-        assertThat(defaults.reentryAllowed()).isTrue();
-    }
-
-    @Test
-    void battlePresentationChoiceSurvivesNormalization() {
-        GameSetup normalized = new GameSetup(
-                24, 1, 1, List.of(4, 4), 2, 6, 8,
-                true, true, List.of(), null, null, false
-        ).normalized();
-
-        assertThat(normalized.battlePresentationEnabled()).isFalse();
-    }
-
-    @Test
-    void flagsSurviveNormalization() {
-        GameSetup normalized = new GameSetup(
-                24, 2, 1,
-                List.of(4, 4, 4),
-                2, 6, 8,
-                false, false, List.of(), null, null
-        ).normalized();
-
-        assertThat(normalized.observersAllowed()).isFalse();
-        assertThat(normalized.reentryAllowed()).isFalse();
-    }
-
-    @Test
-    void seatColorsDefaultToPaletteOrder() {
-        GameSetup setup = new GameSetup(
-                24, 2, 1,
-                List.of(4, 4, 4),
-                2, 6, 8,
-                true, true, List.of(), null, null
-        ).normalized();
-
-        assertThat(setup.seatColorHexes()).hasSize(3);
-        assertThat(setup.colorForSeat(0)).isEqualTo(GameConfig.PLAYER_PALETTE.get(0));
-        assertThat(setup.colorForSeat(1)).isEqualTo(GameConfig.PLAYER_PALETTE.get(1));
-        assertThat(setup.colorForSeat(2)).isEqualTo(GameConfig.PLAYER_PALETTE.get(2));
-    }
-
-    @Test
-    void chosenSeatColorsSurviveNormalization() {
-        String third = GameConfig.PLAYER_PALETTE.get(2);
-        String first = GameConfig.PLAYER_PALETTE.get(0);
-
-        GameSetup setup = new GameSetup(
-                24, 2, 0,
-                List.of(4, 4),
-                2, 6, 8,
-                true, true, List.of(third, first), null, null
-        ).normalized();
-
-        assertThat(setup.colorForSeat(0)).isEqualTo(third);
-        assertThat(setup.colorForSeat(1)).isEqualTo(first);
-    }
-
-    @Test
-    void duplicateSeatColorsAreReplacedByFreePaletteEntries() {
-        String same = GameConfig.PLAYER_PALETTE.get(1);
-
-        GameSetup setup = new GameSetup(
-                24, 3, 0,
-                List.of(4, 4, 4),
-                2, 6, 8,
-                true, true, List.of(same, same, same), null, null
-        ).normalized();
-
-        assertThat(setup.seatColorHexes()).doesNotHaveDuplicates();
-        assertThat(setup.colorForSeat(0)).isEqualTo(same);
-    }
-
-    @Test
-    void unknownSeatColorFallsBackToPalette() {
-        GameSetup setup = new GameSetup(
-                24, 2, 0,
-                List.of(4, 4),
-                2, 6, 8,
-                true, true, List.of("not-a-color", "#123456"), null, null
-        ).normalized();
-
-        assertThat(setup.seatColorHexes()).allMatch(GameConfig.PLAYER_PALETTE::contains);
-        assertThat(setup.seatColorHexes()).doesNotHaveDuplicates();
-    }
-
-    @Test
-    void seatColorsCoverEveryPlayerAfterClamping() {
-        GameSetup setup = setup(GameConfig.MAX_HUMAN_PLAYERS, GameConfig.MAX_AI_PLAYERS, true).normalized();
-
-        assertThat(setup.seatColorHexes()).hasSize(setup.totalPlayers());
+        assertThat(restored.systemCount()).isEqualTo(30);
+        assertThat(restored.totalPlayers()).isEqualTo(3);
+        assertThat(restored.galaxyLayout()).isEqualTo(GalaxyLayout.RANDOM);
+        assertThat(restored.maxProduction()).isEqualTo(GameConfig.DEFAULT_MAX_PRODUCTION);
+        assertThat(restored.randomness()).isEqualTo(RandomnessLevel.DEFAULT);
+        assertThat(restored.computerStrength()).isEqualTo(ComputerStrength.DEFAULT);
     }
 }

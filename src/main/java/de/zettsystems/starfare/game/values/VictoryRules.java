@@ -36,6 +36,17 @@ public record VictoryRules(int individualSystemPercent, boolean alliancesAllowed
     public static VictoryRules defaults(RulesetRef rules, int individualPercent) {
         return new VictoryRules(individualPercent, rules.isSpaceward(), false, GameConfig.VICTORY_SYSTEM_PERCENT);
     }
+
+    /**
+     * Fixed rules of a new game: 70 % of the systems win; with the extended rules alliances, computer alliances
+     * and an alliance victory at the same share are always allowed. The first extended version knew no choice.
+     */
+    public static VictoryRules forNewGame(RulesetRef rules) {
+        if (!rules.isSpaceward() || rules.equals(RulesetRef.SPACEWARD)) {
+            return defaults(rules, GameConfig.VICTORY_SYSTEM_PERCENT);
+        }
+        return new VictoryRules(GameConfig.VICTORY_SYSTEM_PERCENT, true, true, GameConfig.VICTORY_SYSTEM_PERCENT, true);
+    }
     public VictoryRules forRuleset(RulesetRef rules) {
         if (!rules.isSpaceward()) { return defaults(rules, individualSystemPercent); }
         if (rules.equals(RulesetRef.SPACEWARD) && !equals(defaults(rules, individualSystemPercent))) {

@@ -43,7 +43,7 @@ public class NewMatchView extends VerticalLayout {
     }
 
     private void openWizard() {
-        CreateGameWizardDialog.open(game, players, () -> { },
+        NewGameDialog.open(game, players, () -> { },
                 RulesetOffer.of(rulesetAccess, UserContext.currentPlayerId().orElse(null)),
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)));
     }

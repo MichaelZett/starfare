@@ -54,9 +54,10 @@ class SectorOptionsTest {
     @Test
     void onlySectorForcesKeepsTheOptions() {
         var chosen = new SectorOptions(EventFrequency.NORMAL, Set.of(CosmicEvent.SUPERNOVA), true, 40);
-        GameSetup sector = GameSetup.defaults().withSectorOptions(chosen);
+        GameSetup sector = GameSetup.defaults().chooseRandomness(RandomnessLevel.MEDIUM)
+                .chooseEvents(Set.of(CosmicEvent.SUPERNOVA)).limitRounds(40);
         assertThat(sector.sectorOptions()).isEqualTo(chosen);
         assertThat(sector.selectRuleset(RulesetRef.SPACEWARD).sectorOptions()).isEqualTo(SectorOptions.none());
-        assertThat(sector.chooseAiStrategies(java.util.List.of()).sectorOptions()).isEqualTo(chosen);
+        assertThat(sector.chooseComputerStrength(ComputerStrength.EASY).sectorOptions()).isEqualTo(chosen);
     }
 }

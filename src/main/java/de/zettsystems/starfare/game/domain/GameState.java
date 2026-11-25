@@ -401,8 +401,12 @@ public class GameState {
     private final Map<Integer, List<FleetOrder>> pendingOrders = new HashMap<>();
     private final Map<Integer, List<FleetOrder>> previousOrders = new HashMap<>();
     private @Nullable GameSetup originalSetup;
+    private GalaxyExtent extent = GalaxyExtent.LEGACY;
 
     public Optional<GameSetup> originalSetup() { return Optional.ofNullable(originalSetup); }
+
+    /** Size of this galaxy's map; fixed when the game is created, older games keep the earlier fixed map. */
+    public GalaxyExtent extent() { return extent; }
 
     /** SectorForces options of this game; games without them, or other variants, have everything off. */
     public SectorOptions sectorOptions() {
@@ -426,6 +430,7 @@ public class GameState {
         }
         originalSetup = setup;
         ruleset = setup.ruleset();
+        extent = GalaxyExtent.forSystems(setup.systemCount());
         configureVictoryRules(setup.victoryRules());
     }
 
@@ -784,6 +789,7 @@ public class GameState {
         this.pendingOrders.clear();
         this.previousOrders.clear();
         this.originalSetup = null;
+        this.extent = GalaxyExtent.LEGACY;
         this.victoryRules = null;
         this.groupWinners = List.of();
         this.winningAlliance = null;
@@ -852,7 +858,7 @@ public class GameState {
     }
 
     public int travelRounds(int fromId, int toId) {
-        return roundsFor(distance(fromId, toId), baseSpeed());
+        return roundsFor(distance(fromId, toId));
     }
 
     /**
@@ -864,7 +870,6 @@ public class GameState {
         if (sourceSystemIds.isEmpty()) {
             return Set.of();
         }
-        double baseSpeed = baseSpeed();
         Map<Integer, StarSystem> index = new HashMap<>();
         for (StarSystem s : systems) {
             index.put(s.id(), s);
@@ -874,7 +879,7 @@ public class GameState {
         for (StarSystem target : systems) {
             for (StarSystem source : sources) {
                 double d = Math.hypot(source.x() - target.x(), source.y() - target.y());
-                if (roundsFor(d, baseSpeed) <= maxRounds) {
+                if (roundsFor(d) <= maxRounds) {
                     reachable.add(target.id());
                     break;
                 }
@@ -883,22 +888,10 @@ public class GameState {
         return reachable;
     }
 
-    private double baseSpeed() {
-        var bbox = bounds();
-        double diag = Math.hypot(bbox.width, bbox.height);
-        return Math.max(1.0, diag / 20.0);
-    }
-
-    private static int roundsFor(double distance, double baseSpeed) {
-        return Math.clamp((int) Math.ceil(distance / baseSpeed), 2, 20);
-    }
-
-    private Bounds bounds() {
-        double minX = systems.stream().mapToDouble(StarSystem::x).min().orElse(0);
-        double maxX = systems.stream().mapToDouble(StarSystem::x).max().orElse(0);
-        double minY = systems.stream().mapToDouble(StarSystem::y).min().orElse(0);
-        double maxY = systems.stream().mapToDouble(StarSystem::y).max().orElse(0);
-        return new Bounds(minX, minY, maxX - minX, maxY - minY);
+    /** Every map flies at the same speed; a larger galaxy is larger, not faster. */
+    private static int roundsFor(double distance) {
+        return Math.clamp((int) Math.ceil(distance / GameConfig.TRAVEL_SPEED),
+                GameConfig.MIN_TRAVEL_ROUNDS, GameConfig.MAX_TRAVEL_ROUNDS);
     }
 
     public StarSystem byId(int id) {
@@ -976,9 +969,6 @@ public class GameState {
         replayFrames.put(turn, new ReplayFrame(turn, systems, fleets, reports, industries, outcome(), colonies, metals));
     }
 
-    private record Bounds(double x, double y, double width, double height) {
-    }
-
     public record Intel(@Nullable Integer ownerId, int turn, @Nullable Integer garrison) {
         public Intel(@Nullable Integer ownerId, int turn) {
             this(ownerId, turn, null);
@@ -1012,7 +1002,7 @@ public class GameState {
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
                   new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome(), new HashMap<>(s.colonies), s.metals, Map.copyOf(s.miningAutomation),
-                Set.copyOf(s.resignedSeats), s.cosmic, Map.copyOf(s.timedOutPlaces));
+                Set.copyOf(s.resignedSeats), s.cosmic, Map.copyOf(s.timedOutPlaces), s.extent);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -1103,6 +1093,7 @@ public class GameState {
         c.initializeNavigation();
         c.validateNavigation();
         c.originalSetup = s.originalSetup();
+        c.extent = s.extent() == null ? GalaxyExtent.LEGACY : s.extent();
         if (c.originalSetup != null && !c.originalSetup.ruleset().equals(c.ruleset)) {
             throw new IllegalArgumentException("Snapshot and original setup disagree on game rules");
         }
@@ -1230,6 +1221,7 @@ public class GameState {
         c.navigation = s.navigation;
         c.diplomacy = s.diplomacy;
         c.originalSetup = s.originalSetup;
+        c.extent = s.extent;
         c.previousOrders.putAll(s.previousOrders);
         return c;
     }

@@ -56,7 +56,7 @@ class PrivateGameLifecycleTest extends AbstractBrowserlessTest {
         navigate(ImprintView.class);
         hostEmail = loginAsNewPlayer("Lobby Host");
         host = UserContext.currentPlayerId().orElseThrow();
-        GameSetup setup = new GameSetup(20, 1, 1, List.of(5, 5), 2, 5, 6, false, false, List.of(), null, null);
+        GameSetup setup = GameSetup.defaults().seatPlayers(1, 1).chooseGalaxy(20, de.zettsystems.starfare.game.values.GalaxyLayout.EVEN);
         id = games.newGame(setup, host, NAME);
         assertThat(games.summaryOf(id).visibility()).isEqualTo(GameVisibility.PRIVATE);
     }

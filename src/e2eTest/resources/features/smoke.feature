@@ -10,7 +10,7 @@ Funktionalität: Smoke — vom Konto bis zur ersten Runde
     Wenn das Konto "Alice Tester" mit der E-Mail-Adresse "alice@example.test" besteht
     Und ich mich mit "alice@example.test" anmelde
     Wenn ich ein Standardspiel anlege und beitrete
-    Dann zeigen die Empire-Stats 1 System, Produktion 4 und 8 Schiffe
+    Dann zeigen die Empire-Stats 1 System und Produktion 4
     Dann kann ich im Systeminspektor eine Flotte oder Verlegung vorbereiten und abbrechen
     Wenn ich die nächste Runde auslöse
     Dann sehe ich den Rundenbericht für Runde 1

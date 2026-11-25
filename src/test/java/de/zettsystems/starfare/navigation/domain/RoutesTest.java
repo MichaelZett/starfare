@@ -73,11 +73,11 @@ class RoutesTest {
         assertThat(Routes.plan(state, 1, 1, 4).orElseThrow().systems()).containsExactly(1, 9, 3, 4);
     }
     @Test void searchPrefersFewerRoundsOverLowerSystemIdsAndLongerLegs() {
-        // 10 map units per round; legs of 20 take 2 rounds, legs of about 30 take 3.
+        // 160 map pixels per round; legs of 320 take 2 rounds, legs of about 480 take 3.
         // Beyond precedes Hop in the list, so equally short returns must be ordered by system id.
-        GameState state = network(35, new StarSystem(1, "Start", 0, 0, 1, 10, 1, false),
-                new StarSystem(2, "Detour", 20, 22, 1, 1, 1, false), new StarSystem(3, "Goal", 40, 0, 1, 1, 1, false),
-                new StarSystem(5, "Beyond", 60, 0, 1, 1, 1, false), new StarSystem(4, "Hop", 20, 0, 1, 1, 1, false));
+        GameState state = network(560, new StarSystem(1, "Start", 0, 0, 1, 10, 1, false),
+                new StarSystem(2, "Detour", 320, 352, 1, 1, 1, false), new StarSystem(3, "Goal", 640, 0, 1, 1, 1, false),
+                new StarSystem(5, "Beyond", 960, 0, 1, 1, 1, false), new StarSystem(4, "Hop", 320, 0, 1, 1, 1, false));
         var route = Routes.plan(state, 1, 1, 3).orElseThrow();
         assertThat(route.systems()).containsExactly(1, 4, 3);
         assertThat(route.rounds()).isEqualTo(5);
@@ -88,9 +88,9 @@ class RoutesTest {
         assertThat(home.rounds()).isEqualTo(2);
     }
     @Test void everyIntermediateStopCostsAFullRound() {
-        GameState state = network(35, new StarSystem(1, "Start", 0, 0, 1, 10, 1, false),
-                new StarSystem(2, "Middle", 30, 0, 1, 1, 1, false), new StarSystem(3, "Near", 20, 0, 1, 1, 1, false),
-                new StarSystem(4, "Goal", 60, 0, 1, 1, 1, false), new StarSystem(5, "Far", 40, 0, 1, 1, 1, false));
+        GameState state = network(560, new StarSystem(1, "Start", 0, 0, 1, 10, 1, false),
+                new StarSystem(2, "Middle", 480, 0, 1, 1, 1, false), new StarSystem(3, "Near", 320, 0, 1, 1, 1, false),
+                new StarSystem(4, "Goal", 960, 0, 1, 1, 1, false), new StarSystem(5, "Far", 640, 0, 1, 1, 1, false));
         var route = Routes.plan(state, 1, 1, 4).orElseThrow();
         assertThat(route.systems()).containsExactly(1, 2, 4);
         assertThat(route.rounds()).isEqualTo(7);
@@ -106,8 +106,8 @@ class RoutesTest {
         state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
         state.players().add(new Player(1, "Navigator", false, "#56b4e9"));
         state.systems().addAll(List.of(stations));
-        // Neutral corner far from every station: the 160 x 120 map has a 200 diagonal, so a round covers 10.
-        state.systems().add(new StarSystem(99, "Corner", 160, 120, null, 1, 1, true));
+        // Neutral corner far from every station.
+        state.systems().add(new StarSystem(99, "Corner", 2560, 1920, null, 1, 1, true));
         state.configureNavigation(new NavigationSettings(range));
         return state;
     }

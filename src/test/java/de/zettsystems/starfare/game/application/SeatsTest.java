@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.StarSystem;
@@ -142,10 +143,7 @@ class SeatsTest extends AbstractIntegrationTest {
 
     @Test
     void originalHumansTrackedAfterNewGame() {
-        GameSetup setup = new GameSetup(
-                10, 2, 1,
-                List.of(4, 4, 4),
-                2, 4, 6, true, true, List.of(), null, null);
+        GameSetup setup = GameSetup.defaults().seatPlayers(2, 1).chooseGalaxy(10, GalaxyLayout.EVEN);
         GameId id = registry.createGame(setup);
 
         assertThat((int) registry.readState(id, state -> state.originalHumanPlayerIds().size())).isEqualTo(2);

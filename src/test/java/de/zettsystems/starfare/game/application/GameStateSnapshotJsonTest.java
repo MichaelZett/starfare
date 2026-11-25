@@ -31,19 +31,18 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
         state.players().replaceAll(p -> new Player(p.id(), p.name(), true, p.colorHex(), p.empireName(), profile));
         // Remembering the setup also determines the snapshot's rule version.
         state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE)
-                .chooseAiStrategies(java.util.Collections.nCopies(GameSetup.defaults().aiPlayers(), profile)));
+                .chooseComputerStrength(ComputerStrength.HARD));
         state.start();
         ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
         var restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
         assertThat(restored.players()).extracting(Player::aiStrategy).containsExactly(profile);
-        assertThat(restored.originalSetup().orElseThrow().aiStrategies()).containsOnly(profile);
+        assertThat(restored.originalSetup().orElseThrow().computerStrength()).isEqualTo(ComputerStrength.HARD);
         ((ObjectNode) json.get("players").get(0)).remove("aiStrategy");
-        ((ObjectNode) json.get("originalSetup")).remove("aiStrategies");
+        ((ObjectNode) json.get("originalSetup")).remove("computerStrength");
         var legacy = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
         assertThat(legacy.players()).extracting(Player::aiStrategy)
                 .containsExactly(de.zettsystems.starfare.ai.values.AiStrategy.BASELINE);
-        assertThat(legacy.originalSetup().orElseThrow().strategyForAi(0))
-                .isEqualTo(de.zettsystems.starfare.ai.values.AiStrategy.BASELINE);
+        assertThat(legacy.originalSetup().orElseThrow().computerStrength()).isEqualTo(ComputerStrength.DEFAULT);
     }
 
     @Test
@@ -61,15 +60,16 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void sectorOptionsSurviveJsonAndOldSetupsReadAsOff() {
-        var chosen = new SectorOptions(EventFrequency.RARE,
+    void sectorOptionsSurviveJsonAndGamesWithoutSetupReadAsOff() {
+        var chosen = new SectorOptions(EventFrequency.NORMAL,
                 java.util.EnumSet.of(CosmicEvent.SUPERNOVA, CosmicEvent.PIRATES), true, 45);
         GameState state = new GameState();
-        state.rememberSetup(GameSetup.defaults().withSectorOptions(chosen));
+        state.rememberSetup(GameSetup.defaults().chooseRandomness(RandomnessLevel.MEDIUM)
+                .chooseEvents(chosen.enabledEvents()).limitRounds(45));
         ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
         assertThat(GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class)).sectorOptions())
                 .isEqualTo(chosen);
-        ((ObjectNode) json.get("originalSetup")).remove("sectorOptions");
+        json.remove("originalSetup");
         assertThat(GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class)).sectorOptions())
                 .isEqualTo(SectorOptions.none());
     }

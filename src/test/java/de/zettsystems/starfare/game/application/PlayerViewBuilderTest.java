@@ -21,9 +21,10 @@ class PlayerViewBuilderTest {
         state = new GameState();
         state.players().add(new Player(1, "P1", false, "#aaaaaa"));
         state.players().add(new Player(2, "P2", false, "#bbbbbb"));
+        // One round covers 160 map pixels: S2 is 10 rounds away, S3 20.
         state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 10, 2, false));      // owned by P1
-        state.systems().add(new StarSystem(2, "S2", 100, 0, 2, 7, 1, false));     // owned by P2
-        state.systems().add(new StarSystem(3, "S3", 200, 0, null, 4, 1, true));   // neutral
+        state.systems().add(new StarSystem(2, "S2", 1600, 0, 2, 7, 1, false));     // owned by P2
+        state.systems().add(new StarSystem(3, "S3", 3200, 0, null, 4, 1, true));   // neutral
         state.intel().put(1, new HashMap<>());
         state.intel().put(2, new HashMap<>());
     }
@@ -202,7 +203,7 @@ class PlayerViewBuilderTest {
     @Test
     void systemInSensorRangeShowsLiveOwnerAndApproximateGarrison() {
         // Reichweite haengt an der Distanz, nicht am Besitz: S4 liegt dicht an P1s Heimatsystem.
-        state.systems().add(new StarSystem(4, "S4", 5, 0, 2, 42, 3, false));
+        state.systems().add(new StarSystem(4, "S4", 80, 0, 2, 42, 3, false));
 
         VisibleSystem seen = visible(builder.forPlayer(state, 1), 4);
 
@@ -217,7 +218,7 @@ class PlayerViewBuilderTest {
 
     @Test
     void neutralSystemInSensorRangeDropsStaleIntelColor() {
-        state.systems().add(new StarSystem(4, "S4", 5, 0, null, 8, 1, true));
+        state.systems().add(new StarSystem(4, "S4", 80, 0, null, 8, 1, true));
         for (int i = 0; i < 5; i++) {
             state.nextTurn();
         }
@@ -246,7 +247,7 @@ class PlayerViewBuilderTest {
 
     @Test
     void fleetDestinationProvidesSensorCoverage() {
-        state.systems().add(new StarSystem(4, "S4", 195, 0, 2, 12, 1, false));
+        state.systems().add(new StarSystem(4, "S4", 3120, 0, 2, 12, 1, false));
         assertThat(visible(builder.forPlayer(state, 1), 4).approximate())
                 .as("ohne Flotte ausser Reichweite").isFalse();
 
@@ -258,7 +259,7 @@ class PlayerViewBuilderTest {
 
     @Test
     void freshCombatIntelBeatsTheSensorEstimate() {
-        state.systems().add(new StarSystem(4, "S4", 5, 0, 2, 42, 3, false));
+        state.systems().add(new StarSystem(4, "S4", 80, 0, 2, 42, 3, false));
         state.nextTurn();
         // Kampf der letzten Runde: der Spieler kennt die genaue Zahl aus dem Bericht.
         state.intel().get(1).put(4, new GameState.Intel(2, state.turn() - 1, 12));
@@ -271,7 +272,7 @@ class PlayerViewBuilderTest {
 
     @Test
     void staleCombatIntelDoesNotOverrideTheSensorEstimate() {
-        state.systems().add(new StarSystem(4, "S4", 5, 0, 2, 42, 3, false));
+        state.systems().add(new StarSystem(4, "S4", 80, 0, 2, 42, 3, false));
         for (int i = 0; i < 5; i++) {
             state.nextTurn();
         }

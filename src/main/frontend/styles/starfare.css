@@ -652,160 +652,6 @@ html[data-gp-game="starfare"] {
     font-size: 0.95rem;
 }
 
-/* â”€â”€ Wizard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-.create-game-dialog::part(content) {
-    padding: 0;
-    border-radius: 18px;
-    border: 1px solid var(--sf-border);
-    box-shadow: 0 28px 72px rgba(0, 0, 0, 0.7);
-    background: var(--sf-surface);
-}
-
-.create-game-dialog::part(header) {
-    padding: 18px 22px 10px;
-    border-bottom: 1px solid var(--sf-border);
-    background: var(--sf-surface-2);
-}
-
-.create-game-dialog::part(footer) {
-    padding: 14px 22px 18px;
-    border-top: 1px solid var(--sf-border);
-    background: var(--sf-surface-2);
-}
-
-.wizard-body {
-    box-sizing: border-box;
-    padding: 16px 22px 20px;
-    min-width: 0;
-}
-
-.wizard-private-hint {
-    color: var(--sf-text);
-    font-size: 0.92rem;
-    line-height: 1.4;
-}
-
-.wizard-intro {
-    font-size: 0.98rem;
-    color: var(--sf-text-muted);
-    border-left: 4px solid var(--sf-accent);
-    padding: 10px 12px;
-    background: rgba(88, 166, 255, 0.08);
-    border-radius: 10px;
-}
-
-.wizard-section {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 14px 14px 12px;
-    border: 1px solid var(--sf-border);
-    border-radius: 14px;
-    background: var(--sf-surface-2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.wizard-overview {
-    display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(22rem, 2fr);
-    gap: 14px;
-    width: 100%;
-}
-
-.wizard-overview-side {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-width: 0;
-}
-
-.wizard-advanced {
-    box-sizing: border-box;
-    width: 100%;
-    padding: .65rem .85rem;
-    border: 1px solid var(--sf-border);
-    border-radius: 14px;
-    background: var(--sf-surface-1);
-}
-
-.wizard-advanced-content {
-    display: grid;
-    gap: 14px;
-    padding-top: .75rem;
-}
-
-.wizard-section-title {
-    margin: 0 0 4px 0;
-    font-size: 1.05rem;
-    letter-spacing: 0.01em;
-}
-
-.wizard-section-hint {
-    display: block;
-    margin: 0 0 12px 0;
-    font-size: 0.9rem;
-    color: var(--sf-text-muted);
-}
-
-.wizard-grid,
-.wizard-start-production {
-    width: 100%;
-}
-
-.wizard-start-production {
-    margin-top: 8px;
-    padding-top: 10px;
-    border-top: 1px solid var(--sf-border);
-}
-
-.wizard-confirmation-content { display: grid; gap: .9rem; }
-.wizard-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .45rem; }
-.wizard-summary-line { padding: .45rem .6rem; border: 1px solid var(--sf-border); border-radius: .55rem; }
-.wizard-summary-colors { display: flex; flex-wrap: wrap; gap: .45rem; }
-.wizard-summary-color { border-left: .5rem solid var(--seat-color); padding: .3rem .55rem; background: var(--sf-surface-2); }
-.wizard-galaxy-preview { position: relative; min-height: 12rem; overflow: hidden; border: 1px solid var(--sf-border); border-radius: .8rem; background: radial-gradient(ellipse, #182744, #080d19); max-height: 180px; }
-.wizard-galaxy-preview > span { position: absolute; z-index: 1; top: .45rem; left: .6rem; color: var(--sf-text-muted); font-size: .82rem; }
-.wizard-galaxy-stars { position: absolute; inset: 1.8rem .5rem .5rem; }
-.wizard-galaxy-star { position: absolute; transform: translate(-50%, -50%); width: 7px; height: 7px; border-radius: 50%; background: #80c8e8; box-shadow: 0 0 8px #80c8e8; }
-
-.wizard-grid vaadin-integer-field::part(label),
-.wizard-grid vaadin-combo-box::part(label),
-.wizard-start-production vaadin-integer-field::part(label),
-.wizard-start-production vaadin-combo-box::part(label) {
-    font-weight: 600;
-}
-
-@media (max-width: 900px) {
-    .wizard-overview {
-        grid-template-columns: 1fr;
-    }
-}
-
-.color-option-row {
-    width: 100%;
-    gap: 10px;
-}
-
-.color-swatch {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25), 0 1px 3px rgba(0, 0, 0, 0.4);
-    flex: 0 0 18px;
-}
-
-.color-option-name {
-    font-weight: 600;
-}
-
-.color-option-hex {
-    margin-left: auto;
-    color: var(--sf-text-muted);
-    font-size: 0.82rem;
-    letter-spacing: 0.03em;
-    font-family: "IBM Plex Mono", Consolas, monospace;
-}
-
 /* â”€â”€ Send-fleet dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .send-fleet-dialog::part(content) {
     padding: 0;
@@ -1398,11 +1244,6 @@ html[data-gp-game="starfare"] {
     .lobby-card vaadin-grid::part(cell),
     .lobby-card vaadin-grid::part(header-cell) {
         font-size: 0.85rem;
-    }
-
-    .wizard-body {
-        min-width: min(96vw, 96vw);
-        padding: 12px 12px 14px;
     }
 }
 
@@ -2010,27 +1851,6 @@ html[data-gp-game="starfare"] {
     margin-left: auto;
     color: var(--sf-text-muted);
 }
-.combat-randomness-field {
-    display: grid;
-    gap: 0.35rem;
-}
-
-.combat-randomness-slider {
-    inline-size: 100%;
-}
-
-.combat-randomness-value {
-    color: var(--sf-accent);
-    font-size: 1.05rem;
-    font-weight: 750;
-}
-
-.combat-randomness-hint {
-    color: var(--sf-text-muted);
-    font-size: 0.85rem;
-    line-height: 1.35;
-}
-
 .system-metrics {
     width: 100%;
     box-sizing: border-box;
@@ -2195,28 +2015,6 @@ html[data-gp-game="starfare"] {
 
 .map-controls, .legal-footer { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .5rem; }
 :where(html[data-gp-game="starfare"]) [role=button]:focus-visible { outline: 3px solid #58a6ff; outline-offset: 3px; }
-.ruleset-selection { gap: .5rem; }
-.ruleset-cards {
-    display: grid;
-    gap: .75rem;
-    width: 100%;
-    grid-template-columns: 1fr;
-}
-@media (max-width: 900px) {
-    .ruleset-cards { grid-template-columns: 1fr; }
-}
-.ruleset-card {
-    box-sizing: border-box;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: .35rem;
-    padding: .75rem 1rem;
-    border: 1px solid rgba(139, 168, 205, .25);
-    border-radius: .5rem;
-    background: rgba(139, 168, 205, .06);
-}
-.ruleset-card-title { font-weight: 600; }
 
 /* Spaceward industry; Classic keeps its decorative shipyard only. */
 .industry-panel { padding: .85rem; margin: .65rem 0; border: 1px solid #426356; border-radius: 12px; background: linear-gradient(135deg, #142d2c, #142130); min-width: 0; display: flex; flex-direction: column; gap: .6rem; }
@@ -2264,13 +2062,7 @@ html[data-gp-game="starfare"] {
 .recycling-details { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
 .event-recycling { border-left-color: #8fbf9a; }
 
-/* Decision-oriented planning and readable summaries. */
-.wizard-summary-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.wizard-summary-group { padding: 1rem; border: 1px solid #354252; border-radius: 12px; background: #1c232b; }
-.wizard-summary-heading { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
-.wizard-summary-heading h3 { margin: 0 0 .5rem; }
-.wizard-summary-group .wizard-summary-line { display: block; border: 0; background: none; padding: .3rem 0; min-height: 0; }
-.wizard-summary-seat { border-left: 4px solid var(--seat-color); padding-left: .75rem; margin-top: .6rem; }
+/* Decision-oriented planning. */
 .empire-metal { position: relative; white-space: nowrap; }
 .empire-metal[opened] { z-index: 5; }
 .empire-metal::part(content) { position: absolute; padding: .75rem; background: #1c232b; border: 1px solid #354252; border-radius: 8px; width: min(400px, 80vw); white-space: normal; }
@@ -2283,7 +2075,6 @@ html[data-gp-game="starfare"] {
 .map-root > .legal-footer { flex-shrink: 0; margin: 0; padding: .2rem .8rem; font-size: .8rem; }
 .legal-footer { display: flex; gap: 1rem; justify-content: center; flex-shrink: 0; }
 .legal-footer a[target=_blank]::after { content: ' ↗'; }
-@media (max-width: 1100px) { .wizard-summary-groups { grid-template-columns: 1fr; } }
 
 .fleet-direct-actions {
   display: flex;

@@ -47,7 +47,8 @@ public class DefaultGameTemplateService implements GameTemplateService {
                 .filter(RulesetDefinition::creationEnabled)
                 .filter(entry -> entry.supports(setup.ruleset()))
                 .filter(entry -> rulesetAccess.mayUse(entry.defaultRef(), account))
-                .map(entry -> new GameTemplate(setup.selectRuleset(entry.defaultRef()).chooseVictoryRules(setup.victoryRules()), state.seatByUser())));
+                // Only the choices of the current dialog carry over; the current version of the rules applies.
+                .map(entry -> new GameTemplate(setup.selectRuleset(entry.defaultRef()).normalized(), state.seatByUser())));
     }
 
     @Override

@@ -105,29 +105,19 @@ html.starfare-mobile[data-gp-game="starfare"] vaadin-dialog vaadin-vertical-layo
     width: 100%;
 }
 
-/* ── Wizard ─────────────────────────────────────────────────────── */
-html.starfare-mobile[data-gp-game="starfare"] .wizard-body {
+/* ── New-game dialog ─────────────────────────────────────────────── */
+html.starfare-mobile[data-gp-game="starfare"] .setup-form {
     min-width: 0 !important;
     width: 100% !important;
     padding: 4px 0 12px;
-    overflow: visible;
 }
 
-html.starfare-mobile[data-gp-game="starfare"] .wizard-confirmation {
-    padding: 4px 0 12px;
-}
-
-html.starfare-mobile[data-gp-game="starfare"] .wizard-grid,
-html.starfare-mobile[data-gp-game="starfare"] .wizard-summary-groups {
-    grid-template-columns: 1fr !important;
-}
-
-html.starfare-mobile[data-gp-game="starfare"] .wizard-section {
+html.starfare-mobile[data-gp-game="starfare"] .setup-section {
     padding: 12px 10px;
 }
 
-html.starfare-mobile[data-gp-game="starfare"] .wizard-overview-side {
-    display: none;
+html.starfare-mobile[data-gp-game="starfare"] .setup-cards::part(group-field) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 /* ── Lobby ──────────────────────────────────────────────────────── */

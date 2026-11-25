@@ -75,10 +75,6 @@ public class LayoutSteps {
         assertWizardFits();
         assertVariantCardsClearTheForm();
         capture("wizard", width);
-        browser.clickButtonWithText("Zusammenfassung prüfen");
-        browser.awaitCss(".wizard-confirmation-content");
-        assertWizardFits();
-        capture("wizard-summary", width);
         browser.clickButtonWithText("Abbrechen");
         browser.awaitNoneDisplayed("vaadin-dialog[opened]");
     }
@@ -114,18 +110,18 @@ public class LayoutSteps {
         Object measured = js.executeScript("""
                 const bottom = selector => Math.max(...[...document.querySelectorAll(selector)]
                         .map(element => element.getBoundingClientRect().bottom));
-                const form = document.querySelector('vaadin-dialog[opened] .wizard-section');
+                const form = document.querySelector('vaadin-dialog[opened] #wizard-empire-name');
                 return {
-                    gap: form.getBoundingClientRect().top - bottom('.ruleset-card'),
-                    details: ['.ruleset-card', '#ruleset-selection vaadin-radio-button', '#ruleset-selection',
-                            '.ruleset-selection'].map(selector => selector + '=' + bottom(selector)).join(' ')
+                    gap: form.getBoundingClientRect().top - bottom('#ruleset-selection .setup-card'),
+                    details: ['#ruleset-selection .setup-card', '#ruleset-selection vaadin-radio-button',
+                            '#ruleset-selection'].map(selector => selector + '=' + bottom(selector)).join(' ')
                             + ' form=' + form.getBoundingClientRect().top
                 };
                 """);
         if (!(measured instanceof java.util.Map<?, ?> values) || !(values.get("gap") instanceof Number gap)) {
             throw new IllegalStateException("Wizard card measurement is not numeric");
         }
-        assertThat(gap.doubleValue()).as("Abstand Variantenkarten zu Deine Partie: " + values.get("details"))
+        assertThat(gap.doubleValue()).as("Abstand Regelkarten zum Namen des Imperiums: " + values.get("details"))
                 .isGreaterThanOrEqualTo(4);
     }
 

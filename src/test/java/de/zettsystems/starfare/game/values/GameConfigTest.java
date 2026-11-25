@@ -13,12 +13,10 @@ class GameConfigTest {
         assertThat(GameConfig.DEFAULT_SYSTEM_COUNT).isPositive();
         assertThat(GameConfig.DEFAULT_HUMAN_PLAYERS).isPositive();
         assertThat(GameConfig.DEFAULT_AI_PLAYERS).isNotNegative();
-        assertThat(GameConfig.DEFAULT_START_SYSTEM_PRODUCTION).isPositive();
-        assertThat(GameConfig.DEFAULT_NEUTRAL_MIN_PRODUCTION).isPositive();
-        assertThat(GameConfig.DEFAULT_NEUTRAL_MAX_PRODUCTION)
-                .isGreaterThanOrEqualTo(GameConfig.DEFAULT_NEUTRAL_MIN_PRODUCTION)
-                .isEqualTo(10);
-        assertThat(GameConfig.DEFAULT_PRODUCTION_DISTRIBUTION).isEqualTo(ProductionDistribution.GAUSSIAN);
+        assertThat(GameConfig.START_PRODUCTION).isPositive();
+        assertThat(GameConfig.START_GARRISON).isGreaterThanOrEqualTo(GameConfig.START_PRODUCTION);
+        assertThat(GameConfig.MAX_PRODUCTION_CHOICES).contains(GameConfig.DEFAULT_MAX_PRODUCTION)
+                .allSatisfy(highest -> assertThat(highest).isBetween(GameConfig.MIN_PRODUCTION, GameConfig.MAX_PRODUCTION));
         assertThat(GameConfig.DEFAULT_GALAXY_LAYOUT).isEqualTo(GalaxyLayout.EVEN);
         assertThat(GameConfig.SPACEOUT_ITERATIONS).isPositive();
         assertThat(GameConfig.SPACEOUT_MIN_DIST).isGreaterThan(0.0);

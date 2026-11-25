@@ -3,6 +3,8 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.ComputerStrength;
+import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import org.junit.jupiter.api.Test;
@@ -51,12 +53,9 @@ class GameRegistryTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void appliesStartProductionPerPlayerAndNeutralProductionRange() {
-        GameSetup setup = new GameSetup(
-                30, 1, 2,
-                List.of(11, 7, 4),
-                2, 5, 6,
-                true, true, List.of(), null, null);
+    void appliesStartProductionByComputerStrengthAndNeutralProductionRange() {
+        GameSetup setup = GameSetup.defaults().seatPlayers(1, 2).chooseGalaxy(30, GalaxyLayout.EVEN)
+                .chooseMaxProduction(5).chooseComputerStrength(ComputerStrength.HARD);
         GameId id = registry.createGame(setup);
 
         registry.readState(id, state -> {
@@ -65,14 +64,14 @@ class GameRegistryTest extends AbstractIntegrationTest {
             var p2Home = state.systems().stream().filter(s -> s.ownerId() != null && s.ownerId() == 2).findFirst().orElseThrow();
             var p3Home = state.systems().stream().filter(s -> s.ownerId() != null && s.ownerId() == 3).findFirst().orElseThrow();
 
-            assertThat(byId.get(p1Home.id()).productionPerTurn()).isEqualTo(11);
-            assertThat(byId.get(p2Home.id()).productionPerTurn()).isEqualTo(7);
-            assertThat(byId.get(p3Home.id()).productionPerTurn()).isEqualTo(4);
+            assertThat(byId.get(p1Home.id()).productionPerTurn()).isEqualTo(4);
+            assertThat(byId.get(p2Home.id()).productionPerTurn()).isEqualTo(5);
+            assertThat(byId.get(p3Home.id()).productionPerTurn()).isEqualTo(5);
 
             state.systems().stream()
                     .filter(s -> s.ownerId() == null)
                     .forEach(s -> {
-                assertThat(s.productionPerTurn()).isGreaterThanOrEqualTo(2);
+                assertThat(s.productionPerTurn()).isGreaterThanOrEqualTo(1);
                 assertThat(s.productionPerTurn()).isLessThanOrEqualTo(5);
                     });
             return null;
@@ -81,11 +80,7 @@ class GameRegistryTest extends AbstractIntegrationTest {
 
     @Test
     void multipleHumansGetDistinctColors() {
-        GameSetup setup = new GameSetup(
-                24, 3, 1,
-                List.of(4, 4, 4, 4),
-                2, 6, 8,
-                true, true, List.of(), null, null);
+        GameSetup setup = GameSetup.defaults().seatPlayers(3, 1);
         GameId id = registry.createGame(setup);
 
         registry.readState(id, state -> {

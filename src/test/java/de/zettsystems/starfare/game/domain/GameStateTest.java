@@ -252,8 +252,8 @@ class GameStateTest {
     void systemsWithinRoundsCoversNeighboursButNotDistantSystems() {
         GameState state = new GameState();
         state.systems().add(new StarSystem(1, "A", 0, 0, 1, 5, 1, false));
-        state.systems().add(new StarSystem(2, "B", 5, 0, null, 5, 1, true));
-        state.systems().add(new StarSystem(3, "C", 200, 0, null, 5, 1, true));
+        state.systems().add(new StarSystem(2, "B", 80, 0, null, 5, 1, true));
+        state.systems().add(new StarSystem(3, "C", 3200, 0, null, 5, 1, true));
 
         Set<Integer> reachable = state.systemsWithinRounds(List.of(1), 2);
 
@@ -519,13 +519,13 @@ class GameStateTest {
     }
 
     @Test
-    void travelTimeDependsOnTheGalaxyExtentNotItsPosition() {
+    void travelTimeDependsOnTheDistanceAtAFixedSpeedNotOnThePosition() {
         GameState state = new GameState();
         state.systems().add(new StarSystem(1, "A", 1000, 1000, 1, 5, 1, false));
-        state.systems().add(new StarSystem(2, "B", 1100, 1000, null, 5, 1, true));
-        state.systems().add(new StarSystem(3, "C", 1000, 1200, null, 5, 1, true));
+        state.systems().add(new StarSystem(2, "B", 2440, 1000, null, 5, 1, true));
+        state.systems().add(new StarSystem(3, "C", 1000, 3880, null, 5, 1, true));
 
-        // 100 x 200 extent: the 223.6 diagonal makes one round cover 11.18, so 100 takes 9 rounds.
+        // One round covers 160 map pixels on every map: 1440 take 9 rounds, 2880 take 18.
         assertThat(state.travelRounds(1, 2)).isEqualTo(9);
         assertThat(state.travelRounds(1, 3)).isEqualTo(18);
         assertThat(state.systemsWithinRounds(List.of(1), 9)).containsExactlyInAnyOrder(1, 2);

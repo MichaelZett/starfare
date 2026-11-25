@@ -9,36 +9,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class AiStrategySetupTest {
     @Test
-    void selectionsSurviveNormalizationAndRuleOptionsWhileUnsupportedProfilesFallBack() {
-        var setup = setup().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE)
-                .chooseAiStrategies(List.of(AiStrategy.INDUSTRY_ADAPTIVE, AiStrategy.RUSH))
-                .chooseVictoryRules(new VictoryRules(80, true, true, 90)).normalized();
-        assertThat(setup.aiStrategies()).containsExactly(AiStrategy.INDUSTRY_ADAPTIVE, AiStrategy.RUSH);
-        assertThat(setup.selectRuleset(RulesetRef.SECTOR_FORCES).normalized().aiStrategies())
-                .containsExactly(AiStrategy.BASELINE, AiStrategy.RUSH);
-        assertThat(setup.strategyForAi(99)).isEqualTo(AiStrategy.BASELINE);
-        assertThat(setup().normalized().aiStrategies()).containsExactly(AiStrategy.BASELINE, AiStrategy.BASELINE);
+    void theComputerStrengthDecidesWhichProfilesTheComputersDraw() {
         assertThat(AiStrategy.forRules(RulesetRef.SECTOR_FORCES)).hasSize(5).noneMatch(AiStrategy::requiresIndustry);
         assertThat(AiStrategy.forRules(RulesetRef.SPACEWARD_ALLIANCE)).containsExactly(AiStrategy.values());
+        var registry = new DefaultGameRegistry(new InMemoryGameSessionStore(), new DefaultGameAccessPolicy());
+
+        var easy = registry.createGame(setup().chooseComputerStrength(ComputerStrength.EASY), "host", "Easy");
+        List<Player> easyPlayers = registry.readState(easy, state -> List.copyOf(state.players()));
+        assertThat(easyPlayers).extracting(Player::aiStrategy).containsOnly(AiStrategy.BASELINE);
+
+        var normal = registry.createGame(setup(), "host", "Normal");
+        List<Player> normalPlayers = registry.readState(normal, state -> List.copyOf(state.players()));
+        assertThat(normalPlayers.subList(1, 3)).extracting(Player::aiStrategy)
+                .allMatch(List.of(AiStrategy.RUSH, AiStrategy.EXPANSION, AiStrategy.CONCENTRATION, AiStrategy.DEFENSE)::contains);
     }
 
     @Test
-    void registryAssignsEachAiSeatAndTemplatesKeepProfiles() {
+    void templatesKeepTheComputerStrength() {
         var registry = new DefaultGameRegistry(new InMemoryGameSessionStore(), new DefaultGameAccessPolicy());
-        var requested = setup().chooseAiStrategies(List.of(AiStrategy.RUSH, AiStrategy.DEFENSE));
-        var id = registry.createGame(requested, "host", "Profiles");
-        List<Player> originalPlayers = registry.readState(id, state -> List.copyOf(state.players()));
-        assertThat(originalPlayers).extracting(Player::aiStrategy)
-                .containsExactly(AiStrategy.BASELINE, AiStrategy.RUSH, AiStrategy.DEFENSE);
+        var id = registry.createGame(setup().chooseComputerStrength(ComputerStrength.HARD), "host", "Profiles");
         var templates = new DefaultGameTemplateService(registry, mock(GameArchiveStore.class),
                 new DefaultGameAccessPolicy(), mock(Broadcaster.class));
         var copy = templates.create(id, "host", "Copy", true).orElseThrow();
-        List<AiStrategy> copiedProfiles = registry.readState(copy, state -> state.originalSetup().orElseThrow().aiStrategies());
-        assertThat(copiedProfiles)
-                .containsExactly(AiStrategy.RUSH, AiStrategy.DEFENSE);
+        ComputerStrength copied = registry.readState(copy, state -> state.originalSetup().orElseThrow().computerStrength());
+        assertThat(copied).isEqualTo(ComputerStrength.HARD);
+        // Three empires with hard classic computers: the baseline led the strategy bench in multiplayer games.
         List<Player> copiedPlayers = registry.readState(copy, state -> List.copyOf(state.players()));
-        assertThat(copiedPlayers).extracting(Player::aiStrategy)
-                .containsExactly(AiStrategy.BASELINE, AiStrategy.RUSH, AiStrategy.DEFENSE);
+        assertThat(copiedPlayers.subList(1, 3)).extracting(Player::aiStrategy).containsOnly(AiStrategy.BASELINE);
     }
 
     @Test
@@ -49,9 +46,6 @@ class AiStrategySetupTest {
     }
 
     private static GameSetup setup() {
-        var defaults = GameSetup.defaults();
-        return new GameSetup(16, 1, 2, List.of(5, 5, 5), 1, 10, 20, true, true,
-                defaults.seatColorHexes(), defaults.productionDistribution(), defaults.galaxyLayout(), false,
-                10, defaults.roundRules(), 70);
+        return GameSetup.defaults().seatPlayers(1, 2).chooseGalaxy(16, GalaxyLayout.EVEN);
     }
 }

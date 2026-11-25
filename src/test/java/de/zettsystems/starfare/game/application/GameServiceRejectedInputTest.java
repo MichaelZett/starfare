@@ -8,6 +8,7 @@ import de.zettsystems.starfare.economy.values.ProductionAllocation;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
 import de.zettsystems.starfare.game.values.GameId;
+import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.PlannedOrder;
 import de.zettsystems.starfare.game.values.Player;
@@ -27,10 +28,8 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
     private static final String HOST = "host";
     private static final String GUEST = "guest";
     private static final String STRANGER = "stranger";
-    private static final GameSetup TWO_HUMANS = new GameSetup(20, 2, 0, List.of(5, 5), 2, 5, 6,
-            false, false, List.of(), null, null);
-    private static final GameSetup HUMAN_AND_COMPUTER = new GameSetup(20, 1, 1, List.of(5, 5), 2, 5, 6,
-            false, false, List.of(), null, null);
+    private static final GameSetup TWO_HUMANS = GameSetup.defaults().seatPlayers(2, 0).chooseGalaxy(20, GalaxyLayout.EVEN);
+    private static final GameSetup HUMAN_AND_COMPUTER = GameSetup.defaults().seatPlayers(1, 1).chooseGalaxy(20, GalaxyLayout.EVEN);
 
     @Autowired
     private GameService games;
