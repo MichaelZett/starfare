@@ -108,7 +108,8 @@ not a matrix of research-aware opponents. Military AI still makes its existing
 hull-count decisions; it is not a technology-aware tactical optimizer. Other
 resource environments, maps larger than 32 systems, multiplayer diplomacy,
 quality-dependent research, more opening policies and higher technology levels
-need separate experiments. Human gameplay acceptance remains pending.
+need separate experiments. Personal gameplay acceptance was completed on
+18 November 2026; data from human matches is still missing.
 
 ## Browser acceptance and fixes
 

@@ -39,10 +39,12 @@ beschreiben, worin es von SectorForces abweicht. Weil dort alle feindlichen Seit
 gleichzeitig kämpfen, blendet der Dialog bei Spaceward die Einstellung
 **Reihenfolge mehrerer Angreifer** aus.
 
-Auf der gemeinsamen Spieleplattform ist Spaceward derzeit eine Testvariante: Nur
-Tester sehen sie im Dialog, sehen offene Spaceward-Partien in der Lobby und können
-ihnen beitreten. Partien, an denen du schon teilnimmst, spielst du in jedem Fall
-weiter. Im eigenen Start von Starfare stehen beide Varianten allen offen.
+Auf der gemeinsamen Spieleplattform hat jede Variante eine Stufe (Alpha, Beta,
+Produktion); Spaceward ist derzeit in Alpha. Wer eine Variante nutzen darf,
+entscheidet die Plattform; der Assistent kennzeichnet Alpha- und Beta-Varianten.
+Wer eine Variante nicht mehr nutzen darf, erreicht auch ihre Partien nicht mehr,
+auch laufende und die Nachbetrachtung. Im eigenen Start von Starfare stehen beide
+Varianten allen offen.
 
 Variante und Regelversion bleiben für die Partie fest. Die Anwendungsversion
 ist davon unabhängig. Alte Partien werden als SectorForces angezeigt und behalten
@@ -447,9 +449,9 @@ Erschöpfte Vorkommen bleiben erschöpft, auch bei Eroberung. Örtliche Restvork
 gehen an den neuen Besitzer, der Reichsvorrat bleibt beim bisherigen Spieler.
 Neuladen und Nachbetrachtung verändern keine Rohstoffmengen. Interne Prüfwerte sind
 10 Startmetall je Spieler, 200 Metallvorkommen je Reichtumsstufe und eine Fördermenge
-je Reichtumsstufe und Kapazitätspunkt. Die Wirtschaftsabnahme steht noch aus.
-W1 und ältere Partien behalten ihre Regeln; die öffentliche Neuanlage bleibt bei
-1.1.0. Recycling gehört erst zum folgenden Ausbau.
+je Reichtumsstufe und Kapazitätspunkt. W1 und ältere Partien behalten ihre Regeln.
+Dieser Abschnitt beschreibt den historischen W2-Stand; neue Spaceward-Partien
+verwenden die aktuelle Regelfassung 1.3.0-r1.
 
 ## Spaceward-Navigation
 
@@ -825,7 +827,7 @@ bringt unverändert 70 Prozent zurück.
 
 KI-Imperien verwenden 10 Prozent Forschung, Rush 5 Prozent. Der erste kontrollierte
 Vergleich stützt kleine Budgets; hohe Dauerbudgets schwächen den frühen Flottenaufbau.
-Die Ergebnisse und Grenzen stehen in `RESEARCH-EXPERIMENTS.md`. Die persönliche Spielabnahme steht noch aus.
+Die Ergebnisse und Grenzen stehen in `RESEARCH-EXPERIMENTS.md`. Die persönliche Spielabnahme ist erledigt (18.11.2026).
 Bevölkerung, Besiedlung und getrennte Forschungsgebiete bleiben für später.
 
 

@@ -12,23 +12,22 @@ human has submitted.
 create an account on the platform and start a game against the AI or invite
 friends. **Spielanleitung auf Deutsch:** [Anleitung](docs/ANLEITUNG.md).
 
-## The plan: three classics, one platform
+## The goal: SectorForces, classic and extended
 
-Starfare rebuilds the ideas of three science fiction strategy classics as game
-variants on a shared platform. Lobby, AI opponents, archive and the map are
-common; each variant brings its own rules. Every game keeps its
-variant and rule version, so rules can evolve without changing running games.
+Starfare rebuilds *Sector Forces*, a Commodore 64 strategy game that can no longer
+be found, most likely a German clone of *Galactic Empire* (1983). Lobby, AI
+opponents, archive and the map are shared; each rule set brings its own rules.
+Every game keeps its variant and rule version, so rules can evolve without
+changing running games.
 
-| Variant | Inspired by | Status |
-|---|---|---|
-| **SectorForces** | *Sector Forces* (Commodore 64) | Playable, rules 1.0.0 |
-| **Spaceward** | *Spaceward Ho!* | Playable, rules 1.3.0-r1 with colonies, metal, recycling and ship research; alpha stage inside the platform host |
-| *(not named yet)* | *Master of Orion II: Battle at Antares* | An idea, not planned |
+| Variant | Status |
+|---|---|
+| **SectorForces, classic rules** (`classic`) | Playable, rules 1.0.0 |
+| **Extended rules** (`spaceward`, still shown as "Spaceward" in the game) | Playable, rules 1.3.0-r1 with colonies, metal, recycling and ship research; alpha stage inside the platform host |
 
-The steps build on each other: SectorForces is the compact core of conquest and
-fleet movement. Spaceward adds an economy, limited flight range, alliances and
-coalition combat. The Master of Orion II variant is meant to add research, ship
-design, colonies with population and diplomacy on top.
+The classic rules are the compact core of conquest and fleet movement. The
+extended rules, which started out inspired by *Spaceward Ho!*, add an economy,
+limited flight range, alliances and coalition combat.
 
 Starfare is an independent hobby project. It is not affiliated with or endorsed
 by the publishers or rights holders of these games; their names only describe
@@ -63,7 +62,7 @@ complete game.
 ## Game variants and rule versions
 
 Choose a game variant before its settings in the new-game dialog. SectorForces
-(rules **1.0.0**) is preselected. **Spaceward** (rules **1.2.0-w7**, with **1.2.0-w6** also selectable), inspired by
+(rules **1.0.0**) is preselected. **Spaceward** (always the current rules **1.3.0-r1**), inspired by
 Spaceward Ho!, is available for new games as well. Inside the games platform host
 each variant has a stage the platform keeps (alpha, beta, production; Spaceward starts
 in alpha): the platform decides who may use it, the wizard marks alpha and beta
@@ -625,8 +624,8 @@ Testcontainers; Docker must be running.
 
 ## Internal economy checkpoint
 
-The next economy step is available for internal acceptance as **Spaceward
-1.2.0-w1**: saved colony environments and population limit usable industry,
+The internal economy checkpoint **Spaceward 1.2.0-w1** remains loadable for
+saved games: saved colony environments and population limit usable industry,
 with growth taking effect on the following turn. The public wizard continues
 to create games with the current **1.3.0-r1** rules. Existing rules and saved games retain their behavior.
 W1 retains its original behavior without mining. The separate internal **1.2.0-w2** checkpoint adds finite metal; the separate internal **1.2.0-w3** checkpoint adds recycling.
@@ -948,7 +947,7 @@ Research consumes industrial capacity, not metal. Coalition strength sums the
 actual generations, including allied stationed forces. AI budgets are
 10% (5% for RUSH), calibrated with paired seeded duels; see
 [research experiments](docs/RESEARCH-EXPERIMENTS.md) for results and limits. Population management, colonization, research fields and ship-design
-editors remain later work. Desktop and phone browser checks and the initial balance study have passed; personal gameplay acceptance remains pending.
+editors remain later work. Desktop and phone browser checks, the initial balance study and personal gameplay acceptance (18 November 2026) have passed.
 
 
 ## Individual model sizes and mining automation

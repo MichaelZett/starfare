@@ -3,6 +3,12 @@
 Der erste Teil dokumentiert die W4-Prüfung vom 07.10.2026; der Abschnitt W6 ergänzt
 den Vergleich der neueren Wirtschaft und die gleichmäßige Metallverteilung.
 
+Stand 25.11.2026: Die Abschnitte sind historische Studienstände; Hinweise auf offene
+Abnahmen oder Freigaben gelten nicht mehr. W7 ist in der aktuellen Regelfassung
+1.3.0-r1 aufgegangen, die persönlichen Abnahmen sind erledigt (18.11.2026), und
+Spaceward steht in der Plattform auf Stufe Alpha. Offen bleiben ein großer Vergleich
+mit 1.3.0-r1 und Daten aus menschlichen Partien (`BACKLOG.md`, Abschnitt Spaceward).
+
 ## Versuchsanordnung
 
 Der stumme Prüfstand verwendet die vollständige W3-Wirtschaft, die unverändert
