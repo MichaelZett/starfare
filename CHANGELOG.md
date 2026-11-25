@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.3.0 - 2026-11-25
 
 - **Erweitert neu (Regelfassung 2.0.0):** Erweitert ist jetzt Klassisch plus ausbaubare Industrie,
   begrenzte Flugreichweite mit Zwischenstationen, Bündnisse und gemeinsame Schlachten. Entfallen
