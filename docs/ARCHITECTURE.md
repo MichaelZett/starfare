@@ -3,14 +3,6 @@
 Deep dive into the architecture. The README has the user-facing overview;
 this document covers the structural decisions.
 
-The decorative system inspector uses `game.values.SystemComposition`, a pure,
-versioned generator seeded by game and system IDs. It receives only immutable
-visible values and refuses incomplete visibility. `game.ui.DetailedSystemPanel`
-renders the illustration; `FleetAndOrdersPanel` retains it across ordinary
-updates and excludes it while battle results are pending. No game-state,
-snapshot, map geometry or turn-rule changes are involved. Research and deliberate
-simplifications are documented in [System illustrations](SYSTEM-ILLUSTRATIONS.md).
-
 ## Goals
 
 - Domain-oriented packages with a thin technical sub-layer per module
@@ -198,8 +190,7 @@ industry map so historical views never read present-day progress. Invalid or
 inconsistent industrial snapshots are rejected during restoration.
 
 `PlayerViewBuilder` exposes an `IndustryView` only with full visibility. The
-system illustration adds industry buildings; the adjacent `IndustryPanel`
-shows allocation, progress, time to growth and next outgoing delivery. Edits
+`IndustryPanel` in the system details shows allocation, progress, time to growth and next outgoing delivery. Edits
 preview shortages before they are applied. Foreign sensor views and unresolved
 battles do not reveal the industrial details. Observers and archives are read-only.
 The BASELINE branch of `DefaultSpacewardPlanning` uses filtered views, allocating one third of capacity
@@ -247,9 +238,9 @@ Subsequent metal rules must use a different reference rather than change W1.
 `SystemQuality` saves stellar luminosity, orbital distance in AU, host body,
 whether the colony is on a moon, atmosphere and independently generated metal
 richness. `ColonyGenesis` generates this once at the explicit creation boundary.
-Home systems share fertility and richness despite different star appearances.
-`SystemComposition` renders the saved host for fully visible W1 systems;
-older versions retain their decorative generator. Richness is not yet a deposit.
+Home systems share fertility and richness despite different star types. The
+star and body types (`SystemQuality.StarType`, `BodyType`) are part of the saved
+environment; no picture of the system is drawn. Richness is not yet a deposit.
 
 `ColonyEconomy` combines the immutable quality and population. One labor unit
 is 100 population points; usable capacity is min(installed industry, whole labor
@@ -307,7 +298,7 @@ value of 2 must allocate fleet F3 next.
 `ClassicSnapshotCompatibilityTest` reads them with the application's mapper,
 continues the running game, checks replay perspectives, writes and reads the
 current format, and reloads raw fixtures from PostgreSQL through a fresh
-`JpaGameSessionStore`. Read-only views and system illustrations must preserve
+`JpaGameSessionStore`. Read-only views must preserve
 both the state snapshot and the database JSON/version. An absent completion
 date stays absent, an absent visibility defaults to public, and missing
 original settings do not become an invented game template.
@@ -1203,12 +1194,7 @@ readiness. Per-volley strength uses the same member/contingent rounding as final
 survivor allocation; generation strength is summed in integer tenths.
 
 
-## Optional mining order assistance and model radii
-
-`PhysicalSystemSize` is a frozen presentation model keyed by game, system and
-body identities. It supplies explicitly fictional radii without changing
-`SystemComposition` generation, colony environment, production or rule references.
-Planetary bodies share one compressed scale; stars have a separate scale.
+## Optional mining order assistance
 
 `MiningAutomation` contains opt-in human order preferences, separate from economic
 rules. Its optional map in `GameStateSnapshot` defaults to no automation for old

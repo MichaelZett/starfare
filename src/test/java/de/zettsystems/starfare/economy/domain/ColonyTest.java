@@ -1,14 +1,13 @@
 package de.zettsystems.starfare.economy.domain;
 
 import de.zettsystems.starfare.economy.values.SystemQuality;
-import de.zettsystems.starfare.game.values.SystemComposition;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 
 class ColonyTest {
     private static SystemQuality quality(double light, double orbit, SystemQuality.Atmosphere atmosphere, int richness) {
-        return new SystemQuality(SystemComposition.StarType.YELLOW, light, orbit,
-                SystemComposition.BodyType.ROCKY, false, atmosphere, richness);
+        return new SystemQuality(SystemQuality.StarType.YELLOW, light, orbit,
+                SystemQuality.BodyType.ROCKY, false, atmosphere, richness);
     }
     @Test void suitabilityUsesLightDistanceAndAtmosphereRatherThanStarColor() {
         var earth = quality(1, 1, SystemQuality.Atmosphere.TEMPERATE, 1);
@@ -35,10 +34,10 @@ class ColonyTest {
         assertThatThrownBy(() -> quality(Double.NaN, 1, SystemQuality.Atmosphere.NONE, 1)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> quality(1, 0, SystemQuality.Atmosphere.NONE, 1)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> quality(1, 1, SystemQuality.Atmosphere.NONE, 6)).isInstanceOf(IllegalArgumentException.class);
-        assertThatCode(() -> new SystemQuality(SystemComposition.StarType.RED, 0.04, 0.2,
-                SystemComposition.BodyType.GAS_GIANT, true, SystemQuality.Atmosphere.TEMPERATE, 2)).doesNotThrowAnyException();
-        assertThatThrownBy(() -> new SystemQuality(SystemComposition.StarType.RED, 0.04, 0.2,
-                SystemComposition.BodyType.GAS_GIANT, false, SystemQuality.Atmosphere.TEMPERATE, 2))
+        assertThatCode(() -> new SystemQuality(SystemQuality.StarType.RED, 0.04, 0.2,
+                SystemQuality.BodyType.GAS_GIANT, true, SystemQuality.Atmosphere.TEMPERATE, 2)).doesNotThrowAnyException();
+        assertThatThrownBy(() -> new SystemQuality(SystemQuality.StarType.RED, 0.04, 0.2,
+                SystemQuality.BodyType.GAS_GIANT, false, SystemQuality.Atmosphere.TEMPERATE, 2))
                 .isInstanceOf(IllegalArgumentException.class);
     }
     @Test void populationMayReachButNotExceedTheEnvironmentLimit() {

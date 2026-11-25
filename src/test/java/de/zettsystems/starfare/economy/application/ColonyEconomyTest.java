@@ -70,10 +70,7 @@ class ColonyEconomyTest {
         assertThat(own.industry().colony().population()).isEqualTo(690);
         assertThat(own.industry().usableCapacity()).isEqualTo(6);
         assertThat(enemy.industry()).isNull();
-        var illustration = SystemComposition.forVisible(new GameId("first"), own);
-        assertThat(SystemComposition.forVisible(new GameId("other"), own)).isEqualTo(illustration);
-        assertThat(illustration.orElseThrow().stars()).containsExactly(state.colonies().get(1).quality().star());
-        assertThat(SystemComposition.forVisible(new GameId("first"), enemy)).isEmpty();
+        assertThat(own.industry().colony().quality()).isEqualTo(state.colonies().get(1).quality());
         var frame = state.replayFrames().get(1);
         economy.produce(state, Map.of());
         var replay = views.forReplay(state, frame, 1).systems().getFirst();

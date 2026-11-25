@@ -1,11 +1,11 @@
 package de.zettsystems.starfare.economy.values;
 
-import de.zettsystems.starfare.game.values.SystemComposition;
-
 /** Persisted physical inputs; suitability thresholds are deliberately simplified game rules. */
-public record SystemQuality(SystemComposition.StarType star, double luminosity,
-                            double orbitAu, SystemComposition.BodyType body, boolean moon,
+public record SystemQuality(StarType star, double luminosity,
+                            double orbitAu, BodyType body, boolean moon,
                             Atmosphere atmosphere, int metalRichness) {
+    public enum StarType { RED, ORANGE, YELLOW, YELLOW_WHITE, WHITE }
+    public enum BodyType { ROCKY, SUPER_EARTH, GAS_GIANT, ICE_GIANT, DWARF, ASTEROIDS }
     public enum Atmosphere { NONE, THIN, TEMPERATE, DENSE }
     public enum Suitability {
         HARSH(25, 1), HABITABLE(35, 2), FERTILE(50, 3);
@@ -24,8 +24,7 @@ public record SystemQuality(SystemComposition.StarType star, double luminosity,
         java.util.Objects.requireNonNull(atmosphere, "atmosphere");
         if (!Double.isFinite(luminosity) || luminosity <= 0 || !Double.isFinite(orbitAu)
                 || orbitAu <= 0 || metalRichness < 1 || metalRichness > 5
-                || (!moon && body != SystemComposition.BodyType.ROCKY
-                    && body != SystemComposition.BodyType.SUPER_EARTH)) {
+                || (!moon && body != BodyType.ROCKY && body != BodyType.SUPER_EARTH)) {
             throw new IllegalArgumentException("Invalid colony environment");
         }
     }

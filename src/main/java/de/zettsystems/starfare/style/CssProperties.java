@@ -1,7 +1,6 @@
 package de.zettsystems.starfare.style;
 
 public final class CssProperties {
-    public static final String BODY_DIAMETER = "--system-body-diameter";
     public static final String SEAT_COLOR = "--seat-color";
     public static final String MAX_WIDTH = "max-width";
 

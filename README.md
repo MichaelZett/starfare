@@ -102,14 +102,6 @@ incompatible industry selection to Baseline. The confirmation lists each AI seat
 strategy before creation. The alternatives use the same policies as the strategy
 benchmark and consume player-visible information and legal route durations.
 
-## System inspector
-
-The system inspector on the right includes a schematic stellar system with
-selectable stars, planets and moons. Its shipyard represents existing production;
-the illustration changes no game rules or saved state. It is available only when
-the system is fully revealed and its battle results are no longer pending.
-See [System illustrations](docs/SYSTEM-ILLUSTRATIONS.md) for sources and simplifications.
-
 ## Lobby and archive
 
 New games are private. Use **Manage** to invite players or publish the game
@@ -156,17 +148,11 @@ preserve unchanged input controls and focus. In the own start, **My account** le
 lobby and archive; imprint and privacy share a footer.
 
 System details put sendable ships, total garrison and forecast ship
-production per round above the send and relocation actions, followed by the
-system diagram. **Logistics** (or **Colony & logistics**) expands rates,
-arrivals and colony data. **Background** expands descriptions,
+production per round above the send and relocation actions. **Logistics** (or
+**Colony & logistics** for SectorForces extended colonies) expands rates, arrivals
+and the colony data. **Background** expands descriptions,
 environment values and ownership history. Expanded sections stay open across
 updates and system selections while their data follows the selected system.
-
-The system diagram uses clipped stellar discs and fixed type sizes, with separate
-scales for stars and planets. Saved Spaceward colony orbits use the same compressed
-distance scale across systems. Colonized planets and moons open the existing
-colony details directly; atmospheric appearance follows the colonized body.
-SectorForces illustrations remain decorative and reveal no hidden information.
 
 Cancelling a send with Cancel, Escape or an outside click retains the source and
 target selection. Success confirms the queued order and keeps the source details
@@ -582,8 +568,7 @@ saved filters after a new sign-in, rematches, relocation limits, station routes
 and coalition ownership, concealed results and persistent battle acknowledgements.
 Game-end journeys cover alliance proposals, notice periods and departures with two
 accounts, continuing a won game towards full conquest, and victory staying hidden
-until the last battle has been evaluated, also after reloading. The home system view
-keeps its stars and worlds across reloads and follows a language change.
+until the last battle has been evaluated, also after reloading.
 They need neither Chrome nor a running HTTP server. `./gradlew e2eTest` runs the
 Cucumber/Selenium journeys that need a real browser against the real application in
 headless Chrome: sign-in of a test account and one round, round submission pushed between
@@ -951,15 +936,7 @@ actual generations, including allied stationed forces. AI budgets are
 editors remain later work. Desktop and phone browser checks, the initial balance study and personal gameplay acceptance (18 November 2026) have passed.
 
 
-## Individual model sizes and mining automation
-
-System inspectors show stable, fictional radii in kilometres for stars, planets
-and moons. These are explicitly labelled model values, not catalogue measurements.
-Planets share one compressed scale; stars use a separate scale. Major moons are
-drawn smaller on it, at most two fifths of their planet, close beside it.
-Asteroid belts have no single radius. Production, environment and visibility
-rules are unchanged; model sizes are shown only with the existing full visibility.
-See [System illustrations](docs/SYSTEM-ILLUSTRATIONS.md).
+## Mining automation
 
 **Logistics → Mining automation** enables optional, persistent empire-wide mining
 orders. It defaults to off. Select systems, protected systems and a reserve target

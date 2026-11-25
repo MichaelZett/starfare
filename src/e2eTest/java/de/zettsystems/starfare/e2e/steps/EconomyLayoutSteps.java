@@ -13,7 +13,6 @@ import io.cucumber.java.After;
 import io.cucumber.java.de.Wenn;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.IOException;
@@ -23,8 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /** Retains geometry, keyboard activation and acceptance pictures from migrated economy journeys. */
 public class EconomyLayoutSteps {
@@ -81,9 +78,8 @@ public class EconomyLayoutSteps {
 
     private void checkColony(GameId id, int width) throws IOException {
         openAlpha(id);
-        var moon = browser.awaitCss(".system-colony-moon");
-        assertThat(moon.getRect().getWidth()).isGreaterThanOrEqualTo(44);
-        browser.type(".system-colony-moon", Keys.ENTER);
+        browser.awaitTextIn(".system-operations > vaadin-details-summary", "Kolonie & Logistik");
+        browser.clickCss(".system-operations > vaadin-details-summary");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> Boolean.TRUE.equals(js().executeScript(
                 "return document.querySelector('.system-operations')?.opened")));
         browser.awaitTextIn(".colony-details", "Hauptkolonie auf einem Mond");

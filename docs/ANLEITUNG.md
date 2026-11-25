@@ -160,19 +160,12 @@ Fokus.
 
 In den Systemdetails stehen versendbare Schiffe und Gesamtbestand oben;
 außerdem die erwartete Schiffproduktion pro Runde. **Flotte senden** und
-**Verlegung anlegen** stehen direkt darunter, vor dem Systembild.
-**Logistik** öffnet Zu- und Abflüsse und Ankünfte;
-bei Kolonien heißt dieser Bereich **Kolonie & Logistik**. **Hintergrund** enthält
-Beschreibungen, Umweltwerte und Besitzhistorie. Die geöffneten Bereiche bleiben
-bei Aktualisierungen und Systemwechseln geöffnet; die Angaben folgen der Auswahl.
-
-Sterne sind links angeschnitten und zeigen ihre Farbe und Typgröße. Planeten
-unterscheiden sich durch Größenklasse und Oberfläche. Stern- und Planetengrößen
-verwenden getrennte Maßstäbe; die Abstände sind schematisch. Hat SectorForces erweitert
-gespeicherte Koloniedaten, liegt eine fernere Bahn sichtbar weiter außen.
-Ein besiedelter Planet oder Mond trägt eine Koloniemarkierung. Seine Auswahl
-öffnet die vorhandenen Kolonieangaben; sie erteilt keinen Siedlungsbefehl.
-In SectorForces klassisch bleiben Körper dekorativ. Hintergrundwerte folgen dem Kriegsnebel.
+**Verlegung anlegen** stehen direkt darunter.
+**Logistik** öffnet Zu- und Abflüsse und Ankünfte; bei Kolonien in SectorForces erweitert
+heißt dieser Bereich **Kolonie & Logistik** und enthält auch die Kolonieangaben.
+**Hintergrund** enthält Beschreibungen, Umweltwerte und Besitzhistorie. Die geöffneten
+Bereiche bleiben bei Aktualisierungen und Systemwechseln geöffnet; die Angaben folgen der
+Auswahl. Hintergrundwerte folgen dem Kriegsnebel.
 
 ## Flotten und Befehle
 
@@ -283,17 +276,6 @@ dem Ende der Partie ist der Chat für alle nur noch lesbar. Zuschauer haben kein
 Kartenansicht. **Partie verlassen** übergibt deinen Sitz an die KI. Erlaubt die Partie
 den Wiedereinstieg, kannst du später zurückkehren.
 
-### Individuelle Größen im Systembild
-
-Sterne, Planeten und Monde besitzen reproduzierbare **fiktive Modellradien**.
-Sie stehen in den Körperdetails mit der Einheit km und Herkunftshinweis; ein
-Asteroidengürtel hat keinen erfundenen Einzelradius. Derselbe Körper behält
-seinen Wert nach Neuladen und Neustart. Planeten verwenden überall dieselbe
-komprimierte Größenskala, Sterne eine eigene. Hauptmonde sind darauf verkleinert,
-höchstens zwei Fünftel ihres Planeten groß, und stehen dicht an ihm, damit sie als
-Begleiter zu lesen sind; ihr Modellradius steht weiter in den Körperdetails. Größen sind keine
-Messungen und ändern weder Produktion noch Umwelt oder Reichweite.
-
 ## Schlachten ansehen oder sofort auswerten
 
 Eine offene Kampfmeldung zeigt zunächst den Ort. Besitzer und Ergebnis am
@@ -398,7 +380,7 @@ der aktuellen Kapazität. Das Maximum ist 50. Neue Kapazität wirkt ab der folge
 Runde. Fortschritt bleibt bei Umschaltung und Eroberung erhalten; ein Eroberer
 beginnt mit vollem Schiffbau.
 
-Die rechte Systemsicht zeigt Industriegebäude, Verteilung, Fortschritt und die
+Die Systemdetails zeigen Industriegebäude, Verteilung, Fortschritt und die
 voraussichtliche nächste Lieferung. Bestehende Verlegungen bleiben erhalten;
 reicht der Schiffbau nicht, können sie auf die Garnison zugreifen.
 Engpässe werden angezeigt. Rohstoffe, Forschung und Schiffstypen folgen später.
@@ -407,7 +389,7 @@ SectorForces klassisch verwendet weiterhin seine bisherigen Regeln.
 Die nächste Wirtschaftsfassung wird zunächst intern geprüft. Der Zwischenstand
 **1.2.0-w1** ergänzt eine gespeicherte Hauptkolonie je System. Bevölkerung und
 Industrie bestimmen gemeinsam die nutzbare Kapazität; zusätzliche Arbeitskräfte
-und fertiger Ausbau wirken erst in der nächsten Runde. Die Systemsicht zeigt
+und fertiger Ausbau wirken erst in der nächsten Runde. Die Systemdetails zeigen
 Bevölkerung, Wachstum, Eignung und den Engpass durch fehlende Arbeitskräfte.
 Eroberung erhält Bevölkerung und Systemeigenschaften. Metallreichtum ist hier
 eine gespeicherte Eigenschaft; Förderung und Recycling folgen später.
@@ -419,7 +401,7 @@ verwenden die aktuelle Regelfassung 1.3.0-r1; ältere Versionen bleiben fortsetz
 Diese gesonderte interne Regelfassung ergänzt endliche Vorkommen je System und
 Metallvorräte je Spieler. Ein Schiff kostet **1 Metall**. Der Vorrat steht im
 gesamten eigenen Reich zur Verfügung; Bündnispartner teilen ihn nicht automatisch.
-Die Spielleiste zeigt den Reichsvorrat; die Systemsicht zeigt Restvorkommen, Förderergiebigkeit und geplante Förderung
+Die Spielleiste zeigt den Reichsvorrat; die Systemdetails zeigen Restvorkommen, Förderergiebigkeit und geplante Förderung
 und den metallgedeckten Schiffbau. Förderung und Ausbau werden gemeinsam zugewiesen
 und dürfen zusammen die nutzbare Industrie nicht überschreiten. Die übrige
 Kapazität dient dem Schiffbau. Der Planungsdialog zeigt ihn als eigenen gekoppelten
@@ -511,19 +493,6 @@ Browsersitzung behalten.
 
 **Mein Bereich** bündelt Lobby und Archiv. Konto, Kontolöschung, Impressum und
 Datenschutz gehören der Spieleplattform und stehen in ihrem Rahmen.
-
-## Grafische Systemsicht
-
-Die Systemdetails rechts zeigen ein schematisches Sternsystem. Sonnen und
-Himmelskörper lassen sich anklicken oder mit Enter und Leertaste auswählen;
-darunter erscheinen ihre Beschreibungen. „Himmelskörper erkunden“ öffnet die
-vollständige Liste. Monde sind als kleine Auswahl dargestellt. Die Werft steht
-für die vorhandene Schiffsproduktion und ist kein zusätzliches Gebäude.
-
-Die Illustration verändert weder Produktion noch Kampf, Reisezeit oder Besitz.
-Bei unvollständiger Sicht und offenen Schlachten bleibt sie verborgen. Bestehende
-Partien behalten ihre Spielstände. Wissenschaftliche Grundlagen und bewusst
-vereinfachte Darstellung stehen in [System illustrations](SYSTEM-ILLUSTRATIONS.md).
 
 ## Erweiterte Regeln: Siegoptionen
 

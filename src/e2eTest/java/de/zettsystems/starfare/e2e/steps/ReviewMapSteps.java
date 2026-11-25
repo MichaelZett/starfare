@@ -210,11 +210,9 @@ public class ReviewMapSteps {
             assertThat(js().executeScript("""
                     const metrics = document.querySelector('.system-metrics');
                     const actions = document.querySelector('.system-details-actions');
-                    const image = document.querySelector('.system-orrery');
                     const sidebar = actions.closest('.map-right').getBoundingClientRect();
                     const buttons = [...actions.querySelectorAll('vaadin-button')];
                     return metrics.firstElementChild.classList.contains('system-metric-sendable')
-                        && actions.getBoundingClientRect().bottom <= image.getBoundingClientRect().top
                         && buttons.every(button => {
                             const r = button.getBoundingClientRect();
                             return r.top >= sidebar.top && r.bottom <= Math.min(innerHeight, sidebar.bottom)

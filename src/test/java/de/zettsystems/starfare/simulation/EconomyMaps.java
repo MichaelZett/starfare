@@ -4,7 +4,6 @@ import de.zettsystems.starfare.economy.domain.*;
 import de.zettsystems.starfare.economy.values.SystemQuality;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.StarSystem;
-import de.zettsystems.starfare.game.values.SystemComposition;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +20,8 @@ final class EconomyMaps {
         for (var system : systems) {
             int richness = switch (environment) { case POOR -> 1; case RICH -> 5; default -> 3; };
             var atmosphere = environment == Environment.HARSH ? SystemQuality.Atmosphere.NONE : SystemQuality.Atmosphere.TEMPERATE;
-            var quality = new SystemQuality(SystemComposition.StarType.YELLOW, 1, 1,
-                    SystemComposition.BodyType.ROCKY, false, atmosphere, richness);
+            var quality = new SystemQuality(SystemQuality.StarType.YELLOW, 1, 1,
+                    SystemQuality.BodyType.ROCKY, false, atmosphere, richness);
             result.put(system.id(), new ColonyEconomy(quality, natural.get(system.id()).colony()));
         }
         return Map.copyOf(result);

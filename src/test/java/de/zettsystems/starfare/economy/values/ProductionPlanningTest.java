@@ -164,8 +164,8 @@ class ProductionPlanningTest {
         assertThat(inputs.forSystem(2, 1, maximum).valid()).isFalse();
     }
     @Test void environmentAndAutomationBoundsIncludeTheirLimits() {
-        var star = de.zettsystems.starfare.game.values.SystemComposition.StarType.YELLOW;
-        var rocky = de.zettsystems.starfare.game.values.SystemComposition.BodyType.ROCKY;
+        var star = de.zettsystems.starfare.economy.values.SystemQuality.StarType.YELLOW;
+        var rocky = de.zettsystems.starfare.economy.values.SystemQuality.BodyType.ROCKY;
         assertThatThrownBy(() -> new SystemQuality(star, 0, 1, rocky, false, SystemQuality.Atmosphere.THIN, 1))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatCode(() -> new MiningAutomation("a", true, 0, Set.of(), Set.of(), 0, 0, MiningPlan.EMPTY)).doesNotThrowAnyException();

@@ -3,6 +3,7 @@ package de.zettsystems.starfare.testsupport;
 import de.zettsystems.starfare.economy.domain.Colony;
 import de.zettsystems.starfare.economy.domain.ColonyEconomy;
 import de.zettsystems.starfare.economy.domain.ColonyGenesis;
+import de.zettsystems.starfare.economy.values.SystemQuality;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.navigation.values.NavigationSettings;
@@ -35,9 +36,9 @@ public final class ColonyStates {
         var colonies = new HashMap<>(ColonyGenesis.forGalaxy(state.systems(), 42));
         colonies.put(1, new ColonyEconomy(colonies.get(1).quality(), new Colony(690)));
         if (moon) {
-            var quality = new de.zettsystems.starfare.economy.values.SystemQuality(
-                    SystemComposition.StarType.YELLOW, 1, 1, SystemComposition.BodyType.GAS_GIANT, true,
-                    de.zettsystems.starfare.economy.values.SystemQuality.Atmosphere.TEMPERATE, 3);
+            var quality = new SystemQuality(
+                    SystemQuality.StarType.YELLOW, 1, 1, SystemQuality.BodyType.GAS_GIANT, true,
+                    SystemQuality.Atmosphere.TEMPERATE, 3);
             colonies.put(1, new ColonyEconomy(quality, new Colony(690)));
         }
         state.establishColonies(colonies);

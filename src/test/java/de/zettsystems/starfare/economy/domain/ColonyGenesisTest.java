@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.economy.domain;
 
-import de.zettsystems.starfare.game.values.SystemComposition;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.economy.values.SystemQuality;
 import org.junit.jupiter.api.Test;
@@ -38,7 +37,7 @@ class ColonyGenesisTest {
         var colonies = ColonyGenesis.forGalaxy(systems, 7);
         for (int id = 1; id <= 40; id++) {
             assertThat(colonies.get(id).quality().moon()).isFalse();
-            assertThat(colonies.get(id).quality().body()).isEqualTo(SystemComposition.BodyType.ROCKY);
+            assertThat(colonies.get(id).quality().body()).isEqualTo(SystemQuality.BodyType.ROCKY);
         }
         long moons = colonies.entrySet().stream().filter(entry -> entry.getKey() > 40 && entry.getValue().quality().moon()).count();
         assertThat(moons).isBetween(60L, 120L);

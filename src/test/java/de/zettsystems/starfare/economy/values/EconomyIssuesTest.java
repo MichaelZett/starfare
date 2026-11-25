@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.economy.values;
 
-import de.zettsystems.starfare.game.values.SystemComposition;
 import de.zettsystems.starfare.game.values.VisibleSystem;
 import java.util.List;
 import java.util.Set;
@@ -47,7 +46,7 @@ class EconomyIssuesTest {
     }
     @Test void depositExactlyCoveringTheMiningAndLaborEqualToCapacityAreNoIssues() {
         var covered = new IndustryView(10, 0, 0, 20, 0, false, null, new MetalView(6, 3, 2, 0, 6, 8, 8));
-        var quality = new SystemQuality(SystemComposition.StarType.YELLOW, 1, 1, SystemComposition.BodyType.ROCKY, false,
+        var quality = new SystemQuality(SystemQuality.StarType.YELLOW, 1, 1, SystemQuality.BodyType.ROCKY, false,
                 SystemQuality.Atmosphere.TEMPERATE, 3);
         var staffed = new IndustryView(10, 0, 0, 20, 0, false, new ColonyView(quality, 1000, 1000, true));
         assertThat(EconomyIssues.forSystems(List.of(system(1, 1, true, covered), system(2, 1, true, staffed)), 1, Set.of(), Set.of())).isEmpty();

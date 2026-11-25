@@ -2,7 +2,6 @@ package de.zettsystems.starfare.economy.domain;
 
 import de.zettsystems.starfare.economy.values.SystemQuality;
 import de.zettsystems.starfare.game.values.StarSystem;
-import de.zettsystems.starfare.game.values.SystemComposition;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +22,8 @@ public final class ColonyGenesis {
         return Map.copyOf(result);
     }
     private static SystemQuality environment(Random random, boolean home) {
-        var stars = List.of(SystemComposition.StarType.RED, SystemComposition.StarType.ORANGE,
-                SystemComposition.StarType.YELLOW, SystemComposition.StarType.YELLOW_WHITE, SystemComposition.StarType.WHITE);
+        var stars = List.of(SystemQuality.StarType.RED, SystemQuality.StarType.ORANGE,
+                SystemQuality.StarType.YELLOW, SystemQuality.StarType.YELLOW_WHITE, SystemQuality.StarType.WHITE);
         var star = stars.get(random.nextInt(stars.size()));
         double luminosity = switch (star) {
             case RED -> 0.04; case ORANGE -> 0.4; case YELLOW -> 1.0;
@@ -36,7 +35,7 @@ public final class ColonyGenesis {
                 SystemQuality.Atmosphere.TEMPERATE, SystemQuality.Atmosphere.DENSE);
         var atmosphere = home ? SystemQuality.Atmosphere.TEMPERATE : atmospheres.get(random.nextInt(atmospheres.size()));
         boolean moon = !home && random.nextInt(4) == 0;
-        var body = moon ? SystemComposition.BodyType.GAS_GIANT : SystemComposition.BodyType.ROCKY;
+        var body = moon ? SystemQuality.BodyType.GAS_GIANT : SystemQuality.BodyType.ROCKY;
         return new SystemQuality(star, luminosity, Math.sqrt(luminosity) * relativeOrbit,
                 body, moon, atmosphere, richness);
     }

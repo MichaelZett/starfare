@@ -17,6 +17,10 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   vorgemerkter Sendungen; Produktionsverlegungen dürfen in beiden Regelwerken auf die ganze Garnison
   zugreifen. **Alle außer Produktion** bleibt. Gespeicherte Partien mit einer Reserve laden weiter, die
   Reserve wird dabei verworfen.
+- **Grafische Systemsicht entfällt:** Das Bild mit Sternen, Planeten, Monden und Werft sowie die
+  Himmelskörperbeschreibungen und Modellradien fallen aus den Systemdetails weg. Die Systemdetails
+  zeigen weiter Produktion, Garnison, Flotten und Verlegungen. In SectorForces erweitert stehen die
+  Kolonieangaben im Bereich **Kolonie & Logistik** der Systemdetails.
 
 ## 0.2.18 - 2026-11-24
 

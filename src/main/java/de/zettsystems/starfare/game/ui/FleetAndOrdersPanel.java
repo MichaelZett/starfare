@@ -172,8 +172,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final VerticalLayout relocationCards = page();
     private final List<TextField> routeFilters = new java.util.ArrayList<>();
     private @Nullable Object lastDetails;
-    private @Nullable DetailedSystemPanel detailedSystem;
-    private Object detailedSystemKey = "";
     private boolean fleetArrivalsOpened;
     private final java.util.Set<Integer> openedFleetDetails = new java.util.HashSet<>();
     private final java.util.Set<Integer> expandedFleetRoutes = new java.util.HashSet<>();
@@ -671,7 +669,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         backgroundDetails.setOpened(systemBackgroundOpened);
         backgroundDetails.addOpenedChangeListener(event -> systemBackgroundOpened = event.isOpened());
         renderIndustry(view, system, operations, background);
-        renderSystemIllustration(system, background, () -> backgroundDetails.setOpened(true));
         if (system.routedProduction() != null) {
             operations.add(systemFlow(system, ProductionFlow.at(system.id(), view.standingOrders())));
         }
@@ -685,13 +682,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             operationalDetails.addClassName("system-operations");
             operationalDetails.setOpened(systemOperationsOpened);
             operationalDetails.addOpenedChangeListener(event -> systemOperationsOpened = event.isOpened());
-            DetailedSystemPanel systemPanel = detailedSystem;
-            if (systemPanel != null && industry != null && industry.colony() != null) {
-                systemPanel.onColonyInspect(() -> {
-                    operationalDetails.setOpened(true);
-                    operations.getElement().executeJs("this.querySelector('.colony-details')?.scrollIntoView({block:'nearest'})");
-                });
-            }
             detailsPage.add(operationalDetails);
         }
         renderOwnershipHistory(view, system, background);
@@ -726,24 +716,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         production.addClassName("system-metric-rate");
         metrics.add(production);
         return metrics;
-    }
-
-    private void renderSystemIllustration(VisibleSystem system, VerticalLayout background, Runnable revealBackground) {
-        GameId currentGame = gameId;
-        if (currentGame == null) { return; }
-        SystemComposition.forVisible(currentGame, system).ifPresent(composition -> {
-            boolean shipyard = system.ownerId() != null && system.productionPerTurn() != null;
-            Object identity = List.of(currentGame, system.id(), shipyard, composition);
-            DetailedSystemPanel panel = detailedSystem;
-            if (panel == null || !identity.equals(detailedSystemKey)) {
-                panel = new DetailedSystemPanel(composition, shipyard, currentGame, system.id());
-                detailedSystem = panel;
-                detailedSystemKey = identity;
-            }
-            panel.onInspect(revealBackground);
-            detailsPage.add(panel);
-            background.add(panel.background());
-        });
     }
 
     private void renderSystemActions(VisibleSystem system, boolean targetSelectionActive) {

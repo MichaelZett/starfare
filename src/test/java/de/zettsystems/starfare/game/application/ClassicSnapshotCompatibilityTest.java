@@ -190,8 +190,7 @@ class ClassicSnapshotCompatibilityTest extends AbstractIntegrationTest {
                 views.forReview(state, player, false);
                 state.replayFrames().values().forEach(frame -> views.forReplay(state, frame, player));
             }
-            views.forObserver(state).systems().forEach(system ->
-                    assertThat(SystemComposition.forVisible(id, system)).isPresent());
+            assertThat(views.forObserver(state).systems()).allMatch(VisibleSystem::fullyVisible);
             assertThat(GameState.toSnapshot(state)).isEqualTo(before);
             assertThat(state.originalSetup()).isEmpty();
             return null;
