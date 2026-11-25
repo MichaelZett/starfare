@@ -692,3 +692,98 @@ Rivalen), `k7d-dev` und `k7d-dev-baseline` (Entwicklung, Endstand), `k7d-control
 Java 25.0.3, Quellfingerabdruck der Abschlussläufe
 `85acb4aa82db794f894bc6908ef367911abe8909d22f89a8f612fca3cb51f16d`. Insgesamt rund 39.000
 Partien.
+
+## Computerstärke Erweitert (E5) — 25.11.2026
+
+Kalibriert werden die Stufen des Dialogs „Neue Partie“ für **Erweitert 2.0.0** (Industrieausbau,
+Reichweite, Bündnisse). Aufbau wie bei K4; `--mode=strength` kennt dafür `--rules=spaceward`.
+Referenz auf Sitz 1 ist wieder die Basisstrategie. In Erweitert baut sie ein Drittel der Kapazität
+aus, solange kein Gegner näher als zwei Runden steht, spielt also wie ein Mensch, der seine
+Industrie mitnimmt. Die Computer schließen untereinander keine Bündnisse (die Spiel-KI beantwortet
+nur Vorschläge), der Prüfstand spielt deshalb ohne Diplomatie; Sieg bei 70 % allein.
+
+### Entwicklung (Karten 1–150, Mittel und Groß, Zufall Wenig)
+
+Je Zelle 150 Partien, Computerprofile und Startanteil fest vorgegeben. Quote = Siege der
+Referenz (offene Partien nach 300 Runden zählen nicht als Sieg).
+
+| Computer | Startanteil | Mittel 2 / 4 Spieler | Groß 2 / 4 Spieler |
+|---|---|---|---|
+| BASELINE | 0,5 | 75 / 55 % | 54 / 37 % |
+| BASELINE | 0,75 | 55 / 24 % | 41 / 14 % |
+| BASELINE | 1,0 | 50 / 23 % | 40 / 15 % |
+| BASELINE | 1,25 / 1,5 / 2,0 | 51 / 46 / 45 % · 22 / 18 / 17 % | 39 / 36 / 33 % · 14 / 11 / 9 % |
+| RUSH | 1,0 | 87 / 89 % | 91 / 99 % |
+| EXPANSION | 1,0 | 75 / 72 % | 76 / 79 % |
+| CONCENTRATION | 1,0 | 63 / 59 % | 69 / 70 % |
+| DEFENSE | 1,0 | 81 / 77 % | 89 / 81 % |
+| INDUSTRY | 1,0 | 56 / 65 % | 24 / 42 % |
+| INDUSTRY_LIGHT | 1,0 | 27 / 17 % | 21 / 23 % |
+| INDUSTRY_ADAPTIVE | 1,0 | 16 / 17 % | 9 / 17 % |
+
+Anders als in Klassisch verlieren Rush, Expansion, Konzentration und Verteidigung fast immer
+gegen die ausbauende Referenz. Die bisherige Normal-Mischung aus genau diesen vier Profilen war
+deshalb viel zu leicht. Der Startanteil wirkt ab ×0,75 kaum: Die günstigen ersten Ausbaustufen
+(W7) lassen ein kleineres Reich aufholen, und ein größerer Start bringt wenig. Erst ×0,5 macht die
+Computer spürbar schwächer; die bisherige Stufe Einfach (×0,75) war kaum leichter als Normal.
+
+### Endwerte und Kontrolle (Karten 1001–1200, Zufall Wenig)
+
+| Stärke | Computer | Start |
+|---|---|---|
+| Einfach | Basisstrategie | ×0,5 |
+| Normal | Basisstrategie | ×1 |
+| Anspruchsvoll | adaptive Industrie | ×1 |
+
+Siegquote der Referenz, je Zelle 200 Partien, in Klammern 95 % (fairer Anteil 50/33/25 %):
+
+| Stärke | Größe | 2 Spieler | 3 Spieler | 4 Spieler |
+|---|---|---:|---:|---:|
+| Einfach | Mittel | 72 % (65–78) | 48 % (41–55) | 51 % (44–58) |
+| Einfach | Groß | 55 % (48–62) | 36 % (30–43) | 36 % (30–43) |
+| Normal | Mittel | 50 % (43–56) | 29 % (23–36) | 26 % (20–32) |
+| Normal | Groß | 37 % (30–43) | 26 % (20–33) | 16 % (11–21) |
+| Anspruchsvoll | Mittel | 17 % (12–23) | 18 % (13–23) | 17 % (12–23) |
+| Anspruchsvoll | Groß | 8 % (5–13) | 23 % (17–29) | 17 % (12–22) |
+
+Offen nach 300 Runden blieben auf Mittel 4–21 %, auf Groß 12–32 % der Partien; auf Groß zählen
+diese als Nicht-Sieg und drücken die Quoten. Unter den entschiedenen Partien liegt Normal auf Groß
+im Zweikampf bei 53 %.
+
+Zusatz mit 80 Karten (3001–3080), Einfach/Normal/Anspruchsvoll: Klein 16 im Zweikampf 80/55/23 %,
+mit vier Reichen 59/19/11 %. **Riesig 64** blieb in Erweitert meist unentschieden: 60–78 % der
+Partien waren nach 300 Runden offen (Klassisch: 20–40 %), Median der entschiedenen 140–260 Runden.
+
+**Neue Größen Groß 30 und Riesig 40** (User 25.11.2026; Karten 3001–3080, je Zelle 80 Partien,
+Siegquote der Referenz Einfach/Normal/Anspruchsvoll, in Klammern offen nach 300 Runden):
+
+| Regeln | Größe | 2 Spieler | 4 Spieler | Median Runden |
+|---|---|---|---|---|
+| Klassisch | Groß 30 | 88 / 58 / 20 % (0–0 %) | 41 / 16 / 10 % (0–1 %) | 80–132 |
+| Klassisch | Riesig 40 | 74 / 50 / 13 % (4–9 %) | 49 / 20 / 9 % (1–6 %) | 101–167 |
+| Erweitert | Groß 30 | 68 / 48 / 14 % (9–18 %) | 45 / 21 / 14 % (6–29 %) | 117–174 |
+| Erweitert | Riesig 40 | 61 / 44 / 16 % (14–25 %) | 28 / 14 / 19 % (24–31 %) | 141–201 |
+
+Riesig ist damit in beiden Regeln meist zu Ende zu spielen; Normal liegt im Zweikampf fair.
+
+Entscheidung:
+
+- **Normal** spielt die Basisstrategie mit gleichem Start und liegt auf Mittel in jeder
+  Spielerzahl im fairen Bereich.
+- **Einfach** halbiert den Start; im Zweikampf gewinnt die Referenz 55–80 %, mit mehreren Reichen
+  deutlich über dem fairen Anteil.
+- **Anspruchsvoll** spielt die adaptive Industrie mit gleichem Start; die Referenz gewinnt nur noch
+  8–23 %. Ein größerer Start wäre in Erweitert kaum wirksam.
+
+Nicht erreicht: Normal mit vier Reichen liegt auf den großen Karten unter dem fairen Viertel
+(14–21 %), auch wegen offener Partien.
+
+### Nachweise
+
+Rohdaten lokal unter `build/strategy-harness/`: `e5-sweep/*` (Entwicklung,
+Quellfingerabdruck `a0bab3bfcd76f81240c618f0ac053a613cc0d79620c4846d617547b50bd51b9d`),
+`e5-final` und `e5-sizes` (Abschluss, Quellfingerabdruck
+`c58bc990959bafa899c91adba2b88cc4814dbf13cdfc0df30fd1e2c3501cdd05`); je Ordner `invocation.txt`,
+`matches.csv` und `strength.md`; neue Größen unter `sizes-30-40-classic` und `sizes-30-40-spaceward`
+(Quellfingerabdruck `f7b36deab78a5f3ffa5393f60116454b3771f2c54b9cdcbe15dd0108fabb68f0`). Java 25.0.3.
+Insgesamt rund 14.300 Partien.

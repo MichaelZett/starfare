@@ -28,6 +28,18 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   derselben Runde ankommen; ihre Schiffe verteidigen bis dahin die Garnison, sind aber vorgemerkt.
   Geplante Starts stehen im Reiter Flotten und lassen sich stornieren. Der bisherige Dialog
   „Flotten gesammelt senden“ entfällt.
+- **Durchgang zu Rundenbeginn:** Schlachten, Verluste, kosmische Ereignisse mit Ort und geänderte
+  gemeinsame Starts der Runde kommen nacheinander, die Karte zentriert jeweils auf den Ort. Schlachten
+  öffnen die Wiedergabe, alles andere „Weiter“. Befehle und „Runde abgeben“ sind erst danach möglich.
+  Nach Spielende nimmt die Karte keine Befehle mehr an (bisher „Ungültiger Befehl“).
+- **Normal in Klassisch weniger aggressiv:** Normale Computer halten mehr Schiffe zur Verteidigung
+  zurück, greifen etwa halb so oft an und dann mit größeren Flotten.
+- **Galaxiegrößen:** Groß hat 30 statt 40 Systeme, Riesig 40 statt 64; große Partien gegen Computer
+  enden damit meist innerhalb von 300 Runden.
+- **Erweitert schlanker bedient:** Die Industrie hat nur noch einen Regler „Ausbau“ mit Ergebniszeile
+  (Schiffe je Runde, Ausbaufortschritt, fertig in N Runden). Die Reichweite zeigt „Direkt
+  erreichbar“, „Über N Stationen“ oder „Kein Weg“ statt Prozentwerten. Bündnisse haben eine feste
+  Kündigungsfrist von 3 Runden. Das Spielende zeigt nur noch die gebaute Industrie.
 
 ## 0.2.19 - 2026-11-25
 
