@@ -2009,13 +2009,10 @@ html[data-gp-game="starfare"] {
 .industry-panel { padding: .85rem; margin: .65rem 0; border: 1px solid #426356; border-radius: 12px; background: linear-gradient(135deg, #142d2c, #142130); min-width: 0; display: flex; flex-direction: column; gap: .6rem; }
 .industry-panel h3 { font-size: 1rem; color: #b6e2cc; margin: 0; }
 .industry-panel > span { font-size: .82rem; }
-.industry-shipbuilding { background: #729dc9; }
-.industry-expansion { background: #79cfa8; }
-.industry-progress-track { height: .3rem; margin-top: .35rem; background: #0c1621; border-radius: .2rem; overflow: hidden; }
-.industry-progress-fill { height: 100%; background: #79cfa8; }
-.industry-progress { font-size: .8rem; }
 .industry-panel vaadin-integer-field { width: 100%; min-width: 0; }
-.industry-panel > vaadin-button { align-self: flex-start; }
+.production-editor { display: flex; flex-direction: column; gap: .5rem; }
+.production-result { font-size: .82rem; font-weight: 600; }
+.production-notes { display: flex; flex-direction: column; gap: .3rem; font-size: .8rem; }
 
 .navigation-itinerary {
   display: block;
@@ -2037,10 +2034,9 @@ html[data-gp-game="starfare"] {
 .event-coalition-battle { border-left-color: #d7b75e; }
 
 .conquest-hint { font-size: .85rem; line-height: 1.4; margin-block: .5rem; }
-.production-allocation-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: .3rem .7rem; margin: .65rem 0; align-items: center; }
+.production-allocation-row { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: .3rem .7rem; align-items: center; }
 .production-allocation-row vaadin-integer-field { width: 100%; min-width: 0; }
-.production-allocation-row input[type=range] { width: 100%; accent-color: #57a6f5; }
-.production-plan-results { display: flex; flex-direction: column; gap: .5rem; padding: 1rem; background: #173344; border-radius: 10px; margin: .75rem 0; }
+.production-allocation-row input[type=range] { grid-column: 1 / -1; width: 100%; min-width: 0; accent-color: #57a6f5; }
 .production-warning { display: block; color: #ffd78a; font-weight: 600; }
 .map-root > .legal-footer { flex-shrink: 0; margin: 0; padding: .2rem .8rem; font-size: .8rem; }
 .legal-footer { display: flex; gap: 1rem; justify-content: center; flex-shrink: 0; }
@@ -2055,23 +2051,6 @@ html[data-gp-game="starfare"] {
 .app-header-empire { font-weight: 700; }
 .system-transfer-row { align-items: center; flex-wrap: wrap; gap: 0.5rem; display:grid; width:100%; box-sizing:border-box; }
 
-/* Production planning: distinct functional silhouettes and inline local drafts. */
-.production-functions { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
-.production-function { flex:1 1 85px; min-height:92px; height:auto; padding:8px; background:#192b3b; border:1px solid #456178; }
-.production-function::part(label) { display:flex; flex-direction:column; gap:6px; width:100%; font-size:11px; white-space:normal; }
-.production-function-idle .production-silhouette { opacity:.4; }
-.production-function div { display:flex; flex-direction:column; }
-.production-silhouette { position:relative; display:block; width:64px; height:34px; margin:auto; color:#81bedf; }
-.production-function-shipyard .production-silhouette { background:linear-gradient(90deg,#456178 0 8px,transparent 8px 56px,#456178 56px); border-top:8px solid #81bedf; }
-.production-function-shipyard .production-silhouette::after { content:''; position:absolute; left:18px; top:9px; width:28px; height:13px; background:#bacde0; clip-path:polygon(0 50%,35% 0,100% 35%,100% 65%,35% 100%); }
-.production-function-crane .production-silhouette { background:linear-gradient(90deg,transparent 0 20px,#81bedf 20px 27px,transparent 27px); border-top:5px solid #81bedf; }
-.production-function-crane .production-silhouette::after { content:''; position:absolute; width:2px; height:23px; background:#bacde0; right:8px; top:0; border-bottom:6px solid #bacde0; }
-.production-inline-fields { border:1px solid #456178; border-radius:8px; padding:8px; margin-top:8px; }
-.production-inline-fields .production-allocation-row { display:grid; grid-template-columns:minmax(0,1fr) 100px; gap:6px; margin:10px 0; }
-.production-inline-fields .production-allocation-row input[type=range] { grid-column:1; width:100%; min-width:0; }
-.production-inline-fields .production-allocation-row vaadin-checkbox { grid-column:2; font-size:11px; }
-.production-inline-fields .production-plan-results { display:flex; flex-direction:column; gap:7px; padding:8px; }
-.production-inline-fields > span:last-child { display:block; font-size:11px; color:#95a5bb; margin-top:8px; }
 .sys-economy-marker { position:absolute; z-index:5; width:26px; min-width:26px; height:26px; padding:0; border-radius:50%; color:#f5d28c; background:#382d1b; border:1px solid #c4a563; --vaadin-button-background:#ffc14f; --vaadin-button-text-color:#231900; --vaadin-button-border-color:#fff1bf; }
 
 /* Shared route strips keep decisions ahead of detailed travel rules. */
@@ -2090,7 +2069,6 @@ html[data-gp-game="starfare"] {
 .diplomacy-member { border-left:5px solid #61768e; padding-left:10px; font-weight:600; }
 .diplomacy-proposal { border-color:#8db6d8; background:#192e42; }
 .diplomacy-card vaadin-button { width:fit-content; max-width:100%; height:auto; min-height:36px; white-space:normal; }
-.diplomacy-card vaadin-details > div { display:flex; flex-direction:column; gap:8px; }
 /* Map interaction areas follow the actual browser zoom. */
 .sys-own::before, .sys-fog::before {
     content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);

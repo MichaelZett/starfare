@@ -72,24 +72,15 @@ final class GameOutcomeDialog {
         return dialog;
     }
 
-    /** Spaceward only: recorded sums, never an invented zero for missing history. */
+    /** Extended rules only: the industry built over the game. */
     private static Div economy(EconomyTotals economy) {
         Div section = new Div();
         section.addClassName("game-outcome-economy");
-        if (!economy.recorded()) {
-            section.add(new Span(I18n.t(UiTexts.GAME_OUTCOME_ECONOMY_NOT_RECORDED)));
-            return section;
-        }
         Div metrics = new Div();
         metrics.addClassName("game-outcome-metrics");
         metrics.setWidthFull();
         metrics.add(metric("⚙", UiTexts.GAME_OUTCOME_INDUSTRY_BUILT, economy.industryBuilt()));
         section.add(metrics);
-        switch (economy.coverage()) {
-            case SINCE -> section.add(new Span(I18n.t(UiTexts.GAME_OUTCOME_ECONOMY_SINCE, economy.firstRound())));
-            case PARTIAL -> section.add(new Span(I18n.t(UiTexts.GAME_OUTCOME_ECONOMY_PARTIAL)));
-            case COMPLETE, NOT_RECORDED -> { /* complete or unrecorded history needs no hint */ }
-        }
         return section;
     }
 

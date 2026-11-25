@@ -13,7 +13,6 @@ import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.ui.UiTexts;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.i18n.I18n;
-import java.util.HashSet;
 import java.util.function.Consumer;
 
 /** The map host refreshes an open dialog; this adds no independent subscription. */
@@ -22,7 +21,6 @@ public class DiplomacyDialog extends Dialog {
     private final GameId id;
     private final String account;
     private final Div content = new Div();
-    private final DiplomacyDrafts drafts = new DiplomacyDrafts();
     private final DiplomacyCards cards;
     private final Consumer<String> notify;
     private @org.jspecify.annotations.Nullable ConfirmDialog leaveConfirmation;
@@ -33,7 +31,7 @@ public class DiplomacyDialog extends Dialog {
     /** {@code notify} shows a short message; tests capture it instead of opening a notification. */
     DiplomacyDialog(GameService game, GameId id, String account, Consumer<String> notify) {
         this.game = game; this.id = id; this.account = account; this.notify = notify;
-        cards = new DiplomacyCards(drafts, this::send, this::leave);
+        cards = new DiplomacyCards(this::send, this::leave);
         setHeaderTitle(I18n.t(UiTexts.DIP_TITLE)); setWidth("640px");
         getElement().getStyle().set(de.zettsystems.starfare.style.CssProperties.MAX_WIDTH, "calc(100vw - 32px)");
         content.addClassName("diplomacy-content"); add(content);
@@ -48,8 +46,9 @@ public class DiplomacyDialog extends Dialog {
         if (current.isEmpty()) { close(); return; }
         var view = current.orElseThrow(); content.removeAll();
         if (!view.canAct()) { content.add(new Span(I18n.t(UiTexts.DIP_LOCKED))); }
-        retainDrafts(view);
+        // Former notice changes no longer decide anything; they lapse at the next round.
         var proposals = view.treaties().proposals().stream().filter(proposal -> proposal.voters().contains(view.player()))
+                .filter(proposal -> proposal.kind() != TreatyProposal.Kind.NOTICE)
                 .sorted(java.util.Comparator.comparing((TreatyProposal proposal) -> proposal.approvals().contains(view.player()))
                         .thenComparingInt(TreatyProposal::id)).toList();
         if (!proposals.isEmpty()) {
@@ -68,23 +67,12 @@ public class DiplomacyDialog extends Dialog {
                             ? cards.blockedPartner(view, player) : cards.partner(view, player)));
         }
         if (others.getChildren().findAny().isPresent()) { content.add(new H3(I18n.t(DiplomacyKeys.OTHERS)), others); }
-        content.add(new Details(I18n.t(DiplomacyKeys.BACKGROUND), new Span(I18n.t(UiTexts.DIP_RULES))));
-    }
-    private void retainDrafts(DiplomacyView view) {
-        var valid = new HashSet<DiplomacyDrafts.Key>();
-        view.treaties().groupFor(view.player()).ifPresent(group -> valid.add(new DiplomacyDrafts.Key(DiplomacyOrder.Action.NOTICE, group.id())));
-        if (view.treaties().groupFor(view.player()).isEmpty()) {
-            view.players().stream().filter(player -> player.id() != view.player() && view.treaties().groupFor(player.id()).isEmpty())
-                    .filter(player -> view.aiAlliancesAllowed() || !player.ai())
-                    .forEach(player -> valid.add(new DiplomacyDrafts.Key(DiplomacyOrder.Action.FOUND, player.id())));
-        }
-        if (drafts.retain(valid)) { notify.accept(I18n.t(DiplomacyKeys.LOST_TARGET)); }
+        content.add(new Details(I18n.t(DiplomacyKeys.BACKGROUND),
+                new Span(I18n.t(UiTexts.DIP_RULES, AllianceGroup.NOTICE_ROUNDS))));
     }
     private void send(DiplomacyView view, DiplomacyOrder order) {
         if (!isOpened()) { return; }
-        if (game.diplomacyOrder(id, account, view.turn(), order)) {
-            drafts.completed(new DiplomacyDrafts.Key(order.action(), order.subject()));
-        } else { notify.accept(I18n.t(UiTexts.DIP_REJECTED)); }
+        if (!game.diplomacyOrder(id, account, view.turn(), order)) { notify.accept(I18n.t(UiTexts.DIP_REJECTED)); }
         refresh();
     }
     private void leave(DiplomacyView view, AllianceGroup group) {
@@ -94,7 +82,7 @@ public class DiplomacyDialog extends Dialog {
         confirm.setText(I18n.t(DiplomacyKeys.LEAVE_EFFECT, group.departureTurn(view.turn())));
         confirm.setCancelable(true); confirm.setCancelText(I18n.t(UiTexts.MAP_DIALOG_CANCEL));
         confirm.setConfirmText(I18n.t(DiplomacyKeys.CONFIRM_LEAVE));
-        confirm.addConfirmListener(_ -> send(view, new DiplomacyOrder(DiplomacyOrder.Action.LEAVE, group.id(), 0)));
+        confirm.addConfirmListener(_ -> send(view, new DiplomacyOrder(DiplomacyOrder.Action.LEAVE, group.id())));
         confirm.open();
     }
 }

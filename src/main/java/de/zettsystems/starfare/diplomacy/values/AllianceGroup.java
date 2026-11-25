@@ -5,8 +5,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/** All members share one treaty; departures keep their originally agreed deadline. */
+/**
+ * All members share one treaty; departures keep their originally agreed deadline. New alliances
+ * always get the fixed notice period; the stored value keeps older saved groups readable.
+ */
 public record AllianceGroup(int id, Set<Integer> members, int noticeRounds, Map<Integer, Integer> departures) {
+    /** Fixed notice period of every new alliance. */
+    public static final int NOTICE_ROUNDS = 3;
+
     public AllianceGroup {
         members = Set.copyOf(members);
         departures = Map.copyOf(departures);
@@ -19,7 +25,6 @@ public record AllianceGroup(int id, Set<Integer> members, int noticeRounds, Map<
         var updated = new HashSet<>(members); updated.add(player);
         return new AllianceGroup(id, updated, noticeRounds, departures);
     }
-    public AllianceGroup agreeNotice(int rounds) { return new AllianceGroup(id, members, rounds, departures); }
     public AllianceGroup announceDeparture(int player, int turn) {
         var updated = new HashMap<>(departures); updated.put(player, departureTurn(turn));
         return new AllianceGroup(id, members, noticeRounds, updated);

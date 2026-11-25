@@ -81,10 +81,11 @@ public class GameSession {
                 state.roundRules().tempo(), state.tutorial(), pendingAnswers(state));
     }
 
-    /** The treaty proposals each seat still has to vote on. */
+    /** The treaty proposals each seat still has to vote on; saved notice changes need no answer. */
     private static Map<Integer, List<Integer>> pendingAnswers(GameState state) {
         Map<Integer, List<Integer>> answers = new HashMap<>();
         for (var proposal : state.diplomacy().proposals()) {
+            if (proposal.kind() == de.zettsystems.starfare.diplomacy.values.TreatyProposal.Kind.NOTICE) { continue; }
             proposal.voters().stream().filter(voter -> !proposal.approvals().contains(voter))
                     .forEach(voter -> answers.computeIfAbsent(voter, _ -> new ArrayList<>()).add(proposal.id()));
         }

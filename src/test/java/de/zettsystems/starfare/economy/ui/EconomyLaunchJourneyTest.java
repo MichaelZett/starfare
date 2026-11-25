@@ -28,7 +28,6 @@ class EconomyLaunchJourneyTest extends AbstractEconomyUiTest {
         var home = before.systems().stream().filter(system -> Integer.valueOf(1).equals(system.ownerId()))
                 .findFirst().orElseThrow();
         select(home.name());
-        click("production-plan-open");
         enter(IndustryPanel.ALLOCATION_ID, 1);
         assertThat(text("production-save-status")).contains("Gespeichert");
         test(button("Runde abgeben")).click();

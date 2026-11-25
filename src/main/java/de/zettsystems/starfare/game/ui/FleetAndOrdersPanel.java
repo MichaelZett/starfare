@@ -897,8 +897,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (view != null) {
             view.ownFleets().stream().filter(candidate -> candidate.globalId() == fleet.fleetId()).findFirst()
                     .ifPresent(candidate -> {
-                        NavigationDisplay.addJourney(card, candidate, view)
-                                .ifPresent(details -> rememberTravelDetails(details, candidate.globalId()));
+                        NavigationDisplay.addJourney(card, candidate, view);
                         card.getChildren().filter(de.zettsystems.starfare.navigation.ui.RouteStrip.class::isInstance)
                                 .map(de.zettsystems.starfare.navigation.ui.RouteStrip.class::cast)
                                 .forEach(strip -> rememberRoute(strip, candidate.globalId()));

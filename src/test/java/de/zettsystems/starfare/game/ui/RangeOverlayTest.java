@@ -86,8 +86,16 @@ class RangeOverlayTest {
         return new RangeView(SOURCE.id(), RANGE, targets);
     }
 
+    @Test
+    void describesReachByStationsWithoutPercentages() {
+        assertThat(RangeOverlay.describe(target(RangeView.Reach.DIRECT))).isEqualTo("Direkt erreichbar");
+        assertThat(RangeOverlay.describe(new RangeView.Target(RangeView.Reach.STATIONS, 1))).isEqualTo("Über 1 Station");
+        assertThat(RangeOverlay.describe(new RangeView.Target(RangeView.Reach.STATIONS, 3))).isEqualTo("Über 3 Stationen");
+        assertThat(RangeOverlay.describe(target(RangeView.Reach.NONE))).isEqualTo("Kein Weg");
+    }
+
     private static RangeView.Target target(RangeView.Reach reach) {
-        return new RangeView.Target(reach, 1.1);
+        return new RangeView.Target(reach, reach == RangeView.Reach.STATIONS ? 1 : 0);
     }
 
     private static VisibleSystem system(int id, double x, double y, int production) {

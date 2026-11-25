@@ -2,46 +2,21 @@ package de.zettsystems.starfare.game.values;
 
 import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.report.values.TurnReport;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.Collection;
 
-/**
- * Personal industry over a game, summed only from recorded round summaries. Missing history is
- * never counted as zero: the coverage says whether the sums span the whole game, start later
- * or have gaps, or whether nothing was recorded at all.
- */
-public record EconomyTotals(int industryBuilt, Coverage coverage, int firstRound) {
-    public enum Coverage { COMPLETE, SINCE, PARTIAL, NOT_RECORDED }
+/** Personal industry built over a game of the extended rules, summed from the player's round summaries. */
+public record EconomyTotals(int industryBuilt) {
 
-    public boolean recorded() { return coverage != Coverage.NOT_RECORDED; }
-
-    /**
-     * Sums the recorded industry events for one player and reports the available history.
-     *
-     * @param reports the player's report per resolved round; rounds without a report count as unrecorded
-     * @param rounds  every resolved round of the game
-     */
-    public static EconomyTotals of(Map<Integer, TurnReport> reports, SortedSet<Integer> rounds, int playerId) {
+    /** Sums the capacity one player gained over the given reports. */
+    public static EconomyTotals of(Collection<TurnReport> reports, int playerId) {
         int built = 0;
-        SortedSet<Integer> recorded = new TreeSet<>();
-        for (int round : rounds) {
-            TurnReport report = reports.get(round);
-            List<TurnEvent> events = report == null ? List.of() : report.events();
-            for (TurnEvent event : events) {
+        for (TurnReport report : reports) {
+            for (TurnEvent event : report.events()) {
                 if (event instanceof TurnEvent.EconomySummary(int owner, int capacityGained) && owner == playerId) {
                     built += capacityGained;
-                    recorded.add(round);
                 }
             }
         }
-        if (recorded.isEmpty()) { return new EconomyTotals(0, Coverage.NOT_RECORDED, 0); }
-        int first = recorded.first();
-        Coverage coverage;
-        if (recorded.equals(rounds)) { coverage = Coverage.COMPLETE; }
-        else if (recorded.equals(rounds.tailSet(first))) { coverage = Coverage.SINCE; }
-        else { coverage = Coverage.PARTIAL; }
-        return new EconomyTotals(built, coverage, first);
+        return new EconomyTotals(built);
     }
 }

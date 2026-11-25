@@ -122,7 +122,7 @@ class StarfareMatchesTest {
             GameState state = treatyGame();
             int proposal = propose(state);
 
-            assertThat(DIPLOMACY.act(state, 2, new DiplomacyOrder(DiplomacyOrder.Action.APPROVE, proposal, 0))).isTrue();
+            assertThat(DIPLOMACY.act(state, 2, new DiplomacyOrder(DiplomacyOrder.Action.APPROVE, proposal))).isTrue();
 
             assertThat(summaryOf(state).pendingDecisions()).extracting(PendingDecision::kind)
                     .containsOnly(DecisionKind.TURN);
@@ -133,7 +133,7 @@ class StarfareMatchesTest {
             GameState state = treatyGame();
             int proposal = propose(state);
 
-            assertThat(DIPLOMACY.act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.REJECT, proposal, 0))).isTrue();
+            assertThat(DIPLOMACY.act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.REJECT, proposal))).isTrue();
 
             assertThat(summaryOf(state).pendingDecisions()).extracting(PendingDecision::kind)
                     .containsOnly(DecisionKind.TURN);
@@ -430,7 +430,7 @@ class StarfareMatchesTest {
 
     /** Seat 1 proposes an alliance to seat 2; returns the proposal's id. */
     private static int propose(GameState state) {
-        assertThat(DIPLOMACY.act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 2))).isTrue();
+        assertThat(DIPLOMACY.act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2))).isTrue();
         return state.diplomacy().proposals().getFirst().id();
     }
 

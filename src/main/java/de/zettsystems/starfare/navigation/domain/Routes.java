@@ -43,7 +43,7 @@ public final class Routes {
         if (stations.isEmpty()) { return Map.of(); }
         var edges = travelEdges(state);
         Map<Integer, Map<Integer, Integer>> routes = new HashMap<>();
-        for (int source : stations) { routes.put(source, shortestRounds(source, stations, edges)); }
+        for (int source : stations) { routes.put(source, shortestRounds(source, stations, edges, new HashMap<>())); }
         return Map.copyOf(routes);
     }
 
@@ -61,11 +61,13 @@ public final class Routes {
         return edges;
     }
 
+    /** Fastest rounds to every reachable system; {@code stops} receives the intermediate stations of each route. */
     private static Map<Integer, Integer> shortestRounds(int from, Set<Integer> stations,
-                                                       Map<Integer, Map<Integer, Integer>> edges) {
+                                                       Map<Integer, Map<Integer, Integer>> edges, Map<Integer, Integer> stops) {
         Map<Integer, Integer> costs = new HashMap<>();
         Set<Integer> visited = new HashSet<>();
         costs.put(from, 0);
+        stops.put(from, -1);
         while (true) {
             Integer current = costs.keySet().stream().filter(id -> stations.contains(id) && !visited.contains(id))
                     .min(Comparator.comparingInt((Integer id) -> costs.getOrDefault(id, Integer.MAX_VALUE))
@@ -73,10 +75,16 @@ public final class Routes {
             if (current == null) { break; }
             visited.add(current);
             int departureCost = costs.getOrDefault(current, 0) + (current == from ? 0 : 1);
-            edges.getOrDefault(current, Map.of()).forEach((target, duration) ->
-                    costs.merge(target, departureCost + duration, Math::min));
+            int stopsBefore = stops.getOrDefault(current, -1) + 1;
+            edges.getOrDefault(current, Map.of()).forEach((target, duration) -> {
+                if (departureCost + duration < costs.getOrDefault(target, Integer.MAX_VALUE)) {
+                    costs.put(target, departureCost + duration);
+                    stops.put(target, stopsBefore);
+                }
+            });
         }
         costs.remove(from);
+        stops.remove(from);
         return Map.copyOf(costs);
     }
 
@@ -89,14 +97,17 @@ public final class Routes {
         if (!limited(state) || settings.isEmpty() || !stationAllowed(state, owner, from)) { return Optional.empty(); }
         double range = settings.orElseThrow().range();
         Set<Integer> stations = stations(state, owner);
-        var reachable = shortestRounds(from, stations, travelEdges(state));
+        Map<Integer, Integer> stops = new HashMap<>();
+        var reachable = shortestRounds(from, stations, travelEdges(state), stops);
         Map<Integer, RangeView.Target> targets = new HashMap<>();
         for (StarSystem system : state.systems()) {
             if (system.id() == from) { continue; }
-            RangeView.Reach reach = RangeView.Reach.NONE;
-            if (withinRange(state, from, system.id())) { reach = RangeView.Reach.DIRECT; }
-            else if (reachable.containsKey(system.id())) { reach = RangeView.Reach.STATIONS; }
-            targets.put(system.id(), new RangeView.Target(reach, state.distance(from, system.id()) / range));
+            RangeView.Target target = new RangeView.Target(RangeView.Reach.NONE, 0);
+            if (withinRange(state, from, system.id())) { target = new RangeView.Target(RangeView.Reach.DIRECT, 0); }
+            else if (reachable.containsKey(system.id())) {
+                target = new RangeView.Target(RangeView.Reach.STATIONS, stops.getOrDefault(system.id(), 1));
+            }
+            targets.put(system.id(), target);
         }
         return Optional.of(new RangeView(from, range, targets));
     }

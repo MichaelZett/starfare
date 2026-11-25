@@ -37,7 +37,7 @@ public class DefaultDiplomacyService implements DiplomacyService {
                 if (proposal.voters().contains(player.id()) && !proposal.approvals().contains(player.id())) {
                     boolean leaving = state.diplomacy().groupFor(player.id()).map(group -> group.departures().containsKey(player.id())).orElse(false);
                     boolean refused = !state.victoryRules().aiAlliancesAllowed() && newAiParty(state, proposal);
-                    act(state, player.id(), new DiplomacyOrder(leaving || refused ? DiplomacyOrder.Action.REJECT : DiplomacyOrder.Action.APPROVE, proposal.id(), 0));
+                    act(state, player.id(), new DiplomacyOrder(leaving || refused ? DiplomacyOrder.Action.REJECT : DiplomacyOrder.Action.APPROVE, proposal.id()));
                 }
             }
         }
@@ -45,7 +45,7 @@ public class DefaultDiplomacyService implements DiplomacyService {
 
     /**
      * Founding or joining that would make an AI empire a new alliance party. Treaty
-     * management of existing groups (notice changes, rejections, departures) stays open.
+     * management of existing groups (rejections, departures) stays open.
      */
     private static boolean bringsInAi(GameState state, int player, DiplomacyOrder order) {
         return switch (order.action()) {
@@ -53,7 +53,7 @@ public class DefaultDiplomacyService implements DiplomacyService {
             case JOIN -> isAi(state, player);
             case APPROVE -> state.diplomacy().proposals().stream().filter(proposal -> proposal.id() == order.subject())
                     .anyMatch(proposal -> newAiParty(state, proposal));
-            case NOTICE, REJECT, LEAVE -> false;
+            case REJECT, LEAVE -> false;
         };
     }
 

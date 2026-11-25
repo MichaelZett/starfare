@@ -61,10 +61,10 @@ public class EconomyLayoutSteps {
         openAlpha(id);
         browser.awaitTextIn(".industry-panel", "Industrie");
         js().executeScript("arguments[0].scrollIntoView({block:'start'});", browser.awaitCss(".industry-panel"));
-        capture("industry", width);
-        browser.clickCss("#production-plan-open");
+        // The expansion control is always visible; no separate editor has to be opened.
         browser.awaitCss("#industry-expansion input");
-        capture("production-editor", width);
+        browser.awaitTextIn(".industry-panel .production-result", "Schiffe/Runde");
+        capture("industry", width);
     }
 
     private void openAlpha(GameId id) {

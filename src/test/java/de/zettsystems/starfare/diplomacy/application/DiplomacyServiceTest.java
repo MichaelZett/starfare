@@ -12,57 +12,57 @@ import static org.assertj.core.api.Assertions.*;
 
 class DiplomacyServiceTest {
     private final DefaultDiplomacyService service = new DefaultDiplomacyService();
-    private static DiplomacyOrder order(DiplomacyOrder.Action action, int subject, int notice) { return new DiplomacyOrder(action, subject, notice); }
-    private void found(GameState state, int notice) {
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, notice))).isTrue();
-        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.APPROVE, state.diplomacy().proposals().getFirst().id(), 0))).isTrue();
+    private static DiplomacyOrder order(DiplomacyOrder.Action action, int subject) { return new DiplomacyOrder(action, subject); }
+    private void found(GameState state) {
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2))).isTrue();
+        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.APPROVE, state.diplomacy().proposals().getFirst().id()))).isTrue();
     }
     private static GameState threePlayers() {
         var state = NavigationStates.running(); state.players().add(new Player(3, "Third", false, "#009e73")); return state;
     }
     @Test void foundingRequiresConsentAndRejectingDoesNotCreateMembership() {
         var state = threePlayers();
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 3))).isTrue();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2))).isTrue();
         assertThat(state.allied(1, 2)).isFalse(); var proposal = state.diplomacy().proposals().getFirst();
         var before = GameState.toSnapshot(state);
-        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.APPROVE, proposal.id(), 0))).isFalse();
-        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.FOUND, 3, 0))).isFalse();
+        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.APPROVE, proposal.id()))).isFalse();
+        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.FOUND, 3))).isFalse();
         assertThat(GameState.toSnapshot(state)).isEqualTo(before);
-        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.REJECT, proposal.id(), 0))).isTrue();
+        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.REJECT, proposal.id()))).isTrue();
         assertThat(state.diplomacy().groups()).isEmpty(); assertThat(state.diplomacy().proposals()).isEmpty();
-        found(state, 3); assertThat(state.allied(1, 2)).isTrue(); assertThat(state.allied(1, 3)).isFalse();
+        found(state); assertThat(state.allied(1, 2)).isTrue(); assertThat(state.allied(1, 3)).isFalse();
         assertThat(state.allied(1, null)).isFalse();
     }
     @Test void admissionRequiresEveryExistingMemberAndPreservesOneGroupPerEmpire() {
-        var state = threePlayers(); found(state, 2); int group = state.diplomacy().groups().getFirst().id();
-        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.JOIN, group, 0))).isTrue();
+        var state = threePlayers(); found(state); int group = state.diplomacy().groups().getFirst().id();
+        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.JOIN, group))).isTrue();
         int proposal = state.diplomacy().proposals().getFirst().id();
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.APPROVE, proposal, 0))).isTrue();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.APPROVE, proposal))).isTrue();
         assertThat(state.allied(1, 3)).isFalse();
-        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.APPROVE, proposal, 0))).isTrue();
+        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.APPROVE, proposal))).isTrue();
         assertThat(state.diplomacy().groups().getFirst().members()).containsExactlyInAnyOrder(1, 2, 3);
         assertThat(state.allied(2, 3)).isTrue();
-        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.FOUND, 1, 1))).isFalse();
-        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.JOIN, group, 1))).isFalse();
+        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.FOUND, 1))).isFalse();
+        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.JOIN, group))).isFalse();
     }
-    @Test void agreedNoticeNeverChangesAnAlreadyAnnouncedDeparture() {
-        var state = threePlayers(); found(state, 3);
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.LEAVE, 0, 0))).isTrue();
+    @Test void aDepartureTakesEffectAfterTheFixedNoticePeriod() {
+        var state = threePlayers(); found(state);
+        assertThat(state.diplomacy().groups().getFirst().noticeRounds()).isEqualTo(3);
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.LEAVE, 0))).isTrue();
         assertThat(state.diplomacy().groups().getFirst().departures()).containsEntry(1, 4);
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.NOTICE, 0, 20))).isTrue();
-        int proposal = state.diplomacy().proposals().getFirst().id();
-        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.APPROVE, proposal, 0))).isTrue();
-        assertThat(state.diplomacy().groups().getFirst().noticeRounds()).isEqualTo(20);
-        assertThat(state.diplomacy().groups().getFirst().departures()).containsEntry(1, 4);
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.LEAVE, 0))).isFalse();
         service.beginRound(state, 3); assertThat(state.allied(1, 2)).isTrue();
         service.beginRound(state, 4); assertThat(state.diplomacy().groups()).isEmpty();
         assertThat(state.gameOver()).isFalse();
     }
-    @Test void zeroNoticeWaitsUntilTheNextRoundAndStaleElectoratesAreDiscarded() {
-        var state = threePlayers(); found(state, 0);
-        int group = state.diplomacy().groups().getFirst().id();
-        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.JOIN, group, 0))).isTrue();
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.LEAVE, 0, 0))).isTrue();
+    @Test void aSavedZeroNoticeGroupWaitsUntilTheNextRoundAndStaleElectoratesAreDiscarded() {
+        var state = threePlayers(); found(state);
+        var founded = state.diplomacy().groups().getFirst();
+        state.agreeTreaties(new DiplomacyState(state.diplomacy().nextId(),
+                List.of(new AllianceGroup(founded.id(), founded.members(), 0, founded.departures())), List.of()));
+        int group = founded.id();
+        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.JOIN, group))).isTrue();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.LEAVE, 0))).isTrue();
         assertThat(state.diplomacy().groups().getFirst().departures()).containsEntry(1, 2);
         service.beginRound(state, 1); assertThat(state.allied(1, 2)).isTrue();
         service.beginRound(state, 2); assertThat(state.allied(1, 2)).isFalse();
@@ -70,16 +70,14 @@ class DiplomacyServiceTest {
     }
     @Test void aiAnswersInvitationsWithoutForcingHumanMembership() {
         var state = NavigationStates.running(); state.players().set(1, state.players().get(1).asAi());
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 3))).isTrue();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2))).isTrue();
         service.answerAiProposals(state); assertThat(state.allied(1, 2)).isTrue();
-        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.LEAVE, 0, 0))).isTrue();
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.NOTICE, 0, 2))).isTrue();
-        service.answerAiProposals(state); assertThat(state.diplomacy().proposals()).isEmpty();
+        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.LEAVE, 0))).isTrue();
         assertThat(state.diplomacy().groups().getFirst().noticeRounds()).isEqualTo(3);
     }
     @Test void classicAndInvalidTreatyValuesAreRejectedWithoutMutation() {
         var classic = new GameState(); classic.start(); var before = GameState.toSnapshot(classic);
-        assertThat(service.act(classic, 1, order(DiplomacyOrder.Action.FOUND, 2, 3))).isFalse();
+        assertThat(service.act(classic, 1, order(DiplomacyOrder.Action.FOUND, 2))).isFalse();
         service.beginRound(classic, 10); assertThat(GameState.toSnapshot(classic)).isEqualTo(before);
         var input1 = Set.of(1);
         Map<Integer, Integer> input2 = Map.of();
@@ -91,8 +89,7 @@ class DiplomacyServiceTest {
         List<de.zettsystems.starfare.diplomacy.values.TreatyProposal> input6 = List.of();
         assertThatThrownBy(() -> new DiplomacyState(3, input5, input6)).isInstanceOf(IllegalArgumentException.class);
         var state = NavigationStates.running();
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 99, 3))).isFalse();
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 51))).isFalse();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 99))).isFalse();
         assertThat(state.diplomacy()).isEqualTo(DiplomacyState.EMPTY);
     }
 
@@ -105,44 +102,39 @@ class DiplomacyServiceTest {
     @Test void withoutAiAlliancesNoAiEmpireBecomesANewPartyButHumansStillAlly() {
         var state = withAi(false);
         assertThat(state.victoryRules().aiAlliancesAllowed()).isFalse();
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 3, 2))).isFalse();
-        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.FOUND, 1, 2))).isFalse();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 3))).isFalse();
+        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.FOUND, 1))).isFalse();
         assertThat(state.diplomacy().proposals()).isEmpty();
-        found(state, 2);
+        found(state);
         assertThat(state.allied(1, 2)).isTrue();
         int group = state.diplomacy().groups().getFirst().id();
-        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.JOIN, group, 0))).isFalse();
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.NOTICE, 0, 5))).isTrue();
-        service.answerAiProposals(state);
-        assertThat(state.diplomacy().proposals()).hasSize(1);
+        assertThat(service.act(state, 3, order(DiplomacyOrder.Action.JOIN, group))).isFalse();
     }
     @Test void enabledAiAlliancesKeepThePreviousAcceptingBehaviour() {
         var state = withAi(true);
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 3, 2))).isTrue();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 3))).isTrue();
         service.answerAiProposals(state);
         assertThat(state.allied(1, 3)).isTrue();
     }
     @Test void aiTakeoverKeepsExistingTreatiesAndRefusesNewEntriesUntilTheHumanReturns() {
         var state = withAi(false);
-        found(state, 2);
+        found(state);
         state.players().replaceAll(player -> player.id() == 2 ? player.asAi() : player);
         assertThat(state.allied(1, 2)).isTrue();
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.NOTICE, 0, 4))).isTrue();
-        service.answerAiProposals(state);
-        assertThat(state.diplomacy().groups().getFirst().noticeRounds()).isEqualTo(4);
-        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.LEAVE, 0, 0))).isTrue();
+        assertThat(state.diplomacy().groups().getFirst().noticeRounds()).isEqualTo(AllianceGroup.NOTICE_ROUNDS);
+        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.LEAVE, 0))).isTrue();
         service.beginRound(state, state.turn() + 5);
         assertThat(state.diplomacy().groups()).isEmpty();
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 1))).isFalse();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2))).isFalse();
         state.players().replaceAll(player -> player.id() == 2 ? player.asHuman() : player);
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 1))).isTrue();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2))).isTrue();
     }
     @Test void staleProposalsThatWouldBringInAnAiAreRejectedNotApproved() {
         var state = withAi(false);
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 1))).isTrue();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2))).isTrue();
         state.players().replaceAll(player -> player.id() == 2 ? player.asAi() : player);
         int proposal = state.diplomacy().proposals().getFirst().id();
-        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.APPROVE, proposal, 0))).isFalse();
+        assertThat(service.act(state, 2, order(DiplomacyOrder.Action.APPROVE, proposal))).isFalse();
         service.answerAiProposals(state);
         assertThat(state.diplomacy().proposals()).isEmpty();
         assertThat(state.diplomacy().groups()).isEmpty();
@@ -150,11 +142,11 @@ class DiplomacyServiceTest {
     @Test void aStaleAiProposalDoesNotBlockApprovalOfAnotherHumanTreaty() {
         var state = withAi(false);
         state.players().add(new Player(4, "Fourth", false, "#cc79a7")); state.players().add(new Player(5, "Fifth", false, "#d55e00"));
-        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2, 1))).isTrue();
+        assertThat(service.act(state, 1, order(DiplomacyOrder.Action.FOUND, 2))).isTrue();
         state.players().replaceAll(player -> player.id() == 2 ? player.asAi() : player);
-        assertThat(service.act(state, 4, order(DiplomacyOrder.Action.FOUND, 5, 1))).isTrue();
+        assertThat(service.act(state, 4, order(DiplomacyOrder.Action.FOUND, 5))).isTrue();
         int humans = state.diplomacy().proposals().getLast().id();
-        assertThat(service.act(state, 5, order(DiplomacyOrder.Action.APPROVE, humans, 0))).isTrue();
+        assertThat(service.act(state, 5, order(DiplomacyOrder.Action.APPROVE, humans))).isTrue();
         assertThat(state.allied(4, 5)).isTrue();
     }
 }

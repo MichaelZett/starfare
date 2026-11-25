@@ -12,13 +12,22 @@ class MapLegendTest extends AbstractBrowserlessTest {
 
     @Test
     void explainsTheMapSymbolsAndCloses() {
-        MapLegend.open();
+        MapLegend.open(false);
         Dialog dialog = openedDialog();
 
         assertThat(dialog.getHeaderTitle()).isEqualTo("Kartenhilfe");
-        assertThat(elementText(dialog.getElement())).contains("G: Garnison", "P: Produktion");
+        assertThat(elementText(dialog.getElement())).contains("G: Garnison", "P: Produktion")
+                .doesNotContain("Zwischenstationen");
 
         test(find(Button.class).withText("Schließen").single()).click();
         assertThat(dialog.isOpened()).isFalse();
+    }
+
+    @Test
+    void explainsStaysOnlyForTheExtendedRules() {
+        MapLegend.open(true);
+
+        assertThat(elementText(openedDialog().getElement()))
+                .contains("Zwischenstationen benötigen einen Aufenthalt.");
     }
 }

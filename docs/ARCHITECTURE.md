@@ -127,21 +127,23 @@ The diplomacy module owns immutable treaty state, unanimous proposals and
 application services. GameState keeps DiplomacyState independently of military
 intelligence. Each empire belongs to at most one AllianceGroup; a lone remaining
 member becomes contractless. Founding requires both partners, admission requires
-all current members plus the applicant, and notice changes require all members.
+all current members plus the applicant.
 Overlapping votes are rejected. Roster changes discard stale electorates.
 
 `VictoryRules.aiAlliancesAllowed` is fixed per game (setup, snapshot, templates);
 missing JSON reads as `true` through the `@JsonCreator`, and the value is only
 effective while alliances are allowed. When it is false,
 `DefaultDiplomacyService.act` refuses FOUND with an AI party, JOIN by an AI and
-APPROVE of such a proposal; NOTICE, REJECT and LEAVE stay available so existing
+APPROVE of such a proposal; REJECT and LEAVE stay available so existing
 treaties of an AI-controlled seat can still be managed. `answerAiProposals` rejects
 proposals that would bring in an AI. `DiplomacyView.aiAlliancesAllowed` lets the
 dialog explain the blocked partners instead of offering them.
 
-Notice periods are 0–50 whole rounds. A departure takes effect at current turn
-plus max(1, notice), processed at the resolution boundary before arrivals.
-Already announced dates are never changed by a later agreement. Account-facing
+Every new group gets the fixed notice period `AllianceGroup.NOTICE_ROUNDS` (3).
+Stored groups keep their saved period and stored `NOTICE` proposals stay readable;
+they change nothing, are hidden and lapse at the next round start. A departure
+takes effect at current turn plus max(1, notice), processed at the resolution
+boundary before arrivals. Account-facing
 commands run under the game write lock and verify the actual human seat, expected
 turn and submission state. Views expose group contracts and only proposals in
 which the account votes; they add no military intelligence. Read paths never
@@ -1061,14 +1063,13 @@ orders and persisted snapshot remain untouched. `ProductionPlanPreview` contains
 immutable industry and empire views; `EmpireStats.metal` is absent for non-metal
 rules and unprivileged observer views.
 
-`AllocationSplit` redistributes integer capacity shares while retaining pinned
-values. `ProductionEditor` saves every completed input through
-`GameService.commitProduction`; slider dragging only calls the copy-based preview.
-`ProductionInputs` keeps the transient input, pins, opened editor, focused control
-and the last save feedback per system of one map view; a server update always
-replaces the input. `ProductionOutcome` turns an authorized forecast into points,
-yield and actual ships, metal or progress. Pins are view-local and require no
-snapshot migration. `MetalBalance.formattedChange` derives the header change from
+`AllocationSplit` splits the integer capacity into the expansion share and the
+shipbuilding rest. `ProductionEditor` shows one always-visible expansion control and
+saves every completed input through `GameService.commitProduction`; slider dragging
+only calls the copy-based preview. `ProductionInputs` keeps the transient input, the
+focused control and the last save feedback per system of one map view; a server
+update always replaces the input. `IndustryPanel.result` renders ships per round,
+the expansion progress after the next round and the rounds until the level completes. `MetalBalance.formattedChange` derives the header change from
 `next - current`, so the rounded display matches the forecast stock.
 
 `RelocationTrim` is the single rule for W5 relocation shortening: floor(old × limit /

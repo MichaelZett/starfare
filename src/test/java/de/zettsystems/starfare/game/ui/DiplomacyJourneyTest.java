@@ -2,10 +2,7 @@ package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
-import com.vaadin.flow.component.details.Details;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.textfield.IntegerField;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameSetup;
@@ -24,8 +21,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Two empires found an alliance only together, agree on a new notice period, and a visible notice ends the
- * alliance after its period and sends stationed ships home.
+ * Two empires found an alliance only together, and a visible notice ends the alliance after the fixed notice
+ * period and sends stationed ships home.
  */
 class DiplomacyJourneyTest extends AbstractMapJourneyTest {
     private String hostEmail = "";
@@ -42,7 +39,6 @@ class DiplomacyJourneyTest extends AbstractMapJourneyTest {
         hostEmail = email;
 
         foundingNeedsThePartner();
-        bothAgreeOnANewNoticePeriod();
         shipsStationAtTheAlly();
         aVisibleNoticeEndsTheAllianceAndSendsTheShipsHome();
     }
@@ -71,25 +67,6 @@ class DiplomacyJourneyTest extends AbstractMapJourneyTest {
         changeLanguage(Locale.GERMAN);
     }
 
-    private void bothAgreeOnANewNoticePeriod() {
-        openTreatiesAs(partnerEmail);
-        proposeNotice(5);
-        openTreatiesAs(hostEmail);
-        assertThat(treatyText()).contains("Frist von 5 Runden");
-        openTreatiesAs(partnerEmail);
-        treatyClick("Ablehnen / zurückziehen");
-        assertThat(registry.<Boolean>readState(id, current -> current.diplomacy().proposals().isEmpty())).isTrue();
-
-        openTreatiesAs(hostEmail);
-        proposeNotice(0);
-        openTreatiesAs(partnerEmail);
-        assertThat(treatyText()).contains("Frist von 0 Runden");
-        treatyClick("Zustimmen");
-        openTreatiesAs(hostEmail);
-        assertThat(treatyText()).contains("Kündigungsfrist: 0 Runden");
-        treatyClick("Schließen");
-    }
-
     private void shipsStationAtTheAlly() {
         assertThat(registry.<Boolean>writeState(id, current -> new DefaultFleetService().sendFleet(current, 1, 1, 2, 10))).isTrue();
         int arrival = registry.readState(id, current -> current.fleets().getFirst().arrivalTurn());
@@ -101,7 +78,7 @@ class DiplomacyJourneyTest extends AbstractMapJourneyTest {
     }
 
     private void aVisibleNoticeEndsTheAllianceAndSendsTheShipsHome() {
-        int effective = games.viewFor(id, 1).turn() + 1;
+        int effective = games.viewFor(id, 1).turn() + 3;
         openTreatiesAs(hostEmail);
         treatyClick("Bündnis kündigen");
         assertThat(test(leaveConfirmation()).getText()).contains("Runde " + effective);
@@ -119,6 +96,10 @@ class DiplomacyJourneyTest extends AbstractMapJourneyTest {
         assertThat(treatyText()).as("the notice survives a fresh view").contains(notice);
         treatyClick("Schließen");
 
+        while (games.viewFor(id, 1).turn() < effective - 1) {
+            advance();
+        }
+        assertThat(allied()).as("the alliance holds during the notice period").isTrue();
         advance();
         assertThat(allied()).isFalse();
         advance();
@@ -137,16 +118,8 @@ class DiplomacyJourneyTest extends AbstractMapJourneyTest {
     private void proposeAlliance() {
         Div partnerCard = find(Div.class, openedDialog())
                 .withCondition(card -> "2".equals(card.getElement().getAttribute("data-diplomacy-partner"))).single();
-        find(Details.class, partnerCard).single().setOpened(true);
         test(find(Button.class, partnerCard).withText("Bündnis vorschlagen").single()).click();
         runPendingUiAccess();
-    }
-
-    private void proposeNotice(int rounds) {
-        Dialog treaties = openedDialog();
-        find(Details.class, treaties).all().forEach(details -> details.setOpened(true));
-        test(find(IntegerField.class, treaties).single()).setValue(rounds);
-        treatyClick("Neue Frist vorschlagen");
     }
 
     private void openTreatiesAs(String account) {

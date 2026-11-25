@@ -1232,15 +1232,12 @@ public class DefaultGameService implements GameService {
         private static de.zettsystems.starfare.game.values.@org.jspecify.annotations.Nullable EconomyTotals economy(
                 GameState state, int playerId) {
             if (!state.ruleset().isSpaceward()) { return null; }
-            java.util.SortedSet<Integer> rounds = new java.util.TreeSet<>();
-            Map<Integer, de.zettsystems.starfare.report.values.TurnReport> reports = new java.util.HashMap<>();
-            state.replayFrames().forEach((round, frame) -> {
-                if (round >= state.turn()) { return; }
-                rounds.add(round);
-                var report = frame.reports().get(playerId);
-                if (report != null) { reports.put(round, report); }
-            });
-            return de.zettsystems.starfare.game.values.EconomyTotals.of(reports, rounds, playerId);
+            var reports = state.replayFrames().entrySet().stream()
+                    .filter(frame -> frame.getKey() < state.turn())
+                    .map(frame -> frame.getValue().reports().get(playerId))
+                    .filter(Objects::nonNull)
+                    .toList();
+            return de.zettsystems.starfare.game.values.EconomyTotals.of(reports, playerId);
         }
 
         private static final class Totals {

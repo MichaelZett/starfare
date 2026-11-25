@@ -3,8 +3,10 @@ package de.zettsystems.starfare.diplomacy.values;
 import java.util.HashSet;
 import java.util.Set;
 
+/** {@code noticeRounds} and {@link Kind#NOTICE} only keep older saved proposals readable. */
 public record TreatyProposal(int id, Kind kind, int groupId, int candidate, int noticeRounds,
                              Set<Integer> voters, Set<Integer> approvals) {
+    /** {@code NOTICE}: a former notice change; it no longer changes anything and lapses at the next round. */
     public enum Kind { FOUND, JOIN, NOTICE }
     public TreatyProposal {
         java.util.Objects.requireNonNull(kind);

@@ -71,7 +71,7 @@ variants, and an account that may no longer use a variant loses access to its ga
 running ones included. In Starfare's own start every variant is open. It adds
 production allocation between ships and industrial expansion, plus limited flight range,
 automatically planned routes through owned or allied systems and refuelling stops.
-Diplomacy adds unanimous alliance groups, agreed notice periods and
+Diplomacy adds unanimous alliance groups, a fixed three-round notice period and
 automatic non-combat returns after departure. Coalition combat resolves all hostile
 sides simultaneously, including stationed support. Ships retain their empire; a conquest
 beneficiary is selected before launch.

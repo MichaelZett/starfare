@@ -15,18 +15,15 @@ class ProductionPlanningJourneyTest extends AbstractEconomyUiTest {
     @Test
     void expansionTrimsRelocationsAndSurvivesNavigationUntilTheRoundIsSubmitted() {
         openGame(EconomyUiStates.directProduction(), "Direct production Browserless");
-        assertThat(text("production-functions")).contains("10 Punkte → 10 Schiffe/Runde");
-        click("production-plan-open");
+        assertThat(text(IndustryPanel.RESULT_CLASS).strip()).isEqualTo("10 Schiffe/Runde · Ausbau 0/10");
         enter(IndustryPanel.ALLOCATION_ID, 4);
         assertThat(text("production-save-status")).contains("Verlegung nach Beta: 6 → 4/Runde", "Verlegung nach Enemy: 4 → 2/Runde");
         assertThat(routes()).containsEntry(2, 4).containsEntry(3, 2);
-        assertThat(text("production-functions")).contains("6 Punkte → 6 Schiffe/Runde");
+        assertThat(text(IndustryPanel.RESULT_CLASS).strip()).isEqualTo("6 Schiffe/Runde · Ausbau 4/10 · fertig in 3 Runden");
         select("Beta");
         select("Alpha");
         reloadMap();
-        click("production-plan-open");
         assertThat(field(IndustryPanel.ALLOCATION_ID).getValue()).isEqualTo(4);
-        assertThat(field("industry-shipbuilding").getValue()).isEqualTo(6);
         test(button("Runde abgeben")).click();
         runPendingUiAccess();
         assertThat(viewText()).contains("Abgegeben");

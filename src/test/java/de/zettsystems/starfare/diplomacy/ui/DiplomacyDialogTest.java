@@ -5,7 +5,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.html.Span;
 import de.zettsystems.starfare.diplomacy.values.AllianceGroup;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyOrder;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyState;
@@ -26,9 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static de.zettsystems.starfare.diplomacy.ui.DiplomacyCardsTest.button;
-import static de.zettsystems.starfare.diplomacy.ui.DiplomacyCardsTest.clientValue;
 import static de.zettsystems.starfare.diplomacy.ui.DiplomacyCardsTest.descendants;
-import static de.zettsystems.starfare.diplomacy.ui.DiplomacyCardsTest.single;
 import static de.zettsystems.starfare.diplomacy.ui.DiplomacyCardsTest.spanTexts;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,8 +44,6 @@ class DiplomacyDialogTest {
             new Player(1, "Ana", false, "#111111"), new Player(2, "Bo", false, "#222222"),
             new Player(3, "Cy", false, "#333333"), new Player(4, "Dee", true, "#444444"),
             new Player(5, "Eve", false, "#555555"));
-    private static final String LOST_TARGET =
-            "Das Ziel einer Fristeingabe ist weggefallen. Die zugehörige Eingabe wurde geschlossen.";
 
     private final GameService game = mock(GameService.class);
     private final UI ui = new UI();
@@ -103,6 +99,8 @@ class DiplomacyDialogTest {
         assertThat(spanTexts(others)).contains("KI-Imperien gehen in dieser Partie keine Bündnisse ein.");
         assertThat(lastChild()).isInstanceOf(Details.class);
         assertThat(((Details) lastChild()).getSummaryText()).isEqualTo("Bündnisregeln");
+        assertThat(((Details) lastChild()).getContent().filter(Span.class::isInstance).map(Span.class::cast).map(Span::getText).toList())
+                .singleElement().asString().contains("Die Kündigungsfrist beträgt fest 3 Runden");
     }
 
     @Test
@@ -111,7 +109,7 @@ class DiplomacyDialogTest {
 
         assertThat(partners()).containsExactly("2", "3", "4", "5");
         assertThat(spanTexts(others())).doesNotContain("KI-Imperien gehen in dieser Partie keine Bündnisse ein.");
-        assertThat(descendants(others()).filter(Details.class::isInstance)).hasSize(4);
+        assertThat(descendants(others()).filter(Details.class::isInstance)).isEmpty();
     }
 
     @Test
@@ -147,111 +145,44 @@ class DiplomacyDialogTest {
         assertThat(headings()).containsExactly("Deine Entscheidungen", "Weitere Imperien und Bündnisse");
         var proposals = descendants(content()).filter(component -> component.hasClassName("diplomacy-proposal")).toList();
         assertThat(proposals).hasSize(1);
-        assertThat(cardTitle(proposals.getFirst())).isEqualTo("Neues Bündnis: Ana, Bo · vorgeschlagene Kündigungsfrist: 4 Runden");
+        assertThat(cardTitle(proposals.getFirst())).isEqualTo("Neues Bündnis: Ana, Bo");
         assertThat(content().getChildren().toList().get(1)).isSameAs(proposals.getFirst());
     }
 
     @Test
-    void draftSurvivesARefreshWhileItsTargetRemains() {
-        show(view(true, DiplomacyState.EMPTY, true));
-        clientValue(noticeField("2"), 9);
-        noticeDetails("2").setOpened(true);
-
-        show(view(true, DiplomacyState.EMPTY, true));
-
-        assertThat(noticeField("2").getValue()).isEqualTo(9);
-        assertThat(noticeDetails("2").isOpened()).isTrue();
-        assertThat(noticeField("3").getValue()).isEqualTo(3);
-        assertThat(notifications()).isEmpty();
-    }
-
-    @Test
-    void draftForAPartnerWhoJoinedAnotherGroupIsDropped() {
-        show(view(true, DiplomacyState.EMPTY, true));
-        clientValue(noticeField("2"), 9);
-        noticeDetails("2").setOpened(true);
-        noticeDetails("3").setOpened(true);
-
-        var group = new AllianceGroup(1, Set.of(2, 3), 3, Map.of());
-        show(view(true, new DiplomacyState(2, List.of(group), List.of()), true));
-        assertThat(partners()).containsExactly("4", "5");
-        assertThat(notifications()).containsExactly(LOST_TARGET);
-
-        show(view(true, DiplomacyState.EMPTY, true));
-        assertThat(noticeField("2").getValue()).isEqualTo(3);
-        assertThat(noticeDetails("2").isOpened()).isFalse();
-        assertThat(noticeDetails("3").isOpened()).isFalse();
-        assertThat(notifications()).containsExactly(LOST_TARGET);
-    }
-
-    @Test
-    void draftForAnAiPartnerIsDroppedOnceAiAlliancesAreForbidden() {
-        show(view(true, DiplomacyState.EMPTY, true));
-        clientValue(noticeField("4"), 11);
-
-        show(view(true, DiplomacyState.EMPTY, false));
-        assertThat(notifications()).containsExactly(LOST_TARGET);
-
-        show(view(true, DiplomacyState.EMPTY, true));
-        assertThat(noticeField("4").getValue()).isEqualTo(3);
-    }
-
-    @Test
-    void foundingDraftsAreDroppedWhenThePlayerJoinsAGroup() {
-        show(view(true, DiplomacyState.EMPTY, true));
-        clientValue(noticeField("2"), 9);
-
-        var own = new AllianceGroup(1, Set.of(1, 3), 6, Map.of());
-        show(view(true, new DiplomacyState(2, List.of(own), List.of()), true));
-        assertThat(notifications()).containsExactly(LOST_TARGET);
-        assertThat(single(content().getChildren().toList().get(1), IntegerField.class).getValue()).isEqualTo(6);
-
-        show(view(true, DiplomacyState.EMPTY, true));
-        assertThat(noticeField("2").getValue()).isEqualTo(3);
-    }
-
-    @Test
-    void noticeDraftOfTheOwnGroupSurvivesUntilThePlayerHasLeft() {
+    void savedNoticeChangesAreNotShownAsDecisions() {
         var own = new AllianceGroup(5, Set.of(1, 2), 3, Map.of());
-        var allied = view(true, new DiplomacyState(6, List.of(own), List.of()), true);
-        show(allied);
-        clientValue(ownNoticeField(), 12);
+        var notice = new TreatyProposal(6, TreatyProposal.Kind.NOTICE, 5, 2, 8, Set.of(1, 2), Set.of(2));
+        show(view(true, new DiplomacyState(7, List.of(own), List.of(notice)), true));
 
-        show(allied);
-        assertThat(ownNoticeField().getValue()).isEqualTo(12);
-        assertThat(notifications()).isEmpty();
-
-        show(view(true, DiplomacyState.EMPTY, true));
-        assertThat(notifications()).containsExactly(LOST_TARGET);
-        show(allied);
-        assertThat(ownNoticeField().getValue()).isEqualTo(3);
+        assertThat(headings()).startsWith("Dein Bündnis").doesNotContain("Deine Entscheidungen");
+        assertThat(descendants(content()).filter(component -> component.hasClassName("diplomacy-proposal"))).isEmpty();
     }
 
     @Test
-    void acceptedOrderClearsItsDraftAndRefreshes() {
-        var view = view(true, DiplomacyState.EMPTY, true);
-        show(view);
+    void acceptedOrderIsSentOnceAndRefreshes() {
+        show(view(true, DiplomacyState.EMPTY, true));
         dialog.open();
-        clientValue(noticeField("2"), 9);
-        var order = new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 9);
+        var order = new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2);
         when(game.diplomacyOrder(GAME, ACCOUNT, 4, order)).thenReturn(true);
+        var proposal = new TreatyProposal(1, TreatyProposal.Kind.FOUND, 0, 1, 3, Set.of(1, 2), Set.of(1));
+        when(game.diplomacyFor(GAME, ACCOUNT)).thenReturn(Optional.of(view(true, new DiplomacyState(2, List.of(), List.of(proposal)), true)));
 
         button(partnerCard("2"), "Bündnis vorschlagen").click();
 
         verify(game).diplomacyOrder(GAME, ACCOUNT, 4, order);
-        assertThat(noticeField("2").getValue()).isEqualTo(3);
+        assertThat(headings()).containsExactly("Deine Entscheidungen", "Weitere Imperien und Bündnisse");
+        assertThat(button(partnerCard("3"), "Bündnis vorschlagen").isEnabled()).isFalse();
         assertThat(notifications()).isEmpty();
     }
 
     @Test
-    void rejectedOrderKeepsTheDraftAndExplains() {
+    void rejectedOrderExplains() {
         show(view(true, DiplomacyState.EMPTY, true));
         dialog.open();
-        clientValue(noticeField("2"), 9);
 
         button(partnerCard("2"), "Bündnis vorschlagen").click();
 
-        assertThat(noticeField("2").getValue()).isEqualTo(9);
         assertThat(notifications()).containsExactly("Vertragsaktion abgelehnt. Der Stand wurde aktualisiert.");
     }
 
@@ -300,18 +231,6 @@ class DiplomacyDialogTest {
         return descendants(content())
                 .filter(component -> player.equals(component.getElement().getAttribute(HtmlAttributes.DIPLOMACY_PARTNER)))
                 .findFirst().orElseThrow();
-    }
-
-    private IntegerField noticeField(String player) {
-        return single(partnerCard(player), IntegerField.class);
-    }
-
-    private Details noticeDetails(String player) {
-        return single(partnerCard(player), Details.class);
-    }
-
-    private IntegerField ownNoticeField() {
-        return single(content().getChildren().toList().get(1), IntegerField.class);
     }
 
     private List<String> notifications() {
