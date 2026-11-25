@@ -552,6 +552,9 @@ eine Siegquote der Referenz am fairen Anteil oder etwas darüber (Zweikampf etwa
 Reiche 33–40 %, vier Reiche 25–32 %) bei sichtbar selteneren Angriffen. Einfach und
 Anspruchsvoll bleiben unverändert und müssen ihre Rangfolge behalten.
 
+„Groß“ meint in diesem Abschnitt noch 40 Systeme; seit `4ffd8ea` heißt diese Größe Riesig. Die
+Nachmessung mit Groß 30 und Riesig 40 steht im Abschnitt zu E5.
+
 ### Aufbau
 
 Prüfstand und Karten wie K4 (`--mode=strength`, Zufall Wenig, Ereignisse an, Startwerte 4/8,
