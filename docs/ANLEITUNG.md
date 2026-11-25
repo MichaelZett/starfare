@@ -65,8 +65,8 @@ Im Assistenten wählst du unter anderem:
   persönliche Geschwindigkeitswahl hat Vorrang vor dieser Vorgabe.
 - **Tutorial**: Die Partie zeigt Hilfen zum Lernen, die es im normalen Spiel nicht
   gibt. Zurzeit ist das eine gestrichelte Raute am System mit der Zahl freier Schiffe,
-  wenn dort mehr Schiffe stehen, als das System in einer Runde baut. Eine höhere
-  Reserve lässt die Raute verschwinden. Alle Teilnehmer sehen in Warteraum und Kopfzeile,
+  wenn dort mehr Schiffe stehen, als das System in einer Runde baut. Alle Teilnehmer
+  sehen in Warteraum und Kopfzeile,
   dass es ein Tutorial ist; es zählt nicht in der Statistik der Plattform.
 
 Neue Partien sind **privat**. Der Gastgeber kann vor dem Start Spieler einladen
@@ -94,7 +94,7 @@ und Revanchen übernommen. Bestehende Partien verwenden die **Basisstrategie**.
 | Verteidigung | Hält größere Garnisonen zurück und verstärkt die Front. |
 | Industrieausbau | Investiert einen großen Produktionsanteil in weiteren Ausbau. |
 | Zurückhaltender Industrieausbau | Investiert außerhalb naher sichtbarer Bedrohung ein Viertel der Kapazität. |
-| Adaptiver Industrieausbau | Berücksichtigt sichtbare Bedrohung, Schiffsbestand und Reservebedarf; baut bei knappen Kräften nicht weiter aus. |
+| Adaptiver Industrieausbau | Berücksichtigt sichtbare Bedrohung und Schiffsbestand; baut bei knappen Kräften nicht weiter aus. |
 
 Die drei Industrieprofile stehen nur in **SectorForces erweitert** bereit. Beim Wechsel zu
 SectorForces klassisch werden unpassende Auswahlen auf Basisstrategie zurückgesetzt.
@@ -153,15 +153,15 @@ stehen nur in Übersichten und in der Diplomatie.
 
 Die Seitenleiste enthält **Kontakte, Details, Flotten, Befehle, Verlegungen,
 Logistik und Bericht**. Bei wenig Platz ersetzt das Auswahlfeld **Ansicht** die
-Reiter; es bietet dieselben Bereiche. Sammelversand, Sammelreserve und **Rückgängig** stehen direkt am Kopf der Seitenleiste. Die kurzen Knopfbeschriftungen
+Reiter; es bietet dieselben Bereiche. Sammelversand und **Rückgängig** stehen direkt am Kopf der Seitenleiste. Die kurzen Knopfbeschriftungen
 zeigen den vollständigen Aktionsnamen als Hilfetext. Einzelversand und Verlegungen behalten den aktuellen
 Reiter; Sammelbefehle öffnen den Befehlsreiter, eine ausgewertete Runde den Bericht. Aktualisierungen unveränderter Inhalte erhalten Eingaben und
 Fokus.
 
-In den Systemdetails stehen versendbare Schiffe, Gesamtbestand und Reserve oben;
+In den Systemdetails stehen versendbare Schiffe und Gesamtbestand oben;
 außerdem die erwartete Schiffproduktion pro Runde. **Flotte senden** und
 **Verlegung anlegen** stehen direkt darunter, vor dem Systembild.
-**Logistik & Reserve** öffnet Zu- und Abflüsse, Ankünfte und die Reservebearbeitung;
+**Logistik** öffnet Zu- und Abflüsse und Ankünfte;
 bei Kolonien heißt dieser Bereich **Kolonie & Logistik**. **Hintergrund** enthält
 Beschreibungen, Umweltwerte und Besitzhistorie. Die geöffneten Bereiche bleiben
 bei Aktualisierungen und Systemwechseln geöffnet; die Angaben folgen der Auswahl.
@@ -182,8 +182,8 @@ Rechtsklick auf ein eigenes System beginnt direkt die Zielwahl. Alternativ
 wähle das System mit Linksklick und nutze **Flotte senden** in den Details.
 Klicke anschließend auf das Ziel. Stelle die Menge per Regler,
 Eingabefeld oder Schnellknopf ein. **Alle** nutzt die verfügbaren Schiffe nach
-Abzug von Reserve und bereits vorgemerkten Sendungen. **Alle außer Produktion**
-behält zusätzlich den Nettozufluss einer Runde zurück: Produktion + eingehende − ausgehende Verlegungen, mindestens null. Eingehende Schiffe bleiben bis zu ihrer tatsächlichen Ankunft unterwegs.
+Abzug bereits vorgemerkter Sendungen. **Alle außer Produktion**
+behält den Nettozufluss einer Runde zurück: Produktion + eingehende − ausgehende Verlegungen, mindestens null. Eingehende Schiffe bleiben bis zu ihrer tatsächlichen Ankunft unterwegs.
 
 **Abbrechen**, Escape und ein Klick außerhalb des Dialogs erhalten die bisherige
 Auswahl und Zielwahl. Nach dem Bestätigen erscheint eine kurze Meldung; die
@@ -191,15 +191,14 @@ Quellsicht bleibt geöffnet, sodass du gleich einen weiteren Auftrag beginnen ka
 
 Der Auftrag erscheint unter **Befehle**. Solange du die Runde noch nicht abgegeben
 hast, kannst du ihn **Stornieren** oder mit **Befehl bearbeiten** Menge und Ziel
-ändern. Ein Sendebefehl darf weder die Reserve unterschreiten noch mehr Schiffe
-vormerken, als am Ausgangssystem verfügbar sind.
+ändern. Ein Sendebefehl darf nicht mehr Schiffe vormerken, als am Ausgangssystem
+verfügbar sind.
 
 **Letzten Befehlschritt zurücknehmen** stellt die eigene Befehlsliste vor der
 letzten Änderung wieder her. Das gilt auch für einen Sammelversand. Es gibt einen
 Rücknahmeschritt, keine mehrstufige Historie. Er bleibt nach Neuladen und Neustart
-erhalten, endet aber mit dem Rundenwechsel. Eine inzwischen erhöhte Reserve wird
-dabei weiterhin eingehalten. Reserveänderungen und Verlegungen selbst gehören
-nicht zu dieser Befehlsrücknahme.
+erhalten, endet aber mit dem Rundenwechsel. Verlegungen gehören nicht zu dieser
+Befehlsrücknahme.
 
 ### Gleichzeitig ankommen und gemeinsam senden
 
@@ -244,17 +243,7 @@ System stationierten Flotte und führt ihre Schiffe in die Garnison zurück.
 Rückzugsflotten bieten diese Aktionen nicht an. Beide Aktionen werden als Befehle
 für die Rundenabgabe vorgemerkt. Ein Aktionsklick behält den aktuellen Reiter.
 
-## Reserven und Produktionsverlegungen
-
-Die Garnisonsreserve legt fest, wie viele Schiffe am eigenen System zurückbleiben
-sollen. Direkte Sendungen, vorgemerkte Befehle und Verlegungen beachten sie.
-Beim Besitzerwechsel wird die Reserve auf null zurückgesetzt.
-
-Mit **Reserven gesammelt setzen** wählst du mehrere Systeme und entweder eine
-feste Reserve oder **Eine Produktionsrunde zurückbehalten**. Letzteres setzt je
-System dessen aktuelle Produktionsmenge als Reserve. Die Reserve wird höchstens
-auf die aktuelle Garnison gesetzt. Bereits vorgemerkte Sendungen müssen weiterhin
-dazu passen; andernfalls wird die gesamte Änderung abgelehnt.
+## Produktionsverlegungen
 
 Eine **Produktionsverlegung** sendet jede Runde eine feste Anzahl Schiffe.
 Ziehe ein eigenes System auf das Ziel oder wähle die Verlegung im Sendedialog.
@@ -266,8 +255,8 @@ dann 10, abzüglich anderer ausgehender Aufträge.
 
 Das gemeinsame Limit aller ausgehenden Verlegungen ist die eigene Produktion plus
 die eingehenden Verlegungsmengen. Eingehende Schiffe brauchen trotzdem ihre normale
-Reisezeit. Wenn nötig, nutzt die Verlegung vorhandene Garnison, lässt aber die Reserve
-stehen. Nicht versandte Produktion bleibt am System. Die Karte zeigt die Routen
+Reisezeit. Wenn nötig, nutzt die Verlegung vorhandene Garnison. Nicht versandte
+Produktion bleibt am System. Die Karte zeigt die Routen
 violett gestrichelt mit ihrer Menge; **Logistik** hilft bei der Übersicht.
 
 ## Runden, Fristen und Kommunikation
@@ -407,11 +396,11 @@ SectorForces erweitert verteilt die Kapazität eines Systems zwischen Schiffbau 
 Der Ausbau sammelt Punkte; eine zusätzliche Kapazitätseinheit kostet das Doppelte
 der aktuellen Kapazität. Das Maximum ist 50. Neue Kapazität wirkt ab der folgenden
 Runde. Fortschritt bleibt bei Umschaltung und Eroberung erhalten; ein Eroberer
-beginnt mit vollem Schiffbau und ohne Garnisonsreserve.
+beginnt mit vollem Schiffbau.
 
 Die rechte Systemsicht zeigt Industriegebäude, Verteilung, Fortschritt und die
 voraussichtliche nächste Lieferung. Bestehende Verlegungen bleiben erhalten;
-reicht der Schiffbau nicht, können sie auf Garnison oberhalb der Reserve zugreifen.
+reicht der Schiffbau nicht, können sie auf die Garnison zugreifen.
 Engpässe werden angezeigt. Rohstoffe, Forschung und Schiffstypen folgen später.
 SectorForces klassisch verwendet weiterhin seine bisherigen Regeln.
 
@@ -441,7 +430,7 @@ Zuerst werden reguläre Flotten aus vorhandenen Schiffen verschickt. Danach erfo
 reichsweit die Förderung und der Schiffbau. Bei Metallknappheit erhält jedes System
 einen proportionalen Anteil seiner geplanten Schiffe; ganzzahlige Reste gehen nach
 größtem Bruchrest, bei Gleichstand nach Systemkennung. Verlegungen verwenden danach
-nur tatsächlich vorhandene Schiffe und halten die Garnisonsreserve ein.
+nur tatsächlich vorhandene Schiffe.
 Industrieausbau kostet kein Metall; Wachstum und Ausbau wirken erst nächste Runde.
 Unverbrauchtes Metall bleibt erhalten, unerfüllter Schiffbau erzeugt keine Schuld.
 
@@ -665,7 +654,7 @@ in einem gesonderten Ausbau.
 In dieser gesonderten internen Fassung können eigene stationierte Schiffe an
 Systemen mit Industrie verschrottet werden. In den Systemdetails eine Menge
 vormerken; **0 hebt den Befehl auf**. Die Schiffe bleiben bis zur Rundenauflösung
-stehen, sind aber gemeinsam mit Versand und Garnisonsreserve reserviert.
+stehen, sind aber gemeinsam mit dem Versand reserviert.
 Die Verschrottung erfolgt nach dem regulären Versand und vor Förderung und
 Schiffbau. Sie benötigt keine zusätzlichen Kapazitätspunkte. Ankommende Schiffe
 stehen erst in der folgenden Runde zum Recycling bereit.

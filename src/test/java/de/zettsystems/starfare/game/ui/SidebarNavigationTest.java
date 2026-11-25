@@ -30,7 +30,7 @@ class SidebarNavigationTest {
     void compactAndWideNavigationStayInSyncWhenTheReportBecomesUnavailable() {
         var panel = new FleetAndOrdersPanel(new BattleAcknowledgements(mock(BattleAcknowledgementService.class)),
                 _ -> { }, _ -> { }, _ -> { }, () -> { }, _ -> { }, _ -> { }, _ -> { }, _ -> { },
-                (_, _) -> { }, _ -> { }, _ -> { }, () -> { });
+                _ -> { }, _ -> { }, () -> { });
         ComboBox<?> compact = descendants(panel).filter(ComboBox.class::isInstance).map(ComboBox.class::cast).findFirst().orElseThrow();
         Tabs tabs = descendants(panel).filter(Tabs.class::isInstance).map(Tabs.class::cast).findFirst().orElseThrow();
         assertThat(compact.getListDataView().getItemCount()).isEqualTo(7);

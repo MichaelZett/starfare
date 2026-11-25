@@ -28,8 +28,8 @@ class SpacewardTurnEngineTest {
         economy.allocateExpansion(state, 1, 1, 4);
         assertThatCode(() -> engine.advanceTurn(state)).doesNotThrowAnyException();
         assertThat(state.turn()).isEqualTo(2);
-        assertThat(state.getSystem(1).garrison()).isEqualTo(10);
-        assertThat(state.fleets()).extracting(Fleet::ships).containsExactly(7, 1);
+        assertThat(state.getSystem(1).garrison()).isEqualTo(8);
+        assertThat(state.fleets()).extracting(Fleet::ships).containsExactly(7, 3);
         assertThat(state.reports().get(1).events()).contains(new TurnEvent.Production(1, 1, "Alpha", 6));
         assertThat(state.replayFrames().get(1).industries().get(1).expansionProgress()).isEqualTo(4);
         verify(ai).plan(state, fleets);

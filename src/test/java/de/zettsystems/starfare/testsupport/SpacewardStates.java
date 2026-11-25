@@ -11,7 +11,7 @@ public final class SpacewardStates {
         state.resetForNewGame();
         state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
         state.players().addAll(List.of(new Player(1, "Human", false, "#111111"), new Player(2, "Opponent", false, "#222222")));
-        state.systems().add(new StarSystem(1, "Alpha", 100, 100, 1, 12, 10, false, 10));
+        state.systems().add(new StarSystem(1, "Alpha", 100, 100, 1, 12, 10, false));
         state.systems().add(new StarSystem(2, "Beta", 200, 100, 1, 3, 4, false));
         state.systems().add(new StarSystem(3, "Enemy", 3000, 1800, 2, 30, 8, false));
         state.systems().add(new StarSystem(4, "Neutral", 2600, 1500, null, 4, 5, true));

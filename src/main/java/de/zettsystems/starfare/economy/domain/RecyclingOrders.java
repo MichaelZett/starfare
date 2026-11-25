@@ -8,7 +8,7 @@ import de.zettsystems.starfare.fleet.values.FleetOrder;
 import java.util.List;
 import java.util.Objects;
 
-/** Shared reservation checks for recycling, dispatch and reserve changes. */
+/** Shared reservation checks for recycling and dispatch. */
 public final class RecyclingOrders {
     private RecyclingOrders() { }
     public static boolean plan(GameState state, int player, int systemId, int ships) {
@@ -19,7 +19,7 @@ public final class RecyclingOrders {
         long committed = state.pendingOrders().getOrDefault(player, List.of()).stream()
                 .filter(order -> order instanceof FleetOrder.Send send && send.fromSystemId() == systemId)
                 .mapToLong(order -> ((FleetOrder.Send) order).ships()).sum();
-        if (ships + committed > system.availableShips()) { return false; }
+        if (ships + committed > system.garrison()) { return false; }
         state.planRecycling(systemId, ships); return true;
     }
     public static void validateReference(RulesetRef rules, MetalEconomy metal) {
@@ -39,7 +39,7 @@ public final class RecyclingOrders {
             long committed = system.ownerId() == null ? 0 : state.pendingOrders().getOrDefault(system.ownerId(), List.of()).stream()
                     .filter(order -> order instanceof FleetOrder.Send send && send.fromSystemId() == system.id())
                     .mapToLong(order -> ((FleetOrder.Send) order).ships()).sum();
-            if (count > 0 && (system.neutral() || system.ownerId() == null || count + committed > system.availableShips())) {
+            if (count > 0 && (system.neutral() || system.ownerId() == null || count + committed > system.garrison())) {
                 throw new IllegalArgumentException("Invalid stored recycling reservation");
             }
         }

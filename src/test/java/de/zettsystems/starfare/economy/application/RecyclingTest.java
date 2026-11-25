@@ -46,7 +46,6 @@ class RecyclingTest {
         assertThat(RecyclingOrders.plan(state, 1, 1, 8)).isTrue();
         assertThat(fleets.queueSend(state, 1, 1, 2, 1)).isFalse();
         assertThat(OrderPlanning.dispatch(state, 1, 2, List.of(new FleetDispatch(1, 1)))).isFalse();
-        assertThat(OrderPlanning.reserves(state, 1, List.of(1), 1, false)).isFalse();
         assertThat(fleets.sendFleet(state, 1, 1, 2, 5)).isFalse();
         assertThat(GameState.toSnapshot(state).metals()).isEqualTo(state.metals().orElseThrow());
     }

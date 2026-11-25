@@ -18,7 +18,7 @@ class JointArrivalTest {
     private static final int TARGET = 9;
 
     private static VisibleSystem system(int id, @Nullable Integer owner, @Nullable Integer available) {
-        return new VisibleSystem(id, "S" + id, 0, 0, owner, 10, 2, true, "#abc", null, false, 0, 0, available, List.of());
+        return new VisibleSystem(id, "S" + id, 0, 0, owner, 10, 2, true, "#abc", null, false, 0, available, List.of());
     }
 
     private static PlayerViewState view(List<Fleet> fleets, List<PlannedOrder> orders, Set<Integer> waiting) {

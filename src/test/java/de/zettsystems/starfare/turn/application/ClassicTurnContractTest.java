@@ -34,10 +34,10 @@ class ClassicTurnContractTest {
     }
 
     @Test
-    void productionRoutingReserveAndWaitHaveFixedThreeRoundOutcomes() {
+    void productionRoutingAndWaitHaveFixedThreeRoundOutcomes() {
         GameState state = players(2);
         state.systems().addAll(List.of(
-                new StarSystem(1, "Home", 0, 0, 1, 10, 4, false, 6),
+                new StarSystem(1, "Home", 0, 0, 1, 10, 4, false),
                 new StarSystem(2, "Relay", 100, 0, 1, 5, 1, false),
                 new StarSystem(3, "Enemy", 1000, 0, 2, 10, 2, false),
                 new StarSystem(4, "Neutral", 2000, 0, null, 7, 5, true)));
@@ -45,7 +45,7 @@ class ClassicTurnContractTest {
 
         assertThat(fleets.addStandingOrder(state, 1, 1, 2, 4)).isOne();
         assertThat(fleets.queueSend(state, 1, 1, 2, 4)).isTrue();
-        assertThat(fleets.queueSend(state, 1, 1, 2, 1)).isFalse();
+        assertThat(fleets.queueSend(state, 1, 1, 2, 7)).isFalse();
         assertThat(state.getSystem(1).garrison()).isEqualTo(10);
         assertThat(state.travelRounds(1, 2)).isEqualTo(2);
         assertThat(state.travelRounds(1, 4)).isEqualTo(20);
@@ -55,7 +55,6 @@ class ClassicTurnContractTest {
         assertThat(state.fleets()).containsExactly(
                 new Fleet(1, 1, 1, 1, 2, 4, 1, 3), new Fleet(2, 1, 2, 1, 2, 4, 1, 3));
         assertThat(state.pendingOrders()).isEmpty();
-        assertThat(state.getSystem(1).availableShips()).isZero();
 
         assertThat(fleets.queueWait(state, 1, 1)).isTrue();
         engine.advanceTurn(state);
@@ -84,7 +83,6 @@ class ClassicTurnContractTest {
         assertThat(state.turn()).isEqualTo(turn);
         assertThat(state.systems()).extracting(StarSystem::garrison).containsExactly(garrisons);
         assertThat(state.systems()).extracting(StarSystem::productionPerTurn).containsExactly(4, 1, 2, 5);
-        assertThat(state.getSystem(1).garrisonReserve()).isEqualTo(6);
         assertThat(state.gameOver()).isFalse();
     }
 
@@ -92,7 +90,7 @@ class ClassicTurnContractTest {
     void mergedFriendlyReinforcementPrecedesSequentialEqualSizeAttackers() {
         GameState state = players(3);
         state.systems().addAll(List.of(
-                new StarSystem(1, "Target", 0, 0, 1, 5, 2, false, 4),
+                new StarSystem(1, "Target", 0, 0, 1, 5, 2, false),
                 new StarSystem(2, "Second", 100, 0, 2, 4, 1, false),
                 new StarSystem(3, "Third", 200, 0, 3, 4, 1, false),
                 new StarSystem(4, "Neutral", 2000, 0, null, 8, 4, true)));
@@ -104,7 +102,7 @@ class ClassicTurnContractTest {
 
         engine.advanceTurn(state);
 
-        assertThat(state.getSystem(1)).isEqualTo(new StarSystem(1, "Target", 0, 0, 3, 12, 2, false, 0));
+        assertThat(state.getSystem(1)).isEqualTo(new StarSystem(1, "Target", 0, 0, 3, 12, 2, false));
         assertThat(state.systems()).extracting(StarSystem::garrison).containsExactly(12, 5, 5, 8);
         assertThat(state.fleets()).isEmpty();
         assertThat(state.gameOver()).isFalse();

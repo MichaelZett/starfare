@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductionFlowTest {
-    @Test void quickAmountPreservesNetProductionOnTopOfAnAlreadyDeductedReserve() {
+    @Test void quickAmountPreservesNetProduction() {
         ProductionFlow flow = new ProductionFlow(6, 3);
         assertThat(flow.retainedShips(4)).isEqualTo(7);
         assertThat(flow.sendExceptProduction(20, 4)).isEqualTo(13);

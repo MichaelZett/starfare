@@ -332,12 +332,6 @@ public class DefaultGameService implements GameService {
                 && de.zettsystems.starfare.fleet.domain.OrderPlanning.dispatch(state, player, target, dispatches));
     }
 
-    @Override
-    public boolean setReserves(GameId id, int player, int turn, List<Integer> systems, int reserve, boolean production) {
-        return registry.writeState(id, state -> canPlan(state, player, turn)
-                && de.zettsystems.starfare.fleet.domain.OrderPlanning.reserves(state, player, systems, reserve, production));
-    }
-
     private static final Logger LOG = LoggerFactory.getLogger(DefaultGameService.class);
     private final EconomyService economy;
     private final DiplomacyService diplomacy;
@@ -808,24 +802,6 @@ public class DefaultGameService implements GameService {
     public List<Player> conquestCandidates(GameId id, int player) {
         return registry.readState(id, state -> state.players().stream()
                 .filter(candidate -> candidate.id() == player || state.allied(player, candidate.id())).toList());
-    }
-
-    @Override
-    public boolean setGarrisonReserve(GameId gameId, int playerId, int systemId, int reserve) {
-        if (!isRunningGame(gameId) || reserve < 0) {
-            return false;
-        }
-        return registry.writeState(gameId, state -> {
-            var system = state.findSystem(systemId).orElse(null);
-            if (state.gameOver() || system == null || !Objects.equals(system.ownerId(), playerId)) {
-                return false;
-            }
-            if (state.ruleset().usesRecycling()) {
-                return de.zettsystems.starfare.fleet.domain.OrderPlanning.reserves(state, playerId, List.of(systemId), reserve, false);
-            }
-            state.updateSystem(systemId, current -> current.reserveGarrison(reserve));
-            return true;
-        });
     }
 
     @Override

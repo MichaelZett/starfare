@@ -124,7 +124,7 @@ class MetalEconomyTest {
         assertThat(state.metals().orElseThrow().mining()).containsEntry(1, 0);
         assertThat(state.industries().get(1).expansionAllocation()).isZero();
     }
-    @Test void realRoundRelocatesOnlyActuallyBuiltShipsAndPreservesReserve() {
+    @Test void realRoundWithoutMetalRelocatesOnlyExistingShips() {
         var state = MetalStates.running(10, 0);
         var fleets = new DefaultFleetService();
         assertThat(fleets.addStandingOrder(state, 1, 1, 2, 6)).isPositive();
@@ -133,10 +133,10 @@ class MetalEconomyTest {
         var limited = MetalStates.running(0, 0);
         limited.standingOrders().putAll(snapshot.standingOrders());
         advance(limited, fleets);
-        assertThat(limited.getSystem(1).garrison()).isEqualTo(10);
+        assertThat(limited.getSystem(1).garrison()).isEqualTo(6);
         assertThat(limited.getSystem(2).garrison()).isEqualTo(3);
         assertThat(limited.fleets()).hasSize(1);
-        assertThat(limited.fleets().getFirst().ships()).isEqualTo(2);
+        assertThat(limited.fleets().getFirst().ships()).isEqualTo(6);
         assertThat(limited.reports().get(1).events()).isNotEmpty();
         assertThat(limited.turn()).isEqualTo(2);
         assertThat(limited.metals().orElseThrow().stocks()).containsEntry(1, 0L);
@@ -144,6 +144,7 @@ class MetalEconomyTest {
     }
     @Test void regularDispatchReservesShipsBeforeProductionRelocations() {
         var state = MetalStates.running(10, 0);
+        state.updateSystem(1, system -> system.afterDefense(2));
         var fleets = new DefaultFleetService();
         assertThat(fleets.addStandingOrder(state, 1, 1, 2, 6)).isPositive();
         assertThat(fleets.queueSend(state, 1, 1, 2, 2)).isTrue();
@@ -151,7 +152,7 @@ class MetalEconomyTest {
         var preview = views.forPlayer(state, 1).systems().stream().filter(s -> s.id() == 1).findFirst().orElseThrow();
         assertThat(preview.industry().nextDelivery()).isEqualTo(3);
         advance(state, fleets);
-        assertThat(state.getSystem(1).garrison()).isEqualTo(10);
+        assertThat(state.getSystem(1).garrison()).isZero();
         assertThat(state.fleets().stream().mapToInt(Fleet::ships).sum()).isEqualTo(5);
     }
     @Test void viewsUseTheSharedForecastAndHideExactResourcesBehindFog() {

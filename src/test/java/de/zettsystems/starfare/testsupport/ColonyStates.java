@@ -27,7 +27,7 @@ public final class ColonyStates {
         state.rememberSetup(GameSetup.defaults().selectRuleset(rules));
         state.players().addAll(List.of(new Player(1, "Colonist", false, "#111111"),
                 new Player(2, "Opponent", false, "#222222")));
-        state.systems().addAll(List.of(new StarSystem(1, "Alpha", 100, 100, 1, 12, 10, false, 10),
+        state.systems().addAll(List.of(new StarSystem(1, "Alpha", 100, 100, 1, 12, 10, false),
                 new StarSystem(2, "Beta", 200, 100, 1, 3, 4, false),
                 new StarSystem(3, "Enemy", 3000, 1800, 2, 30, 8, false),
                 new StarSystem(4, "Neutral", 2600, 1500, null, 4, 5, true)));

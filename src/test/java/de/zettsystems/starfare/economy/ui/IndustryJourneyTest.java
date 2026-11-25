@@ -15,7 +15,7 @@ class IndustryJourneyTest extends AbstractEconomyUiTest {
         enter("industry-expansion", 4);
         assertThat(text("production-save-status")).contains("Gespeichert");
         assertThat(text("industry-panel")).contains("6 Punkte → 6 Schiffe/Runde", "4 Punkte → Fortschritt 0/20 → 4/20");
-        assertThat(text("production-plan-results")).contains("Verlegung: voraussichtlich 8 Schiffe");
+        assertThat(text("production-plan-results")).contains("Verlegung: voraussichtlich 10 Schiffe");
         assertThat(text("system-metric-rate")).contains("6 (+0/Runde)");
 
         reloadMap();
@@ -33,14 +33,14 @@ class IndustryJourneyTest extends AbstractEconomyUiTest {
         assertThat(viewText()).contains("Runde 6");
         assertThat(text("industry-panel")).contains("Kapazität 11 / 50", "7 Punkte → 7 Schiffe/Runde",
                 "4 Punkte → Fortschritt 0/22 → 4/22", "Ausbaufortschritt: 0 / 22");
-        assertThat(garrison()).isEqualTo(10);
+        assertThat(garrison()).isZero();
 
-        registry.writeState(id, state -> { state.updateSystem(1, system -> system.afterDefense(1)); return null; });
+        registry.writeState(id, state -> { state.updateSystem(1, system -> system.reinforce(1)); return null; });
         reloadMap();
         click("production-plan-open");
-        assertThat(text("production-plan-results")).contains("Verlegung: voraussichtlich 0 Schiffe");
+        assertThat(text("production-plan-results")).contains("Verlegung: voraussichtlich 8 Schiffe");
         enter("industry-expansion", 0);
         assertThat(text("industry-panel")).contains("11 Punkte → 11 Schiffe/Runde");
-        assertThat(text("production-plan-results")).contains("Verlegung: voraussichtlich 2 Schiffe");
+        assertThat(text("production-plan-results")).contains("Verlegung: voraussichtlich 10 Schiffe");
     }
 }

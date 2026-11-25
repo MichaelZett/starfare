@@ -37,12 +37,12 @@ class SystemCompositionTest {
         var quality = new de.zettsystems.starfare.economy.values.SystemQuality(
                 SystemComposition.StarType.YELLOW, 1, 2.4, SystemComposition.BodyType.GAS_GIANT, true,
                 de.zettsystems.starfare.economy.values.SystemQuality.Atmosphere.THIN, 3);
-        var industry = new de.zettsystems.starfare.economy.values.IndustryView(5, 0, 0, 10, 5, false, 0,
+        var industry = new de.zettsystems.starfare.economy.values.IndustryView(5, 0, 0, 10, 5, false,
                 new de.zettsystems.starfare.economy.values.ColonyView(quality, 500, 505));
         var full = new VisibleSystem(1, "Colony", 0, 0, 1, 5, 5, true, "#fff", 1,
-                false, 0, 0, 5, List.of(), industry);
+                false, 0, 5, List.of(), industry);
         var partial = new VisibleSystem(1, "Colony", 0, 0, 1, 5, 5, false, "#fff", 1,
-                true, null, null, null, List.of(), industry);
+                true, null, null, List.of(), industry);
         var composition = SystemComposition.forVisible(GAME, full).orElseThrow();
         assertThat(composition.colonyQuality()).isEqualTo(quality);
         assertThat(composition.stars()).containsExactly(quality.star());

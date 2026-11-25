@@ -15,7 +15,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
@@ -102,7 +101,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final IntConsumer onReportSystemSelected;
     private final IntConsumer onResolvedBattleSelected;
     private final IntConsumer onStandingOrderSelected;
-    private final BiConsumer<Integer, Integer> onGarrisonReserveChanged;
     private final Consumer<VisibleSystem> onFleetTargetSelection;
     private final Consumer<VisibleSystem> onRelocationTargetSelection;
     private final Runnable onTargetSelectionCancelled;
@@ -181,8 +179,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final java.util.Set<Integer> expandedFleetRoutes = new java.util.HashSet<>();
     private boolean systemOperationsOpened;
     private boolean systemBackgroundOpened;
-    private record ReserveEditor(int systemId, int savedReserve, IntegerField input) { }
-    private @Nullable ReserveEditor reserveEditor;
     private @Nullable Object lastTravel;
     private @Nullable Object lastLogistics;
     private @Nullable Object lastReport;
@@ -196,7 +192,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                         IntConsumer onStandingOrderSelected,
                         IntConsumer onReportSystemSelected,
                         IntConsumer onResolvedBattleSelected,
-                        BiConsumer<Integer, Integer> onGarrisonReserveChanged,
                         Consumer<VisibleSystem> onFleetTargetSelection,
                         Consumer<VisibleSystem> onRelocationTargetSelection,
                         Runnable onTargetSelectionCancelled) {
@@ -205,7 +200,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         this.onCancelOrder = onCancelOrder;
         this.onResolvedBattleSelected = onResolvedBattleSelected;
         this.onStandingOrderSelected = onStandingOrderSelected;
-        this.onGarrisonReserveChanged = onGarrisonReserveChanged;
         this.onFleetTargetSelection = onFleetTargetSelection;
         this.onRelocationTargetSelection = onRelocationTargetSelection;
         this.onTargetSelectionCancelled = onTargetSelectionCancelled;
@@ -273,7 +267,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         readOnly = view.gameOver() || spectator;
         productionInputs.reconcile(gameId.value(), view.turn(), view.systems().stream()
                 .filter(candidate -> !spectator && candidate.fullyVisible() && candidate.industry() != null
-                        && candidate.garrisonReserve() != null && !isBattlePending(candidate.id()))
+                        && candidate.availableShips() != null && !isBattlePending(candidate.id()))
                 .collect(java.util.stream.Collectors.toMap(VisibleSystem::id, candidate -> Objects.requireNonNull(candidate.industry()))));
         TurnReport report = view.report();
         battlePresentationEnabled = BattlePresentationPreference.enabled(view.battlePresentationEnabled());
@@ -379,7 +373,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private void renderEconomyList(PlayerViewState view) {
         if (view.systems().stream().anyMatch(system -> isBattlePending(system.id()))) { return; }
-        int player = view.systems().stream().filter(system -> system.garrisonReserve() != null)
+        int player = view.systems().stream().filter(system -> system.availableShips() != null)
                 .map(VisibleSystem::ownerId).filter(Objects::nonNull).findFirst().orElse(-1);
         var issues = EconomyIssues.forView(view, player, java.util.Set.of());
         var issueMap = issues.stream().collect(java.util.stream.Collectors.toMap(issue -> issue.system().id(), issue -> issue));
@@ -507,14 +501,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 logisticsMetric("↑", "O", summary.plannedOutgoing()),
                 logisticsMetric("Σ", "P+I−O", summary.plannedAccumulation()));
         metrics.addClassName("logistics-metrics");
-        Span reserve = new Span(I18n.t(UiTexts.MAP_LOGISTICS_RESERVE_AVAILABLE,
-                summary.reserve(), summary.availableShips()));
-        reserve.addClassName("logistics-system-reserve");
+        Span available = new Span(I18n.t(UiTexts.MAP_LOGISTICS_AVAILABLE, summary.availableShips()));
+        available.addClassName("logistics-system-available");
         Span delivery = new Span(I18n.t(summary.deliveryBottleneck()
                 ? UiTexts.MAP_LOGISTICS_DELIVERY_BOTTLENECK : UiTexts.MAP_LOGISTICS_NEXT_DELIVERY,
                 summary.nextDelivery()));
         delivery.addClassName(summary.deliveryBottleneck() ? "logistics-delivery-bottleneck" : "logistics-delivery");
-        card.add(name, direction, metrics, reserve, delivery);
+        card.add(name, direction, metrics, available, delivery);
         var metal = metalOf(system);
         if (metal != null) {
             Span yield = new Span(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.LOGISTICS_YIELD,
@@ -610,13 +603,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (selectedSystem != null) {
             VisibleSystem system = selectedSystem;
             if (isBattlePending(system.id())) {
-                reserveEditor = null;
                 detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS),
                         new Paragraph(I18n.t(UiTexts.ROUND_EVENT_BATTLE_READY, system.name())));
                 return;
             }
             if (!system.fullyVisible()) {
-                reserveEditor = null;
                 detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS),
                         detail(I18n.t(UiTexts.MAP_SIDEBAR_SYSTEM), system.name()), intelligenceHeader(),
                         detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())),
@@ -630,7 +621,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             return;
         }
         detailsPage.add(header(UiTexts.MAP_SIDEBAR_DETAILS));
-        reserveEditor = null;
         Fleet selectedFleet = view.ownFleets().stream()
                 .filter(fleet -> selectedFleetId != null && fleet.globalId() == selectedFleetId)
                 .findFirst().orElse(null);
@@ -688,11 +678,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         ArrivalPreview.from(view).stream().filter(arrival -> arrival.systemId() == system.id())
                 .forEach(arrival -> operations.add(new Paragraph(I18n.t(UiTexts.PLAN_ARRIVAL,
                         arrival.systemName(), arrival.turn(), arrival.ships()))));
-        renderGarrisonReserve(system, operations);
         if (operations.getChildren().findAny().isPresent()) {
             var industry = system.industry();
             Details operationalDetails = new Details(I18n.t(industry != null && industry.colony() != null
-                    ? UiTexts.SYSTEM_COLONY_LOGISTICS : UiTexts.SYSTEM_LOGISTICS_RESERVE), operations);
+                    ? UiTexts.SYSTEM_COLONY_LOGISTICS : UiTexts.SYSTEM_LOGISTICS), operations);
             operationalDetails.addClassName("system-operations");
             operationalDetails.setOpened(systemOperationsOpened);
             operationalDetails.addOpenedChangeListener(event -> systemOperationsOpened = event.isOpened());
@@ -731,10 +720,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             metrics.add(sendable);
         }
         metrics.add(systemMetric(VaadinIcon.SHIELD, I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())));
-        Integer reserve = system.garrisonReserve();
-        if (reserve != null) {
-            metrics.add(systemMetric(VaadinIcon.LOCK, I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE), reserve));
-        }
         String rate = system.routedProduction() == null ? value(system.productionPerTurn())
                 : I18n.t(UiTexts.SYSTEM_PRODUCTION_INCOMING, value(system.productionPerTurn()), flow.incoming());
         Div production = systemMetric(VaadinIcon.COGS, I18n.t(UiTexts.SYSTEM_PRODUCTION_RATE), rate);
@@ -804,33 +789,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         detailsPage.add(panel);
         if (industry.colony() != null) { operations.add(panel.colonyDetails()); }
         background.add(panel.background());
-    }
-
-    private void renderGarrisonReserve(VisibleSystem system, VerticalLayout operations) {
-        Integer reserveValue = system.garrisonReserve();
-        Integer garrison = system.garrison();
-        if (readOnly || reserveValue == null || garrison == null) {
-            reserveEditor = null;
-            return;
-        }
-        IntegerField reserve = new IntegerField(I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE));
-        reserve.setMin(0);
-        reserve.setMax(garrison);
-        ReserveEditor previous = reserveEditor;
-        Integer draft = previous == null ? null : previous.input().getValue();
-        boolean retainDraft = previous != null && previous.systemId() == system.id()
-                && previous.savedReserve() == reserveValue && draft != null && draft >= 0 && draft <= garrison;
-        reserve.setValue(retainDraft ? draft : reserveValue);
-        reserveEditor = new ReserveEditor(system.id(), reserveValue, reserve);
-        reserve.setStepButtonsVisible(true);
-        Button save = new Button(I18n.t(UiTexts.MAP_SIDEBAR_GARRISON_RESERVE_SAVE), _ -> {
-            Integer value = reserve.getValue();
-            if (value != null) {
-                onGarrisonReserveChanged.accept(system.id(), value);
-            }
-        });
-        save.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
-        operations.add(reserve, save);
     }
 
     private void renderOwnershipHistory(PlayerViewState view, VisibleSystem system, VerticalLayout background) {

@@ -44,10 +44,10 @@ class ShipCohortsTest {
     }
     @Test void immutableSystemAndFleetOperationsPreserveBuildTimeGenerations() {
         var mixed = new ShipCohorts(Map.of(0, 8, 2, 4));
-        var system = new StarSystem(1, "A", 0, 0, 1, 12, 4, false, 0, mixed);
+        var system = new StarSystem(1, "A", 0, 0, 1, 12, 4, false, mixed);
         assertThat(system.launchFleet(4).composition()).isEqualTo(ShipCohorts.of(0, 8));
         assertThat(system.scrapShips(8).composition()).isEqualTo(ShipCohorts.of(2, 4));
-        assertThat(system.reserveGarrison(3).relocateTo(1, 1).planShipbuilding(2).composition()).isEqualTo(mixed);
+        assertThat(system.relocateTo(1, 1).planShipbuilding(2).composition()).isEqualTo(mixed);
         assertThat(system.completeShipbuilding(2, 0, 4, 3).composition().levels()).containsEntry(3, 2);
         var fleet = new Fleet(1, 1, 1, 1, 2, 12, 1, 2).commissionedAs(mixed);
         assertThat(fleet.designateConquest(2).delayedByOneTurn().endJourneyAfterBattle().composition()).isEqualTo(mixed);

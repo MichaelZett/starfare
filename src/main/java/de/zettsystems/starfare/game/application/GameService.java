@@ -39,7 +39,6 @@ public interface GameService {
     boolean undoOrders(GameId gameId, int playerId, int expectedTurn);
     boolean dispatchFleets(GameId gameId, int playerId, int expectedTurn, int target,
                           List<de.zettsystems.starfare.fleet.values.FleetDispatch> dispatches);
-    boolean setReserves(GameId gameId, int playerId, int expectedTurn, List<Integer> systems, int reserve, boolean production);
     List<GameSummary> visibleGamesFor(String account, GameListScope scope);
 
     /**
@@ -165,9 +164,6 @@ public interface GameService {
 
     boolean sendFleet(GameId gameId, int playerId, int expectedTurn, int fromId, int toId, int ships, int beneficiary);
     List<Player> conquestCandidates(GameId gameId, int playerId);
-
-    /** Sets the permanent garrison that remains at an owned system. */
-    boolean setGarrisonReserve(GameId gameId, int playerId, int systemId, int reserve);
 
     boolean addStandingOrder(GameId gameId, int playerId, int fromId, int toId, int ships);
 

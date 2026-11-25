@@ -183,13 +183,10 @@ returns to full shipbuilding. Growth changes output for the following turn only.
 
 `StarSystem.productionPerTurn` always contains actual ship output, so existing
 routing limits, delivery checks and logistics previews consume the same value.
-Standing orders retained after an allocation change may use the source garrison
-above its reserve; incoming rates never count as already delivered ships.
-Defense losses may leave a garrison below its reserve: production continues
-while transfers wait for sufficient surplus. `IndustryView.reserveShortfall`
-also accounts for that deficit in the editable allocation preview.
+Standing orders retained after an allocation change may use the source garrison;
+incoming rates never count as already delivered ships.
 `DefaultEconomyService` produces only the output available before this turn's
-growth. Capture resets allocation to full shipbuilding and reserve to zero while
+growth. Capture resets allocation to full shipbuilding while
 retaining industrial capacity and progress, directly in `GameState.updateSystem`.
 Neutral systems never expand automatically.
 
@@ -292,13 +289,13 @@ covered by `TurnEngineRoundRulesTest` and `CombatResolverTest`.
 
 | Reference case | Required result |
 | --- | --- |
-| Production, reserve, routing, queued send and wait | Four systems have garrisons `6/6/12/7`, `6/11/14/7`, then `6/20/16/7`; the source retains reserve 6, neutral production does not grow its garrison, delayed and routed fleets merge on arrival. |
-| Friendly arrivals and two equal attackers | Friendly fleets merge before combat. Production plus reinforcement gives 12 defenders; player 2 loses a 12:12 tie leaving zero defenders, then player 3 captures with 12 ships. Capture clears the old reserve. |
+| Production, routing, queued send and wait | Four systems have garrisons `6/6/12/7`, `6/11/14/7`, then `6/20/16/7`; neutral production does not grow its garrison, delayed and routed fleets merge on arrival. |
+| Friendly arrivals and two equal attackers | Friendly fleets merge before combat. Production plus reinforcement gives 12 defenders; player 2 loses a 12:12 tie leaving zero defenders, then player 3 captures with 12 ships. |
 | Victory and continuation | Three of four systems win at 70%. Further turns do nothing. Continuation requires full conquest; the next win records 100%, while the earlier replay still records 70%. |
 
 `src/test/resources/classic/legacy-running.json` and `legacy-archive.json` are
 hand-authored, synthetic old-format fixtures, not production exports. They
-omit newer settings, `originalSetup`, previous orders, reserve and empire-name
+omit newer settings, `originalSetup`, previous orders and empire-name
 fields. The running fixture also omits replay frames, reinforcement totals,
 standing-order quantities and intel garrisons. The archive includes historical
 owners and fleets, missing combat strengths, integer combat strengths, and a
@@ -790,9 +787,8 @@ enforces this.
 under `GameRegistry.writeState`. Edits compare the displayed command with the
 current index and use a turn token. Batch dispatch rejects duplicate sources,
 foreign systems, missing destinations and overcommitted garrisons before any
-mutation. Batch reserves similarly check all selected systems and pending sends.
 `GameState.previousOrders` stores one undo step per player, is part of the optional
-snapshot fields, and is cleared by `nextTurn`. Undo revalidates current reserves.
+snapshot fields, and is cleared by `nextTurn`. Undo revalidates the current garrisons.
 `ArrivalPreview` combines fleets and queued sends by destination and arrival turn;
 wait commands affect the existing fleet rather than adding a second arrival.
 
@@ -929,7 +925,7 @@ Explicit --profiles selections in matrix and multiplayer mode are validated
 against every chosen ruleset before any match. Historical default profile sets
 remain unchanged. The shared `ai.domain.IndustryPolicy` supplies two allocations:
 INDUSTRY_LIGHT and INDUSTRY_ADAPTIVE. They reuse INDUSTRY's military policy and
-consume only own industry, available ships, reserve shortfall and route distance
+consume only own industry, available ships and route distance
 to visible enemies. Unknown threats are not revealed. Integer allocation may be
 zero on very small colonies; no fractional growth or new economic rule is added.
 
@@ -964,9 +960,8 @@ required, with complete system and player keys, in W3 current and replay state.
 Explicit creation records the initial whole-galaxy material, including neutral
 ships; restoration never synthesizes orders, fractions or a new balance.
 
-`RecyclingOrders` validates ownership and the combined dispatch/recycling/reserve
-budget. Single dispatch, batch edits, undo and reserve changes share the same
-reservation. `GameService.planRecycling` validates the round and unsubmitted seat
+`RecyclingOrders` validates ownership and the combined dispatch/recycling
+budget. Single dispatch, batch edits and undo share the same reservation. `GameService.planRecycling` validates the round and unsubmitted seat
 inside `GameRegistry.writeState`; zero cancels or replaces the local order.
 `Recycling.calculate` is pure fixed-point settlement. Seven of ten metal tenths
 return per ship, with empire-wide fractions retained across rounds and reloads.
@@ -1086,7 +1081,7 @@ ownership transition. Missing roles in historical data remain explicitly unknown
 `CombatReadiness` derives deterministic, transient crew-condition buckets from
 stored opening strength, never from survivors or the winner.
 `ProductionFlow` also supplies the net retained production amount used by the
-send dialog, on top of its already reserve-adjusted mode maximum.
+send dialog, on top of its mode maximum.
 
 ## Equal metal candidate: Spaceward 1.2.0-w6
 

@@ -56,7 +56,7 @@ class ResearchCombatTest {
     @Test void conquestKeepsSurvivorGenerationsAndAccountsForPhysicalCombatLosses() {
         var state = ColonyStates.ready(RulesetRef.SPACEWARD_SHIP_RESEARCH);
         state.updateSystem(1, s -> new StarSystem(s.id(), s.name(), s.x(), s.y(), s.ownerId(), s.garrison(),
-                s.productionPerTurn(), false, 0, ShipCohorts.of(20, 12)));
+                s.productionPerTurn(), false, ShipCohorts.of(20, 12)));
         state.start(); state.players().forEach(player -> state.intel().put(player.id(), new java.util.HashMap<>()));
         state.planShipResearch(1, 17); state.planShipResearch(2, 23);
         var fleets = new DefaultFleetService();
@@ -80,7 +80,7 @@ class ResearchCombatTest {
         var state = ColonyStates.ready(RulesetRef.SPACEWARD_SHIP_RESEARCH);
         var mixed = new ShipCohorts(Map.of(0, 8, 2, 4));
         state.updateSystem(1, s -> new StarSystem(s.id(), s.name(), s.x(), s.y(), s.ownerId(), 12,
-                s.productionPerTurn(), false, 0, mixed));
+                s.productionPerTurn(), false, mixed));
         state.start();
         var fleets = new DefaultFleetService();
         assertThat(fleets.sendFleet(state, 1, 1, 2, 5)).isTrue();

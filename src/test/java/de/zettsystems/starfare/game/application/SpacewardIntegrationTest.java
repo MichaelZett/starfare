@@ -91,6 +91,7 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
     }
     @Test void visibleDeliveryMatchesResolutionAndForeignIndustryDoesNotLeak() {
         GameState state = SpacewardStates.running();
+        state.updateSystem(1, system -> system.afterDefense(2));
         fleets.addStandingOrder(state, 1, 1, 3, 7); fleets.addStandingOrder(state, 1, 1, 4, 3);
         economy.allocateExpansion(state, 1, 1, 4);
         var view = views.forPlayer(state, 1); var own = view.systems().getFirst();
@@ -104,10 +105,11 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         Map<Integer, Integer> routed = fleets.applyStandingOrdersForProduction(state);
         assertThat(routed).containsEntry(1, own.industry().nextDelivery());
         economy.produce(state, routed);
-        assertThat(state.getSystem(1).garrison()).isEqualTo(10);
+        assertThat(state.getSystem(1).garrison()).isZero();
     }
-    @Test void queuedLaunchReducesDeliveryPreviewWithoutConsumingTheGarrisonReserve() {
+    @Test void queuedLaunchReducesDeliveryPreview() {
         GameState state = SpacewardStates.running();
+        state.updateSystem(1, system -> system.afterDefense(2));
         fleets.addStandingOrder(state, 1, 1, 3, 7);
         fleets.addStandingOrder(state, 1, 1, 4, 3);
         assertThat(fleets.queueSend(state, 1, 1, 2, 2)).isTrue();
@@ -119,27 +121,7 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         Map<Integer, Integer> routed = fleets.applyStandingOrdersForProduction(state);
         assertThat(routed).containsEntry(1, own.industry().nextDelivery());
         economy.produce(state, routed);
-        assertThat(state.getSystem(1).garrison()).isEqualTo(10);
-    }
-
-    @Test void damagedDefenseRebuildsBelowItsReserveBeforeShippingSurplus() {
-        GameState state = SpacewardStates.running();
-        fleets.addStandingOrder(state, 1, 1, 3, 7);
-        economy.allocateExpansion(state, 1, 1, 4);
-        state.updateSystem(1, system -> system.afterDefense(1));
-        var industry = views.forPlayer(state, 1).systems().getFirst().industry();
-        assertThat(industry.reserveShortfall()).isEqualTo(9);
-        assertThat(industry.nextDelivery()).isZero();
-        Map<Integer, Integer> first = fleets.applyStandingOrdersForProduction(state);
-        assertThat(first.getOrDefault(1, 0)).isZero();
-        economy.produce(state, first);
-        assertThat(state.getSystem(1).garrison()).isEqualTo(7);
-        assertThat(views.forPlayer(state, 1).systems().getFirst().industry().nextDelivery()).isEqualTo(3);
-        Map<Integer, Integer> second = fleets.applyStandingOrdersForProduction(state);
-        assertThat(second).containsEntry(1, 3);
-        economy.produce(state, second);
-        assertThat(state.getSystem(1).garrison()).isEqualTo(10);
-        assertThat(state.getSystem(1).garrisonReserve()).isEqualTo(10);
+        assertThat(state.getSystem(1).garrison()).isZero();
     }
 
     @Test void aiUsesKnownThreatsAndDoesNotReactToHiddenEnemyStrength() {

@@ -114,7 +114,6 @@ class GameArchiveTest extends AbstractIntegrationTest {
         sessions.delete(id);
 
         assertThat(games.sendFleet(id, 1, 1, 2, 1)).isFalse();
-        assertThat(games.setGarrisonReserve(id, 1, 1, 0)).isFalse();
         assertThat(games.addStandingOrder(id, 1, 1, 2, 1)).isFalse();
         assertThat(games.setFleetWait(id, 1, 1)).isFalse();
         assertThat(games.disbandFleet(id, 1, 1)).isFalse();

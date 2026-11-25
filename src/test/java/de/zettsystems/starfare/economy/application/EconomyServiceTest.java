@@ -24,7 +24,7 @@ class EconomyServiceTest {
         economy.produce(state, Map.of());
         assertThat(state.getSystem(1).garrison()).isEqualTo(49);
     }
-    @Test void allocationChangesKeepRoutesAndCompetingTransfersNeverSpendTheReserve() {
+    @Test void allocationChangesKeepRoutesAndServeCompetingTransfers() {
         GameState state = SpacewardStates.running();
         var fleets = new DefaultFleetService();
         assertThat(fleets.addStandingOrder(state, 1, 1, 3, 7)).isPositive();
@@ -33,13 +33,13 @@ class EconomyServiceTest {
         assertThat(fleets.routingCapacity(state, 1, 1)).isEqualTo(6);
         assertThat(fleets.addStandingOrder(state, 1, 1, 3, 7)).isEqualTo(-1);
         Map<Integer, Integer> routed = fleets.applyStandingOrdersForProduction(state);
-        assertThat(routed).containsEntry(1, 8);
-        assertThat(state.fleets()).extracting(Fleet::ships).containsExactly(7, 1);
+        assertThat(routed).containsEntry(1, 10);
+        assertThat(state.fleets()).extracting(Fleet::ships).containsExactly(7, 3);
         economy.produce(state, routed);
-        assertThat(state.getSystem(1).garrison()).isEqualTo(10);
+        assertThat(state.getSystem(1).garrison()).isEqualTo(8);
         assertThat(state.standingOrders().get(1)).hasSize(2);
     }
-    @Test void captureRetainsCapacityAndProgressButRestoresFullShipbuildingAndNoReserve() {
+    @Test void captureRetainsCapacityAndProgressButRestoresFullShipbuilding() {
         GameState state = SpacewardStates.running();
         economy.allocateExpansion(state, 1, 1, 4);
         economy.produce(state, Map.of());
@@ -47,7 +47,6 @@ class EconomyServiceTest {
         state.updateSystem(1, system -> system.captureBy(2, 5));
         assertThat(state.industries()).containsEntry(1, new Industry(10, 0, 8));
         assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(10);
-        assertThat(state.getSystem(1).garrisonReserve()).isZero();
         assertThat(state.getSystem(1).garrison()).isEqualTo(5);
     }
     @Test void allExpansionBuildsNoShipsAndNeutralSystemsDoNotGrow() {

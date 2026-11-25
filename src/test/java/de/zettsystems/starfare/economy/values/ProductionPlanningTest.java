@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ProductionPlanningTest {
     private static IndustryView industry(int capacity, int mining, int expansion, long remaining) {
-        return new IndustryView(capacity, expansion, 0, 20, 0, false, 0, null,
+        return new IndustryView(capacity, expansion, 0, 20, 0, false, null,
                 new MetalView(remaining, 3, mining, 0, Math.min(remaining, mining * 3L), capacity - mining - expansion, 0));
     }
     @Test void autarkSplitsOnlyFreeCapacityAndPreservesExpansion() {
@@ -38,10 +38,10 @@ class ProductionPlanningTest {
         var metal = industry(11, 0, 0, 100);
         assertThat(ProductionPreset.EVEN.apply(metal, ProductionPreset.saved(metal), Set.of()).allocation())
                 .isEqualTo(new AllocationSplit(4, 4, 3));
-        var noMetal = new IndustryView(11, 0, 0, 20, 0, false, 0);
+        var noMetal = new IndustryView(11, 0, 0, 20, 0, false);
         assertThat(ProductionPreset.EVEN.apply(noMetal, ProductionPreset.saved(noMetal), Set.of()).allocation())
                 .isEqualTo(new AllocationSplit(6, 0, 5));
-        var maximum = new IndustryView(EconomyRules.MAX_CAPACITY, 0, 0, 20, 0, false, 0);
+        var maximum = new IndustryView(EconomyRules.MAX_CAPACITY, 0, 0, 20, 0, false);
         assertThat(ProductionPreset.INDUSTRY.apply(maximum, ProductionPreset.saved(maximum), Set.of()).rejection())
                 .isEqualTo(ProductionPreset.Rejection.LIMIT);
     }
@@ -108,7 +108,7 @@ class ProductionPlanningTest {
         assertThat(inputs.forSystem(1, 2, industry).locks()).isEmpty();
     }
     @Test void outcomesSeparatePointsYieldAndActualResults() {
-        var plan = new IndustryView(6, 0, 8, 12, 0, false, 0, null, new MetalView(100, 3, 2, 10, 6, 4, 4));
+        var plan = new IndustryView(6, 0, 8, 12, 0, false, null, new MetalView(100, 3, 2, 10, 6, 4, 4));
         var outcome = ProductionOutcome.of(new AllocationSplit(4, 2, 0), plan);
         assertThat(outcome.ships()).isEqualTo(4);
         assertThat(outcome.metal()).isEqualTo(6);
@@ -116,17 +116,17 @@ class ProductionPlanningTest {
         assertThat(outcome.shipsShort()).isFalse();
         assertThat(outcome.depositLimited()).isFalse();
         var short_ = ProductionOutcome.of(new AllocationSplit(4, 2, 0),
-                new IndustryView(6, 0, 8, 12, 0, false, 0, null, new MetalView(1, 3, 2, 0, 1, 4, 2)));
+                new IndustryView(6, 0, 8, 12, 0, false, null, new MetalView(1, 3, 2, 0, 1, 4, 2)));
         assertThat(short_.shipsShort()).isTrue();
         assertThat(short_.plannedShips()).isEqualTo(4);
         assertThat(short_.ships()).isEqualTo(2);
         assertThat(short_.depositLimited()).isTrue();
         var growth = ProductionOutcome.of(new AllocationSplit(3, 0, 2),
-                new IndustryView(5, 2, 8, 12, 0, false, 0));
+                new IndustryView(5, 2, 8, 12, 0, false));
         assertThat(growth.progress()).isEqualTo(8);
         assertThat(growth.nextProgress()).isEqualTo(10);
         assertThat(growth.cost()).isEqualTo(12);
-        assertThat(ProductionOutcome.of(new AllocationSplit(0, 0, 9), new IndustryView(10, 9, 8, 12, 0, false, 0)).nextProgress()).isEqualTo(12);
+        assertThat(ProductionOutcome.of(new AllocationSplit(0, 0, 9), new IndustryView(10, 9, 8, 12, 0, false)).nextProgress()).isEqualTo(12);
     }
     @Test void metalChangeIsTheRoundedStockDifference() {
         assertThat(new MetalBalance(24, 2, 1, 6, 21).formattedChange()).isEqualTo("(\u22123)");
@@ -135,7 +135,7 @@ class ProductionPlanningTest {
         assertThat(new MetalBalance(24, 2, 1, 6, 21).change()).isEqualTo(-3);
     }
     @Test void shipbuildingIsUsableCapacityMinusExpansion() {
-        assertThat(new IndustryView(10, 3, 0, 20, 0, false, 0).shipbuilding()).isEqualTo(7);
+        assertThat(new IndustryView(10, 3, 0, 20, 0, false).shipbuilding()).isEqualTo(7);
         assertThat(ProductionPreset.saved(industry(10, 3, 2, 100))).isEqualTo(new AllocationSplit(5, 3, 2));
     }
     @Test void presetsUseTheWholeLimitAndNameTheirRejection() {
@@ -146,7 +146,7 @@ class ProductionPlanningTest {
         assertThat(ships.allocation()).isEqualTo(new AllocationSplit(10, 0, 0));
         assertThat(ProductionPreset.SHIPS.apply(current, saved, Set.of(0)).rejection()).isEqualTo(ProductionPreset.Rejection.LOCKED);
         assertThat(ProductionPreset.SHIPS.apply(current, saved, Set.of(0, 1, 2)).rejection()).isEqualTo(ProductionPreset.Rejection.NO_CAPACITY);
-        var noMetal = new IndustryView(10, 0, 0, 20, 0, false, 0);
+        var noMetal = new IndustryView(10, 0, 0, 20, 0, false);
         assertThat(ProductionPreset.SHIPS.apply(noMetal, new AllocationSplit(5, 0, 5), Set.of(1)))
                 .isEqualTo(new ProductionPreset.Result(new AllocationSplit(10, 0, 0), ProductionPreset.Rejection.NONE));
         var two = industry(2, 0, 0, 100);
@@ -160,7 +160,7 @@ class ProductionPlanningTest {
         input.pin(2, true);
         input.adjust(1, 4);
         assertThat(input.allocation()).isEqualTo(new AllocationSplit(4, 4, 2));
-        var maximum = new IndustryView(EconomyRules.MAX_CAPACITY, 5, 0, 100, 0, false, 0);
+        var maximum = new IndustryView(EconomyRules.MAX_CAPACITY, 5, 0, 100, 0, false);
         assertThat(inputs.forSystem(2, 1, maximum).valid()).isFalse();
     }
     @Test void environmentAndAutomationBoundsIncludeTheirLimits() {

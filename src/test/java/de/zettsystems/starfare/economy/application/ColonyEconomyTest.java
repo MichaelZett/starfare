@@ -50,7 +50,6 @@ class ColonyEconomyTest {
         assertThat(state.colonies()).containsEntry(1, colony);
         assertThat(state.industries().get(1).expansionAllocation()).isZero();
         assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(6);
-        assertThat(state.getSystem(1).garrisonReserve()).isZero();
     }
     @Test void neutralColoniesStayStillAndCopiesGrowIndependently() {
         var state = ColonyStates.running();
@@ -81,16 +80,16 @@ class ColonyEconomyTest {
         assertThat(replay.industry().colony().population()).isEqualTo(690);
         assertThat(views.forObserver(state).systems().getFirst().industry().colony().population()).isEqualTo(711);
     }
-    @Test void productionRelocationsRespectLimitedLaborAndGarrisonReserve() {
+    @Test void productionRelocationsRespectLimitedLabor() {
         var state = ColonyStates.running();
         var fleets = new DefaultFleetService();
         assertThat(fleets.addStandingOrder(state, 1, 1, 2, 6)).isPositive();
         assertThat(fleets.addStandingOrder(state, 1, 1, 2, 7)).isEqualTo(-1);
         economy.allocateExpansion(state, 1, 1, 3);
         var shipped = fleets.applyStandingOrdersForProduction(state);
-        assertThat(shipped).containsEntry(1, 5);
+        assertThat(shipped).containsEntry(1, 6);
         economy.produce(state, shipped);
-        assertThat(state.getSystem(1).garrison()).isEqualTo(10);
+        assertThat(state.getSystem(1).garrison()).isEqualTo(9);
         assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(4);
     }
     @ParameterizedTest @EnumSource(AiStrategy.class)

@@ -190,10 +190,6 @@ public class ReviewMapSteps {
         browser.driver().manage().window().setSize(new org.openqa.selenium.Dimension(1366, 768));
     }
 
-    private void openSystemDetails(String selector) {
-        browser.clickCss(selector + " > vaadin-details-summary");
-    }
-
     private void switchLanguage(String option, String selected) {
         if (!browser.hasOwnLanguageSwitch()) {
             browser.switchLanguage(option);
@@ -250,13 +246,9 @@ public class ReviewMapSteps {
         open(first);
         browser.type("#map .sys-own", Keys.ENTER);
         browser.awaitCss(".system-metric");
-        openSystemDetails(".system-operations");
-        WebElement reserve = browser.type(".map-right vaadin-integer-field input", Keys.chord(Keys.CONTROL, "a"), "3");
-        broadcaster.publish(new de.zettsystems.starfare.game.application.GameEvent.PlayerSubmitted(first.id(), 99));
         browser.clickButtonWithText("Vergrößern");
         new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ ->
                 Double.parseDouble(String.valueOf(js().executeScript("return document.querySelector('#map').style.zoom"))) > 1);
-        assertThat(reserve.getDomProperty("value")).isEqualTo("3");
         browser.clickTabWithText("Flotten");
         WebElement filter = visibleRouteFilter();
         filter.sendKeys("Alpha");

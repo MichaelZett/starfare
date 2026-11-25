@@ -54,24 +54,9 @@ public final class OrderPlanning {
                         || ships <= 0 || from == to
                         || Routes.plan(state, player, from, to).isEmpty()) { return false; }
                 long total = committed.merge(from, (long) ships, Long::sum);
-                if (total + state.recyclingShips(source.id()) > source.availableShips()) { return false; }
+                if (total + state.recyclingShips(source.id()) > source.garrison()) { return false; }
             }
         }
-        return true;
-    }
-
-    public static boolean reserves(GameState state, int player, List<Integer> systems, int reserve, boolean production) {
-        if (systems.isEmpty() || reserve < 0 || systems.stream().anyMatch(id -> state.systems().stream()
-                .noneMatch(system -> system.id() == id && Objects.equals(system.ownerId(), player)))) { return false; }
-        for (int id : systems) {
-            var system = state.getSystem(id);
-            int desired = production ? system.productionPerTurn() : reserve;
-            long committed = state.pendingOrders().getOrDefault(player, List.of()).stream()
-                    .filter(order -> order instanceof FleetOrder.Send send && send.fromSystemId() == id)
-                    .mapToLong(order -> ((FleetOrder.Send) order).ships()).sum();
-            if (committed + state.recyclingShips(id) > Math.max(0L, system.garrison() - (long) desired)) { return false; }
-        }
-        systems.forEach(id -> state.updateSystem(id, system -> system.reserveGarrison(production ? system.productionPerTurn() : reserve)));
         return true;
     }
 }

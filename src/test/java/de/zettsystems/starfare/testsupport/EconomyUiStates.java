@@ -23,7 +23,7 @@ public final class EconomyUiStates {
         state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
         state.players().addAll(List.of(new Player(1, "Industrialist", false, "#56b4e9"),
                 new Player(2, "Opponent", false, "#d55e00")));
-        state.systems().add(new StarSystem(1, "Alpha", 400, 350, 1, 12, 10, false, 10));
+        state.systems().add(new StarSystem(1, "Alpha", 400, 350, 1, 12, 10, false));
         state.systems().add(new StarSystem(2, "Beta", 800, 350, 1, 3, 4, false));
         state.systems().add(new StarSystem(3, "Enemy", 2800, 1600, 2, 100, 8, false));
         for (int system = 4; system <= 8; system++) {

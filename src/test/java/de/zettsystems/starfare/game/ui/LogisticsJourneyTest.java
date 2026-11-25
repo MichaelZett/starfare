@@ -5,7 +5,6 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.textfield.IntegerField;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
@@ -84,16 +83,11 @@ class LogisticsJourneyTest extends AbstractMapJourneyTest {
     }
 
     @Test
-    void idleShipsHintGoesAwayWhenAHigherReserveMakesThemIntentional() {
+    void tutorialPointsAtShipsBeyondOneRoundOfProduction() {
         createReviewGame(true);
         assertThat(find(Component.class).withClassName(TutorialMark.CLASS_NAME).all()).hasSize(1);
         assertThat(idleShipsHint("Beta")).contains("3");
         assertThat(idleShipsHint("Alpha")).isEmpty();
-        select("Beta");
-        details("system-operations").setOpened(true);
-        test(find(IntegerField.class).single()).setValue(1);
-        click("Reserve speichern");
-        assertThat(idleShipsHint("Beta")).isEmpty();
     }
 
     private java.util.Optional<String> idleShipsHint(String system) {
@@ -102,7 +96,7 @@ class LogisticsJourneyTest extends AbstractMapJourneyTest {
     }
 
     @Test
-    void systemDetailsAndReserveSurviveSelectionAndSavingInBothLanguages() {
+    void systemDetailsSurviveSelectionInBothLanguages() {
         createReviewGame();
         select("Alpha");
         assertThat(text("app-header-empire")).isEqualTo("Host Empire");
@@ -119,14 +113,6 @@ class LogisticsJourneyTest extends AbstractMapJourneyTest {
         select("Beta");
         assertThat(details("system-operations").isOpened()).isTrue();
         assertThat(details("system-background").isOpened()).isTrue();
-        assertThat(find(IntegerField.class).single().getValue()).isZero();
-        test(find(IntegerField.class).single()).setValue(1);
-        click("Reserve speichern");
-        assertThat(view().systems().stream().filter(system -> system.id() == 2).findFirst().orElseThrow().garrisonReserve()).isEqualTo(1);
-        assertThat(details("system-operations").isOpened()).isTrue();
-        test(find(IntegerField.class).single()).setValue(0);
-        click("Reserve speichern");
-        assertThat(view().systems().stream().filter(system -> system.id() == 2).findFirst().orElseThrow().garrisonReserve()).isZero();
     }
 
     private void toggleMode() {

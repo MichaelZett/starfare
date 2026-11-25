@@ -148,7 +148,6 @@ public class SmokeSteps {
         browser.clickCss(".sys-action-source");
         browser.awaitCss(".system-metric[aria-label^='Garnison']");
         browser.awaitCss(".system-metric[aria-label^='Produktion']");
-        browser.awaitCss(".system-metric[aria-label*='reserve']");
         browser.clickButtonWithText("Verlegung anlegen");
         browser.awaitText("Ziel auf der Karte auswählen");
         browser.clickButtonWithText("Zielwahl abbrechen");

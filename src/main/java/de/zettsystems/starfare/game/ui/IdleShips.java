@@ -6,8 +6,7 @@ import java.util.OptionalInt;
 
 /**
  * Free ships worth a quiet hint on the map: more than the system builds in one round, because
- * freshly built ships are not idle yet. Reserve and planned flights are already deducted, so a
- * higher reserve is how a player says the ships stay on purpose.
+ * freshly built ships are not idle yet. Planned flights are already deducted.
  */
 final class IdleShips {
 

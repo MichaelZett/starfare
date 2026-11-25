@@ -16,7 +16,6 @@ public record LogisticsSystemSummary(
         int plannedIncoming,
         int plannedOutgoing,
         int currentShips,
-        int reserve,
         int availableShips,
         int nextDelivery,
         boolean deliveryBottleneck
@@ -61,7 +60,7 @@ public record LogisticsSystemSummary(
             ProductionFlow flow = ProductionFlow.at(system.id(), orders);
             summaries.put(system.id(), new LogisticsSystemSummary(system.id(), valueOrZero(system.productionPerTurn()),
                     flow.incoming(), flow.outgoing(), valueOrZero(system.garrison()),
-                    valueOrZero(system.garrisonReserve()), valueOrZero(system.availableShips()),
+                    valueOrZero(system.availableShips()),
                     deliveredByTarget.getOrDefault(system.id(), 0),
                     bottleneckBySource.getOrDefault(system.id(), false)));
         }

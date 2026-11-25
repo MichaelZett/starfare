@@ -125,17 +125,6 @@ class FleetServiceTest {
         assertThat(state.pendingOrders().get(1)).hasSize(2);
     }
 
-    @Test
-    void garrisonReserveCannotBeQueuedOrSent() {
-        state.updateSystem(1, system -> system.reserveGarrison(4));
-
-        assertThat(service.queueSend(state, 1, 1, 2, 6)).isTrue();
-        assertThat(service.queueSend(state, 1, 1, 2, 1)).isFalse();
-        assertThat(service.sendFleet(state, 1, 1, 2, 7)).isFalse();
-        assertThat(service.sendFleet(state, 1, 1, 2, 6)).isTrue();
-        assertThat(state.getSystem(1).garrison()).isEqualTo(4);
-    }
-
     // --- queueWait ---
 
     @Test
@@ -343,32 +332,6 @@ class FleetServiceTest {
         assertThat(routed).containsEntry(1, 2);
         assertThat(state.fleets()).hasSize(1);
         assertThat(state.standingOrders().get(1)).hasSize(1); // kept
-    }
-
-    @Test
-    void routingKeepsTheGarrisonReserveWhenProductionIsGone() {
-        state.updateSystem(1, system -> system.reserveGarrison(8));
-        service.addStandingOrder(state, 1, 1, 2, 2);
-        state.updateSystem(1, system -> new StarSystem(system.id(), system.name(), system.x(), system.y(),
-                system.ownerId(), system.garrison(), 0, system.neutral(), system.garrisonReserve()));
-
-        var routed = service.applyStandingOrdersForProduction(state);
-
-        assertThat(routed).containsEntry(1, 2);
-        state.updateSystem(1, system -> system.produceAndRoute(routed.getOrDefault(1, 0)));
-        assertThat(state.getSystem(1).garrison()).isEqualTo(8);
-    }
-
-    @Test
-    void routingRefillsAnUndershotReserveBeforeSendingProduction() {
-        state.updateSystem(1, system -> new StarSystem(system.id(), system.name(), system.x(), system.y(),
-                system.ownerId(), 4, 3, system.neutral(), 8));
-        service.addStandingOrder(state, 1, 1, 2, 3);
-
-        var routed = service.applyStandingOrdersForProduction(state);
-
-        assertThat(routed).isEmpty();
-        assertThat(state.fleets()).isEmpty();
     }
 
     @Test

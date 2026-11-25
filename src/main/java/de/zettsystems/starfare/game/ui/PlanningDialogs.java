@@ -138,23 +138,6 @@ final class PlanningDialogs {
         return available != null && available >= ships;
     }
 
-    void reserves() {
-        Dialog dialog = dialog(UiTexts.PLAN_RESERVES);
-        MultiSelectComboBox<VisibleSystem> systems = sources();
-        IntegerField amount = amount();
-        amount.setMin(0);
-        amount.setValue(0);
-        Checkbox production = new Checkbox(I18n.t(UiTexts.PLAN_KEEP_PRODUCTION));
-        production.addValueChangeListener(event -> amount.setEnabled(!event.getValue()));
-        Button save = new Button(I18n.t(UiTexts.PLAN_SAVE), _ -> {
-            Integer reserve = amount.getValue();
-            finish(dialog, reserve != null && games.setReserves(id, player, view.turn(),
-                    systems.getValue().stream().map(VisibleSystem::id).toList(), reserve, production.getValue()));
-        });
-        dialog.add(systems, production, amount, new Paragraph(I18n.t(UiTexts.PLAN_RESERVE_HINT)));
-        footer(dialog, save);
-    }
-
     private ComboBox<VisibleSystem> targets() {
         ComboBox<VisibleSystem> target = new ComboBox<>(I18n.t(UiTexts.PLAN_TARGET));
         target.setItems(view.systems());

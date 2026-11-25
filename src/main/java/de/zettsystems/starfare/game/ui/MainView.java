@@ -124,7 +124,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 this::refresh,
                 this::onFleetRowSelected, this::onStandingOrderSelected, this::onReportSystemSelected,
                 this::onResolvedBattleSelected,
-                this::setGarrisonReserve,
                 this::selectFleetTarget,
                 this::selectRelocationTarget,
                 this::cancelTargetSelectionAndRefresh);
@@ -156,7 +155,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
             }
             refresh();
-        }), iconAction(VaadinIcon.LOCK, UiTexts.PLAN_RESERVES, () -> planningDialogs().reserves()));
+        }));
         actionBar.addClassName("map-controls");
         actionBar.add(treatyActions, planningActions);
         fleetsPanel.setActions(actionBar);
@@ -315,7 +314,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private void openEconomicSystem(int id, int section) {
         var view = viewForCurrentMode();
         if (view == null) { return; }
-        view.systems().stream().filter(system -> system.id() == id && system.garrisonReserve() != null).findFirst().ifPresent(system -> {
+        view.systems().stream().filter(system -> system.id() == id && system.availableShips() != null).findFirst().ifPresent(system -> {
             selectedSystem = system; cancelTargetSelection(); highlightedFleetId = null;
             mapCanvas.centerOn(system.x(), system.y()); fleetsPanel.showDetails(); refresh(); fleetsPanel.openProduction(section);
         });
@@ -409,15 +408,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             refresh();
         }
         return result;
-    }
-
-    private void setGarrisonReserve(int systemId, int reserve) {
-        int pid = currentSeat();
-        if (pid < 0 || !game.setGarrisonReserve(gameId, pid, systemId, reserve)) {
-            Notification.show(I18n.t(UiTexts.MAP_INVALID_COMMAND));
-            return;
-        }
-        refresh();
     }
 
     private void deleteStandingOrder(StandingOrderView order) {

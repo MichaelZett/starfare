@@ -93,7 +93,7 @@ previous AI behavior and is the default for new seats and older saved games.
 Rush commits ships early; Expansion favors nearby neutral systems; Concentration
 moves spare forces toward the front; Defense keeps larger local reserves. Industry
 invests heavily, Light industry retains more shipbuilding, and Adaptive industry
-adjusts investment to visible threats, available ships and reserve shortages.
+adjusts investment to visible threats and available ships.
 These are different approaches, not difficulty levels or a guaranteed ranking.
 
 Selections survive changes to the AI count, the confirmation/back step, reloads,
@@ -145,7 +145,7 @@ Who played whom and the result stay in the platform's statistics.
 
 Map controls provide zoom, whole-galaxy and own-empire views. **Map help** contains
 reset and the legend. Narrow sidebars use a labelled **View** selector for the same
-seven sections. Bulk send, bulk reserves and undo remain directly available at
+seven sections. Bulk send and undo remain directly available at
 the top of the sidebar. The **game chat** belongs to the platform: its button sits in the
 platform's strip above the map and in the waiting room, on phones as well. Starfare only says
 who may read and write: everyone who holds or held a seat reads the chat; only those still
@@ -155,10 +155,10 @@ Focusable map objects and action cards accept Enter and Space. Background update
 preserve unchanged input controls and focus. In the own start, **My account** leads to
 lobby and archive; imprint and privacy share a footer.
 
-System details put sendable ships, total garrison, reserve and forecast ship
+System details put sendable ships, total garrison and forecast ship
 production per round above the send and relocation actions, followed by the
-system diagram. **Logistics & reserve** (or **Colony & logistics**) expands rates,
-arrivals, colony data and reserve editing. **Background** expands descriptions,
+system diagram. **Logistics** (or **Colony & logistics**) expands rates,
+arrivals and colony data. **Background** expands descriptions,
 environment values and ownership history. Expanded sections stay open across
 updates and system selections while their data follows the selected system.
 
@@ -178,8 +178,8 @@ fleet can return to an owned garrison. Action clicks retain the current tab.
 The Fleets tab aggregates your fleets and queued sends by destination and arrival
 turn, including waits. Use **Edit order** to change a queued send's destination or
 amount. **Undo last order change** reverses your most recent queue change in the
-same round, including after a reload or server restart. It cannot override a newer
-garrison reserve or undo a resolved turn.
+same round, including after a reload or server restart. It cannot undo a resolved
+turn.
 
 Select a foreign system or one of your flying fleets on the map, and each of your
 systems with ships to spare shows the round a fleet sent from there now would arrive
@@ -188,9 +188,8 @@ to a fleet already on its way, or the earliest own arrival at the system, the ba
 marks arriving together (✓), too early by n rounds (`+n ⏸`) or later. **Send
 together** above the target opens the joint send with the target and the systems
 arriving together preselected; it previews arrivals per round before queuing the
-batch. **Set reserves together** retains a fixed amount or one round
-of production, capped at the current garrison. Both actions validate the entire
-selection and reject stale turns or unavailable ships without partial changes.
+batch. It validates the entire selection and rejects stale turns or unavailable
+ships without partial changes.
 
 With battle speed **Instant**, **Resolve all open battles** acknowledges the complete
 round. Speed, sound, report/logistics filters, route search and sidebar width are
@@ -257,7 +256,7 @@ presence panel, chat, language switcher and a per-user visibility menu.*
 
 *Send-fleet dialog: ship slider with quick buttons (half / double / all /
 all except production), travel-time preview, optional "as production transfer"
-mode. A configurable garrison reserve stays at the source system.*
+mode.*
 
 Starfare keeps no statistics of its own: at the first end of a game it announces
 the places to the platform (`MatchEnded`, games-platform-api), whose statistics
@@ -403,8 +402,8 @@ Dialogs fill the screen with their buttons fixed at the bottom.
 1. Right-click your source system, or select it and choose **Send fleet**.
 2. Click the target system.
 3. Set the ship count via slider or input field. Quick buttons:
-   **Half**, **Double**, **All** (available ships after reserves and queued sends),
-   and **All except production**, which retains the nonnegative net flow of production + incoming − outgoing transfers in addition to the reserve. Incoming ships still travel normally.
+   **Half**, **Double**, **All** (available ships after queued sends),
+   and **All except production**, which retains the nonnegative net flow of production + incoming − outgoing transfers. Incoming ships still travel normally.
 4. **Send fleet**.
 
 The order lands in **Orders** in the right-hand sidebar. Before submitting your
@@ -578,7 +577,7 @@ accounts in the private lobby, and automatic navigation after wizard creation.
 Economy journeys also cover colony growth, mining and shortages, recycling,
 production presets and relocation trimming, the Spaceward wizard and ship research,
 including saved allocations and historical review.
-Map journeys cover fleet actions, bulk dispatch and reserves, editing and undo,
+Map journeys cover fleet actions, bulk dispatch, editing and undo,
 saved filters after a new sign-in, rematches, relocation limits, station routes
 and coalition ownership, concealed results and persistent battle acknowledgements.
 Game-end journeys cover alliance proposals, notice periods and departures with two
@@ -654,7 +653,7 @@ assigned by largest fractional remainder, then by system ID. Unused metal stays
 in stock; unused capacity creates no debt. Industry expansion consumes no metal.
 
 Regular dispatch uses existing ships first. Production relocations follow actual
-construction and retain permanent garrison reserves. Growth and expanded industry
+construction and may draw on the garrison. Growth and expanded industry
 only contribute to the following round. The system panel shows the saved plan's
 forecast across the empire; every completed change is saved immediately.
 Deposits survive conquest without replenishment; empire stock remains with its
@@ -718,7 +717,7 @@ Strategies are intentionally small, contrasting policies:
 | DEFENSE | Keep a larger reserve and strongly prefer lower-risk targets. |
 | INDUSTRY | Spaceward only: invest two thirds of capacity away from known nearby enemies, one fifth near them; consolidate idle forces. |
 | INDUSTRY_LIGHT | Spaceward only, explicit selection: invest one quarter of capacity when visible enemies are more than two travel rounds away; use the same military policy as INDUSTRY. |
-| INDUSTRY_ADAPTIVE | Spaceward only, explicit selection: stop investing near visible enemies or with insufficient available ships/reserve; otherwise invest one quarter near the front or one half in the rear, capped at the next expansion's remaining cost. |
+| INDUSTRY_ADAPTIVE | Spaceward only, explicit selection: stop investing near visible enemies or with insufficient available ships; otherwise invest one quarter near the front or one half in the rear, capped at the next expansion's remaining cost. |
 
 Use `--profiles=EXPANSION,CONCENTRATION,INDUSTRY,INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE`
 to compare selected profiles in `matrix` or `multiplayer` mode. Matrix mode needs

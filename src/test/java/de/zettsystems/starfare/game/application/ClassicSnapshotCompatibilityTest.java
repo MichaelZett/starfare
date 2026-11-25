@@ -68,7 +68,6 @@ class ClassicSnapshotCompatibilityTest extends AbstractIntegrationTest {
         assertThat(state.combatRandomnessPercent()).isEqualTo(10);
         assertThat(state.battlePresentationEnabled()).isTrue();
         assertThat(state.players().getFirst().empireNameOrName()).isEqualTo("Fixture Alpha");
-        assertThat(state.systems()).extracting(StarSystem::garrisonReserve).containsOnly(0);
         assertThat(state.intel().get(1)).containsEntry(3, new GameState.Intel(2, 2, null));
         assertThat(state.standingOrders().get(1)).containsExactly(new StandingOrder(1, 1, 1, 2, 0));
         assertThat(state.pendingOrders().get(1)).containsExactly(

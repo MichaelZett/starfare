@@ -14,20 +14,20 @@ class OrderPlanningTest {
     private final GameState state = new GameState();
 
     OrderPlanningTest() {
-        state.systems().addAll(List.of(new StarSystem(1, "A", 0, 0, 1, 20, 3, false, 5),
+        state.systems().addAll(List.of(new StarSystem(1, "A", 0, 0, 1, 15, 3, false),
                 new StarSystem(2, "B", 100, 0, 1, 10, 4, false),
                 new StarSystem(3, "C", 200, 0, 2, 10, 2, false)));
     }
 
     @Test
-    void batchIsAtomicAndRespectsOwnershipCapacityAndReserve() {
+    void batchIsAtomicAndRespectsOwnershipAndCapacity() {
         assertThat(OrderPlanning.dispatch(state, 1, 3, List.of(new FleetDispatch(1, 5), new FleetDispatch(2, 11)))).isFalse();
         assertThat(state.pendingOrders()).isEmpty();
         assertThat(OrderPlanning.dispatch(state, 1, 2, List.of(new FleetDispatch(3, 1)))).isFalse();
         assertThat(OrderPlanning.dispatch(state, 1, 3, List.of(new FleetDispatch(1, 16)))).isFalse();
         assertThat(OrderPlanning.dispatch(state, 1, 3, List.of(new FleetDispatch(1, 15), new FleetDispatch(2, 10)))).isTrue();
         assertThat(state.pendingOrders().get(1)).hasSize(2);
-        assertThat(state.getSystem(1).garrison()).isEqualTo(20);
+        assertThat(state.getSystem(1).garrison()).isEqualTo(15);
     }
 
     @Test
@@ -78,26 +78,5 @@ class OrderPlanningTest {
         assertThat(restored.pendingOrders().get(2)).hasSize(1);
         restored.nextTurn();
         assertThat(restored.undoOrders(2)).isFalse();
-    }
-
-    @Test
-    void reserveBatchRejectsForeignSystemAndConflictingQueuedShips() {
-        assertThat(OrderPlanning.reserves(state, 1, List.of(1, 3), 7, false)).isFalse();
-        assertThat(state.getSystem(1).garrisonReserve()).isEqualTo(5);
-        assertThat(OrderPlanning.dispatch(state, 1, 3, List.of(new FleetDispatch(1, 15)))).isTrue();
-        assertThat(OrderPlanning.reserves(state, 1, List.of(1, 2), 8, false)).isFalse();
-        assertThat(state.getSystem(2).garrisonReserve()).isZero();
-        assertThat(OrderPlanning.reserves(state, 1, List.of(1, 2), 0, true)).isTrue();
-        assertThat(state.getSystem(1).garrisonReserve()).isEqualTo(3);
-        assertThat(state.getSystem(2).garrisonReserve()).isEqualTo(4);
-    }
-
-    @Test
-    void undoDoesNotOverruleANewerReserve() {
-        assertThat(OrderPlanning.dispatch(state, 1, 3, List.of(new FleetDispatch(1, 15)))).isTrue();
-        assertThat(OrderPlanning.replace(state, 1, List.of())).isTrue();
-        assertThat(OrderPlanning.reserves(state, 1, List.of(1), 20, false)).isTrue();
-        assertThat(state.undoOrders(1)).isFalse();
-        assertThat(state.pendingOrders().get(1)).isEmpty();
     }
 }

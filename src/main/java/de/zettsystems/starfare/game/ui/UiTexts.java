@@ -115,7 +115,7 @@ public final class UiTexts {
     public static final String UX_BACKGROUND = "ux.background";
     public static final String SYSTEM_SENDABLE_SHIPS = "system.sendableShips";
     public static final String SYSTEM_PRODUCTION_RATE = "system.productionRate";
-    public static final String SYSTEM_LOGISTICS_RESERVE = "system.logisticsReserve";
+    public static final String SYSTEM_LOGISTICS = "system.logistics";
     public static final String SYSTEM_COLONY_LOGISTICS = "system.colonyLogistics";
     public static final String SYSTEM_DELIVERY_BOTTLENECK = "system.deliveryBottleneck";
     public static final String UX_CANCEL_RECYCLING = "ux.cancel.recycling";
@@ -228,7 +228,7 @@ public final class UiTexts {
     public static final String MAP_LOGISTICS_SOURCE = "map.logistics.source";
     public static final String MAP_LOGISTICS_SINK = "map.logistics.sink";
     public static final String MAP_LOGISTICS_BALANCED = "map.logistics.balanced";
-    public static final String MAP_LOGISTICS_RESERVE_AVAILABLE = "map.logistics.reserveAvailable";
+    public static final String MAP_LOGISTICS_AVAILABLE = "map.logistics.available";
     public static final String MAP_LOGISTICS_PER_TURN = "map.logistics.perTurn";
     public static final String MAP_SIDEBAR_REPORT = "map.sidebar.report";
     public static final String MAP_SIDEBAR_DETAILS_EMPTY = "map.sidebar.detailsEmpty";
@@ -643,8 +643,6 @@ public final class UiTexts {
     public static final String GAME_OUTCOME_PERSONAL_DEFEAT = "gameOutcome.personalDefeat";
     public static final String GAME_OUTCOME_REVIEW = "gameOutcome.review";
     public static final String GAME_OUTCOME_LOBBY = "gameOutcome.lobby";
-    public static final String MAP_SIDEBAR_GARRISON_RESERVE = "map.sidebar.garrisonReserve";
-    public static final String MAP_SIDEBAR_GARRISON_RESERVE_SAVE = "map.sidebar.garrisonReserve.save";
     public static final String MAP_ZOOM_IN = "map.zoomIn";
     public static final String MAP_ZOOM_OUT = "map.zoomOut";
     public static final String MAP_RESET = "map.reset";
@@ -668,13 +666,10 @@ public final class UiTexts {
     public static final String PLAN_ARRIVALS = "plan.arrivals";
     public static final String PLAN_ARRIVAL = "plan.arrival";
     public static final String PLAN_DISPATCH = "plan.dispatch";
-    public static final String PLAN_RESERVES = "plan.reserves";
     public static final String PLAN_UNDO = "plan.undo";
     public static final String PLAN_TARGET = "plan.target";
     public static final String PLAN_SOURCES = "plan.sources";
     public static final String PLAN_ALL_AVAILABLE = "plan.allAvailable";
-    public static final String PLAN_KEEP_PRODUCTION = "plan.keepProduction";
-    public static final String PLAN_RESERVE_HINT = "plan.reserveHint";
     public static final String PLAN_REJECTED = "plan.rejected";
     public static final String PLAN_ACK_ALL = "plan.ackAll";
     public static final String PLAN_TEMPLATE = "plan.template";

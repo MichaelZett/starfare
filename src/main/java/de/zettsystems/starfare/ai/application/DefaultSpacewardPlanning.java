@@ -99,7 +99,7 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
                     && !Objects.equals(contact.ownerId(), player.id()) && !state.allied(player.id(), contact.ownerId())
                     && state.travelRounds(system.id(), contact.id()) <= 2);
             int shortage = metal.plannedShips() - metal.actualShips();
-            int surplus = Math.max(0, state.getSystem(system.id()).availableShips() - RecyclingRules.AI_REAR_GARRISON);
+            int surplus = Math.max(0, state.getSystem(system.id()).garrison() - RecyclingRules.AI_REAR_GARRISON);
             int ships = threatened || shortage <= 0 ? 0 : Math.min(surplus, Math.ceilDiv(shortage * RecyclingRules.METAL_SCALE, RecyclingRules.RETURN_TENTHS));
             de.zettsystems.starfare.economy.domain.RecyclingOrders.plan(state, player.id(), system.id(), ships);
         }
@@ -112,7 +112,7 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
     private static void sendFrom(GameState state, FleetService fleets, Player player,
                                  VisibleSystem base, PlayerViewState view) {
         var system = state.getSystem(base.id());
-        int available = Math.max(0, system.availableShips() - state.recyclingShips(base.id()) - Math.max(1, system.productionPerTurn()));
+        int available = Math.max(0, system.garrison() - state.recyclingShips(base.id()) - Math.max(1, system.productionPerTurn()));
         if (available == 0) { return; }
         view.systems().stream().filter(s -> !Objects.equals(s.ownerId(), player.id()) && !state.allied(player.id(), s.ownerId()))
                 .filter(target -> Routes.plan(state, player.id(), base.id(), target.id()).isPresent())

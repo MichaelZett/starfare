@@ -12,6 +12,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Die Varianten heißen jetzt **SectorForces klassisch** und **SectorForces erweitert** (bisher
   „SectorForces“ und „Spaceward“). Regeln, gespeicherte Partien und die Stufe Alpha der erweiterten
   Regeln bleiben unverändert.
+- **Garnisonsreserve entfällt:** Die Reserve je System, das Feld in den Systemdetails und der Dialog
+  „Reserven gesammelt setzen“ fallen weg. Versendbar ist jetzt die ganze Garnison abzüglich bereits
+  vorgemerkter Sendungen; Produktionsverlegungen dürfen in beiden Regelwerken auf die ganze Garnison
+  zugreifen. **Alle außer Produktion** bleibt. Gespeicherte Partien mit einer Reserve laden weiter, die
+  Reserve wird dabei verworfen.
 
 ## 0.2.18 - 2026-11-24
 

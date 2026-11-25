@@ -26,7 +26,7 @@ public final class Recycling {
             int planned = orders.getOrDefault(system.id(), 0);
             Integer owner = system.ownerId();
             if (planned == 0 || owner == null || system.neutral()) { continue; }
-            if (planned > system.availableShips()) { throw new IllegalArgumentException("Recycling exceeds available garrison"); }
+            if (planned > system.garrison()) { throw new IllegalArgumentException("Recycling exceeds available garrison"); }
             long recovered = (long) planned * RecyclingRules.RETURN_TENTHS + Objects.requireNonNull(fractions.get(owner));
             stocks.merge(owner, recovered / RecyclingRules.METAL_SCALE, Math::addExact);
             fractions.put(owner, (int) (recovered % RecyclingRules.METAL_SCALE));

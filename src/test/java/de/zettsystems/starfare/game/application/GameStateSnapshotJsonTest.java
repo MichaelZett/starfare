@@ -225,13 +225,15 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void systemJsonWithoutGarrisonReserveStillLoads() {
-        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(sampleState()));
-        ((ObjectNode) json.get("systems").get(0)).remove("garrisonReserve");
+    void systemJsonWithTheRemovedGarrisonReserveStillLoads() {
+        GameState state = sampleState();
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+        assertThat(json.get("systems").get(0).has("garrisonReserve")).isFalse();
+        ((ObjectNode) json.get("systems").get(0)).put("garrisonReserve", 3);
 
         GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
 
-        assertThat(restored.systems().getFirst().garrisonReserve()).isZero();
+        assertThat(restored.systems()).isEqualTo(state.systems());
     }
 
     @Test

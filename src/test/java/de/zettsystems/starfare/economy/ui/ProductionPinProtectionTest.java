@@ -16,7 +16,7 @@ class ProductionPinProtectionTest {
     @Test
     void historicalIndustryWithoutMetalsKeepsLocalPinsWithoutCallingMiningAutomation() {
         var calls = new AtomicInteger();
-        var industry = new IndustryView(10, 0, 0, 5, 0, false, 0);
+        var industry = new IndustryView(10, 0, 0, 5, 0, false);
         Checkbox pin = shipPin(industry, calls);
         pin.setValue(true);
         assertThat(pin.getValue()).isTrue();
@@ -26,7 +26,7 @@ class ProductionPinProtectionTest {
     @Test
     void metalIndustryNotifiesPersistentProtectionWhenItsShipbuildingIsPinned() {
         var calls = new AtomicInteger();
-        var industry = new IndustryView(10, 0, 0, 5, 0, false, 0, null,
+        var industry = new IndustryView(10, 0, 0, 5, 0, false, null,
                 new MetalView(100, 3, 0, 0, 0, 10, 0));
         shipPin(industry, calls).setValue(true);
         assertThat(calls.get()).isEqualTo(1);

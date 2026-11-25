@@ -1142,7 +1142,7 @@ html[data-gp-game="starfare"] {
 .logistics-system-direction { color: var(--sf-accent); font-size: .88rem; }
 .logistics-metrics { display: flex; flex-wrap: wrap; gap: .35rem; }
 .logistics-metric { padding: .2rem .42rem; border-radius: 999px; background: var(--sf-contrast-10); font-size: .85rem; }
-.logistics-system-reserve { color: var(--sf-text-muted); font-size: .82rem; }
+.logistics-system-available { color: var(--sf-text-muted); font-size: .82rem; }
 .logistics-routes { display: grid; gap: .45rem; }
 .logistics-route-card { cursor: pointer; grid-template-columns: 1fr auto; }
 .logistics-route-card:hover { border-color: var(--sf-accent); }

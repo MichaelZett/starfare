@@ -33,7 +33,7 @@ public class DefaultFleetService implements FleetService {
             return false;
         }
         int committed = committedShipsFrom(state, playerId, fromId) + state.recyclingShips(fromId);
-        if (from.availableShips() - committed < ships) {
+        if (from.garrison() - committed < ships) {
             return false;
         }
         state.rememberOrders(playerId);
@@ -91,7 +91,7 @@ public class DefaultFleetService implements FleetService {
                 || state.destroyed(toId)) {
             return false;
         }
-        if (ships <= 0 || from.availableShips() - state.recyclingShips(fromId) < ships || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
+        if (ships <= 0 || from.garrison() - state.recyclingShips(fromId) < ships || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
             return false;
         }
         state.updateSystem(fromId, current -> current.launchFleet(ships));
@@ -256,7 +256,7 @@ public class DefaultFleetService implements FleetService {
         // abzueglich dessen, was fruehere Verlegungen desselben Systems schon nehmen.
         if (Routes.plan(state, playerId, o.fromSystemId(), o.toSystemId()).isEmpty()) { return; }
         int alreadyRouted = routed.getOrDefault(o.fromSystemId(), 0);
-        int available = from.garrison() + (state.ruleset().usesMetals() ? 0 : from.productionPerTurn()) - from.garrisonReserve() - alreadyRouted;
+        int available = from.garrison() + (state.ruleset().usesMetals() ? 0 : from.productionPerTurn()) - alreadyRouted;
         int ships = Math.clamp(o.ships(), 0, Math.max(0, available));
         if (ships <= 0) {
             return;

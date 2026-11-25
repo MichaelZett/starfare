@@ -42,6 +42,6 @@ class IdleShipsTest {
 
     private static VisibleSystem system(Integer free, Integer production) {
         return new VisibleSystem(1, "Alpha", 0, 0, 1, 20, production, true, "#abc", null, false,
-                0, 0, free, List.of());
+                0, free, List.of());
     }
 }

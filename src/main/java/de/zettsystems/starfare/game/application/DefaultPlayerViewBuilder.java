@@ -94,9 +94,9 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             String color = owner != null ? playerById(state, owner).colorHex() : null;
             return new VisibleSystem(system.id(), system.name(), system.x(), system.y(), owner,
                     system.garrison(), metalForecast == null ? Integer.valueOf(system.productionPerTurn()) : metalForecast.ships().getOrDefault(system.id(), 0), true, color, frame.turn(), false,
-                    null, system.garrisonReserve(), system.availableShips(), ownershipHistory(state, system.id()),
-                    metalIndustry(industryView(frame.industries(), frame.colonies(), state.ruleset(), system, system.availableShips(), 0),
-                            metalForecast, system, system.availableShips(), 0, 0));
+                    null, system.garrison(), ownershipHistory(state, system.id()),
+                    metalIndustry(industryView(frame.industries(), frame.colonies(), state.ruleset(), system, system.garrison(), 0),
+                            metalForecast, system, system.garrison(), 0, 0));
         }).toList();
         List<Fleet> ownFleets = frame.fleets().stream().filter(fleet -> fleet.ownerId() == playerId).toList();
         TurnReport report = frame.reports().getOrDefault(playerId, new TurnReport(frame.turn(), List.of()));
@@ -115,9 +115,9 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             return new VisibleSystem(
                     s.id(), s.name(), s.x(), s.y(),
                     ownerId, s.garrison(), metalForecast == null ? Integer.valueOf(s.productionPerTurn()) : metalForecast.ships().getOrDefault(s.id(), 0),
-                    true, color, turn, false, null, s.garrisonReserve(), s.availableShips(), ownershipHistory(state, s.id()),
-                    metalIndustry(industryView(state.industries(), state.colonies(), state.ruleset(), s, s.availableShips(), 0),
-                            metalForecast, s, s.availableShips(), 0, 0));
+                    true, color, turn, false, null, s.garrison(), ownershipHistory(state, s.id()),
+                    metalIndustry(industryView(state.industries(), state.colonies(), state.ruleset(), s, s.garrison(), 0),
+                            metalForecast, s, s.garrison(), 0, 0));
         }).toList();
     }
 
@@ -241,10 +241,9 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 production,
                 own, color, lastSeen, inRange,
                 own ? routedBySystem.getOrDefault(s.id(), 0) : null,
-                own ? s.garrisonReserve() : null,
-                own ? Math.max(0, s.availableShips() - committedBySystem.getOrDefault(s.id(), 0)) : null,
+                own ? Math.max(0, s.garrison() - committedBySystem.getOrDefault(s.id(), 0)) : null,
                 own ? ownershipHistory(state, s.id()) : List.of(),
-                own ? industryView(state, s, playerId, Math.max(0, s.availableShips()
+                own ? industryView(state, s, playerId, Math.max(0, s.garrison()
                         - committedBySystem.getOrDefault(s.id(), 0)), routedBySystem.getOrDefault(s.id(), 0), metalForecast) : null);
     }
 
@@ -264,7 +263,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
             return metalIndustry(base, metalForecast, system, available, reachable, planned);
         }
         return new IndustryView(base.capacity(), base.expansionAllocation(), base.expansionProgress(),
-                base.expansionCost(), base.nextDelivery(), base.nextDelivery() < planned, base.reserveShortfall(), base.colony());
+                base.expansionCost(), base.nextDelivery(), base.nextDelivery() < planned, base.colony());
     }
 
     private static @Nullable IndustryView industryView(@Nullable Map<Integer, Industry> industries,
@@ -272,15 +271,14 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                                                         RulesetRef rules, StarSystem system, int available, int routed) {
         Industry industry = industries == null ? null : industries.get(system.id());
         if (industry == null) { return null; }
-        int shortfall = Math.max(0, system.garrisonReserve() - system.garrison());
-        int delivery = Math.clamp(available + (long) system.productionPerTurn() - shortfall, 0, routed);
+        int delivery = Math.clamp(available + (long) system.productionPerTurn(), 0, routed);
         var saved = colonies == null ? null : colonies.get(system.id());
         int nextPopulation = 0;
         if (saved != null) { nextPopulation = system.neutral() ? saved.colony().population() : saved.grow().colony().population(); }
         var colony = saved == null ? null : new de.zettsystems.starfare.economy.values.ColonyView(
                 saved.quality(), saved.colony().population(), nextPopulation, rules.limitsIndustryByLabor());
         return new IndustryView(industry.capacity(), industry.expansionAllocation(), industry.expansionProgress(),
-                industry.expansionCost(rules), delivery, delivery < routed, shortfall, colony, null, 0,
+                industry.expansionCost(rules), delivery, delivery < routed, colony, null, 0,
                 rules.usesShipResearch() ? system.composition() : null);
     }
 
@@ -305,9 +303,9 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 recyclingShips, available + recyclingShips, fraction);
         var metal = new MetalView(deposit.remaining() + extracted,
                 deposit.yieldPerPoint(), mining, stock, extracted, planned, actual, recycleView);
-        int delivery = Math.clamp(available + (long) actual - base.reserveShortfall(), 0, routed);
+        int delivery = Math.clamp(available + (long) actual, 0, routed);
         return new IndustryView(base.capacity(), base.expansionAllocation(), base.expansionProgress(), base.expansionCost(),
-                delivery, delivery < expectedDelivery, base.reserveShortfall(), base.colony(), metal, reserved, base.composition());
+                delivery, delivery < expectedDelivery, base.colony(), metal, reserved, base.composition());
     }
 
     private static List<SystemOwnership> ownershipHistory(GameState state, int systemId) {

@@ -22,7 +22,6 @@ class GameServiceSubmitTurnTest extends AbstractIntegrationTest {
         assertThat(game.dispatchFleets(id, 1, turn, 3, dispatch)).isTrue();
         assertThat(game.submitTurn(id, 1)).isTrue();
         assertThat(game.undoOrders(id, 1, turn)).isFalse();
-        assertThat(game.setReserves(id, 1, turn, java.util.List.of(1), 1, false)).isFalse();
     }
 
     @Autowired

@@ -394,8 +394,7 @@ final class SendFleetDialog {
             return;
         }
         int remaining = Math.max(0, availableShips(context.from()) - ships);
-        consequence.setText(I18n.t(UiTexts.MAP_SEND_FLEET_PREVIEW, ships, travelTurns, remaining,
-                reserveOf(context.from())));
+        consequence.setText(I18n.t(UiTexts.MAP_SEND_FLEET_PREVIEW, ships, travelTurns, remaining));
         updateCapacityFill(capacityFill, ships, availableShips(context.from()));
     }
 
@@ -415,11 +414,6 @@ final class SendFleetDialog {
     private static int availableShips(VisibleSystem system) {
         Integer available = system.availableShips();
         return available == null ? 0 : available;
-    }
-
-    private static int reserveOf(VisibleSystem system) {
-        Integer reserve = system.garrisonReserve();
-        return reserve == null ? 0 : reserve;
     }
 
     private static void setAmountEnablement(DialogControls c, boolean canSend) {

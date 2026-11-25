@@ -51,7 +51,6 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
             assertThat(games.planRecycling(id, 1, 1, 1, 1)).isFalse();
             assertThat(games.diplomacyOrder(id, HOST, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 0))).isFalse();
             assertThat(games.sendFleet(id, 1, 1, 1, 2, 1, 1)).isFalse();
-            assertThat(games.setGarrisonReserve(id, 1, 1, 1)).isFalse();
         }
         assertThat(registry.readState(lobby, GameState::started)).isFalse();
     }
@@ -67,14 +66,11 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
         assertThat(games.planShipResearch(id, HOST, 1, 0, -1)).isFalse();
         assertThat(games.planShipResearch(id, HOST, 1, 0, 101)).isFalse();
         assertThat(games.planShipResearch(id, HOST, 1, 0, 50)).as("SectorForces has no research").isFalse();
-        assertThat(games.setGarrisonReserve(id, seat, own, -1)).isFalse();
-        assertThat(games.setGarrisonReserve(id, seat, foreign, 1)).isFalse();
-        assertThat(games.setGarrisonReserve(id, seat, 9_999, 1)).as("an unknown system").isFalse();
+        assertThat(games.sendFleet(id, seat, foreign, own, 1)).as("from a foreign system").isFalse();
+        assertThat(games.sendFleet(id, seat, 9_999, own, 1)).as("from an unknown system").isFalse();
         assertThat(games.removeStandingOrder(id, seat, 1)).as("no relocation yet").isFalse();
         assertThat(games.removeStandingOrderFrom(id, seat, own)).as("no relocation yet").isFalse();
         assertThat(snapshot(id)).isEqualTo(before);
-
-        assertThat(games.setGarrisonReserve(id, seat, own, 1)).as("the own system").isTrue();
     }
 
     @Test
@@ -97,7 +93,6 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
         assertThat(games.editOrder(id, seat, staleRound, planned, target, 1)).isFalse();
         assertThat(games.undoOrders(id, seat, staleRound)).isFalse();
         assertThat(games.dispatchFleets(id, seat, staleRound, target, List.of())).isFalse();
-        assertThat(games.setReserves(id, seat, staleRound, List.of(own), 1, false)).isFalse();
         assertThat(games.allocateExpansion(id, seat, staleRound, own, 0)).isFalse();
         assertThat(games.planRecycling(id, seat, staleRound, own, 1)).isFalse();
         assertThat(snapshot(id)).isEqualTo(before);

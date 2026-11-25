@@ -134,7 +134,7 @@ class ProductionPreviewTest extends AbstractIntegrationTest {
         var state = directEconomy();
         var fleets = new de.zettsystems.starfare.fleet.application.DefaultFleetService();
         assertThat(fleets.addStandingOrder(state, 1, 2, 1, 2)).isPositive();
-        assertThat(state.getSystem(1).availableShips()).isPositive();
+        assertThat(state.getSystem(1).garrison()).isPositive();
         save(state);
         var result = games.commitProduction(id, "preview-owner", new ProductionAllocation(1, 1, 6, 0, saved()));
         assertThat(result.relocations()).extracting(RelocationAdjustment::after).containsExactlyInAnyOrder(4, 2);

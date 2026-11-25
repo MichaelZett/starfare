@@ -10,10 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EconomyIssuesTest {
     private static VisibleSystem system(int id, int owner, boolean visible, IndustryView industry) {
         return new VisibleSystem(id, "System " + id, 0, 0, owner, 10, 2, visible, "#abc", null, false,
-                0, 0, 10, List.of(), industry);
+                0, 10, List.of(), industry);
     }
     @Test void sharedShortageIsOneGroupAndMultipleReasonsStayOnOneSystem() {
-        var shortage = new IndustryView(10, 0, 0, 20, 2, true, 0, null, new MetalView(1, 3, 2, 0, 1, 8, 1));
+        var shortage = new IndustryView(10, 0, 0, 20, 2, true, null, new MetalView(1, 3, 2, 0, 1, 8, 1));
         var systems = List.of(system(3, 1, true, shortage), system(1, 1, true, shortage), system(2, 1, true, shortage));
         var issues = EconomyIssues.forSystems(systems, 1, Set.of(), Set.of());
         assertThat(issues).extracting(issue -> issue.system().id()).containsExactly(1, 2, 3);
@@ -22,36 +22,36 @@ class EconomyIssuesTest {
         assertThat(issues.stream().filter(issue -> issue.reasons().contains(EconomyIssues.Kind.METAL)).count()).isEqualTo(3);
     }
     @Test void researchReservationsAreNotMissingWorkers() {
-        var research = new IndustryView(10, 0, 0, 20, 0, false, 0, null, null, 5, null);
+        var research = new IndustryView(10, 0, 0, 20, 0, false, null, null, 5, null);
         assertThat(EconomyIssues.forSystems(List.of(system(1, 1, true, research)), 1, Set.of(), Set.of())).isEmpty();
     }
     @Test void ownershipVisibilityAndPendingBattlesProtectAggregation() {
-        var shortage = new IndustryView(10, 0, 0, 20, 0, false, 0, null, new MetalView(0, 3, 0, 0, 0, 10, 0));
+        var shortage = new IndustryView(10, 0, 0, 20, 0, false, null, new MetalView(0, 3, 0, 0, 0, 10, 0));
         var systems = List.of(system(1, 1, true, shortage), system(2, 2, true, shortage), system(3, 1, false, shortage));
         assertThat(EconomyIssues.forSystems(systems, 1, Set.of(), Set.of())).hasSize(1);
         assertThat(EconomyIssues.forSystems(systems, 1, Set.of(2), Set.of())).isEmpty();
     }
     @Test void zeroMiningAndDeliberatelyZeroShipbuildingAreNotWarnings() {
-        var quiet = new IndustryView(10, 10, 0, 20, 0, false, 0, null, new MetalView(0, 3, 0, 0, 0, 0, 0));
+        var quiet = new IndustryView(10, 10, 0, 20, 0, false, null, new MetalView(0, 3, 0, 0, 0, 0, 0));
         var systems = List.of(system(1, 1, true, quiet));
         assertThat(EconomyIssues.forSystems(systems, 1, Set.of(), Set.of())).isEmpty();
         assertThat(EconomyIssues.forSystems(systems, 1, Set.of(), Set.of(1)).getFirst().reasons())
                 .containsExactly(EconomyIssues.Kind.DELIVERY);
     }
     @Test void issuesAreSortedByNameBeforeId() {
-        var shortage = new IndustryView(10, 0, 0, 20, 0, false, 0, null, new MetalView(0, 3, 0, 0, 0, 10, 0));
-        var beta = new VisibleSystem(1, "Beta", 0, 0, 1, 10, 2, true, "#abc", null, false, 0, 0, 10, List.of(), shortage);
-        var alpha = new VisibleSystem(2, "Alpha", 0, 0, 1, 10, 2, true, "#abc", null, false, 0, 0, 10, List.of(), shortage);
+        var shortage = new IndustryView(10, 0, 0, 20, 0, false, null, new MetalView(0, 3, 0, 0, 0, 10, 0));
+        var beta = new VisibleSystem(1, "Beta", 0, 0, 1, 10, 2, true, "#abc", null, false, 0, 10, List.of(), shortage);
+        var alpha = new VisibleSystem(2, "Alpha", 0, 0, 1, 10, 2, true, "#abc", null, false, 0, 10, List.of(), shortage);
         assertThat(EconomyIssues.forSystems(List.of(beta, alpha), 1, Set.of(), Set.of()))
                 .extracting(issue -> issue.system().name()).containsExactly("Alpha", "Beta");
     }
     @Test void depositExactlyCoveringTheMiningAndLaborEqualToCapacityAreNoIssues() {
-        var covered = new IndustryView(10, 0, 0, 20, 0, false, 0, null, new MetalView(6, 3, 2, 0, 6, 8, 8));
+        var covered = new IndustryView(10, 0, 0, 20, 0, false, null, new MetalView(6, 3, 2, 0, 6, 8, 8));
         var quality = new SystemQuality(SystemComposition.StarType.YELLOW, 1, 1, SystemComposition.BodyType.ROCKY, false,
                 SystemQuality.Atmosphere.TEMPERATE, 3);
-        var staffed = new IndustryView(10, 0, 0, 20, 0, false, 0, new ColonyView(quality, 1000, 1000, true));
+        var staffed = new IndustryView(10, 0, 0, 20, 0, false, new ColonyView(quality, 1000, 1000, true));
         assertThat(EconomyIssues.forSystems(List.of(system(1, 1, true, covered), system(2, 1, true, staffed)), 1, Set.of(), Set.of())).isEmpty();
-        var understaffed = new IndustryView(10, 0, 0, 20, 0, false, 0, new ColonyView(quality, 999, 1000, true));
+        var understaffed = new IndustryView(10, 0, 0, 20, 0, false, new ColonyView(quality, 999, 1000, true));
         assertThat(EconomyIssues.forSystems(List.of(system(1, 1, true, understaffed)), 1, Set.of(), Set.of()).getFirst().reasons())
                 .containsExactly(EconomyIssues.Kind.LABOR);
     }
