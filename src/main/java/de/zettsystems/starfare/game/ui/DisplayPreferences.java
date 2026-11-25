@@ -26,8 +26,10 @@ final class DisplayPreferences {
         values = new EnumMap<>(DisplaySetting.class);
         if (settings != null && !account.isBlank()) {
             var keys = Arrays.stream(DisplaySetting.values()).map(DisplaySetting::name).toList();
-            settings.values(StarfareMatches.GAME_KEY, keys)
-                    .forEach((key, value) -> values.put(DisplaySetting.valueOf(key), value));
+            // Only the keys asked for count: a value kept for a setting that no longer exists is ignored.
+            settings.values(StarfareMatches.GAME_KEY, keys).forEach((key, value) -> {
+                if (keys.contains(key)) { values.put(DisplaySetting.valueOf(key), value); }
+            });
         }
     }
 

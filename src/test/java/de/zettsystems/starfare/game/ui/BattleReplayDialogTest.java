@@ -18,7 +18,7 @@ class BattleReplayDialogTest extends AbstractBrowserlessTest {
     @Test
     void eachSideShowsItsLabelIdentityShipsAndScaledMarkers() {
         BattleReplayDialog.open(new BattleReplay("Alpha", 20, 4, 15, 0),
-                new BattleReplayDialog.BattleSides("Du", ""), () -> { });
+                new BattleReplayDialog.BattleSides("Du", ""), null, () -> { });
         Dialog dialog = openedDialog();
         assertThat(dialog.getHeaderTitle()).isEqualTo("Schlacht bei Alpha");
 
@@ -42,7 +42,7 @@ class BattleReplayDialogTest extends AbstractBrowserlessTest {
     @Test
     void smallFleetsGetOneMarkerPerShipAndAnEmptySideKeepsOneMarker() {
         BattleReplayDialog.open(new BattleReplay("Beta", 3, 0, 3, 0),
-                new BattleReplayDialog.BattleSides("", "Neutrales System"), () -> { });
+                new BattleReplayDialog.BattleSides("", "Neutrales System"), "3", () -> { });
         Dialog dialog = openedDialog();
 
         Div attacker = side(dialog, "battle-attacker");
@@ -52,13 +52,27 @@ class BattleReplayDialogTest extends AbstractBrowserlessTest {
         assertThat(find(Span.class, defender).withClassName("battle-identity").single().getText()).isEqualTo("Neutrales System");
         assertThat(number(defender).getText()).isEqualTo("0");
         assertThat(markers(defender)).hasSize(1);
+        assertThat(find(Div.class, dialog).withClassName("battle-replay-production").single().getText())
+                .isEqualTo("Produktion von Beta: 3 je Runde");
+    }
+
+    @Test
+    void offersSoundAndSpeedButNoSoundTestAndLeavesOutAnUnknownProduction() {
+        BattleReplayDialog.open(new BattleReplay("Delta", 4, 2, 3, 0),
+                new BattleReplayDialog.BattleSides("Du", "Gegner"), null, () -> { });
+        Dialog dialog = openedDialog();
+
+        assertThat(find(Button.class, dialog).all()).extracting(Button::getText).containsExactly("Ergebnis übernehmen");
+        assertThat(find(com.vaadin.flow.component.checkbox.Checkbox.class, dialog).single().getLabel()).isEqualTo("Kampfgeräusche");
+        assertThat(find(com.vaadin.flow.component.combobox.ComboBox.class, dialog).single().getLabel()).isEqualTo("Geschwindigkeit");
+        assertThat(find(Div.class, dialog).withClassName("battle-replay-production").all()).isEmpty();
     }
 
     @Test
     void acknowledgingClosesTheReplayAndReportsIt() {
         AtomicInteger acknowledged = new AtomicInteger();
         BattleReplayDialog.open(new BattleReplay("Gamma", 5, 5, 0, 2),
-                new BattleReplayDialog.BattleSides("Gegner", "Du"), acknowledged::incrementAndGet);
+                new BattleReplayDialog.BattleSides("Gegner", "Du"), null, acknowledged::incrementAndGet);
         Dialog dialog = openedDialog();
 
         test(find(Button.class, dialog).withText("Ergebnis übernehmen").single()).click();

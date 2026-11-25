@@ -148,14 +148,10 @@ class PrivateGameLifecycleTest extends AbstractBrowserlessTest {
     }
 
     private void chooseSidebarSections() {
-        selectTab("Kontakte");
-        assertThat(viewText()).contains("Noch keine Feinderkenntnisse.");
         selectTab("Details");
         assertThat(viewText()).contains("System oder Flotte auf der Karte auswählen.");
         selectTab("Flotten");
         assertThat(viewText()).contains("Eigene Flotten");
-        selectTab("Befehle");
-        assertThat(viewText()).contains("Geplante Befehle");
         selectTab("Verlegungen");
         assertThat(viewText()).contains("Produktionsverlegungen");
         selectTab("Bericht");

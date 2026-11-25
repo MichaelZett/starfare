@@ -31,7 +31,7 @@ class BulkPlanningJourneyTest extends AbstractMapJourneyTest {
                 .contains("Gamma · Runde");
         dialogClick("Flotten gesammelt senden");
         assertThat(view().plannedOrders()).allMatch(order -> Integer.valueOf(1).equals(order.ships()));
-        assertTab("Befehle");
+        assertTab("Flotten");
         assertThat(view().plannedOrders()).hasSize(2);
         cardAction("fleet-travel-card-planned", "Alpha → Gamma", "Befehl bearbeiten");
         selectTarget("Beta");

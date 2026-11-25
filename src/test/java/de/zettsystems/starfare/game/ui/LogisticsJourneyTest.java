@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.details.Details;
@@ -33,8 +34,8 @@ class LogisticsJourneyTest extends AbstractMapJourneyTest {
         assertAmount(20, 20);
         dialogClick("Hälfte");
         assertAmount(10, 20);
-        dialogClick("Doppelt");
-        assertAmount(20, 20);
+        assertThat(find(Button.class, openedDialog()).all()).extracting(Button::getText)
+                .contains("Alle", "Alle außer Produktion").doesNotContain("Doppelt");
         toggleMode();
         assertAmount(5, 5);
         dialogClick("Alle");
@@ -44,8 +45,8 @@ class LogisticsJourneyTest extends AbstractMapJourneyTest {
         assertAmount(20, 20);
         dialogClick("Verlegung speichern");
         assertThat(view().standingOrders()).singleElement().satisfies(route -> assertThat(route.ships()).isEqualTo(20));
-        selectTab("Logistik");
-        assertThat(text("logistics-route-card")).contains("20");
+        selectTab("Verlegungen");
+        assertThat(text("fleet-travel-card-relocation")).contains("Alpha → Beta", "20");
         assertIncomingFlowAndEditing();
     }
 

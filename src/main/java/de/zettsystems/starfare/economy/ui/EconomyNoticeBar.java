@@ -7,7 +7,7 @@ import de.zettsystems.starfare.i18n.I18n;
 import java.util.List;
 import java.util.function.Consumer;
 
-/** Compact problem groups; each opens the filtered logistics list. */
+/** Compact problem groups; each opens the filtered issue list in the system details. */
 public final class EconomyNoticeBar extends Div {
     public EconomyNoticeBar() { addClassName("economy-notices"); }
     public void show(List<EconomyIssues.Issue> issues, Consumer<EconomyIssues.Kind> open) {

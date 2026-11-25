@@ -5,7 +5,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.details.Details;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
@@ -24,7 +23,6 @@ import de.zettsystems.starfare.report.values.TurnReport;
 import de.zettsystems.starfare.style.CssProperties;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -37,21 +35,15 @@ import de.zettsystems.starfare.economy.values.EconomyIssues;
 /** Switchable right-hand map sidebar that keeps the map context visible. */
 final class FleetAndOrdersPanel extends VerticalLayout {
 
-    private enum Section { CONTACTS, DETAILS, FLEETS, ORDERS, RELOCATIONS, LOGISTICS, REPORT }
+    private enum Section { DETAILS, FLEETS, RELOCATIONS, REPORT }
 
     private enum EventCategory { COALITION, PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD }
 
-    private enum LogisticsFilter { NET_INFLOW, FREE_CAPACITY, DELIVERY_BOTTLENECK, NO_OUTGOING_ROUTE }
-
-    private final VerticalLayout contactsPage = page();
     private final VerticalLayout detailsPage = page();
     private final VerticalLayout fleetsPage = page();
-    private final VerticalLayout ordersPage = page();
     private final VerticalLayout relocationsPage = page();
-    private final VerticalLayout logisticsPage = page();
     private final VerticalLayout reportPage = page();
-    private final List<VerticalLayout> pages = List.of(contactsPage, detailsPage, fleetsPage, ordersPage,
-            relocationsPage, logisticsPage, reportPage);
+    private final List<VerticalLayout> pages = List.of(detailsPage, fleetsPage, relocationsPage, reportPage);
     private final Tabs tabs;
     private final Div navigation = new Div();
     private final ComboBox<Section> compactNavigation = new ComboBox<>();
@@ -75,7 +67,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private @Nullable IndustryPanel industryPanel;
     private EconomyIssues.@Nullable Kind economyFilter;
     private boolean economyFiltered;
-    private boolean sortByYield;
+    private boolean yieldRankingOpened;
     private BiConsumer<Integer, Integer> onEconomySelected = (_, _) -> { };
     void onEconomySelected(BiConsumer<Integer, Integer> action) { onEconomySelected = action; }
     void openProduction(int index) {
@@ -85,11 +77,12 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 .map(Details.class::cast).filter(details -> details.hasClassName("system-operations"))
                 .forEach(details -> details.setOpened(true)); }
     }
+    /** The economy issue list of the advanced rules takes the place of the system details until cleared. */
     void showEconomy(EconomyIssues.Kind kind) {
         economyFilter = kind; economyFiltered = true;
         var view = currentView;
-        if (view != null) { renderLogistics(view); }
-        showLogistics();
+        if (view != null) { renderDetails(view, false); lastDetails = null; }
+        select(Section.DETAILS);
     }
     private boolean battlePresentationEnabled;
     private @Nullable GameId gameId;
@@ -97,7 +90,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private @Nullable Integer selectedFleetId;
     private @Nullable Integer selectedStandingOrderId;
     private final EnumSet<EventCategory> enabledEventCategories = EnumSet.allOf(EventCategory.class);
-    private final EnumSet<LogisticsFilter> enabledLogisticsFilters = EnumSet.noneOf(LogisticsFilter.class);
     private final IntConsumer onReportSystemSelected;
     private final IntConsumer onResolvedBattleSelected;
     private final IntConsumer onStandingOrderSelected;
@@ -110,13 +102,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final BattleAcknowledgements acknowledgements;
     private @Nullable Integer selectedReportSystemId;
     private final IntConsumer onFleetRowSelected;
-    private IntConsumer onRouteStationSelected = _ -> { };
+    private IntConsumer onSystemSelected = _ -> { };
     private Runnable onDiplomacySelected = () -> { };
     private boolean diplomacyAvailable;
     private java.util.Set<Integer> alliedOwners = java.util.Set.of();
     void alliedOwners(java.util.Set<Integer> owners) { alliedOwners = owners; }
     void diplomacyAvailable(boolean available) { diplomacyAvailable = available; }
-    void onRouteStationSelected(IntConsumer action) { onRouteStationSelected = action; }
+    void onSystemSelected(IntConsumer action) { onSystemSelected = action; }
     void onDiplomacySelected(Runnable action) { onDiplomacySelected = action; }
     private final Consumer<PlannedOrder> onCancelOrder;
     private String routeFilter = "";
@@ -144,10 +136,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (!events.equals("*")) {
             enabledEventCategories.removeIf(category -> !List.of(events.split(",")).contains(category.name()));
         }
-        String logistics = DisplayPreferences.get(de.zettsystems.starfare.game.values.DisplaySetting.LOGISTICS_FILTERS, "");
-        for (LogisticsFilter filter : LogisticsFilter.values()) {
-            if (List.of(logistics.split(",")).contains(filter.name())) { enabledLogisticsFilters.add(filter); }
-        }
     }
 
     // Each change writes only its own filter: the others may still show what this map read when it was
@@ -162,13 +150,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.EVENT_FILTERS,
                 events.isEmpty() ? NO_EVENT_CATEGORY : events);
     }
-
-    private void saveLogisticsFilters() {
-        DisplayPreferences.choose(de.zettsystems.starfare.game.values.DisplaySetting.LOGISTICS_FILTERS,
-                enabledLogisticsFilters.stream().map(Enum::name).collect(java.util.stream.Collectors.joining(",")));
-    }
     private final VerticalLayout fleetCards = page();
-    private final VerticalLayout orderCards = page();
     private final VerticalLayout relocationCards = page();
     private final List<TextField> routeFilters = new java.util.ArrayList<>();
     private @Nullable Object lastDetails;
@@ -178,7 +160,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private boolean systemOperationsOpened;
     private boolean systemBackgroundOpened;
     private @Nullable Object lastTravel;
-    private @Nullable Object lastLogistics;
     private @Nullable Object lastReport;
 
     FleetAndOrdersPanel(BattleAcknowledgements acknowledgements,
@@ -213,12 +194,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         addClassName("map-right");
 
         sectionTabs = List.of(
-                tab(UiTexts.MAP_SIDEBAR_CONTACTS),
                 tab(UiTexts.MAP_SIDEBAR_DETAILS),
                 tab(UiTexts.MAP_SIDEBAR_FLEETS),
-                tab(UiTexts.MAP_SIDEBAR_ORDERS),
                 tab(UiTexts.MAP_SIDEBAR_RELOCATIONS),
-                tab(UiTexts.MAP_SIDEBAR_LOGISTICS),
                 tab(UiTexts.MAP_SIDEBAR_REPORT));
         reportTab = sectionTabs.getLast();
         tabs = new Tabs();
@@ -240,10 +218,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         Div compactRow = new Div(compactNavigation);
         compactRow.addClassName("map-sidebar-compact");
         navigation.add(tabs, compactRow);
-        add(navigation, contactsPage, detailsPage, fleetsPage, ordersPage, relocationsPage, logisticsPage, reportPage);
-        showSection(Section.CONTACTS);
+        add(navigation, detailsPage, fleetsPage, relocationsPage, reportPage);
+        showSection(Section.DETAILS);
         fleetsPage.add(header(UiTexts.MAP_OWN_FLEETS), routeFilter(), fleetCards);
-        ordersPage.add(header(UiTexts.MAP_PLANNED_ORDERS), routeFilter(), orderCards);
         relocationsPage.add(header(UiTexts.MAP_STANDING_ORDERS_HEADER), routeFilter(), relocationCards);
     }
 
@@ -272,16 +249,14 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         Object travel = java.util.Arrays.asList(view.turn(), view.ownFleets(), view.plannedOrders(),
                 view.standingOrders(), view.waitingFleetIds(), readOnly, fleetId, standingOrderId);
         if (!travel.equals(lastTravel)) { renderTravelCards(view); lastTravel = travel; }
-        renderContacts(view);
         Integer detailOwner = selectedSystem == null ? null : selectedSystem.ownerId();
         boolean industryLocked = detailOwner != null && view.roundStatus().hasSubmitted(detailOwner);
         Object details = java.util.Arrays.asList(gameId, selectedSystem, fleetId, view.ownFleets(), view.plannedOrders(),
                 view.empire(), automatedSystems, protectedSystems,
                 view.waitingFleetIds(), view.standingOrders(), view.turn(), industryLocked, view.roundStatus(), readOnly, targetSelectionActive,
-                selectedSystem != null && isBattlePending(selectedSystem.id()));
+                selectedSystem != null && isBattlePending(selectedSystem.id()), economyFiltered, economyFilter,
+                economyFiltered ? view.systems() : List.of());
         if (!details.equals(lastDetails)) { renderDetails(view, targetSelectionActive); lastDetails = details; }
-        Object logistics = List.of(view.systems(), view.standingOrders(), readOnly, automatedSystems, protectedSystems);
-        if (!logistics.equals(lastLogistics)) { renderLogistics(view); lastLogistics = logistics; }
         Object reportState = java.util.Arrays.asList(report, battlePresentationEnabled,
                 report == null ? List.of() : pendingBattleIndices(report.events()));
         if (!reportState.equals(lastReport)) { renderReport(view); lastReport = reportState; }
@@ -313,60 +288,22 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         addComponentAsFirst(actions);
     }
 
-    void showOrders() {
-        select(Section.ORDERS);
+    void showFleets() {
+        select(Section.FLEETS);
     }
 
     void showReport() {
         select(Section.REPORT);
     }
 
+    /** Something was selected to look at: its details replace a shown economy issue list. */
     void showDetails() {
+        economyFiltered = false;
         select(Section.DETAILS);
     }
 
     void showRelocations() {
         select(Section.RELOCATIONS);
-    }
-
-    void showLogistics() {
-        select(Section.LOGISTICS);
-    }
-
-    private void renderLogistics(PlayerViewState view) {
-        logisticsPage.removeAll();
-        if (economyFiltered) { renderEconomyList(view); return; }
-        logisticsPage.add(header(UiTexts.MAP_SIDEBAR_LOGISTICS),
-                new Paragraph(I18n.t(UiTexts.MAP_LOGISTICS_INTRO)));
-        Map<Integer, LogisticsSystemSummary> summaries = LogisticsSystemSummary.forSystems(view.systems(),
-                view.standingOrders());
-        addLogisticsFilters();
-        boolean mining = view.systems().stream().anyMatch(system -> metalOf(system) != null);
-        if (mining && !readOnly) {
-            logisticsPage.add(new Button(I18n.t(UiTexts.MINING_TITLE), _ -> onMining.run()));
-        }
-        if (mining) { addYieldSort(); }
-        java.util.Comparator<VisibleSystem> ranking = (left, right) -> Integer.compare(logisticsPriority(right, summaries),
-                logisticsPriority(left, summaries));
-        if (mining && sortByYield) { ranking = yieldOrder().thenComparing(ranking); }
-        List<VisibleSystem> ownSystems = view.systems().stream()
-                .filter(VisibleSystem::fullyVisible)
-                .filter(system -> summaries.containsKey(system.id()))
-                .filter(system -> matchesLogisticsFilters(logisticsSummary(summaries, system.id())))
-                .sorted(ranking)
-                .toList();
-        if (ownSystems.isEmpty()) {
-            logisticsPage.add(new Paragraph(I18n.t(UiTexts.MAP_LOGISTICS_EMPTY)));
-            return;
-        }
-        ownSystems.forEach(system -> logisticsPage.add(logisticsSystemCard(system,
-                logisticsSummary(summaries, system.id()))));
-        if (!view.standingOrders().isEmpty()) {
-            Div routes = new Div();
-            routes.addClassName("logistics-routes");
-            view.standingOrders().forEach(order -> routes.add(logisticsRouteCard(order)));
-            logisticsPage.add(header(UiTexts.MAP_LOGISTICS_ROUTES), routes);
-        }
     }
 
     private void renderEconomyList(PlayerViewState view) {
@@ -380,13 +317,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 .sorted(java.util.Comparator.comparing(VisibleSystem::name).thenComparingInt(VisibleSystem::id)).toList();
         String key = de.zettsystems.starfare.economy.ui.EconomyNoticeBar.key(Objects.requireNonNull(economyFilter));
         Button clear = new Button(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.CLEAR), _ -> {
-            economyFiltered = false; var current = currentView; if (current != null) { renderLogistics(current); }
+            economyFiltered = false; var current = currentView; if (current != null) { renderDetails(current, false); lastDetails = null; }
         });
-        logisticsPage.add(new H2(I18n.t(key, shown.size())), clear);
+        detailsPage.add(new H2(I18n.t(key, shown.size())), clear);
         int section = 0;
         if (economyFilter == EconomyIssues.Kind.DEPOSIT) { section = 1; }
         if (economyFilter == EconomyIssues.Kind.LABOR) { section = -1; }
-        for (var system : shown) { logisticsPage.add(economyIssueCard(view, system, Optional.ofNullable(issueMap.get(system.id())), section)); }
+        for (var system : shown) { detailsPage.add(economyIssueCard(view, system, Optional.ofNullable(issueMap.get(system.id())), section)); }
     }
 
     private Div economyIssueCard(PlayerViewState view, VisibleSystem system, Optional<EconomyIssues.Issue> issue, int section) {
@@ -405,7 +342,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                 : de.zettsystems.starfare.economy.ui.ProductionKeys.CHANGE), _ -> onEconomySelected.accept(system.id(), section)));
         if (issue.map(candidate -> candidate.reasons().contains(EconomyIssues.Kind.DELIVERY)).orElse(false)) {
             view.standingOrders().stream().filter(order -> order.fromSystemId() == system.id())
-                    .forEach(order -> card.add(logisticsRouteCard(order)));
+                    .forEach(order -> card.add(relocationCard(order)));
             view.ownFleets().stream().filter(fleet -> fleet.toSystemId() == system.id())
                     .filter(fleet -> { var journey = fleet.journey(); return journey != null && journey.blocked(); })
                     .forEach(fleet -> card.add(new Button(I18n.t(UiTexts.MAP_OWN_FLEETS), _ -> onFleetRowSelected.accept(fleet.globalId()))));
@@ -413,54 +350,32 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return card;
     }
 
-    private void addLogisticsFilters() {
-        VerticalLayout filters = new VerticalLayout();
-        filters.setPadding(false);
-        filters.setSpacing(false);
-        addLogisticsFilter(filters, LogisticsFilter.NET_INFLOW, UiTexts.MAP_LOGISTICS_FILTER_NET_INFLOW);
-        addLogisticsFilter(filters, LogisticsFilter.FREE_CAPACITY, UiTexts.MAP_LOGISTICS_FILTER_FREE_CAPACITY);
-        addLogisticsFilter(filters, LogisticsFilter.DELIVERY_BOTTLENECK, UiTexts.MAP_LOGISTICS_FILTER_BOTTLENECK);
-        addLogisticsFilter(filters, LogisticsFilter.NO_OUTGOING_ROUTE, UiTexts.MAP_LOGISTICS_FILTER_NO_OUTGOING);
-        Details details = new Details(I18n.t(UiTexts.MAP_LOGISTICS_FILTERS), filters);
-        logisticsPage.add(details);
-    }
-
-    private void addLogisticsFilter(VerticalLayout filters, LogisticsFilter filter, String key) {
-        Checkbox checkbox = new Checkbox(I18n.t(key), enabledLogisticsFilters.contains(filter));
-        checkbox.addValueChangeListener(event -> {
-            if (event.getValue()) {
-                enabledLogisticsFilters.add(filter);
-            } else {
-                enabledLogisticsFilters.remove(filter);
-            }
-            saveLogisticsFilters();
-            PlayerViewState view = currentView;
-            if (view != null) {
-                renderLogistics(view);
-            }
-        });
-        filters.add(checkbox);
-    }
-
-    private boolean matchesLogisticsFilters(LogisticsSystemSummary summary) {
-        return (!enabledLogisticsFilters.contains(LogisticsFilter.NET_INFLOW) || summary.netFlow() > 0)
-                && (!enabledLogisticsFilters.contains(LogisticsFilter.FREE_CAPACITY)
-                || summary.freePlanningCapacity() > 0)
-                && (!enabledLogisticsFilters.contains(LogisticsFilter.DELIVERY_BOTTLENECK)
-                || summary.deliveryBottleneck())
-                && (!enabledLogisticsFilters.contains(LogisticsFilter.NO_OUTGOING_ROUTE)
-                || summary.plannedOutgoing() == 0);
-    }
-
-    private void addYieldSort() {
-        Checkbox sort = new Checkbox(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.LOGISTICS_SORT_YIELD), sortByYield);
-        sort.setId("logistics-sort-yield");
-        sort.addValueChangeListener(event -> {
-            sortByYield = event.getValue();
-            PlayerViewState view = currentView;
-            if (view != null) { renderLogistics(view); }
-        });
-        logisticsPage.add(sort);
+    /** The empire-wide mining assistance and the own systems by mining yield, best first. */
+    private void addMining(PlayerViewState view) {
+        if (!readOnly) {
+            Button automation = new Button(I18n.t(UiTexts.MINING_TITLE), _ -> onMining.run());
+            automation.setId("mining-automation-open");
+            automation.addThemeVariants(ButtonVariant.SMALL);
+            detailsPage.add(automation);
+        }
+        Div ranking = new Div();
+        ranking.addClassName("mining-yield-ranking");
+        view.systems().stream().filter(VisibleSystem::fullyVisible)
+                .filter(candidate -> candidate.availableShips() != null && metalOf(candidate) != null)
+                .sorted(yieldOrder().thenComparing(VisibleSystem::name)).forEach(candidate -> {
+                    var metal = Objects.requireNonNull(metalOf(candidate));
+                    Div row = new Div(new Span(candidate.name()), new Span(I18n.t(
+                            de.zettsystems.starfare.economy.ui.ProductionKeys.YIELD, metal.yieldPerPoint(), metal.remaining())));
+                    row.addClassName("mining-yield-row");
+                    row.addClickListener(_ -> onSystemSelected.accept(candidate.id()));
+                    KeyboardActions.enable(row);
+                    ranking.add(row);
+                });
+        Details details = new Details(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.YIELD_RANKING), ranking);
+        details.addClassName("mining-yield-details");
+        details.setOpened(yieldRankingOpened);
+        details.addOpenedChangeListener(event -> yieldRankingOpened = event.isOpened());
+        detailsPage.add(details);
     }
 
     private static de.zettsystems.starfare.economy.values.@Nullable MetalView metalOf(VisibleSystem system) {
@@ -476,94 +391,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
                     var metal = metalOf(system); return metal == null ? -1 : metal.remaining(); }).reversed());
     }
 
-    private static int logisticsPriority(VisibleSystem system, Map<Integer, LogisticsSystemSummary> summaries) {
-        LogisticsSystemSummary summary = logisticsSummary(summaries, system.id());
-        return (summary.deliveryBottleneck() ? 10_000 : 0) + Math.abs(summary.netFlow());
-    }
-
-    private static LogisticsSystemSummary logisticsSummary(Map<Integer, LogisticsSystemSummary> summaries, int systemId) {
-        return Objects.requireNonNull(summaries.get(systemId));
-    }
-
-    private static Div logisticsSystemCard(VisibleSystem system, LogisticsSystemSummary summary) {
-        Div card = new Div();
-        card.addClassName("logistics-system-card");
-        Span name = new Span(system.name());
-        name.addClassName("logistics-system-name");
-        Span direction = new Span(summary.netFlow() > 0 ? "↓ " + I18n.t(UiTexts.MAP_LOGISTICS_SINK)
-                : summary.netFlow() < 0 ? "↑ " + I18n.t(UiTexts.MAP_LOGISTICS_SOURCE)
-                : "◆ " + I18n.t(UiTexts.MAP_LOGISTICS_BALANCED));
-        direction.addClassName("logistics-system-direction");
-        Div metrics = new Div(logisticsMetric("⚙", "P", summary.production()),
-                logisticsMetric("↓", "I", summary.plannedIncoming()),
-                logisticsMetric("↑", "O", summary.plannedOutgoing()),
-                logisticsMetric("Σ", "P+I−O", summary.plannedAccumulation()));
-        metrics.addClassName("logistics-metrics");
-        Span available = new Span(I18n.t(UiTexts.MAP_LOGISTICS_AVAILABLE, summary.availableShips()));
-        available.addClassName("logistics-system-available");
-        Span delivery = new Span(I18n.t(summary.deliveryBottleneck()
-                ? UiTexts.MAP_LOGISTICS_DELIVERY_BOTTLENECK : UiTexts.MAP_LOGISTICS_NEXT_DELIVERY,
-                summary.nextDelivery()));
-        delivery.addClassName(summary.deliveryBottleneck() ? "logistics-delivery-bottleneck" : "logistics-delivery");
-        card.add(name, direction, metrics, available, delivery);
-        var metal = metalOf(system);
-        if (metal != null) {
-            Span yield = new Span(I18n.t(de.zettsystems.starfare.economy.ui.ProductionKeys.LOGISTICS_YIELD,
-                    metal.yieldPerPoint(), metal.remaining()));
-            yield.addClassName("logistics-system-yield");
-            card.add(yield);
-        }
-        return card;
-    }
-
-    private Div logisticsRouteCard(StandingOrderView order) {
-        Div card = new Div();
-        card.addClassName("logistics-route-card");
-        Button edit = new Button(I18n.t(UiTexts.MAP_ACTION_EDIT_STANDING), _ -> onEditStandingOrder.accept(order));
-        edit.addThemeVariants(ButtonVariant.SMALL, ButtonVariant.TERTIARY);
-        card.add(new Span(order.fromSystem() + " → " + order.toSystem()),
-                new Span("◆ " + order.ships() + " / " + I18n.t(UiTexts.MAP_LOGISTICS_PER_TURN)), edit);
-        card.getElement().addEventListener("click", _ -> onStandingOrderSelected.accept(order.id()))
-                .setFilter("!event.target.closest('vaadin-button, vaadin-details')");
-        KeyboardActions.enable(card);
-        return card;
-    }
-
-    private static Span logisticsMetric(String icon, String label, int value) {
-        Span metric = new Span(icon + " " + label + " " + value);
-        metric.addClassName("logistics-metric");
-        return metric;
-    }
-
     private static int valueOrZero(@Nullable Integer value) {
         return value == null ? 0 : value;
-    }
-
-    private void renderContacts(PlayerViewState view) {
-        contactsPage.removeAll();
-        contactsPage.add(header(UiTexts.MAP_SIDEBAR_CONTACTS));
-        List<VisibleSystem> contacts = view.systems().stream()
-                .filter(system -> !isBattlePending(system.id()))
-                .filter(system -> !system.fullyVisible() && system.ownerId() != null)
-                .sorted((left, right) -> Integer.compare(lastSeen(right), lastSeen(left)))
-                .toList();
-        if (contacts.isEmpty()) {
-            contactsPage.add(new Paragraph(I18n.t(UiTexts.MAP_SIDEBAR_CONTACTS_EMPTY)));
-            return;
-        }
-        contacts.forEach(system -> contactsPage.add(contact(view, system)));
-    }
-
-    private static VerticalLayout contact(PlayerViewState view, VisibleSystem system) {
-        VerticalLayout card = page();
-        card.addClassName("map-sidebar-contact");
-        card.add(new H2(system.name()),
-                detail(I18n.t(UiTexts.MAP_SIDEBAR_OWNER), ownerName(view, system.ownerId())),
-                detail(I18n.t(system.approximate() ? UiTexts.MAP_SIDEBAR_ESTIMATED_SHIPS
-                                : UiTexts.MAP_SIDEBAR_COUNTED_SHIPS), shipValue(system)),
-                detail(I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), productionValue(system)),
-                detail(I18n.t(UiTexts.MAP_SIDEBAR_LAST_CONTACT), contactAge(system)));
-        return card;
     }
 
     private static String ownerName(PlayerViewState view, @Nullable Integer ownerId) {
@@ -591,13 +420,12 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return I18n.t(UiTexts.MAP_SIDEBAR_LAST_SEEN_TURN, system.lastSeenTurn());
     }
 
-    private static int lastSeen(VisibleSystem system) {
-        Integer turn = system.lastSeenTurn();
-        return turn != null ? turn : Integer.MIN_VALUE;
-    }
-
     private void renderDetails(PlayerViewState view, boolean targetSelectionActive) {
         detailsPage.removeAll();
+        if (economyFiltered && economyFilter != null) {
+            renderEconomyList(view);
+            return;
+        }
         if (selectedSystem != null) {
             VisibleSystem system = selectedSystem;
             if (isBattlePending(system.id())) {
@@ -656,12 +484,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         detailsPage.add(heading, owner, systemHeaderMetrics(system, ProductionFlow.at(system.id(), view.standingOrders())));
         renderSystemActions(system, targetSelectionActive);
         renderSystemTransfers(view, system);
-        var logistics = LogisticsSystemSummary.forSystems(view.systems(), view.standingOrders()).get(system.id());
-        if (logistics != null && logistics.deliveryBottleneck()) {
-            Span warning = new Span(I18n.t(UiTexts.SYSTEM_DELIVERY_BOTTLENECK));
-            warning.addClassName("logistics-delivery-bottleneck");
-            detailsPage.add(warning);
-        }
         VerticalLayout operations = page();
         VerticalLayout background = page();
         Details backgroundDetails = new Details(I18n.t(UiTexts.UX_BACKGROUND), background);
@@ -758,6 +580,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (automatedSystems.contains(system.id())) {
             detailsPage.add(new Span(I18n.t(protectedSystems.contains(system.id()) ? UiTexts.MINING_SYSTEM_PROTECTED : UiTexts.MINING_SYSTEM_ACTIVE)));
         } else if (editable && industry.metal() != null) { detailsPage.add(new Span(I18n.t(UiTexts.MINING_SYSTEM_MANUAL))); }
+        if (industry.metal() != null && system.availableShips() != null) { addMining(view); }
         detailsPage.add(panel);
         if (industry.colony() != null) { operations.add(panel.colonyDetails()); }
         background.add(panel.background());
@@ -904,9 +727,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         TurnEvent event = events.get(eventIndex);
         BattleReplay replay = BattleReplay.from(event).orElse(null);
         event.battleSystemId().ifPresent(onReportSystemSelected);
-        Runnable acknowledge = battleAcknowledgement(event, eventIndex);
+        Runnable acknowledge = battleAcknowledgement(eventIndex);
         if (battlePresentationEnabled && replay != null) {
-            BattleReplayDialog.open(replay, RoundEventTexts.sides(event), acknowledge);
+            BattleReplayDialog.open(replay, RoundEventTexts.sides(event), battleProduction(event), acknowledge);
         } else {
             acknowledge.run();
         }
@@ -941,7 +764,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     private Div eventCard(TurnEvent event, int eventIndex, int index) {
-        Runnable acknowledge = battleAcknowledgement(event, eventIndex);
+        Runnable acknowledge = battleAcknowledgement(eventIndex);
         Div card = new Div();
         card.addClassNames("event-card", eventCss(event, eventIndex));
         card.getStyle().set(CssProperties.ANIMATION_DELAY, (index * 0.1) + "s");
@@ -964,7 +787,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             card.addClassName("event-battle-interactive");
             card.addClickListener(_ -> {
                 onReportSystemSelected.accept(event.battleSystemId().getAsInt());
-                BattleReplayDialog.open(replay, RoundEventTexts.sides(event), acknowledge);
+                BattleReplayDialog.open(replay, RoundEventTexts.sides(event), battleProduction(event), acknowledge);
             });
             return card;
         }
@@ -987,7 +810,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         TurnReport report = currentView == null ? null : currentView.report();
         return current != null && report != null && acknowledgements.isPending(current, report, eventIndex);
     }
-    private Runnable battleAcknowledgement(TurnEvent event, int eventIndex) {
+    private Runnable battleAcknowledgement(int eventIndex) {
         GameId current = gameId;
         TurnReport report = currentView == null ? null : currentView.report();
         // Capture the report shown by the card, not whichever round is current on dialog close.
@@ -995,36 +818,19 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             if (current != null && report != null) {
                 acknowledgements.acknowledge(current, report, eventIndex);
                 onBattleAcknowledged.run();
-                showCaptureSummary(event);
             }
         };
     }
 
-    private void showCaptureSummary(TurnEvent event) {
-        if (!(event instanceof TurnEvent.BattleWon battle)) {
-            return;
-        }
+    /** The production of the embattled system as far as the player knows it; the replay shows it beside the numbers. */
+    private @Nullable String battleProduction(TurnEvent event) {
         PlayerViewState view = currentView;
-        if (view == null) {
-            return;
+        if (view == null || event.battleSystemId().isEmpty()) {
+            return null;
         }
-        VisibleSystem system = view.systems().stream()
-                .filter(candidate -> candidate.id() == battle.systemId()).findFirst().orElse(null);
-        if (system == null || !system.fullyVisible()) {
-            return;
-        }
-        Dialog dialog = new Dialog();
-        dialog.setHeaderTitle(I18n.t(UiTexts.MAP_CAPTURE_SUMMARY_TITLE, system.name()));
-        dialog.addClassName("capture-summary-dialog");
-        Div metrics = new Div(
-                systemMetric(VaadinIcon.SHIELD, I18n.t(UiTexts.MAP_SIDEBAR_GARRISON), value(system.garrison())),
-                systemMetric(VaadinIcon.COGS, I18n.t(UiTexts.MAP_SIDEBAR_PRODUCTION), value(system.productionPerTurn())));
-        metrics.addClassName("system-metrics");
-        dialog.add(metrics);
-        Button close = new Button(I18n.t(UiTexts.MAP_CAPTURE_SUMMARY_CLOSE), _ -> dialog.close());
-        close.addThemeVariants(ButtonVariant.PRIMARY);
-        dialog.getFooter().add(close);
-        dialog.open();
+        int systemId = event.battleSystemId().getAsInt();
+        return view.systems().stream().filter(system -> system.id() == systemId && system.productionPerTurn() != null)
+                .findFirst().map(FleetAndOrdersPanel::productionValue).orElse(null);
     }
 
     void selectReportSystem(int systemId) {
@@ -1077,7 +883,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private void renderTravelCards(PlayerViewState view) {
         fleetCards.removeAll();
-        orderCards.removeAll();
         relocationCards.removeAll();
         Div arrivals = new Div();
         ArrivalPreview.from(view).forEach(arrival -> arrivals.add(new Paragraph(I18n.t(UiTexts.PLAN_ARRIVAL,
@@ -1087,18 +892,18 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         arrivalDetails.addOpenedChangeListener(event -> fleetArrivalsOpened = event.isOpened());
         fleetCards.add(arrivalDetails);
 
-        List<FleetView> fleets = UiMapper.toFleetViews(view).stream()
+        // Fleets under way and orders planned this round in one list; at each arrival round the fleets come first.
+        List<TravelEntry> travel = new java.util.ArrayList<>();
+        UiMapper.toFleetViews(view).stream()
                 .filter(fleet -> matchesRoute(fleet.fromName(), fleet.toName()))
-                .sorted(java.util.Comparator.comparingInt((FleetView fleet) -> view.turn() + fleet.eta())
-                        .thenComparingInt(FleetView::fleetId))
-                .toList();
-        addArrivalGroups(fleetCards, fleets, fleet -> fleet.eta() < 0 ? Integer.MAX_VALUE : view.turn() + fleet.eta(), this::fleetCard);
-
-        List<PlannedOrder> orders = view.plannedOrders().stream()
+                .forEach(fleet -> travel.add(new TravelEntry(fleet.eta() < 0 ? Integer.MAX_VALUE : view.turn() + fleet.eta(),
+                        0, fleet.fleetId(), () -> fleetCard(fleet))));
+        view.plannedOrders().stream()
                 .filter(order -> matchesRoute(order.fromSystem(), order.toSystem()))
-                .sorted(java.util.Comparator.comparingInt(this::orderArrival).thenComparingInt(PlannedOrder::index))
-                .toList();
-        addArrivalGroups(orderCards, orders, this::orderArrival, this::orderCard);
+                .forEach(order -> travel.add(new TravelEntry(orderArrival(order), 1, order.index(), () -> orderCard(order))));
+        travel.sort(java.util.Comparator.comparingInt(TravelEntry::arrival).thenComparingInt(TravelEntry::kind)
+                .thenComparingInt(TravelEntry::order));
+        addArrivalGroups(fleetCards, travel, TravelEntry::arrival, entry -> entry.card().get());
 
         List<StandingOrderView> relocations = view.standingOrders().stream()
                 .filter(order -> matchesRoute(order.fromSystem(), order.toSystem()))
@@ -1111,6 +916,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             relocations.forEach(order -> relocationCards.add(relocationCard(order)));
         }
     }
+
+    /** A fleet ({@code kind} 0) or a planned order (1) in the travel list. */
+    private record TravelEntry(int arrival, int kind, int order, java.util.function.Supplier<Div> card) { }
 
     private TextField routeFilter() {
         TextField filter = new TextField(I18n.t(UiTexts.MAP_TRAVEL_FILTER));
@@ -1236,7 +1044,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         var journey = fleet.journey();
         if (journey != null && journey.blocked()) {
             actions.add(new Button(I18n.t(de.zettsystems.starfare.navigation.ui.RouteKeys.SYSTEM),
-                    _ -> onRouteStationSelected.accept(fleet.toSystemId())));
+                    _ -> onSystemSelected.accept(fleet.toSystemId())));
             boolean foreignStation = view.systems().stream().anyMatch(system -> system.id() == fleet.toSystemId()
                     && system.ownerId() != null && !Objects.equals(system.ownerId(), fleet.ownerId()));
             if (diplomacyAvailable && foreignStation) {
@@ -1356,12 +1164,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private void showSection(Section section) {
         if (compactNavigation.getValue() != section) { compactNavigation.setValue(section); }
-        contactsPage.setVisible(section == Section.CONTACTS);
         detailsPage.setVisible(section == Section.DETAILS);
         fleetsPage.setVisible(section == Section.FLEETS);
-        ordersPage.setVisible(section == Section.ORDERS);
         relocationsPage.setVisible(section == Section.RELOCATIONS);
-        logisticsPage.setVisible(section == Section.LOGISTICS);
         reportPage.setVisible(section == Section.REPORT);
     }
 
@@ -1372,12 +1177,9 @@ final class FleetAndOrdersPanel extends VerticalLayout {
 
     private Tab tabFor(Section section) {
         return switch (section) {
-            case CONTACTS -> sectionTabs.getFirst();
-            case DETAILS -> sectionTabs.get(1);
-            case FLEETS -> sectionTabs.get(2);
-            case ORDERS -> sectionTabs.get(3);
-            case RELOCATIONS -> sectionTabs.get(4);
-            case LOGISTICS -> sectionTabs.get(5);
+            case DETAILS -> sectionTabs.getFirst();
+            case FLEETS -> sectionTabs.get(1);
+            case RELOCATIONS -> sectionTabs.get(2);
             case REPORT -> reportTab;
         };
     }

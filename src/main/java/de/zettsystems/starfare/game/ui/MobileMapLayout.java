@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Phone arrangement of the map screen: compact header on top, the map filling the screen with
- * floating zoom buttons, and the sidebar as a sheet over the map. A bottom bar switches between
+ * floating zoom and help buttons, and the sidebar as a sheet over the map. A bottom bar switches between
  * map and sheet; while a target is picked the sheet closes and a banner offers to cancel.
  */
 final class MobileMapLayout extends Div {
@@ -32,7 +32,8 @@ final class MobileMapLayout extends Div {
                 icon(VaadinIcon.PLUS, UiTexts.MAP_ZOOM_IN, () -> canvas.zoom(1.2)),
                 icon(VaadinIcon.MINUS, UiTexts.MAP_ZOOM_OUT, () -> canvas.zoom(1 / 1.2)),
                 icon(VaadinIcon.HOME, UiTexts.MAP_FIT_EMPIRE, () -> canvas.fit(true)),
-                icon(VaadinIcon.EXPAND_SQUARE, UiTexts.MAP_FIT_GALAXY, () -> canvas.fit(false)));
+                icon(VaadinIcon.EXPAND_SQUARE, UiTexts.MAP_FIT_GALAXY, () -> canvas.fit(false)),
+                icon(VaadinIcon.QUESTION_CIRCLE_O, UiTexts.MAP_HELP, MapLegend::open));
         zoom.addClassName("mobile-map-zoom");
 
         var cancel = new Button(I18n.t(UiTexts.MAP_TARGET_SELECTION_CANCEL), _ -> onCancelTarget.run());

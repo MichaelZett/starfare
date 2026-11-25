@@ -78,11 +78,11 @@ class CoalitionJourneyTest extends AbstractMapJourneyTest {
         assertThat(elementText(openedDialog().getElement())).contains("deine Schiffe bleiben deine");
         dialogClick("Flotte senden");
         assertTab("Details");
-        selectTab("Befehle");
+        selectTab("Flotten");
         assertThat(view().plannedOrders().getFirst().beneficiaryId()).isEqualTo(2);
         assertThat(viewText()).contains("Erobern für: Partner");
         reloadMap();
-        selectTab("Befehle");
+        selectTab("Flotten");
         assertThat(viewText()).contains("Erobern für: Partner");
     }
 

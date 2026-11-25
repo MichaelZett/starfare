@@ -50,7 +50,7 @@ final class SendFleetDialog {
     }
 
     private record DialogControls(Input slider, IntegerField shipsInput, Span consequence, Div capacityFill,
-                                  Button halfBtn, Button doubleBtn, Button allBtn, Button exceptProductionBtn,
+                                  Button halfBtn, Button allBtn, Button exceptProductionBtn,
                                   Checkbox standingCheckbox, Button sendBtn) {
     }
 
@@ -124,8 +124,6 @@ final class SendFleetDialog {
         wireTwoWaySync(slider, shipsInput, amountState);
         Button halfBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_HALF,
                 _ -> shipsInput.setValue(Math.max(1, amountState.sliderMax / 2)));
-        Button doubleBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_DOUBLE,
-                _ -> shipsInput.setValue((int) Math.min(amountState.sliderMax, currentOr(shipsInput, 1) * 2L)));
         Button allBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_ALL,
                 _ -> shipsInput.setValue(amountState.sliderMax));
         Button exceptProductionBtn = buildQuickButton(UiTexts.MAP_SEND_QUICK_EXCEPT_PRODUCTION,
@@ -137,7 +135,7 @@ final class SendFleetDialog {
         Button cancelBtn = new Button(I18n.t(UiTexts.MAP_DIALOG_CANCEL), _ -> dialog.close());
 
         DialogControls controls = new DialogControls(slider, shipsInput, consequence, capacityFill,
-                halfBtn, doubleBtn, allBtn, exceptProductionBtn,
+                halfBtn, allBtn, exceptProductionBtn,
                 standingCheckbox, sendBtn);
         standingCheckbox.setValue(relocation || !params.canSend());
         wireStandingToggle(controls, params, amountState);
@@ -420,7 +418,6 @@ final class SendFleetDialog {
         c.slider().setEnabled(canSend);
         c.shipsInput().setEnabled(canSend);
         c.halfBtn().setEnabled(canSend);
-        c.doubleBtn().setEnabled(canSend);
         c.allBtn().setEnabled(canSend);
         c.exceptProductionBtn().setEnabled(canSend);
         c.sendBtn().setEnabled(canSend);
@@ -433,7 +430,7 @@ final class SendFleetDialog {
         sliderRow.setPadding(false);
         sliderRow.setSpacing(false);
 
-        var quickRow = new HorizontalLayout(c.halfBtn(), c.doubleBtn(), c.allBtn(), c.exceptProductionBtn());
+        var quickRow = new HorizontalLayout(c.halfBtn(), c.allBtn(), c.exceptProductionBtn());
         quickRow.addClassName("send-fleet-quick-row");
         quickRow.setWidthFull();
         quickRow.setPadding(false);

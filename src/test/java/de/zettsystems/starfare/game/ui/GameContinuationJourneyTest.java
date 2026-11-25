@@ -134,12 +134,6 @@ class GameContinuationJourneyTest extends AbstractMapJourneyTest {
     private void acknowledgeTheBattle() {
         DomEvents.fire(find(Div.class).withClassName("event-battle-pending").single(), "click");
         dialogClick("Ergebnis übernehmen");
-        find(Dialog.class).all().stream().filter(Dialog::isOpened)
-                .filter(dialog -> dialog.hasClassName("capture-summary-dialog"))
-                .forEach(dialog -> {
-                    test(find(Button.class, dialog).single()).click();
-                    runPendingUiAccess();
-                });
     }
 
     private void assertPending() {

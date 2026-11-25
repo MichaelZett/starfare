@@ -41,7 +41,6 @@ final class MapRenderer {
                   Set<Integer> reportedSystemIds,
                   @Nullable Integer highlightedReportSystemId,
                   Set<Integer> pendingBattleSystemIds,
-                  boolean logisticsMode,
                   boolean tutorial,
                   Set<Integer> badgesShowingFleetNo,
                   List<VisibleSystem> systems,
@@ -60,7 +59,6 @@ final class MapRenderer {
 
     static void render(Div map, Inputs in) {
         map.removeAll();
-        map.setClassName(in.logisticsMode() ? "map-logistics-mode" : "");
         var range = in.range();
         VisibleSystem source = in.selectedFrom();
         if (range != null && source != null) { map.add(RangeOverlay.circle(source, range, in.systems())); }
@@ -156,9 +154,6 @@ final class MapRenderer {
         Div lane = buildLaneDiv(geometry, "#bc8cff", tooltip, highlighted);
         routeData(lane, "standing-" + order.id() + "-" + from, source, target, geometry);
         lane.addClassName("fleet-lane-standing");
-        if (in.logisticsMode()) {
-            lane.addClassName("fleet-lane-logistics");
-        }
         map.add(lane);
 
         Div badge = new Div();
@@ -281,7 +276,7 @@ final class MapRenderer {
      * hint needs a plan to act on and must not reveal anything before battles are viewed.
      */
     private static boolean showsIdleShips(Inputs in) {
-        return in.tutorial() && !in.observer() && !in.view().gameOver() && !in.logisticsMode() && in.pendingBattleSystemIds().isEmpty();
+        return in.tutorial() && !in.observer() && !in.view().gameOver() && in.pendingBattleSystemIds().isEmpty();
     }
 
     /** A tutorial aid: a diamond outside the row of fleet badges, so it never reads as a fleet. */

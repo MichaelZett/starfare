@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** The phone layout shows the map legend as a dialog. */
+/** The phone layout shows the map legend as its map help. */
 class MapLegendTest extends AbstractBrowserlessTest {
 
     @Test
@@ -15,7 +15,7 @@ class MapLegendTest extends AbstractBrowserlessTest {
         MapLegend.open();
         Dialog dialog = openedDialog();
 
-        assertThat(dialog.getHeaderTitle()).isEqualTo("Legende");
+        assertThat(dialog.getHeaderTitle()).isEqualTo("Kartenhilfe");
         assertThat(elementText(dialog.getElement())).contains("G: Garnison", "P: Produktion");
 
         test(find(Button.class).withText("Schließen").single()).click();

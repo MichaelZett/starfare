@@ -94,7 +94,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private boolean outcomeAcknowledged;
     private boolean outcomeDialogOpen;
     private @Nullable Dialog outcomeDialog;
-    private boolean logisticsMode;
     private @Nullable PlayerViewState economicView;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
     private final BattleAcknowledgements acknowledgements;
@@ -137,7 +136,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         fleetsPanel.onEditOrder(order -> planningDialogs().edit(order));
         fleetsPanel.onFleetWait(id -> executeFleetAction(id, false));
         fleetsPanel.onFleetDisband(id -> executeFleetAction(id, true));
-        fleetsPanel.onRouteStationSelected(id -> {
+        fleetsPanel.onSystemSelected(id -> {
             var view = viewForCurrentMode();
             if (view != null) { view.systems().stream().filter(system -> system.id() == id).findFirst().ifPresent(system -> {
                 selectedSystem = system; highlightedFleetId = null; cancelTargetSelection();
@@ -161,7 +160,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         fleetsPanel.setActions(actionBar);
         treatyActions.add(iconAction(VaadinIcon.HANDSHAKE, UiTexts.DIP_TITLE, this::openDiplomacy));
         boolean phone = Devices.mobile();
-        header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::toggleLogisticsMode, this::leaveGameNow,
+        header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::leaveGameNow,
                 () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openRoundRules, this::openShipResearch, this::confirmResign), phone, frame);
 
         gameOverBanner.setVisible(false);
@@ -240,7 +239,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private PlanningDialogs planningDialogs() {
         return new PlanningDialogs(game, gameId, currentSeat(), concealedPlanningView(), () -> {
             refresh();
-            fleetsPanel.showOrders();
+            fleetsPanel.showFleets();
         });
     }
 
@@ -327,15 +326,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             highlightedStandingOrderId = null;
             refresh();
         }
-    }
-
-    private void toggleLogisticsMode() {
-        logisticsMode = !logisticsMode;
-        if (logisticsMode) {
-            fleetsPanel.showLogistics();
-            revealPanel();
-        }
-        refresh();
     }
 
     private void executeFleetAction(int fleetId, boolean disband) {
@@ -712,7 +702,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         header.setEmpireName(observer ? "" : view.players().stream().filter(player -> player.id() == playerId)
                 .map(de.zettsystems.starfare.game.values.Player::empireNameOrName).findFirst().orElse(""));
         header.updateTurnAction(status, playerId, observer, view.gameOver());
-        header.setLogisticsActive(logisticsMode);
         showGameOverBanner(view);
         if (!observer) {
             header.updateEmpireStats(view);
@@ -810,7 +799,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         mapCanvas.render(new MapRenderer.Inputs(
                 game, gameId, view, playerId, observer, selectedFrom, targetSelection == TargetSelection.RELOCATION,
                 highlightedFleetId, highlightedStandingOrderId, reportedSystemIds(view), highlightedReportSystemId,
-                pendingBattleSystemIds(view), logisticsMode, game.isTutorial(gameId),
+                pendingBattleSystemIds(view), game.isTutorial(gameId),
                 badgesShowingFleetNo, systems,
                 this::inspectSystem,
                 this::selectSource,

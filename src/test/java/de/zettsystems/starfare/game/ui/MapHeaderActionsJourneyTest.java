@@ -29,7 +29,10 @@ class MapHeaderActionsJourneyTest extends AbstractMapJourneyTest {
     void theMapHasNoChatOfItsOwnBecauseThePlatformShowsIt() {
         createReviewGame();
 
-        assertThat(find(Button.class).all()).noneMatch(button -> CHAT.equals(button.getText()));
+        assertThat(find(Button.class).all()).noneMatch(button -> CHAT.equals(button.getText()))
+                .as("no logistics map mode").noneMatch(button -> "Logistik".equals(button.getText()));
+        assertThat(menuEntries()).as("the legend lives in the map help").doesNotContain("Legende", "Logistik");
+        assertThat(elementText(find(MapControls.class).single().getElement())).contains("Kartenhilfe", "G: Garnison");
     }
 
     @Test

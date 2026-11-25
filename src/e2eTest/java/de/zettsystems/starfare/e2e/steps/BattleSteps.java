@@ -114,11 +114,11 @@ public class BattleSteps {
             screenshot("battle-result-" + battle);
             assertThat(browser.textsOf("[data-battle-attacking]")).contains(battle == 0 ? "20" : "60");
             assertThat(browser.textsOf("[data-battle-defending]")).contains("0");
+            browser.awaitTextIn(".battle-replay-production", "Produktion von");
             browser.clickButtonWithText("Ergebnis übernehmen");
-            browser.clickCss(".capture-summary-dialog vaadin-button");
             new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(
                     org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated(
-                            By.cssSelector(".capture-summary-dialog[opened]")));
+                            By.cssSelector(".battle-replay-dialog[opened]")));
             if (battle == 0) {
                 new WebDriverWait(browser.driver(), Duration.ofSeconds(10))
                         .until(_ -> browser.all(PENDING).size() == 1);
@@ -183,13 +183,7 @@ public class BattleSteps {
                     return gain;
                 };
                 """);
-        browser.clickButtonWithText("Ton testen");
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(5)).until(_ -> Boolean.TRUE.equals(
-                js().executeScript("""
-                        const data = new Float32Array(window.battleTestAnalyser.fftSize);
-                        window.battleTestAnalyser.getFloatTimeDomainData(data);
-                        return window.battleTestHeardAudio;
-                        """)));
+        // Switching the sound back on plays an impact, so the toggle doubles as the check that sound comes out.
         WebElement sound = browser.awaitCss(".battle-replay-dialog vaadin-checkbox");
         sound.click();
         new WebDriverWait(browser.driver(), Duration.ofSeconds(5)).until(_ ->
@@ -197,5 +191,7 @@ public class BattleSteps {
         sound.click();
         new WebDriverWait(browser.driver(), Duration.ofSeconds(5)).until(_ ->
                 Boolean.TRUE.equals(js().executeScript("return window.starfareBattleAudio.enabled")));
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(5)).until(_ -> Boolean.TRUE.equals(
+                js().executeScript("return window.battleTestHeardAudio;")));
     }
 }

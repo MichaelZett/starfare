@@ -30,6 +30,7 @@ class DisplayPreferencesTest extends AbstractMapJourneyTest {
     void aChangeOnThisDeviceKeepsTheOtherFiltersAnotherDeviceChoseMeanwhile() {
         createReviewGame();
         settings.set("starfare", "EVENT_FILTERS", "COMBAT");
+        // An old device's value of a setting that no longer exists (the logistics filters).
         settings.set("starfare", "LOGISTICS_FILTERS", "CAPTURES");
 
         selectTab("Flotten");
@@ -38,7 +39,7 @@ class DisplayPreferencesTest extends AbstractMapJourneyTest {
 
         assertThat(settings.value("starfare", "ROUTE_FILTER")).hasValue("Gamma");
         assertThat(settings.value("starfare", "EVENT_FILTERS")).as("this map still shows every category").hasValue("COMBAT");
-        assertThat(settings.value("starfare", "LOGISTICS_FILTERS")).hasValue("CAPTURES");
+        assertThat(settings.value("starfare", "LOGISTICS_FILTERS")).as("left alone").hasValue("CAPTURES");
         reloadMap();
         assertThat(DisplayPreferences.get(DisplaySetting.EVENT_FILTERS, "*")).as("the next map reads the other device's choice")
                 .isEqualTo("COMBAT");

@@ -29,4 +29,18 @@ class MobileMapJourneyTest extends AbstractMapJourneyTest {
         test(find(Button.class, layout).withText("Karte").single()).click();
         assertThat(find(Div.class, layout).withClassName("mobile-map-sheet").exists()).isFalse();
     }
+
+    @Test
+    void theLegendIsInTheMapHelpAndNoLongerInTheMenu() {
+        VaadinSession.getCurrent().setAttribute("starfare.deviceLayout", DeviceLayout.MOBILE);
+        createReviewGame();
+
+        var menu = find(com.vaadin.flow.component.menubar.MenuBar.class).withClassName("app-header-menu").single();
+        assertThat(menu.getItems().getFirst().getSubMenu().getItems()).extracting(item -> item.getText())
+                .doesNotContain("Legende", "Logistik");
+        test(find(Button.class).withAriaLabel("Kartenhilfe").single()).click();
+        var help = openedDialog();
+        assertThat(help.getHeaderTitle()).isEqualTo("Kartenhilfe");
+        assertThat(elementText(help.getElement())).contains("G: Garnison");
+    }
 }

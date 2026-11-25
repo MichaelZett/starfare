@@ -28,7 +28,7 @@ class EconomyIssueListTest extends AbstractEconomyUiTest {
     }
 
     @Test
-    void clearingTheFilterReturnsToTheLogisticsOverview() {
+    void clearingTheFilterReturnsToTheSystemDetails() {
         openGame(ColonyStates.readyWithMoon(), "Economy issues cleared");
         click("economy-notice-labor");
         assertThat(find(Component.class).withClassName("economy-issue-card").all()).hasSize(1);
@@ -37,6 +37,7 @@ class EconomyIssueListTest extends AbstractEconomyUiTest {
         runPendingUiAccess();
 
         assertThat(find(Component.class).withClassName("economy-issue-card").all()).isEmpty();
-        assertThat(find(H2.class).all()).extracting(H2::getText).doesNotContain("Arbeitskräfte fehlen · 1 System");
+        assertThat(find(H2.class).all()).extracting(H2::getText).doesNotContain("Arbeitskräfte fehlen · 1 System")
+                .contains("Alpha");
     }
 }

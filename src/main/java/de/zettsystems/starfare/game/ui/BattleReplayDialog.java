@@ -9,6 +9,7 @@ import com.vaadin.flow.component.html.Span;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.BattleReplay;
 import de.zettsystems.starfare.style.HtmlAttributes;
+import org.jspecify.annotations.Nullable;
 
 /** Client-side combat playback with an optional synthesized sound effect. */
 final class BattleReplayDialog {
@@ -18,7 +19,8 @@ final class BattleReplayDialog {
     private BattleReplayDialog() {
     }
 
-    static void open(BattleReplay replay, BattleSides sides, Runnable onAcknowledge) {
+    /** {@code production} is the system's production as the player knows it; without it the line is left out. */
+    static void open(BattleReplay replay, BattleSides sides, @Nullable String production, Runnable onAcknowledge) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(I18n.t(UiTexts.BATTLE_REPLAY_TITLE, replay.systemName()));
         dialog.addClassName("battle-replay-dialog");
@@ -54,12 +56,6 @@ final class BattleReplayDialog {
                     if (this.checked) audio.unlock().then(() => audio.impact()).catch(() => {});
                 });
                 """);
-        Button soundTest = new Button(I18n.t(UiTexts.BATTLE_REPLAY_SOUND_TEST));
-        soundTest.getElement().executeJs("""
-                this.addEventListener('click', () => {
-                    window.starfareBattleAudio?.test().catch(() => {});
-                });
-                """);
         Button acknowledge = new Button(I18n.t(UiTexts.BATTLE_REPLAY_ACKNOWLEDGE), _ -> {
             dialog.close();
             onAcknowledge.run();
@@ -69,7 +65,13 @@ final class BattleReplayDialog {
         speed.setItemLabelGenerator(value -> value + "×");
         speed.setValue(speed());
         speed.addValueChangeListener(event -> { if (event.getValue() != null) { setSpeed(event.getValue()); } });
-        dialog.getFooter().add(sound, soundTest, speed, acknowledge);
+        dialog.getFooter().add(sound, speed, acknowledge);
+        if (production != null) {
+            Div systemProduction = new Div();
+            systemProduction.setText(I18n.t(UiTexts.BATTLE_REPLAY_PRODUCTION, replay.systemName(), production));
+            systemProduction.addClassName("battle-replay-production");
+            dialog.add(systemProduction);
+        }
         dialog.add(visual);
         dialog.open();
         if (!replay.coalitions().isEmpty()) {

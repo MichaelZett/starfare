@@ -84,7 +84,6 @@ public final class UiTexts {
     public static final String SYSTEM_PRODUCTION_RATE = "system.productionRate";
     public static final String SYSTEM_LOGISTICS = "system.logistics";
     public static final String SYSTEM_COLONY_LOGISTICS = "system.colonyLogistics";
-    public static final String SYSTEM_DELIVERY_BOTTLENECK = "system.deliveryBottleneck";
     public static final String UX_CANCEL_RECYCLING = "ux.cancel.recycling";
     public static final String UX_MORE_ACTIONS = "ux.more.actions";
     public static final String UX_CONQUEST_HINT = "ux.conquest.hint";
@@ -140,29 +139,15 @@ public final class UiTexts {
     public static final String MAP_PRODUCTION_INCOMING = "map.production.incoming";
     public static final String MAP_PRODUCTION_OUTGOING = "map.production.outgoing";
     public static final String MAP_PRODUCTION_FLOW = "map.production.flow";
-    public static final String MAP_SIDEBAR_CONTACTS = "map.sidebar.contacts";
     public static final String MAP_SIDEBAR_DETAILS = "map.sidebar.details";
     public static final String MAP_SIDEBAR_FLEETS = "map.sidebar.fleets";
-    public static final String MAP_SIDEBAR_ORDERS = "map.sidebar.orders";
     public static final String MAP_SIDEBAR_RELOCATIONS = "map.sidebar.relocations";
-    public static final String MAP_SIDEBAR_LOGISTICS = "map.sidebar.logistics";
-    public static final String MAP_LOGISTICS_INTRO = "map.logistics.intro";
-    public static final String MAP_LOGISTICS_EMPTY = "map.logistics.empty";
-    public static final String MAP_LOGISTICS_ROUTES = "map.logistics.routes";
-    public static final String MAP_LOGISTICS_SOURCE = "map.logistics.source";
-    public static final String MAP_LOGISTICS_SINK = "map.logistics.sink";
-    public static final String MAP_LOGISTICS_BALANCED = "map.logistics.balanced";
-    public static final String MAP_LOGISTICS_AVAILABLE = "map.logistics.available";
-    public static final String MAP_LOGISTICS_PER_TURN = "map.logistics.perTurn";
     public static final String MAP_SIDEBAR_REPORT = "map.sidebar.report";
     public static final String MAP_SIDEBAR_DETAILS_EMPTY = "map.sidebar.detailsEmpty";
     public static final String MAP_SIDEBAR_PRODUCTION = "map.sidebar.production";
     public static final String MAP_SIDEBAR_SYSTEM = "map.sidebar.system";
     public static final String MAP_SIDEBAR_FLEET = "map.sidebar.fleet";
     public static final String MAP_SIDEBAR_GARRISON = "map.sidebar.garrison";
-    public static final String MAP_CAPTURE_SUMMARY_TITLE = "map.captureSummary.title";
-    public static final String MAP_CAPTURE_SUMMARY_CLOSE = "map.captureSummary.close";
-    public static final String MAP_SIDEBAR_CONTACTS_EMPTY = "map.sidebar.contactsEmpty";
     public static final String MAP_SIDEBAR_OWNER = "map.sidebar.owner";
     public static final String MAP_SIDEBAR_ESTIMATED_SHIPS = "map.sidebar.estimatedShips";
     public static final String MAP_SIDEBAR_COUNTED_SHIPS = "map.sidebar.countedShips";
@@ -305,7 +290,6 @@ public final class UiTexts {
     public static final String MAP_NEXT_ROUND = "map.nextRound";
     public static final String MAP_SUBMIT_TURN = "map.submitTurn";
     public static final String MAP_TURN_SUBMITTED = "map.turnSubmitted";
-    public static final String MAP_LOGISTICS_MODE = "map.logistics.mode";
     public static final String MAP_SUBMIT_WAITING = "map.submit.waiting";
     public static final String MAP_SUBMIT_FAILED = "map.submit.failed";
     public static final String MAP_GAME_OVER = "map.gameOver";
@@ -330,7 +314,6 @@ public final class UiTexts {
     public static final String MAP_AVAILABLE = "map.available";
     public static final String MAP_SEND_QUICK_ALL = "map.send.quick.all";
     public static final String MAP_SEND_QUICK_HALF = "map.send.quick.half";
-    public static final String MAP_SEND_QUICK_DOUBLE = "map.send.quick.double";
     public static final String MAP_SEND_QUICK_EXCEPT_PRODUCTION = "map.send.quick.exceptProduction";
     public static final String MAP_STANDING_ORDER_CHECKBOX = "map.standingOrder.checkbox";
     public static final String MAP_INVALID_COMMAND = "map.invalidCommand";
@@ -352,13 +335,6 @@ public final class UiTexts {
     public static final String MAP_TRAVEL_FILTER_PLACEHOLDER = "map.travel.filter.placeholder";
     public static final String MAP_TRAVEL_ARRIVAL_GROUP = "map.travel.arrivalGroup";
     public static final String MAP_TRAVEL_EMPTY = "map.travel.empty";
-    public static final String MAP_LOGISTICS_FILTERS = "map.logistics.filters";
-    public static final String MAP_LOGISTICS_FILTER_NET_INFLOW = "map.logistics.filter.netInflow";
-    public static final String MAP_LOGISTICS_FILTER_FREE_CAPACITY = "map.logistics.filter.freeCapacity";
-    public static final String MAP_LOGISTICS_FILTER_BOTTLENECK = "map.logistics.filter.bottleneck";
-    public static final String MAP_LOGISTICS_FILTER_NO_OUTGOING = "map.logistics.filter.noOutgoing";
-    public static final String MAP_LOGISTICS_DELIVERY_BOTTLENECK = "map.logistics.deliveryBottleneck";
-    public static final String MAP_LOGISTICS_NEXT_DELIVERY = "map.logistics.nextDelivery";
     public static final String ROUND_FILTER_SUMMARY = "round.filter.summary";
     public static final String LOBBY_CARD_MORE_ACTIONS = "lobby.card.moreActions";
     public static final String LOBBY_CARD_OPEN_SEATS = "lobby.card.openSeats";
@@ -381,7 +357,6 @@ public final class UiTexts {
     public static final String MAP_DISBAND_FAILED = "map.disbandFailed";
 
     // Map — planned orders grid
-    public static final String MAP_PLANNED_ORDERS = "map.plannedOrders";
     public static final String MAP_ACTION_CANCEL_ORDER = "map.action.cancelOrder";
     public static final String MAP_CANCEL_ORDER_FAILED = "map.cancelOrder.failed";
 
@@ -454,7 +429,7 @@ public final class UiTexts {
     public static final String BATTLE_REPLAY_NEUTRAL = "battleReplay.neutral";
     public static final String BATTLE_REPLAY_RESULT = "battleReplay.result";
     public static final String BATTLE_REPLAY_SOUND = "battleReplay.sound";
-    public static final String BATTLE_REPLAY_SOUND_TEST = "battleReplay.soundTest";
+    public static final String BATTLE_REPLAY_PRODUCTION = "battleReplay.production";
     public static final String BATTLE_REPLAY_SPEED = "battleReplay.speed";
     public static final String BATTLE_REPLAY_OFF = "battleReplay.off";
     public static final String BATTLE_REPLAY_ACKNOWLEDGE = "battleReplay.acknowledge";
@@ -553,7 +528,6 @@ public final class UiTexts {
     public static final String MAP_RESET = "map.reset";
     public static final String MAP_FIT_GALAXY = "map.fitGalaxy";
     public static final String MAP_FIT_EMPIRE = "map.fitEmpire";
-    public static final String MAP_LEGEND = "map.legend";
     public static final String MAP_LEGEND_TEXT = "map.legendText";
     public static final String MAP_LEGEND_TEXT_TOUCH = "map.legendTextTouch";
     public static final String MAP_MOBILE_MAP = "map.mobile.map";

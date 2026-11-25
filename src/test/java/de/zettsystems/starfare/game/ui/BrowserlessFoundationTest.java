@@ -60,7 +60,7 @@ class BrowserlessFoundationTest extends AbstractBrowserlessTest {
 
         assertThat(dialog.isOpened()).isFalse();
         assertThat(games.viewFor(game.id(), game.hostSeat()).plannedOrders()).hasSize(1);
-        selectTab("Befehle");
+        selectTab("Flotten");
         assertThat(viewText()).contains("Alpha", "Beta");
 
         test(button("Runde abgeben")).click();

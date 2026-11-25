@@ -975,38 +975,18 @@ html[data-gp-game="starfare"] {
 .statistics-empty { color: var(--sf-text-muted); }
 @media (max-width: 800px) { .statistics-history-card { grid-template-columns: 1fr 1fr; } }
 
-.logistics-system-card, .logistics-route-card {
+.mining-yield-ranking { display: grid; gap: .35rem; }
+.mining-yield-row {
     display: grid;
-    gap: .45rem;
-    padding: .75rem;
+    gap: .15rem;
+    padding: .5rem .6rem;
     border: 1px solid var(--sf-border);
-    border-radius: .7rem;
+    border-radius: .5rem;
     background: var(--sf-surface-2);
+    cursor: pointer;
 }
-
-.logistics-system-name { font-weight: 800; font-size: 1.05rem; }
-.logistics-system-direction { color: var(--sf-accent); font-size: .88rem; }
-.logistics-metrics { display: flex; flex-wrap: wrap; gap: .35rem; }
-.logistics-metric { padding: .2rem .42rem; border-radius: 999px; background: var(--sf-contrast-10); font-size: .85rem; }
-.logistics-system-available { color: var(--sf-text-muted); font-size: .82rem; }
-.logistics-routes { display: grid; gap: .45rem; }
-.logistics-route-card { cursor: pointer; grid-template-columns: 1fr auto; }
-.logistics-route-card:hover { border-color: var(--sf-accent); }
-.logistics-delivery { color: var(--sf-text-muted); font-size: .82rem; }
-.logistics-delivery-bottleneck { color: #ffad66; font-size: .82rem; font-weight: 700; }
-
-.map-logistics-mode .fleet-lane:not(.fleet-lane-standing),
-.map-logistics-mode .fleet-badge,
-.map-logistics-mode .fleet-lane-hit,
-.map-logistics-mode .fleet-lane-planned {
-    opacity: .18;
-}
-
-.map-logistics-mode .fleet-lane-logistics {
-    border-top-width: 5px;
-    border-top-color: #d7b8ff;
-    opacity: 1;
-}
+.mining-yield-row:hover { border-color: var(--sf-accent); }
+.mining-yield-row > span:last-child { color: var(--sf-text-muted); font-size: .82rem; }
 
 .system-details-heading { margin: 0; font-size: 1.25rem; }
 .system-flow {
@@ -1093,6 +1073,7 @@ html[data-gp-game="starfare"] {
 
 .battle-attacker { align-items: flex-start; color: #ffd86a; }
 .battle-defender { align-items: flex-end; color: #ffd86a; text-align: right; }
+.battle-replay-production { margin-bottom: .5rem; text-align: center; color: var(--sf-text-muted); }
 .battle-replay-result-known.battle-replay-attacker-won .battle-attacker,
 .battle-replay-result-known:not(.battle-replay-attacker-won) .battle-defender { color: #56d990; }
 .battle-replay-result-known.battle-replay-attacker-won .battle-defender,
@@ -1763,18 +1744,6 @@ html[data-gp-game="starfare"] {
     background: var(--sf-surface-2);
     border: 1px solid var(--sf-border);
     border-radius: 0.4rem;
-}
-
-.map-sidebar-contact {
-    padding: 0.6rem;
-    background: var(--sf-surface-1);
-    border: 1px solid var(--sf-border);
-    border-radius: 0.45rem;
-}
-
-.map-sidebar-contact h2 {
-    margin: 0;
-    font-size: 1rem;
 }
 
 /* Rundenstatus: Mitspieler mit Abgabe-Haken und Countdown */

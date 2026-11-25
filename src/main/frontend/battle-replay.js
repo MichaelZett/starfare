@@ -24,13 +24,6 @@ const audio = {
         oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
         oscillator.start(time);
         oscillator.stop(time + 0.25);
-    },
-    async test() {
-        await this.unlock();
-        const enabled = this.enabled;
-        this.enabled = true;
-        this.impact();
-        this.enabled = enabled;
     }
 };
 window.starfareBattleAudio = audio;

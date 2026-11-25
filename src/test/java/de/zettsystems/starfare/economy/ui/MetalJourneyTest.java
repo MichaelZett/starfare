@@ -79,6 +79,15 @@ class MetalJourneyTest extends AbstractEconomyUiTest {
         assertArchived("Metal Browserless");
     }
 
+    @Test
+    void systemDetailsOfferTheMiningAssistanceAndTheSystemsByYield() {
+        openGame(MetalStates.ready(2, 5), "Metal mining overview");
+
+        assertThat(text("mining-yield-ranking")).contains("Alpha", "Förderung: 3 Metall je Punkt · Restvorkommen 5");
+        click("mining-automation-open");
+        assertThat(openedDialog().getHeaderTitle()).isEqualTo("Förderautomatik");
+    }
+
     private Input miningSlider() {
         return find(Input.class).withAriaLabel("Metall fördern").single();
     }

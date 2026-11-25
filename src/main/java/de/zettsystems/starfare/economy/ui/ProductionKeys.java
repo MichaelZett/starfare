@@ -33,8 +33,8 @@ public final class ProductionKeys {
     public static final String NOT_SAVED = PREFIX + "notSaved";
     public static final String RELOCATION_SHORTENED = PREFIX + "relocation.shortened";
     public static final String RELOCATION_REMOVED = PREFIX + "relocation.removed";
-    public static final String LOGISTICS_YIELD = PREFIX + "logistics.yield";
-    public static final String LOGISTICS_SORT_YIELD = PREFIX + "logistics.sortYield";
+    public static final String YIELD = PREFIX + "yield";
+    public static final String YIELD_RANKING = PREFIX + "yieldRanking";
     public static String preset(de.zettsystems.starfare.economy.values.ProductionPreset preset) {
         return switch (preset) { case SHIPS -> SHIPS; case METAL -> METAL; case INDUSTRY -> INDUSTRY;
             case EVEN -> EVEN; case AUTARK -> AUTARK; };

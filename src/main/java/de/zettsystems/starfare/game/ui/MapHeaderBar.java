@@ -17,7 +17,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Top header bar: game title/round info, empire stats, next-round button and menu.
  * Wiring is fully callback-driven so MainView stays in charge of navigation. The compact variant
- * for phones drops the title and language switcher and moves logistics and legend into the menu.
+ * for phones drops the title and language switcher.
  */
 final class MapHeaderBar extends HorizontalLayout {
 
@@ -29,14 +29,12 @@ final class MapHeaderBar extends HorizontalLayout {
     private final de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices = new de.zettsystems.starfare.economy.ui.EconomyNoticeBar();
     de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices() { return economyNotices; }
     private final Button next;
-    private final @Nullable Button logistics;
-    private final @Nullable MenuItem logisticsItem;
     private final MenuItem researchItem;
     private final MenuItem leaveItem;
     private final MenuItem resignItem;
     private final MenuItem roundRulesItem;
 
-    record Actions(Runnable onNext, Runnable onToggleLogistics, Runnable onLeave, Runnable onLobby,
+    record Actions(Runnable onNext, Runnable onLeave, Runnable onLobby,
                    Runnable onEditRoundRules, Runnable onResearch, Runnable onResign) { }
 
     MapHeaderBar(Actions actions, boolean compact, @Nullable OwnFrameParts frame) {
@@ -57,16 +55,6 @@ final class MapHeaderBar extends HorizontalLayout {
         headerMenu.addClassName("app-header-menu");
         MenuItem menuRoot = headerMenu.addItem(VaadinIcon.MENU.create());
         menuRoot.getElement().setAttribute("aria-label", "Menü");
-        if (compact) {
-            logistics = null;
-            logisticsItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_LOGISTICS_MODE), _ -> actions.onToggleLogistics().run());
-            logisticsItem.setCheckable(true);
-            menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_LEGEND), _ -> MapLegend.open());
-        } else {
-            logisticsItem = null;
-            logistics = new Button(I18n.t(UiTexts.MAP_LOGISTICS_MODE), _ -> actions.onToggleLogistics().run());
-            logistics.addThemeVariants(ButtonVariant.TERTIARY);
-        }
         researchItem = menuRoot.getSubMenu().addItem(I18n.t(de.zettsystems.starfare.game.ui.UiTexts.RESEARCH_TITLE), _ -> actions.onResearch().run());
         researchItem.setVisible(false);
         roundRulesItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_ROUND_RULES),
@@ -84,12 +72,10 @@ final class MapHeaderBar extends HorizontalLayout {
         headerLeft.addClassName("app-header-left");
 
         HorizontalLayout headerRight;
-        if (logistics == null) {
-            headerRight = new HorizontalLayout(next, headerMenu);
-        } else if (frame != null) {
-            headerRight = new HorizontalLayout(frame.languageSwitcher(), logistics, next, headerMenu);
+        if (!compact && frame != null) {
+            headerRight = new HorizontalLayout(frame.languageSwitcher(), next, headerMenu);
         } else {
-            headerRight = new HorizontalLayout(logistics, next, headerMenu);
+            headerRight = new HorizontalLayout(next, headerMenu);
         }
         headerRight.setAlignItems(Alignment.CENTER);
         headerRight.setSpacing(true);
@@ -160,16 +146,6 @@ final class MapHeaderBar extends HorizontalLayout {
 
     void setNextVisible(boolean visible) {
         next.setVisible(visible);
-    }
-
-    void setLogisticsActive(boolean active) {
-        if (logisticsItem != null) { logisticsItem.setChecked(active); }
-        if (logistics == null) { return; }
-        if (active) {
-            logistics.addThemeVariants(ButtonVariant.PRIMARY);
-        } else {
-            logistics.removeThemeVariants(ButtonVariant.PRIMARY);
-        }
     }
 
     void setEmpireStatsVisible(boolean visible) {

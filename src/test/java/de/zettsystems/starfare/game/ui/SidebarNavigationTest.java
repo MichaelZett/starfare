@@ -33,18 +33,20 @@ class SidebarNavigationTest {
                 _ -> { }, _ -> { }, () -> { });
         ComboBox<?> compact = descendants(panel).filter(ComboBox.class::isInstance).map(ComboBox.class::cast).findFirst().orElseThrow();
         Tabs tabs = descendants(panel).filter(Tabs.class::isInstance).map(Tabs.class::cast).findFirst().orElseThrow();
-        assertThat(compact.getListDataView().getItemCount()).isEqualTo(7);
-        panel.showOrders();
-        assertThat(compact.getValue()).hasToString("ORDERS");
-        assertThat(tabs.getSelectedIndex()).isEqualTo(3);
+        assertThat(tabs.getChildren().map(tab -> tab.getElement().getText()).toList())
+                .containsExactly("Details", "Flotten", "Verlegungen", "Bericht");
+        assertThat(compact.getListDataView().getItemCount()).isEqualTo(4);
+        panel.showFleets();
+        assertThat(compact.getValue()).hasToString("FLEETS");
+        assertThat(tabs.getSelectedIndex()).isEqualTo(1);
         panel.showReport();
         panel.setReportAvailable(false);
-        assertThat(compact.getListDataView().getItemCount()).isEqualTo(6);
-        assertThat(compact.getValue()).hasToString("CONTACTS");
+        assertThat(compact.getListDataView().getItemCount()).isEqualTo(3);
+        assertThat(compact.getValue()).hasToString("DETAILS");
         assertThat(tabs.getSelectedIndex()).isZero();
         panel.setReportAvailable(true);
-        assertThat(compact.getListDataView().getItemCount()).isEqualTo(7);
-        tabs.setSelectedIndex(4);
+        assertThat(compact.getListDataView().getItemCount()).isEqualTo(4);
+        tabs.setSelectedIndex(2);
         assertThat(compact.getValue()).hasToString("RELOCATIONS");
     }
 

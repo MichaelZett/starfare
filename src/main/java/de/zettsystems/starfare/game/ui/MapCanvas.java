@@ -56,7 +56,7 @@ final class MapCanvas extends Div {
                 inputs.view().turn(), inputs.playerId(), inputs.observer(), inputs.selectedFrom(),
                 inputs.relocationTargetSelection(), inputs.highlightedFleetId(), inputs.highlightedStandingOrderId(),
                 inputs.reportedSystemIds(), inputs.highlightedReportSystemId(), inputs.pendingBattleSystemIds(),
-                inputs.logisticsMode(), java.util.Set.copyOf(inputs.badgesShowingFleetNo()), inputs.joint());
+                java.util.Set.copyOf(inputs.badgesShowingFleetNo()), inputs.joint());
         if (rendering.equals(lastRender)) { return; }
         lastRender = rendering;
         MapRenderer.render(map, inputs);
