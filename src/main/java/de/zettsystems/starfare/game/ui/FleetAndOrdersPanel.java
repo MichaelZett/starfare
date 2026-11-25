@@ -95,6 +95,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private Consumer<PlannedOrder> onEditOrder = _ -> { };
 
     void onEditOrder(Consumer<PlannedOrder> action) { onEditOrder = action; }
+    private Consumer<PlannedDeparture> onCancelDeparture = _ -> { };
+    void onCancelDeparture(Consumer<PlannedDeparture> action) { onCancelDeparture = action; }
 
     private static final String NO_EVENT_CATEGORY = "-";
 
@@ -205,7 +207,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         TurnReport report = view.report();
         battlePresentationEnabled = BattlePresentationPreference.enabled(view.battlePresentationEnabled());
         Object travel = java.util.Arrays.asList(view.turn(), view.ownFleets(), view.plannedOrders(),
-                view.standingOrders(), view.waitingFleetIds(), readOnly, fleetId, standingOrderId);
+                view.plannedDepartures(), view.standingOrders(), view.waitingFleetIds(), readOnly, fleetId, standingOrderId);
         if (!travel.equals(lastTravel)) { renderTravelCards(view); lastTravel = travel; }
         Integer detailOwner = selectedSystem == null ? null : selectedSystem.ownerId();
         boolean industryLocked = detailOwner != null && view.roundStatus().hasSubmitted(detailOwner);
@@ -596,7 +598,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return switch (event) {
             case TurnEvent.CoalitionBattle _, TurnEvent.BattleWon _, TurnEvent.BattleLost _, TurnEvent.SystemLost _, TurnEvent.DefenseHeld _ -> 1;
             case TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.FinalScore _ -> 2;
-            case TurnEvent.Cosmic _ -> 3;
+            case TurnEvent.Cosmic _, TurnEvent.JointDeparture _ -> 3;
             case TurnEvent.Reinforcement _ -> 3;
             case TurnEvent.Production _, TurnEvent.EconomySummary _ -> 4;
         };
@@ -643,7 +645,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.SystemLost _ -> EventCategory.SYSTEM_LOST;
             case TurnEvent.DefenseHeld _ -> EventCategory.DEFENSE_HELD;
             case TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _, TurnEvent.Cosmic _,
-                 TurnEvent.FinalScore _ -> null;
+                 TurnEvent.FinalScore _, TurnEvent.JointDeparture _ -> null;
         });
     }
 
@@ -744,6 +746,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.Defeat _ -> "☠";
             case TurnEvent.Cosmic _ -> "☄";
             case TurnEvent.FinalScore _ -> "🏁";
+            case TurnEvent.JointDeparture _ -> "⏱";
         };
     }
 
@@ -763,6 +766,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             case TurnEvent.Defeat _ -> "event-system-lost";
             case TurnEvent.Cosmic _ -> "event-cosmic";
             case TurnEvent.FinalScore _ -> "event-victory";
+            case TurnEvent.JointDeparture _ -> "event-joint-departure";
         };
     }
 
@@ -786,6 +790,13 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         view.plannedOrders().stream()
                 .filter(order -> matchesRoute(order.fromSystem(), order.toSystem()))
                 .forEach(order -> travel.add(new TravelEntry(orderArrival(order), 1, order.index(), () -> orderCard(order))));
+        List<PlannedDeparture> departures = view.plannedDepartures();
+        for (int i = 0; i < departures.size(); i++) {
+            PlannedDeparture departure = departures.get(i);
+            if (matchesRoute(departure.fromSystem(), departure.toSystem())) {
+                travel.add(new TravelEntry(departure.arrivalTurn(), 2, i, () -> departureCard(departure)));
+            }
+        }
         travel.sort(java.util.Comparator.comparingInt(TravelEntry::arrival).thenComparingInt(TravelEntry::kind)
                 .thenComparingInt(TravelEntry::order));
         addArrivalGroups(fleetCards, travel, TravelEntry::arrival, entry -> entry.card().get());
@@ -802,7 +813,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
     }
 
-    /** A fleet ({@code kind} 0) or a planned order (1) in the travel list. */
+    /** A fleet ({@code kind} 0), a planned order (1) or a planned later start (2) in the travel list. */
     private record TravelEntry(int arrival, int kind, int order, java.util.function.Supplier<Div> card) { }
 
     private TextField routeFilter() {
@@ -975,6 +986,26 @@ final class FleetAndOrdersPanel extends VerticalLayout {
             if (order.isSend()) {
                 card.add(new Button(I18n.t(UiTexts.PLAN_EDIT), _ -> onEditOrder.accept(order)));
             }
+        }
+        return card;
+    }
+
+    /** A joint attack's later start: the ships wait in the source garrison until the start round. */
+    private Div departureCard(PlannedDeparture departure) {
+        Div card = new Div();
+        card.addClassNames("fleet-travel-card", "fleet-travel-card-planned", "fleet-travel-card-departure");
+        Div top = new Div();
+        top.addClassName("fleet-travel-card-top");
+        top.add(new Span("⏱ " + I18n.t(UiTexts.JOINT_DEPARTURE)), fleetNumber(departure.ships()));
+        Span route = new Span(departure.fromSystem() + " → " + departure.toSystem());
+        route.addClassName("fleet-travel-route");
+        Span times = new Span(I18n.t(UiTexts.JOINT_DEPARTURE_TIMES, departure.departureTurn(), departure.arrivalTurn()));
+        times.addClassName("fleet-travel-arrival");
+        card.add(top, route, times);
+        if (!readOnly) {
+            Button cancel = new Button(I18n.t(UiTexts.MAP_ACTION_CANCEL_ORDER), _ -> onCancelDeparture.accept(departure));
+            cancel.addThemeVariants(ButtonVariant.ERROR, ButtonVariant.SMALL, ButtonVariant.TERTIARY);
+            card.add(cancel);
         }
         return card;
     }

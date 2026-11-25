@@ -22,6 +22,12 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   fast immer verlieren.
 - **Wieder Reiter in der Seitenleiste:** Details, Flotten, Verlegungen und Bericht sind auch in der
   schmalen Seitenleiste und auf dem Telefon vier Reiter statt einer Auswahlliste.
+- **Gemeinsam angreifen:** Nach dem Klick auf ein Ziel wählen die Rundenabzeichen der eigenen Systeme
+  per Klick die Quellen aus; der Knopf über dem Ziel zeigt die gemeinsame Ankunft und öffnet eine kurze
+  Bestätigung mit den Schiffen je Quelle. Schnellere Quellen starten automatisch später, damit alle in
+  derselben Runde ankommen; ihre Schiffe verteidigen bis dahin die Garnison, sind aber vorgemerkt.
+  Geplante Starts stehen im Reiter Flotten und lassen sich stornieren. Der bisherige Dialog
+  „Flotten gesammelt senden“ entfällt.
 
 ## 0.2.19 - 2026-11-25
 

@@ -1,11 +1,8 @@
 package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -13,7 +10,6 @@ import de.zettsystems.starfare.fleet.values.FleetDispatch;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -66,59 +62,75 @@ final class PlanningDialogs {
         footer(dialog, save);
     }
 
-    /** Joint send to one target, opened from the map with the systems that arrive together already chosen. */
-    void dispatch(int targetId, Collection<Integer> sourceIds) {
-        Dialog dialog = dialog(UiTexts.PLAN_DISPATCH);
-        MultiSelectComboBox<VisibleSystem> sources = sources();
-        ComboBox<VisibleSystem> target = targets();
-        view.systems().stream().filter(system -> system.id() == targetId).findFirst().ifPresent(target::setValue);
-        sources.setValue(view.systems().stream().filter(system -> sourceIds.contains(system.id())
-                && Objects.equals(system.ownerId(), player)).toList());
-        IntegerField amount = amount();
-        Checkbox all = new Checkbox(I18n.t(UiTexts.PLAN_ALL_AVAILABLE), true);
-        amount.setEnabled(false);
-        Div preview = new Div();
-        Button save = new Button(I18n.t(UiTexts.PLAN_DISPATCH), _ -> {
-            VisibleSystem destination = target.getValue();
-            List<FleetDispatch> dispatches = dispatches(sources, amount, all);
-            finish(dialog, destination != null
-                    && games.dispatchFleets(id, player, view.turn(), destination.id(), dispatches));
-        });
-        Runnable update = () -> updateDispatchPreview(preview, save, sources, target, amount, all);
-        sources.addValueChangeListener(_ -> update.run());
-        target.addValueChangeListener(_ -> update.run());
-        amount.addValueChangeListener(_ -> update.run());
-        all.addValueChangeListener(_ -> { amount.setEnabled(!all.getValue()); update.run(); });
-        update.run();
-        dialog.add(sources, target, all, amount, preview);
+    /**
+     * Confirmation of a joint attack picked on the map: per source the ships (all available by default), its start
+     * and the common arrival. Faster sources start later; the game launches them in their round.
+     */
+    void jointAttack(JointArrival joint, Runnable done) {
+        VisibleSystem target = system(joint.targetId());
+        Integer common = joint.commonArrival();
+        if (target == null || common == null) { return; }
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle(I18n.t(UiTexts.JOINT_DIALOG_TITLE, target.name()));
+        dialog.setWidth("min(32rem, 90vw)");
+        dialog.addClassNames("planning-dialog", "joint-attack-dialog");
+        Paragraph summary = new Paragraph();
+        summary.addClassName("joint-attack-summary");
+        java.util.Map<Integer, IntegerField> amounts = new java.util.LinkedHashMap<>();
+        Button confirm = new Button(I18n.t(UiTexts.JOINT_DIALOG_CONFIRM));
+        Runnable update = () -> {
+            List<FleetDispatch> dispatches = jointDispatches(amounts);
+            confirm.setEnabled(dispatches.size() == amounts.size());
+            summary.setText(I18n.t(UiTexts.JOINT_DIALOG_SUMMARY, common,
+                    dispatches.stream().mapToInt(FleetDispatch::ships).sum()));
+        };
+        for (var entry : joint.selectedArrivals()) {
+            VisibleSystem source = system(entry.getKey());
+            if (source == null) { continue; }
+            int available = Objects.requireNonNullElse(source.availableShips(), 0);
+            IntegerField ships = amount();
+            ships.setLabel(source.name());
+            ships.setMax(available);
+            ships.setValue(available);
+            ships.addValueChangeListener(_ -> update.run());
+            amounts.put(source.id(), ships);
+            var start = new com.vaadin.flow.component.html.Span(startText(common - entry.getValue(), common));
+            start.addClassName("joint-attack-start");
+            var row = new com.vaadin.flow.component.html.Div(ships, start);
+            row.addClassName("joint-attack-row");
+            dialog.add(row);
+        }
+        dialog.add(summary, new Paragraph(I18n.t(UiTexts.JOINT_DIALOG_GARRISON)));
         if (view.systems().stream().anyMatch(system -> system.industry() != null)) {
             dialog.add(new Paragraph(I18n.t(UiTexts.CONQUEST_SELF)));
         }
-        footer(dialog, save);
+        update.run();
+        confirm.addClickListener(_ -> {
+            boolean accepted = games.planJointAttack(id, player, view.turn(), target.id(), jointDispatches(amounts));
+            if (!accepted) { Notification.show(I18n.t(UiTexts.PLAN_REJECTED)); return; }
+            dialog.close();
+            done.run();
+        });
+        confirm.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.PRIMARY);
+        footer(dialog, confirm);
     }
 
-    private void updateDispatchPreview(Div preview, Button save, MultiSelectComboBox<VisibleSystem> sources,
-                                       ComboBox<VisibleSystem> target, IntegerField amount, Checkbox all) {
-        preview.removeAll();
-        VisibleSystem destination = target.getValue();
-        var dispatches = dispatches(sources, amount, all);
-        var arrivals = new java.util.HashMap<Integer, Integer>();
-        if (destination != null) {
-            dispatches.forEach(dispatch -> {
-                Integer arrival = arrivalTurn(dispatch.sourceId(), destination.id());
-                if (arrival != null) { arrivals.put(dispatch.sourceId(), arrival); }
-            });
-        }
-        boolean valid = destination != null && !dispatches.isEmpty() && dispatches.stream().allMatch(dispatch ->
-                dispatch.sourceId() != destination.id() && dispatch.ships() > 0 && arrivals.containsKey(dispatch.sourceId())
-                        && sources.getValue().stream().filter(s -> s.id() == dispatch.sourceId())
-                        .anyMatch(s -> hasEnoughShips(s, dispatch.ships())));
-        save.setEnabled(valid);
-        if (destination == null) { return; }
-        var totals = new java.util.TreeMap<Integer, Long>();
-        dispatches.stream().filter(dispatch -> arrivals.containsKey(dispatch.sourceId()))
-                .forEach(dispatch -> totals.merge(arrivals.get(dispatch.sourceId()), (long) dispatch.ships(), Long::sum));
-        totals.forEach((turn, ships) -> preview.add(new Paragraph(I18n.t(UiTexts.PLAN_ARRIVAL, destination.name(), turn, ships))));
+    private String startText(int delay, int arrival) {
+        return delay <= 0 ? I18n.t(UiTexts.JOINT_DIALOG_START_NOW, arrival)
+                : I18n.t(UiTexts.JOINT_DIALOG_START_LATER, view.turn() + delay, delay, arrival);
+    }
+
+    /** Only valid amounts: a source left empty or above what it has drops out, which keeps the confirmation off. */
+    private static List<FleetDispatch> jointDispatches(java.util.Map<Integer, IntegerField> amounts) {
+        return amounts.entrySet().stream().filter(entry -> {
+            Integer ships = entry.getValue().getValue();
+            Integer max = entry.getValue().getMax();
+            return ships != null && ships > 0 && ships <= max;
+        }).map(entry -> new FleetDispatch(entry.getKey(), Objects.requireNonNull(entry.getValue().getValue()))).toList();
+    }
+
+    private @Nullable VisibleSystem system(int systemId) {
+        return view.systems().stream().filter(system -> system.id() == systemId).findFirst().orElse(null);
     }
 
     /** Arrival along the route the order would take, as the game plans it; none if the target is out of reach. */
@@ -126,31 +138,11 @@ final class PlanningDialogs {
         return games.routeFor(id, player, source, target).map(route -> view.turn() + route.rounds()).orElse(null);
     }
 
-    private static List<FleetDispatch> dispatches(MultiSelectComboBox<VisibleSystem> sources, IntegerField amount, Checkbox all) {
-        Integer count = amount.getValue();
-        return sources.getValue().stream().sorted(java.util.Comparator.comparingInt(VisibleSystem::id))
-                .map(system -> new FleetDispatch(system.id(), Boolean.TRUE.equals(all.getValue())
-                        ? Objects.requireNonNullElse(system.availableShips(), 0) : Objects.requireNonNullElse(count, 0))).toList();
-    }
-
-    private static boolean hasEnoughShips(VisibleSystem system, int ships) {
-        Integer available = system.availableShips();
-        return available != null && available >= ships;
-    }
-
     private ComboBox<VisibleSystem> targets() {
         ComboBox<VisibleSystem> target = new ComboBox<>(I18n.t(UiTexts.PLAN_TARGET));
         target.setItems(view.systems());
         target.setItemLabelGenerator(VisibleSystem::name);
         return target;
-    }
-
-    private MultiSelectComboBox<VisibleSystem> sources() {
-        MultiSelectComboBox<VisibleSystem> sources = new MultiSelectComboBox<>(I18n.t(UiTexts.PLAN_SOURCES));
-        sources.setWidthFull();
-        sources.setItems(view.systems().stream().filter(s -> Objects.equals(s.ownerId(), player)).toList());
-        sources.setItemLabelGenerator(VisibleSystem::name);
-        return sources;
     }
 
     private static IntegerField amount() {

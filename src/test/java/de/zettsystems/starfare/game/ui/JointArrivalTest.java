@@ -52,31 +52,47 @@ class JointArrivalTest {
     void badgesOnlyForSystemsWithShipsThatReachTheTarget() {
         var view = view(List.of(), List.of(), Set.of());
         var joint = JointArrival.of(view, new JointArrival.Aim(TARGET, 14),
-                Map.of(1, 14, 2, 13, 3, 14, 4, 16, TARGET, 11), true);
+                Map.of(1, 14, 2, 13, 3, 14, 4, 16, TARGET, 11), true, Set.of(3));
 
         assertThat(joint).isNotNull();
         assertThat(joint.arrivals()).as("system 3 has no ships to spare, the target is no source")
                 .containsOnlyKeys(1, 2, 4);
+        assertThat(joint.selected()).as("a pick without a badge drops out").isEmpty();
         assertThat(joint.fit(14)).isEqualTo(JointArrival.Fit.MATCH);
         assertThat(joint.fit(13)).isEqualTo(JointArrival.Fit.EARLY);
         assertThat(joint.gap(13)).isEqualTo(1);
         assertThat(joint.fit(16)).isEqualTo(JointArrival.Fit.LATE);
         assertThat(joint.gap(16)).isEqualTo(2);
-        assertThat(joint.matchingSources()).containsExactly(1);
         assertThat(joint.arrivalFrom(3)).isNull();
-        assertThat(JointArrival.of(view, new JointArrival.Aim(TARGET, 14), Map.of(3, 14), true))
+        assertThat(JointArrival.of(view, new JointArrival.Aim(TARGET, 14), Map.of(3, 14), true, Set.of()))
                 .as("nothing to send, nothing to show").isNull();
     }
 
     @Test
-    void withoutARoundToMeetTheBadgesShowPlainRoundsAndPreselectNothing() {
+    void withoutARoundToMeetTheBadgesShowPlainRounds() {
         var joint = JointArrival.of(view(List.of(), List.of(), Set.of()), new JointArrival.Aim(TARGET, null),
-                Map.of(1, 14, 2, 13), false);
+                Map.of(1, 14, 2, 13), false, Set.of());
 
         assertThat(joint).isNotNull();
         assertThat(joint.fit(14)).isEqualTo(JointArrival.Fit.OPEN);
         assertThat(joint.gap(14)).isZero();
-        assertThat(joint.matchingSources()).isEmpty();
+        assertThat(joint.commonArrival()).isNull();
         assertThat(joint.mayDispatch()).isFalse();
+    }
+
+    @Test
+    void pickedSourcesMeetAtTheLatestArrivalAndTheFasterOnesWait() {
+        var joint = JointArrival.of(view(List.of(), List.of(), Set.of()), new JointArrival.Aim(TARGET, 12),
+                Map.of(1, 14, 2, 13, 4, 16), true, Set.of(2, 1));
+
+        assertThat(joint).isNotNull();
+        assertThat(joint.commonArrival()).as("the latest picked arrival, not the reference").isEqualTo(14);
+        assertThat(joint.isSelected(1)).isTrue();
+        assertThat(joint.isSelected(4)).isFalse();
+        assertThat(joint.fit(14)).isEqualTo(JointArrival.Fit.MATCH);
+        assertThat(joint.fit(13)).isEqualTo(JointArrival.Fit.EARLY);
+        assertThat(joint.gap(13)).as("system 2 starts a round later").isEqualTo(1);
+        assertThat(joint.fit(16)).as("picking system 4 would delay everyone").isEqualTo(JointArrival.Fit.LATE);
+        assertThat(joint.selectedArrivals()).containsExactly(Map.entry(1, 14), Map.entry(2, 13));
     }
 }

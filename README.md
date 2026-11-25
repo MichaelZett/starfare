@@ -166,13 +166,17 @@ turn.
 
 Select a foreign system or one of your flying fleets on the map, and each of your
 systems with ships to spare shows the round a fleet sent from there now would arrive
-(along the same routes the game uses, so Spaceward range and stopovers count). Next
-to a fleet already on its way, or the earliest own arrival at the system, the badge
-marks arriving together (✓), too early by n rounds (`+n ⏸`) or later. **Send
-together** above the target opens the joint send with the target and the systems
-arriving together preselected; it previews arrivals per round before queuing the
-batch. It validates the entire selection and rejects stale turns or unavailable
-ships without partial changes.
+(along the same routes the game uses, so extended range and stopovers count). Click
+those badges to pick the sources of a **joint attack**; the button above the target
+shows the common arrival (the latest among the picked sources) and opens a short
+confirmation with the ships per source (all available by default). The slowest
+sources leave now; faster ones get a planned later start so that all arrive in the
+same round. Until then their ships stay in the garrison and defend it, but are
+reserved and cannot be sent twice. Planned starts are listed in the Fleets tab and can
+be cancelled while the round is open. A start whose source is lost, whose ships are
+gone or whose target can no longer be reached is cancelled with a report line; with
+fewer ships left, the rest starts. A target that became your own or an ally's is
+still flown to.
 
 With battle speed **Instant**, **Resolve all open battles** acknowledges the complete
 round. Speed, sound, report filters, route search and sidebar width are

@@ -84,6 +84,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     /** Arrival rounds at the last badge target, asked again only for a new target or round. */
     private String arrivalKey = "";
     private java.util.Map<Integer, Integer> arrivalTurns = java.util.Map.of();
+    /** Sources picked on the map for a joint attack on the current target; view-local, reset with target or round. */
+    private final Set<Integer> jointSources = new java.util.HashSet<>();
     private @Nullable Integer highlightedStandingOrderId;
     private @Nullable Integer highlightedReportSystemId;
     private @Nullable ReplayEventMarker pendingReplayEvent;
@@ -133,6 +135,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 this::cancelTargetSelectionAndRefresh);
         mapCanvas = new MapCanvas(this::onMapBackgroundClick);
         fleetsPanel.onEditOrder(order -> planningDialogs().edit(order));
+        fleetsPanel.onCancelDeparture(this::cancelDeparture);
         fleetsPanel.onFleetWait(id -> executeFleetAction(id, false));
         fleetsPanel.onFleetDisband(id -> executeFleetAction(id, true));
         fleetsPanel.onSystemSelected(id -> {
@@ -345,6 +348,28 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         Integer next = standingOrderId < 0 ? null : standingOrderId;
         highlightedStandingOrderId = Objects.equals(highlightedStandingOrderId, next) ? null : next;
         refresh();
+    }
+
+    private void cancelDeparture(PlannedDeparture departure) {
+        int pid = currentSeat();
+        PlayerViewState view = viewForCurrentMode();
+        if (pid < 0 || view == null || !game.cancelDeparture(gameId, pid, view.turn(), departure)) {
+            Notification.show(I18n.t(UiTexts.MAP_CANCEL_ORDER_FAILED));
+        }
+        refresh();
+    }
+
+    private void toggleJointSource(int systemId) {
+        if (!jointSources.remove(systemId)) { jointSources.add(systemId); }
+        refresh();
+    }
+
+    private void openJointAttack(JointArrival joint) {
+        planningDialogs().jointAttack(joint, () -> {
+            jointSources.clear();
+            refresh();
+            fleetsPanel.showFleets();
+        });
     }
 
     private void cancelOrder(PlannedOrder o) {
@@ -829,7 +854,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 this::refresh,
                 rangeForSelection(playerId, observer),
                 jointArrival(view, playerId, !ordersOffered),
-                joint -> planningDialogs().dispatch(joint.targetId(), joint.matchingSources())));
+                this::toggleJointSource,
+                this::openJointAttack));
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
         if (mobile != null) { mobile.targetSelection(targetSelection != TargetSelection.NONE); }
@@ -854,8 +880,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         if (!key.equals(arrivalKey)) {
             arrivalTurns = game.arrivalTurnsTo(gameId, playerId, aim.targetId());
             arrivalKey = key;
+            jointSources.clear();
         }
-        return JointArrival.of(view, aim, arrivalTurns, !view.roundStatus().hasSubmitted(playerId));
+        JointArrival joint = JointArrival.of(view, aim, arrivalTurns, !view.roundStatus().hasSubmitted(playerId), jointSources);
+        jointSources.retainAll(joint == null ? Set.of() : joint.selected());
+        return joint;
     }
 
     private de.zettsystems.starfare.navigation.values.@Nullable RangeView rangeForSelection(int playerId, boolean observer) {

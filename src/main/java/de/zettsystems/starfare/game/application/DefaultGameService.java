@@ -160,10 +160,19 @@ public class DefaultGameService implements GameService {
     }
 
     @Override
-    public boolean dispatchFleets(GameId id, int player, int turn, int target,
-                                 List<de.zettsystems.starfare.fleet.values.FleetDispatch> dispatches) {
+    public boolean planJointAttack(GameId id, int player, int turn, int target,
+                                   List<de.zettsystems.starfare.fleet.values.FleetDispatch> dispatches) {
         return registry.writeState(id, state -> canPlan(state, player, turn)
-                && de.zettsystems.starfare.fleet.domain.OrderPlanning.dispatch(state, player, target, dispatches));
+                && de.zettsystems.starfare.fleet.domain.OrderPlanning.jointAttack(state, player, target, dispatches));
+    }
+
+    @Override
+    public boolean cancelDeparture(GameId id, int player, int turn, PlannedDeparture expected) {
+        return registry.writeState(id, state -> canPlan(state, player, turn)
+                && de.zettsystems.starfare.fleet.domain.OrderPlanning.cancelDeparture(state, player,
+                new de.zettsystems.starfare.fleet.values.ScheduledDeparture(player, expected.fromSystemId(),
+                        expected.toSystemId(), expected.ships(), expected.departureTurn(), expected.arrivalTurn(),
+                        expected.beneficiaryId())));
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultGameService.class);
@@ -725,6 +734,7 @@ public class DefaultGameService implements GameService {
                 state.updatePlayer(id, Player::asAi);
                 state.joinedHumanPlayerIds().remove(id);
                 state.pendingOrders().remove(id);
+                state.replaceDepartures(id, List.of());
                 // The count stays, so the seat stays timed out: no way back (TIMED_OUT, platform decision
                 // 19.11.2026). seatByUser stays as well, so the former player still reads chat and review.
             });
@@ -809,6 +819,7 @@ public class DefaultGameService implements GameService {
             state.joinedHumanPlayerIds().remove(playerId);
             state.submittedThisTurn().remove(playerId);
             state.pendingOrders().remove(playerId);
+            state.replaceDepartures(playerId, List.of());
             TurnResult turn = maybeAdvance(state);
             return new SubmitResult(true, turn);
         });
@@ -880,6 +891,7 @@ public class DefaultGameService implements GameService {
         state.joinedHumanPlayerIds().remove(seatId);
         state.submittedThisTurn().remove(seatId);
         state.pendingOrders().remove(seatId);
+        state.replaceDepartures(seatId, List.of());
         if (kickedPlayerId != null) {
             state.seatByUser().remove(kickedPlayerId);
         }
@@ -1270,7 +1282,7 @@ public class DefaultGameService implements GameService {
                         destroyed += battle.destroyedBy(playerId);
                     }
                     case TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.EconomySummary _,
-                            TurnEvent.Defeat _, TurnEvent.Cosmic _, TurnEvent.FinalScore _ -> { }
+                            TurnEvent.Defeat _, TurnEvent.Cosmic _, TurnEvent.FinalScore _, TurnEvent.JointDeparture _ -> { }
                 }
             }
         }

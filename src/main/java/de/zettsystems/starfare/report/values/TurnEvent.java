@@ -29,7 +29,8 @@ import java.util.OptionalInt;
         @JsonSubTypes.Type(value = TurnEvent.Victory.class, name = "victory"),
         @JsonSubTypes.Type(value = TurnEvent.Defeat.class, name = "defeat"),
         @JsonSubTypes.Type(value = TurnEvent.Cosmic.class, name = "cosmic"),
-        @JsonSubTypes.Type(value = TurnEvent.FinalScore.class, name = "finalScore")
+        @JsonSubTypes.Type(value = TurnEvent.FinalScore.class, name = "finalScore"),
+        @JsonSubTypes.Type(value = TurnEvent.JointDeparture.class, name = "jointDeparture")
 })
 public sealed interface TurnEvent {
 
@@ -44,6 +45,7 @@ public sealed interface TurnEvent {
             case DefenseHeld event -> OptionalInt.of(event.systemId());
             case CoalitionBattle event -> OptionalInt.of(event.systemId());
             case Cosmic event -> event.system();
+            case JointDeparture event -> OptionalInt.of(event.systemId());
             case Victory _, Defeat _, EconomySummary _, FinalScore _ -> OptionalInt.empty();
         };
     }
@@ -61,8 +63,8 @@ public sealed interface TurnEvent {
             case SystemLost event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
             case DefenseHeld event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
             case CoalitionBattle event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
-            case Production _, Reinforcement _, Victory _, Defeat _, EconomySummary _, Cosmic _, FinalScore _ ->
-                    Optional.empty();
+            case Production _, Reinforcement _, Victory _, Defeat _, EconomySummary _, Cosmic _, FinalScore _,
+                 JointDeparture _ -> Optional.empty();
         };
     }
 
@@ -329,6 +331,30 @@ public sealed interface TurnEvent {
 
     /** One empire's score: 400 per system, 25 per stationed ship, 20 per ship in flight. */
     record ScoreLine(int playerId, String name, int systems, int stationed, int inFlight, int points) {
+    }
+
+    /**
+     * A planned later start of a joint attack that could not launch as planned: cancelled, or launched with fewer
+     * ships than planned.
+     *
+     * @param systemId   the source system
+     * @param targetId   the target system
+     * @param planned    ships planned to launch
+     * @param sent       ships actually launched; zero when cancelled
+     */
+    record JointDeparture(int playerId, int systemId, String systemName, int targetId, String targetName,
+                          int planned, int sent, Outcome outcome) implements TurnEvent {
+        /** Why the planned start changed. */
+        public enum Outcome {
+            /** The source changed hands before the start; nothing launched. */
+            SOURCE_LOST,
+            /** No ships were left at the source; nothing launched. */
+            NO_SHIPS,
+            /** The target can no longer be reached from the source; nothing launched. */
+            NO_ROUTE,
+            /** Fewer ships than planned were left; those launched. */
+            REDUCED
+        }
     }
 
     /** End-of-game notice sent to every player other than the winner. */

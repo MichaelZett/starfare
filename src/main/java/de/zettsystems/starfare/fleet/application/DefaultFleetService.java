@@ -279,12 +279,14 @@ public class DefaultFleetService implements FleetService {
         return state.standingOrders().getOrDefault(playerId, List.of());
     }
 
+    /** Ships already queued to leave this round, plus those reserved for a planned later start. */
     private static int committedShipsFrom(GameState state, int playerId, int fromId) {
+        int reserved = state.reservedShips(playerId, fromId);
         List<FleetOrder> orders = state.pendingOrders().get(playerId);
         if (orders == null) {
-            return 0;
+            return reserved;
         }
-        return orders.stream()
+        return reserved + orders.stream()
                 .filter(o -> o instanceof FleetOrder.Send s && s.fromSystemId() == fromId)
                 .mapToInt(o -> ((FleetOrder.Send) o).ships())
                 .sum();

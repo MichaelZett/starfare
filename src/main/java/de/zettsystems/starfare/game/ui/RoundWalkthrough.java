@@ -38,7 +38,12 @@ final class RoundWalkthrough {
 
     /** Where an event of the walkthrough happened; empty for events the walkthrough leaves out. */
     static OptionalInt siteOf(TurnEvent event) {
-        return event instanceof TurnEvent.Cosmic news ? news.system() : event.battleSystemId();
+        return switch (event) {
+            case TurnEvent.Cosmic news -> news.system();
+            // A planned joint start that was cancelled or reduced changes the player's attack.
+            case TurnEvent.JointDeparture departure -> OptionalInt.of(departure.systemId());
+            default -> event.battleSystemId();
+        };
     }
 
     /** The first unconfirmed walkthrough event in report order, if any is left. */

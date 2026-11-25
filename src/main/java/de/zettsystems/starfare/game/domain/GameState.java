@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.domain;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyState;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
+import de.zettsystems.starfare.fleet.values.ScheduledDeparture;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.navigation.domain.RangeCalibration;
 import de.zettsystems.starfare.navigation.domain.Routes;
@@ -215,6 +216,8 @@ public class GameState {
     private final Map<String, Integer> invitedSeats = new HashMap<>();
     private final Map<Integer, List<FleetOrder>> pendingOrders = new HashMap<>();
     private final Map<Integer, List<FleetOrder>> previousOrders = new HashMap<>();
+    private final List<ScheduledDeparture> scheduledDepartures = new ArrayList<>();
+    private final Map<Integer, List<ScheduledDeparture>> previousDepartures = new HashMap<>();
     private @Nullable GameSetup originalSetup;
     private GalaxyExtent extent = GalaxyExtent.LEGACY;
 
@@ -252,16 +255,43 @@ public class GameState {
     /** One reversible command change per player, valid only within the current round. */
     public void rememberOrders(int player) {
         previousOrders.put(player, List.copyOf(pendingOrders.getOrDefault(player, List.of())));
+        previousDepartures.put(player, departuresOf(player));
     }
 
     public boolean undoOrders(int player) {
         List<FleetOrder> previous = previousOrders.get(player);
-        if (previous == null || !de.zettsystems.starfare.fleet.domain.OrderPlanning.valid(this, player, previous)) {
+        List<ScheduledDeparture> departures = previousDepartures.getOrDefault(player, departuresOf(player));
+        if (previous == null
+                || !de.zettsystems.starfare.fleet.domain.OrderPlanning.valid(this, player, previous, departures)) {
             return false;
         }
         pendingOrders.put(player, new ArrayList<>(previous));
+        replaceDepartures(player, departures);
         previousOrders.remove(player);
+        previousDepartures.remove(player);
         return true;
+    }
+
+    /** Planned later starts of joint attacks, of all players; they reserve ships until they launch. */
+    public List<ScheduledDeparture> scheduledDepartures() {
+        return scheduledDepartures;
+    }
+
+    public List<ScheduledDeparture> departuresOf(int player) {
+        return scheduledDepartures.stream().filter(departure -> departure.ownerId() == player).toList();
+    }
+
+    /** Ships of one system reserved for its owner's planned later starts. */
+    public int reservedShips(int player, int systemId) {
+        return scheduledDepartures.stream()
+                .filter(departure -> departure.ownerId() == player && departure.fromSystemId() == systemId)
+                .mapToInt(ScheduledDeparture::ships).sum();
+    }
+
+    /** Replaces all planned later starts of one player, keeping the others. */
+    public void replaceDepartures(int player, List<ScheduledDeparture> departures) {
+        scheduledDepartures.removeIf(departure -> departure.ownerId() == player);
+        scheduledDepartures.addAll(departures);
     }
     private final Map<Integer, List<StandingOrder>> standingOrders = new HashMap<>();
     private final Map<Integer, Integer> nextStandingOrderId = new HashMap<>();
@@ -365,6 +395,7 @@ public class GameState {
             originalHumanPlayerIds.remove(seat);
             submittedThisTurn.remove(seat);
             pendingOrders.remove(seat);
+            scheduledDepartures.removeIf(departure -> departure.ownerId() == seat);
             standingOrders.remove(seat);
             updatePlayer(seat, Player::asAi);
             changed = true;
@@ -600,6 +631,8 @@ public class GameState {
         this.invitedSeats.clear();
         this.pendingOrders.clear();
         this.previousOrders.clear();
+        this.scheduledDepartures.clear();
+        this.previousDepartures.clear();
         this.originalSetup = null;
         this.extent = GalaxyExtent.LEGACY;
         this.victoryRules = null;
@@ -753,6 +786,7 @@ public class GameState {
 
     public void nextTurn() {
         previousOrders.clear();
+        previousDepartures.clear();
         this.turn++;
         this.turnStartedAt = Instant.now();
         this.stragglerSince = null;
@@ -782,6 +816,8 @@ public class GameState {
         Map<Integer, List<SystemOwnership>> historyCopy = new HashMap<>();
         s.ownershipHistory.forEach((systemId, periods) -> historyCopy.put(systemId, new ArrayList<>(periods)));
         Map<Integer, ReplayFrame> replayCopy = new HashMap<>(s.replayFrames);
+        Map<Integer, List<ScheduledDeparture>> departuresCopy = new HashMap<>();
+        s.previousDepartures.forEach((pid, departures) -> departuresCopy.put(pid, List.copyOf(departures)));
         return new GameStateSnapshot(
                 s.turn, s.nextGlobalFleetId, new HashMap<>(s.nextLocalFleetNo),
                 List.copyOf(s.players), List.copyOf(s.systems), List.copyOf(s.fleets),
@@ -794,7 +830,8 @@ public class GameState {
                 s.observersAllowed, s.reentryAllowed, s.turnStartedAt, s.visibility, s.finishedAt, historyCopy, replayCopy,
                 s.battlePresentationEnabled, s.combatRandomnessPercent, s.roundRules, s.stragglerSince,
                   new HashMap<>(s.missedRounds), s.victorySystemPercent, s.originalSetup, new HashMap<>(s.previousOrders), s.ruleset, new HashMap<>(s.industries), s.navigation, s.diplomacy, s.victoryRules(), s.outcome(),
-                Set.copyOf(s.resignedSeats), s.cosmic, Map.copyOf(s.timedOutPlaces), s.extent);
+                Set.copyOf(s.resignedSeats), s.cosmic, Map.copyOf(s.timedOutPlaces), s.extent,
+                List.copyOf(s.scheduledDepartures), departuresCopy);
     }
 
     public static GameState fromSnapshot(GameStateSnapshot s) {
@@ -893,6 +930,13 @@ public class GameState {
         }
         if (s.nextStandingOrderId() != null) {
             c.nextStandingOrderId.putAll(s.nextStandingOrderId());
+        }
+        // Games saved before joint attacks have no planned later starts.
+        var departures = s.scheduledDepartures();
+        if (departures != null) { c.scheduledDepartures.addAll(departures); }
+        var previousDepartures = s.previousDepartures();
+        if (previousDepartures != null) {
+            previousDepartures.forEach((pid, planned) -> c.previousDepartures.put(pid, List.copyOf(planned)));
         }
     }
 
@@ -1005,6 +1049,8 @@ public class GameState {
         c.originalSetup = s.originalSetup;
         c.extent = s.extent;
         c.previousOrders.putAll(s.previousOrders);
+        c.scheduledDepartures.addAll(s.scheduledDepartures);
+        c.previousDepartures.putAll(s.previousDepartures);
         return c;
     }
 

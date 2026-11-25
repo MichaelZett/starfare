@@ -26,6 +26,9 @@ class RoundWalkthroughTest {
         assertThat(REPORT.events()).extracting(event -> RoundWalkthrough.siteOf(event).isPresent())
                 .containsExactly(false, true, false, true, false, true, false);
         assertThat(RoundWalkthrough.siteOf(REPORT.events().get(3)).getAsInt()).isEqualTo(12);
+        var cancelled = new TurnEvent.JointDeparture(1, 14, "Rigel", 13, "Altair", 8, 0,
+                TurnEvent.JointDeparture.Outcome.SOURCE_LOST);
+        assertThat(RoundWalkthrough.siteOf(cancelled)).as("a changed joint start is shown at its source").hasValue(14);
     }
 
     @Test
