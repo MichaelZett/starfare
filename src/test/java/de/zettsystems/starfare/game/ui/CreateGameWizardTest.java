@@ -135,8 +135,8 @@ class CreateGameWizardTest extends AbstractBrowserlessTest {
         assertThat(elementText(wizard.getElement())).contains("Private Partien sehen nur Eingeladene.");
         List<Component> cards = find(Component.class, wizard).withClassName("ruleset-card").all();
         assertThat(cards).hasSize(2);
-        assertThat(elementText(cards.getFirst().getElement())).contains("SectorForces", "Regeln 1.0.0");
-        assertThat(elementText(cards.get(1).getElement())).contains("Spaceward");
+        assertThat(elementText(cards.getFirst().getElement())).contains("SectorForces klassisch", "Regeln 1.0.0");
+        assertThat(elementText(cards.get(1).getElement())).contains("SectorForces erweitert");
         assertThat(variants().getValue().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
 
         test(find(Checkbox.class).withId("host-only").single()).click();
@@ -146,7 +146,7 @@ class CreateGameWizardTest extends AbstractBrowserlessTest {
         assertThat(games.summaryOf(id).visibility()).isEqualTo(GameVisibility.PRIVATE);
         assertThat(games.summaryOf(id).ruleset()).isEqualTo(RulesetRef.SECTOR_FORCES);
         assertThat(games.seatFor(id, host)).as("the host only hosts").isEmpty();
-        assertThat(viewText()).contains("Privat", "SectorForces · Regeln 1.0.0");
+        assertThat(viewText()).contains("Privat", "SectorForces klassisch · Regeln 1.0.0");
     }
 
     @Test

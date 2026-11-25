@@ -22,12 +22,14 @@ changing running games.
 
 | Variant | Status |
 |---|---|
-| **SectorForces, classic rules** (`classic`) | Playable, rules 1.0.0 |
-| **Extended rules** (`spaceward`, still shown as "Spaceward" in the game) | Playable, rules 1.3.0-r1 with colonies, metal, recycling and ship research; alpha stage inside the platform host |
+| **SectorForces classic** (`classic`) | Playable, rules 1.0.0 |
+| **SectorForces extended** (`spaceward`) | Playable, rules 1.3.0-r1 with colonies, metal, recycling and ship research; alpha stage inside the platform host |
 
 The classic rules are the compact core of conquest and fleet movement. The
 extended rules, which started out inspired by *Spaceward Ho!*, add an economy,
-limited flight range, alliances and coalition combat.
+limited flight range, alliances and coalition combat. Technically the extended
+rules are the variant `spaceward`, so the rest of this document and the rule
+versions (for example `spaceward/1.3.0-r1`) keep that name.
 
 Starfare is an independent hobby project. It is not affiliated with or endorsed
 by the publishers or rights holders of these games; their names only describe
@@ -61,10 +63,10 @@ complete game.
 
 ## Game variants and rule versions
 
-Choose a game variant before its settings in the new-game dialog. SectorForces
-(rules **1.0.0**) is preselected. **Spaceward** (always the current rules **1.3.0-r1**), inspired by
-Spaceward Ho!, is available for new games as well. Inside the games platform host
-each variant has a stage the platform keeps (alpha, beta, production; Spaceward starts
+Choose a game variant before its settings in the new-game dialog. **SectorForces
+classic** (rules **1.0.0**) is preselected. **SectorForces extended** (always the
+current rules **1.3.0-r1**) is available for new games as well. Inside the games platform host
+each variant has a stage the platform keeps (alpha, beta, production; SectorForces extended starts
 in alpha): the platform decides who may use it, the wizard marks alpha and beta
 variants, and an account that may no longer use a variant loses access to its games,
 running ones included. In Starfare's own start every variant is open. It adds

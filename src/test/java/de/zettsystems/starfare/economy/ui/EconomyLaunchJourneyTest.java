@@ -19,7 +19,7 @@ class EconomyLaunchJourneyTest extends AbstractEconomyUiTest {
         test(find(Button.class).withText("Neues Spiel").atIndex(1)).click();
         chooseSpaceward();
         test(button("Zusammenfassung prüfen")).click();
-        assertThat(elementText(openedDialog().getElement())).contains("Spaceward · Regeln 1.3.0-r1");
+        assertThat(elementText(openedDialog().getElement())).contains("SectorForces erweitert · Regeln 1.3.0-r1");
         test(button("Spiel anlegen")).click();
         runPendingUiAccess();
         assertThat(getCurrentView()).isInstanceOf(MainView.class);

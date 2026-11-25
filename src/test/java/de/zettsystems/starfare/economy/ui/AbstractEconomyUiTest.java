@@ -112,7 +112,7 @@ abstract class AbstractEconomyUiTest extends AbstractBrowserlessTest {
         GridTester<Grid<Object>, Object> grid = test(find(Grid.class).single());
         assertThat(java.util.stream.IntStream.range(0, grid.size())
                 .mapToObj(row -> elementText(grid.getCellComponent(row, 0).getElement())).toList())
-                .anySatisfy(row -> assertThat(row).contains(name, "Spaceward"));
+                .anySatisfy(row -> assertThat(row).contains(name, "SectorForces erweitert"));
     }
 
     @AfterEach

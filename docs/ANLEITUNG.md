@@ -28,26 +28,26 @@ Kontaktadresse im Impressum.
 
 ## Partie erstellen und beitreten
 
-Wähle zuerst die **Spielvariante**. **SectorForces** (Regelversion **1.0.0**)
-orientiert sich an Sector Forces, einem C64-Spiel der 80er-Jahre: Jedes System
-baut Schiffe, Flotten erobern fremde Systeme, und wer genug der Galaxie
-beherrscht, gewinnt. Die Variante ist vorausgewählt; die folgenden Spielregeln
-beschreiben sie. **Spaceward** (Regelversion **1.3.0-r1**)
-ist nach Spaceward Ho! gestaltet und ergänzt Industrieausbau, begrenzte Reichweite,
-Bündnisse und gemeinsame Schlachten. Die Abschnitte zu Spaceward weiter unten
-beschreiben, worin es von SectorForces abweicht. Weil dort alle feindlichen Seiten
-gleichzeitig kämpfen, blendet der Dialog bei Spaceward die Einstellung
+Wähle zuerst die **Spielvariante**. Starfare setzt Sector Forces um, ein C64-Spiel
+der 80er-Jahre: Jedes System baut Schiffe, Flotten erobern fremde Systeme, und wer
+genug der Galaxie beherrscht, gewinnt. **SectorForces klassisch** (Regelversion
+**1.0.0**) ist vorausgewählt; die folgenden Spielregeln beschreiben sie.
+**SectorForces erweitert** (Regelversion **1.3.0-r1**) ergänzt Industrieausbau,
+Metall und Schiffsforschung, begrenzte Reichweite, Bündnisse und gemeinsame
+Schlachten. Die Abschnitte „Erweiterte Regeln“ weiter unten beschreiben, worin sie
+von den klassischen Regeln abweicht. Weil dort alle feindlichen Seiten
+gleichzeitig kämpfen, blendet der Dialog bei SectorForces erweitert die Einstellung
 **Reihenfolge mehrerer Angreifer** aus.
 
 Auf der gemeinsamen Spieleplattform hat jede Variante eine Stufe (Alpha, Beta,
-Produktion); Spaceward ist derzeit in Alpha. Wer eine Variante nutzen darf,
+Produktion); SectorForces erweitert ist derzeit in Alpha. Wer eine Variante nutzen darf,
 entscheidet die Plattform; der Assistent kennzeichnet Alpha- und Beta-Varianten.
 Wer eine Variante nicht mehr nutzen darf, erreicht auch ihre Partien nicht mehr,
 auch laufende und die Nachbetrachtung. Im eigenen Start von Starfare stehen beide
 Varianten allen offen.
 
 Variante und Regelversion bleiben für die Partie fest. Die Anwendungsversion
-ist davon unabhängig. Alte Partien werden als SectorForces angezeigt und behalten
+ist davon unabhängig. Alte Partien werden als SectorForces klassisch angezeigt und behalten
 ihre bisherigen Regeln. Lobby, Beitritt, Verwaltung und Archiv zeigen die
 Regelreferenz; Vorlagen und Revanchen übernehmen sie.
 
@@ -87,7 +87,7 @@ und Revanchen übernommen. Bestehende Partien verwenden die **Basisstrategie**.
 
 | Strategie | Schwerpunkt |
 | --- | --- |
-| Basisstrategie | Bisheriges Verhalten: stärkste Basis, nahes Ziel und begrenzter Versand; Spaceward baut zusätzlich Industrie aus. |
+| Basisstrategie | Bisheriges Verhalten: stärkste Basis, nahes Ziel und begrenzter Versand; SectorForces erweitert baut zusätzlich Industrie aus. |
 | Früher Angriff | Früher Versand großer Kräfte mit kleiner Rücklage; gegnerische Systeme werden stärker bevorzugt. |
 | Expansion | Bevorzugt nahe, schwach verteidigte neutrale Systeme. |
 | Kräftekonzentration | Führt freie Schiffe aus dem Hinterland näher an die Front. |
@@ -96,8 +96,8 @@ und Revanchen übernommen. Bestehende Partien verwenden die **Basisstrategie**.
 | Zurückhaltender Industrieausbau | Investiert außerhalb naher sichtbarer Bedrohung ein Viertel der Kapazität. |
 | Adaptiver Industrieausbau | Berücksichtigt sichtbare Bedrohung, Schiffsbestand und Reservebedarf; baut bei knappen Kräften nicht weiter aus. |
 
-Die drei Industrieprofile stehen nur in **Spaceward** bereit. Beim Wechsel zu
-SectorForces werden unpassende Auswahlen auf Basisstrategie zurückgesetzt.
+Die drei Industrieprofile stehen nur in **SectorForces erweitert** bereit. Beim Wechsel zu
+SectorForces klassisch werden unpassende Auswahlen auf Basisstrategie zurückgesetzt.
 Strategien sind unterschiedliche Spielweisen, keine festen Schwierigkeitsstufen.
 Die zusätzlichen Profile nutzen sichtbare Informationen; verborgene Garnisonen
 und gegnerische Befehle erhalten sie nicht.
@@ -168,11 +168,11 @@ bei Aktualisierungen und Systemwechseln geöffnet; die Angaben folgen der Auswah
 
 Sterne sind links angeschnitten und zeigen ihre Farbe und Typgröße. Planeten
 unterscheiden sich durch Größenklasse und Oberfläche. Stern- und Planetengrößen
-verwenden getrennte Maßstäbe; die Abstände sind schematisch. Hat Spaceward
+verwenden getrennte Maßstäbe; die Abstände sind schematisch. Hat SectorForces erweitert
 gespeicherte Koloniedaten, liegt eine fernere Bahn sichtbar weiter außen.
 Ein besiedelter Planet oder Mond trägt eine Koloniemarkierung. Seine Auswahl
 öffnet die vorhandenen Kolonieangaben; sie erteilt keinen Siedlungsbefehl.
-SectorForces-Körper bleiben dekorativ. Hintergrundwerte folgen dem Kriegsnebel.
+In SectorForces klassisch bleiben Körper dekorativ. Hintergrundwerte folgen dem Kriegsnebel.
 
 ## Flotten und Befehle
 
@@ -206,7 +206,7 @@ nicht zu dieser Befehlsrücknahme.
 Klickst du auf der Karte ein fremdes System oder eine eigene fliegende Flotte an,
 zeigt jedes eigene System mit freien Schiffen links ein Abzeichen mit der Runde,
 in der eine jetzt gesendete Flotte dort ankäme (`R14`). Gerechnet wird über
-dieselben Routen wie beim Senden, in Spaceward also mit Reichweite und
+dieselben Routen wie beim Senden, in SectorForces erweitert also mit Reichweite und
 Zwischenhalten; Systeme ohne Weg dorthin bekommen kein Abzeichen.
 
 Gibt es schon eine Ankunft, nach der du dich richten kannst, vergleichen die
@@ -337,7 +337,7 @@ weder die Kampfstärke noch Rundenfristen oder Ergebnisse.
 Gewonnen hat, wer den eingestellten Anteil aller Systeme kontrolliert; neutrale
 Systeme zählen zur Gesamtzahl. Die Vorgabe ist 70 %. Wenn die letzte Runde noch
 offene Schlachten enthält, erscheint zunächst der Bericht. Erst nach deren
-Bestätigung öffnet sich das Ergebnis mit persönlichen Schiffssummen. Spaceward
+Bestätigung öffnet sich das Ergebnis mit persönlichen Schiffssummen. SectorForces erweitert
 zeigt zusätzlich die Wirtschaft der Partie: gebaute Industrie in Kapazitätspunkten
 und, mit Metall, gefördertes und verbrauchtes Metall. Recycling zählt nicht als
 Förderung. Fehlt die Erfassung für ältere Partien, steht dort „nicht erfasst“;
@@ -347,17 +347,17 @@ beginnt sie später oder hat Lücken, nennt der Dialog „seit Runde N“ bzw.
 Der Sieger darf **Bis zur vollständigen Eroberung weiterspielen** wählen. Das Ziel
 steigt dann auf 100 %, die Abgaben werden zurückgesetzt und die Fristen starten neu.
 Die anderen Teilnehmer werden automatisch informiert. Das zuerst erreichte
-Ergebnis bleibt in der Statistik der Plattform bestehen. Endet eine SectorForces-Partie
+Ergebnis bleibt in der Statistik der Plattform bestehen. Endet eine Partie nach klassischen Regeln
 durch ihr Rundenlimit, gibt es keine Fortsetzung.
 
 **Aufgeben** steht in der Kopfleiste neben **Verlassen**. Nach einer Rückfrage übernimmt
 der Computer dein Reich bis zum Ende der Partie. Anders als beim Verlassen kannst du
 nicht zurückkehren, auch wenn die Partie Wiedereinstieg erlaubt.
 
-## Galaxie-Ereignisse und Wertung (SectorForces)
+## Galaxie-Ereignisse und Wertung (SectorForces klassisch)
 
 Nach dem C64-Klassiker Galactic Empire (1983). Der Abschnitt **Galaxie-Ereignisse und
-Wertung** im Spielassistenten erscheint nur bei SectorForces; alles ist zunächst aus.
+Wertung** im Spielassistenten erscheint nur bei SectorForces klassisch; alles ist zunächst aus.
 Die Zusammenfassung nennt die gewählten Ereignisse.
 
 **Zufallsereignisse** stehen auf **Aus**, **Selten** oder **Normal**; darunter lässt sich
@@ -401,9 +401,9 @@ auf Berechtigte beschränkt; öffentliche erlauben fremde Zuschauer nur bei akti
 Zuschaueroption. Deine Ergebnisse zeigt die **Statistik** der Plattform über alle
 Spiele; Starfare selbst führt keine eigene Statistik.
 
-## Spaceward-Wirtschaft
+## Erweiterte Regeln: Wirtschaft
 
-Spaceward verteilt die Kapazität eines Systems zwischen Schiffbau und Industrieausbau.
+SectorForces erweitert verteilt die Kapazität eines Systems zwischen Schiffbau und Industrieausbau.
 Der Ausbau sammelt Punkte; eine zusätzliche Kapazitätseinheit kostet das Doppelte
 der aktuellen Kapazität. Das Maximum ist 50. Neue Kapazität wirkt ab der folgenden
 Runde. Fortschritt bleibt bei Umschaltung und Eroberung erhalten; ein Eroberer
@@ -413,7 +413,7 @@ Die rechte Systemsicht zeigt Industriegebäude, Verteilung, Fortschritt und die
 voraussichtliche nächste Lieferung. Bestehende Verlegungen bleiben erhalten;
 reicht der Schiffbau nicht, können sie auf Garnison oberhalb der Reserve zugreifen.
 Engpässe werden angezeigt. Rohstoffe, Forschung und Schiffstypen folgen später.
-SectorForces verwendet weiterhin seine bisherigen Regeln.
+SectorForces klassisch verwendet weiterhin seine bisherigen Regeln.
 
 Die nächste Wirtschaftsfassung wird zunächst intern geprüft. Der Zwischenstand
 **1.2.0-w1** ergänzt eine gespeicherte Hauptkolonie je System. Bevölkerung und
@@ -422,7 +422,7 @@ und fertiger Ausbau wirken erst in der nächsten Runde. Die Systemsicht zeigt
 Bevölkerung, Wachstum, Eignung und den Engpass durch fehlende Arbeitskräfte.
 Eroberung erhält Bevölkerung und Systemeigenschaften. Metallreichtum ist hier
 eine gespeicherte Eigenschaft; Förderung und Recycling folgen später.
-Dieser Abschnitt beschreibt den historischen W1-Stand. Neue Spaceward-Partien
+Dieser Abschnitt beschreibt den historischen W1-Stand. Neue Partien mit erweiterten Regeln
 verwenden die aktuelle Regelfassung 1.3.0-r1; ältere Versionen bleiben fortsetzbar.
 
 ### Interne Metallwirtschaft 1.2.0-w2
@@ -450,12 +450,12 @@ gehen an den neuen Besitzer, der Reichsvorrat bleibt beim bisherigen Spieler.
 Neuladen und Nachbetrachtung verändern keine Rohstoffmengen. Interne Prüfwerte sind
 10 Startmetall je Spieler, 200 Metallvorkommen je Reichtumsstufe und eine Fördermenge
 je Reichtumsstufe und Kapazitätspunkt. W1 und ältere Partien behalten ihre Regeln.
-Dieser Abschnitt beschreibt den historischen W2-Stand; neue Spaceward-Partien
+Dieser Abschnitt beschreibt den historischen W2-Stand; neue Partien mit erweiterten Regeln
 verwenden die aktuelle Regelfassung 1.3.0-r1.
 
-## Spaceward-Navigation
+## Erweiterte Regeln: Navigation
 
-Jede Spaceward-Partie erhält eine feste Reichweite je Reiseabschnitt.
+Jede Partie mit erweiterten Regeln erhält eine feste Reichweite je Reiseabschnitt.
 Sie wird aus der Galaxie berechnet, damit alle Systeme schrittweise erreichbar
 bleiben. Reisezeit und Sensorreichweite sind davon unabhängig.
 
@@ -464,7 +464,7 @@ Reichweite. Ziele tragen einen Zustand: durchgezogener Rahmen für direkt erreic
 gestrichelter Rahmen für „nur über Stationen“, abgeblendet für „kein Weg“. Der
 Hinweistext und der Versanddialog nennen den Zustand samt Entfernung als Anteil der
 direkten Reichweite, etwa „90 % der direkten Reichweite“. Knapp außerhalb liegende
-Ziele erscheinen nie als genau 100 %. SectorForces hat keine Reichweitengrenze und
+Ziele erscheinen nie als genau 100 %. SectorForces klassisch hat keine Reichweitengrenze und
 zeigt keinen Kreis.
 
 Für ein entferntes Ziel sucht der Flottenversand automatisch den schnellsten
@@ -498,7 +498,7 @@ erhalten. Verbündete Stationen verwenden dieselbe Reichweitenprüfung.
 Ist bereits vor dem Abflug die nächste Zwischenstation verloren, bleibt die
 Flotte an ihrer aktuellen Station, bis dieser Reiseabschnitt wieder zulässig ist.
 
-SectorForces verwendet weiterhin direkte Flüge ohne Reichweitengrenze.
+SectorForces klassisch verwendet weiterhin direkte Flüge ohne Reichweitengrenze.
 
 ## Vorlagen und Revanche
 
@@ -536,13 +536,13 @@ Bei unvollständiger Sicht und offenen Schlachten bleibt sie verborgen. Bestehen
 Partien behalten ihre Spielstände. Wissenschaftliche Grundlagen und bewusst
 vereinfachte Darstellung stehen in [System illustrations](SYSTEM-ILLUSTRATIONS.md).
 
-## Spaceward-Siegoptionen
+## Erweiterte Regeln: Siegoptionen
 
-Spaceward 1.1.0 ergänzt vor dem Start zwei Partieeigenschaften:
+Die Regelfassung 1.1.0 ergänzt vor dem Start zwei Partieeigenschaften:
 **Bündnisse erlaubt** und **Bündnissiege erlaubt**. Die Einzelschwelle und
 die Bündnisschwelle sind getrennt einstellbar (10–100 %, jeweils Vorgabe 70 %).
 Standardmäßig sind Bündnisse erlaubt, Bündnissiege ausgeschaltet. Ohne
-erlaubte Bündnisse ist auch der Bündnissieg ausgeschaltet. SectorForces bietet
+erlaubte Bündnisse ist auch der Bündnissieg ausgeschaltet. SectorForces klassisch bietet
 keine Bündnisse.
 
 Einzelsieg wird zuerst geprüft. Danach kann eine wirksame Gruppe mit mindestens
@@ -560,10 +560,10 @@ Dialog, Bericht, Archiv und die Statistik der Plattform berücksichtigen jeden S
 Jeder Sieger darf einmal bis zur vollständigen Eroberung fortsetzen; dann
 steigen beide Schwellen auf 100 %. Das erste Ergebnis bleibt
 erhalten. Einstellungen bleiben in Vorlagen und Revanchen erhalten. Bestehende
-Partien bleiben bei ihrer Regelversion; Spaceward 1.0.0 behält ausschließlich
+Partien bleiben bei ihrer Regelversion; Fassung 1.0.0 behält ausschließlich
 den Einzelsieg und erlaubte Bündnisse.
 
-## Spaceward-Bündnisse
+## Erweiterte Regeln: Bündnisse
 
 **Bündnisse** zeigt zuerst offene Entscheidungen, danach dein Bündnis und
 mögliche Partner. Zustimmen und Ablehnen stehen direkt am Vorschlag.
@@ -590,7 +590,7 @@ gesperrt, Verträge bleiben lesbar.
 
 Verbündete Systeme können als Zwischenstationen dienen. Ankommende Unterstützung
 bleibt eine eigene Flotte und übernimmt weder Garnison noch System des Partners.
-Verbündete kämpfen gemeinsam (siehe Spaceward-Kampf). Ein Vertrag verrät keine zusätzlichen militärischen
+Verbündete kämpfen gemeinsam (siehe „Erweiterte Regeln: Kampf“). Ein Vertrag verrät keine zusätzlichen militärischen
 Werte und verändert die individuelle Siegschwelle nicht.
 
 Nach wirksamem Austritt treten fremd stationierte Schiffe automatisch die
@@ -602,7 +602,7 @@ Wartebefehle geparkt oder in einer fremden Garnison aufgelöst werden.
 Die KI stimmt Anfragen zu, sofern sie nicht bereits selbst einen Austritt
 angekündigt hat; sie gründet keine Bündnisse von sich aus.
 
-Beim Anlegen einer Spaceward-Partie legt **KI darf Bündnisse eingehen** fest, ob
+Beim Anlegen einer Partie mit erweiterten Regeln legt **KI darf Bündnisse eingehen** fest, ob
 KI-Imperien neuen Bündnissen beitreten oder sie gründen dürfen (Vorgabe: ja). Ist
 die Option aus, erscheinen KI-Imperien in der Bündnisauswahl mit dem Hinweis, dass
 sie in dieser Partie keine Bündnisse eingehen; Bündnisse zwischen Menschen bleiben
@@ -611,9 +611,9 @@ samt Fristen und Kündigungen gültig; nur neue Beitritte sind gesperrt. Kehrt d
 Mensch zurück, gelten wieder seine Rechte. Ohne erlaubte Bündnisse ist die Option
 wirkungslos; ältere Partien behalten die bisherige KI-Teilnahme.
 
-## Spaceward-Kampf
+## Erweiterte Regeln: Kampf
 
-Spaceward wertet Kämpfe für ganze Bündnisgruppen gemeinsam aus; SectorForces
+SectorForces erweitert wertet Kämpfe für ganze Bündnisgruppen gemeinsam aus; SectorForces klassisch
 verwendet weiter seinen bisherigen Kampf.
 
 An einem System kämpfen Besitzer, eintreffende Verbündete und dort stationierte
@@ -680,14 +680,14 @@ kein Metall zurück. Startschiffe und neutrale Garnisonen zählen zur Metallbila
 Alle acht KI-Profile nutzen Recycling bei Metallknappheit für überschüssige Schiffe
 im Hinterland; sie behalten eine Garnison und schonen Systeme mit bekannten nahen
 Gegnern. Der Wirtschaftsvergleich für W4 steht in `docs/ECONOMY-EXPERIMENTS.md`. W2-Partien erhalten
-keine Recyclingbefehle. W3 bleibt nur fortsetzbar; neue Spaceward-Partien verwenden die aktuelle Regelfassung 1.3.0-r1.
+keine Recyclingbefehle. W3 bleibt nur fortsetzbar; neue Partien mit erweiterten Regeln verwenden die aktuelle Regelfassung 1.3.0-r1.
 
-### Spaceward: immer die aktuelle Regelfassung
+### Erweiterte Regeln: immer die aktuelle Regelfassung
 
-Im normalen Spielassistenten „Spaceward“ auswählen. Neue Partien verwenden
+Im normalen Spielassistenten „SectorForces erweitert“ auswählen. Neue Partien verwenden
 stets die aktuelle Regelfassung **1.3.0-r1**, einschließlich Metallförderung,
 Recycling, Industrieausbau und Schiffsforschung. Eine Versionsauswahl oder ein
-besonderes Startprofil ist nicht erforderlich. „SectorForces“ bleibt eine eigene
+besonderes Startprofil ist nicht erforderlich. „SectorForces klassisch“ bleibt eine eigene
 Spielvariante und verwendet ebenfalls ihre aktuelle Fassung.
 
 Seit 1.2.0-w5 ist die Bevölkerung vorerst Atmosphäre: Sie wächst und beschreibt die
@@ -735,7 +735,7 @@ Anteil. Jede Funktion zeigt eingesetzte Punkte und ihren Ertrag je Runde, etwa
 4 Schiffen/Runde“; reicht das Vorkommen nicht, „Vorkommen erschöpft“. Die
 Fördereignung („3 je Punkt“) steht direkt an der Förderung.
 **Produktion planen** öffnet die gekoppelte Verteilung am System.
-Spaceward mit Metall verwendet **Schiffe bauen**, **Metall fördern** und
+Die erweiterten Regeln mit Metall verwenden **Schiffe bauen**, **Metall fördern** und
 **Industrie ausbauen**. Mehr Punkte in einem Bereich reduzieren die anderen im
 bisherigen Verhältnis. **Wert festhalten** schützt einen Anteil; bei zwei festen
 Werten ist der dritte bestimmt. Ältere Regeln ohne Metall haben zwei Bereiche.
@@ -787,7 +787,7 @@ Reisedauer und Ankunftsrunde. Die Gesamtzeit enthält die Aufenthalte. Ohne verf
 Weg ist Senden gesperrt. **Für Bündnispartner erobern** erscheint nur, wenn eine
 Eroberungsentscheidung mit anderen zulässigen Partnern möglich ist; eigene oder
 verbündete Verstärkung benötigt diese Wahl nicht. Die eigene Partei bleibt Vorgabe.
-SectorForces nutzt denselben Versandaufbau ohne Spaceward-Wirtschaft und Bündniswahl.
+SectorForces klassisch nutzt denselben Versandaufbau ohne erweiterte Wirtschaft und Bündniswahl.
 
 Impressum und Datenschutz stehen im Seitenfuß und öffnen in einem neuen Tab,
 damit laufende Eingaben erhalten bleiben.
@@ -797,8 +797,8 @@ Flotten lassen sich auf freien Strecken auswählen. Systeme und ihre unmittelbar
 
 ### Gemeinsame Schiffsforschung erproben
 
-Schiffsforschung gehört zur aktuellen Spaceward-Regelfassung **1.3.0-r1**
-und steht bei jeder neuen Spaceward-Partie ohne besonderes Startprofil bereit.
+Schiffsforschung gehört zur aktuellen Regelfassung der erweiterten Regeln **1.3.0-r1**
+und steht bei jeder neuen Partie mit erweiterten Regeln ohne besonderes Startprofil bereit.
 Gespeicherte ältere Partien behalten ihre bisherigen Regeln.
 
 Im Kartenmenü **Schiffsforschung** öffnen. Der Forschungsanteil gilt reichsweit
