@@ -127,7 +127,7 @@ class NewGameDialogTest extends AbstractBrowserlessTest {
         assertThat(setup.humanPlayers()).isEqualTo(2);
         assertThat(setup.computerStrength()).isEqualTo(ComputerStrength.HARD);
         assertThat(setup.galaxyLayout()).isEqualTo(GalaxyLayout.RANDOM);
-        assertThat(setup.systemCount()).isEqualTo(40);
+        assertThat(setup.systemCount()).isEqualTo(30);
         assertThat(setup.maxProduction()).isEqualTo(15);
     }
 
