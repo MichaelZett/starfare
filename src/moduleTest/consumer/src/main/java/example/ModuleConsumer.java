@@ -30,7 +30,7 @@ public final class ModuleConsumer {
         var catalog = RulesetCatalog.builtIn();
         require(catalog.definitions().size() == 2, "Both game variants must be available");
         catalog.requireCreatable(RulesetRef.SECTOR_FORCES);
-        catalog.requireCreatable(RulesetCatalog.ECONOMY_CANDIDATE);
+        catalog.requireCreatable(RulesetRef.EXTENDED);
         var state = new GameState();
         state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SECTOR_FORCES));
         state.start();

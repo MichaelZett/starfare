@@ -1,15 +1,11 @@
 package de.zettsystems.starfare.testsupport;
 
-import de.zettsystems.starfare.economy.application.DefaultEconomyService;
-import de.zettsystems.starfare.economy.domain.MetalEconomy;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.navigation.values.NavigationSettings;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,7 +16,7 @@ public final class EconomyUiStates {
     public static GameState industry() {
         GameState state = new GameState();
         state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         state.players().addAll(List.of(new Player(1, "Industrialist", false, "#56b4e9"),
                 new Player(2, "Opponent", false, "#d55e00")));
         state.systems().add(new StarSystem(1, "Alpha", 400, 350, 1, 12, 10, false));
@@ -40,33 +36,12 @@ public final class EconomyUiStates {
         return state;
     }
 
+    /** The industry test game of {@link SpacewardStates} with two relocations from Alpha. */
     public static GameState directProduction() {
-        var state = withStock(RulesetRef.SPACEWARD_DIRECT_ECONOMY);
-        state.start();
+        var state = SpacewardStates.running();
         var fleets = new DefaultFleetService();
         assertThat(fleets.addStandingOrder(state, 1, 1, 2, 6)).isPositive();
         assertThat(fleets.addStandingOrder(state, 1, 1, 3, 4)).isPositive();
         return state;
-    }
-
-    public static GameState research() {
-        var state = withStock(RulesetRef.SPACEWARD_SHIP_RESEARCH);
-        state.start();
-        state.planShipResearch(1, 100);
-        var economy = new DefaultEconomyService();
-        for (int round = 0; round < 7; round++) {
-            economy.produce(state, Map.of());
-            state.nextTurn();
-        }
-        state.planShipResearch(1, 0);
-        return state;
-    }
-
-    private static GameState withStock(RulesetRef rules) {
-        return ColonyStates.ready(rules, original -> {
-            var stocks = new HashMap<>(original.stocks());
-            stocks.replaceAll((_, _) -> 100L);
-            return new MetalEconomy(original.deposits(), stocks, original.mining(), original.recycling());
-        });
     }
 }

@@ -25,7 +25,7 @@ class SetupCardsTest {
         RadioButtonGroup<RulesetDefinition> all = SetupCards.rules(catalog, RulesetOffer.everything());
         assertThat(all.getValue().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
         assertThat(all.getListDataView().getItems().map(RulesetDefinition::defaultRef))
-                .containsExactly(RulesetRef.SECTOR_FORCES, RulesetCatalog.ECONOMY_CANDIDATE);
+                .containsExactly(RulesetRef.SECTOR_FORCES, RulesetRef.EXTENDED);
 
         RadioButtonGroup<RulesetDefinition> classicOnly = SetupCards.rules(catalog,
                 new RulesetOffer(ruleset -> !ruleset.isSpaceward(), _ -> Optional.empty()));

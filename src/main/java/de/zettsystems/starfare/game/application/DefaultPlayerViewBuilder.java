@@ -1,7 +1,5 @@
 package de.zettsystems.starfare.game.application;
 
-import de.zettsystems.starfare.economy.values.MetalView;
-import de.zettsystems.starfare.economy.domain.MetalProduction;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.economy.values.IndustryView;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
@@ -52,13 +50,11 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         List<FleetOrder> orders = state.gameOver() ? List.of()
                 : state.pendingOrders().getOrDefault(playerId, List.of());
         Map<Integer, Integer> committedBySystem = committedShipsBySystem(orders);
-        state.systems().forEach(system -> committedBySystem.merge(system.id(), state.recyclingShips(system.id()), Integer::sum));
         Map<Integer, Integer> routedBySystem = routedShipsBySystem(state, playerId);
 
         Set<Integer> sensorCoverage = sensorCoverage(state, playerId);
-        var metalForecast = state.ruleset().usesMetals() ? state.metalPreview() : null;
         var vis = state.systems().stream()
-                .map(s -> buildVisibleSystem(state, playerId, s, committedBySystem, sensorCoverage, routedBySystem, metalForecast))
+                .map(s -> buildVisibleSystem(state, playerId, s, committedBySystem, sensorCoverage, routedBySystem))
                 .toList();
 
         Map<Integer, String> sysNames = state.systems().stream()
@@ -86,18 +82,13 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
 
     @Override
     public PlayerViewState forReplay(GameState state, ReplayFrame frame, int playerId) {
-        var metals = frame.metals();
-        var metalForecast = metals == null ? null : MetalProduction.forPlan(
-                frame.systems(), Objects.requireNonNull(frame.industries()), Objects.requireNonNull(frame.colonies()), metals,
-                state.ruleset());
         List<VisibleSystem> systems = frame.systems().stream().map(system -> {
             Integer owner = system.ownerId();
             String color = owner != null ? playerById(state, owner).colorHex() : null;
             return new VisibleSystem(system.id(), system.name(), system.x(), system.y(), owner,
-                    system.garrison(), metalForecast == null ? Integer.valueOf(system.productionPerTurn()) : metalForecast.ships().getOrDefault(system.id(), 0), true, color, frame.turn(), false,
+                    system.garrison(), system.productionPerTurn(), true, color, frame.turn(), false,
                     null, system.garrison(), ownershipHistory(state, system.id()),
-                    metalIndustry(industryView(frame.industries(), frame.colonies(), state.ruleset(), system, system.garrison(), 0),
-                            metalForecast, system, system.garrison(), 0, 0));
+                    industryView(frame.industries(), system, system.garrison(), 0));
         }).toList();
         List<Fleet> ownFleets = frame.fleets().stream().filter(fleet -> fleet.ownerId() == playerId).toList();
         TurnReport report = frame.reports().getOrDefault(playerId, new TurnReport(frame.turn(), List.of()));
@@ -109,16 +100,14 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
     /** Alle Systeme ohne Nebel: fuer Zuschauer und fuer die entschiedene Partie. */
     private static List<VisibleSystem> revealedSystems(GameState state) {
         int turn = state.turn();
-        var metalForecast = state.ruleset().usesMetals() ? state.metalPreview() : null;
         return state.systems().stream().map(s -> {
             Integer ownerId = s.ownerId();
             String color = ownerId != null ? playerById(state, ownerId).colorHex() : null;
             return new VisibleSystem(
                     s.id(), s.name(), s.x(), s.y(),
-                    ownerId, s.garrison(), metalForecast == null ? Integer.valueOf(s.productionPerTurn()) : metalForecast.ships().getOrDefault(s.id(), 0),
+                    ownerId, s.garrison(), s.productionPerTurn(),
                     true, color, turn, false, null, s.garrison(), ownershipHistory(state, s.id()),
-                    metalIndustry(industryView(state.industries(), state.colonies(), state.ruleset(), s, s.garrison(), 0),
-                            metalForecast, s, s.garrison(), 0, 0));
+                    industryView(state.industries(), s, s.garrison(), 0));
         }).toList();
     }
 
@@ -142,27 +131,16 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         int systems = 0;
         int production = 0;
         int garrison = 0;
-        var forecast = state.ruleset().usesMetals() ? state.metalPreview() : null;
         for (StarSystem s : state.systems()) {
             Integer ownerId = s.ownerId();
             if (ownerId != null && ownerId == playerId) {
                 systems++;
-                production += forecast == null ? s.productionPerTurn() : forecast.ships().getOrDefault(s.id(), 0);
+                production += s.productionPerTurn();
                 garrison += s.garrison();
             }
         }
         int inTransit = ownFleets.stream().mapToInt(Fleet::ships).sum();
-        de.zettsystems.starfare.economy.values.MetalBalance balance = null;
-        if (forecast != null) {
-            long current = state.metals().orElseThrow().stocks().getOrDefault(playerId, 0L);
-            long next = forecast.economy().stocks().getOrDefault(playerId, 0L);
-            long extraction = state.systems().stream().filter(system -> Objects.equals(system.ownerId(), playerId))
-                    .mapToLong(system -> forecast.extracted().getOrDefault(system.id(), 0L)).sum();
-            long consumption = (long) production * de.zettsystems.starfare.economy.values.MetalRules.SHIP_COST;
-            balance = new de.zettsystems.starfare.economy.values.MetalBalance(current, extraction,
-                    next + consumption - current - extraction, consumption, next);
-        }
-        return new EmpireStats(systems, production, garrison + inTransit, balance);
+        return new EmpireStats(systems, production, garrison + inTransit);
     }
 
     private static Set<Integer> waitingFleetIds(GameState state, List<FleetOrder> orders) {
@@ -197,8 +175,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
     private static VisibleSystem buildVisibleSystem(GameState state, int playerId, StarSystem s,
                                                     Map<Integer, Integer> committedBySystem,
                                                     Set<Integer> sensorCoverage,
-                                                    Map<Integer, Integer> routedBySystem,
-                                                    @Nullable MetalProduction metalForecast) {
+                                                    Map<Integer, Integer> routedBySystem) {
         boolean own = Objects.equals(s.ownerId(), playerId);
         var intel = state.intel().getOrDefault(playerId, Map.of()).get(s.id());
         boolean inRange = !own && sensorCoverage.contains(s.id());
@@ -211,7 +188,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         if (own) {
             visibleOwner = s.ownerId();
             garrison = s.garrison() - committedBySystem.getOrDefault(s.id(), 0);
-            production = ownProduction(s, metalForecast);
+            production = s.productionPerTurn();
             color = playerById(state, playerId).colorHex();
             lastSeen = state.turn();
         } else if (inRange) {
@@ -245,68 +222,27 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 own ? Math.max(0, s.garrison() - committedBySystem.getOrDefault(s.id(), 0)) : null,
                 own ? ownershipHistory(state, s.id()) : List.of(),
                 own ? industryView(state, s, playerId, Math.max(0, s.garrison()
-                        - committedBySystem.getOrDefault(s.id(), 0)), routedBySystem.getOrDefault(s.id(), 0), metalForecast) : null);
+                        - committedBySystem.getOrDefault(s.id(), 0)), routedBySystem.getOrDefault(s.id(), 0)) : null);
     }
 
-    private static int ownProduction(StarSystem system, @Nullable MetalProduction forecast) {
-        return forecast == null ? system.productionPerTurn() : forecast.ships().getOrDefault(system.id(), 0);
-    }
-
-    private static @Nullable IndustryView industryView(GameState state, StarSystem system, int player, int available, int planned,
-            @Nullable MetalProduction metalForecast) {
+    private static @Nullable IndustryView industryView(GameState state, StarSystem system, int player, int available, int planned) {
         int reachable = state.standingOrders().getOrDefault(player, List.of()).stream()
                 .filter(order -> order.fromSystemId() == system.id()
                         && Routes.plan(state, player, order.fromSystemId(), order.toSystemId()).isPresent())
                 .mapToInt(StandingOrder::ships).sum();
-        IndustryView base = industryView(state.industries(), state.colonies(), state.ruleset(), system, available, reachable);
+        IndustryView base = industryView(state.industries(), system, available, reachable);
         if (base == null) { return null; }
-        if (state.ruleset().usesMetals()) {
-            return metalIndustry(base, metalForecast, system, available, reachable, planned);
-        }
         return new IndustryView(base.capacity(), base.expansionAllocation(), base.expansionProgress(),
-                base.expansionCost(), base.nextDelivery(), base.nextDelivery() < planned, base.colony());
+                base.expansionCost(), base.nextDelivery(), base.nextDelivery() < planned);
     }
 
     private static @Nullable IndustryView industryView(@Nullable Map<Integer, Industry> industries,
-                                                        @Nullable Map<Integer, de.zettsystems.starfare.economy.domain.ColonyEconomy> colonies,
-                                                        RulesetRef rules, StarSystem system, int available, int routed) {
+                                                        StarSystem system, int available, int routed) {
         Industry industry = industries == null ? null : industries.get(system.id());
         if (industry == null) { return null; }
         int delivery = Math.clamp(available + (long) system.productionPerTurn(), 0, routed);
-        var saved = colonies == null ? null : colonies.get(system.id());
-        int nextPopulation = 0;
-        if (saved != null) { nextPopulation = system.neutral() ? saved.colony().population() : saved.grow().colony().population(); }
-        var colony = saved == null ? null : new de.zettsystems.starfare.economy.values.ColonyView(
-                saved.quality(), saved.colony().population(), nextPopulation, rules.limitsIndustryByLabor());
         return new IndustryView(industry.capacity(), industry.expansionAllocation(), industry.expansionProgress(),
-                industry.expansionCost(rules), delivery, delivery < routed, colony, null, 0,
-                rules.usesShipResearch() ? system.composition() : null);
-    }
-
-    private static @Nullable IndustryView metalIndustry(@Nullable IndustryView base,
-            @Nullable MetalProduction forecast,
-            StarSystem system, int available, int routed, int expectedDelivery) {
-        if (base == null || forecast == null) { return base; }
-        var resources = forecast.economy();
-        var deposit = Objects.requireNonNull(resources.deposits().get(system.id()));
-        int actual = forecast.ships().getOrDefault(system.id(), 0);
-        long extracted = forecast.extracted().getOrDefault(system.id(), 0L);
-        Integer owner = system.ownerId();
-        long stock = owner == null ? 0 : Objects.requireNonNull(forecast.openingStocks().get(owner));
-        int mining = Objects.requireNonNull(resources.mining().get(system.id()));
-        int reserved = forecast.researchPoints().getOrDefault(system.id(), 0);
-        int planned = base.usableCapacity() - reserved - base.expansionAllocation() - mining;
-        var recycling = forecast.plannedRecycling();
-        int recyclingShips = recycling == null ? 0 : recycling.orders().getOrDefault(system.id(), 0);
-        int fraction = 0;
-        if (recycling != null && owner != null) { fraction = recycling.fractions().getOrDefault(owner, 0); }
-        var recycleView = recycling == null ? null : new de.zettsystems.starfare.economy.values.RecyclingView(
-                recyclingShips, available + recyclingShips, fraction);
-        var metal = new MetalView(deposit.remaining() + extracted,
-                deposit.yieldPerPoint(), mining, stock, extracted, planned, actual, recycleView);
-        int delivery = Math.clamp(available + (long) actual, 0, routed);
-        return new IndustryView(base.capacity(), base.expansionAllocation(), base.expansionProgress(), base.expansionCost(),
-                delivery, delivery < expectedDelivery, base.colony(), metal, reserved, base.composition());
+                industry.expansionCost(), delivery, delivery < routed);
     }
 
     private static List<SystemOwnership> ownershipHistory(GameState state, int systemId) {

@@ -77,24 +77,6 @@ final class MapCanvas extends Div {
                 """, factor);
     }
 
-    void economyMarkers(java.util.List<de.zettsystems.starfare.economy.values.EconomyIssues.Issue> issues,
-                        java.util.function.IntConsumer selected) {
-        map.getChildren().filter(component -> component.hasClassName("sys-economy-marker"))
-                .toList().forEach(map::remove);
-        for (var issue : issues) {
-            var system = issue.system();
-            var button = new com.vaadin.flow.component.button.Button("!", _ -> selected.accept(system.id()));
-            button.addClassName("sys-economy-marker");
-            button.getElement().setAttribute(HtmlAttributes.MAP_X, Double.toString(system.x()));
-            button.getElement().setAttribute(HtmlAttributes.MAP_Y, Double.toString(system.y()));
-            button.setAriaLabel(system.name() + ": " + de.zettsystems.starfare.i18n.I18n.t(
-                    de.zettsystems.starfare.economy.ui.EconomyNoticeBar.key(issue.reasons().getFirst()), 1));
-            button.getStyle().set(CssProperties.LEFT, (system.x() + SystemDisplaySize.pixelsFor(system) / 2.0) + "px")
-                    .set(CssProperties.TOP, (system.y() - 16) + "px");
-            map.add(button);
-        }
-    }
-
     void resetViewport() {
         getElement().executeJs("this.querySelector('#map').style.zoom = '1';");
         if (ownSystems.isEmpty()) {

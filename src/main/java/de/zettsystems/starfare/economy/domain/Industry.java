@@ -1,9 +1,11 @@
 package de.zettsystems.starfare.economy.domain;
 
 import de.zettsystems.starfare.economy.values.EconomyRules;
-import de.zettsystems.starfare.game.values.RulesetRef;
 
-/** Immutable per-system industry, separate from Classic ship production. */
+/**
+ * Immutable per-system industry of the extended rules: the capacity is split between shipbuilding and
+ * expansion. Conquest keeps capacity and progress and only clears the allocation.
+ */
 public record Industry(int capacity, int expansionAllocation, int expansionProgress) {
     public Industry {
         if (capacity < 1 || capacity > EconomyRules.MAX_CAPACITY || expansionAllocation < 0
@@ -18,14 +20,14 @@ public record Industry(int capacity, int expansionAllocation, int expansionProgr
     public int expansionCost() { return EconomyRules.expansionCost(capacity); }
     public Industry allocateExpansion(int points) { return new Industry(capacity, points, expansionProgress); }
     public Industry captured() { return new Industry(capacity, 0, expansionProgress); }
-    public int expansionCost(RulesetRef rules) { return EconomyRules.expansionCost(capacity, rules); }
-    public Industry expandForOneTurn() { return expandForOneTurn(RulesetRef.SPACEWARD); }
-    public Industry expandForOneTurn(RulesetRef rules) {
+
+    /** Several levels may complete in one round; the remaining progress is kept. */
+    public Industry expandForOneTurn() {
         if (capacity == EconomyRules.MAX_CAPACITY || expansionAllocation == 0) { return this; }
         int progress = expansionProgress + expansionAllocation;
         int nextCapacity = capacity;
-        while (nextCapacity < EconomyRules.MAX_CAPACITY && progress >= EconomyRules.expansionCost(nextCapacity, rules)) {
-            progress -= EconomyRules.expansionCost(nextCapacity, rules);
+        while (nextCapacity < EconomyRules.MAX_CAPACITY && progress >= EconomyRules.expansionCost(nextCapacity)) {
+            progress -= EconomyRules.expansionCost(nextCapacity);
             nextCapacity++;
         }
         return new Industry(nextCapacity, nextCapacity == EconomyRules.MAX_CAPACITY ? 0 : expansionAllocation, progress);

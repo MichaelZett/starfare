@@ -97,7 +97,7 @@ class DiplomacyServiceTest {
     }
 
     private static GameState withAi(boolean aiAlliances) {
-        var state = NavigationStates.running(de.zettsystems.starfare.game.values.RulesetRef.SPACEWARD_ALLIANCE,
+        var state = NavigationStates.running(de.zettsystems.starfare.game.values.RulesetRef.EXTENDED,
                 new de.zettsystems.starfare.game.values.VictoryRules(70, true, false, 70, aiAlliances));
         state.players().add(new Player(3, "Machine", true, "#009e73"));
         return state;

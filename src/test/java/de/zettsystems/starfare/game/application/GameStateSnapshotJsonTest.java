@@ -30,7 +30,7 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
         state.systems().add(new StarSystem(1, "Home", 0, 0, 1, 20, 5, false));
         state.players().replaceAll(p -> new Player(p.id(), p.name(), true, p.colorHex(), p.empireName(), profile));
         // Remembering the setup also determines the snapshot's rule version.
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE)
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED)
                 .chooseComputerStrength(ComputerStrength.HARD));
         state.start();
         ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));

@@ -54,7 +54,7 @@ public final class OrderPlanning {
                         || ships <= 0 || from == to
                         || Routes.plan(state, player, from, to).isEmpty()) { return false; }
                 long total = committed.merge(from, (long) ships, Long::sum);
-                if (total + state.recyclingShips(source.id()) > source.garrison()) { return false; }
+                if (total > source.garrison()) { return false; }
             }
         }
         return true;

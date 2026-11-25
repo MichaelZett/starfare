@@ -94,7 +94,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private boolean outcomeAcknowledged;
     private boolean outcomeDialogOpen;
     private @Nullable Dialog outcomeDialog;
-    private @Nullable PlayerViewState economicView;
     private final Set<Integer> badgesShowingFleetNo = new HashSet<>();
     private final BattleAcknowledgements acknowledgements;
     private final GameTemplateService templates;
@@ -127,12 +126,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 this::selectRelocationTarget,
                 this::cancelTargetSelectionAndRefresh);
         mapCanvas = new MapCanvas(this::onMapBackgroundClick);
-        fleetsPanel.onMining(() -> de.zettsystems.starfare.economy.ui.MiningAutomationDialog.open(game, gameId,
-                UserContext.currentPlayerId().orElse(""), fleetsPanel.protectedProductionSystems()));
-        fleetsPanel.onMiningProtection((system, protect) -> {
-            if (displayedTurn != null && !game.protectMiningSystem(gameId, UserContext.currentPlayerId().orElse(""),
-                    displayedTurn, system, protect)) { Notification.show(I18n.t(UiTexts.MINING_REJECTED)); }
-        });
         fleetsPanel.onEditOrder(order -> planningDialogs().edit(order));
         fleetsPanel.onFleetWait(id -> executeFleetAction(id, false));
         fleetsPanel.onFleetDisband(id -> executeFleetAction(id, true));
@@ -145,9 +138,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         });
         fleetsPanel.onDiplomacySelected(this::openDiplomacy);
         fleetsPanel.onProductionAllocation(this::allocateExpansion);
-        fleetsPanel.onEconomySelected(this::openEconomicSystem);
         fleetsPanel.onProductionPreview(plan -> game.previewProduction(gameId, UserContext.currentPlayerId().orElse(""), plan));
-        fleetsPanel.onRecycling(this::planRecycling);
         planningActions.addClassName("planning-actions");
         planningActions.add(iconAction(VaadinIcon.ROTATE_LEFT, UiTexts.PLAN_UNDO, () -> {
             if (!game.undoOrders(gameId, currentSeat(), Objects.requireNonNull(displayedTurn))) {
@@ -161,7 +152,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         treatyActions.add(iconAction(VaadinIcon.HANDSHAKE, UiTexts.DIP_TITLE, this::openDiplomacy));
         boolean phone = Devices.mobile();
         header = new MapHeaderBar(new MapHeaderBar.Actions(this::onNextRound, this::leaveGameNow,
-                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openRoundRules, this::openShipResearch, this::confirmResign), phone, frame);
+                () -> getUI().ifPresent(ui -> ui.navigate(LobbyView.class)), this::openRoundRules, this::confirmResign), phone, frame);
 
         gameOverBanner.setVisible(false);
         gameOverBanner.getStyle().set(CssProperties.FONT_WEIGHT, "600");
@@ -203,14 +194,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         }
         add(header, roundStatus, spectatorControls, reviewControls, buildContent());
         if (frame != null) { add(frame.legalFooter()); }
-    }
-
-    private void planRecycling(de.zettsystems.starfare.economy.values.RecyclingOrder order) {
-        int player = currentSeat();
-        if (player < 0 || !game.planRecycling(gameId, player, order.turn(), order.systemId(), order.ships())) {
-            Notification.show(I18n.t(UiTexts.PLAN_REJECTED));
-            refresh();
-        }
     }
 
     /** Brings the sidebar into view; on phones it lies as a sheet over the map. */
@@ -296,27 +279,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             return;
         }
         refresh();
-    }
-
-    private void updateEconomyNotices() {
-        var view = economicView;
-        if (view == null) { return; }
-        var issues = de.zettsystems.starfare.economy.values.EconomyIssues.forView(view, currentSeat(), pendingBattleSystemIds(view));
-        boolean hidden = isObserver() || reviewing || !pendingBattleSystemIds(view).isEmpty();
-        header.economyNotices().show(hidden ? List.of() : issues, kind -> { fleetsPanel.showEconomy(kind); revealPanel(); });
-        mapCanvas.economyMarkers(hidden ? List.of() : issues, id -> {
-            issues.stream().filter(issue -> issue.system().id() == id).findFirst()
-                    .ifPresent(issue -> { fleetsPanel.showEconomy(issue.reasons().getFirst()); revealPanel(); });
-        });
-    }
-
-    private void openEconomicSystem(int id, int section) {
-        var view = viewForCurrentMode();
-        if (view == null) { return; }
-        view.systems().stream().filter(system -> system.id() == id && system.availableShips() != null).findFirst().ifPresent(system -> {
-            selectedSystem = system; cancelTargetSelection(); highlightedFleetId = null;
-            mapCanvas.centerOn(system.x(), system.y()); fleetsPanel.showDetails(); refresh(); fleetsPanel.openProduction(section);
-        });
     }
 
     private void onMapBackgroundClick() {
@@ -600,8 +562,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         boolean advancedTurn = displayedTurn != null && view.turn() > displayedTurn;
         displayedTurn = view.turn();
         boolean observer = isObserver() || reviewing;
-        fleetsPanel.miningPolicy(observer ? null : game.miningAutomationFor(gameId, UserContext.currentPlayerId().orElse(""))
-                .map(de.zettsystems.starfare.economy.values.MiningAutomationView::policy).orElse(null));
         int playerId = observer ? -1 : currentSeat();
         var diplomacy = observer ? java.util.Optional.<de.zettsystems.starfare.diplomacy.values.DiplomacyView>empty()
                 : game.diplomacyFor(gameId, UserContext.currentPlayerId().orElse(""));
@@ -692,8 +652,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         header.setRoundRulesVisible(!reviewing && hostMayChangeRoundRules());
         header.setLeaveText(I18n.t(observer ? UiTexts.MAP_ACTION_LEAVE_OBSERVE : UiTexts.MAP_ACTION_LEAVE));
         header.setEmpireStatsVisible(!observer && pendingBattleSystemIds(view).isEmpty());
-        header.setResearch(reviewing || observer || !pendingBattleSystemIds(view).isEmpty() ? null
-                : game.shipResearchFor(gameId, UserContext.currentPlayerId().orElse("")).orElse(null));
         header.setRound(view.turn());
         RoundStatus status = reviewing ? RoundStatus.NONE : view.roundStatus();
         roundStatus.update(status, playerId);
@@ -721,12 +679,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         gameOverBanner.setVisible(shown);
         if (shown) {
             gameOverBanner.setText(I18n.t(UiTexts.MAP_GAME_OVER, winnerName(view)));
-        }
-    }
-
-    private void openShipResearch() {
-        if (!reviewing) {
-            de.zettsystems.starfare.research.ui.ResearchDialog.open(game, gameId, UserContext.currentPlayerId().orElse(""), this::refresh);
         }
     }
 
@@ -815,8 +767,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
         if (mobile != null) { mobile.targetSelection(targetSelection != TargetSelection.NONE); }
-        economicView = view;
-        updateEconomyNotices();
     }
 
     /**

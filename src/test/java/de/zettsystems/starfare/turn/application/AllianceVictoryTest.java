@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 
 class AllianceVictoryTest {
-    @Test void legacyVersionsRetainSimultaneousIndividualVictoryEvaluation() {
-        for (var ref : List.of(RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD)) {
+    @Test void classicGamesKeepSimultaneousIndividualVictoryEvaluation() {
+        for (var ref : List.of(RulesetRef.SECTOR_FORCES)) {
             var state = new GameState();
             state.rememberSetup(GameSetup.defaults().selectRuleset(ref));
             state.configureVictoryRules(VictoryRules.defaults(ref, 50));
@@ -98,21 +98,18 @@ class AllianceVictoryTest {
     }
 
     @Test void optionsAreFixedAndDisabledDiplomacyRejectsOrders() {
-        var setup = GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE);
+        var setup = GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED);
         var state = new GameState(); state.rememberSetup(setup);
         state.configureVictoryRules(new VictoryRules(70, false, true, 80));
         state.players().addAll(List.of(new Player(1, "One", true, "#56b4e9"), new Player(2, "Two", true, "#d55e00")));
         state.start();
         assertThat(state.victoryRules().allianceVictoryAllowed()).isFalse();
         assertThat(new DefaultDiplomacyService().act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 3))).isFalse();
-        var allowed = new GameState(); allowed.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE));
+        var allowed = new GameState(); allowed.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         allowed.players().addAll(state.players()); allowed.start();
         assertThat(new DefaultDiplomacyService().act(allowed, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 3))).isTrue();
         var input1 = new VictoryRules(80, true, true, 90);
         assertThatThrownBy(() -> state.configureVictoryRules(input1)).isInstanceOf(IllegalStateException.class);
-        var input2 = new VictoryRules(70, true, true, 70);
-        var target3 = new GameState(); target3.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
-        assertThatThrownBy(() -> target3.configureVictoryRules(input2)).isInstanceOf(IllegalArgumentException.class);
         var classic = new GameState(); classic.rememberSetup(GameSetup.defaults());
         classic.configureVictoryRules(new VictoryRules(70, true, true, 70));
         assertThat(classic.victoryRules().alliancesAllowed()).isFalse();
@@ -135,7 +132,7 @@ class AllianceVictoryTest {
 
     static GameState state(int individual, boolean enabled, int group, int one, int two, int three, int neutral) {
         var state = new GameState(); state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         state.configureVictoryRules(new VictoryRules(individual, true, enabled, group));
         for (int player = 1; player <= 4; player++) {
             state.players().add(new Player(player, "Empire " + player, true, GameConfig.PLAYER_PALETTE.get(player - 1)));

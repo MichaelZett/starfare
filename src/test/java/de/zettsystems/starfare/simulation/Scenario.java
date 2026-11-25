@@ -19,8 +19,7 @@ record Scenario(RulesetRef rules, GalaxyLayout layout, int systems, long mapSeed
         return new Scenario(rules, layout, systems, mapSeed, combatSeed, roundLimit, randomness, chosen.forRuleset(rules));
     }
     Scenario {
-        if (!List.of(RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD, RulesetRef.SPACEWARD_ALLIANCE, RulesetRef.SPACEWARD_RECYCLING,
-                RulesetRef.SPACEWARD_ECONOMY_PREVIEW, RulesetRef.SPACEWARD_DIRECT_ECONOMY, RulesetRef.SPACEWARD_EQUAL_METAL, RulesetRef.SPACEWARD_EARLY_INDUSTRY, RulesetRef.SPACEWARD_SHIP_RESEARCH).contains(rules)
+        if (!List.of(RulesetRef.SECTOR_FORCES, RulesetRef.EXTENDED).contains(rules)
                 || systems < 8 || systems > 120 || roundLimit < 1 || roundLimit > 2000
                 || randomness < 0 || randomness > 30) {
             throw new IllegalArgumentException("Unsupported scenario settings");
@@ -28,10 +27,6 @@ record Scenario(RulesetRef rules, GalaxyLayout layout, int systems, long mapSeed
     }
 
     GameState create(int seats) {
-        return create(seats, EconomyMaps.Environment.NATURAL);
-    }
-
-    GameState create(int seats, EconomyMaps.Environment environment) {
         if (seats < 2 || seats > 7 || seats > systems) { throw new IllegalArgumentException("Expected 2..7 seats"); }
         // No cosmic events; the scenario sets the combat deviation and the victory rules itself.
         var setup = GameSetup.defaults().seatPlayers(0, seats).chooseGalaxy(systems, layout).selectRuleset(rules)
@@ -56,11 +51,8 @@ record Scenario(RulesetRef rules, GalaxyLayout layout, int systems, long mapSeed
             int owner = seat;
             state.updateSystem(homes.get(seat - 1).id(), system -> system.colonize(owner, 20, 5));
         }
-        if (rules.usesColonies()) {
+        if (rules.isSpaceward()) {
             state.initializeIndustry();
-            var colonies = EconomyMaps.colonies(state.systems(), mapSeed, environment);
-            state.establishColonies(colonies);
-            state.establishMetals(EconomyMaps.resources(state, environment));
         }
         state.start();
         return state;

@@ -16,7 +16,3 @@ Funktionalität: Handy-Oberfläche
     Wenn ich auf dem Handy „Flotte senden“ wähle
     Dann zeigt die Handy-Karte den Zielhinweis und die Zielwahl lässt sich abbrechen
     Und kann ich auf dem Handy die Runde abgeben
-
-  @research
-  Szenario: Forschungsbudget bleibt auf dem Handy erreichbar und gespeichert
-    Wenn ich die Schiffsforschung auf dem Handy prüfe

@@ -1,16 +1,12 @@
 package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.AbstractIntegrationTest;
-import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
 import de.zettsystems.starfare.game.values.RulesetRef;
-import de.zettsystems.starfare.testsupport.ColonyStates;
-import de.zettsystems.starfare.testsupport.MetalStates;
 import de.zettsystems.starfare.testsupport.NavigationStates;
 import de.zettsystems.starfare.testsupport.SpacewardStates;
-import java.util.Map;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,41 +19,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /** A stored game whose parts contradict its rules or each other is refused on restore, not played on. */
 class TamperedSnapshotTest extends AbstractIntegrationTest {
     @Autowired private ObjectMapper mapper;
-
-    @Test
-    void economyPartsMustBelongToTheStoredRules() {
-        ObjectNode metals = (ObjectNode) tree(MetalStates.running(2, 5)).get("metals");
-
-        assertRejected(SpacewardStates.running(), json -> json.set("colonies", tree(ColonyStates.running()).get("colonies")),
-                "Colonies require their own rule version");
-        assertRejected(ColonyStates.running(), json -> json.set("metals", metals), "Metal economy requires W2 rules");
-    }
-
-    @Test
-    void historicalColoniesMustBeComplete() {
-        GameState state = ColonyStates.running();
-        new DefaultEconomyService().produce(state, Map.of());
-
-        assertRejected(state, json -> ((ObjectNode) json.path("replayFrames").path("1")).remove("colonies"),
-                "Missing historical colony properties");
-    }
-
-    @Test
-    void storedMetalsMustFitTheSystemsAndEmpires() {
-        assertRejected(MetalStates.running(2, 5), json -> ((ObjectNode) json.path("metals").path("mining")).put("1", 100_000),
-                "Incomplete stored metal economy");
-        assertRejected(MetalStates.running(2, 5), json -> ((ObjectNode) json.path("metals").path("stocks")).put("9", 0),
-                "Incomplete stored metal economy");
-    }
-
-    @Test
-    void researchMustMatchTheResearchRules() {
-        GameState state = ColonyStates.ready(RulesetRef.SPACEWARD_SHIP_RESEARCH);
-        state.start();
-
-        assertRejected(state, json -> ((ObjectNode) json.path("metals")).remove("research"),
-                "Research must match the stored rules and empires");
-    }
 
     @Test
     void industryAndNavigationBelongOnlyToSpaceward() {

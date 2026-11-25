@@ -48,7 +48,6 @@ public class DefaultReportService implements ReportService {
     /** Economy summaries are statistics only and add no report line, so they never count as news. */
     private static @Nullable String textFor(TurnEvent e) {
         return switch (e) {
-            case TurnEvent.Recycling r -> "Recycling: %s, %d ships, %d tenths of metal recovered.".formatted(r.systemName(), r.ships(), r.recoveredTenths());
             case TurnEvent.Production p -> "Produktion: %s +%d".formatted(p.systemName(), p.amount());
             case TurnEvent.Reinforcement r ->
                     "Verstärkung: %s +%d (%s)".formatted(r.systemName(), r.ships(), r.fleetLabel());
@@ -67,7 +66,6 @@ public class DefaultReportService implements ReportService {
                     : "Bündnissieg %d: %s, mindestens %d%% Systeme unter Kontrolle."
                             .formatted(victory.allianceId(), String.join(", ", victory.winnerNames()), victory.systemPercent());
             case TurnEvent.Defeat defeat -> "Niederlage: %s gewinnt die Partie.".formatted(defeat.winnerName());
-            case TurnEvent.ResearchCompleted research -> "Schiffsforschung: Technikstufe %d erreicht.".formatted(research.level());
             case TurnEvent.EconomySummary _ -> null;
             case TurnEvent.Cosmic(var kind, _, var systemName, _, _, _, _, _) ->
                     "Hyperraum-Ticker: %s %s".formatted(kind, systemName).strip();

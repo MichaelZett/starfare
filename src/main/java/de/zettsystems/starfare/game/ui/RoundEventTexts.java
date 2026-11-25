@@ -13,7 +13,6 @@ final class RoundEventTexts {
     static String text(TurnEvent event, boolean pending) {
         return switch (event) {
             case TurnEvent.CoalitionBattle battle -> battle(pending, battle.systemName(), () -> CoalitionPresentation.report(battle));
-            case TurnEvent.Recycling r -> I18n.t(UiTexts.RECYCLING_EVENT, r.systemName(), r.ships(), r.recoveredTenths() / 10.0);
             case TurnEvent.Production production -> I18n.t(UiTexts.ROUND_EVENT_PRODUCTION,
                     production.systemName(), production.amount());
             case TurnEvent.Reinforcement reinforcement -> I18n.t(UiTexts.ROUND_EVENT_REINFORCEMENT,
@@ -27,7 +26,6 @@ final class RoundEventTexts {
                     held.systemName(), held.attacking(), held.defendersLeft()));
             case TurnEvent.Victory victory -> victory(victory);
             case TurnEvent.Defeat defeat -> I18n.t(UiTexts.ROUND_EVENT_DEFEAT, defeat.winnerName());
-            case TurnEvent.ResearchCompleted research -> I18n.t(UiTexts.RESEARCH_COMPLETED, research.level(), research.level() * 10);
             case TurnEvent.EconomySummary _ -> "";
             case TurnEvent.Cosmic news -> CosmicNewsTexts.text(news);
             case TurnEvent.FinalScore score -> CosmicNewsTexts.score(score);
@@ -44,8 +42,8 @@ final class RoundEventTexts {
                     you(lost.defenderName()));
             case TurnEvent.DefenseHeld held -> new BattleReplayDialog.BattleSides(opponent(held.attackerName()),
                     you(held.defenderName()));
-            case TurnEvent.CoalitionBattle _, TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _,
-                 TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _,
+            case TurnEvent.CoalitionBattle _, TurnEvent.Production _, TurnEvent.Reinforcement _,
+                 TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _,
                  TurnEvent.Cosmic _, TurnEvent.FinalScore _ -> new BattleReplayDialog.BattleSides("", "");
         };
     }

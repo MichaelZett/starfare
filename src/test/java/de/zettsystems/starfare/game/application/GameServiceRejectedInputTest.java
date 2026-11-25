@@ -2,8 +2,6 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.AbstractIntegrationTest;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyOrder;
-import de.zettsystems.starfare.economy.values.MiningAutomation;
-import de.zettsystems.starfare.economy.values.MiningRequest;
 import de.zettsystems.starfare.economy.values.ProductionAllocation;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
@@ -38,16 +36,10 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
     void economyAndDiplomacyCommandsNeedARunningGame() {
         GameId lobby = games.newGame(GameSetup.defaults(), HOST, "Lobby");
         assertThat(games.joinGame(lobby, HOST)).isPresent();
-        MiningRequest mining = new MiningRequest(1, MiningAutomation.off(HOST), Map.of(), false, 0, Set.of(), Set.of());
 
         for (GameId id : List.of(lobby, GameId.newId())) {
-            assertThat(games.configureMining(id, HOST, mining)).as("mining in %s", id).isFalse();
-            assertThat(games.protectMiningSystem(id, HOST, 1, 1, true)).isFalse();
-            assertThat(games.planShipResearch(id, HOST, 1, 0, 50)).isFalse();
-            assertThat(games.commitProduction(id, HOST, new ProductionAllocation(1, 1, 0, 0)).accepted()).isFalse();
-            assertThat(games.allocateProduction(id, 1, 1, 1, 0, 0)).isFalse();
+            assertThat(games.commitProduction(id, HOST, new ProductionAllocation(1, 1, 0)).accepted()).isFalse();
             assertThat(games.allocateExpansion(id, 1, 1, 1, 0)).isFalse();
-            assertThat(games.planRecycling(id, 1, 1, 1, 1)).isFalse();
             assertThat(games.diplomacyOrder(id, HOST, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 0))).isFalse();
             assertThat(games.sendFleet(id, 1, 1, 1, 2, 1, 1)).isFalse();
         }
@@ -62,9 +54,6 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
         int foreign = foreignSystem(id, seat);
         GameStateSnapshot before = snapshot(id);
 
-        assertThat(games.planShipResearch(id, HOST, 1, 0, -1)).isFalse();
-        assertThat(games.planShipResearch(id, HOST, 1, 0, 101)).isFalse();
-        assertThat(games.planShipResearch(id, HOST, 1, 0, 50)).as("SectorForces has no research").isFalse();
         assertThat(games.sendFleet(id, seat, foreign, own, 1)).as("from a foreign system").isFalse();
         assertThat(games.sendFleet(id, seat, 9_999, own, 1)).as("from an unknown system").isFalse();
         assertThat(games.removeStandingOrder(id, seat, 1)).as("no relocation yet").isFalse();
@@ -81,10 +70,9 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
         PlannedOrder planned = new PlannedOrder(0, "send", own, target, "From", "To", 1, false, null, null, null);
         GameStateSnapshot before = snapshot(id);
 
-        assertThat(games.commitProduction(id, STRANGER, new ProductionAllocation(own, 1, 0, 0)).accepted()).isFalse();
-        assertThat(games.commitProduction(id, HOST, new ProductionAllocation(own, 1, 0, 0)).accepted())
+        assertThat(games.commitProduction(id, STRANGER, new ProductionAllocation(own, 1, 0)).accepted()).isFalse();
+        assertThat(games.commitProduction(id, HOST, new ProductionAllocation(own, 1, 0)).accepted())
                 .as("without the expected plan").isFalse();
-        assertThat(games.protectMiningSystem(id, STRANGER, 1, own, true)).isFalse();
         assertThat(games.diplomacyOrder(id, STRANGER, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, seat, 0))).isFalse();
 
         int staleRound = 2;
@@ -93,7 +81,6 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
         assertThat(games.undoOrders(id, seat, staleRound)).isFalse();
         assertThat(games.dispatchFleets(id, seat, staleRound, target, List.of())).isFalse();
         assertThat(games.allocateExpansion(id, seat, staleRound, own, 0)).isFalse();
-        assertThat(games.planRecycling(id, seat, staleRound, own, 1)).isFalse();
         assertThat(snapshot(id)).isEqualTo(before);
     }
 

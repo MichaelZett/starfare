@@ -18,8 +18,6 @@ import java.util.OptionalInt;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = TurnEvent.ResearchCompleted.class, name = "researchCompleted"),
-        @JsonSubTypes.Type(value = TurnEvent.Recycling.class, name = "recycling"),
         @JsonSubTypes.Type(value = TurnEvent.Production.class, name = "production"),
         @JsonSubTypes.Type(value = TurnEvent.EconomySummary.class, name = "economySummary"),
         @JsonSubTypes.Type(value = TurnEvent.Reinforcement.class, name = "reinforcement"),
@@ -38,7 +36,6 @@ public sealed interface TurnEvent {
     /** Returns the system affected by this event, if it has one. */
     default OptionalInt affectedSystemId() {
         return switch (this) {
-            case Recycling event -> OptionalInt.of(event.systemId());
             case Production event -> OptionalInt.of(event.systemId());
             case Reinforcement event -> OptionalInt.of(event.systemId());
             case BattleWon event -> OptionalInt.of(event.systemId());
@@ -47,7 +44,7 @@ public sealed interface TurnEvent {
             case DefenseHeld event -> OptionalInt.of(event.systemId());
             case CoalitionBattle event -> OptionalInt.of(event.systemId());
             case Cosmic event -> event.system();
-            case Victory _, Defeat _, EconomySummary _, ResearchCompleted _, FinalScore _ -> OptionalInt.empty();
+            case Victory _, Defeat _, EconomySummary _, FinalScore _ -> OptionalInt.empty();
         };
     }
 
@@ -64,30 +61,23 @@ public sealed interface TurnEvent {
             case SystemLost event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
             case DefenseHeld event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
             case CoalitionBattle event -> Optional.of(new BattleSite(event.systemId(), event.systemName()));
-            case Recycling _, Production _, Reinforcement _, Victory _, Defeat _, EconomySummary _, ResearchCompleted _,
-                 Cosmic _, FinalScore _ -> Optional.empty();
+            case Production _, Reinforcement _, Victory _, Defeat _, EconomySummary _, Cosmic _, FinalScore _ ->
+                    Optional.empty();
         };
     }
 
     /** The system of a resolved battle, as shown on the map and in the replay. */
     record BattleSite(int systemId, String systemName) { }
 
-    record ResearchCompleted(int playerId, int level) implements TurnEvent { }
-
     record Production(int playerId, int systemId, String systemName, int amount)
             implements TurnEvent {}
 
     /**
-     * One player's economy in one resolved round, captured at the production step before
-     * combat: metal actually mined, metal actually booked for ships and finished capacity.
-     * Recorded even when all values are zero, so missing history differs from a true zero.
-     * Not shown as a report line; only the final summary reads it.
+     * One player's industry in one resolved round, captured at the production step before combat:
+     * the capacity that construction finished. Recorded even when it is zero, so missing history
+     * differs from a true zero. Not shown as a report line; only the final summary reads it.
      */
-    record EconomySummary(int playerId, long metalMined, long metalConsumed, int capacityGained)
-            implements TurnEvent {}
-
-    record Recycling(int playerId, int systemId, String systemName, int ships, long recoveredTenths)
-            implements TurnEvent {}
+    record EconomySummary(int playerId, int capacityGained) implements TurnEvent {}
 
     record Reinforcement(int playerId, int systemId, String systemName, int ships, int totalGarrison, String fleetLabel)
             implements TurnEvent {

@@ -31,7 +31,6 @@ final class SimulationEngine {
     private record CachedRoutes(String geometry, java.util.Map<Observation.Route, Integer> routes) { }
     private final DefaultTurnEngine classic;
     private final SpacewardTurnEngine spaceward;
-    private final SpacewardTurnEngine allianceSpaceward;
     private final boolean dropRejectedSends;
 
     SimulationEngine() {
@@ -52,7 +51,6 @@ final class SimulationEngine {
                 coalitions, () -> orderRandom);
         classic = new DefaultTurnEngine(pipeline, (_, _) -> { }, reports, fleets);
         spaceward = new SpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports);
-        allianceSpaceward = new de.zettsystems.starfare.turn.application.AllianceSpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports);
     }
 
     List<StrategyOrders> plan(GameState state, List<Strategy> strategies) {
@@ -89,7 +87,7 @@ final class SimulationEngine {
         combatRandom.setSeed(mix(combatSeed, state.turn()));
         orderRandom.setSeed(mix(combatSeed ^ 0x6a09e667f3bcc909L, state.turn()));
         if (state.ruleset().isSpaceward()) {
-            (state.ruleset().equals(RulesetRef.SPACEWARD_ALLIANCE) ? allianceSpaceward : spaceward).advanceTurn(state);
+            spaceward.advanceTurn(state);
         }
         else { classic.advanceTurn(state); }
         return List.copyOf(plans);

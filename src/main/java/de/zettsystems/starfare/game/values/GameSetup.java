@@ -46,7 +46,7 @@ public record GameSetup(
         enabledEvents = copyOfEvents(enabledEvents);
         RoundRules deadlines = roundRules == null ? RoundRules.defaults() : roundRules;
         // The randomness level decides the order of several attackers; coalition battles have none to store.
-        AttackOrder order = ruleset.resolvesCoalitionBattles() ? RoundRules.DEFAULT_ATTACK_ORDER : randomness.attackOrder();
+        AttackOrder order = ruleset.isSpaceward() ? RoundRules.DEFAULT_ATTACK_ORDER : randomness.attackOrder();
         roundRules = new RoundRules(deadlines.roundLimit(), deadlines.stragglerLimit(), order, deadlines.tempo());
         roundLimit = roundLimit <= 0 ? 0
                 : Math.clamp(roundLimit, SectorOptions.MIN_ROUND_LIMIT, SectorOptions.MAX_ROUND_LIMIT);

@@ -170,7 +170,7 @@ class NewGameDialogTest extends AbstractBrowserlessTest {
 
         GameId id = create();
 
-        assertThat(games.summaryOf(id).ruleset()).isEqualTo(RulesetCatalog.ECONOMY_CANDIDATE);
+        assertThat(games.summaryOf(id).ruleset()).isEqualTo(RulesetRef.EXTENDED);
         assertThat(registry.readState(id, GameState::victoryRules)).isEqualTo(new VictoryRules(70, true, true, 70, true));
     }
 

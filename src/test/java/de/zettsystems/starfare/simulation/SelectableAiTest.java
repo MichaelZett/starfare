@@ -18,7 +18,7 @@ class SelectableAiTest {
     @ParameterizedTest
     @EnumSource(AiStrategy.class)
     void gamePlanningMatchesBenchmarkCommandsForEverySupportedRuleset(AiStrategy strategy) {
-        for (var rules : List.of(RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD, RulesetRef.SPACEWARD_ALLIANCE)) {
+        for (var rules : List.of(RulesetRef.SECTOR_FORCES, RulesetRef.EXTENDED, RulesetRef.EXTENDED)) {
             if (!strategy.supports(rules)) { continue; }
             var state = new Scenario(rules, GalaxyLayout.EVEN, 16, 101, 314159, 30, 10).create(2);
             state.players().replaceAll(p -> new Player(p.id(), p.name(), true, p.colorHex(), p.empireName(), strategy));
@@ -40,7 +40,7 @@ class SelectableAiTest {
     @EnumSource(AiStrategy.class)
     void selectedGameAiDoesNotReactToHiddenGarrisonsOrEnemyOrders(AiStrategy strategy) {
         var state = new GameState();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         state.players().addAll(List.of(new Player(1, "AI", true, "#fff", "AI", strategy),
                 new Player(2, "Enemy", false, "#000")));
         state.systems().addAll(List.of(new StarSystem(1, "Home", 0, 0, 1, 80, 5, false),

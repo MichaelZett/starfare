@@ -57,7 +57,7 @@ class SectorOptionsTest {
         GameSetup sector = GameSetup.defaults().chooseRandomness(RandomnessLevel.MEDIUM)
                 .chooseEvents(Set.of(CosmicEvent.SUPERNOVA)).limitRounds(40);
         assertThat(sector.sectorOptions()).isEqualTo(chosen);
-        assertThat(sector.selectRuleset(RulesetRef.SPACEWARD).sectorOptions()).isEqualTo(SectorOptions.none());
+        assertThat(sector.selectRuleset(RulesetRef.EXTENDED).sectorOptions()).isEqualTo(SectorOptions.none());
         assertThat(sector.chooseComputerStrength(ComputerStrength.EASY).sectorOptions()).isEqualTo(chosen);
     }
 }

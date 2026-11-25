@@ -48,23 +48,6 @@
     box-shadow: 0 0 0 3px rgba(226, 72, 80, .85), 0 0 20px rgba(226, 72, 80, .6), 0 4px 12px rgba(0, 0, 0, .45) !important;
 }
 
-/* Research sits with the empire figures and looks clickable, so it is found without the menu. */
-.app-header-stats vaadin-button.app-header-research {
-    --vaadin-button-background: var(--sf-surface-2);
-    --vaadin-button-text-color: var(--sf-text);
-    min-height: 0;
-    height: auto;
-    padding: 3px 12px;
-    border: 1px solid var(--sf-accent-2);
-    border-radius: 999px;
-    font-size: .92rem;
-    line-height: 1.4;
-    cursor: pointer;
-}
-
-.app-header-research vaadin-icon { width: 14px; height: 14px; color: var(--sf-accent-2); }
-.app-header-research [slot="suffix"] { font-weight: 700; color: var(--sf-accent-2); }
-
 /* Free ships are a tutorial aid: the platform's dashed diamond at the upper rim, away from the fleet
    badges, so it never reads as a fleet. A normal game does not show it. */
 #map .sys-idle-ships {

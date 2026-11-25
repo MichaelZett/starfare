@@ -12,12 +12,7 @@ public final class CoalitionResolver {
     private CoalitionResolver() { }
 
     public static List<CoalitionSide> resolve(List<CoalitionSide> forces, int percent, IntToDoubleFunction roll) {
-        return resolve(forces, percent, roll, Map.of());
-    }
-    public static List<CoalitionSide> resolve(List<CoalitionSide> forces, int percent, IntToDoubleFunction roll,
-            Map<Integer, de.zettsystems.starfare.research.values.ShipCohorts> generations) {
-        return resolve(forces, percent, roll, (id, remaining) -> generations.containsKey(id)
-                ? java.util.Objects.requireNonNull(generations.get(id)).survive(remaining).strength() : remaining);
+        return resolve(forces, percent, roll, (_, remaining) -> remaining);
     }
     public static List<CoalitionSide> resolve(List<CoalitionSide> forces, int percent, IntToDoubleFunction roll,
             java.util.function.ToDoubleBiFunction<Integer, Integer> strength) {

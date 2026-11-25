@@ -2,12 +2,14 @@ package de.zettsystems.starfare.game.values;
 
 import de.zettsystems.starfare.navigation.values.RoutePreview;
 import de.zettsystems.starfare.navigation.values.FlightJourney;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.jspecify.annotations.Nullable;
-import de.zettsystems.starfare.research.values.ShipCohorts;
 
 /**
- * Immutable fleet transfer between star systems.
+ * Immutable fleet transfer between star systems. Snapshots from before the extended rules 2.0.0 may
+ * still carry the ship generations of the removed research ({@code composition}); they are ignored.
  */
+@JsonIgnoreProperties({"composition"})
 public record Fleet(
         int globalId,      // spielweit eindeutig
         int ownerId,
@@ -18,21 +20,8 @@ public record Fleet(
         int launchTurn,
         int arrivalTurn,
         @Nullable FlightJourney journey,
-        @Nullable Integer beneficiaryId,
-        ShipCohorts composition
+        @Nullable Integer beneficiaryId
 ) {
-    public Fleet {
-        if (composition == null) { composition = ShipCohorts.of(0, ships); }
-        if (composition.count() != ships) { throw new IllegalArgumentException("Fleet generations disagree with ship count"); }
-    }
-    public Fleet(int globalId, int ownerId, int localNo, int fromSystemId, int toSystemId, int ships,
-                 int launchTurn, int arrivalTurn, @Nullable FlightJourney journey, @Nullable Integer beneficiaryId) {
-        this(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, journey,
-                beneficiaryId, ShipCohorts.of(0, ships));
-    }
-    public Fleet commissionedAs(ShipCohorts built) {
-        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, journey, beneficiaryId, built);
-    }
     public Fleet(int globalId, int ownerId, int localNo, int fromSystemId, int toSystemId, int ships, int launchTurn, int arrivalTurn) {
         this(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, null);
     }
@@ -42,61 +31,61 @@ public record Fleet(
     }
     public int conquestOwner() { return beneficiaryId == null ? ownerId : beneficiaryId; }
     public Fleet designateConquest(int beneficiary) {
-        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, journey, beneficiary, composition);
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, journey, beneficiary);
     }
     public Fleet surviveBattle(int survivors) {
         if (survivors < 0 || survivors > ships) { throw new IllegalArgumentException("Combat cannot create ships"); }
-        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, survivors, launchTurn, arrivalTurn, journey, beneficiaryId, composition.survive(survivors));
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, survivors, launchTurn, arrivalTurn, journey, beneficiaryId);
     }
     public boolean inFlight() { return journey == null || journey.flying(); }
     /** A hostile intermediate arrival ends the itinerary at the site of combat. */
     public Fleet endJourneyAfterBattle() {
-        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, null, beneficiaryId, composition);
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, null, beneficiaryId);
     }
     public Fleet landForRefueling() {
         FlightJourney route = java.util.Objects.requireNonNull(journey);
-        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, route.land(arrivalTurn), beneficiaryId, composition);
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, route.land(arrivalTurn), beneficiaryId);
     }
     public Fleet holdAtBlockedStation() {
         FlightJourney route = java.util.Objects.requireNonNull(journey);
-        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, route.block(), beneficiaryId, composition);
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, route.block(), beneficiaryId);
     }
     public Fleet resumeAtStation(int ready, int finalArrival) {
         FlightJourney route = java.util.Objects.requireNonNull(journey);
-        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, route.resume(ready, finalArrival), beneficiaryId, composition);
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, route.resume(ready, finalArrival), beneficiaryId);
     }
     public Fleet continueFlight(int from, int to, int departure, int arrival, int finalArrival) {
         FlightJourney route = java.util.Objects.requireNonNull(journey);
-        return new Fleet(globalId, ownerId, localNo, from, to, ships, departure, arrival, route.depart(finalArrival), beneficiaryId, composition);
+        return new Fleet(globalId, ownerId, localNo, from, to, ships, departure, arrival, route.depart(finalArrival), beneficiaryId);
     }
     public boolean evacuating() { return journey != null && journey.evacuating(); }
     public Fleet prepareReturn(RoutePreview route, int turn, int firstArrival) {
         return new Fleet(globalId, ownerId, localNo, route.systems().getFirst(), route.systems().get(1), ships,
-                turn, firstArrival, new FlightJourney(route.systems(), 1, FlightJourney.Phase.FLYING, 0, turn + route.rounds(), true), beneficiaryId, composition);
+                turn, firstArrival, new FlightJourney(route.systems(), 1, FlightJourney.Phase.FLYING, 0, turn + route.rounds(), true), beneficiaryId);
     }
     public Fleet beginEvacuation() {
         var route = java.util.Objects.requireNonNull(journey);
         return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn,
-                new FlightJourney(route.stations(), route.legIndex(), route.phase(), route.readyTurn(), route.finalArrivalTurn(), true), beneficiaryId, composition);
+                new FlightJourney(route.stations(), route.legIndex(), route.phase(), route.readyTurn(), route.finalArrivalTurn(), true), beneficiaryId);
     }
     public Fleet dockAtPartner() {
         var route = journey == null ? new FlightJourney(java.util.List.of(fromSystemId, toSystemId), 1, FlightJourney.Phase.FLYING, 0, arrivalTurn) : journey;
-        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, route.land(arrivalTurn), beneficiaryId, composition);
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn, route.land(arrivalTurn), beneficiaryId);
     }
     public Fleet requireReturn() {
         var route = java.util.Objects.requireNonNull(journey);
         return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrivalTurn,
-                new FlightJourney(route.stations(), route.legIndex(), FlightJourney.Phase.BLOCKED, Math.max(1, route.readyTurn()), route.finalArrivalTurn(), true), beneficiaryId, composition);
+                new FlightJourney(route.stations(), route.legIndex(), FlightJourney.Phase.BLOCKED, Math.max(1, route.readyTurn()), route.finalArrivalTurn(), true), beneficiaryId);
     }
     /** A space-time quake shortens the flight; only SectorForces fleets without an itinerary are affected. */
     public Fleet acceleratedTo(int arrival) {
         if (journey != null || arrival > arrivalTurn) { return this; }
-        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrival, null, beneficiaryId, composition);
+        return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn, arrival, null, beneficiaryId);
     }
 
     /** The target exploded: the navigation computer panics and jumps from there to another system. */
     public Fleet panicJump(int newTarget, int newArrival) {
-        return new Fleet(globalId, ownerId, localNo, toSystemId, newTarget, ships, launchTurn, newArrival, null, beneficiaryId, composition);
+        return new Fleet(globalId, ownerId, localNo, toSystemId, newTarget, ships, launchTurn, newArrival, null, beneficiaryId);
     }
 
     /**
@@ -104,6 +93,6 @@ public record Fleet(
      */
     public Fleet delayedByOneTurn() {
         return new Fleet(globalId, ownerId, localNo, fromSystemId, toSystemId, ships, launchTurn,
-                inFlight() ? arrivalTurn + 1 : arrivalTurn, journey == null ? null : journey.delayed(), beneficiaryId, composition);
+                inFlight() ? arrivalTurn + 1 : arrivalTurn, journey == null ? null : journey.delayed(), beneficiaryId);
     }
 }

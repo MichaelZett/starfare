@@ -6,10 +6,18 @@ import java.util.List;
 
 public final class SpacewardStates {
     private SpacewardStates() { }
+    /** A started two-empire game of the extended rules with wide range. */
     public static GameState running() {
+        GameState state = ready();
+        state.start();
+        return state;
+    }
+
+    /** The same game before its start: industry is established, navigation configured. */
+    public static GameState ready() {
         GameState state = new GameState();
         state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         state.players().addAll(List.of(new Player(1, "Human", false, "#111111"), new Player(2, "Opponent", false, "#222222")));
         state.systems().add(new StarSystem(1, "Alpha", 100, 100, 1, 12, 10, false));
         state.systems().add(new StarSystem(2, "Beta", 200, 100, 1, 3, 4, false));
@@ -18,7 +26,7 @@ public final class SpacewardStates {
         state.joinedHumanPlayerIds().addAll(List.of(1, 2));
         state.originalHumanPlayerIds().addAll(List.of(1, 2));
         state.configureNavigation(new de.zettsystems.starfare.navigation.values.NavigationSettings(5000));
-        state.start();
+        state.initializeIndustry();
         return state;
     }
 }

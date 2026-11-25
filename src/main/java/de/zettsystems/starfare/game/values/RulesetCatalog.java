@@ -7,9 +7,6 @@ import java.util.Set;
 
 /** Immutable, extensible catalog used by creation, restoration and rule dispatch. */
 public record RulesetCatalog(List<RulesetDefinition> definitions) {
-    /** Current rules for every new Spaceward game, template and rematch. */
-    public static final RulesetRef ECONOMY_CANDIDATE = RulesetRef.SPACEWARD_SHIP_RESEARCH;
-
     public RulesetCatalog {
         definitions = List.copyOf(definitions);
         Set<String> variants = new HashSet<>();
@@ -20,13 +17,13 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
         }
     }
 
+    /** Exactly one version per variant: classic 1.0.0 and extended 2.0.0. */
     public static RulesetCatalog builtIn() {
         return new RulesetCatalog(List.of(
                 new RulesetDefinition(RulesetRef.SECTOR_FORCES, RulesetDefinition.SECTOR_FORCES_NAME,
                         RulesetDefinition.SECTOR_FORCES_DESCRIPTION, Set.of(RulesetRef.SECTOR_FORCES.version()), true),
-                new RulesetDefinition(ECONOMY_CANDIDATE, RulesetDefinition.SPACEWARD_NAME,
-                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.SPACEWARD.version(), RulesetRef.SPACEWARD_ALLIANCE.version(), RulesetRef.SPACEWARD_COLONIES.version(), RulesetRef.SPACEWARD_METALS.version(), RulesetRef.SPACEWARD_RECYCLING.version(), RulesetRef.SPACEWARD_ECONOMY_PREVIEW.version(), RulesetRef.SPACEWARD_DIRECT_ECONOMY.version(), RulesetRef.SPACEWARD_EQUAL_METAL.version(), RulesetRef.SPACEWARD_EARLY_INDUSTRY.version(), RulesetRef.SPACEWARD_SHIP_RESEARCH.version()), true,
-                        Set.of(ECONOMY_CANDIDATE.version()))));
+                new RulesetDefinition(RulesetRef.EXTENDED, RulesetDefinition.SPACEWARD_NAME,
+                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.EXTENDED.version()), true)));
     }
 
     public Optional<RulesetDefinition> find(String variant) {

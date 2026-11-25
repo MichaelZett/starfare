@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.economy.ui;
 
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.textfield.IntegerField;
 import de.zettsystems.starfare.game.values.StandingOrder;
@@ -14,38 +13,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductionPlanningJourneyTest extends AbstractEconomyUiTest {
     @Test
-    void presetsTrimRelocationsAndSystemNavigationPreservesOnlyCurrentInputs() {
+    void expansionTrimsRelocationsAndSurvivesNavigationUntilTheRoundIsSubmitted() {
         openGame(EconomyUiStates.directProduction(), "Direct production Browserless");
         assertThat(text("production-functions")).contains("10 Punkte → 10 Schiffe/Runde");
-        click("production-preset-autark");
-        assertThat(mining(1)).isEqualTo(5);
-        assertThat(text("production-save-status")).contains("Verlegung nach Beta: 6 → 3/Runde", "Verlegung nach Enemy: 4 → 2/Runde");
-        assertThat(routes()).containsEntry(2, 3).containsEntry(3, 2);
-        assertThat(text("production-functions")).contains("5 Punkte → 5 Schiffe/Runde");
         click("production-plan-open");
-        assertThat(field("industry-mining").getValue()).isEqualTo(5);
-        enter("industry-mining", 3);
-        assertThat(routes()).containsEntry(2, 3).containsEntry(3, 2);
-        test(find(Checkbox.class).withId("industry-expansion-pin").single()).click();
+        enter(IndustryPanel.ALLOCATION_ID, 4);
+        assertThat(text("production-save-status")).contains("Verlegung nach Beta: 6 → 4/Runde", "Verlegung nach Enemy: 4 → 2/Runde");
+        assertThat(routes()).containsEntry(2, 4).containsEntry(3, 2);
+        assertThat(text("production-functions")).contains("6 Punkte → 6 Schiffe/Runde");
         select("Beta");
-        click("production-preset-metal");
-        assertThat(mining(2)).isEqualTo(4);
         select("Alpha");
-        assertThat(find(Checkbox.class).withId("industry-expansion-pin").single().getValue()).isTrue();
-        assertThat(field("industry-mining").getValue()).isEqualTo(3);
-        assertThat(games.allocateProduction(id, 1, 1, 2, 1, 0)).isTrue();
-        runPendingUiAccess();
-        select("Beta");
-        assertThat(field("industry-mining").getValue()).isZero();
-        click("production-preset-ships");
         reloadMap();
         click("production-plan-open");
-        assertThat(field("industry-mining").getValue()).isEqualTo(3);
+        assertThat(field(IndustryPanel.ALLOCATION_ID).getValue()).isEqualTo(4);
+        assertThat(field("industry-shipbuilding").getValue()).isEqualTo(6);
         test(button("Runde abgeben")).click();
         runPendingUiAccess();
         assertThat(viewText()).contains("Abgegeben");
-        assertThat(mining(1)).isEqualTo(3);
-        assertThat(find(IntegerField.class).withId("industry-mining").all()).isEmpty();
+        int expansion = registry.readState(id, state -> state.industries().get(1).expansionAllocation());
+        assertThat(expansion).isEqualTo(4);
+        assertThat(find(IntegerField.class).withId(IndustryPanel.ALLOCATION_ID).all()).isEmpty();
         assertThat(find(Component.class).withId("production-submit-warning").all()).isEmpty();
     }
 

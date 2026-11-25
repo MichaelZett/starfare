@@ -60,8 +60,8 @@ public record BattleReplay(String systemName, int attacking, int defending, Outc
                     ? Optional.of(new BattleReplay(held.systemName(), held.attacking(), held.defending(),
                     new Outcome(0, held.defendersLeft(), false),
                     held.attackerStrength(), held.defenderStrength())) : Optional.empty();
-            case TurnEvent.Recycling _, TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
-                 TurnEvent.EconomySummary _, TurnEvent.ResearchCompleted _, TurnEvent.Cosmic _, TurnEvent.FinalScore _ -> Optional.empty();
+            case TurnEvent.Production _, TurnEvent.Reinforcement _, TurnEvent.Victory _, TurnEvent.Defeat _,
+                 TurnEvent.EconomySummary _, TurnEvent.Cosmic _, TurnEvent.FinalScore _ -> Optional.empty();
         };
     }
 

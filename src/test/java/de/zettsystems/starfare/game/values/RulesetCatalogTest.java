@@ -8,67 +8,31 @@ import static org.assertj.core.api.Assertions.*;
 class RulesetCatalogTest {
     private final RulesetCatalog catalog = RulesetCatalog.builtIn();
 
-    @Test void onlyCurrentRulesAreCreatableWhileAllOlderSpacewardVersionsRemainSupported() {
-        var entry = catalog.find("spaceward").orElseThrow();
-        assertThat(entry.defaultRef()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
-        assertThat(entry.creationChoices()).containsExactly(RulesetRef.SPACEWARD_SHIP_RESEARCH);
-        for (var version : entry.supportedVersions()) {
-            var rules = new RulesetRef("spaceward", version);
-            assertThatCode(() -> catalog.requireSupported(rules)).doesNotThrowAnyException();
-            if (entry.creationChoices().contains(rules)) {
-                assertThatCode(() -> catalog.requireCreatable(rules)).doesNotThrowAnyException();
-            } else {
-                assertThatThrownBy(() -> catalog.requireCreatable(rules)).isInstanceOf(IllegalArgumentException.class);
-            }
-        }
-    }
-
-    @Test void spacewardCanBeCreatedAndStoredGamesStaySupported() {
-        var spaceward = catalog.find("spaceward").orElseThrow();
-        assertThat(spaceward.creationEnabled()).isTrue();
-        assertThatCode(() -> catalog.requireSupported(RulesetRef.SPACEWARD)).doesNotThrowAnyException();
-    }
-
-    @Test void directEconomyCandidatesDropTheLaborLimitAndLaterCandidatesShareMetalEqually() {
-        assertThat(RulesetRef.SPACEWARD_DIRECT_ECONOMY.limitsIndustryByLabor()).isFalse();
-        assertThat(RulesetRef.SPACEWARD_EQUAL_METAL.limitsIndustryByLabor()).isFalse();
-        assertThat(RulesetRef.SPACEWARD_EQUAL_METAL.sharesMetalEqually()).isTrue();
-        assertThat(RulesetRef.SPACEWARD_EQUAL_METAL.usesCheapEarlyIndustry()).isFalse();
-        assertThat(RulesetRef.SPACEWARD_EARLY_INDUSTRY.usesCheapEarlyIndustry()).isTrue();
-        assertThat(RulesetRef.SPACEWARD_EARLY_INDUSTRY.limitsIndustryByLabor()).isFalse();
-        assertThat(RulesetRef.SPACEWARD_EARLY_INDUSTRY.sharesMetalEqually()).isTrue();
-        assertThat(RulesetRef.SPACEWARD_EARLY_INDUSTRY.adjustsRelocationsToShipbuilding()).isTrue();
-        assertThat(RulesetRef.SPACEWARD_EARLY_INDUSTRY.usesRecycling()).isTrue();
-        assertThat(RulesetRef.SPACEWARD_DIRECT_ECONOMY.sharesMetalEqually()).isFalse();
-        assertThat(RulesetRef.SPACEWARD_DIRECT_ECONOMY.usesRecycling()).isTrue();
-        assertThat(RulesetRef.SPACEWARD_DIRECT_ECONOMY.usesConfigurableVictory()).isTrue();
-        for (var limited : List.of(RulesetRef.SPACEWARD_COLONIES, RulesetRef.SPACEWARD_METALS, RulesetRef.SPACEWARD_RECYCLING,
-                RulesetRef.SPACEWARD_ECONOMY_PREVIEW)) {
-            assertThat(limited.limitsIndustryByLabor()).isTrue();
-        }
-        assertThat(RulesetRef.SPACEWARD_ALLIANCE.limitsIndustryByLabor()).isFalse();
-    }
-
-    @Test
-    void sectorForcesAndSpacewardAreReleased() {
-        assertThat(catalog.definitions()).hasSize(2);
-        assertThat(catalog.definitions().getFirst().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
+    @Test void eachVariantHasExactlyOneVersion() {
+        var extended = catalog.find("spaceward").orElseThrow();
+        assertThat(extended.defaultRef()).isEqualTo(RulesetRef.EXTENDED);
+        assertThat(extended.supportedVersions()).containsExactly(RulesetRef.EXTENDED.version());
+        assertThat(extended.creationEnabled()).isTrue();
+        assertThatCode(() -> catalog.requireCreatable(RulesetRef.EXTENDED)).doesNotThrowAnyException();
+        var classic = catalog.find("classic").orElseThrow();
+        assertThat(classic.supportedVersions()).containsExactly(RulesetRef.SECTOR_FORCES.version());
         assertThatCode(() -> catalog.requireCreatable(RulesetRef.SECTOR_FORCES)).doesNotThrowAnyException();
-        assertThat(catalog.find(RulesetRef.SPACEWARD.variant()).orElseThrow().creationEnabled()).isTrue();
-        assertThat(catalog.find(RulesetRef.SPACEWARD.variant()).orElseThrow().defaultRef())
-                .isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
-        assertThatThrownBy(() -> catalog.requireCreatable(RulesetRef.SPACEWARD_EQUAL_METAL)).isInstanceOf(IllegalArgumentException.class);
-        assertThatCode(() -> catalog.requireCreatable(RulesetRef.SPACEWARD_SHIP_RESEARCH)).doesNotThrowAnyException();
-        var input1 = new RulesetRef("spaceward", "2.0.0");
-        assertThatThrownBy(() -> catalog.requireCreatable(input1)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(catalog.definitions()).extracting(RulesetDefinition::defaultRef)
+                .containsExactly(RulesetRef.SECTOR_FORCES, RulesetRef.EXTENDED);
     }
 
-    @Test
-    void onlySpacewardReplacesTheAttackOrderWithCoalitionBattles() {
-        assertThat(RulesetRef.SPACEWARD.resolvesCoalitionBattles()).isTrue();
-        assertThat(RulesetRef.SPACEWARD_ALLIANCE.resolvesCoalitionBattles()).isTrue();
-        assertThat(RulesetRef.SECTOR_FORCES.resolvesCoalitionBattles()).isFalse();
-        assertThat(new RulesetRef("spaceward", "2.0.0").resolvesCoalitionBattles()).isFalse();
+    @Test void removedExtendedVersionsAreNoLongerSupported() {
+        for (var version : List.of("1.0.0", "1.1.0", "1.2.0-w7", "1.3.0-r1")) {
+            var removed = new RulesetRef("spaceward", version);
+            assertThat(removed.isSpaceward()).isTrue();
+            assertThatThrownBy(() -> catalog.requireSupported(removed)).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Test void onlyTheClassicRulesUseEventsStartBalanceAndRoundLimit() {
+        assertThat(RulesetRef.SECTOR_FORCES.usesSectorOptions()).isTrue();
+        assertThat(RulesetRef.EXTENDED.usesSectorOptions()).isFalse();
+        assertThat(RulesetRef.SECTOR_FORCES.isSpaceward()).isFalse();
     }
 
     @Test
@@ -111,9 +75,9 @@ class RulesetCatalogTest {
         assertThatThrownBy(() -> new RulesetCatalog(input4)).isInstanceOf(IllegalArgumentException.class);
         Set<String> released = Set.of("1.0.0");
         Set<String> withUnimplemented = Set.of("1.0.0", "9.0.0");
-        assertThatThrownBy(() -> new RulesetDefinition(RulesetRef.SPACEWARD, "test.name", "test.description",
+        assertThatThrownBy(() -> new RulesetDefinition(RulesetRef.EXTENDED, "test.name", "test.description",
                 released, true, withUnimplemented)).isInstanceOf(IllegalArgumentException.class);
         Set<String> input5 = Set.of();
-        assertThatThrownBy(() -> new RulesetDefinition(RulesetRef.SPACEWARD, "test.name", "test.description", input5, true)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new RulesetDefinition(RulesetRef.EXTENDED, "test.name", "test.description", input5, true)).isInstanceOf(IllegalArgumentException.class);
     }
 }

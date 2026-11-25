@@ -83,10 +83,6 @@ final class GameOutcomeDialog {
         Div metrics = new Div();
         metrics.addClassName("game-outcome-metrics");
         metrics.setWidthFull();
-        if (economy.metal()) {
-            metrics.add(metric("⛏", UiTexts.GAME_OUTCOME_METAL_MINED, economy.metalMined()),
-                    metric("⬇", UiTexts.GAME_OUTCOME_METAL_CONSUMED, economy.metalConsumed()));
-        }
         metrics.add(metric("⚙", UiTexts.GAME_OUTCOME_INDUSTRY_BUILT, economy.industryBuilt()));
         section.add(metrics);
         switch (economy.coverage()) {

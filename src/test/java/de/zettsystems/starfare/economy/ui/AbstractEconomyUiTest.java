@@ -86,10 +86,6 @@ abstract class AbstractEconomyUiTest extends AbstractBrowserlessTest {
         select("Alpha");
     }
 
-    protected int mining(int system) {
-        return registry.readState(id, state -> state.metals().orElseThrow().mining().get(system));
-    }
-
     protected int garrison() {
         return registry.readState(id, state -> state.getSystem(1).garrison());
     }

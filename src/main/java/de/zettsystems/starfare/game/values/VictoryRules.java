@@ -39,20 +39,16 @@ public record VictoryRules(int individualSystemPercent, boolean alliancesAllowed
 
     /**
      * Fixed rules of a new game: 70 % of the systems win; with the extended rules alliances, computer alliances
-     * and an alliance victory at the same share are always allowed. The first extended version knew no choice.
+     * and an alliance victory at the same share are always allowed.
      */
     public static VictoryRules forNewGame(RulesetRef rules) {
-        if (!rules.isSpaceward() || rules.equals(RulesetRef.SPACEWARD)) {
+        if (!rules.isSpaceward()) {
             return defaults(rules, GameConfig.VICTORY_SYSTEM_PERCENT);
         }
         return new VictoryRules(GameConfig.VICTORY_SYSTEM_PERCENT, true, true, GameConfig.VICTORY_SYSTEM_PERCENT, true);
     }
     public VictoryRules forRuleset(RulesetRef rules) {
-        if (!rules.isSpaceward()) { return defaults(rules, individualSystemPercent); }
-        if (rules.equals(RulesetRef.SPACEWARD) && !equals(defaults(rules, individualSystemPercent))) {
-            throw new IllegalArgumentException("Custom diplomacy requires Spaceward 1.1.0");
-        }
-        return this;
+        return rules.isSpaceward() ? this : defaults(rules, individualSystemPercent);
     }
     public VictoryRules forFullConquest() {
         return new VictoryRules(100, alliancesAllowed, allianceVictoryAllowed, 100, aiAlliancesAllowed);

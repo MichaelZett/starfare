@@ -11,7 +11,7 @@ class AiStrategySetupTest {
     @Test
     void theComputerStrengthDecidesWhichProfilesTheComputersDraw() {
         assertThat(AiStrategy.forRules(RulesetRef.SECTOR_FORCES)).hasSize(5).noneMatch(AiStrategy::requiresIndustry);
-        assertThat(AiStrategy.forRules(RulesetRef.SPACEWARD_ALLIANCE)).containsExactly(AiStrategy.values());
+        assertThat(AiStrategy.forRules(RulesetRef.EXTENDED)).containsExactly(AiStrategy.values());
         var registry = new DefaultGameRegistry(new InMemoryGameSessionStore(), new DefaultGameAccessPolicy());
 
         var easy = registry.createGame(setup().chooseComputerStrength(ComputerStrength.EASY), "host", "Easy");

@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class AllianceBenchmarkTest {
     @Test void pairedElevenAndFiveScenarioEndsAsGroupVictoryOnlyWhenEnabled(@TempDir Path output) throws java.io.IOException {
-        var base = new Scenario(RulesetRef.SPACEWARD_ALLIANCE, GalaxyLayout.EVEN, 16, 7, 123, 2, 10);
+        var base = new Scenario(RulesetRef.EXTENDED, GalaxyLayout.EVEN, 16, 7, 123, 2, 10);
         var enabled = base.withVictoryRules(new VictoryRules(70, true, true, 70));
         var disabled = base.withVictoryRules(new VictoryRules(70, true, false, 70));
         var profiles = List.of(Strategy.DEFENSE, Strategy.DEFENSE, Strategy.DEFENSE);
@@ -31,13 +31,13 @@ class AllianceBenchmarkTest {
         assertThat(Files.readString(output.resolve("summary.md"))).contains("group-on", "group-off");
     }
 
-    @Test void commandLineCanPairTheNewVersionAndRejectsLegacyGroupVictory(@TempDir Path output) throws java.io.IOException {
-        StrategyBenchmark.main(new String[]{"--mode=alliance", "--rules=spaceward-1.1", "--alliance-victory=both",
+    @Test void commandLinePairsGroupVictoryAndRejectsItForClassicRules(@TempDir Path output) throws java.io.IOException {
+        StrategyBenchmark.main(new String[]{"--mode=alliance", "--rules=spaceward", "--alliance-victory=both",
                 "--seeds=1", "--layouts=EVEN", "--systems=8", "--rounds=3", "--output=" + output});
         var lines = Files.readAllLines(output.resolve("matches.csv"));
         assertThat(lines).hasSize(9);
-        assertThat(String.join("\n", lines)).contains("group-win-true", "group-win-false", "spaceward,1.1.0");
-        assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--rules=spaceward", "--alliance-victory=true"}))
+        assertThat(String.join("\n", lines)).contains("group-win-true", "group-win-false", "spaceward,2.0.0");
+        assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--rules=classic", "--alliance-victory=true"}))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

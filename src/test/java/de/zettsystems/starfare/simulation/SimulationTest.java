@@ -160,18 +160,18 @@ class SimulationTest {
         StrategyBenchmark.main(new String[]{"--mode=" + mode, "--rules=spaceward", "--layouts=EVEN", "--systems=8",
                 "--seeds=1", "--rounds=12", "--fork-round=1", "--output=" + output});
         assertThat(Files.readString(output.resolve("invocation.txt"))).contains("source-sha256=", "java=");
-        assertThat(Files.readString(output.resolve("matches.csv"))).contains("spaceward,1.0.0");
+        assertThat(Files.readString(output.resolve("matches.csv"))).contains("spaceward,2.0.0");
         assertThat(Files.readString(output.resolve("summary.md"))).contains("Strategiepruefstand");
     }
 
     private static Scenario scenario(boolean spaceward, int rounds) {
-        return new Scenario(spaceward ? RulesetRef.SPACEWARD : RulesetRef.SECTOR_FORCES, GalaxyLayout.EVEN, 8, 7, 123, rounds, 10);
+        return new Scenario(spaceward ? RulesetRef.EXTENDED : RulesetRef.SECTOR_FORCES, GalaxyLayout.EVEN, 8, 7, 123, rounds, 10);
     }
 
     private static GameState hiddenState(boolean spaceward) {
         var state = new GameState();
         state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(spaceward ? RulesetRef.SPACEWARD : RulesetRef.SECTOR_FORCES));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(spaceward ? RulesetRef.EXTENDED : RulesetRef.SECTOR_FORCES));
         state.players().addAll(List.of(new Player(1, "One", true, "#ffffff"), new Player(2, "Two", true, "#ff0000")));
         state.systems().add(new StarSystem(1, "Home", 100, 100, 1, 50, 5, false));
         state.systems().add(new StarSystem(2, "Hidden", 3100, 1900, 2, 20, 5, false));

@@ -103,7 +103,7 @@ class RoutesTest {
     }
     private static GameState network(double range, StarSystem... stations) {
         GameState state = new GameState(); state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         state.players().add(new Player(1, "Navigator", false, "#56b4e9"));
         state.systems().addAll(List.of(stations));
         // Neutral corner far from every station.

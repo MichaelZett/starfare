@@ -7,7 +7,7 @@ import de.zettsystems.starfare.game.values.GalaxyLayout;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.GameVisibility;
-import de.zettsystems.starfare.game.values.RulesetCatalog;
+import de.zettsystems.starfare.game.values.RulesetRef;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +32,7 @@ class TesterRulesetIntegrationTest extends AbstractIntegrationTest {
     private static final String OTHER_TESTER = "tester-2";
     private static final String PLAYER = "player";
     private static final GameSetup CLASSIC = twoHumans();
-    private static final GameSetup SPACEWARD = twoHumans().selectRuleset(RulesetCatalog.ECONOMY_CANDIDATE);
+    private static final GameSetup SPACEWARD = twoHumans().selectRuleset(RulesetRef.EXTENDED);
 
     /** Accounts whose Alpha role the platform took away during the test. */
     private static final Set<String> REVOKED = ConcurrentHashMap.newKeySet();

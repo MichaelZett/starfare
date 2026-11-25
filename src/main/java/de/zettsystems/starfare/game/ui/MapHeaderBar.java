@@ -11,7 +11,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.game.values.RoundStatus;
 import de.zettsystems.starfare.i18n.I18n;
-import de.zettsystems.starfare.research.values.ResearchView;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -26,19 +25,16 @@ final class MapHeaderBar extends HorizontalLayout {
     private final Span empireNameLabel = new Span();
     private final Span roundLabel = new Span();
     private final EmpireStatsBar empireStats;
-    private final de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices = new de.zettsystems.starfare.economy.ui.EconomyNoticeBar();
-    de.zettsystems.starfare.economy.ui.EconomyNoticeBar economyNotices() { return economyNotices; }
     private final Button next;
-    private final MenuItem researchItem;
     private final MenuItem leaveItem;
     private final MenuItem resignItem;
     private final MenuItem roundRulesItem;
 
     record Actions(Runnable onNext, Runnable onLeave, Runnable onLobby,
-                   Runnable onEditRoundRules, Runnable onResearch, Runnable onResign) { }
+                   Runnable onEditRoundRules, Runnable onResign) { }
 
     MapHeaderBar(Actions actions, boolean compact, @Nullable OwnFrameParts frame) {
-        empireStats = new EmpireStatsBar(actions.onResearch());
+        empireStats = new EmpireStatsBar();
         gameNameLabel.addClassName("app-header-game");
         tutorialMark.setVisible(false);
         empireNameLabel.addClassName("app-header-empire");
@@ -55,8 +51,6 @@ final class MapHeaderBar extends HorizontalLayout {
         headerMenu.addClassName("app-header-menu");
         MenuItem menuRoot = headerMenu.addItem(VaadinIcon.MENU.create());
         menuRoot.getElement().setAttribute("aria-label", "Menü");
-        researchItem = menuRoot.getSubMenu().addItem(I18n.t(de.zettsystems.starfare.game.ui.UiTexts.RESEARCH_TITLE), _ -> actions.onResearch().run());
-        researchItem.setVisible(false);
         roundRulesItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_ROUND_RULES),
                 _ -> actions.onEditRoundRules().run());
         leaveItem = menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LEAVE), _ -> actions.onLeave().run());
@@ -65,8 +59,8 @@ final class MapHeaderBar extends HorizontalLayout {
         menuRoot.getSubMenu().addItem(I18n.t(UiTexts.MAP_ACTION_LOBBY), _ -> actions.onLobby().run());
 
         var headerLeft = compact
-                ? new HorizontalLayout(gameNameLabel, tutorialMark, roundLabel, empireStats, economyNotices)
-                : new HorizontalLayout(title(), gameNameLabel, tutorialMark, empireNameLabel, roundLabel, empireStats, economyNotices);
+                ? new HorizontalLayout(gameNameLabel, tutorialMark, roundLabel, empireStats)
+                : new HorizontalLayout(title(), gameNameLabel, tutorialMark, empireNameLabel, roundLabel, empireStats);
         headerLeft.setAlignItems(Alignment.BASELINE);
         headerLeft.setSpacing(true);
         headerLeft.addClassName("app-header-left");
@@ -117,12 +111,6 @@ final class MapHeaderBar extends HorizontalLayout {
 
     /** Only a seated player of a running game can resign. */
     void setResignVisible(boolean visible) { resignItem.setVisible(visible); }
-
-    /** Without research there is neither the header button nor the menu entry. */
-    void setResearch(@Nullable ResearchView research) {
-        researchItem.setVisible(research != null);
-        empireStats.showResearch(research);
-    }
 
     void setRoundRulesVisible(boolean visible) {
         roundRulesItem.setVisible(visible);

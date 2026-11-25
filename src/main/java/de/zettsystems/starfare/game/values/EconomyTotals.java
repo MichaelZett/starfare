@@ -8,44 +8,40 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Personal economy over a game, summed only from recorded round summaries. Missing history is
+ * Personal industry over a game, summed only from recorded round summaries. Missing history is
  * never counted as zero: the coverage says whether the sums span the whole game, start later
  * or have gaps, or whether nothing was recorded at all.
  */
-public record EconomyTotals(long metalMined, long metalConsumed, int industryBuilt,
-                            Coverage coverage, int firstRound, boolean metal) {
+public record EconomyTotals(int industryBuilt, Coverage coverage, int firstRound) {
     public enum Coverage { COMPLETE, SINCE, PARTIAL, NOT_RECORDED }
 
     public boolean recorded() { return coverage != Coverage.NOT_RECORDED; }
 
     /**
-     * Sums the recorded economy events for one player and reports the available history.
+     * Sums the recorded industry events for one player and reports the available history.
      *
      * @param reports the player's report per resolved round; rounds without a report count as unrecorded
      * @param rounds  every resolved round of the game
      */
-    public static EconomyTotals of(Map<Integer, TurnReport> reports, SortedSet<Integer> rounds, int playerId, boolean metal) {
-        long mined = 0;
-        long consumed = 0;
+    public static EconomyTotals of(Map<Integer, TurnReport> reports, SortedSet<Integer> rounds, int playerId) {
         int built = 0;
         SortedSet<Integer> recorded = new TreeSet<>();
         for (int round : rounds) {
             TurnReport report = reports.get(round);
             List<TurnEvent> events = report == null ? List.of() : report.events();
             for (TurnEvent event : events) {
-                if (event instanceof TurnEvent.EconomySummary(int owner, long metalMined, long metalConsumed, int capacityGained)
-                        && owner == playerId) {
-                    mined += metalMined; consumed += metalConsumed; built += capacityGained;
+                if (event instanceof TurnEvent.EconomySummary(int owner, int capacityGained) && owner == playerId) {
+                    built += capacityGained;
                     recorded.add(round);
                 }
             }
         }
-        if (recorded.isEmpty()) { return new EconomyTotals(0, 0, 0, Coverage.NOT_RECORDED, 0, metal); }
+        if (recorded.isEmpty()) { return new EconomyTotals(0, Coverage.NOT_RECORDED, 0); }
         int first = recorded.first();
         Coverage coverage;
         if (recorded.equals(rounds)) { coverage = Coverage.COMPLETE; }
         else if (recorded.equals(rounds.tailSet(first))) { coverage = Coverage.SINCE; }
         else { coverage = Coverage.PARTIAL; }
-        return new EconomyTotals(mined, consumed, built, coverage, first, metal);
+        return new EconomyTotals(built, coverage, first);
     }
 }

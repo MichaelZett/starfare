@@ -7,7 +7,7 @@ import java.util.List;
 
 public final class NavigationStates {
     private NavigationStates() { }
-    public static GameState running() { return running(RulesetRef.SPACEWARD, null); }
+    public static GameState running() { return running(RulesetRef.EXTENDED, null); }
     public static GameState running(RulesetRef rules, @org.jspecify.annotations.Nullable VictoryRules victory) {
         GameState state = new GameState(); state.resetForNewGame();
         state.rememberSetup(GameSetup.defaults().selectRuleset(rules));

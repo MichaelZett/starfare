@@ -32,7 +32,7 @@ public class DefaultFleetService implements FleetService {
         if (ships <= 0 || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
             return false;
         }
-        int committed = committedShipsFrom(state, playerId, fromId) + state.recyclingShips(fromId);
+        int committed = committedShipsFrom(state, playerId, fromId);
         if (from.garrison() - committed < ships) {
             return false;
         }
@@ -91,11 +91,11 @@ public class DefaultFleetService implements FleetService {
                 || state.destroyed(toId)) {
             return false;
         }
-        if (ships <= 0 || from.garrison() - state.recyclingShips(fromId) < ships || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
+        if (ships <= 0 || from.garrison() < ships || Routes.plan(state, playerId, fromId, toId).isEmpty()) {
             return false;
         }
         state.updateSystem(fromId, current -> current.launchFleet(ships));
-        int fleetId = state.addFleet(playerId, fromId, toId, ships, from.composition().take(ships, true));
+        int fleetId = state.addFleet(playerId, fromId, toId, ships);
         if (claim != null) {
             Fleet launched = state.fleets().stream().filter(fleet -> fleet.globalId() == fleetId).findFirst().orElseThrow();
             state.replaceFleet(launched.designateConquest(claim));
@@ -123,7 +123,7 @@ public class DefaultFleetService implements FleetService {
             if (f.globalId() == fleetId && f.ownerId() == playerId && canDisband(state, f)) {
                 it.remove();
                 state.waitThisTurn().remove(fleetId);
-                state.updateSystem(f.inFlight() ? f.fromSystemId() : f.toSystemId(), current -> current.reinforce(f.composition()));
+                state.updateSystem(f.inFlight() ? f.fromSystemId() : f.toSystemId(), current -> current.reinforce(f.ships()));
                 return true;
             }
         }
@@ -256,16 +256,13 @@ public class DefaultFleetService implements FleetService {
         // abzueglich dessen, was fruehere Verlegungen desselben Systems schon nehmen.
         if (Routes.plan(state, playerId, o.fromSystemId(), o.toSystemId()).isEmpty()) { return; }
         int alreadyRouted = routed.getOrDefault(o.fromSystemId(), 0);
-        int available = from.garrison() + (state.ruleset().usesMetals() ? 0 : from.productionPerTurn()) - alreadyRouted;
+        int available = from.garrison() + from.productionPerTurn() - alreadyRouted;
         int ships = Math.clamp(o.ships(), 0, Math.max(0, available));
         if (ships <= 0) {
             return;
         }
         routed.merge(o.fromSystemId(), ships, Integer::sum);
-        if (state.ruleset().usesShipResearch()) {
-            var remaining = from.composition().minus(from.composition().take(alreadyRouted, true));
-            state.addFleet(playerId, o.fromSystemId(), o.toSystemId(), ships, remaining.take(ships, true));
-        } else { state.addFleet(playerId, o.fromSystemId(), o.toSystemId(), ships); }
+        state.addFleet(playerId, o.fromSystemId(), o.toSystemId(), ships);
     }
 
     private static boolean canDisband(GameState state, Fleet fleet) {

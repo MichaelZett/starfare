@@ -50,7 +50,7 @@ public final class AiPolicy {
                 && observation.hostile(target) && observation.rounds(source.id(), target.id()) <= 2);
         int points = 0;
         if (strategy == AiStrategy.INDUSTRY && !industry.atMaximum()) {
-            points = threatened ? industry.usableCapacity() / 5 : industry.usableCapacity() * 2 / 3;
+            points = threatened ? industry.capacity() / 5 : industry.capacity() * 2 / 3;
         }
         if (strategy == AiStrategy.INDUSTRY_LIGHT || strategy == AiStrategy.INDUSTRY_ADAPTIVE) {
             int nearestEnemy = observation.view().systems().stream()
@@ -58,11 +58,9 @@ public final class AiPolicy {
                     .mapToInt(target -> observation.rounds(source.id(), target.id())).min().orElse(Integer.MAX_VALUE);
             points = IndustryPolicy.allocation(strategy, industry, nearestEnemy, available(source));
         }
-        var metal = industry.metal();
-        int mining = metal == null ? 0 : metal.miningPoints();
-        points = Math.min(points, industry.usableCapacity() - mining);
+        points = Math.min(points, industry.capacity());
         expansion.put(source.id(), points);
-        return industry.usableCapacity() - points - mining;
+        return industry.capacity() - points;
     }
 
     private static int reserve(AiStrategy strategy, int output) {

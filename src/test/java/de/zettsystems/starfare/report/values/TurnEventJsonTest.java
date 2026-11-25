@@ -21,7 +21,7 @@ class TurnEventJsonTest {
 
     @Test
     void economySummariesRoundTripWithoutAnySystemOrBattle() {
-        TurnEvent summary = new TurnEvent.EconomySummary(2, 6, 4, 1);
+        TurnEvent summary = new TurnEvent.EconomySummary(2, 1);
         String json = mapper.writeValueAsString(summary);
         assertThat(json).contains("\"type\":\"economySummary\"");
         TurnEvent restored = mapper.readValue(json, TurnEvent.class);

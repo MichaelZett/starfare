@@ -12,14 +12,6 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public interface GameService {
-    Optional<de.zettsystems.starfare.economy.values.MiningAutomationView> miningAutomationFor(GameId id, String account);
-    Optional<de.zettsystems.starfare.economy.values.MiningPlan> previewMining(GameId id, String account,
-            de.zettsystems.starfare.economy.values.MiningRequest request);
-    boolean configureMining(GameId id, String account, de.zettsystems.starfare.economy.values.MiningRequest request);
-    boolean protectMiningSystem(GameId id, String account, int turn, int system, boolean protect);
-    Optional<de.zettsystems.starfare.research.values.ResearchView> shipResearchFor(GameId id, String account);
-    boolean planShipResearch(GameId id, String account, int turn, int expectedPercent, int percent);
-
     Optional<de.zettsystems.starfare.economy.values.ProductionPlanPreview> previewProduction(
             GameId id, String account, de.zettsystems.starfare.economy.values.ProductionAllocation plan);
 
@@ -28,9 +20,7 @@ public interface GameService {
 
     Optional<DiplomacyView> diplomacyFor(GameId id, String account);
     boolean diplomacyOrder(GameId id, String account, int turn, DiplomacyOrder order);
-    boolean planRecycling(GameId id, int player, int turn, int system, int ships);
 
-    boolean allocateProduction(GameId id, int playerId, int expectedTurn, int systemId, int expansion, int mining);
     boolean allocateExpansion(GameId id, int playerId, int expectedTurn, int systemId, int points);
 
     de.zettsystems.starfare.game.values.RulesetCatalog rulesets();

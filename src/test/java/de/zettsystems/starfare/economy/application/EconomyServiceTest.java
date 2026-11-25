@@ -15,14 +15,15 @@ class EconomyServiceTest {
     @Test void productionUsesCurrentCapacityAndGrowthAffectsTheFollowingRound() {
         GameState state = SpacewardStates.running();
         assertThat(economy.allocateExpansion(state, 1, 1, 4)).isTrue();
-        for (int turn = 0; turn < 5; turn++) {
+        // The first level above 10 costs 10 points: 4 points a round complete it in the third round.
+        for (int turn = 0; turn < 3; turn++) {
             assertThat(economy.produce(state, Map.of()).stream().filter(r -> r.systemId() == 1).findFirst().orElseThrow().ships()).isEqualTo(6);
         }
-        assertThat(state.getSystem(1).garrison()).isEqualTo(42);
+        assertThat(state.getSystem(1).garrison()).isEqualTo(30);
         assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(7);
-        assertThat(state.industries()).containsEntry(1, new Industry(11, 4, 0));
+        assertThat(state.industries()).containsEntry(1, new Industry(11, 4, 2));
         economy.produce(state, Map.of());
-        assertThat(state.getSystem(1).garrison()).isEqualTo(49);
+        assertThat(state.getSystem(1).garrison()).isEqualTo(37);
     }
     @Test void allocationChangesKeepRoutesAndServeCompetingTransfers() {
         GameState state = SpacewardStates.running();
@@ -49,14 +50,15 @@ class EconomyServiceTest {
         assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(10);
         assertThat(state.getSystem(1).garrison()).isEqualTo(5);
     }
-    @Test void allExpansionBuildsNoShipsAndNeutralSystemsDoNotGrow() {
+    @Test void allExpansionBuildsNoShipsThisRoundAndNeutralSystemsDoNotGrow() {
         GameState state = SpacewardStates.running();
         StarSystem neutral = state.getSystem(4);
         assertThat(economy.allocateExpansion(state, 1, 1, 10)).isTrue();
         economy.produce(state, Map.of());
         assertThat(state.getSystem(1).garrison()).isEqualTo(12);
-        assertThat(state.getSystem(1).productionPerTurn()).isZero();
-        assertThat(state.industries().get(1).expansionProgress()).isEqualTo(10);
+        // Ten points complete the level at once; the new capacity builds one ship next round.
+        assertThat(state.industries()).containsEntry(1, new Industry(11, 10, 0));
+        assertThat(state.getSystem(1).productionPerTurn()).isOne();
         assertThat(state.getSystem(4)).isEqualTo(neutral);
     }
     @Test void unauthorizedOrInvalidAllocationsAndClassicAreUnchanged() {
@@ -83,7 +85,7 @@ class EconomyServiceTest {
     @Test void productionReportsTheCapacityGainedThisRound() {
         GameState state = SpacewardStates.running();
         assertThat(economy.allocateExpansion(state, 1, 1, 10)).isTrue();
-        assertThat(economy.produce(state, Map.of()).stream().filter(r -> r.systemId() == 1).findFirst().orElseThrow().capacityGained()).isZero();
         assertThat(economy.produce(state, Map.of()).stream().filter(r -> r.systemId() == 1).findFirst().orElseThrow().capacityGained()).isOne();
+        assertThat(economy.produce(state, Map.of()).stream().filter(r -> r.systemId() == 1).findFirst().orElseThrow().capacityGained()).isZero();
     }
 }

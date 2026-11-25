@@ -32,8 +32,7 @@ record BenchmarkOptions(String mode, List<RulesetRef> rules, List<GalaxyLayout> 
         }
         var rules = Arrays.stream(options.getOrDefault("rules", "classic,spaceward").split(",")).map(value -> switch (value) {
             case "classic" -> RulesetRef.SECTOR_FORCES;
-            case "spaceward" -> RulesetRef.SPACEWARD;
-            case "spaceward-1.1" -> RulesetRef.SPACEWARD_ALLIANCE;
+            case "spaceward" -> RulesetRef.EXTENDED;
             default -> throw new IllegalArgumentException("Unknown rules: " + value);
         }).toList();
         var layouts = Arrays.stream(options.getOrDefault("layouts", "RANDOM,EVEN").split(",")).map(GalaxyLayout::valueOf).toList();
@@ -51,8 +50,8 @@ record BenchmarkOptions(String mode, List<RulesetRef> rules, List<GalaxyLayout> 
         }
         String allianceVictory = options.getOrDefault("alliance-victory", "false");
         if (!Set.of("false", "true", "both").contains(allianceVictory)
-                || (!allianceVictory.equals("false") && !rules.equals(List.of(RulesetRef.SPACEWARD_ALLIANCE)))) {
-            throw new IllegalArgumentException("Group victory requires --rules=spaceward-1.1 and false, true or both");
+                || (!allianceVictory.equals("false") && !rules.equals(List.of(RulesetRef.EXTENDED)))) {
+            throw new IllegalArgumentException("Group victory requires --rules=spaceward and false, true or both");
         }
         int individual = number(options, "individual-percent", 70);
         int group = number(options, "alliance-percent", 70);

@@ -8,19 +8,16 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RulesetRegistryTest {
-    @Test void acceptanceGamesAreCreatedWithCompleteSavedEconomicsBeforeTheirFirstRound() {
+    @Test void extendedGamesAreCreatedWithACompleteSavedIndustryBeforeTheirFirstRound() {
         var store = new InMemoryGameSessionStore();
         GameRegistry preview = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(), RulesetCatalog.builtIn());
-        var id = preview.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_SHIP_RESEARCH));
+        var id = preview.createGame(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         var original = preview.readState(id, GameState::toSnapshot);
-        assertThat(original.colonies()).hasSameSizeAs(original.systems());
-        assertThat(original.metals()).isNotNull();
+        assertThat(original.industries()).hasSameSizeAs(original.systems());
         var restored = GameState.fromSnapshot(original);
         restored.start();
-        assertThat(de.zettsystems.starfare.economy.domain.RecyclingOrders.balanceTenths(restored))
-                .isEqualTo(restored.metals().orElseThrow().recycling().initialTenths());
-        assertThat(restored.ruleset()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
-        assertThat(RulesetCatalog.builtIn().find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+        assertThat(restored.ruleset()).isEqualTo(RulesetRef.EXTENDED);
+        assertThat(RulesetCatalog.builtIn().find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.EXTENDED);
     }
     @Test
     void unavailableVariantsAreRejectedBeforeAnyGameIsSaved() {
@@ -42,7 +39,7 @@ class RulesetRegistryTest {
         var registry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
         for (var version : RulesetCatalog.builtIn().find("spaceward").orElseThrow().supportedVersions()) {
             var rules = new RulesetRef("spaceward", version);
-            if (rules.equals(RulesetRef.SPACEWARD_SHIP_RESEARCH)) { continue; }
+            if (rules.equals(RulesetRef.EXTENDED)) { continue; }
             var setup = GameSetup.defaults().selectRuleset(rules);
             assertThatThrownBy(() -> registry.createGame(setup))
                     .isInstanceOf(IllegalArgumentException.class);
@@ -54,9 +51,9 @@ class RulesetRegistryTest {
     void releasedSpacewardGamesStartWithIndustryAndFixedRange() {
         GameSessionStore store = new InMemoryGameSessionStore();
         GameRegistry registry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
-        GameId id = registry.createGame(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_SHIP_RESEARCH));
+        GameId id = registry.createGame(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         registry.readState(id, state -> {
-            assertThat(state.ruleset()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+            assertThat(state.ruleset()).isEqualTo(RulesetRef.EXTENDED);
             assertThat(state.industries()).hasSameSizeAs(state.systems());
             assertThat(state.navigationSettings()).isPresent();
             return null;
@@ -93,7 +90,7 @@ class RulesetRegistryTest {
     void gameRulesCannotBeChangedAfterInitialization() {
         var state = new GameState();
         state.rememberSetup(GameSetup.defaults());
-        var input3 = GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD);
+        var input3 = GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED);
         assertThatThrownBy(() -> state.rememberSetup(input3)).isInstanceOf(IllegalStateException.class);
         state.start();
         var input4 = GameSetup.defaults();

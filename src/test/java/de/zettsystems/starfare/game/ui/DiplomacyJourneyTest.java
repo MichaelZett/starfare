@@ -188,7 +188,7 @@ class DiplomacyJourneyTest extends AbstractMapJourneyTest {
     private static GameState twoEmpires() {
         GameState state = new GameState();
         state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         state.players().addAll(List.of(new Player(1, "Diplomat", false, "#56b4e9"),
                 new Player(2, "Partner", false, "#d55e00")));
         // Neighbours 495 map pixels apart: four rounds at 160 pixels per round, within the 495 range.

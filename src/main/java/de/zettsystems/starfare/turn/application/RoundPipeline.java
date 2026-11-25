@@ -78,18 +78,11 @@ public class RoundPipeline {
         planOrders.run();
         applyOrders(state);
         navigation.departReadyFleets(state);
-        state.recycleShips().forEach(event -> reportService.appendEvent(state, event.playerId(), event));
-        if (state.ruleset().usesMetals()) {
-            produce.accept(Map.of());
-            fleetService.applyStandingOrdersForProduction(state)
-                    .forEach((system, ships) -> state.updateSystem(system, current -> current.launchFleet(ships)));
-        } else { produce.accept(fleetService.applyStandingOrdersForProduction(state)); }
+        produce.accept(fleetService.applyStandingOrdersForProduction(state));
         applyWaitOrders(state);
-        long shipsBeforeCombat = state.totalShips();
         diplomacy.beginRound(state, state.turn() + 1);
         resolveArrivals(state);
         navigation.refreshStationAccess(state, state.turn() + 1);
-        state.recordCombatLoss(shipsBeforeCombat - state.totalShips());
         cosmicEvents.resolve(state);
         checkVictory(state);
         state.captureReplayFrame();

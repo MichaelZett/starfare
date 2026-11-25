@@ -2,10 +2,6 @@ package de.zettsystems.starfare.game.domain;
 
 import de.zettsystems.starfare.diplomacy.values.AllianceGroup;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyState;
-import de.zettsystems.starfare.economy.domain.ColonyGenesis;
-import de.zettsystems.starfare.economy.domain.MetalEconomy;
-import de.zettsystems.starfare.economy.domain.MetalGenesis;
-import de.zettsystems.starfare.economy.values.MiningAutomation;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.values.AttackOrder;
@@ -20,7 +16,7 @@ import de.zettsystems.starfare.game.values.SystemOwnership;
 import de.zettsystems.starfare.game.values.VictoryRules;
 import de.zettsystems.starfare.navigation.values.NavigationSettings;
 import de.zettsystems.starfare.report.application.DefaultReportService;
-import de.zettsystems.starfare.testsupport.ColonyStates;
+import de.zettsystems.starfare.testsupport.SpacewardStates;
 import de.zettsystems.starfare.testsupport.NavigationStates;
 import org.junit.jupiter.api.Test;
 
@@ -39,9 +35,9 @@ class GameStateTest {
 
     @Test
     void fullConquestIsRequiredOnlyOnceEveryVictoryPathNeedsAllSystems() {
-        GameState lowerGroupThreshold = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE,
+        GameState lowerGroupThreshold = NavigationStates.running(RulesetRef.EXTENDED,
                 new VictoryRules(100, true, true, 70));
-        GameState groupVictoryOff = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE,
+        GameState groupVictoryOff = NavigationStates.running(RulesetRef.EXTENDED,
                 new VictoryRules(100, true, false, 70));
 
         assertThat(lowerGroupThreshold.requiresFullConquest()).isFalse();
@@ -320,7 +316,6 @@ class GameStateTest {
         assertThat(state.ownershipHistory()).isEmpty();
         assertThat(state.replayFrames()).isEmpty();
         assertThat(state.industries()).isEmpty();
-        assertThat(state.miningAutomation()).isEmpty();
         assertThat(state.resignedSeats()).isEmpty();
         assertThat(state.timedOutPlaces()).isEmpty();
         assertPerMatchDataCleared(state);
@@ -348,7 +343,7 @@ class GameStateTest {
 
     /** A running alliance game with every per-match collection filled. */
     private static GameState populated() {
-        GameState state = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE, new VictoryRules(90, true, true, 80));
+        GameState state = NavigationStates.running(RulesetRef.EXTENDED, new VictoryRules(90, true, true, 80));
         var fleets = new DefaultFleetService();
         assertThat(fleets.sendFleet(state, 1, 1, 2, 5)).isTrue();
         assertThat(fleets.queueSend(state, 1, 1, 2, 3)).isTrue();
@@ -362,7 +357,6 @@ class GameStateTest {
         new DefaultReportService().appendReport(state, 1, "report line");
         state.updateSystem(4, system -> system.captureBy(1, 3));
         state.missedRounds().put(2, 1);
-        state.miningAutomation().put(1, MiningAutomation.off("alice"));
         state.agreeTreaties(new DiplomacyState(2, List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of()));
         state.configureLobby(true, true, false, 25);
         state.configureRoundRules(new RoundRules(Duration.ofMinutes(10), Duration.ofMinutes(2), AttackOrder.STRONGEST_FIRST));
@@ -425,7 +419,7 @@ class GameStateTest {
 
     @Test
     void allianceVictoryMustNameTheEffectiveGroup() {
-        GameState state = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE, new VictoryRules(100, true, true, 70));
+        GameState state = NavigationStates.running(RulesetRef.EXTENDED, new VictoryRules(100, true, true, 70));
         state.agreeTreaties(new DiplomacyState(2, List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of()));
         Set<Integer> members = Set.of(1, 2);
 
@@ -437,7 +431,7 @@ class GameStateTest {
 
     @Test
     void anAllianceVictoryNeedsAtLeastTwoMembers() {
-        GameState state = NavigationStates.running(RulesetRef.SPACEWARD_ALLIANCE, new VictoryRules(100, true, true, 70));
+        GameState state = NavigationStates.running(RulesetRef.EXTENDED, new VictoryRules(100, true, true, 70));
         state.agreeTreaties(new DiplomacyState(2, List.of(new AllianceGroup(1, Set.of(1, 2), 3, Map.of())), List.of()));
 
         Set<Integer> alone = Set.of(1);
@@ -458,41 +452,31 @@ class GameStateTest {
         assertThatThrownBy(() -> state.agreeTreaties(alliance)).isInstanceOf(IllegalStateException.class);
         assertThatThrownBy(() -> state.winAsAlliance(1, members)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> state.configureNavigation(navigation)).isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> state.planRecycling(1, 1)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> state.planShipResearch(1, 50)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> state.establishColonies(Map.of())).isInstanceOf(IllegalArgumentException.class);
 
         assertThat(state.allied(1, 2)).isFalse();
         assertThat(state.diplomacy()).isEqualTo(DiplomacyState.EMPTY);
         assertThat(state.navigationSettings()).isEmpty();
-        assertThat(state.colonies()).isEmpty();
     }
 
     @Test
     void creationSettingsAreFixedOnceEstablished() {
-        GameState prepared = ColonyStates.ready(RulesetRef.SPACEWARD_METALS);
-        var metals = prepared.metals().orElseThrow();
-        var colonies = prepared.colonies();
+        GameState prepared = SpacewardStates.ready();
         NavigationSettings navigation = new NavigationSettings(200);
         GameState started = NavigationStates.running();
 
-        assertThatThrownBy(() -> prepared.establishMetals(metals)).hasMessage("Metal economy is fixed at creation");
-        assertThatThrownBy(() -> prepared.establishColonies(colonies)).hasMessageContaining("established once");
         assertThatThrownBy(() -> prepared.configureNavigation(navigation))
                 .as("navigation already configured").isInstanceOf(IllegalStateException.class);
         assertThatThrownBy(() -> started.configureNavigation(navigation))
                 .as("game already started").isInstanceOf(IllegalStateException.class);
-        assertThat(prepared.metals()).containsSame(metals);
     }
 
     @Test
     void industryChangesNeedAKnownSystem() {
-        GameState state = ColonyStates.ready();
+        GameState state = SpacewardStates.ready();
         var industry = state.industries().get(1);
 
         assertThatThrownBy(() -> state.planIndustrialExpansion(99, industry)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> state.completeIndustrialProduction(99, industry, 0)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> state.usableIndustrialCapacity(99)).hasMessage("Unknown industry");
         assertThat(state.industries()).doesNotContainKey(99);
     }
 
@@ -535,7 +519,7 @@ class GameStateTest {
     void startCalibratesTheSpacewardRangeWhenNoneWasConfigured() {
         GameState state = new GameState();
         state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         state.players().add(new Player(1, "P1", false, "#fff"));
         state.systems().add(new StarSystem(1, "A", 0, 0, 1, 5, 2, false));
         state.systems().add(new StarSystem(2, "B", 30, 40, null, 5, 2, true));
@@ -543,53 +527,6 @@ class GameStateTest {
         state.start();
 
         assertThat(state.navigationSettings()).contains(new NavigationSettings(50));
-    }
-
-    @Test
-    void metalRulesRequireACompleteStoredEconomy() {
-        GameState state = new GameState();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_METALS));
-        state.players().add(new Player(1, "P1", false, "#fff"));
-        state.systems().add(new StarSystem(1, "A", 0, 0, 1, 5, 4, false));
-        state.systems().add(new StarSystem(2, "B", 30, 40, null, 5, 2, true));
-        state.initializeIndustry();
-        state.establishColonies(ColonyGenesis.forGalaxy(state.systems(), 42));
-
-        assertThatThrownBy(state::start).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Missing stored metal");
-        assertThat(state.started()).isFalse();
-        assertThatThrownBy(() -> GameState.toSnapshot(state)).hasMessageContaining("Missing stored metal");
-        var genesis = MetalGenesis.forGalaxy(state.systems(), state.players(), state.colonies());
-        var strangerStock = new MetalEconomy(genesis.deposits(), Map.of(1, 0L, 9, 0L), genesis.mining());
-        assertThatThrownBy(() -> state.establishMetals(strangerStock)).hasMessageContaining("Incomplete stored metal");
-    }
-
-    @Test
-    void miningAndExpansionShareTheUsableCapacity() {
-        GameState state = ColonyStates.ready(RulesetRef.SPACEWARD_METALS);
-        int usable = state.usableIndustrialCapacity(1);
-        state.planIndustrialExpansion(1, state.industries().get(1).allocateExpansion(2));
-
-        assertThatThrownBy(() -> state.planMining(1, usable - 1)).isInstanceOf(IllegalArgumentException.class);
-        assertThat(state.metals().orElseThrow().mining()).containsEntry(1, 0);
-        state.planMining(1, usable - 2);
-        var moreExpansion = state.industries().get(1).allocateExpansion(3);
-        assertThatThrownBy(() -> state.planIndustrialExpansion(1, moreExpansion)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void researchReservationIsTakenFromShipbuildingAndRebalancedAfterACapture() {
-        GameState state = ColonyStates.ready(RulesetRef.SPACEWARD_SHIP_RESEARCH);
-        state.start();
-        int before = state.getSystem(1).productionPerTurn();
-
-        state.planShipResearch(1, 50);
-
-        assertThat(state.researchReservations()).containsEntry(1, 5).containsEntry(2, 2);
-        assertThat(state.getSystem(1).productionPerTurn()).isEqualTo(before - 5);
-        // Keeping the garrison keeps the recycling ship balance intact.
-        state.updateSystem(2, system -> system.captureBy(2, system.garrison()));
-        assertThat(state.researchReservations()).containsEntry(2, 0);
-        assertThatCode(() -> GameState.toSnapshot(state)).doesNotThrowAnyException();
     }
 
     @Test

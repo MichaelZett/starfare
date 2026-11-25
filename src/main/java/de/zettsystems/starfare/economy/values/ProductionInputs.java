@@ -2,25 +2,18 @@ package de.zettsystems.starfare.economy.values;
 
 import de.zettsystems.starfare.game.values.RelocationAdjustment;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
- * One map view's short-lived production input: the value being dragged, local pins, the
- * opened editor, the focused control and the latest save feedback. Every completed input is
- * saved at once, so nothing here outlives a server update except pins and view state.
+ * One map view's short-lived production input: the value being dragged, the opened editor, the
+ * focused control and the latest save feedback. Every completed input is saved at once, so nothing
+ * here outlives a server update except the view state.
  */
 public final class ProductionInputs {
     private final Map<Integer, Input> inputs = new HashMap<>();
     private String game = "";
-
-    public Set<Integer> protectedSystems() {
-        return inputs.entrySet().stream().filter(entry -> entry.getValue().locks.contains(0) || entry.getValue().locks.contains(1))
-                .map(Map.Entry::getKey).collect(java.util.stream.Collectors.toSet());
-    }
 
     public void reconcile(String gameId, int turn, Map<Integer, IndustryView> allowed) {
         if (!game.equals(gameId)) { inputs.clear(); game = gameId; }
@@ -42,7 +35,6 @@ public final class ProductionInputs {
         private AllocationSplit saved;
         private AllocationSplit allocation;
         private IndustryView industry;
-        private final Set<Integer> locks = new HashSet<>();
         private int turn;
         private boolean expanded;
         private @Nullable Integer focus;
@@ -51,12 +43,11 @@ public final class ProductionInputs {
 
         private Input(int turn, IndustryView industry) {
             this.turn = turn; this.industry = industry;
-            saved = ProductionPreset.saved(industry); allocation = saved;
+            saved = AllocationSplit.saved(industry); allocation = saved;
         }
         public AllocationSplit allocation() { return allocation; }
         public AllocationSplit saved() { return saved; }
         public IndustryView industry() { return industry; }
-        public Set<Integer> locks() { return Set.copyOf(locks); }
         public int turn() { return turn; }
         public boolean changed() { return !allocation.equals(saved); }
         public boolean expanded() { return expanded; }
@@ -65,23 +56,16 @@ public final class ProductionInputs {
         public void focus(@Nullable Integer index) { focus = index; }
         public Status status() { return status; }
         public List<RelocationAdjustment> relocations() { return relocations; }
-        public void pin(int index, boolean pinned) { if (pinned) { locks.add(index); } else { locks.remove(index); } }
-        public void choose(AllocationSplit value) { allocation = value; expanded = true; status = Status.NONE; }
         public void adjust(int index, int value) {
-            boolean[] pinned = new boolean[3];
-            locks.forEach(i -> pinned[i] = true);
-            if (!valid()) {
-                var adjusted = ProductionPreset.EVEN.apply(industry, allocation, locks);
-                if (!adjusted.applicable()) { return; }
-                allocation = adjusted.allocation();
-            }
-            choose(allocation.adjust(index, value, pinned, ProductionPreset.limits(industry)));
+            allocation = allocation.adjust(index, value, AllocationSplit.limits(industry));
+            expanded = true;
+            status = Status.NONE;
         }
         public boolean valid() {
-            int[] limits = ProductionPreset.limits(industry);
-            if (allocation.total() != industry.usableCapacity()) { return false; }
-            for (int index = 0; index < 3; index++) { if (allocation.at(index) > limits[index]) { return false; } }
-            return true;
+            int[] limits = AllocationSplit.limits(industry);
+            return allocation.total() == industry.capacity()
+                    && allocation.ships() <= limits[AllocationSplit.SHIPS]
+                    && allocation.expansion() <= limits[AllocationSplit.EXPANSION];
         }
         /** The server accepted the current allocation; it is the expected base of the next save. */
         public void accepted(List<RelocationAdjustment> shortened) {
@@ -93,7 +77,7 @@ public final class ProductionInputs {
         public void observe(int currentTurn, IndustryView current) {
             if (currentTurn != turn) { status = Status.NONE; relocations = List.of(); focus = null; }
             turn = currentTurn; industry = current;
-            saved = ProductionPreset.saved(current); allocation = saved;
+            saved = AllocationSplit.saved(current); allocation = saved;
         }
     }
 }

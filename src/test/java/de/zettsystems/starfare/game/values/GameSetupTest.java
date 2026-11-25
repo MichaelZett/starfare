@@ -85,14 +85,12 @@ class GameSetupTest {
     @Test
     void extendedGamesHaveNoClassicOptionsNoAttackOrderAndFixedAlliances() {
         GameSetup extended = GameSetup.defaults().chooseRandomness(RandomnessLevel.NONE)
-                .selectRuleset(RulesetCatalog.ECONOMY_CANDIDATE);
+                .selectRuleset(RulesetRef.EXTENDED);
 
         assertThat(extended.sectorOptions()).isEqualTo(SectorOptions.none());
         assertThat(extended.roundRules().attackOrder()).isEqualTo(RoundRules.DEFAULT_ATTACK_ORDER);
         assertThat(extended.victoryRules()).isEqualTo(new VictoryRules(70, true, true, 70, true));
         assertThat(GameSetup.defaults().victoryRules()).isEqualTo(VictoryRules.defaults(RulesetRef.SECTOR_FORCES, 70));
-        assertThat(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD).victoryRules())
-                .isEqualTo(VictoryRules.defaults(RulesetRef.SPACEWARD, 70));
     }
 
     @Test
@@ -132,7 +130,7 @@ class GameSetupTest {
     @Test
     void computerStrengthScalesTheStartAndPicksProfiles() {
         RulesetRef classic = RulesetRef.SECTOR_FORCES;
-        RulesetRef extended = RulesetCatalog.ECONOMY_CANDIDATE;
+        RulesetRef extended = RulesetRef.EXTENDED;
         assertThat(ComputerStrength.EASY.computerStart(classic, 4)).isEqualTo(2);
         assertThat(ComputerStrength.NORMAL.computerStart(classic, 8)).isEqualTo(8);
         assertThat(ComputerStrength.HARD.computerStart(classic, 8)).isEqualTo(12);

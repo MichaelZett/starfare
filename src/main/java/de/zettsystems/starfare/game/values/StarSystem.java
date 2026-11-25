@@ -1,77 +1,37 @@
 package de.zettsystems.starfare.game.values;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jspecify.annotations.Nullable;
-import de.zettsystems.starfare.research.values.ShipCohorts;
 
 /**
  * Immutable star system on the map. Neutral systems have no owner.
  * <p>
  * Mutating operations are exposed as fachliche Domain-Methoden (z.B.
  * {@link #produce()}, {@link #captureBy(int, int)}), nicht als generische
- * {@code withX}-Setter.
- * <p>
- * Snapshots written before the garrison reserve was removed still carry {@code garrisonReserve}; it is ignored.
+ * {@code withX}-Setter. Older snapshots may still carry the removed garrison reserve
+ * ({@code garrisonReserve}) or the ship generations of the removed research ({@code composition}); both are ignored.
  */
-@JsonIgnoreProperties({"garrisonReserve"})
+@JsonIgnoreProperties({"composition", "garrisonReserve"})
 public record StarSystem(int id, String name, double x, double y,
-                         @Nullable Integer ownerId, int garrison, int productionPerTurn, boolean neutral,
-                         ShipCohorts composition) {
-
-    public StarSystem {
-        if (composition == null) { composition = ShipCohorts.of(0, garrison); }
-        if (composition.count() != garrison) { throw new IllegalArgumentException("Garrison generations disagree with ship count"); }
-    }
-    /** A system whose garrison consists of ships without research technology. */
-    public StarSystem(int id, String name, double x, double y, @Nullable Integer ownerId,
-                      int garrison, int productionPerTurn, boolean neutral) {
-        this(id, name, x, y, ownerId, garrison, productionPerTurn, neutral, ShipCohorts.of(0, garrison));
-    }
-
-    /** Restores systems persisted before permanent garrisons were introduced. */
-    @JsonCreator
-    public static StarSystem restore(
-            @JsonProperty("id") int id,
-            @JsonProperty("name") String name,
-            @JsonProperty("x") double x,
-            @JsonProperty("y") double y,
-            @JsonProperty("ownerId") @Nullable Integer ownerId,
-            @JsonProperty("garrison") int garrison,
-            @JsonProperty("productionPerTurn") int productionPerTurn,
-            @JsonProperty("neutral") boolean neutral,
-            @JsonProperty("composition") @Nullable ShipCohorts composition) {
-        return new StarSystem(id, name, x, y, ownerId, garrison, productionPerTurn, neutral,
-                composition == null ? ShipCohorts.of(0, garrison) : composition);
-    }
+                         @Nullable Integer ownerId, int garrison, int productionPerTurn, boolean neutral) {
 
     /** Plans next round's ship output without changing ships already stationed here. */
     public StarSystem planShipbuilding(int shipsPerTurn) {
         if (shipsPerTurn < 0) { throw new IllegalArgumentException("Ship output must not be negative"); }
-        return new StarSystem(id, name, x, y, ownerId, garrison, shipsPerTurn, neutral, composition);
-    }
-    public StarSystem scrapShips(int ships) {
-        if (ships < 0 || ships > garrison) { throw new IllegalArgumentException("Recycling exceeds the garrison"); }
-        return new StarSystem(id, name, x, y, ownerId, garrison - ships, productionPerTurn, neutral, composition.minus(composition.take(ships, false)));
+        return new StarSystem(id, name, x, y, ownerId, garrison, shipsPerTurn, neutral);
     }
 
     /** Produces using this round's capacity; expanded output becomes available next round. */
     public StarSystem completeShipbuilding(int produced, int routed, int nextOutput) {
-        return completeShipbuilding(produced, routed, nextOutput, 0);
-    }
-    public StarSystem completeShipbuilding(int produced, int routed, int nextOutput, int technology) {
         if (produced < 0 || routed < 0 || routed > garrison + produced || nextOutput < 0) {
             throw new IllegalArgumentException("Industrial production cannot route more ships than it has");
         }
-        var built = composition.merge(ShipCohorts.of(technology, produced));
-        return new StarSystem(id, name, x, y, ownerId, garrison + produced - routed, nextOutput, neutral,
-                built.minus(built.take(routed, true)));
+        return new StarSystem(id, name, x, y, ownerId, garrison + produced - routed, nextOutput, neutral);
     }
 
     /** Adds this system's production output to its garrison. */
     public StarSystem produce() {
-        return new StarSystem(id, name, x, y, ownerId, garrison + productionPerTurn, productionPerTurn, neutral, composition.merge(ShipCohorts.of(0, productionPerTurn)));
+        return new StarSystem(id, name, x, y, ownerId, garrison + productionPerTurn, productionPerTurn, neutral);
     }
 
     /**
@@ -82,8 +42,7 @@ public record StarSystem(int id, String name, double x, double y,
     public StarSystem produceAndRoute(int routed) {
         int available = garrison + productionPerTurn;
         int shipped = Math.clamp(routed, 0, available);
-        return new StarSystem(id, name, x, y, ownerId, available - shipped, productionPerTurn, neutral,
-                composition.merge(ShipCohorts.of(0, productionPerTurn)).minus(composition.merge(ShipCohorts.of(0, productionPerTurn)).take(shipped, true)));
+        return new StarSystem(id, name, x, y, ownerId, available - shipped, productionPerTurn, neutral);
     }
 
     /**
@@ -93,12 +52,7 @@ public record StarSystem(int id, String name, double x, double y,
         if (ships < 0) {
             throw new IllegalArgumentException("ships must be >= 0");
         }
-        return new StarSystem(id, name, x, y, ownerId, garrison + ships, productionPerTurn, neutral, composition.merge(ShipCohorts.of(0, ships)));
-    }
-
-    public StarSystem reinforce(ShipCohorts incoming) {
-        return new StarSystem(id, name, x, y, ownerId, Math.addExact(garrison, incoming.count()), productionPerTurn,
-                neutral, composition.merge(incoming));
+        return new StarSystem(id, name, x, y, ownerId, garrison + ships, productionPerTurn, neutral);
     }
 
     /**
@@ -111,7 +65,7 @@ public record StarSystem(int id, String name, double x, double y,
         if (ships > garrison) {
             throw new IllegalStateException("cannot launch more ships than garrison");
         }
-        return new StarSystem(id, name, x, y, ownerId, garrison - ships, productionPerTurn, neutral, composition.minus(composition.take(ships, true)));
+        return new StarSystem(id, name, x, y, ownerId, garrison - ships, productionPerTurn, neutral);
     }
 
     /**
@@ -131,7 +85,7 @@ public record StarSystem(int id, String name, double x, double y,
         if (defendersLeft < 0) {
             throw new IllegalArgumentException("defendersLeft must be >= 0");
         }
-        return new StarSystem(id, name, x, y, ownerId, defendersLeft, productionPerTurn, neutral, composition.survive(defendersLeft));
+        return new StarSystem(id, name, x, y, ownerId, defendersLeft, productionPerTurn, neutral);
     }
 
     /**
@@ -165,6 +119,6 @@ public record StarSystem(int id, String name, double x, double y,
 
     /** Repositions the system on the map (used by the layout space-out pass). */
     public StarSystem relocateTo(double nx, double ny) {
-        return new StarSystem(id, name, nx, ny, ownerId, garrison, productionPerTurn, neutral, composition);
+        return new StarSystem(id, name, nx, ny, ownerId, garrison, productionPerTurn, neutral);
     }
 }

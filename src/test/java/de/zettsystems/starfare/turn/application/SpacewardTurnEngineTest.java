@@ -8,10 +8,7 @@ import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.report.application.DefaultReportService;
 import de.zettsystems.starfare.report.values.TurnEvent;
-import de.zettsystems.starfare.game.values.RulesetRef;
-import de.zettsystems.starfare.testsupport.ColonyStates;
 import de.zettsystems.starfare.testsupport.SpacewardStates;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,22 +30,6 @@ class SpacewardTurnEngineTest {
         assertThat(state.reports().get(1).events()).contains(new TurnEvent.Production(1, 1, "Alpha", 6));
         assertThat(state.replayFrames().get(1).industries().get(1).expansionProgress()).isEqualTo(4);
         verify(ai).plan(state, fleets);
-    }
-    @Test void completedResearchIsReportedOnlyInTheRoundItCompletes() {
-        var fleets = new DefaultFleetService(); var reports = new DefaultReportService();
-        var economy = new DefaultEconomyService();
-        var engine = new ShipResearchSpacewardTurnEngine(new RoundPipeline(mock(CombatService.class), reports, fleets),
-                economy, mock(SpacewardPlanning.class), fleets, reports);
-        GameState state = ColonyStates.ready(RulesetRef.SPACEWARD_SHIP_RESEARCH);
-        state.start(); state.planShipResearch(1, 100);
-        for (int round = 0; round < 7; round++) { economy.produce(state, Map.of()); state.nextTurn(); }
-        state.planShipResearch(1, 50);
-        engine.advanceTurn(state);
-        assertThat(state.shipTechnology(1)).isOne();
-        assertThat(state.reports().get(1).events()).contains(new TurnEvent.ResearchCompleted(1, 1));
-        state.planShipResearch(1, 0);
-        engine.advanceTurn(state);
-        assertThat(state.reports().get(1).events()).noneMatch(TurnEvent.ResearchCompleted.class::isInstance);
     }
     @Test void wrongRulesAndFinishedGamesNeverPlanOrProduce() {
         var fleets = new DefaultFleetService(); var reports = new DefaultReportService();

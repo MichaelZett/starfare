@@ -16,7 +16,7 @@ import static org.mockito.Mockito.when;
 
 /** Who may use a variant is the platform's rule (stage of the variant and role); see the host's tests. */
 class DefaultRulesetAccessTest {
-    private static final RulesetRef SPACEWARD = RulesetCatalog.ECONOMY_CANDIDATE;
+    private static final RulesetRef SPACEWARD = RulesetRef.EXTENDED;
     private static final RulesetRef SECTOR_FORCES = RulesetRef.SECTOR_FORCES;
 
     private final PlatformAccounts accounts = mock(PlatformAccounts.class);
@@ -28,7 +28,7 @@ class DefaultRulesetAccessTest {
         when(accounts.mayUseVariant(AccountId.of(2), "starfare", "classic")).thenReturn(true);
 
         assertThat(host.mayUse(SPACEWARD, "2")).isTrue();
-        assertThat(host.mayUse(RulesetRef.SPACEWARD, "2")).as("stored older Spaceward versions count as Spaceward").isTrue();
+        assertThat(host.mayUse(RulesetRef.EXTENDED, "2")).as("stored older Spaceward versions count as Spaceward").isTrue();
         assertThat(host.mayUse(SECTOR_FORCES, "2")).isTrue();
     }
 
@@ -84,7 +84,7 @@ class DefaultRulesetAccessTest {
 
         assertThat(usable.test(SECTOR_FORCES)).isTrue();
         assertThat(usable.test(SPACEWARD)).isFalse();
-        assertThat(usable.test(RulesetRef.SPACEWARD)).isFalse();
+        assertThat(usable.test(RulesetRef.EXTENDED)).isFalse();
         assertThat(usable.test(SECTOR_FORCES)).isTrue();
 
         verify(accounts, times(1)).mayUseVariant(AccountId.of(9), "starfare", "classic");

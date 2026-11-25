@@ -23,7 +23,7 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
     @Autowired GameTemplateService templates;
 
     @Test void legacyJsonKeepsEachVariantsDefaultsAndSingleWinner() {
-        for (var ref : List.of(RulesetRef.SECTOR_FORCES, RulesetRef.SPACEWARD)) {
+        for (var ref : List.of(RulesetRef.SECTOR_FORCES, RulesetRef.EXTENDED)) {
             var state = sample(ref, false); state.endGame(1);
             var json = (ObjectNode) mapper.valueToTree(GameState.toSnapshot(state));
             json.remove(List.of("victoryRules", "outcome"));
@@ -43,7 +43,7 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
 
     @Test void aiAllianceChoiceSurvivesJsonTemplatesAndContinuationWhileOldDataKeepsParticipation() {
         var state = new GameState(); state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.SPACEWARD_ALLIANCE));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         state.configureVictoryRules(new VictoryRules(70, true, false, 70, false));
         state.players().add(new Player(1, "P1", false, GameConfig.PLAYER_PALETTE.getFirst()));
         state.systems().add(new StarSystem(1, "S1", 100, 100, 1, 5, 2, false));
@@ -61,7 +61,7 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
     }
 
     @Test void groupOutcomeSetupAndReportsSurviveJson() {
-        var state = sample(RulesetRef.SPACEWARD_ALLIANCE, true);
+        var state = sample(RulesetRef.EXTENDED, true);
         state.winAsAlliance(1, Set.of(1, 2));
         var reports = new de.zettsystems.starfare.report.application.DefaultReportService();
         reports.appendEvent(state, 2, new de.zettsystems.starfare.report.values.TurnEvent.Victory(2, 80, 1, List.of("P1", "P2")));
@@ -77,7 +77,7 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
     }
 
     @Test void bothHumanWinnersCountAsWinsAndEitherCanContinueOnlyOnce() {
-        var state = sample(RulesetRef.SPACEWARD_ALLIANCE, true);
+        var state = sample(RulesetRef.EXTENDED, true);
         state.seatByUser().putAll(Map.of("ally-one", 1, "ally-two", 2, "loser", 3));
         state.joinedHumanPlayerIds().addAll(Set.of(1, 2, 3));
         state.originalHumanPlayerIds().addAll(Set.of(1, 2, 3));
@@ -87,7 +87,7 @@ class AlliancePersistenceTest extends AbstractIntegrationTest {
         assertThat(recordedEnds(id)).isOne();
         assertThat(games.summaryFor(id, "ally-two").orElseThrow().outcome().wonBy(2)).isTrue();
         var copiedSetup = templates.template(id, "ally-two").orElseThrow().setup();
-        assertThat(copiedSetup.ruleset()).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+        assertThat(copiedSetup.ruleset()).isEqualTo(RulesetRef.EXTENDED);
         // A rematch gets the fixed rules of a new extended game: alliances and an alliance victory at 70 %.
         assertThat(copiedSetup.victoryRules()).isEqualTo(new VictoryRules(70, true, true, 70, true));
         assertThat(games.reviewFor(id, "ally-two", 2, true).orElseThrow().wonBy(2)).isTrue();

@@ -6,6 +6,6 @@ Funktionalität: Layout-Sicherung beim Umzug auf Browserless
     Dann meldet die Browser-Konsole keine Fehler
 
   @economy-layout
-  Szenario: Wirtschaftsdetails, Mondkolonie und Forschung passen auf beide Desktopbreiten
-    Wenn ich Mondkolonie, Wirtschaftsplanung und Forschung bei beiden Desktopbreiten prüfe
+  Szenario: Industrie und Produktionsplanung passen auf beide Desktopbreiten
+    Wenn ich die Industrie bei beiden Desktopbreiten prüfe
     Dann meldet die Browser-Konsole keine Fehler

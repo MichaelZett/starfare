@@ -295,8 +295,6 @@ html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .app-header-st
     font-size: .85rem;
 }
 
-html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .app-header-research::part(label) { display: none; }
-
 html.starfare-mobile[data-gp-game="starfare"] .app-header-compact .app-header-right {
     gap: 6px;
 }

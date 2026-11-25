@@ -2,15 +2,18 @@ package de.zettsystems.starfare.turn.application;
 
 import de.zettsystems.starfare.ai.application.SpacewardPlanning;
 import de.zettsystems.starfare.economy.application.EconomyService;
+import de.zettsystems.starfare.economy.values.IndustrialProduction;
 import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.report.application.ReportService;
 import de.zettsystems.starfare.report.values.TurnEvent;
-import org.springframework.stereotype.Service;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.List;
+import org.springframework.stereotype.Service;
 
-/** Spaceward 1.0.0 round implementation: industry, limited range, alliances and coalition combat. */
+/** Extended rules 2.0.0: industry expansion, limited range, alliances and coalition combat. */
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Spring-injected collaborators are retained for the lifetime of this stateless bean.")
@@ -24,21 +27,11 @@ public class SpacewardTurnEngine implements RulesetRoundImplementation {
                                FleetService fleets, ReportService reports) {
         this.pipeline = pipeline; this.economy = economy; this.ai = ai; this.fleets = fleets; this.reports = reports;
     }
-    @Override public RulesetRef ruleset() { return RulesetRef.SPACEWARD; }
+    @Override public RulesetRef ruleset() { return RulesetRef.EXTENDED; }
     @Override public void advanceTurn(GameState state) {
-        if (!ruleset().equals(state.ruleset())) { throw new IllegalArgumentException("Spaceward cannot resolve " + state.ruleset()); }
+        if (!ruleset().equals(state.ruleset())) { throw new IllegalArgumentException("Extended rules cannot resolve " + state.ruleset()); }
         pipeline.advanceTurn(state, () -> ai.plan(state, fleets), routed -> {
-            var previousTechnology = state.players().stream().collect(java.util.stream.Collectors.toMap(
-                    de.zettsystems.starfare.game.values.Player::id, player -> state.shipTechnology(player.id())));
             var results = economy.produce(state, routed);
-            if (state.ruleset().usesShipResearch()) {
-                state.players().forEach(player -> {
-                    int level = state.shipTechnology(player.id());
-                    if (level > java.util.Objects.requireNonNull(previousTechnology.get(player.id()))) {
-                        reports.appendEvent(state, player.id(), new TurnEvent.ResearchCompleted(player.id(), level));
-                    }
-                });
-            }
             results.forEach(result -> reports.appendEvent(state, result.ownerId(),
                     new TurnEvent.Production(result.ownerId(), result.systemId(), result.systemName(), result.ships())));
             recordEconomy(state, results);
@@ -46,16 +39,11 @@ public class SpacewardTurnEngine implements RulesetRoundImplementation {
     }
 
     /** One summary per participant and resolved round, zero included, captured before combat. */
-    private void recordEconomy(GameState state, java.util.List<de.zettsystems.starfare.economy.values.IndustrialProduction> results) {
-        for (var player : state.players()) {
-            long mined = 0;
-            long consumed = 0;
-            int gained = 0;
-            for (var result : results) {
-                if (result.ownerId() != player.id()) { continue; }
-                mined += result.metalMined(); consumed += result.metalConsumed(); gained += result.capacityGained();
-            }
-            reports.appendEvent(state, player.id(), new TurnEvent.EconomySummary(player.id(), mined, consumed, gained));
+    private void recordEconomy(GameState state, List<IndustrialProduction> results) {
+        for (Player player : state.players()) {
+            int gained = results.stream().filter(result -> result.ownerId() == player.id())
+                    .mapToInt(IndustrialProduction::capacityGained).sum();
+            reports.appendEvent(state, player.id(), new TurnEvent.EconomySummary(player.id(), gained));
         }
     }
 }

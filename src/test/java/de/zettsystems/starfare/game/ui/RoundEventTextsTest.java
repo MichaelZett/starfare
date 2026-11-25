@@ -44,16 +44,12 @@ class RoundEventTextsTest {
         assertThat(RoundEventTexts.text(new TurnEvent.Production(1, 7, "Vega", 3), true)).isEqualTo("Vega: +3 Schiffe");
         assertThat(RoundEventTexts.text(new TurnEvent.Reinforcement(1, 7, "Vega", 4, 12, "Flotte 2"), false))
                 .isEqualTo("Vega: +4 → 12 (Flotte 2)");
-        assertThat(RoundEventTexts.text(new TurnEvent.Recycling(1, 7, "Vega", 5, 25), false))
-                .isEqualTo("Recycling: Vega, 5 Schiffe verschrottet, 2,5 Metall zurückgewonnen.");
-        assertThat(RoundEventTexts.text(new TurnEvent.ResearchCompleted(1, 3), false))
-                .isEqualTo("Schiffsforschung: Technikstufe 3 erreicht. Neubauten erhalten ab nächster Runde +30 % Kampfstärke.");
         assertThat(RoundEventTexts.text(new TurnEvent.Victory(1, 70), false))
                 .isEqualTo("Sieg! Mindestens 70 % der Systeme kontrolliert.");
         assertThat(RoundEventTexts.text(new TurnEvent.Victory(1, 60, 4, List.of("Ann", "Bob")), false))
                 .isEqualTo("Bündnissieg 4: Ann, Bob – mindestens 60% aller Systeme.");
         assertThat(RoundEventTexts.text(new TurnEvent.Defeat(2, "Ann"), false)).isEqualTo("Niederlage: Ann gewinnt die Partie.");
-        assertThat(RoundEventTexts.text(new TurnEvent.EconomySummary(1, 5, 3, 1), false)).isEmpty();
+        assertThat(RoundEventTexts.text(new TurnEvent.EconomySummary(1, 1), false)).isEmpty();
     }
 
     @Test

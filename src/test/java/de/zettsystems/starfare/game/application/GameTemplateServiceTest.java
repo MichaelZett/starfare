@@ -45,15 +45,7 @@ class GameTemplateServiceTest {
             var oldRegistry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy(),
                     new RulesetCatalog(List.of(historical)));
             var setup = GameSetup.defaults().selectRuleset(rules);
-            GameId source;
-            if (rules.equals(RulesetRef.SPACEWARD_COLONIES)) {
-                var historicalState = de.zettsystems.starfare.testsupport.ColonyStates.ready(rules);
-                source = GameId.newId();
-                store.save(new de.zettsystems.starfare.game.domain.GameSession(source, "Stored", "host",
-                        java.time.Instant.now(), historicalState));
-            } else {
-                source = oldRegistry.createGame(setup, "host", "Stored");
-            }
+            GameId source = oldRegistry.createGame(setup, "host", "Stored");
             oldRegistry.writeState(source, state -> {
                 state.seatByUser().put("host", 1);
                 return null;
@@ -63,12 +55,12 @@ class GameTemplateServiceTest {
                     new DefaultGameAccessPolicy(), mock(Broadcaster.class));
             var before = current.readState(source, GameState::toSnapshot);
             // Copies get the fixed rules of a new extended game, whatever their source allowed.
-            var newVictory = VictoryRules.forNewGame(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+            var newVictory = VictoryRules.forNewGame(RulesetRef.EXTENDED);
             assertThat(currentTemplates.template(source, "host").orElseThrow().setup().ruleset())
-                    .isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+                    .isEqualTo(RulesetRef.EXTENDED);
             for (boolean rematch : new boolean[] {false, true}) {
                 var copy = currentTemplates.create(source, "host", "Copy", rematch).orElseThrow();
-                assertThat(current.readState(copy, GameState::ruleset)).isEqualTo(RulesetRef.SPACEWARD_SHIP_RESEARCH);
+                assertThat(current.readState(copy, GameState::ruleset)).isEqualTo(RulesetRef.EXTENDED);
                 var copiedVictory = current.readState(copy, state -> state.originalSetup().orElseThrow().victoryRules());
                 assertThat(copiedVictory).isEqualTo(newVictory);
                 assertThat(current.readState(copy, GameState::victoryRules)).isEqualTo(newVictory);

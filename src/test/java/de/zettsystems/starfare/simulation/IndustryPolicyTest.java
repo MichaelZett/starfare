@@ -35,8 +35,8 @@ class IndustryPolicyTest {
     }
 
     @Test
-    void explicitProfilesAreValidatedWithoutChangingHistoricalDefaults() {
-        var options = BenchmarkOptions.parse(new String[]{"--rules=spaceward-1.1", "--profiles=INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE"});
+    void explicitProfilesAreValidatedWithoutChangingDefaults() {
+        var options = BenchmarkOptions.parse(new String[]{"--rules=spaceward", "--profiles=INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE"});
         assertThat(options.selectedProfiles()).containsExactly(Strategy.INDUSTRY_LIGHT, Strategy.INDUSTRY_ADAPTIVE);
         assertThat(Strategy.forRules(options.rules().getFirst())).doesNotContain(Strategy.INDUSTRY_LIGHT, Strategy.INDUSTRY_ADAPTIVE);
         for (String profiles : List.of("RUSH", "RUSH,RUSH", "RUSH,UNKNOWN", "")) {
@@ -45,9 +45,9 @@ class IndustryPolicyTest {
         }
         assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--rules=classic", "--profiles=RUSH,INDUSTRY_ADAPTIVE"}))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--mode=decision", "--rules=spaceward-1.1", "--profiles=RUSH,INDUSTRY_LIGHT"}))
+        assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--mode=decision", "--rules=spaceward", "--profiles=RUSH,INDUSTRY_LIGHT"}))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--mode=multiplayer", "--rules=spaceward-1.1",
+        assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--mode=multiplayer", "--rules=spaceward",
                 "--profiles=BASELINE,RUSH,EXPANSION,CONCENTRATION,DEFENSE,INDUSTRY,INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE"}))
                 .isInstanceOf(IllegalArgumentException.class);
     }
