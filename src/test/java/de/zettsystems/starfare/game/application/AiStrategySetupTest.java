@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AiStrategySetupTest {
     @Test
     void theComputerStrengthDecidesWhichProfilesTheComputersDraw() {
-        assertThat(AiStrategy.forRules(RulesetRef.SECTOR_FORCES)).hasSize(5).noneMatch(AiStrategy::requiresIndustry);
+        assertThat(AiStrategy.forRules(RulesetRef.SECTOR_FORCES)).hasSize(6).contains(AiStrategy.CAUTIOUS).noneMatch(AiStrategy::requiresIndustry);
         assertThat(AiStrategy.forRules(RulesetRef.EXTENDED)).containsExactly(AiStrategy.values());
         var registry = new DefaultGameRegistry(new InMemoryGameSessionStore(), new DefaultGameAccessPolicy());
 
@@ -20,12 +20,12 @@ class AiStrategySetupTest {
 
         var normal = registry.createGame(setup(), "host", "Normal");
         List<Player> normalPlayers = registry.readState(normal, state -> List.copyOf(state.players()));
-        // Normal classic computers plan like the baseline: other profiles were unfair in duels and larger games.
-        assertThat(normalPlayers.subList(1, 3)).extracting(Player::aiStrategy).containsOnly(AiStrategy.BASELINE);
+        // Normal classic computers play the calm profile with the same start: fewer, larger attacks (K7d).
+        assertThat(normalPlayers.subList(1, 3)).extracting(Player::aiStrategy).containsOnly(AiStrategy.CAUTIOUS);
 
         var duel = registry.createGame(setup().seatPlayers(1, 1), "host", "Duel");
         List<Player> duelPlayers = registry.readState(duel, state -> List.copyOf(state.players()));
-        assertThat(duelPlayers.get(1).aiStrategy()).isEqualTo(AiStrategy.BASELINE);
+        assertThat(duelPlayers.get(1).aiStrategy()).isEqualTo(AiStrategy.CAUTIOUS);
     }
 
     @Test

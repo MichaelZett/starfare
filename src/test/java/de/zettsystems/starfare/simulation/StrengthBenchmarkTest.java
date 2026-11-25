@@ -29,6 +29,8 @@ class StrengthBenchmarkTest {
         assertThat(first).hasSize(4).allSatisfy(match -> assertThat(match.computers()).hasSize(1));
         assertThat(first).filteredOn(match -> match.strength() == ComputerStrength.EASY)
                 .allSatisfy(match -> assertThat(match.computers()).containsOnly(Strategy.BASELINE));
+        assertThat(first).allSatisfy(match -> assertThat(match.activity()).singleElement()
+                .satisfies(computer -> assertThat(computer.player()).isEqualTo(2)));
         var state = StrengthBenchmark.create(options, StrengthBenchmark.setup(options, ComputerStrength.EASY,
                 RandomnessLevel.LOW, true, 16, 2), 1);
         assertThat(state.players().getFirst().ai()).isFalse();
@@ -97,12 +99,32 @@ class StrengthBenchmarkTest {
     }
 
     @Test
+    void normalComputersPlayTheCalmProfileAndAttackLessOftenThanTheBaseline() {
+        String[] calm = {"--systems=24", "--players=2", "--seeds=4", "--rounds=80", "--strengths=NORMAL"};
+        String[] baseline = {"--systems=24", "--players=2", "--seeds=4", "--rounds=80", "--strengths=NORMAL",
+                "--computer-profiles=BASELINE"};
+        var calmMatches = StrengthBenchmark.run(StrengthOptions.parse(calm));
+        assertThat(calmMatches).allSatisfy(match -> assertThat(match.computers()).containsExactly(Strategy.CAUTIOUS));
+        assertThat(attacksPerRound(calmMatches)).isLessThan(attacksPerRound(StrengthBenchmark.run(StrengthOptions.parse(baseline))));
+    }
+
+    private static double attacksPerRound(List<StrengthBenchmark.Match> matches) {
+        var computers = matches.stream().flatMap(match -> match.activity().stream()).toList();
+        assertThat(computers).allSatisfy(computer -> assertThat(computer.sends()).isGreaterThanOrEqualTo(computer.attacks())
+                .isLessThanOrEqualTo(2 * computer.activeRounds()));
+        return computers.stream().mapToInt(MatchResult.SeatActivity::attacks).sum()
+                / (double) computers.stream().mapToInt(MatchResult.SeatActivity::activeRounds).sum();
+    }
+
+    @Test
     void reportsShowRatesLengthsLuckAndMaps(@TempDir Path output) throws IOException {
         StrengthBenchmark.main(new String[]{"--mode=strength", "--systems=16", "--players=2", "--seeds=2", "--rounds=30",
                 "--strengths=NORMAL", "--events=on,off", "--combat-seeds=2", "--output=" + output});
         String summary = Files.readString(output.resolve("strength.md"));
-        assertThat(summary).contains("| NORMAL | LOW | an | 16 | 2 | 4 |", "## Nach Computerprofil", "## Kampfstartwert",
-                "## Ereignisse", "## Karten");
+        assertThat(summary).contains("| NORMAL | LOW | an | 16 | 2 | 4 |", "## Nach Computerprofil", "## Angriffe der Computer",
+                "## Kampfstartwert", "## Ereignisse", "## Karten");
+        assertThat(Files.readAllLines(output.resolve("matches.csv")).getFirst()).endsWith(
+                ",computer_rounds,sends,attacks,attack_ships,reference_attacks,first_reference_attack");
         assertThat(Files.readAllLines(output.resolve("matches.csv"))).hasSize(9);
         assertThat(output.resolve("invocation.txt")).exists();
     }

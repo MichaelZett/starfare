@@ -87,11 +87,14 @@ The new-game dialog offers one computer strength for all computer seats
 
 | Strength | Play | Computer start |
 | --- | --- | --- |
-| Easy | Baseline | Classic ×0.5 (production 2, 4 ships); Extended ×0.75 |
-| Normal (default) | Classic: Baseline; Extended: each computer secretly draws Rush, Expansion, Concentration or Defense | as humans |
-| Challenging | Classic: Baseline, in duels secretly Baseline or Rush; Extended: Adaptive industry (in larger games also Baseline) | Classic ×1.5 (production 6, 12 ships); Extended ×1.25 |
+| Easy | Baseline | ×0.5 (production 2, 4 ships) |
+| Normal (default) | Classic: Cautious; Extended: Baseline | as humans |
+| Challenging | Classic: Baseline, in duels secretly Baseline or Rush; Extended: Adaptive industry | Classic ×1.5 (production 6, 12 ships); Extended as humans |
 
-Rush commits ships early; Expansion favors nearby neutral systems; Concentration
+Cautious keeps three rounds of production at home against one rival (fewer with more
+rivals), sends at most one fleet per round and only when a system's spare ships beat the
+estimated defence at arrival by half again; it then sends all of them, preferring near,
+weak and neutral targets. Rush commits ships early; Expansion favors nearby neutral systems; Concentration
 moves spare forces toward the front; Defense keeps larger local reserves; Adaptive
 industry adjusts investment to visible threats and available ships. The profiles use
 the same policies as the strategy benchmark and consume only player-visible
@@ -725,6 +728,7 @@ Strategies are intentionally small, contrasting policies:
 | EXPANSION | Prefer accessible, weak or apparently neutral systems; retain a production-sized reserve. |
 | CONCENTRATION | Attack estimated beatable targets and transfer idle forces towards the front. |
 | DEFENSE | Keep a larger reserve and strongly prefer lower-risk targets. |
+| CAUTIOUS | Classic normal computers: home guard, at most one fleet per round, only with a clear superiority at arrival, then all spare ships; near, weak and neutral targets first. |
 | INDUSTRY | Spaceward only: invest two thirds of capacity away from known nearby enemies, one fifth near them; consolidate idle forces. |
 | INDUSTRY_LIGHT | Spaceward only, explicit selection: invest one quarter of capacity when visible enemies are more than two travel rounds away; use the same military policy as INDUSTRY. |
 | INDUSTRY_ADAPTIVE | Spaceward only, explicit selection: stop investing near visible enemies or with insufficient available ships; otherwise invest one quarter near the front or one half in the rear, capped at the next expansion's remaining cost. |
@@ -760,7 +764,9 @@ Dimensions: `--strengths=EASY,NORMAL,HARD`, `--randomness=NONE,LOW,MEDIUM,HIGH`,
 `--combat-seeds`, `--rounds=300` and `--threads`. `--start-share=0.9` and
 `--computer-profiles=RUSH,EXPANSION` try other values than the built-in ones.
 `strength.md` lists the reference's win rate with a Wilson interval, game lengths, rates per
-drawn profile, winners changed by the combat seed or by events and neighbour travel rounds.
+drawn profile, how restless the computers play (sends and attacks on other empires per computer
+and round, ships per attack, first attack on the reference; also in `matches.csv`), winners
+changed by the combat seed or by events and neighbour travel rounds.
 
 ```powershell
 .\gradlew.bat strategyBenchmark -x vaadinBuildFrontend "-PstrategyArgs=--mode=strength --systems=24,40 --players=2,4 --seeds=200 --first-seed=1001 --threads=2"

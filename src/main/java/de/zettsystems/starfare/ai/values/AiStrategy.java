@@ -6,7 +6,9 @@ import java.util.List;
 
 /** Selectable planning profiles; BASELINE preserves the historical rule-specific AI. */
 public enum AiStrategy {
-    BASELINE, RUSH, EXPANSION, CONCENTRATION, DEFENSE, INDUSTRY, INDUSTRY_LIGHT, INDUSTRY_ADAPTIVE;
+    BASELINE, RUSH, EXPANSION, CONCENTRATION, DEFENSE, INDUSTRY, INDUSTRY_LIGHT, INDUSTRY_ADAPTIVE,
+    /** Few, well prepared attacks with a home guard: the calm planning of normal classic computers. */
+    CAUTIOUS;
 
     public boolean requiresIndustry() {
         return this == INDUSTRY || this == INDUSTRY_LIGHT || this == INDUSTRY_ADAPTIVE;

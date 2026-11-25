@@ -9,8 +9,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
@@ -44,14 +46,19 @@ final class MatchRunner {
         long[] invested = new long[strategies.size()];
         var digest = sha256();
         recordState(state, metrics, produced, losses, invested, digest);
+        var activity = new ArrayList<MatchResult.SeatActivity>();
+        state.players().forEach(p -> activity.add(new MatchResult.SeatActivity(p.id(), 0, 0, 0, 0, 0, 0)));
         boolean first = true;
         while (!state.gameOver() && state.turn() <= scenario.roundLimit()) {
             long[] before = state.players().stream().mapToLong(p -> ships(state, p.id())).toArray();
             int round = state.turn();
+            Map<Integer, Integer> owners = new HashMap<>();
+            state.systems().stream().filter(s -> s.ownerId() != null).forEach(s -> owners.put(s.id(), s.ownerId()));
             var plans = engine.advance(state, strategies, scenario.combatSeed(), first ? intervention : SimulationEngine.Intervention.NONE);
             first = false;
             for (int seat = 0; seat < strategies.size(); seat++) {
                 int player = seat + 1;
+                recordActivity(activity, seat, round, owners, plans.get(seat));
                 var report = state.reports().get(player);
                 long built = report == null || report.turn() != round ? 0 : report.events().stream()
                         .filter(TurnEvent.Production.class::isInstance).map(TurnEvent.Production.class::cast)
@@ -67,7 +74,20 @@ final class MatchRunner {
         }
         String outcome = state.gameOver() ? (state.outcome().hasWinner() ? "WIN" : "DRAW") : "ROUND_LIMIT";
         return new MatchResult(scenario, strategies, experiment, outcome,
-                state.winnerId() == null ? 0 : state.winnerId(), metrics, orders, HexFormat.of().formatHex(digest.digest()), state.outcome().winnerIds(), state.outcome().allianceId());
+                state.winnerId() == null ? 0 : state.winnerId(), metrics, orders, HexFormat.of().formatHex(digest.digest()), state.outcome().winnerIds(), state.outcome().allianceId(), activity);
+    }
+
+    private static void recordActivity(List<MatchResult.SeatActivity> activity, int seat, int round,
+                                       Map<Integer, Integer> owners, StrategyOrders plan) {
+        int player = seat + 1;
+        var seatActivity = activity.get(seat);
+        if (owners.containsValue(player)) { seatActivity = seatActivity.active(); }
+        for (var send : plan.sends()) {
+            Integer owner = owners.get(send.toSystemId());
+            boolean attack = owner != null && owner != player;
+            seatActivity = seatActivity.record(round, attack, attack && owner == 1, send.ships());
+        }
+        activity.set(seat, seatActivity);
     }
 
     static GameState checkpoint(Scenario scenario, List<Strategy> strategies, int round) {

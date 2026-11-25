@@ -682,10 +682,11 @@ logic and callbacks stay in `MainView`; only the arrangement differs.
   `RandomnessLevel` maps to combat randomness (0/5/10/20%), `EventFrequency`
   (off/rare/normal/frequent ×2) and the attack order (strongest first only at None);
   rulesets that resolve coalition battles keep the default order.
-  `ComputerStrength` picks each computer's `AiStrategy` (Easy baseline, Normal a hidden
-  draw from Rush/Expansion/Concentration/Defense, Challenging the strongest benchmark
-  profiles) and scales its home production and garrison (0.75/1.0/1.25); the values are
-  named constants, calibrated later. An explicit personal battle speed overrides the
+  `ComputerStrength` picks each computer's `AiStrategy` (Easy baseline; Normal the calm
+  `CAUTIOUS` profile in Classic and the baseline in Extended; Challenging the strongest
+  benchmark profiles) and scales its home production and garrison (Classic 0.5/1.0/1.5,
+  Extended 0.5/1.0/1.0); the values are named constants calibrated with the strategy bench
+  (`docs/STRATEGY-EXPERIMENTS.md`). An explicit personal battle speed overrides the
   presentation default across rounds and sessions via the platform's settings.
   Only the winner's full-conquest continuation changes the victory threshold after the
   start, to 100%.
