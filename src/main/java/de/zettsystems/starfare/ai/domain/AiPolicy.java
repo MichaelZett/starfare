@@ -19,6 +19,7 @@ public final class AiPolicy {
 
     public static AiOrders plan(AiStrategy strategy, AiObservation observation) {
         if (strategy == AiStrategy.BASELINE) { throw new IllegalArgumentException("Use the production baseline adapter"); }
+        if (strategy == AiStrategy.CAUTIOUS) { return CautiousPolicy.plan(observation); }
         var owned = observation.view().systems().stream().filter(observation::owned)
                 .sorted(Comparator.comparingInt(VisibleSystem::id)).toList();
         var sends = new ArrayList<FleetOrder.Send>();

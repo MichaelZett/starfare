@@ -17,11 +17,16 @@ final class StrengthReport {
 
     static void write(Path output, List<StrengthBenchmark.Match> matches, List<StrengthBenchmark.MapFacts> maps) throws IOException {
         Files.createDirectories(output);
-        var csv = new StringBuilder("strength,randomness,events,systems,players,map_seed,combat_seed,computers,outcome,winner,rounds,sha256\n");
+        var csv = new StringBuilder("strength,randomness,events,systems,players,map_seed,combat_seed,computers,outcome,winner,rounds,sha256,"
+                + "computer_rounds,sends,attacks,attack_ships,reference_attacks,first_reference_attack\n");
         matches.forEach(match -> csv.append(match.strength()).append(',').append(match.level()).append(',').append(match.events())
                 .append(',').append(match.systems()).append(',').append(match.players()).append(',').append(match.mapSeed())
                 .append(',').append(match.combatSeed()).append(',').append(profiles(match)).append(',').append(match.outcome())
-                .append(',').append(match.winner()).append(',').append(match.rounds()).append(',').append(match.digest()).append('\n'));
+                .append(',').append(match.winner()).append(',').append(match.rounds()).append(',').append(match.digest())
+                .append(',').append(sum(match, MatchResult.SeatActivity::activeRounds)).append(',').append(sum(match, MatchResult.SeatActivity::sends))
+                .append(',').append(sum(match, MatchResult.SeatActivity::attacks)).append(',').append(sum(match, MatchResult.SeatActivity::attackShips))
+                .append(',').append(sum(match, MatchResult.SeatActivity::referenceAttacks)).append(',').append(firstReferenceAttack(match))
+                .append('\n'));
         Files.writeString(output.resolve("matches.csv"), csv);
         Files.writeString(output.resolve("strength.md"), summary(matches, maps));
     }
@@ -44,6 +49,7 @@ final class StrengthReport {
                     .append(" | ").append(quantile(rounds, 0.9)).append(" |\n");
         });
         appendProfiles(out, matches);
+        appendActivity(out, matches);
         appendCombatSeeds(out, matches);
         appendEvents(out, matches);
         appendMaps(out, maps);
@@ -59,6 +65,44 @@ final class StrengthReport {
             out.append("| ").append(key).append(" | ").append(rows.size()).append(" | ").append(wins).append(" | ")
                     .append(percent(wins / (double) rows.size())).append(" |\n");
         });
+    }
+
+    /**
+     * How restless the computers play: sends and attacks on other empires per computer and round it held a system,
+     * ships per attack, and when a computer first attacked the reference.
+     */
+    private static void appendActivity(StringBuilder out, List<StrengthBenchmark.Match> matches) {
+        out.append("\n## Angriffe der Computer\n\nJe Computer und Runde mit eigenem System. Angriff = Sendung an ein System eines")
+                .append(" anderen Reichs (beim Planen). Erster Angriff auf die Referenz: Median der Computer, die sie angriffen.\n\n")
+                .append("| Staerke | Zufall | Ereignisse | Systeme | Spieler | Sendungen | Angriffe | Schiffe je Angriff | Angriffe auf Referenz ")
+                .append("| erster Angriff auf Referenz | ohne Angriff auf Referenz |\n|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|\n");
+        group(matches, match -> match.strength() + " | " + match.level() + " | " + (match.events() ? "an" : "aus") + " | "
+                + match.systems() + " | " + match.players()).forEach((key, rows) -> {
+            var seats = rows.stream().flatMap(match -> match.activity().stream()).toList();
+            long rounds = seats.stream().mapToLong(MatchResult.SeatActivity::activeRounds).sum();
+            long attacks = seats.stream().mapToLong(MatchResult.SeatActivity::attacks).sum();
+            var first = seats.stream().mapToInt(MatchResult.SeatActivity::firstReferenceAttack).filter(round -> round > 0).sorted().toArray();
+            out.append("| ").append(key).append(" | ").append(rate(seats.stream().mapToLong(MatchResult.SeatActivity::sends).sum(), rounds))
+                    .append(" | ").append(rate(attacks, rounds)).append(" | ")
+                    .append(attacks == 0 ? "-" : String.format(Locale.ROOT, "%.1f",
+                            seats.stream().mapToLong(MatchResult.SeatActivity::attackShips).sum() / (double) attacks))
+                    .append(" | ").append(rate(seats.stream().mapToLong(MatchResult.SeatActivity::referenceAttacks).sum(), rounds))
+                    .append(" | ").append(quantile(first, 0.5)).append(" | ")
+                    .append(percent(seats.isEmpty() ? 0 : (seats.size() - first.length) / (double) seats.size())).append(" |\n");
+        });
+    }
+
+    private static String rate(long count, long rounds) {
+        return rounds == 0 ? "-" : String.format(Locale.ROOT, "%.2f", count / (double) rounds);
+    }
+
+    private static long sum(StrengthBenchmark.Match match, java.util.function.ToLongFunction<MatchResult.SeatActivity> value) {
+        return match.activity().stream().mapToLong(value).sum();
+    }
+
+    private static int firstReferenceAttack(StrengthBenchmark.Match match) {
+        return match.activity().stream().mapToInt(MatchResult.SeatActivity::firstReferenceAttack).filter(round -> round > 0)
+                .min().orElse(0);
     }
 
     /** Maps whose winner changes with the combat seed alone. */

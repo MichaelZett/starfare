@@ -26,12 +26,13 @@ import java.util.concurrent.Future;
 final class StrengthBenchmark {
     private StrengthBenchmark() { }
 
-    /** One finished game; the reference sits on seat 1, so winner 1 is a win of the person. */
+    /** One finished game; the reference sits on seat 1, so winner 1 is a win of the person. Activity covers the computers. */
     record Match(ComputerStrength strength, RandomnessLevel level, boolean events, int systems, int players,
                  long mapSeed, long combatSeed, List<Strategy> computers, String outcome, int winner, int rounds,
-                 String digest) {
+                 String digest, List<MatchResult.SeatActivity> activity) {
         Match {
             computers = List.copyOf(computers);
+            activity = List.copyOf(activity);
         }
 
         boolean referenceWon() { return winner == 1; }
@@ -120,7 +121,8 @@ final class StrengthBenchmark {
         var result = MatchRunner.playLobbyGame(scenario, strategies, state, "strength");
         return new Match(setup.computerStrength(), setup.randomness(), !setup.enabledEvents().isEmpty(),
                 setup.systemCount(), setup.totalPlayers(), mapSeed, combatSeed, strategies.subList(1, strategies.size()),
-                result.outcome(), result.winner(), result.rounds(), result.digest());
+                result.outcome(), result.winner(), result.rounds(), result.digest(),
+                result.activity().subList(1, result.activity().size()));
     }
 
     static GameState create(StrengthOptions options, GameSetup setup, long mapSeed) {

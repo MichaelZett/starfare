@@ -124,17 +124,18 @@ listet die Plattform; im eigenen Start findest du sie im **Archiv** über **Mein
 | Stärke | Spielweise (klassisch) | Start der Computer (klassisch) |
 | --- | --- | --- |
 | Einfach | Basisstrategie: stärkste Basis, nahes Ziel, begrenzter Versand | halbe Produktion und Schiffe (2 und 4) |
-| Normal | Basisstrategie | wie Menschen (4 und 8) |
+| Normal | Ruhige Planung: Heimatwache, höchstens eine Flotte je Runde, nur mit klarer Überlegenheit, dann mit allen freien Schiffen | wie Menschen (4 und 8) |
 | Anspruchsvoll | im Zweikampf verdeckt Basisstrategie oder früher Angriff, mit mehreren Reichen die Basisstrategie | anderthalbfache Produktion und Schiffe (6 und 12) |
 
 Die Werte sind mit dem Strategieprüfstand abgestimmt: Wer wie die Basisstrategie spielt,
 gewinnt im Zweikampf gegen **Einfach** etwa drei bis vier von fünf Partien, gegen
-**Normal** etwa jede zweite und gegen **Anspruchsvoll** etwa jede fünfte; mit mehreren
-Reichen liegt **Normal** beim fairen Anteil, **Einfach** darüber und **Anspruchsvoll**
-darunter. Welche Heimat welcher Sitz bekommt, wird
-ausgelost. In den erweiterten Regeln spielen einfache Computer die Basisstrategie mit
-halbem Start, normale die Basisstrategie mit gleichem Start und anspruchsvolle den
-adaptiven Industrieausbau mit gleichem Start.
+**Normal** jede zweite oder etwas mehr und gegen **Anspruchsvoll** etwa jede fünfte; mit
+mehreren Reichen liegt **Normal** beim fairen Anteil oder knapp darüber, **Einfach** darüber und
+**Anspruchsvoll** darunter. Normale Computer greifen etwa halb so oft an wie die
+Basisstrategie, dafür mit größeren Flotten. Welche Heimat welcher Sitz bekommt, wird
+ausgelost. In den erweiterten Regeln spielen einfache und normale Computer die
+Basisstrategie, anspruchsvolle den adaptiven Industrieausbau; einfache starten mit halber
+Produktion und halben Schiffen, normale und anspruchsvolle wie Menschen.
 
 Die Computer nutzen nur sichtbare Informationen; verborgene Garnisonen und
 gegnerische Befehle erhalten sie nicht. Die Stärke wird mit der Partie gespeichert

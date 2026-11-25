@@ -69,6 +69,8 @@ class GalaxyGenesisTest {
     void easyComputersPlanWithTheBaseline() {
         assertThat(galaxy(ComputerStrength.EASY).players().subList(1, 4)).extracting(Player::aiStrategy)
                 .containsOnly(AiStrategy.BASELINE);
+        assertThat(galaxy(ComputerStrength.NORMAL).players().subList(1, 4)).extracting(Player::aiStrategy)
+                .containsOnly(AiStrategy.CAUTIOUS);
     }
 
     private static GameState galaxy(ComputerStrength strength) {

@@ -142,13 +142,14 @@ class GameSetupTest {
         Random random = new Random(3);
         assertThat(ComputerStrength.EASY.strategy(classic, 2, random)).isEqualTo(AiStrategy.BASELINE);
         for (int draw = 0; draw < 20; draw++) {
-            assertThat(ComputerStrength.NORMAL.strategy(classic, 2, random)).isEqualTo(AiStrategy.BASELINE);
+            assertThat(ComputerStrength.NORMAL.strategy(classic, 2, random)).as("calm classic computers").isEqualTo(AiStrategy.CAUTIOUS);
             assertThat(ComputerStrength.HARD.strategy(classic, 2, random)).isIn(AiStrategy.BASELINE, AiStrategy.RUSH);
             assertThat(ComputerStrength.NORMAL.strategy(extended, 4, random)).isEqualTo(AiStrategy.BASELINE);
             assertThat(ComputerStrength.EASY.strategy(extended, 2, random)).isEqualTo(AiStrategy.BASELINE);
             assertThat(ComputerStrength.HARD.strategy(extended, 5, random)).isEqualTo(AiStrategy.INDUSTRY_ADAPTIVE);
         }
-        assertThat(ComputerStrength.NORMAL.strategy(classic, 4, random)).isEqualTo(AiStrategy.BASELINE);
+        assertThat(ComputerStrength.NORMAL.strategy(classic, 4, random)).isEqualTo(AiStrategy.CAUTIOUS);
+        assertThat(ComputerStrength.EASY.strategy(classic, 4, random)).isEqualTo(AiStrategy.BASELINE);
         assertThat(ComputerStrength.HARD.strategy(classic, 3, random)).isEqualTo(AiStrategy.BASELINE);
         assertThat(ComputerStrength.HARD.strategy(extended, 2, random)).isEqualTo(AiStrategy.INDUSTRY_ADAPTIVE);
     }
