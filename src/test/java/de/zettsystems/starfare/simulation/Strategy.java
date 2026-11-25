@@ -4,11 +4,11 @@ import de.zettsystems.starfare.game.values.RulesetRef;
 import java.util.List;
 
 enum Strategy {
-    BASELINE, RUSH, EXPANSION, CONCENTRATION, DEFENSE, INDUSTRY, INDUSTRY_LIGHT, INDUSTRY_ADAPTIVE;
+    BASELINE, RUSH, EXPANSION, CONCENTRATION, DEFENSE, INDUSTRY, INDUSTRY_LIGHT, INDUSTRY_ADAPTIVE, CAUTIOUS;
 
     static List<Strategy> forRules(RulesetRef rules) {
         return rules.isSpaceward() ? List.of(BASELINE, RUSH, EXPANSION, CONCENTRATION, DEFENSE, INDUSTRY)
-                : List.of(BASELINE, RUSH, EXPANSION, CONCENTRATION, DEFENSE);
+                : List.of(BASELINE, RUSH, EXPANSION, CONCENTRATION, DEFENSE, CAUTIOUS);
     }
 
     boolean requiresIndustry() {

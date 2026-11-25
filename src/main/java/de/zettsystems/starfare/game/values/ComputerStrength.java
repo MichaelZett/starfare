@@ -8,8 +8,16 @@ import java.util.random.RandomGenerator;
 /**
  * How strong the computer empires of a game are: their planning profile and their start compared with the
  * people. Both rules are calibrated with the strategy bench (docs/STRATEGY-EXPERIMENTS.md, 25.11.2026): a person
- * playing like the baseline wins about three to four of five duels against easy computers, half against normal ones
- * and one in five or fewer against hard ones. With the extended rules the cheap first industry levels let a smaller
+ * playing like the baseline wins about three to four of five duels against easy computers, half or a bit more against
+ * normal ones and one in five or fewer against hard ones.
+ * <p>
+ * Classic normal computers play the calm profile ({@link AiStrategy#CAUTIOUS}, K7d) with the same start: the baseline
+ * sends a fleet every round, which people found restless and hard to read. On 1,200 control games (maps 1001-1200,
+ * medium and large, two to four empires) the reference won 64/50 % of the duels, 32/35 % with three and 33/29 % with
+ * four empires (baseline computers: 52/42, 29/30, 24/27 %), while the computers attacked another empire about 0.4
+ * instead of 0.75 times per round, with larger fleets.
+ * <p>
+ * With the extended rules the cheap first industry levels let a smaller
  * start catch up, so only half the start makes computers easier, and hard computers expand their industry instead
  * of starting larger.
  */
@@ -54,7 +62,8 @@ public enum ComputerStrength {
 
     /**
      * Planning profile of one computer empire. With more than two empires the classic baseline is the strongest
-     * profile of the bench, the others mostly fight each other; there the start share alone sets the strength. Under
+     * profile of the bench, the others mostly fight each other; there the start share alone sets the strength of easy
+     * and hard computers. Normal classic computers play the calm profile in every game size. Under
      * the extended rules the profiles without industry lose to the baseline in every size; hard computers play the
      * adaptive industry profile, the strongest of the bench.
      *
@@ -67,8 +76,8 @@ public enum ComputerStrength {
         boolean duel = players <= 2;
         return switch (this) {
             case EASY -> AiStrategy.BASELINE;
-            // The other profiles beat the baseline in duels and lose to it in larger games; none is fair to a person.
-            case NORMAL -> AiStrategy.BASELINE;
+            // The baseline was fair but restless; the calm profile attacks about half as often with the same start.
+            case NORMAL -> AiStrategy.CAUTIOUS;
             case HARD -> duel ? pick(HARD_CLASSIC_DUEL_PROFILES, random) : AiStrategy.BASELINE;
         };
     }
