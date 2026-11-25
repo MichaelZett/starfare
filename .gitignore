@@ -43,3 +43,6 @@ Thumbs.db
 *.log
 
 .gradle/*
+
+# Eigene Eingabeordner des Users
+_input*/
