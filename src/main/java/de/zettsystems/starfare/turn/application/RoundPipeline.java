@@ -75,6 +75,24 @@ public class RoundPipeline {
         this.fleetService = fleetService;
     }
 
+    private RoundPipeline(RoundPipeline base, CosmicEvents cosmicEvents) {
+        this.victory = base.victory;
+        this.attackRandom = base.attackRandom;
+        this.cosmicEvents = cosmicEvents;
+        this.jointDepartures = base.jointDepartures;
+        this.coalitions = base.coalitions;
+        this.diplomacy = base.diplomacy;
+        this.navigation = base.navigation;
+        this.combatService = base.combatService;
+        this.reportService = base.reportService;
+        this.fleetService = base.fleetService;
+    }
+
+    /** The same rounds, telling {@code losses} every ship a cosmic event destroys; for the ship accounting of tests. */
+    RoundPipeline countingCosmicLosses(java.util.function.IntConsumer losses) {
+        return new RoundPipeline(this, new CosmicEvents(reportService, attackRandom, losses));
+    }
+
     public void advanceTurn(GameState state, Runnable planOrders, Consumer<Map<Integer, Integer>> produce) {
         if (state.gameOver()) { return; }
         planOrders.run();

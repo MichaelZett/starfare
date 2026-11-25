@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -27,6 +28,8 @@ import java.util.function.Supplier;
 final class CosmicEvents {
     private final ReportService reports;
     private final Supplier<Random> random;
+    /** Learns every ship an event destroys; only the ship accounting of the tests listens. */
+    private final IntConsumer losses;
 
     @org.springframework.beans.factory.annotation.Autowired
     CosmicEvents(ReportService reports) {
@@ -34,8 +37,13 @@ final class CosmicEvents {
     }
 
     CosmicEvents(ReportService reports, Supplier<Random> random) {
+        this(reports, random, _ -> { });
+    }
+
+    CosmicEvents(ReportService reports, Supplier<Random> random, IntConsumer losses) {
         this.reports = reports;
         this.random = random;
+        this.losses = losses;
     }
 
     void resolve(GameState state) {
@@ -92,6 +100,7 @@ final class CosmicEvents {
         if (remaining > 0) {
             state.fleets().add(fleet.surviveBattle(remaining));
         }
+        losses.accept(fleet.ships() - remaining);
         reports.appendEvent(state, fleet.ownerId(), new TurnEvent.Cosmic(CosmicNews.DISAPPEARANCE, fleet.toSystemId(),
                 name(state, fleet.toSystemId()), fleet.localNo(), fleet.ships() - remaining, remaining, 0, ""));
     }
@@ -103,6 +112,7 @@ final class CosmicEvents {
         StarSystem system = candidates.get(rng.nextInt(candidates.size()));
         int lost = 1 + rng.nextInt(system.garrison());
         state.updateSystem(system.id(), current -> current.loseShips(lost));
+        losses.accept(lost);
         Integer owner = system.ownerId();
         if (owner != null) {
             CosmicNews news = lost * 2 < system.garrison() ? CosmicNews.SPACEPORT_QUAKE_LIGHT : CosmicNews.SPACEPORT_QUAKE_HEAVY;
@@ -130,23 +140,29 @@ final class CosmicEvents {
             state.updateSystem(id, StarSystem::explode);
             tellEveryone(state, new TurnEvent.Cosmic(CosmicNews.SUPERNOVA, id, system.name(), 0, 0, 0, 0, ""));
             if (system.garrison() > 0) {
-                randomTarget(state, rng, id).ifPresent(target -> flee(state, options, system, target));
+                boolean fled = randomTarget(state, rng, id).map(target -> flee(state, options, system, target)).orElse(false);
+                if (!fled) { losses.accept(system.garrison()); }
             }
         }
     }
 
-    private void flee(GameState state, SectorOptions options, StarSystem system, int target) {
+    /** Whether the garrison escaped the supernova, as refugees of its owner or as pirates. */
+    private boolean flee(GameState state, SectorOptions options, StarSystem system, int target) {
         int arrival = state.turn() + 1 + state.travelRounds(system.id(), target);
         Integer owner = system.ownerId();
         if (owner != null) {
             int localNo = state.launchEventFleet(owner, system.id(), target, system.garrison(), arrival);
             reports.appendEvent(state, owner, new TurnEvent.Cosmic(CosmicNews.REFUGEES, system.id(), system.name(),
                     localNo, system.garrison(), 0, arrival, name(state, target)));
-        } else if (options.enabled(CosmicEvent.PIRATES)) {
+            return true;
+        }
+        if (options.enabled(CosmicEvent.PIRATES)) {
             state.updateCosmic(cosmic -> cosmic.launchPirates(system.id(), target, system.garrison(), arrival));
             tellEveryone(state, new TurnEvent.Cosmic(CosmicNews.PIRATES_FLEE, system.id(), system.name(), 0,
                     system.garrison(), 0, arrival, name(state, target)));
+            return true;
         }
+        return false;
     }
 
     /** Fleets bound for the destroyed system find nothing there and jump on to a random system. */
@@ -161,6 +177,8 @@ final class CosmicEvents {
             });
         }
         if (state.systems().stream().noneMatch(system -> system.id() != destroyed && !state.destroyed(system.id()))) {
+            losses.accept(state.cosmic().pirates().stream().filter(pirates -> pirates.toSystemId() == destroyed)
+                    .mapToInt(PirateFleet::ships).sum());
             state.updateCosmic(cosmic -> cosmic.dropPirates(pirates -> pirates.toSystemId() == destroyed));
             return;
         }
@@ -183,7 +201,10 @@ final class CosmicEvents {
 
     private void raid(GameState state, Random rng, PirateFleet pirates) {
         int target = pirates.toSystemId();
-        if (state.destroyed(target)) { return; }
+        if (state.destroyed(target)) {
+            losses.accept(pirates.ships());
+            return;
+        }
         StarSystem system = state.getSystem(target);
         var result = CombatResolver.resolve(pirates.ships(), system.garrison(), state.combatRandomnessPercent(), rng::nextDouble);
         Integer owner = system.ownerId();
@@ -192,6 +213,7 @@ final class CosmicEvents {
         } else {
             state.updateSystem(target, current -> current.afterDefense(result.defendersLeft()));
         }
+        losses.accept(pirates.ships() + system.garrison() - (result.attackerWon() ? result.attackersLeft() : result.defendersLeft()));
         if (owner != null) {
             reports.appendEvent(state, owner, new TurnEvent.Cosmic(
                     result.attackerWon() ? CosmicNews.PIRATE_RAID_WON : CosmicNews.PIRATE_RAID_REPELLED, target,
