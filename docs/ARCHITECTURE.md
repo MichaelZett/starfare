@@ -174,7 +174,7 @@ progress survive allocation changes and conquest. At the cap, the allocation
 returns to full shipbuilding. Growth changes output for the following turn only.
 
 `StarSystem.productionPerTurn` always contains actual ship output, so existing
-routing limits, delivery checks and logistics previews consume the same value.
+routing limits, delivery checks and relocation balances consume the same value.
 Standing orders retained after an allocation change may use the source garrison;
 incoming rates never count as already delivered ships.
 `DefaultEconomyService` produces only the output available before this turn's
@@ -553,13 +553,19 @@ and fog remain selectable.
 
 ### Map sidebar
 
-`FleetAndOrdersPanel` is a view-local, switchable sidebar for Contacts, Details,
-Fleets, Orders, Relocations, Logistics and Report. Contacts derive their last hostile
-intelligence from fog-filtered `VisibleSystem` values; Report renders the player's
-turn events beside the map. It receives only `PlayerViewState` and
+`FleetAndOrdersPanel` is a view-local, switchable sidebar for Details, Fleets,
+Relocations and Report. Details show the selected system or fleet; for a system out
+of sight they show the last intelligence from fog-filtered `VisibleSystem` values, for
+an own system its relocations and relocation balance (`ProductionFlow`). Fleets lists
+fleets under way and the round's planned orders together, grouped by arrival round.
+Report renders the player's turn events beside the map. In the advanced rules the
+header's economy notices replace the details with a filtered issue list until it is
+cleared or something is selected, and the details of an own mining system carry the
+mining automation and the own systems by yield. The panel receives only `PlayerViewState` and
 the view-local map selection from `MainView`; selecting a system or fleet never
-mutates the game. New commands select Orders and a resolved turn selects Report;
-the report stays in the sidebar. Making that automatic choice a user preference
+mutates the game. New bulk commands select Fleets and a resolved turn selects Report;
+the report stays in the sidebar. The battle replay names the system's known
+production; acknowledging it opens no further dialog. Making that automatic choice a user preference
 remains future work.
 
 `TurnEvent.affectedSystemId()` is the shared link between the report and the
@@ -647,7 +653,9 @@ and adapt through that stylesheet. The map does not: `MainView` builds either th
 `SplitLayout` with map and sidebar or `MobileMapLayout`, never both. The phone layout
 reuses the same `MapCanvas`, `FleetAndOrdersPanel` and controls, arranges them as
 full-screen map plus a sheet, and receives the target-selection state on every refresh.
-`MapHeaderBar` has a compact variant without title and language switcher. Game
+`MapHeaderBar` has a compact variant without title and language switcher. The legend
+lives only in the map help: the desktop's help panel above the map, on phones a
+help button beside the zoom buttons (`MapLegend`). Game
 logic and callbacks stay in `MainView`; only the arrangement differs.
 
 ## Configuration and setup
@@ -823,11 +831,12 @@ games and link to the review (plan S.4).
 
 Display choices are kept by the platform (`PlatformSettings`, games-platform-api
 0.4.0) for the signed-in account under the game key `starfare`; the keys are the
-names of `DisplaySetting`: speed, sound, event/logistics filters, route search and
+names of `DisplaySetting`: speed, sound, event filters, route search and
 sidebar position. `DisplayPreferences` reads them in one call while the map is
 built and caches them in the session; each explicit changed choice is written at
 once, and only its own key, so an open map never overwrites what another device
-chose meanwhile (the fleet panel saves its three filters separately); a blank one
+chose meanwhile (the fleet panel saves its two filters separately); keys of removed
+settings that a platform still keeps are ignored; a blank one
 resets the key (the platform keeps no blank values, so "no
 event category" is stored as `-`). Reopening a map refreshes the cache. Without a
 `PlatformSettings` bean the choices last for the session. Starfare's own start
@@ -878,7 +887,7 @@ that player's recorded losses and kill share.
 
 CoalitionConcealment is a presentation-only immutable view projection. Pending
 coalition battles conceal ownership, industrial results and stationed survivors
-in map, logistics and fleet cards, including after reload. Recorded participating
+in map, system details and fleet cards, including after reload. Recorded participating
 fleet IDs constrain concealment to actual combatants; protected blocked fleets
 at the same location remain visible. Missing IDs in older event JSON default to
 an empty immutable list. Existing durable

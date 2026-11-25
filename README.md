@@ -134,8 +134,8 @@ Who played whom and the result stay in the platform's statistics.
 ## Map sidebar
 
 Map controls provide zoom, whole-galaxy and own-empire views. **Map help** contains
-reset and the legend. Narrow sidebars use a labelled **View** selector for the same
-seven sections. Bulk send and undo remain directly available at
+reset and the legend; on phones the question-mark button opens it. Narrow sidebars use
+a labelled **View** selector for the same four sections. Bulk send and undo remain directly available at
 the top of the sidebar. The **game chat** belongs to the platform: its button sits in the
 platform's strip above the map and in the waiting room, on phones as well. Starfare only says
 who may read and write: everyone who holds or held a seat reads the chat; only those still
@@ -146,9 +146,10 @@ preserve unchanged input controls and focus. In the own start, **My account** le
 lobby and archive; imprint and privacy share a footer.
 
 System details put sendable ships, total garrison and forecast ship
-production per round above the send and relocation actions. **Logistics** (or
-**Colony & logistics** for SectorForces extended colonies) expands rates, arrivals
-and the colony data. **Background** expands descriptions,
+production per round above the send and relocation actions, followed by the
+system's incoming and outgoing relocations. **Logistics** (or **Colony & logistics**
+for SectorForces extended colonies) expands the relocation balance (incoming,
+production, outgoing), arrivals and the colony data. **Background** expands descriptions,
 environment values and ownership history. Expanded sections stay open across
 updates and system selections while their data follows the selected system.
 
@@ -159,8 +160,9 @@ open for the next send. Relocation edits retain their current context.
 Fleet cards and fleet details offer **Wait** directly and **Disband** when the
 fleet can return to an owned garrison. Action clicks retain the current tab.
 **Travel details** and **Joint arrivals** expand the additional journey data.
-The Fleets tab aggregates your fleets and queued sends by destination and arrival
-turn, including waits. Use **Edit order** to change a queued send's destination or
+The Fleets tab lists fleets under way and the orders queued this round in one list,
+grouped by arrival round (fleets first within a round); **Joint arrivals** aggregates
+them by destination and arrival turn, including waits. Use **Edit order** to change a queued send's destination or
 amount. **Undo last order change** reverses your most recent queue change in the
 same round, including after a reload or server restart. It cannot undo a resolved
 turn.
@@ -176,7 +178,7 @@ batch. It validates the entire selection and rejects stale turns or unavailable
 ships without partial changes.
 
 With battle speed **Instant**, **Resolve all open battles** acknowledges the complete
-round. Speed, sound, report/logistics filters, route search and sidebar width are
+round. Speed, sound, report filters, route search and sidebar width are
 saved per account and restored on later sign-ins.
 
 Use **Use as template / rematch** on your lobby games or in the review of a
@@ -185,13 +187,13 @@ original settings with a new map. Rematches reserve the previous human seats;
 players still join themselves. Games created before original settings were saved
 cannot be used as templates. New games remain private until explicitly published.
 
-The right-hand sidebar keeps the map visible and switches between Contacts,
-Details, Fleets, Orders, Relocations, Logistics and Report. Contacts retain the last
-known hostile systems with an estimate or a counted garrison. Select a system or fleet on
-the map to inspect it in Details: systems show their known ownership history,
+The right-hand sidebar keeps the map visible and switches between Details, Fleets,
+Relocations and Report. Select a system or fleet on the map to inspect it in Details:
+foreign systems out of sight show the last reconnaissance (owner, estimated or counted
+garrison, production, round of last contact), own systems their known ownership history,
 fleets their owner, launch turn, travel time and ETA. The report entry contains
 the complete filterable round timeline, including victory and defeat reports.
-Single sends and relocations retain the current tab; bulk planning opens Orders.
+Single sends and relocations retain the current tab; bulk planning opens Fleets.
 Resolving a new round opens Report.
 Systems mentioned in a report carry a gold marker on the map. Select a report
 entry to centre the map on it, or select the marker to return to its report
@@ -238,7 +240,7 @@ presence panel, chat, language switcher and a per-user visibility menu.*
 
 ![Send-fleet dialog](docs/screenshots/Flotte.png)
 
-*Send-fleet dialog: ship slider with quick buttons (half / double / all /
+*Send-fleet dialog: ship slider with quick buttons (half / all /
 all except production), travel-time preview, optional "as production transfer"
 mode.*
 
@@ -399,11 +401,12 @@ interface. `?layout=mobile` or `?layout=desktop` on any page overrides the choic
 for the rest of the session.
 
 On the map, the phone layout shows a compact header (game, round, empire summary,
-**End round** and the menu with logistics and legend), the map across the
+**End round** and the menu), the map across the
 whole screen and a bottom bar switching between **Map** and **Overview**. The
 overview is the sidebar as a full-screen sheet, together with alliances and bulk
 orders. Swipe to pan; zoom with two fingers or the round buttons, which also fit
-the view to your empire or the whole galaxy. Tapping a system opens its details;
+the view to your empire or the whole galaxy; the question mark opens the map help
+with the legend. Tapping a system opens its details;
 **Send fleet** returns to the map with a banner until you tap the target or cancel.
 Dialogs fill the screen with their buttons fixed at the bottom.
 
@@ -412,11 +415,11 @@ Dialogs fill the screen with their buttons fixed at the bottom.
 1. Right-click your source system, or select it and choose **Send fleet**.
 2. Click the target system.
 3. Set the ship count via slider or input field. Quick buttons:
-   **Half**, **Double**, **All** (available ships after queued sends),
+   **Half**, **All** (available ships after queued sends),
    and **All except production**, which retains the nonnegative net flow of production + incoming − outgoing transfers. Incoming ships still travel normally.
 4. **Send fleet**.
 
-The order lands in **Orders** in the right-hand sidebar. Before submitting your
+The order lands in **Fleets** in the right-hand sidebar. Before submitting your
 turn, use **Edit order** to change its amount or target, or **Cancel** to remove it.
 **Undo last order change** restores your queue before the most recent command
 change, including a whole batch. It is a single undo step, not an undo history.
@@ -489,7 +492,9 @@ the report's **Speed** selector to choose **0.5×, 1×, 1.5×, 2×, Instant**.
 **Instant** skips animation and also offers **Resolve all open battles**, including
 battles hidden by report filters. Speed and sound are saved per account for later
 rounds and sign-ins; the game default applies until you make a personal choice.
-The playback dialog also lets you change animation speed and test or switch sound.
+The playback dialog also lets you change animation speed and switch sound (switching it
+on plays a short impact), and names the system's production as far as you know it;
+there is no separate conquest dialog afterwards.
 The result appears only after acknowledging the battle;
 until then the map shows a large battle marker and conceals the affected
 system's owner and values. Continue via **Back to map**.
@@ -904,10 +909,11 @@ compares the shown plan with the stored one under the game write lock, and a rej
 change shows the stored plan again. In 1.2.0-w5 and later candidates, lowering a system's shipbuilding
 proportionally shortens its outgoing relocations that no longer fit, and the panel
 names each change. The header shows a metal bar, stock and next-round change, such as
-"24 (−3)", with an accessible breakdown. Logistics lists mining yield per point and
-remaining deposit and can sort by yield.
-Header notices open filtered logistics lists using saved plans, with one system
-per cause. Pending battles suppress these notices.
+"24 (−3)", with an accessible breakdown. The details of an own mining system list
+all own mining systems by yield per point with their remaining deposit, best first,
+and offer **Mining automation**.
+Header notices open filtered lists in the Details tab using saved plans, with one system
+per cause; **Clear filter** returns to the selected system. Pending battles suppress these notices.
 Older
 rules without metal use two allocation areas. The empire's current metal stock
 appears in the header; planet data and rare scrapping actions are expandable.
@@ -976,7 +982,7 @@ editors remain later work. Desktop and phone browser checks, the initial balance
 
 ## Mining automation
 
-**Logistics → Mining automation** enables optional, persistent empire-wide mining
+**Mining automation** in the details of an own mining system enables optional, persistent empire-wide mining
 orders. It defaults to off. Select systems, protected systems and a reserve target
 of 0–10 consumption rounds (default 1), review the global preview, then apply.
 The reserve uses full planned shipbuilding after reallocation, including demand

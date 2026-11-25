@@ -49,6 +49,18 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Bündnissiege (70 %) und Bündnisse der Computer. Vorlagen und Revanchen übernehmen das neue Setup.
 - **Ohne Bestandsschutz:** Ältere laufende Partien laden weiter, Reisezeiten richten sich aber nach der
   festen Geschwindigkeit und können sich ändern.
+- **Schlankere Spieloberfläche:** Die Seitenleiste hat nur noch vier Reiter: **Details**, **Flotten**,
+  **Verlegungen** und **Bericht**. **Flotten** zeigt reisende Flotten und vorgemerkte Befehle in einer
+  Liste, gruppiert nach Ankunftsrunde; der Routenfilter bleibt. Der Reiter **Kontakte** entfällt, die
+  letzte Aufklärung steht in den Systemdetails. **Logistik** entfällt als Kartenmodus und als Reiter samt
+  Filtern, Quelle/Senke und Lieferengpass: Die Routen stehen unter **Verlegungen**, die Verlegungsbilanz
+  (eingehend, Produktion, ausgehend) in den Systemdetails. In SectorForces erweitert stehen Förderautomatik
+  und die eigenen Systeme nach Fördereignung in den Details eines eigenen Fördersystems; die Reichshinweise
+  öffnen ihre gefilterte Liste im Reiter **Details**. Im Senden-Dialog entfällt **Doppelt**, in der
+  Kampfwiedergabe **Ton testen**. Der Dialog „… erobert“ nach einer gewonnenen Schlacht entfällt; die
+  Wiedergabe nennt stattdessen die Produktion des Systems. Die Legende steht nur noch in der Kartenhilfe,
+  auf dem Handy hinter dem Fragezeichen neben den Zoomknöpfen. Gespeicherte Logistikfilter werden
+  ignoriert.
 
 ## 0.2.18 - 2026-11-24
 

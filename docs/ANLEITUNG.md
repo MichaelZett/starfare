@@ -22,7 +22,7 @@ Kontaktadresse im Impressum.
 3. Der Gastgeber startet die Partie, sobald alle menschlichen Plätze besetzt sind.
 4. Wähle auf der Karte ein eigenes System und danach ein anderes System als Ziel.
    Lege die Schiffsanzahl fest und merke den Sendebefehl vor.
-5. Prüfe den Reiter **Befehle** und klicke auf **Runde abgeben**.
+5. Prüfe den Reiter **Flotten** und klicke auf **Runde abgeben**.
 6. Sobald alle Menschen abgegeben haben oder die Frist abläuft, wird die Runde
    ausgewertet. Sieh dir anschließend den **Bericht** an und bestätige offene Schlachten.
 
@@ -172,14 +172,14 @@ Mit `?layout=mobile` oder `?layout=desktop` an einer beliebigen Adresse legst du
 sie für die restliche Sitzung selbst fest.
 
 Auf der Karte zeigt das Handy oben einen kompakten Kopf mit Partie, Runde,
-Reichsübersicht, **Runde abgeben** und dem Menü (Logistik, Legende, Rundenregeln,
-Verlassen, Lobby). Darunter füllt die Karte den Bildschirm; unten wechselt eine
+Reichsübersicht, **Runde abgeben** und dem Menü (Rundenregeln, Verlassen, Aufgeben,
+Lobby). Darunter füllt die Karte den Bildschirm; unten wechselt eine
 Leiste zwischen **Karte** und **Übersicht**. Die Übersicht ist die Seitenleiste
 als Vollbild, dazu Bündnisse und Sammelbefehle.
 
 - Wische zum Verschieben; zoome mit zwei Fingern oder den runden Knöpfen am
   rechten Rand. Diese passen die Ansicht auch an das eigene Reich oder die ganze
-  Galaxie an.
+  Galaxie an; das Fragezeichen öffnet die **Kartenhilfe** mit der Legende.
 - Ein Tipp auf ein System öffnet seine Details in der Übersicht.
 - **Flotte senden** oder **Verlegung anlegen** führen zurück zur Karte. Ein Hinweis
   bleibt sichtbar, bis du das Ziel antippst oder **Zielwahl abbrechen** wählst.
@@ -188,18 +188,22 @@ als Vollbild, dazu Bündnisse und Sammelbefehle.
 Im Spiel und im Kartenkopf erscheinen Imperiumsnamen. Spielernamen in Klammern
 stehen nur in Übersichten und in der Diplomatie.
 
-Die Seitenleiste enthält **Kontakte, Details, Flotten, Befehle, Verlegungen,
-Logistik und Bericht**. Bei wenig Platz ersetzt das Auswahlfeld **Ansicht** die
+Die Seitenleiste enthält **Details, Flotten, Verlegungen und Bericht**. Bei wenig
+Platz ersetzt das Auswahlfeld **Ansicht** die
 Reiter; es bietet dieselben Bereiche. Sammelversand und **Rückgängig** stehen direkt am Kopf der Seitenleiste. Die kurzen Knopfbeschriftungen
 zeigen den vollständigen Aktionsnamen als Hilfetext. Einzelversand und Verlegungen behalten den aktuellen
-Reiter; Sammelbefehle öffnen den Befehlsreiter, eine ausgewertete Runde den Bericht. Aktualisierungen unveränderter Inhalte erhalten Eingaben und
+Reiter; Sammelbefehle öffnen den Reiter **Flotten**, eine ausgewertete Runde den Bericht. Aktualisierungen unveränderter Inhalte erhalten Eingaben und
 Fokus.
 
 In den Systemdetails stehen versendbare Schiffe und Gesamtbestand oben;
 außerdem die erwartete Schiffproduktion pro Runde. **Flotte senden** und
-**Verlegung anlegen** stehen direkt darunter.
-**Logistik** öffnet Zu- und Abflüsse und Ankünfte; bei Kolonien in SectorForces erweitert
+**Verlegung anlegen** stehen direkt darunter, danach die ein- und ausgehenden
+Verlegungen des Systems. **Logistik** öffnet die Verlegungsbilanz (eingehend,
+Produktion, ausgehend) und die Ankünfte; bei Kolonien in SectorForces erweitert
 heißt dieser Bereich **Kolonie & Logistik** und enthält auch die Kolonieangaben.
+Für fremde Systeme außerhalb der eigenen Sicht zeigen die Details die **Letzte
+Aufklärung**: Besitzer, gezählte oder geschätzte Schiffe, Produktion und die Runde
+des letzten Kontakts.
 **Hintergrund** enthält Beschreibungen, Umweltwerte und Besitzhistorie. Die geöffneten
 Bereiche bleiben bei Aktualisierungen und Systemwechseln geöffnet; die Angaben folgen der
 Auswahl. Hintergrundwerte folgen dem Kriegsnebel.
@@ -219,7 +223,7 @@ behält den Nettozufluss einer Runde zurück: Produktion + eingehende − ausgeh
 Auswahl und Zielwahl. Nach dem Bestätigen erscheint eine kurze Meldung; die
 Quellsicht bleibt geöffnet, sodass du gleich einen weiteren Auftrag beginnen kannst.
 
-Der Auftrag erscheint unter **Befehle**. Solange du die Runde noch nicht abgegeben
+Der Auftrag erscheint unter **Flotten**. Solange du die Runde noch nicht abgegeben
 hast, kannst du ihn **Stornieren** oder mit **Befehl bearbeiten** Menge und Ziel
 ändern. Ein Sendebefehl darf nicht mehr Schiffe vormerken, als am Ausgangssystem
 verfügbar sind.
@@ -261,7 +265,9 @@ Runde gewechselt, wird keine Teilmenge der Befehle übernommen.
 
 ### Unterwegs und Ankunftsvorschau
 
-Der Reiter **Flotten** zeigt eigene Flotten als Karten. Der aufklappbare Bereich
+Der Reiter **Flotten** zeigt reisende Flotten und die in dieser Runde vorgemerkten
+Befehle in einer Liste, gruppiert nach Ankunftsrunde; innerhalb einer Runde stehen
+die reisenden Flotten vor den Befehlen. Der aufklappbare Bereich
 **Gemeinsame Ankünfte** summiert reisende Flotten und vorgemerkte Sendungen nach
 Ziel und Ankunftsrunde. **Reisedetails** öffnet zusätzliche Reiseangaben.
 Die Routensuche schränkt die angezeigten Karten ein.
@@ -287,7 +293,7 @@ Das gemeinsame Limit aller ausgehenden Verlegungen ist die eigene Produktion plu
 die eingehenden Verlegungsmengen. Eingehende Schiffe brauchen trotzdem ihre normale
 Reisezeit. Wenn nötig, nutzt die Verlegung vorhandene Garnison. Nicht versandte
 Produktion bleibt am System. Die Karte zeigt die Routen
-violett gestrichelt mit ihrer Menge; **Logistik** hilft bei der Übersicht.
+violett gestrichelt mit ihrer Menge; der Reiter **Verlegungen** listet alle Routen.
 
 ## Runden, Fristen und Kommunikation
 
@@ -318,8 +324,10 @@ den Wiedereinstieg, kannst du später zurückkehren.
 Eine offene Kampfmeldung zeigt zunächst den Ort. Besitzer und Ergebnis am
 betroffenen System bleiben verdeckt, bis du die Schlacht bestätigt hast.
 Klicke die Meldung an, um die Wiedergabe zu öffnen, und bestätige mit
-**Ergebnis übernehmen**. Die Auswahl verändert ausschließlich die Darstellung;
-die Runde ist zu diesem Zeitpunkt bereits berechnet.
+**Ergebnis übernehmen**. Die Wiedergabe nennt über Schiffen und Stärken auch die Produktion
+des Systems, soweit du sie kennst; einen eigenen Eroberungsdialog gibt es nicht. Die
+Auswahl verändert ausschließlich die Darstellung; die Runde ist zu diesem Zeitpunkt
+bereits berechnet.
 
 Im Bericht wählst du die **Geschwindigkeit**:
 
@@ -333,8 +341,8 @@ Im Bericht wählst du die **Geschwindigkeit**:
 Bei **Sofort** erscheint **Alle offenen Schlachten auswerten**. Damit bestätigst du
 alle noch offenen Kämpfe der Runde, auch solche, die ein Berichtsfilter ausblendet.
 Während der Wiedergabe kannst du die Geschwindigkeit ändern und **Kampfgeräusche**
-ein- oder ausschalten. **Ton testen** prüft die Ausgabe; der Browser benötigt zuvor
-eine Nutzeraktion, um Ton freizugeben.
+ein- oder ausschalten; beim Einschalten erklingt ein kurzer Treffer. Der Browser
+benötigt zuvor eine Nutzeraktion, um Ton freizugeben.
 
 Bestätigungen bleiben je Konto, Partie, Runde und Ereignis gespeichert. Ein
 Neuladen oder anderes Gerät setzt sie nicht zurück. Geschwindigkeit und Ton ändern
@@ -515,7 +523,7 @@ können nicht als Vorlage dienen.
 
 ## Persönliche Einstellungen und Konto
 
-Geschwindigkeit, Ton, Berichts- und Logistikfilter, Routensuche und Seitenleistenbreite
+Geschwindigkeit, Ton, Berichtsfilter, Routensuche und Seitenleistenbreite
 werden je Konto gespeichert und bei einer späteren Anmeldung wieder geladen.
 Sprache bleibt sitzungsbezogen; Kartenposition und Zoom werden je Partie in der
 Browsersitzung behalten.
@@ -639,7 +647,7 @@ Zwischenstation beendet die ursprüngliche Route dort.
 Die Wiedergabe zeigt alle Seiten, die einmal ausgewürfelten Stärken und
 anschließend die gespeicherten Verluste jedes Imperiums. Bis zur persönlichen
 Bestätigung bleiben Besitzer, Endwerte und überlebende Unterstützung in Karte,
-Flottenliste und Logistik verborgen. Auch Neuladen umgeht das nicht. Erst nach
+Flottenliste und Systemdetails verborgen. Auch Neuladen umgeht das nicht. Erst nach
 der letzten offenen Schlacht erscheint ein ausstehendes Spielergebnis.
 Der Ergebnisdialog zählt verlorene Schiffe exakt und teilen Abschüsse
 anhand des verursachten Feuers auf, sodass jedes zerstörte Schiff insgesamt
@@ -754,10 +762,13 @@ wird aufgehoben. Die Rückmeldung nennt jede Änderung, z. B. „Verlegung nach 
 6 → 4/Runde“. Späterer Mehrbau erhöht nichts automatisch, und reiner Metallmangel
 ohne eigene Eingabe ändert keine Verlegung. Ältere Fassungen behalten ihre Routen.
 
-Die Logistiksicht nennt für Fördersysteme Ertrag je Punkt und Restvorkommen;
-**Nach Fördereignung sortieren** stellt die ergiebigsten Vorkommen nach vorn.
+In den Details eines eigenen Fördersystems listet **Eigene Systeme nach
+Fördereignung** alle eigenen Fördersysteme mit Ertrag je Punkt und Restvorkommen,
+die ergiebigsten zuerst; ein Klick wählt das System. Dort steht auch der Knopf
+**Förderautomatik**.
 
-Die Reichshinweise neben den Kennzahlen führen zu gefilterten Logistiklisten:
+Die Reichshinweise neben den Kennzahlen führen zu gefilterten Listen im Reiter
+**Details** (**Filter aufheben** zeigt wieder das gewählte System):
 Metallmangel, begrenzte Förderung, fehlende Arbeitskräfte und stockende Verlegungen.
 Die Gruppen zählen jeweils Systeme; sie dürfen nicht zu einer Gesamtsumme addiert
 werden. Hinweise verwenden gespeicherte Pläne und
@@ -818,7 +829,7 @@ Bevölkerung, Besiedlung und getrennte Forschungsgebiete bleiben für später.
 
 ## Dauerhafte Förderautomatik
 
-In **Logistik → Förderautomatik** kannst du eine freiwillige, reichsweite
+Mit **Förderautomatik** in den Details eines eigenen Fördersystems kannst du eine freiwillige, reichsweite
 Planung einschalten. Voreingestellt ist **aus**. Wähle die teilnehmenden Systeme,
 geschützte Systeme und den Zielvorrat in Verbrauchsrunden (0 bis 10, Vorgabe 1).
 **Globale Vorschau** zeigt den geplanten Metallverbrauch, Zielvorrat, prognostizierten
