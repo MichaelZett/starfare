@@ -30,6 +30,22 @@ class RoundEventTextsTest {
     }
 
     @Test
+    void aChangedJointStartSaysWhyAndHowManyShipsLeft() {
+        assertThat(RoundEventTexts.text(joint(TurnEvent.JointDeparture.Outcome.SOURCE_LOST, 0), false))
+                .isEqualTo("Geplanter Start Rigel → Vega entfällt: Rigel ist verloren.");
+        assertThat(RoundEventTexts.text(joint(TurnEvent.JointDeparture.Outcome.NO_SHIPS, 0), false))
+                .isEqualTo("Geplanter Start Rigel → Vega entfällt: In Rigel sind keine Schiffe mehr.");
+        assertThat(RoundEventTexts.text(joint(TurnEvent.JointDeparture.Outcome.NO_ROUTE, 0), false))
+                .isEqualTo("Geplanter Start Rigel → Vega entfällt: Vega ist von Rigel aus nicht mehr erreichbar.");
+        assertThat(RoundEventTexts.text(joint(TurnEvent.JointDeparture.Outcome.REDUCED, 5), false))
+                .isEqualTo("Geplanter Start Rigel → Vega: nur 5 von 12 Schiffen gestartet.");
+    }
+
+    private static TurnEvent.JointDeparture joint(TurnEvent.JointDeparture.Outcome outcome, int sent) {
+        return new TurnEvent.JointDeparture(1, 3, "Rigel", 7, "Vega", 12, sent, outcome);
+    }
+
+    @Test
     void aWonBattleNamesWhetherTheSystemWasNeutral() {
         String neutral = RoundEventTexts.text(new TurnEvent.BattleWon(1, 7, "Vega", 10, 4, 6, true), false);
         String enemy = RoundEventTexts.text(new TurnEvent.BattleWon(1, 7, "Vega", 10, 4, 6, false), false);
