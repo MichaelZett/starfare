@@ -398,3 +398,147 @@ SectorForces und beiden Spaceward-Versionen sowie verborgene Garnisonen und
 fremde Befehle. Die acht Profile sind keine garantierte Rangfolge und keine
 festen Schwierigkeitsstufen. Die 48 anhaltenden Fronten bleiben ein eigenes
 späteres Untersuchungsfeld.
+
+## Computerstärke und Zufallsstufen klassisch (K4) — 25.11.2026
+
+Kalibriert werden die Stufen des Dialogs „Neue Partie“ für **Klassisch**. Erweitert behält
+seine Vorschlagswerte bis Phase E.
+
+### Aufbau
+
+Neuer Modus `--mode=strength` (README, Strategy experiments). Er spielt Lobby-Partien statt
+der synthetischen Prüfstandkarten: dieselbe Erzeugung wie eine neue Partie (`GalaxyGenesis`,
+aus `DefaultGameRegistry` herausgelöst), Startwerte 4/8 mit Startanteil der Computer,
+Glockenkurve bis 10, Startausgleich, Ereignisse und Angreifer-Reihenfolge der Zufallsstufe,
+Sieg bei 70 %, Grenze 300 Runden, Kartenform Gleichmäßig. Sitz 1 ist der Mensch; ihn spielt
+ein festes Referenzprofil, die Computer spielen die Profile, die ihre Stärke zieht.
+Abgelehnte Sendungen (etwa an eine zerstörte Sonne) verfallen wie im Spiel.
+
+**Referenz BASELINE.** Sie ist die Spiel-KI seit dem ersten Stand, spielt ohne
+Sonderwissen und ohne Neigung zu einer Partieform (im Zweikampf mittelmäßig, mit mehreren
+Reichen das stärkste Profil). Ein Mensch wird im Zweikampf eher besser, mit mehreren
+Reichen eher anders spielen; die Quoten messen daher den Abstand der Stufen, sie sagen
+nicht voraus, wie oft ein bestimmter Mensch gewinnt. Intervalle: Wilson 95 %, jede Partie
+als unabhängig gezählt (jede Karte kommt je Zelle einmal vor).
+
+Messfehler im Prüfstand behoben: `BaselinePolicy` rief die Spiel-KI auf, die für einen
+Sitz mit gespeichertem anderem Profil dieses Profil spielte. Der Sitz plant jetzt immer mit
+der Basisstrategie. Ältere Serien betrifft das nicht; ihre Karten speicherten kein Profil.
+
+### Entwicklung (Karten 1–150, Mittel und Groß, Zufall Wenig)
+
+Je Zelle 150 Partien, Computerprofile und Startanteil fest vorgegeben
+(`--computer-profiles`, `--start-share`), noch ohne Auslosung der Heimat (unten).
+Quote = Siege der Referenz.
+
+| Spieler | Computer | Startanteil | Mittel 24 | Groß 40 |
+|---:|---|---|---|---|
+| 2 | BASELINE | 0,5 / 0,75 / 1,0 / 1,25 / 1,75 | 82 / 68 / 52 / 44 / 30 % | 69 / 55 / 49 / 45 / 37 % |
+| 2 | RUSH oder EXPANSION | 0,75 / 1,0 / 1,1 | 33 / 24 / 22 % | 3 / 1 / 1 % |
+| 2 | vier Profile (bisher Normal) | 0,75 / 1,0 | 41 / 29 % | 9 / 9 % |
+| 2 | DEFENSE | 1,0 | 70 % | 35 % |
+| 2 | BASELINE oder DEFENSE | 1,0 | 59 % | 43 % |
+| 2 | BASELINE oder RUSH | 1,25 / 1,5 / 1,75 | 29 / 23 / 19 % | 23 / 19 / 19 % |
+| 4 | BASELINE | 0,5 / 0,75 / 1,0 / 1,5 / 2,0 | 53 / 41 / 26 / 17 / 9 % | 58 / 43 / 35 / 29 / 27 % |
+| 4 | vier Profile | 1,0 / 1,5 | 59 / 53 % | 76 / 69 % |
+| 4 | RUSH oder EXPANSION | 1,25 / 1,5 | 49 / 47 % | 58 / 49 % |
+
+Die Rangfolge kippt mit der Spielerzahl (wie schon im Oktober). Rush, Expansion und
+Konzentration schlagen die Referenz im Zweikampf fast immer, auf Groß unabhängig vom
+Startanteil; mit vier Reichen bekämpfen sie sich gegenseitig, und die Referenz gewinnt
+mehr als den fairen Anteil. Die bisherige Normal-Mischung war deshalb im Zweikampf zu
+schwer und mit mehreren Reichen zu leicht. Nur die Basisstrategie reagiert fein auf den
+Startanteil.
+
+**Heimat-Auslosung.** Mit lauter gleichen Computern (Basisstrategie, gleicher Start) gewann
+bei drei Reichen Sitz 1 98 von 200 Partien, Sitz 3 nur 19 (Groß: 112 zu 13). Die gierige
+Heimatwahl nimmt das erste System zufällig und jedes weitere möglichst weit weg von den
+schon gewählten; das zuletzt gewählte liegt am engsten. Sitz 1 ist meist der Gastgeber.
+Die Sitze losen ihre Heimat jetzt aus; danach verteilen sich die Siege bei drei gleichen
+Reichen auf 58/59/82 (Mittel) bzw. 60/74/63 Partien (Groß).
+
+### Endwerte und Kontrolle (Karten 1001–1200, Zufall Wenig)
+
+| Stärke | Computer | Start (Produktion/Schiffe) |
+|---|---|---|
+| Einfach | Basisstrategie | ×0,5 (2/4) |
+| Normal | Basisstrategie | ×1 (4/8) |
+| Anspruchsvoll | Zweikampf: verdeckt Basisstrategie oder Rush; sonst Basisstrategie | ×1,5 (6/12) |
+
+Siegquote der Referenz, je Zelle 200 Partien, in Klammern 95 % (fairer Anteil 50/33/25 %):
+
+| Stärke | Größe | 2 Spieler | 3 Spieler | 4 Spieler |
+|---|---|---:|---:|---:|
+| Einfach | Mittel | 86 % (81–90) | 45 % (38–51) | 46 % (39–53) |
+| Einfach | Groß | 66 % (59–72) | 40 % (33–46) | 43 % (36–49) |
+| Normal | Mittel | 52 % (45–59) | 29 % (23–36) | 24 % (19–30) |
+| Normal | Groß | 42 % (35–49) | 30 % (24–37) | 27 % (21–34) |
+| Anspruchsvoll | Mittel | 23 % (18–29) | 26 % (20–33) | 10 % (7–15) |
+| Anspruchsvoll | Groß | 16 % (12–22) | 28 % (22–34) | 16 % (11–21) |
+
+Zusatz mit 80 Karten (3001–3080), Einfach/Normal/Anspruchsvoll: Klein 16 im Zweikampf
+90/46/23 %, mit vier Reichen 51/24/13 %; Riesig 64 im Zweikampf 51/30/10 %, mit vier Reichen
+33/19/16 %, dort bleiben aber 20–40 % der Partien nach 300 Runden offen.
+
+Entscheidung:
+
+- **Normal** spielt die Basisstrategie mit gleichem Start und liegt damit in jeder Größe
+  und Spielerzahl im fairen Bereich. Keine Mischung der anderen Profile schaffte das: sie
+  sind im Zweikampf zu stark und mit mehreren Reichen zu schwach. Die verdeckte Vielfalt
+  entfällt deshalb in Klassisch. Basisstrategie oder Verteidigung (59/43 %) fiel nach der
+  Auslosung auf Groß auf 35 % und wurde verworfen.
+- **Einfach** halbiert den Start. Im Zweikampf gewinnt die Referenz 66–90 % (Ziel 70–85 %,
+  Mittel knapp darüber, Groß knapp darunter), mit vier Reichen fast den doppelten fairen
+  Anteil. Bei drei Reichen ist der Vorsprung kleiner (40–45 % statt 33 %); ein noch
+  kleinerer Start (1/2) wäre kaum noch eine Partie.
+- **Anspruchsvoll** startet anderthalbfach. Im Zweikampf spielt je zur Hälfte Rush oder die
+  Basisstrategie: Rush allein ließ der Referenz auf Groß bei jedem Startanteil nur 0–3 %.
+  Mit mehreren Reichen trägt der Start allein den Vorsprung.
+
+Nicht erreicht: **Anspruchsvoll mit drei Reichen** liegt mit 26–28 % nur knapp unter dem
+fairen Drittel, also kaum „klar im Vorteil“. Auf Groß mit vier Reichen kam die Referenz in der
+Entwicklung auch gegen doppelten Start noch auf 27 %. Deutlich stärker werden die Computer
+dort nur mit neuer Planung (etwa gemeinsam gegen den Führenden), die K4 nicht einführt.
+
+### Partielänge und Nachbarsprung
+
+Runden bis zur Entscheidung (Median, Einfach/Normal/Anspruchsvoll): Zweikampf Mittel
+80/102/61, Groß 157/157/70; vier Reiche Mittel 88/86/92, Groß 137/147/141. Klein endet nach
+50–75 Runden, Riesig erst nach 200–240. Nächster Nachbar je System: 3 Runden bei 68–78 %,
+2 bei 10–22 %, 4 bei 9–13 %, Median 3 in jeder Größe. Nächste gegnerische Heimat im
+Zweikampf (Median): 13 (Klein), 16 (Mittel), 21 (Groß), 26 Runden (Riesig).
+
+Die Länge kommt vor allem aus der Planung der Basisstrategie (ein Ziel je Runde von der
+stärksten Basis), nicht aus der Reisezeit: Auf denselben Karten entscheidet Rush den
+Zweikampf auf Groß nach etwa 50 Runden. Die Geschwindigkeit (160 Bildpunkte je Runde,
+gemeinsam mit Erweitert) bleibt deshalb. Riesig ist gegen Computer sehr lang; dort hilft
+das Rundenlimit in den Details.
+
+### Zufallsstufen
+
+Normal, Mittel 24, 80 Karten (2001–2080), je drei Kampfstartwerte, jede Partie mit und ohne
+Ereignisse (gleiche Karte, gleiche Würfel); 240 Partien je Zelle. Werte für zwei / vier Reiche.
+
+| Stufe | Siegquote | Sieger wechselt mit dem Kampfstartwert, ohne Ereignisse | mit Ereignissen | Ereignisse drehen den Sieger | Runden Mittel (2 Reiche) |
+|---|---:|---:|---:|---:|---:|
+| Kein | 44 / 36 % | 0 / 0 % | 0 / 0 % | 0 / 0 % | 97 |
+| Wenig | 48 / 31 % | 10 / 20 % | 23 / 38 % | 11 / 22 % | 101 |
+| Mittel | 48 / 31 % | 16 / 19 % | 25 / 43 % | 17 / 21 % | 97 |
+| Viel | 44 / 32 % | 16 / 33 % | 33 / 54 % | 19 / 31 % | 92 |
+
+„Kein“ ist bei gleicher Karte und Strategiewahl vollständig bestimmt. Keine Stufe
+verschiebt Siegquote oder Partielänge merklich. Mit jeder Stufe wechseln mehr Sieger,
+bei „Viel“ deutlich: mit vier Reichen entscheidet dort in gut der Hälfte der Karten der
+Würfel mit, wer gewinnt. Die Anteile sind Obergrenzen, denn Basisstrategie gegen
+Basisstrategie mit gleichem Start ist der knappste Fall; eine ungleiche Partie kippt
+seltener. Wenig und Mittel liegen nahe beieinander, ihr Unterschied steckt vor allem in
+den Ereignissen. Kampfzufall 0/5/10/20 % und Ereignisse aus/×0,5/×1/×2 bleiben.
+
+### Nachweise
+
+Rohdaten lokal unter `build/strategy-harness/`: `k4-start` (Ausgangswerte, Karten 1–100),
+`k4-sweep/*` (Entwicklung), `k4-control` (Kontrolle vor der Auslosung), `k4-final`,
+`k4-sizes` und `k4-randomness` (Abschluss); je Ordner `invocation.txt`, `matches.csv` und
+`strength.md`. Java 25.0.3, Quellfingerabdruck der Abschlussläufe
+`fd19c1dd7c68e8d949918f15c23cdb15a5fd432e3e83ddd6b60e5d4a9b0c88c2`. Insgesamt rund
+26.700 Partien.

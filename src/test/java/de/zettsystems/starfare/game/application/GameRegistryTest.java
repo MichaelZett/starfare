@@ -65,8 +65,8 @@ class GameRegistryTest extends AbstractIntegrationTest {
             var p3Home = state.systems().stream().filter(s -> s.ownerId() != null && s.ownerId() == 3).findFirst().orElseThrow();
 
             assertThat(byId.get(p1Home.id()).productionPerTurn()).isEqualTo(4);
-            assertThat(byId.get(p2Home.id()).productionPerTurn()).isEqualTo(5);
-            assertThat(byId.get(p3Home.id()).productionPerTurn()).isEqualTo(5);
+            assertThat(byId.get(p2Home.id()).productionPerTurn()).isEqualTo(6);
+            assertThat(byId.get(p3Home.id()).productionPerTurn()).isEqualTo(6);
 
             state.systems().stream()
                     .filter(s -> s.ownerId() == null)

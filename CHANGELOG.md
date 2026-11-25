@@ -29,9 +29,13 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Rundenlimit). Sind alle anderen Sitze Computer, startet die Partie sofort. Neue Partien sind
   öffentlich, außer bei „Nur auf Einladung“. Die Varianten heißen in der Oberfläche nur noch
   **Klassisch** und **Erweitert**, ohne Versionsnummer.
-- **Computerstärke:** **Einfach** (Basisstrategie, Start mit 75 %), **Normal** (je Computer verdeckt
-  eine von vier Strategien) und **Anspruchsvoll** (die stärksten Profile aus dem Prüfstand, Start mit
-  125 %) ersetzen die Strategiewahl je Sitz.
+- **Computerstärke:** **Einfach**, **Normal** und **Anspruchsvoll** ersetzen die Strategiewahl je Sitz.
+  In klassischen Partien mit dem Prüfstand abgestimmt: Einfach spielt die Basisstrategie mit halbem
+  Start (Produktion 2, 4 Schiffe), Normal die Basisstrategie mit gleichem Start, Anspruchsvoll mit
+  anderthalbfachem Start (6 und 12) und im Zweikampf verdeckt Basisstrategie oder frühen Angriff.
+  Erweiterte Partien behalten vorerst ×0,75/×1/×1,25 und ihre Profile.
+- **Heimat wird ausgelost:** Welcher Sitz welches Heimatsystem bekommt, entscheidet das Los. Bisher
+  bekam der erste Sitz, meist der Gastgeber, die günstigste Lage.
 - **Zufallsstufe:** **Kein**, **Wenig** (Vorgabe), **Mittel** und **Viel** legen Kampfzufall (0/5/10/20 %),
   Häufigkeit der Ereignisse (aus, selten, normal, neu: häufig) und die Reihenfolge mehrerer Angreifer
   gemeinsam fest.

@@ -32,8 +32,18 @@ final class SimulationEngine {
     private final DefaultTurnEngine classic;
     private final SpacewardTurnEngine spaceward;
     private final SpacewardTurnEngine allianceSpaceward;
+    private final boolean dropRejectedSends;
 
     SimulationEngine() {
+        this(false);
+    }
+
+    /**
+     * @param dropRejectedSends whether a send the rules reject is dropped as in a real game, for example to a system a
+     *                          supernova destroyed; otherwise it stops the run as a policy error
+     */
+    SimulationEngine(boolean dropRejectedSends) {
+        this.dropRejectedSends = dropRejectedSends;
         var reports = new DefaultReportService();
         var navigation = new DefaultNavigationService();
         var combat = new DefaultCombatService(reports, combatRandom::nextDouble);
@@ -92,8 +102,11 @@ final class SimulationEngine {
             }
         });
         for (var send : orders.sends()) {
-            if (send.ownerId() != player || !fleets.queueSend(state, player,
-                    send.fromSystemId(), send.toSystemId(), send.ships(), send.beneficiaryId())) {
+            if (send.ownerId() != player) {
+                throw new IllegalStateException("Policy submitted a fleet order for another player: " + send);
+            }
+            if (!fleets.queueSend(state, player, send.fromSystemId(), send.toSystemId(), send.ships(), send.beneficiaryId())
+                    && !dropRejectedSends) {
                 throw new IllegalStateException("Policy submitted invalid fleet order: " + send);
             }
         }

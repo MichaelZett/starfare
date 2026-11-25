@@ -120,11 +120,20 @@ findest du im **Archiv** über **Mein Bereich**.
 
 ### Computerstärke
 
-| Stärke | Spielweise | Start der Computer |
+| Stärke | Spielweise (klassisch) | Start der Computer (klassisch) |
 | --- | --- | --- |
-| Einfach | Basisstrategie: stärkste Basis, nahes Ziel, begrenzter Versand | Produktion und Schiffe ×0,75 |
-| Normal | je Computer verdeckt zufällig: früher Angriff, Expansion, Kräftekonzentration oder Verteidigung | wie Menschen |
-| Anspruchsvoll | die im Prüfstand stärksten Profile; erweitert mit adaptivem Industrieausbau | Produktion und Schiffe ×1,25 |
+| Einfach | Basisstrategie: stärkste Basis, nahes Ziel, begrenzter Versand | halbe Produktion und Schiffe (2 und 4) |
+| Normal | Basisstrategie | wie Menschen (4 und 8) |
+| Anspruchsvoll | im Zweikampf verdeckt Basisstrategie oder früher Angriff, mit mehreren Reichen die Basisstrategie | anderthalbfache Produktion und Schiffe (6 und 12) |
+
+Die Werte sind mit dem Strategieprüfstand abgestimmt: Wer wie die Basisstrategie spielt,
+gewinnt im Zweikampf gegen **Einfach** etwa drei bis vier von fünf Partien, gegen
+**Normal** etwa jede zweite und gegen **Anspruchsvoll** etwa jede fünfte; mit mehreren
+Reichen liegt **Normal** beim fairen Anteil, **Einfach** darüber und **Anspruchsvoll**
+darunter. Welche Heimat welcher Sitz bekommt, wird
+ausgelost. In den erweiterten Regeln spielen normale Computer verdeckt früher Angriff,
+Expansion, Kräftekonzentration oder Verteidigung, anspruchsvolle den adaptiven
+Industrieausbau; sie starten mit ×0,75, ×1 oder ×1,25.
 
 Die Computer nutzen nur sichtbare Informationen; verborgene Garnisonen und
 gegnerische Befehle erhalten sie nicht. Die Stärke wird mit der Partie gespeichert

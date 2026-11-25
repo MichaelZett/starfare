@@ -23,11 +23,20 @@ final class MatchRunner {
 
     static MatchResult continueFrom(Scenario scenario, List<Strategy> strategies, GameState checkpoint,
                                     String experiment, SimulationEngine.Intervention intervention) {
+        return continueFrom(scenario, strategies, checkpoint, experiment, intervention, new SimulationEngine());
+    }
+
+    /** Plays a lobby game to its end; like the real game, sends the rules reject are dropped. */
+    static MatchResult playLobbyGame(Scenario scenario, List<Strategy> strategies, GameState start, String experiment) {
+        return continueFrom(scenario, strategies, start, experiment, SimulationEngine.Intervention.NONE, new SimulationEngine(true));
+    }
+
+    private static MatchResult continueFrom(Scenario scenario, List<Strategy> strategies, GameState checkpoint, String experiment,
+                                            SimulationEngine.Intervention intervention, SimulationEngine engine) {
         if (checkpoint.gameOver() || !scenario.rules().equals(checkpoint.ruleset())) {
             throw new IllegalArgumentException("Checkpoint must be running with matching rules");
         }
         var state = GameState.fromSnapshot(GameState.toSnapshot(checkpoint));
-        var engine = new SimulationEngine();
         var metrics = new ArrayList<MatchResult.RoundMetric>();
         var orders = new ArrayList<String>();
         long[] produced = new long[strategies.size()];

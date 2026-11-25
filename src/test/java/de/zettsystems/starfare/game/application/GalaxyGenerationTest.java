@@ -77,7 +77,7 @@ class GalaxyGenerationTest extends AbstractIntegrationTest {
                     .map(player -> state.systems().stream().filter(s -> Integer.valueOf(player.id()).equals(s.ownerId()))
                             .findFirst().orElseThrow().productionPerTurn()).toList());
             assertThat(humanHomes).containsOnly(GameConfig.START_PRODUCTION);
-            assertThat(computerHomes).as("%s", strength).containsOnly(strength.computerStart(GameConfig.START_PRODUCTION));
+            assertThat(computerHomes).as("%s", strength).containsOnly(strength.computerStart(RulesetRef.SECTOR_FORCES, GameConfig.START_PRODUCTION));
         }
     }
 

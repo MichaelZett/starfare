@@ -20,8 +20,12 @@ class AiStrategySetupTest {
 
         var normal = registry.createGame(setup(), "host", "Normal");
         List<Player> normalPlayers = registry.readState(normal, state -> List.copyOf(state.players()));
-        assertThat(normalPlayers.subList(1, 3)).extracting(Player::aiStrategy)
-                .allMatch(List.of(AiStrategy.RUSH, AiStrategy.EXPANSION, AiStrategy.CONCENTRATION, AiStrategy.DEFENSE)::contains);
+        // Normal classic computers plan like the baseline: other profiles were unfair in duels and larger games.
+        assertThat(normalPlayers.subList(1, 3)).extracting(Player::aiStrategy).containsOnly(AiStrategy.BASELINE);
+
+        var duel = registry.createGame(setup().seatPlayers(1, 1), "host", "Duel");
+        List<Player> duelPlayers = registry.readState(duel, state -> List.copyOf(state.players()));
+        assertThat(duelPlayers.get(1).aiStrategy()).isEqualTo(AiStrategy.BASELINE);
     }
 
     @Test

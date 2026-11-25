@@ -1,12 +1,14 @@
 package de.zettsystems.starfare.simulation;
 
 import de.zettsystems.starfare.ai.application.DefaultAiService;
+import de.zettsystems.starfare.ai.values.AiStrategy;
 import de.zettsystems.starfare.ai.application.DefaultSpacewardPlanning;
 import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.application.PlayerViewBuilder;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.Player;
 import java.util.HashMap;
 import java.util.List;
 
@@ -17,7 +19,9 @@ final class BaselinePolicy {
     static StrategyOrders plan(GameState original, int player, PlayerViewBuilder views) {
         var state = GameState.copyOf(original);
         state.pendingOrders().clear();
-        state.players().replaceAll(p -> p.id() == player ? p.asAi() : p.asHuman());
+        // The seat plays the baseline even if the game stored another profile for it.
+        state.players().replaceAll(p -> p.id() == player
+                ? new Player(p.id(), p.name(), true, p.colorHex(), p.empireName(), AiStrategy.BASELINE) : p.asHuman());
         var fleets = new DefaultFleetService();
         if (state.ruleset().isSpaceward()) {
             new DefaultSpacewardPlanning(new DefaultEconomyService(), views).plan(state, fleets);

@@ -18,6 +18,10 @@ public final class StrategyBenchmark {
             InvestmentBenchmark.main(args);
             return;
         }
+        if (java.util.Arrays.asList(args).contains("--mode=strength")) {
+            StrengthBenchmark.main(args);
+            return;
+        }
         if (java.util.Arrays.asList(args).contains("--mode=economy")) {
             EconomyBenchmark.main(args);
             return;

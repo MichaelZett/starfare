@@ -1,6 +1,6 @@
 package de.zettsystems.starfare.game.application;
 
-import de.zettsystems.starfare.game.domain.GalaxyPlacement;
+import de.zettsystems.starfare.game.domain.GalaxyGenesis;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Spring-injected GameSessionStore is kept by reference for the bean's lifetime by design.")
 public class DefaultGameRegistry implements GameRegistry {
-    private static final List<String> AI_NAMES = List.of("Orion", "Lyra", "Vega", "Nova", "Atlas",
-            "Mira", "Sagan", "Astra", "Kepler", "Selene");
     private final GameSessionStore store;
     private final GameAccessPolicy access;
     private final RulesetCatalog catalog;
@@ -273,154 +271,7 @@ public class DefaultGameRegistry implements GameRegistry {
         return store.unloadInactiveSingleHumanGames(inactivity);
     }
 
-    private void initializeState(GameState state, GameSetup setup) {
-        state.resetForNewGame();
-        state.rememberSetup(setup);
-        // Observers, re-entry and the battle presentation are always allowed; the randomness level sets the dice.
-        state.configureLobby(true, true, true, setup.combatRandomnessPercent());
-        state.configureVictoryRules(setup.victoryRules());
-        state.configureRoundRules(setup.roundRules());
-        state.players().clear();
-        state.systems().clear();
-        state.fleets().clear();
-        state.reports().clear();
-        state.intel().clear();
-
-        var r = new Random(System.nanoTime());
-        int pid = 1;
-        for (int i = 1; i <= setup.humanPlayers(); i++) {
-            int seatId = pid++;
-            state.players().add(new Player(seatId, "P" + i, false, setup.colorForSeat(i - 1)));
-            state.originalHumanPlayerIds().add(seatId);
-        }
-        ComputerStrength strength = setup.computerStrength();
-        for (int i = 1; i <= setup.aiPlayers(); i++) {
-            String aiName = aiName(i);
-            state.players().add(new Player(pid++, aiName, true, setup.colorForSeat(setup.humanPlayers() + i - 1),
-                    EmpireNameGenerator.forAi(i), strength.strategy(setup.ruleset(), setup.totalPlayers(), r)));
-        }
-        for (Player p : state.players()) {
-            state.intel().put(p.id(), new HashMap<>());
-        }
-
-        List<String> names = SystemNameGenerator.sample(setup.systemCount(), r);
-        List<double[]> positions = GalaxyPlacement.positionsFor(setup.systemCount(), setup.galaxyLayout(), state.extent(), r);
-        for (int i = 1; i <= setup.systemCount(); i++) {
-            double[] pos = positions.get(i - 1);
-            int prod = neutralProduction(setup.maxProduction(), r);
-            int garrison = Math.max(1, prod - 1);
-            state.systems().add(new StarSystem(i, names.get(i - 1), pos[0], pos[1], null, garrison, prod, true));
-        }
-
-        List<StarSystem> homes = homeSystems(state, r);
-        for (int playerSeat = 0; playerSeat < state.players().size(); playerSeat++) {
-            Player p = state.players().get(playerSeat);
-            StarSystem s = homes.get(playerSeat);
-            int startProduction = p.ai() ? strength.computerStart(GameConfig.START_PRODUCTION) : GameConfig.START_PRODUCTION;
-            int startGarrison = Math.max(p.ai() ? strength.computerStart(GameConfig.START_GARRISON)
-                    : GameConfig.START_GARRISON, startProduction);
-            state.updateSystem(s.id(), current -> current.colonize(p.id(), startGarrison, startProduction));
-        }
-        List<Integer> homeIds = homes.stream().limit(state.players().size()).map(StarSystem::id).toList();
-        state.updateCosmic(cosmic -> cosmic.rememberHomes(homeIds));
-        spaceOut(state, GameConfig.SPACEOUT_ITERATIONS, GameConfig.SPACEOUT_MIN_DIST);
-        if (setup.sectorOptions().positionalBalance()) {
-            // After spacing out: the balance depends on the final travel times.
-            de.zettsystems.starfare.game.domain.StartBalance.apply(state, homeIds);
-        }
-    }
-
-    private static String aiName(int index) {
-        String name = AI_NAMES.get((index - 1) % AI_NAMES.size());
-        int series = (index - 1) / AI_NAMES.size();
-        return series == 0 ? name : name + " " + (series + 1);
-    }
-
-    /**
-     * Bell curve from 1 to the highest production: the middle of the range is the expectation, two sigma reach the
-     * edges. Outliers are drawn again instead of clamped, otherwise they would pile up on the edges.
-     */
-    private static int neutralProduction(int max, Random r) {
-        int min = GameConfig.MIN_PRODUCTION;
-        if (max <= min) {
-            return min;
-        }
-        double mean = (min + max) / 2.0;
-        double sigma = (max - min) / 4.0;
-        for (int attempt = 0; attempt < 10; attempt++) {
-            long value = Math.round(mean + r.nextGaussian() * sigma);
-            if (value >= min && value <= max) {
-                return (int) value;
-            }
-        }
-        return (int) Math.round(mean);
-    }
-
-    private static List<StarSystem> homeSystems(GameState state, Random r) {
-        var candidates = new ArrayList<>(state.systems());
-        Collections.shuffle(candidates, r);
-        int needed = state.players().size();
-        if (needed >= candidates.size()) {
-            return candidates.subList(0, Math.min(needed, candidates.size()));
-        }
-        // Greedy moeglichst weit auseinander: sonst entscheidet der Zufall der
-        // Startnachbarschaft die Partie, bevor der erste Zug laeuft.
-        var chosen = new ArrayList<StarSystem>(needed);
-        chosen.add(candidates.removeFirst());
-        while (chosen.size() < needed) {
-            StarSystem best = candidates.getFirst();
-            double bestDist = -1;
-            for (StarSystem candidate : candidates) {
-                double nearest = chosen.stream()
-                        .mapToDouble(c -> Math.hypot(c.x() - candidate.x(), c.y() - candidate.y()))
-                        .min().orElse(0);
-                if (nearest > bestDist) {
-                    bestDist = nearest;
-                    best = candidate;
-                }
-            }
-            candidates.remove(best);
-            chosen.add(best);
-        }
-        return chosen;
-    }
-
-    private static void spaceOut(GameState state, int iterations, double minDist) {
-        GalaxyExtent extent = state.extent();
-        double minX = extent.marginX();
-        double maxX = extent.width() - minX;
-        double minY = extent.marginY();
-        double maxY = extent.height() - minY;
-        for (int it = 0; it < iterations; it++) {
-            for (int i = 0; i < state.systems().size(); i++) {
-                for (int j = i + 1; j < state.systems().size(); j++) {
-                    StarSystem a = state.systems().get(i);
-                    StarSystem b = state.systems().get(j);
-                    double dx = b.x() - a.x();
-                    double dy = b.y() - a.y();
-                    double dist = Math.hypot(dx, dy);
-                    if (dist < 1e-6) {
-                        dx = 1;
-                        dy = 0;
-                        dist = 1;
-                    }
-                    if (dist < minDist) {
-                        double push = (minDist - dist) / 2.0;
-                        double ux = dx / dist;
-                        double uy = dy / dist;
-                        double ax = clamp(a.x() - ux * push, minX, maxX);
-                        double ay = clamp(a.y() - uy * push, minY, maxY);
-                        double bx = clamp(b.x() + ux * push, minX, maxX);
-                        double by = clamp(b.y() + uy * push, minY, maxY);
-                        state.systems().set(i, a.relocateTo(ax, ay));
-                        state.systems().set(j, b.relocateTo(bx, by));
-                    }
-                }
-            }
-        }
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return Math.clamp(v, lo, hi);
+    private static void initializeState(GameState state, GameSetup setup) {
+        GalaxyGenesis.populate(state, setup, new Random(System.nanoTime()));
     }
 }

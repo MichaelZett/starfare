@@ -748,6 +748,22 @@ farthest-next home selection, uniform neutral production 1–10, home capacity 5
 and 20 ships. They omit the lobby's final spacing relaxation and random naming;
 they are not claimed to reproduce its full map distribution.
 
+`--mode=strength` calibrates the computer strengths of classic games on lobby galaxies:
+the same generation, start values, start balance, events and attack order as a new game
+(`GalaxyGenesis`). Seat 1 is the person, played by `--reference=BASELINE`; the computers
+play the profiles their strength draws. Rejected sends are dropped as in a real game.
+Dimensions: `--strengths=EASY,NORMAL,HARD`, `--randomness=NONE,LOW,MEDIUM,HIGH`,
+`--events=on,off` (pairs the same games with and without events), `--systems=24,40`
+(offered galaxy sizes only), `--players=2,4`, `--layout=EVEN`, `--seeds`, `--first-seed`,
+`--combat-seeds`, `--rounds=300` and `--threads`. `--start-share=0.9` and
+`--computer-profiles=RUSH,EXPANSION` try other values than the built-in ones.
+`strength.md` lists the reference's win rate with a Wilson interval, game lengths, rates per
+drawn profile, winners changed by the combat seed or by events and neighbour travel rounds.
+
+```powershell
+.\gradlew.bat strategyBenchmark -x vaadinBuildFrontend "-PstrategyArgs=--mode=strength --systems=24,40 --players=2,4 --seeds=200 --first-seed=1001 --threads=2"
+```
+
 `matches.csv` records rules/version, seeds, seat assignments, outcome and a SHA-256
 fingerprint of resolved gameplay. `rounds.csv` records systems, ships, capacity,
 production, losses and industrial investment per empire and round. `orders.csv`
