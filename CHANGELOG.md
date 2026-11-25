@@ -6,6 +6,23 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- **Erweitert neu (Regelfassung 2.0.0):** Erweitert ist jetzt Klassisch plus ausbaubare Industrie,
+  begrenzte Flugreichweite mit Zwischenstationen, Bündnisse und gemeinsame Schlachten. Entfallen
+  sind Metall, Förderung und Förderautomatik, Recycling, Kolonien, Schiffsforschung, der
+  Planungsdialog mit drei Reglern und die Reichshinweise. Jedes System teilt seine Kapazität nur
+  noch zwischen Schiffbau und Ausbau; die ersten Ausbaustufen sind günstig. In Erweitert ist der
+  Bündnissieg (70 % der Systeme gemeinsam) immer möglich.
+- **Alte erweiterte Partien:** Partien der Fassungen 1.x lassen sich nicht mehr öffnen. Lobby,
+  beendete Partien und offene Entscheidungen der Plattform lassen sie ohne Fehler aus.
+- **Computerstärke in Erweitert neu eingestellt:** Einfach spielt die Basisstrategie mit halbem
+  Start, Normal die Basisstrategie mit gleichem Start, Anspruchsvoll die adaptive Industrie.
+  Bisher war Einfach kaum leichter als Normal, und Normal zog Profile, die ohne Industrieausbau
+  fast immer verlieren.
+- **Wieder Reiter in der Seitenleiste:** Details, Flotten, Verlegungen und Bericht sind auch in der
+  schmalen Seitenleiste und auf dem Telefon vier Reiter statt einer Auswahlliste.
+
 ## 0.2.19 - 2026-11-25
 
 - **Neue Namen der Varianten:** Starfare setzt SectorForces um, mit klassischen und erweiterten Regeln.
