@@ -40,7 +40,8 @@ class NavigationJourneyTest extends AbstractMapJourneyTest {
         assertThat(mapSystem("Beta").getElement().getAttribute("data-reach")).isEqualTo("direct");
         assertThat(mapSystem("Delta").getElement().getAttribute("data-reach")).isEqualTo("stations");
         assertThat(mapSystem("Remote 5").getElement().getAttribute("data-reach")).isEqualTo("none");
-        assertThat(mapSystem("Beta").getElement().getProperty("title")).contains("Direkt erreichbar · 100 % der direkten Reichweite");
+        assertThat(mapSystem("Beta").getElement().getProperty("title")).contains("Direkt erreichbar").doesNotContain("%");
+        assertThat(mapSystem("Delta").getElement().getProperty("title")).contains("Über 2 Stationen");
         select("Delta");
         assertThat(find(Button.class, openedDialog()).withClassName("route-stop").all())
                 .extracting(Button::getText).containsExactly("Alpha", "Beta", "Gamma", "Delta");
@@ -49,11 +50,11 @@ class NavigationJourneyTest extends AbstractMapJourneyTest {
         assertThat(find(IntegerField.class, openedDialog()).single().getValue()).isEqualTo(amount);
         assertThat(view().plannedOrders()).isEmpty();
         assertThat(text("send-fleet-duration")).contains("2 Aufenthalten", "Ankunft Runde " + arrival);
-        assertThat(text("send-fleet-range")).contains("Nur über Stationen · 300 % der direkten Reichweite");
+        assertThat(text("send-fleet-range")).isEqualTo("Über 2 Stationen");
         dialogClick("Abbrechen");
         openSend("Alpha", "Remote 5", false);
         assertThat(text("send-fleet-duration")).contains("Kein erreichbarer Weg");
-        assertThat(text("send-fleet-range")).contains("Kein Weg ·");
+        assertThat(text("send-fleet-range")).isEqualTo("Kein Weg");
         assertThat(find(Button.class, openedDialog()).withText("Flotte senden").single().isEnabled()).isFalse();
         dialogClick("Abbrechen");
     }

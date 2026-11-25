@@ -72,10 +72,10 @@ public final class StrategyBenchmark {
             var state = scenario.create(seats.size());
             if (alliance) {
                 var diplomacy = new DefaultDiplomacyService();
-                boolean found = diplomacy.act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 3));
+                boolean found = diplomacy.act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2));
                 if (!found) { throw new IllegalStateException("Alliance setup failed"); }
                 int proposal = state.diplomacy().proposals().getFirst().id();
-                if (!diplomacy.act(state, 2, new DiplomacyOrder(DiplomacyOrder.Action.APPROVE, proposal, 0))) {
+                if (!diplomacy.act(state, 2, new DiplomacyOrder(DiplomacyOrder.Action.APPROVE, proposal))) {
                     throw new IllegalStateException("Alliance approval failed");
                 }
             }

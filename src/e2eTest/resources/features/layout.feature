@@ -6,6 +6,6 @@ Funktionalität: Layout-Sicherung beim Umzug auf Browserless
     Dann meldet die Browser-Konsole keine Fehler
 
   @economy-layout
-  Szenario: Industrie und Produktionsplanung passen auf beide Desktopbreiten
+  Szenario: Industrie mit Ausbauregler passt auf beide Desktopbreiten
     Wenn ich die Industrie bei beiden Desktopbreiten prüfe
     Dann meldet die Browser-Konsole keine Fehler

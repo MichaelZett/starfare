@@ -61,7 +61,6 @@ public class NavigationLayoutSteps {
         browser.driver().navigate().refresh();
         browser.clickTabWithText("Flotten");
         browser.awaitTextIn(".fleet-travel-card", "Auftanken in Beta");
-        browser.openDetailsWithText("Reisedetails");
         browser.awaitTextIn(".fleet-travel-card .route-strip", "Gamma");
         captureRefuelling();
     }

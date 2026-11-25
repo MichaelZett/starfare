@@ -78,6 +78,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     @SuppressWarnings("NullAway.Init")
     private GameId gameId;
     private boolean reviewing;
+    /** The shown game limits flight range; the map help then explains stations. */
+    private boolean routeRules;
     private @Nullable VisibleSystem selectedSystem;
     private @Nullable VisibleSystem selectedFrom;
     private TargetSelection targetSelection = TargetSelection.NONE;
@@ -179,7 +181,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             refresh();
         });
         mobile = phone ? new MobileMapLayout(List.of(header, roundStatus, spectatorControls, reviewControls), gameOverBanner,
-                mapCanvas, fleetsPanel, this::cancelTargetSelectionAndRefresh) : null;
+                mapCanvas, fleetsPanel, this::cancelTargetSelectionAndRefresh, () -> routeRules) : null;
         layOut(frame);
     }
 
@@ -238,7 +240,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         left.setWidthFull();
         left.setHeightFull();
         left.addClassName("map-left");
-        left.add(gameOverBanner, new MapControls(mapCanvas), mapCanvas);
+        left.add(gameOverBanner, new MapControls(mapCanvas, () -> routeRules), mapCanvas);
         left.setFlexGrow(1, mapCanvas);
 
         var content = new SplitLayout(left, fleetsPanel);
@@ -416,6 +418,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             return;
         }
         this.gameId = candidate;
+        routeRules = game.summaryFor(candidate, account).map(summary -> summary.ruleset().isSpaceward()).orElse(false);
         mapCanvas.useGame(candidate);
         if (diplomacyDialog != null) { diplomacyDialog.close(); diplomacyDialog = null; }
         displayedTurn = null;

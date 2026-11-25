@@ -65,11 +65,10 @@ final class RangeOverlay {
     }
 
     static String describe(RangeView.Target target) {
-        String key = switch (target.reach()) {
-            case DIRECT -> RouteKeys.REACH_DIRECT;
-            case STATIONS -> RouteKeys.REACH_STATIONS;
-            case NONE -> RouteKeys.REACH_NONE;
+        return switch (target.reach()) {
+            case DIRECT -> I18n.t(RouteKeys.REACH_DIRECT);
+            case STATIONS -> I18n.t(RouteKeys.REACH_STATIONS, target.stations());
+            case NONE -> I18n.t(RouteKeys.REACH_NONE);
         };
-        return I18n.t(key, target.percent());
     }
 }

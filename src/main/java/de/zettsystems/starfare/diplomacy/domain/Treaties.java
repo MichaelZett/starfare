@@ -6,13 +6,17 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-/** Pure unanimous voting; stale proposals are discarded whenever the electorate changes. */
+/**
+ * Pure unanimous voting; stale proposals are discarded whenever the electorate changes. Every new
+ * alliance gets the fixed notice period {@link AllianceGroup#NOTICE_ROUNDS}; notice periods are
+ * never negotiated.
+ */
 public final class Treaties {
     private Treaties() { }
     public static Optional<DiplomacyState> apply(DiplomacyState state, int player, DiplomacyOrder order, int turn, Set<Integer> players) {
-        if (!players.contains(player) || order.noticeRounds() < 0 || order.noticeRounds() > 50) { return Optional.empty(); }
+        if (!players.contains(player)) { return Optional.empty(); }
         return switch (order.action()) {
-            case FOUND, JOIN, NOTICE -> propose(state, player, order, players);
+            case FOUND, JOIN -> propose(state, player, order, players);
             case APPROVE, REJECT -> vote(state, player, order.subject(), order.action() == DiplomacyOrder.Action.APPROVE);
             case LEAVE -> leave(state, player, turn);
         };
@@ -26,15 +30,14 @@ public final class Treaties {
             if (own.isPresent() || player == order.subject() || !players.contains(order.subject()) || state.groupFor(order.subject()).isPresent()) { return Optional.empty(); }
             voters.add(order.subject()); kind = TreatyProposal.Kind.FOUND;
         } else {
-            var group = order.action() == DiplomacyOrder.Action.NOTICE ? own
-                    : state.groups().stream().filter(candidate -> candidate.id() == order.subject()).findFirst();
-            if (group.isEmpty() || (order.action() == DiplomacyOrder.Action.JOIN && own.isPresent())) { return Optional.empty(); }
+            var group = state.groups().stream().filter(candidate -> candidate.id() == order.subject()).findFirst();
+            if (group.isEmpty() || own.isPresent()) { return Optional.empty(); }
             voters.addAll(group.orElseThrow().members()); groupId = group.orElseThrow().id();
-            kind = order.action() == DiplomacyOrder.Action.NOTICE ? TreatyProposal.Kind.NOTICE : TreatyProposal.Kind.JOIN;
+            kind = TreatyProposal.Kind.JOIN;
         }
         if (state.proposals().stream().anyMatch(p -> p.voters().stream().anyMatch(voters::contains))) { return Optional.empty(); }
         var pending = new ArrayList<>(state.proposals());
-        pending.add(new TreatyProposal(state.nextId(), kind, groupId, player, order.noticeRounds(), voters, Set.of(player)));
+        pending.add(new TreatyProposal(state.nextId(), kind, groupId, player, AllianceGroup.NOTICE_ROUNDS, voters, Set.of(player)));
         return Optional.of(new DiplomacyState(state.nextId() + 1, state.groups(), pending));
     }
     private static Optional<DiplomacyState> vote(DiplomacyState state, int player, int proposalId, boolean approve) {
@@ -48,19 +51,14 @@ public final class Treaties {
             proposal = proposal.approve(player);
             if (!proposal.unanimous()) { pending.add(proposal); }
             else if (proposal.kind() == TreatyProposal.Kind.FOUND) {
-                groups.add(new AllianceGroup(state.nextId(), proposal.voters(), proposal.noticeRounds(), java.util.Map.of()));
+                groups.add(new AllianceGroup(state.nextId(), proposal.voters(), AllianceGroup.NOTICE_ROUNDS, java.util.Map.of()));
                 return Optional.of(new DiplomacyState(state.nextId() + 1, groups, pending));
-            } else {
+            } else if (proposal.kind() == TreatyProposal.Kind.JOIN) {
                 var completed = proposal;
-                groups.replaceAll(group -> completeConsent(group, completed));
+                groups.replaceAll(group -> group.id() == completed.groupId() ? group.admit(completed.candidate()) : group);
             }
         }
         return Optional.of(new DiplomacyState(state.nextId(), groups, pending));
-    }
-    private static AllianceGroup completeConsent(AllianceGroup group, TreatyProposal proposal) {
-        if (group.id() != proposal.groupId()) { return group; }
-        if (proposal.kind() == TreatyProposal.Kind.JOIN) { return group.admit(proposal.candidate()); }
-        return group.agreeNotice(proposal.noticeRounds());
     }
     private static Optional<DiplomacyState> leave(DiplomacyState state, int player, int turn) {
         var own = state.groupFor(player);
@@ -68,6 +66,7 @@ public final class Treaties {
         var groups = state.groups().stream().map(group -> group.id() == own.orElseThrow().id() ? group.announceDeparture(player, turn) : group).toList();
         return Optional.of(new DiplomacyState(state.nextId(), groups, state.proposals()));
     }
+    /** Applies due departures; former notice changes lapse like proposals whose electorate changed. */
     public static DiplomacyState beginRound(DiplomacyState state, int turn) {
         var groups = new ArrayList<AllianceGroup>();
         var changed = new HashSet<Integer>();
@@ -80,6 +79,7 @@ public final class Treaties {
             groups.add(new AllianceGroup(group.id(), remaining, group.noticeRounds(), departures));
         }
         return new DiplomacyState(state.nextId(), groups, state.proposals().stream()
+                .filter(proposal -> proposal.kind() != TreatyProposal.Kind.NOTICE)
                 .filter(proposal -> proposal.voters().stream().noneMatch(changed::contains)).toList());
     }
 }

@@ -104,10 +104,10 @@ class AllianceVictoryTest {
         state.players().addAll(List.of(new Player(1, "One", true, "#56b4e9"), new Player(2, "Two", true, "#d55e00")));
         state.start();
         assertThat(state.victoryRules().allianceVictoryAllowed()).isFalse();
-        assertThat(new DefaultDiplomacyService().act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 3))).isFalse();
+        assertThat(new DefaultDiplomacyService().act(state, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2))).isFalse();
         var allowed = new GameState(); allowed.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));
         allowed.players().addAll(state.players()); allowed.start();
-        assertThat(new DefaultDiplomacyService().act(allowed, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 3))).isTrue();
+        assertThat(new DefaultDiplomacyService().act(allowed, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2))).isTrue();
         var input1 = new VictoryRules(80, true, true, 90);
         assertThatThrownBy(() -> state.configureVictoryRules(input1)).isInstanceOf(IllegalStateException.class);
         var classic = new GameState(); classic.rememberSetup(GameSetup.defaults());

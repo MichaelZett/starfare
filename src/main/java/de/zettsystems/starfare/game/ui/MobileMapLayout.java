@@ -22,7 +22,7 @@ final class MobileMapLayout extends Div {
     private final Button panelTab;
 
     MobileMapLayout(List<Component> top, Component gameOverBanner, MapCanvas canvas,
-                    FleetAndOrdersPanel panel, Runnable onCancelTarget) {
+                    FleetAndOrdersPanel panel, Runnable onCancelTarget, java.util.function.BooleanSupplier routeRules) {
         addClassName("mobile-map");
         var head = new Div(top.toArray(Component[]::new));
         head.addClassName("mobile-map-top");
@@ -33,7 +33,7 @@ final class MobileMapLayout extends Div {
                 icon(VaadinIcon.MINUS, UiTexts.MAP_ZOOM_OUT, () -> canvas.zoom(1 / 1.2)),
                 icon(VaadinIcon.HOME, UiTexts.MAP_FIT_EMPIRE, () -> canvas.fit(true)),
                 icon(VaadinIcon.EXPAND_SQUARE, UiTexts.MAP_FIT_GALAXY, () -> canvas.fit(false)),
-                icon(VaadinIcon.QUESTION_CIRCLE_O, UiTexts.MAP_HELP, MapLegend::open));
+                icon(VaadinIcon.QUESTION_CIRCLE_O, UiTexts.MAP_HELP, () -> MapLegend.open(routeRules.getAsBoolean())));
         zoom.addClassName("mobile-map-zoom");
 
         var cancel = new Button(I18n.t(UiTexts.MAP_TARGET_SELECTION_CANCEL), _ -> onCancelTarget.run());

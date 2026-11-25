@@ -10,10 +10,7 @@ public final class DiplomacyKeys {
     public static final String APPROVED = "diplomacy.approved";
     public static final String WAITING = "diplomacy.waiting";
     public static final String REMAINING = "diplomacy.remaining";
-    public static final String EDIT_NOTICE = "diplomacy.editNotice";
-    public static final String FOUND_WITH = "diplomacy.foundWith";
     public static final String LEAVE_TITLE = "diplomacy.leaveTitle";
     public static final String LEAVE_EFFECT = "diplomacy.leaveEffect";
     public static final String CONFIRM_LEAVE = "diplomacy.confirmLeave";
-    public static final String LOST_TARGET = "diplomacy.lostTarget";
 }

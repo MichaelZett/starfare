@@ -9,10 +9,12 @@ import de.zettsystems.starfare.i18n.I18n;
 final class MapLegend {
     private MapLegend() { }
 
-    static void open() {
+    /** {@code routeRules}: the game limits flight range, so the help also explains stations. */
+    static void open(boolean routeRules) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(I18n.t(UiTexts.MAP_HELP));
         dialog.add(new Paragraph(I18n.t(UiTexts.MAP_LEGEND_TEXT_TOUCH)));
+        if (routeRules) { dialog.add(new Paragraph(I18n.t(de.zettsystems.starfare.navigation.ui.RouteKeys.RULES))); }
         dialog.getFooter().add(new Button(I18n.t(UiTexts.MAP_MOBILE_CLOSE), _ -> dialog.close()));
         dialog.open();
     }

@@ -2,26 +2,17 @@ package de.zettsystems.starfare.game.ui;
 
 import de.zettsystems.starfare.game.values.VisibleSystem;
 import com.vaadin.flow.component.HasComponents;
-import com.vaadin.flow.component.details.Details;
-import java.util.Optional;
 import com.vaadin.flow.component.html.Span;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.PlayerViewState;
 import de.zettsystems.starfare.i18n.I18n;
 
-/** Itinerary and station status, using only the player's immutable view. */
+/** Itinerary and station status, using only the player's immutable view; the station rules live in the map help. */
 final class NavigationDisplay {
     private NavigationDisplay() { }
-    static Optional<Details> addJourney(HasComponents target, Fleet fleet, PlayerViewState view) {
-        var journey = fleet.journey();
-        if (journey != null) { target.add(new Span(status(fleet, view))); }
+    static void addJourney(HasComponents target, Fleet fleet, PlayerViewState view) {
+        if (fleet.journey() != null) { target.add(new Span(status(fleet, view))); }
         addItinerary(target, fleet, view);
-        if (journey == null) { return Optional.empty(); }
-        var itinerary = new com.vaadin.flow.component.html.Div();
-        itinerary.add(new Span(I18n.t(de.zettsystems.starfare.navigation.ui.RouteKeys.RULES)));
-        var details = new Details(I18n.t(UiTexts.MAP_FLEET_DETAILS), itinerary);
-        target.add(details);
-        return Optional.of(details);
     }
     static de.zettsystems.starfare.navigation.ui.RouteStrip addItinerary(HasComponents target, Fleet fleet, PlayerViewState view) {
         var state = de.zettsystems.starfare.navigation.values.RouteState.forFleet(fleet, view.waitingFleetIds().contains(fleet.globalId()));

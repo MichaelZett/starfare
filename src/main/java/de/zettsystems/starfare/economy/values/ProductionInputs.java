@@ -7,9 +7,9 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
- * One map view's short-lived production input: the value being dragged, the opened editor, the
- * focused control and the latest save feedback. Every completed input is saved at once, so nothing
- * here outlives a server update except the view state.
+ * One map view's short-lived production input: the value being dragged, the focused control and the
+ * latest save feedback. Every completed input is saved at once, so nothing here outlives a server
+ * update except the view state.
  */
 public final class ProductionInputs {
     private final Map<Integer, Input> inputs = new HashMap<>();
@@ -36,7 +36,6 @@ public final class ProductionInputs {
         private AllocationSplit allocation;
         private IndustryView industry;
         private int turn;
-        private boolean expanded;
         private @Nullable Integer focus;
         private Status status = Status.NONE;
         private List<RelocationAdjustment> relocations = List.of();
@@ -50,15 +49,13 @@ public final class ProductionInputs {
         public IndustryView industry() { return industry; }
         public int turn() { return turn; }
         public boolean changed() { return !allocation.equals(saved); }
-        public boolean expanded() { return expanded; }
-        public void expand() { expanded = true; }
         public @Nullable Integer focus() { return focus; }
-        public void focus(@Nullable Integer index) { focus = index; }
+        public void focus(@Nullable Integer control) { focus = control; }
         public Status status() { return status; }
         public List<RelocationAdjustment> relocations() { return relocations; }
-        public void adjust(int index, int value) {
-            allocation = allocation.adjust(index, value, AllocationSplit.limits(industry));
-            expanded = true;
+        /** Sets the expansion share; shipbuilding receives the rest of the capacity. */
+        public void expansion(int value) {
+            allocation = allocation.adjust(AllocationSplit.EXPANSION, value, AllocationSplit.limits(industry));
             status = Status.NONE;
         }
         public boolean valid() {

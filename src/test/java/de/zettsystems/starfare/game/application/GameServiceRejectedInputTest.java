@@ -40,7 +40,7 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
         for (GameId id : List.of(lobby, GameId.newId())) {
             assertThat(games.commitProduction(id, HOST, new ProductionAllocation(1, 1, 0)).accepted()).isFalse();
             assertThat(games.allocateExpansion(id, 1, 1, 1, 0)).isFalse();
-            assertThat(games.diplomacyOrder(id, HOST, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2, 0))).isFalse();
+            assertThat(games.diplomacyOrder(id, HOST, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, 2))).isFalse();
             assertThat(games.sendFleet(id, 1, 1, 1, 2, 1, 1)).isFalse();
         }
         assertThat(registry.readState(lobby, GameState::started)).isFalse();
@@ -73,7 +73,7 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
         assertThat(games.commitProduction(id, STRANGER, new ProductionAllocation(own, 1, 0)).accepted()).isFalse();
         assertThat(games.commitProduction(id, HOST, new ProductionAllocation(own, 1, 0)).accepted())
                 .as("without the expected plan").isFalse();
-        assertThat(games.diplomacyOrder(id, STRANGER, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, seat, 0))).isFalse();
+        assertThat(games.diplomacyOrder(id, STRANGER, 1, new DiplomacyOrder(DiplomacyOrder.Action.FOUND, seat))).isFalse();
 
         int staleRound = 2;
         assertThat(games.sendFleet(id, seat, staleRound, own, target, 1, seat)).isFalse();

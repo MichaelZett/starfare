@@ -5,6 +5,9 @@ public record IndustryView(int capacity, int expansionAllocation, int expansionP
                            int expansionCost, int nextDelivery, boolean deliveryBottleneck) {
     public int shipbuilding() { return capacity - expansionAllocation; }
     public boolean atMaximum() { return capacity == EconomyRules.MAX_CAPACITY; }
+    /** Expansion progress after the next round, capped at the price of the current level. */
+    public int nextProgress() { return Math.min(expansionCost, expansionProgress + expansionAllocation); }
+    /** Rounds until the current level completes with this allocation; 0 without allocation or at the maximum. */
     public int turnsToExpansion() {
         return expansionAllocation == 0 || atMaximum() ? 0
                 : Math.ceilDiv(expansionCost - expansionProgress, expansionAllocation);

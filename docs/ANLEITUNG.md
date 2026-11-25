@@ -269,7 +269,8 @@ Der Reiter **Flotten** zeigt reisende Flotten und die in dieser Runde vorgemerkt
 Befehle in einer Liste, gruppiert nach Ankunftsrunde; innerhalb einer Runde stehen
 die reisenden Flotten vor den Befehlen. Der aufklappbare Bereich
 **Gemeinsame Ankünfte** summiert reisende Flotten und vorgemerkte Sendungen nach
-Ziel und Ankunftsrunde. **Reisedetails** öffnet zusätzliche Reiseangaben.
+Ziel und Ankunftsrunde. Die Regeln für Aufenthalte an Zwischenstationen stehen
+in der Kartenhilfe.
 Die Routensuche schränkt die angezeigten Karten ein.
 
 **Warten** steht direkt an der Flottenkarte und in ihren Details und verschiebt
@@ -470,10 +471,9 @@ bleiben. Reisezeit und Sensorreichweite sind davon unabhängig.
 Während der Zielwahl zeigt ein gestrichelter Kreis um die Quelle die direkte
 Reichweite. Ziele tragen einen Zustand: durchgezogener Rahmen für direkt erreichbar,
 gestrichelter Rahmen für „nur über Stationen“, abgeblendet für „kein Weg“. Der
-Hinweistext und der Versanddialog nennen den Zustand samt Entfernung als Anteil der
-direkten Reichweite, etwa „90 % der direkten Reichweite“. Knapp außerhalb liegende
-Ziele erscheinen nie als genau 100 %. Klassisch hat keine Reichweitengrenze und
-zeigt keinen Kreis.
+Hinweistext und der Versanddialog nennen den Zustand ohne Prozentangabe:
+„Direkt erreichbar“, „Über 2 Stationen“ oder „Kein Weg“. Klassisch hat keine
+Reichweitengrenze und zeigt keinen Kreis.
 
 Für ein entferntes Ziel sucht der Flottenversand automatisch den schnellsten
 Weg über eigene oder verbündete Systeme. Der Dialog zeigt einen grafischen
@@ -561,8 +561,7 @@ den Einzelsieg und erlaubte Bündnisse.
 
 **Bündnisse** zeigt zuerst offene Entscheidungen, danach dein Bündnis und
 mögliche Partner. Zustimmen und Ablehnen stehen direkt am Vorschlag.
-**Frist ändern** und die Gründung am Partner öffnen die genaue Eingabe;
-gültige Eingaben bleiben bei fremden Aktualisierungen erhalten.
+**Bündnis vorschlagen** am Partner sendet den Gründungsvorschlag sofort.
 **Bündnis kündigen** verlangt eine Bestätigung mit der genauen Austrittsrunde
 und den Folgen für stationierte Flotten. Abbrechen kündigt nichts.
 Allgemeine Regeln stehen im aufklappbaren Hintergrundbereich.
@@ -574,11 +573,10 @@ Zustimmung aller bestehenden Mitglieder. Ein Imperium beantragt seinen eigenen
 Beitritt. Fremde Mitgliedschaft kann niemand erzwingen. Ablehnen oder
 Zurückziehen verwirft den offenen Vorschlag.
 
-Bei der Gründung werden 0–50 Runden Kündigungsfrist vereinbart. Friständerungen
-brauchen erneut die Zustimmung aller. Eine Kündigung zeigt sofort die
-Wirksamkeitsrunde: aktuelle Runde plus vereinbarte Frist, mindestens jedoch
-plus eins. Bis zu deren Beginn gilt das Bündnis vollständig. Bereits
-angekündigte Kündigungen behalten ihren Termin auch nach einer Friständerung.
+Die Kündigungsfrist beträgt fest 3 Runden. Eine Kündigung zeigt sofort die
+Wirksamkeitsrunde: aktuelle Runde plus 3. Bis zu deren Beginn gilt das Bündnis
+vollständig. Gespeicherte Bündnisse aus älteren Fassungen behalten ihre
+vereinbarte Frist; offene Friständerungen daraus verfallen zur nächsten Runde.
 Bleibt nur ein Mitglied, endet die Gruppe. Die Bedienung ist nach Rundenabgabe
 gesperrt, Verträge bleiben lesbar.
 
@@ -721,24 +719,13 @@ Terraforming, aktive Bevölkerungssteuerung und Besiedlung kommen später.
 Der Dialog **Neue Partie** zeigt nur die Einstellungen der gewählten Variante; die
 Details mit Ereignissen und Rundenlimit gibt es nur bei klassischen Regeln.
 
-In den Systemdetails öffnen Werfthalle, Förderturm mit Seilrad und Werkhalle sowie Baukran direkt den jeweiligen
-Anteil. Jede Funktion zeigt eingesetzte Punkte und ihren Ertrag je Runde, etwa
-„4 Punkte → 4 Schiffe/Runde“, „2 Punkte × 3 → 6 Metall/Runde“ oder
-„3 Punkte → Fortschritt 8/12 → 11/12“. Fehlt Metall, steht dort „4 Punkte → 2 von
-4 Schiffen/Runde“; reicht das Vorkommen nicht, „Vorkommen erschöpft“. Die
-Fördereignung („3 je Punkt“) steht direkt an der Förderung.
-**Produktion planen** öffnet die gekoppelte Verteilung am System.
-Die erweiterten Regeln mit Metall verwenden **Schiffe bauen**, **Metall fördern** und
-**Industrie ausbauen**. Mehr Punkte in einem Bereich reduzieren die anderen im
-bisherigen Verhältnis. **Wert festhalten** schützt einen Anteil; bei zwei festen
-Werten ist der dritte bestimmt. Ältere Regeln ohne Metall haben zwei Bereiche.
-Die Vorgaben **Schiffe**, **Metall**, **Industrie**, **Gleichmäßig** und **Autarker
-Schiffbau** gelten sofort. Fixierte Werte bleiben erhalten.
-Autarker Schiffbau teilt freie Punkte auf Schiffbau und Förderung; ein ungerader
-Restpunkt geht in die Förderung. Das ist eine einmalige Aufteilung und garantiert
-keine Metallversorgung. Nicht anwendbare Vorgaben zeigen den Grund.
-Die nutzbare Kapazität ist das gemeinsame Budget. Metallmangel kann den tatsächlichen
-Schiffbau zusätzlich begrenzen; die Vorschau nennt diesen Grund ausdrücklich.
+In den Systemdetails steht unter der Kapazität ein einziger Regler **Ausbau**:
+Zahlenfeld mit Plus/Minus und Schieberegler von 0 bis zur Kapazität. Der Rest der
+Kapazität baut Schiffe. Darunter steht eine Ergebniszeile, etwa
+„6 Schiffe/Runde · Ausbau 4/10 · fertig in 3 Runden“: Schiffe je Runde, der
+Ausbaufortschritt nach der nächsten Runde und die Runden bis zur nächsten Stufe.
+Ohne Ausbau fehlt die Rundenangabe; bei Kapazität 50 ist der Regler gesperrt.
+Nach der Rundenabgabe bleibt nur die Ergebniszeile.
 
 Es gibt keinen Übernehmen-Knopf: Zahlenfeld, Plus/Minus und Vorgaben speichern
 sofort, der Schieberegler beim Loslassen. Während des Ziehens zeigt die Ansicht nur

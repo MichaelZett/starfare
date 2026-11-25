@@ -36,11 +36,6 @@ public final class UiTexts {
 
     public static final String UX_CONQUEST_RESULT = "ux.conquest.result";
 
-    public static final String UX_PLAN_PRODUCTION = "ux.plan.production";
-    public static final String UX_CAPACITY_BUDGET = "ux.capacity.budget";
-    public static final String UX_BUILD_SHIPS = "ux.build.ships";
-    public static final String UX_EXPAND_INDUSTRY = "ux.expand.industry";
-    public static final String UX_DELIVERY_RESULT = "ux.delivery.result";
     public static final String UX_DELIVERY_SHORTAGE = "ux.delivery.shortage";
     public static final String UX_BACKGROUND = "ux.background";
     public static final String SYSTEM_SENDABLE_SHIPS = "system.sendableShips";
@@ -57,16 +52,13 @@ public final class UiTexts {
     public static final String DIP_LOCKED = "diplomacy.locked";
     public static final String DIP_DEPARTURE = "diplomacy.departure";
     public static final String DIP_LEAVE = "diplomacy.leave";
-    public static final String DIP_CHANGE = "diplomacy.change";
     public static final String DIP_JOIN = "diplomacy.join";
     public static final String DIP_FOUND_PROPOSAL = "diplomacy.proposal.found";
     public static final String DIP_JOIN_PROPOSAL = "diplomacy.proposal.join";
-    public static final String DIP_NOTICE_PROPOSAL = "diplomacy.proposal.notice";
     public static final String DIP_PENDING = "diplomacy.pending";
     public static final String DIP_APPROVE = "diplomacy.approve";
     public static final String DIP_REJECT = "diplomacy.reject";
     public static final String DIP_FOUND = "diplomacy.found";
-    public static final String DIP_NOTICE = "diplomacy.notice";
     public static final String DIP_REJECTED = "diplomacy.rejected";
     public static final String NAV_RETURN = "navigation.return";
     public static final String NAV_RETURN_BLOCKED = "navigation.return.blocked";
@@ -74,8 +66,6 @@ public final class UiTexts {
 
     public static final String ECONOMY_TITLE = "economy.title";
     public static final String ECONOMY_CAPACITY = "economy.capacity";
-    public static final String ECONOMY_PROGRESS = "economy.progress";
-    public static final String ECONOMY_MAXIMUM = "economy.maximum";
 
     public static final String RULESET_CHOOSE = "ruleset.choose";
     public static final String RULESET_LABEL = "ruleset.label";
@@ -389,9 +379,6 @@ public final class UiTexts {
     public static final String GAME_OUTCOME_DESTROYED = "gameOutcome.destroyed";
     public static final String GAME_OUTCOME_LOST = "gameOutcome.lost";
     public static final String GAME_OUTCOME_INDUSTRY_BUILT = "gameOutcome.industryBuilt";
-    public static final String GAME_OUTCOME_ECONOMY_NOT_RECORDED = "gameOutcome.economyNotRecorded";
-    public static final String GAME_OUTCOME_ECONOMY_SINCE = "gameOutcome.economySince";
-    public static final String GAME_OUTCOME_ECONOMY_PARTIAL = "gameOutcome.economyPartial";
 
     // Language switcher
     public static final String LANG_LABEL = "lang.label";
