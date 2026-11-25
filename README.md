@@ -17,19 +17,17 @@ friends. **Spielanleitung auf Deutsch:** [Anleitung](docs/ANLEITUNG.md).
 Starfare rebuilds *Sector Forces*, a Commodore 64 strategy game that can no longer
 be found, most likely a German clone of *Galactic Empire* (1983). Lobby, AI
 opponents, archive and the map are shared; each rule set brings its own rules.
-Every game keeps its variant and rule version, so rules can evolve without
-changing running games.
+Every game stores its variant and rule version.
 
 | Variant | Status |
 |---|---|
 | **Classic** (`classic`) | Playable, rules 1.0.0 |
-| **Extended** (`spaceward`) | Playable, rules 1.3.0-r1 with colonies, metal, recycling and ship research; alpha stage inside the platform host. Being rebuilt around industrial expansion, flight range and alliances |
+| **Extended** (`spaceward`) | Playable, rules 2.0.0 (Classic plus industrial expansion, flight range with stations, alliances and coalition combat); alpha stage inside the platform host |
 
 The classic rules are the compact core of conquest and fleet movement. The
-extended rules, which started out inspired by *Spaceward Ho!*, add an economy,
-limited flight range, alliances and coalition combat. Technically the extended
-rules are the variant `spaceward`, so the rest of this document and the rule
-versions (for example `spaceward/1.3.0-r1`) keep that name.
+extended rules add industrial expansion, limited flight range, alliances and
+coalition combat. Technically the extended rules are the variant `spaceward`, so
+the rest of this document and the rule versions (`spaceward/2.0.0`) keep that name.
 
 Starfare is an independent hobby project. It is not affiliated with or endorsed
 by the publishers or rights holders of these games; their names only describe
@@ -64,21 +62,53 @@ complete game.
 ## Game variants and rule versions
 
 Choose the rules first in the new-game dialog: **Classic** (rules **1.0.0**) is preselected,
-**Extended** always uses the current rules **1.3.0-r1**. Inside the games platform host
-each variant has a stage the platform keeps (alpha, beta, production; Extended starts
-in alpha): the platform decides who may use it, the rules card marks alpha and beta
-variants, and an account that may no longer use a variant loses access to its games,
-running ones included. In Starfare's own start every variant is open. It adds
-production allocation between ships and industrial expansion, plus limited flight range,
-automatically planned routes through owned or allied systems and refuelling stops.
-Diplomacy adds unanimous alliance groups, a fixed three-round notice period and
-automatic non-combat returns after departure. Coalition combat resolves all hostile
-sides simultaneously, including stationed support. Ships retain their empire; a conquest
-beneficiary is selected before launch.
+**Extended** uses rules **2.0.0**; each variant has exactly one version and the dialog
+shows no version number. Inside the games platform host each variant has a stage the
+platform keeps (alpha, beta, production; Extended starts in alpha): the platform decides
+who may use it, the rules card marks alpha and beta variants, and an account that may no
+longer use a variant loses access to its games, running ones included. In Starfare's own
+start every variant is open.
 
-Every game keeps its variant and rule version independently of the application
-release. Existing games without a variant are Classic games. Lobby, joining, management and archive show the selected rules.
-Templates and rematches retain them.
+Every game stores its variant and rule version independently of the application
+release. Existing games without a variant are Classic games. Games of the retired
+extended versions 1.x no longer load; lobby, finished games and the platform's open
+decisions leave them out without failing. Lobby, joining, management and archive show
+the selected rules. Templates and rematches retain them.
+
+### Extended rules
+
+Extended is Classic plus four things; events, start balance by position and the round
+limit stay Classic-only.
+
+- **Industrial expansion.** Every system has a capacity, starting at its production and
+  capped at 50. The system details show one **Expansion** control (number field with
+  step buttons and a slider from 0 to the capacity); the rest of the capacity builds
+  ships. A result line reads e.g. "6 ships/round · Expansion 4/10 · done in 3 rounds".
+  Numbers and step buttons save at once, the slider when released; dragging only
+  previews. The next level costs `min(2*C, max(2, ceil(C*C/10)))` points at capacity C
+  (C=2 costs 2, C=5 costs 3, C=10 costs 10, from C=20 twice the capacity); several levels
+  may complete in one round, progress carries over, and new capacity is usable next
+  round. Capture keeps capacity and progress and resets the allocation to full
+  shipbuilding. Lowering a system's shipbuilding below its outgoing relocations shortens
+  them proportionally and names each change.
+- **Flight range with stations.** Each game has a fixed range per leg, the longest edge
+  of the galaxy's minimum spanning tree. During target selection a dashed circle shows
+  the direct range; targets and the send dialog read **Directly reachable**, **Via N
+  stations** or **No route**. Routes run through owned or allied systems with one full
+  refuelling round per stop; the rules for stops are in the map help.
+- **Alliances.** Unanimous alliance groups with a fixed notice period of three rounds;
+  after a departure, stationed and inbound partner fleets return home without fighting.
+  Computers accept requests unless they announced their own departure and never found
+  alliances themselves.
+- **Coalition combat.** All hostile sides fight simultaneously, including stationed
+  support. Ships retain their empire; a conquest beneficiary can be chosen before launch.
+
+Victory: an individual empire needs 70% of all systems. Otherwise an alliance of at least
+two members wins with 70% together; the group with the most systems wins (group ID breaks
+ties), and every member wins, including members without systems. Neutral systems remain
+in the denominator. Any winning member may continue once, raising both thresholds to
+100%; the first result remains. The game end shows **Industry built** with the capacity
+points the player expanded.
 
 ## Computer strength
 
@@ -105,7 +135,8 @@ players or change the visibility before the game starts. Public games can be fou
 games are visible to the host, seat holders and invitees. Visibility is fixed
 once the game starts.
 
-Finished games move from the lobby to **Archive**. Search by game or player name,
+Inside a platform host the platform lists finished games with a link to the review; in
+the own start they move from the lobby to **Archive**. Search by game or player name,
 filter your games and open a completed map without issuing further orders.
 **View** opens the review. Returning to
 the archive within the same account session restores filters and scrolls to the
@@ -113,10 +144,9 @@ last viewed game.
 When the final round contains located events, the round report walks through them first.
 Resolve every battle from that report, individually or together in **Instant** mode, and
 confirm the other events; only then does the victory or defeat dialog appear,
-with personal totals for built, destroyed and lost ships. Spaceward also lists
-the game's economy: industry built in capacity points and, with metal, metal mined
-and consumed. Totals come from per-round summaries captured at the production step;
-older games say "not recorded", and later starts or gaps are labelled as such.
+with personal totals for built, destroyed and lost ships. Extended games also show
+**Industry built** in capacity points, summed from per-round summaries captured at the
+production step.
 In the completed map, select any participant (including AI) and enable **Fog of war**
 to see their final perspective. Disable fog to reveal all systems and fleets.
 For newly completed games, the timeline can rewind to every resolved round;
@@ -131,9 +161,10 @@ Who played whom and the result stay in the platform's statistics.
 ## Map sidebar
 
 Map controls provide zoom, whole-galaxy and own-empire views. **Map help** contains
-reset and the legend; on phones the question-mark button opens it. Narrow sidebars use
-a labelled **View** selector for the same four sections. Bulk send and undo remain directly available at
-the top of the sidebar. The **game chat** belongs to the platform: its button sits in the
+reset and the legend (in Extended also the rules for stops at stations); on phones the
+question-mark button opens it. The sidebar has four tabs, Details, Fleets, Relocations
+and Report, also when it is narrow and on phones. Above them sit **Alliances** (Extended
+only) and **Undo last order change** as icon buttons. The **game chat** belongs to the platform: its button sits in the
 platform's strip above the map and in the waiting room, on phones as well. Starfare only says
 who may read and write: everyone who holds or held a seat reads the chat; only those still
 playing write. Whoever left, resigned or lost the seat to the computer, and everyone after the
@@ -144,11 +175,11 @@ lobby and archive; imprint and privacy share a footer.
 
 System details put sendable ships, total garrison and forecast ship
 production per round above the send and relocation actions, followed by the
-system's incoming and outgoing relocations. **Logistics** (or **Colony & logistics**
-for SectorForces extended colonies) expands the relocation balance (incoming,
-production, outgoing), arrivals and the colony data. **Background** expands descriptions,
-environment values and ownership history. Expanded sections stay open across
-updates and system selections while their data follows the selected system.
+system's incoming and outgoing relocations; in Extended games the industry follows.
+**Logistics** expands the relocation balance (incoming, production, outgoing) and
+arrivals. **Background** expands the ownership history of fully visible systems.
+Expanded sections stay open across updates and system selections while their data
+follows the selected system.
 
 Cancelling a send with Cancel, Escape or an outside click retains the source and
 target selection. Success confirms the queued order and keeps the source details
@@ -194,9 +225,11 @@ foreign systems out of sight show the last reconnaissance (owner, estimated or c
 garrison, production, round of last contact), own systems their known ownership history,
 fleets their owner, launch turn, travel time and ETA. The report entry contains
 the complete filterable round timeline, including victory and defeat reports.
-Single sends and relocations retain the current tab; bulk planning opens Fleets.
+Single sends and relocations retain the current tab; a joint attack and editing an
+order open Fleets.
 Resolving a new round opens Report and walks through its located events one by one
-(battles, conquests, losses, cosmic news with a system): the map centres on each, a battle
+(battles, conquests, losses, cosmic news with a system, cancelled or reduced starts of a
+joint attack): the map centres on each, a battle
 offers its playback, every other event continues. Until the last one is confirmed the map
 offers no orders and **Submit turn** stays locked; the progress is stored per account.
 Spectators and the review are never held up.
@@ -317,7 +350,7 @@ The landing route `/` is the lobby. From there:
     - Players 2–10 (default 3), of which computers 0..n−1 (default all others), computer
       strength Easy / Normal / Challenging (default Normal), tempo only with more than one human,
       invitation only (default off), tutorial
-    - Map: layout even or random; galaxy size Small 16 / Medium 24 / Large 40 / Huge 64
+    - Map: layout even or random; galaxy size Small 16 / Medium 24 / Large 30 / Huge 40
       systems (default Medium; sizes with fewer than two systems per player are locked);
       highest neutral production 6 / 10 / 15 / 20 (default 10)
     - Chance: None / Low / Medium / High (default Low), see below
@@ -344,9 +377,9 @@ The landing route `/` is the lobby. From there:
 
   Fleets fly at one fixed speed on every map: 160 map pixels per round, at least 2 and
   at most 40 rounds. Density is fixed at 240,000 square pixels per system, so larger
-  galaxies are wider (Small 2600×1670, Medium 3160×2020, Large 4040×2570, Huge
-  5080×3220). Neighbours are usually about three rounds apart; crossing the whole map
-  takes about 19 / 23 / 29 / 37 rounds. Each game stores its map size in the snapshot.
+  galaxies are wider (Small 2600×1670, Medium 3160×2020, Large 3510×2240, Huge
+  4040×2570). Neighbours are usually about three rounds apart; crossing the whole map
+  takes about 19 / 23 / 25 / 29 rounds. Each game stores its map size in the snapshot.
 - **Search / filter** — narrow the list by game or player name, and by
   status: all, mine, open or running games. Finished games are in **Archive**.
 - **Join** — take an open slot. One slot per game; first come, first
@@ -408,8 +441,8 @@ for the rest of the session.
 On the map, the phone layout shows a compact header (game, round, empire summary,
 **End round** and the menu), the map across the
 whole screen and a bottom bar switching between **Map** and **Overview**. The
-overview is the sidebar as a full-screen sheet, together with alliances and bulk
-orders. Swipe to pan; zoom with two fingers or the round buttons, which also fit
+overview is the sidebar as a full-screen sheet with the same four tabs, together with
+alliances and undo. Swipe to pan; zoom with two fingers or the round buttons, which also fit
 the view to your empire or the whole galaxy; the question mark opens the map help
 with the legend. Tapping a system opens its details;
 **Send fleet** returns to the map with a banner until you tap the target or cancel.
@@ -427,7 +460,7 @@ Dialogs fill the screen with their buttons fixed at the bottom.
 The order lands in **Fleets** in the right-hand sidebar. Before submitting your
 turn, use **Edit order** to change its amount or target, or **Cancel** to remove it.
 **Undo last order change** restores your queue before the most recent command
-change, including a whole batch. It is a single undo step, not an undo history.
+change, including a whole joint attack. It is a single undo step, not an undo history.
 
 Ticking **as production transfer** turns the order into a standing one: the
 given number of ships is shipped every turn. A system may route at most its
@@ -449,10 +482,9 @@ Long routes expand inline; the current and next stations remain visible when
 collapsed. Blocked journeys show an open arrival rather than an old promise.
 The send dialog lists exact leg durations and refuelling stays in its details.
 
-Spaceward's **Alliances** dialog puts pending decisions before your alliance
-and possible partners. Notice-period edits survive unrelated updates. Leaving
-requires confirmation showing the effective round and consequences for stationed
-fleets; treaty rules remain in an expandable background section.
+The Extended **Alliances** dialog puts pending decisions before your alliance
+and possible partners. Leaving requires confirmation showing the effective round and
+consequences for stationed fleets; treaty rules remain in an expandable section.
 
 - **Wait** — the fleet rests one round at its current position
   (ETA +1).
@@ -461,13 +493,13 @@ fleets; treaty rules remain in an expandable background section.
 
 ### End the round
 
-In the header:
+In the header and its menu:
 
 - **Submit turn** — submits your turn. The button then reads **Submitted**
   and is disabled; the round bar names the players still to submit. This notice
   survives reload and disappears when the next round starts. Once all humans have submitted,
-  the turn pipeline runs (AI orders → all orders → production → wait
-  orders → arrivals/combat → victory check → next round).
+  the turn pipeline runs (AI orders → due joint-attack starts and all orders →
+  production → wait orders → arrivals/combat → events → victory check → next round).
   A bar below the header shows every human with a check mark once they
   have submitted. With two or more humans each round has a deadline: the
   round limit from the start of the round, and the straggler limit as soon as
@@ -507,8 +539,10 @@ Battle acknowledgements are saved per account, game, round and event; reloading
 or signing in on another device does not reset them. Display speed does not
 change combat outcomes or round deadlines.
 Both fleets begin in neutral yellow and turn green or red only with the final
-result. A pending map marker keeps neutral systems grey and known player-system
-colours faded, without revealing combat details.
+result; attackers stand left, defenders right. Crew-condition text describes the rolled
+combat variation, and **Combat details** shows the exact strengths. A pending map marker
+keeps neutral systems grey and known player-system colours faded, without revealing
+combat details.
 
 ## Victory condition
 
@@ -520,9 +554,10 @@ The winner can choose **Continue until every system is conquered** to resume tow
 This restarts the round deadlines and clears submissions without advancing the
 round. Other participants are informed automatically. The first end is the one
 reported to the platform; continued play does not end the game a second time.
-A SectorForces game that ended by its round limit cannot be continued.
+A Classic game that ended by its round limit cannot be continued. Extended games also
+know an alliance victory (section "Extended rules").
 
-**Resign** sits next to **Leave** in the map header. The computer takes over the empire until
+**Resign** sits next to **Leave** in the map menu. The computer takes over the empire until
 the end of the game; unlike leaving there is no way back, even when the game allows re-entry.
 
 ## SectorForces: galactic events and scoring
@@ -593,12 +628,12 @@ logged at WARN; `0` disables a threshold.
 Testcontainers), including Vaadin Browserless checks of real views with test
 accounts as a platform host has them (`testsupport.TestPlatformAccounts`). These cover map dispatch and round broadcasts, switching
 accounts in the private lobby, and automatic navigation after creating a game.
-Economy journeys also cover colony growth, mining and shortages, recycling,
-production presets and relocation trimming, creating Extended games and ship research,
-including saved allocations and historical review.
-Map journeys cover fleet actions, bulk dispatch, editing and undo,
+Industry journeys cover creating Extended games through the new-game dialog, saved
+expansion shares, locking after submission and relocation trimming.
+Map journeys cover fleet actions, joint attacks with later starts, editing and undo,
 saved filters after a new sign-in, rematches, relocation limits, station routes
-and coalition ownership, concealed results and persistent battle acknowledgements.
+and coalition ownership, concealed results, persistent battle acknowledgements and
+the round start walkthrough (also after reloading and on phones).
 Game-end journeys cover alliance proposals, notice periods and departures with two
 accounts, continuing a won game towards full conquest, and victory staying hidden
 until the last battle has been evaluated, also after reloading.
@@ -619,10 +654,8 @@ They save current screenshots and visible text in `build/ui-acceptance/` for
 personal review. Automated checks do not replace a player's usability assessment.
 The `@layout` journey preserves layout checks while functional journeys move to
 Browserless: lobby, new-game dialog, system details, archive and review at
-1366 and 1024 pixels. The economy layout journey retains moon keyboard activation,
-the 44-pixel moon target, production controls and mixed-technology/research views.
-Phone research input and hit testing remain in `mobile.feature` (`@research`).
-Navigation checks retain the range circle, route preview and refuelling card layout;
+1366 and 1024 pixels. The `@economy-layout` scenario checks the industry with its
+expansion slider at both widths. Navigation checks retain the range circle, route preview and refuelling card layout;
 coalition checks retain neutral start colors, side placement and animated end counts.
 Their screenshots use the `navigation-*` and `coalition-*` prefixes in `build/ui-acceptance/`.
 Screenshots and text are saved as `build/ui-acceptance/layout-*`.
@@ -641,64 +674,16 @@ node --test "src/test/frontend/*.test.mjs"
 Integration tests start a single PostgreSQL container via
 Testcontainers; Docker must be running.
 
-## Internal economy checkpoint
-
-The internal economy checkpoint **Spaceward 1.2.0-w1** remains loadable for
-saved games: saved colony environments and population limit usable industry,
-with growth taking effect on the following turn. The new-game dialog continues
-to create games with the current **1.3.0-r1** rules. Existing rules and saved games retain their behavior.
-W1 retains its original behavior without mining. The separate internal **1.2.0-w2** checkpoint adds finite metal; the separate internal **1.2.0-w3** checkpoint adds recycling.
-Run the saved-party Browserless journey with:
-
-```powershell
-.\gradlew.bat test --tests "*.ColonyJourneyTest"
-```
-
-The fixture is test-only; loading and resolving stored W1 parties is supported,
-while public creation is explicitly rejected. Each further economy checkpoint
-will have its own rule reference so interrupted development can resume without
-changing the meaning of earlier saved parties.
-
-### Internal metal economy: 1.2.0-w2
-
-Every system has a saved finite deposit and a yield per mining capacity point.
-Players share metal across their own empire, without an automatic alliance pool.
-Mining and expansion use the same local labor and industrial capacity; the rest
-requests shipbuilding. Ships cost **1 metal each**. All extraction happens before
-empire-wide shipbuilding, so newly mined metal can be used in the same round.
-Scarce metal is allocated in proportion to requested ships, with integer leftovers
-assigned by largest fractional remainder, then by system ID. Unused metal stays
-in stock; unused capacity creates no debt. Industry expansion consumes no metal.
-
-Regular dispatch uses existing ships first. Production relocations follow actual
-construction and may draw on the garrison. Growth and expanded industry
-only contribute to the following round. The system panel shows the saved plan's
-forecast across the empire; every completed change is saved immediately.
-Deposits survive conquest without replenishment; empire stock remains with its
-player. Saved snapshots and historical review retain resources without executing
-extraction on load. Internal trial values are 10 starting metal per player,
-200 deposit metal per richness level, and 1 extraction per richness level and
-mining point. These are fixed W2 test values, pending W4 balance acceptance.
-
-Run the test-only saved-party Browserless journey:
-
-```powershell
-.\gradlew.bat test --tests "*.MetalJourneyTest"
-```
-
-W2 is supported for saved-game restoration and round resolution. Public creation,
-templates and rematches cannot create unreleased checkpoints. W1 and all released
-rules retain their behavior; new Spaceward games use the current 1.3.0-r1 rules; older versions remain restorable.
-
 ## Strategy experiments
 
 The first verified pilot results and their limitations are documented in
 [the experiment report (German)](docs/STRATEGY-EXPERIMENTS.md).
 
-The opt-in `strategyBenchmark` task runs SectorForces and Spaceward games
-through the real turn engines without Spring, PostgreSQL, a browser or audio.
-Running the tooling does not alter stored games or their AI selections. Historical Spaceward W6 and W7 are
-available in the lobby; `--rules=spaceward` deliberately selects the historical 1.0.0 rules.
+The opt-in `strategyBenchmark` task runs Classic and Extended games through the real
+turn engines without Spring, PostgreSQL, a browser or audio. Running the tooling does
+not alter stored games or their AI selections. Modes are `matrix` (default),
+`multiplayer`, `decision`, `alliance` and `strength`; `--rules=classic` selects Classic
+1.0.0, `--rules=spaceward` Extended 2.0.0.
 
 ```powershell
 # Pairwise matches, with both seat assignments for every pair.
@@ -709,15 +694,16 @@ available in the lobby; `--rules=spaceward` deliberately selects the historical 
 .\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=decision --seeds=3 --combat-seeds=3 --fork-round=10"
 # Four empires, with a fixed alliance between seats 1 and 2.
 .\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=alliance --rules=spaceward --seeds=3"
-# Pair identical Spaceward 1.1 scenarios with group victory disabled/enabled.
-.\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=alliance --rules=spaceward-1.1 --alliance-victory=both --seeds=3 --combat-seeds=3"
+# Pair identical Extended scenarios with group victory disabled/enabled.
+.\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=alliance --rules=spaceward --alliance-victory=both --seeds=3 --combat-seeds=3"
 ```
 
 Use `./gradlew` on Linux/macOS. Results default to `build/strategy-harness/<mode>/`;
 `--output=build/strategy-harness/my-run` selects another directory. Reusing an output
 directory replaces its report files. Options use `--key=value`; quote the entire
 Gradle property as shown. Paths supplied through this property must not contain spaces.
-`--rules=classic` or `--rules=spaceward` narrows the variant; `--layouts=RANDOM,EVEN`
+Without `--rules` the matrix, multiplayer and decision modes run both variants;
+`--rules=classic` or `--rules=spaceward` narrows them. `--layouts=RANDOM,EVEN`
 selects galaxy layouts. Defaults are two map seeds, 16 systems, 120 rounds and 10%
 combat variation. `--first-seed=1001` selects a disjoint validation map set after
 tuning on the initial seeds. `--combat-seed=314159` and `--combat-seeds=3` control
@@ -733,9 +719,9 @@ Strategies are intentionally small, contrasting policies:
 | EXPANSION | Prefer accessible, weak or apparently neutral systems; retain a production-sized reserve. |
 | CONCENTRATION | Attack estimated beatable targets and transfer idle forces towards the front. |
 | DEFENSE | Keep a larger reserve and strongly prefer lower-risk targets. |
-| INDUSTRY | Spaceward only: invest two thirds of capacity away from known nearby enemies, one fifth near them; consolidate idle forces. |
-| INDUSTRY_LIGHT | Spaceward only, explicit selection: invest one quarter of capacity when visible enemies are more than two travel rounds away; use the same military policy as INDUSTRY. |
-| INDUSTRY_ADAPTIVE | Spaceward only, explicit selection: stop investing near visible enemies or with insufficient available ships; otherwise invest one quarter near the front or one half in the rear, capped at the next expansion's remaining cost. |
+| INDUSTRY | Extended only: invest two thirds of capacity away from known nearby enemies, one fifth near them; consolidate idle forces. |
+| INDUSTRY_LIGHT | Extended only, explicit selection: invest one quarter of capacity when visible enemies are more than two travel rounds away; use the same military policy as INDUSTRY. |
+| INDUSTRY_ADAPTIVE | Extended only, explicit selection: stop investing near visible enemies or with insufficient available ships; otherwise invest one quarter near the front or one half in the rear, capped at the next expansion's remaining cost. |
 
 Use `--profiles=EXPANSION,CONCENTRATION,INDUSTRY,INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE`
 to compare selected profiles in `matrix` or `multiplayer` mode. Matrix mode needs
@@ -746,8 +732,8 @@ profiles change only production allocation; targeting, reserves and reinforcemen
 match INDUSTRY, so their comparisons isolate the allocation policy.
 
 ```powershell
-# Separate validation maps, released Spaceward rules, longer matches.
-.\gradlew.bat strategyBenchmark -x vaadinBuildFrontend "-PstrategyArgs=--mode=matrix --rules=spaceward-1.1 --profiles=EXPANSION,CONCENTRATION,INDUSTRY,INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE --systems=16,32 --first-seed=1001 --seeds=5 --rounds=300 --output=build/strategy-harness/deepening-control-300"
+# Separate validation maps, Extended rules, longer matches.
+.\gradlew.bat strategyBenchmark -x vaadinBuildFrontend "-PstrategyArgs=--mode=matrix --rules=spaceward --profiles=EXPANSION,CONCENTRATION,INDUSTRY,INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE --systems=16,32 --first-seed=1001 --seeds=5 --rounds=300 --output=build/strategy-harness/deepening-control-300"
 ```
 All alternative policies consume the normal fog-filtered player view and legal
 route durations. Unknown defence is estimated at five ships, not read from the
@@ -758,13 +744,14 @@ farthest-next home selection, uniform neutral production 1–10, home capacity 5
 and 20 ships. They omit the lobby's final spacing relaxation and random naming;
 they are not claimed to reproduce its full map distribution.
 
-`--mode=strength` calibrates the computer strengths of classic games on lobby galaxies:
-the same generation, start values, start balance, events and attack order as a new game
-(`GalaxyGenesis`). Seat 1 is the person, played by `--reference=BASELINE`; the computers
-play the profiles their strength draws. Rejected sends are dropped as in a real game.
+`--mode=strength` calibrates the computer strengths on lobby galaxies: the same
+generation, start values, start balance, events and attack order as a new game
+(`GalaxyGenesis`). `--rules=classic` (default) or `--rules=spaceward` selects the rules.
+Seat 1 is the person, played by `--reference=BASELINE`; the computers play the profiles
+their strength draws. Rejected sends are dropped as in a real game.
 Dimensions: `--strengths=EASY,NORMAL,HARD`, `--randomness=NONE,LOW,MEDIUM,HIGH`,
 `--events=on,off` (pairs the same games with and without events), `--systems=24,40`
-(offered galaxy sizes only), `--players=2,4`, `--layout=EVEN`, `--seeds`, `--first-seed`,
+(offered galaxy sizes 16, 24, 30, 40 only), `--players=2,4`, `--layout=EVEN`, `--seeds`, `--first-seed`,
 `--combat-seeds`, `--rounds=300` and `--threads`. `--start-share=0.9` and
 `--computer-profiles=RUSH,EXPANSION` try other values than the built-in ones.
 `strength.md` lists the reference's win rate with a Wilson interval, game lengths, rates per
@@ -784,9 +771,9 @@ repetitions together. Small samples and a limited opponent set do not prove bala
 `invocation.txt` records arguments, resolved defaults, Java version and a source
 fingerprint. Reproduction requires the same code, Java version and settings.
 
-Decision mode forks immediately before round 10 by default. SectorForces compares
+Decision mode forks immediately before round 10 by default. Classic compares
 CONCENTRATION against RUSH and suppresses the first player's first send order once.
-Spaceward compares INDUSTRY against RUSH, additionally testing full expansion or
+Extended compares INDUSTRY against RUSH, additionally testing full expansion or
 full shipbuilding at that player's first owned system for one round. Other
 players' plans are unchanged in that round; later plans may react to the outcome.
 The original plan is always included. `decision-deltas.csv` compares the first
@@ -796,215 +783,12 @@ change. Future random streams restart from absolute round seeds; altered combat
 sequences may consume different draws, so compare several combat seeds.
 
 Alliance mode exercises joint combat and partner navigation with a fixed contract,
-not a negotiating AI. `--rules=spaceward` retains version 1.0.0 and individual
-victory. Version 1.1.0 (`--rules=spaceward-1.1`) accepts `--alliance-victory=true`,
-`false` (default), or `both` for paired runs. `--individual-percent=70` and
-`--alliance-percent=70` select independent thresholds (10–100%). CSV results
-include both choices and every winning seat; each winning ally counts as a win. Resource
-mining, recycling and ship generations are not available in the current rules
-and therefore are not simulated yet. Use separate validation seeds and human
-playtests before drawing conclusions or changing a ruleset.
-
-## Game victory options
-
-Spaceward 1.1.0 adds fixed game options for allowing alliances and
-allowing group victory. Defaults retain alliances with individual victory only;
-the separate group threshold defaults to 70%. Disabling alliances also disables
-group victory. SectorForces has no diplomacy. Stored Spaceward 1.0.0 games retain
-their version and previous rules. **AI may form alliances** (default on) decides
-whether AI empires may newly found or join alliances; when off, humans can still ally
-with each other, existing treaties of a seat taken over by the AI stay in force, and
-the alliance dialog explains why AI empires cannot be offered a treaty. Stored games
-without this option keep the previous AI participation.
-
-Individual victory takes precedence. Otherwise, the eligible group controlling
-the most systems wins (group ID breaks ties). All effective members win,
-including members without systems. Neutral systems remain in the denominator.
-Results freeze every winner for reports, replay, archive and the platform's result.
-Any winning member may continue once, raising both victory thresholds to 100%;
-the original result remains unchanged.
-
-## License
-
-[MIT](LICENSE).
-
-### Internal recycling: 1.2.0-w3
-
-The separate W3 checkpoint adds editable recycling orders at owned industrial
-systems. Ships are reserved together with dispatches and permanent garrisons.
-Set the order to zero to cancel it. Resolution occurs after ordinary dispatch,
-before mining and construction, without additional industrial capacity use.
-Arriving ships become eligible in the next round. Credits are never immediate.
-
-Each ship returns **0.7 metal** of its one-metal construction cost. Saved tenths
-per player make split and bulk orders equivalent; only whole metal pays for new
-ships. Start ships, including neutral garrisons, bind one metal each. The ledger
-retains initial material, combat losses and the 30% recycling loss. Battles have
-no salvage. Reloading or replaying does not apply a recycling order again.
-
-All eight AI profiles can recycle surplus rear-area ships when metal constrains
-construction, preserving a reserve and excluding known nearby enemies. The W4
-comparison is documented in `docs/ECONOMY-EXPERIMENTS.md`. W2 and older references retain their
-behavior. W3 remains restoration-only; new Spaceward games use the current 1.3.0-r1 rules.
-
-Run the saved-game Browserless journey with:
-
-```powershell
-.\gradlew.bat test --tests "*.RecyclingJourneyTest"
-```
-
-### Spaceward rules: current version only
-
-Choose the **Extended** rules card in the new-game dialog. Every new game uses the current
-**1.3.0-r1** rules, including mining, recycling, industry expansion and ship
-research. There is no version selector.
-SectorForces remains a separate variant using its own current rules.
-
-The current rules use installed industry without a labor limit. They share scarce
-empire metal equally between active yards, capped at each yard's demand; leftovers
-are redistributed and integer remainders go by system ID. For demand 10 and 4
-and stock 8, both yards receive 4. Surplus metal stays in stock.
-
-Templates and rematches always use the current rules of their variant, including
-when copied from an older game. Source games and other stored games retain their
-original rules and remain playable. Colony properties, deposits, stock and initial
-material are established before the first save.
-
-W7 keeps the checkpoint's resource values: **1 metal per ship**, 10 starting metal,
-200 deposit metal per richness level, richness yield per mining point, and
-70% recycling recovery. All eight selectable AI profiles account for mining
-when allocating industry and retaining ships. Experimental economic policies
-remain test-only. Evidence and its limits: [economy experiments](docs/ECONOMY-EXPERIMENTS.md).
-W7 charges `min(2*C, max(2, ceil(C*C/10)))` expansion points per added
-capacity, using the current capacity C. Examples: C=2 costs 2, C=5 costs 3,
-C=10 costs 10; from C=20 the old 2*C price applies. Multiple levels may
-complete in one round, with progress carried over. Added capacity becomes
-usable next round; the cap remains 50. Earlier saved versions keep 2*C.
-System properties and capture retention do not change the price.
-Terraforming, active population management and colonization remain deferred.
-The current economy scope adds no further mechanics before acceptance.
-Personal acceptance and a final, unqualified 1.2.0 release remain pending.
-
-```powershell
-.\gradlew.bat test --tests "*.EconomyLaunchJourneyTest"
-```
-
-This checks the released default through the ordinary new-game dialog. `MetalJourneyTest`
-and `RecyclingJourneyTest` cover shortages, reload, exact fractional recovery and
-historical views. All economy journeys run in the regular `test` task.
-
-### Decision-oriented game interface
-
-The new-game dialog shows only the settings of the selected rules; events and the round
-limit exist only for Classic.
-
-Spaceward production functions open their allocation directly: a shipyard, mining
-tower and construction crane have distinct shapes and show invested points and their
-result per round, e.g. "4 points → 4 ships/round" or "2 points × 3 → 6 metal/round".
-Five presets (Ships, Metal, Industry, Even split, Self-sufficient shipbuilding)
-are saved immediately and preserve pinned shares. Self-sufficient
-shipbuilding splits free capacity between ships and mining, with an odd remainder
-assigned to mining; it does not guarantee exclusive access to empire metal.
-Production planning uses coupled whole-point sliders for shipbuilding,
-mining and industry expansion, with optional pinned shares. A read-only empire-wide
-preview uses the actual economy calculation, including reserved recycling, metal
-shortages and relocation capacity. There is no apply step: numbers, step buttons and
-presets save at once, a slider saves when released; dragging only previews. Each save
-compares the shown plan with the stored one under the game write lock, and a rejected
-change shows the stored plan again. In 1.2.0-w5 and later candidates, lowering a system's shipbuilding
-proportionally shortens its outgoing relocations that no longer fit, and the panel
-names each change. The header shows a metal bar, stock and next-round change, such as
-"24 (−3)", with an accessible breakdown. The details of an own mining system list
-all own mining systems by yield per point with their remaining deposit, best first,
-and offer **Mining automation**.
-Header notices open filtered lists in the Details tab using saved plans, with one system
-per cause; **Clear filter** returns to the selected system. Pending battles suppress these notices.
-Older
-rules without metal use two allocation areas. The empire's current metal stock
-appears in the header; planet data and rare scrapping actions are expandable.
-
-Fleet sending explains reachability, intermediate stations and arrival rounds
-without exposing internal distance coordinates. During Spaceward target selection a
-dashed circle shows the direct range; targets are marked as direct, via stations or
-unreachable, and the send dialog states the distance as a share of the direct range
-(e.g. "90% of the direct range"; a target just outside never reads as 100%). Ally conquest is offered only
-when meaningful; SectorForces shares the simpler setup, overview and sending UI.
-Legal links in the footer open in a new tab to preserve ongoing edits.
-
-Fleet selection areas occupy only free route segments, protecting source, destination and crossing systems at every zoom. Warning markers are separate prominent targets. Combat playback keeps attackers left and defenders right, with neutral colors until the result. Crew-condition text describes stored combat variation; optional combat details retain exact strengths.
-
-
-### Isolated investment experiments
-
-The test-only investment benchmark compares fixed economic interventions with
-one CONCENTRATION military heuristic against CONCENTRATION and RUSH. Prices and
-captured industry are varied independently against the fixed W6 reference.
-The accepted EARLY_COST curve was introduced in W7 and is included in the current rules. Early one-step, moderate and round-40 investment are
-compared with a matched no-expansion reference. A no-expansion reference must
-retain the same trajectory under every price-only model.
-
-```sh
-./gradlew strategyBenchmark '-PstrategyArgs=--mode=investment --model=EARLY_COST --first-seed=7101 --seeds=1 --combat-seeds=2 --rounds=150 --output=build/investment/calibration-EARLY_COST'
-```
-
-Models: `BASELINE`, `HALF_COST`, `EARLY_COST`, `QUALITY_COST`, `HALF_CAPTURE`.
-The control family uses `--first-seed=8101` and a separate output directory.
-Definitions, 1,280 completed matches, paired comparisons and limits are recorded
-in [economy experiments](docs/ECONOMY-EXPERIMENTS.md). The accepted cheap-small-upgrade curve is included in the current rules;
-W6 prices remain unchanged. Other interventions remain test-only.
-
-
-### Ship research: 1.3.0-r1
-
-Ship research is included in the current Spaceward rules for every new game.
-Older saved games retain their original rules.
-
-Open **Research** in the map header or **Ship research** in the map menu. One empire-wide percentage reserves
-industry before mining, expansion and shipbuilding. It starts at 0%; rounding
-happens once per empire, then points are apportioned to systems by capacity,
-with largest remainders and system IDs as tie breakers. Raising the budget
-reduces expansion first, then mining if necessary; outgoing relocations follow
-actual shipbuilding. The production editor shows reserved research points and
-edits only the remaining capacity.
-
-Research has one common technology level: no separate fields or manual designs.
-The next level costs `100 * (level + 1)^2` points (100, 400, 900, ...), retaining
-leftovers. Each level adds 10% of base combat strength to newly built ships;
-level 20 is the initial ceiling, where research stops reserving industry.
-Completion is reported, and the improved generation is built from the following
-round. Old ships retain their build-time level. Mixed fleets display their
-counts by level and combined strength. Launches take newest ships first;
-recycling takes oldest ships first; combat losses are apportioned by hull count
-with deterministic largest remainders. Survivors never acquire a new level.
-
-Ship speed, range, the one-metal hull cost and 70% recycling recovery are unchanged.
-Research consumes industrial capacity, not metal. Coalition strength sums the
-actual generations, including allied stationed forces. AI budgets are
-10% (5% for RUSH), calibrated with paired seeded duels; see
-[research experiments](docs/RESEARCH-EXPERIMENTS.md) for results and limits. Population management, colonization, research fields and ship-design
-editors remain later work. Desktop and phone browser checks, the initial balance study and personal gameplay acceptance (18 November 2026) have passed.
-
-
-## Mining automation
-
-**Mining automation** in the details of an own mining system enables optional, persistent empire-wide mining
-orders. It defaults to off. Select systems, protected systems and a reserve target
-of 0–10 consumption rounds (default 1), review the global preview, then apply.
-The reserve uses full planned shipbuilding after reallocation, including demand
-that cannot currently be built because of a shortage. Zero rounds still covers
-current demand. Expansion and research allocations stay unchanged; relocation
-sources and protected plans are preserved. Unreachable targets show a shortfall
-without blocking round submission. Efficient deposits are preferred with stable
-tie breaking; this is an order assistant, not a guarantee of optimal play.
-
-Settings and protection survive reloads and server restarts. The next plan is
-calculated after each round and after own changes to research, recycling or
-protection. Manual production edits remove that system from automation. Lost
-systems and reassigned seats do not carry orders to a new owner, and new conquests
-are not enrolled automatically. Disabling keeps the last production plan.
-The existing autark preset remains a one-time allocation. No economic formulas,
-rule versions or dependency versions change.
-
+not a negotiating AI, and needs `--rules=spaceward`. `--alliance-victory=true`,
+`false` (default) or `both` (paired runs) sets group victory. `--individual-percent=70`
+and `--alliance-percent=70` select independent thresholds (10–100%). CSV results
+include both choices and every winning seat; each winning ally counts as a win. Use
+separate validation seeds and human playtests before drawing conclusions or changing a
+ruleset.
 
 ## Embeddable game artifact
 
@@ -1042,9 +826,8 @@ in `games/starfare/game.properties` (key, base package, schema, release stage,
 public paths). Texts live in `games/starfare/i18n/translations*.properties` and
 are resolved by Starfare's own helper in the language of the current UI, not by
 the embedding application's `I18NProvider`. Setting defaults are in the
-`@ConfigurationProperties` classes, and the per-request SQL counter registers
-itself through a `HibernatePropertiesCustomizer`, so a host needs no Starfare
-lines in its configuration.
+`@ConfigurationProperties` classes, so a host needs no Starfare lines in its
+configuration. Page timings and query counts are left to the platform.
 
 `check` runs `verifyGameModule` against the actual game archive, its dependency
 metadata and the standalone Boot JAR. The additional Gradle variants have the
@@ -1080,3 +863,7 @@ Starfare project dependency would select the standalone project's normal variant
 
 A host runs its own browser journeys; Starfare's complete journeys run in
 Starfare's own build. The game artifact ships no test fixtures.
+
+## License
+
+[MIT](LICENSE).

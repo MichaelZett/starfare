@@ -16,21 +16,20 @@ this document covers the structural decisions.
 ## Game variants and immutable rule references
 
 `RulesetRef` stores a stable variant ID and rule version independently of the
-application release. SectorForces uses `classic / 1.0.0`; the display name does
-not change its stored identity. `RulesetCatalog` holds localized name and
+application release. Classic ("Klassisch", formerly SectorForces) uses
+`classic / 1.0.0`, Extended ("Erweitert") `spaceward / 2.0.0`; the display names do
+not change the stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
-Spaceward supports stored versions 1.0.0, 1.1.0, W1–W7 and 1.3.0-r1. New games
-use only the current `spaceward / 1.3.0-r1`. Inside the platform host each variant has a
+Each variant has exactly one supported version; the extended versions 1.0.0 to
+1.3.0-r1 were removed with their turn engines, and their stored games no longer load
+(`RetiredRulesPlatformTest`). Inside the platform host each variant has a
 stage the platform keeps (games-platform-api 0.5.0; `variants=classic:PRODUCTION,
 spaceward:ALPHA` in `game.properties` is the stage at first start): `RulesetAccess` asks
 `PlatformAccounts.mayUseVariant` and marks alpha and beta variants on the rules card of the new-game dialog
 (`variantStage`). An account that may not use a variant reaches none of its games, running
 and finished ones included: `DefaultGameAccessPolicy` and the planning and submission
 checks refuse map, review, chat and orders. `MatchSummary.variant` and `MatchEnded.variant`
-carry `classic` or `spaceward`. Older versions remain restoration-only. Versioned implementations share economy, navigation, diplomacy
-and coalition combat services;
-Spaceward is enabled for new games since M7. Orion has
-no implementation or selectable entry.
+carry `classic` or `spaceward`.
 
 `RulesetConfiguration` supplies the shared catalog. `GameSetup`, `GameState`,
 `GameStateSnapshot`, `GameSummary`, templates and compact result history retain
@@ -38,14 +37,14 @@ the reference. Missing legacy snapshot/setup references default to SectorForces;
 explicit incomplete identities, unsupported versions and conflicting setup/state
 references do not fall back. Session and archive stores leave rejected rows
 untouched while continuing to load other games. Writes validate support before
-mutating the registry state or saving a new game. Creation availability does not
-disable an already supported stored version.
+mutating the registry state or saving a new game.
 
 `RulesetTurnEngine` is the primary `TurnEngine` used by `GameService` and autoplay.
 It dispatches by the full reference to registered `RulesetRoundImplementation`
-beans. `DefaultTurnEngine` implements SectorForces 1.0.0 and keeps the frozen
-Classic pipeline through `RoundPipeline`. `SpacewardTurnEngine` uses the same
-order/arrival/victory sequence with its own AI planning and production. Every
+beans. `DefaultTurnEngine` implements Classic 1.0.0 and keeps the frozen
+Classic pipeline through `RoundPipeline`. `SpacewardTurnEngine` implements Extended
+2.0.0 with the same order/arrival/victory sequence, its own AI planning and industrial
+production. Every
 supported reference needs an explicit registered round implementation; incomplete registrations fail during application startup.
 The isolated third-variant tests verify extensibility without shipping another
 game. Later variants may add their own commands, state and views as required.
@@ -60,12 +59,11 @@ tables are no longer read and are dropped later, after a backup.
 victory permission and separate group system share. `GameSetup` normalizes these
 at creation; `GameState` rejects changes after start. Alliance permission gates
 contracts, allied station access and diplomacy views. Disabling it forces group
-victory off. SectorForces remains without diplomacy; Spaceward 1.0.0 permits
-alliances and individual victory only. Missing legacy snapshot fields derive
-these defaults from the stored reference, without migrating its version.
+victory off. Classic remains without diplomacy. `VictoryRules.forNewGame` fixes
+every new game at 70%; Extended games always allow alliances, computer alliances
+and an alliance victory at 70%. The new-game dialog offers no victory options.
 
-`AllianceSpacewardTurnEngine` explicitly registers 1.1.0. `VictoryEvaluation`
-checks individual ownership first, then effective groups of at least two
+`VictoryEvaluation` checks individual ownership first, then effective groups of at least two
 members. Neutral systems remain in the denominator; integer comparisons avoid
 rounding down. The strongest qualifying group wins, then the lowest group ID.
 Every effective member wins, including zero-system members. Departures become
@@ -78,12 +76,11 @@ outcome; victory/defeat reports preserve group membership at resolution time.
 Old constructors and nullable JSON fields retain legacy read compatibility.
 The platform learns every winner from `MatchEnded` (place 1).
 
-The production catalog enables W6 and W7 for new Spaceward games.
-`NewGameDialogTest` covers the option dependencies with every variant creatable;
-`AllianceVictoryJourneyTest` covers both winners, reload and archive. The strategy harness can pair 1.1.0 scenarios with group victory on/off;
-each member receives its own win in the report.
+`AllianceVictoryJourneyTest` covers both winners, reload and archive. The strategy
+harness can pair Extended scenarios with group victory on/off; each member receives
+its own win in the report.
 
-## Spaceward navigation (M4)
+## Extended navigation
 
 The `navigation` module owns pure range calibration and route planning,
 immutable `NavigationSettings`/`FlightJourney`/`RoutePreview` values, and the
@@ -98,10 +95,10 @@ checks exercise both layouts, 8/24/60/120 systems and twenty seeds each.
 systems, adding one full round per stop. Foreign final destinations are allowed.
 Fleet acceptance, atomic order editing/undo, production transfers, AI and view
 previews use the same planner. Lost routes pause existing transfers without
-consuming ships. Each newly launched Spaceward fleet stores its complete path,
+consuming ships. Each launched Extended fleet stores its complete path,
 current leg, flying/station/blocked phase, earliest departure and final ETA.
-The existing fleet endpoints and arrival field describe its physical current leg.
-Classic fleets retain their old direct representation and constructor.
+The fleet endpoints and arrival field describe its physical current leg.
+Classic fleets keep the direct representation.
 
 `RoundPipeline` applies commands, departs ready stationed fleets, launches
 transfers and produces, applies waiting, and resolves arrivals. Owned
@@ -113,15 +110,13 @@ recapture cannot bypass a full refuelling round. Docked fleets do not contribute
 to the system garrison; disbanding at an owned station explicitly merges them.
 
 Snapshots, copying, archived states and replay frames retain the journey.
-Missing navigation fields remain readable: old Classic saves have no settings;
-old internal Spaceward states derive a range once and legacy direct fleets can
-finish their existing flights. New invalid itinerary/state combinations are
-rejected. Arrival summaries count only final destinations, include waits and
+Classic saves have no navigation settings. Invalid itinerary/state combinations
+are rejected. Arrival summaries count only final destinations, include waits and
 exclude blocked fleets. UI cards explain route and phase, use unknown arrival
 for blocked travel, and map lines follow actual legs. No rule-dependent state
 leaks through foreign-system industry views.
 
-## Spaceward diplomacy (M5)
+## Extended diplomacy
 
 The diplomacy module owns immutable treaty state, unanimous proposals and
 application services. GameState keeps DiplomacyState independently of military
@@ -131,8 +126,9 @@ all current members plus the applicant.
 Overlapping votes are rejected. Roster changes discard stale electorates.
 
 `VictoryRules.aiAlliancesAllowed` is fixed per game (setup, snapshot, templates);
-missing JSON reads as `true` through the `@JsonCreator`, and the value is only
-effective while alliances are allowed. When it is false,
+new Extended games always set it, missing JSON reads as `true` through the
+`@JsonCreator`, and the value is only effective while alliances are allowed. When it
+is false,
 `DefaultDiplomacyService.act` refuses FOUND with an AI party, JOIN by an AI and
 APPROVE of such a proposal; REJECT and LEAVE stay available so existing
 treaties of an AI-controlled seat can still be managed. `answerAiProposals` rejects
@@ -152,7 +148,7 @@ and refrains from targeting allies. It does not initiate treaties.
 
 Navigation permits allied intermediate stations. Allied final arrivals use the
 PARTNER journey phase and retain independent fleet ownership; they cannot capture
-the partner system or disband into its garrison. Combined defence and combat use the separate M6 coalition path. A departing member's stationed and already inbound partner
+the partner system or disband into its garrison. Combined defence and combat use the separate coalition path. A departing member's stationed and already inbound partner
 contingents become non-combat returns. They automatically choose the shortest
 currently permitted route to an owned system, or remain BLOCKED until one exists.
 The first return leg may leave an inaccessible origin; subsequent stations obey
@@ -160,19 +156,22 @@ normal ownership/treaty/range checks. Return fleets cannot wait or disband and
 never attack at an arrival, even if their destination is lost in flight.
 
 Snapshots add nullable diplomacy and returningHome fields. Missing fields mean
-no contracts and ordinary M4 travel. Copying, persistence and archives retain
+no contracts and ordinary travel. Copying, persistence and archives retain
 consent, deadlines and return phases. Invalid memberships, electorate data,
 unknown participants and cross-variant treaty state are rejected. SectorForces
 has no diplomacy actions.
 
-## Spaceward industrial economy (M3)
+## Extended industrial economy
 
-Spaceward keeps immutable per-system `Industry` records in a separate
+Extended keeps immutable per-system `Industry` records in a separate
 `GameState.industries` map. Classic retains an empty map and the existing
 `StarSystem` behavior. Capacity starts at the configured system production.
-Integer points go to expansion; the remainder builds ships. The next capacity
-unit costs twice the current capacity, with a maximum of 50. Partial and surplus
-progress survive allocation changes and conquest. At the cap, the allocation
+Integer points go to expansion; the remainder builds ships.
+`EconomyRules.expansionCost` prices the next level at `min(2*C, max(2, ceil(C*C/10)))`
+for capacity C (cheap first levels, twice the capacity from 20 on), with a maximum of
+`EconomyRules.MAX_CAPACITY` (50). `Industry.expandForOneTurn` spends accumulated
+progress level by level, so several cheap levels may complete in one round; partial and
+surplus progress survive allocation changes and conquest. At the cap, the allocation
 returns to full shipbuilding. Growth changes output for the following turn only.
 
 `StarSystem.productionPerTurn` always contains actual ship output, so existing
@@ -192,83 +191,14 @@ industry map so historical views never read present-day progress. Invalid or
 inconsistent industrial snapshots are rejected during restoration.
 
 `PlayerViewBuilder` exposes an `IndustryView` only with full visibility. The
-`IndustryPanel` in the system details shows allocation, progress, time to growth and next outgoing delivery. Edits
-preview shortages before they are applied. Foreign sensor views and unresolved
+`IndustryPanel` in the system details shows the capacity, the expansion control and one
+result line (ships per round, progress after the next round, rounds to the next level). Foreign sensor views and unresolved
 battles do not reveal the industrial details. Observers and archives are read-only.
 The BASELINE branch of `DefaultSpacewardPlanning` uses filtered views, allocating one third of capacity
 to expansion in safe systems and all output to ships near known enemies.
 
-This is Starfare's initial approximation. The long-term inspiration is Delta
-Tao's [Spaceward Ho! 5 manual](https://www.deltatao.com/ho/ho/): colony suitability,
-terraforming, finite metal, empire-wide budgets, ship design and technology are
-separate future decisions. They are not implemented as part of M3.
-
-## Internal metal checkpoint: Spaceward 1.2.0-w2
-
-`RulesetRef.SPACEWARD_METALS` extends colony rules under an independent frozen
-reference. `MetalSpacewardTurnEngine` is registered alongside W1 and older rules.
-`MetalEconomy` holds immutable deposit, player-stock and mining-allocation maps;
-`MetalGenesis` is an explicit creation boundary. Snapshots and replay frames carry
-an optional `metals` field. W2 requires complete current and historical resources;
-legacy games do not acquire deposits when loaded. Public creation stays disabled.
-
-`MetalProduction.calculate` is the pure shared empire forecast. It extracts finite
-local deposits, pools each player's metal, and distributes whole ships by largest
-remainder with system-ID ties. `DefaultEconomyService` validates both allocations
-before mutation and applies construction, expansion and growth under the game lock.
-W2 dispatches ordinary orders before production, then relocates from actual
-garrisons; the legacy pre-production relocation path remains unchanged.
-`StarSystem.productionPerTurn` retains planned capacity minus mining and expansion
-for stored state validation. Player views, empire totals and routing headroom use
-the shared metal forecast for actual buildable output. Sensors expose only the
-existing approximate production information; exact resources require complete visibility.
-Historical views calculate from frame resources rather than the current economy.
-
-W2 trial constants are in `MetalRules`: one metal per ship, 10 initial stock,
-200 deposit metal per richness, and richness metal per mining point. W4 will assess
-balance; changing these values requires another reference. All AI profiles receive
-a legal common mining assignment before their existing industry and fleet policies;
-new mining or recycling strategy comparisons remain a W4 task.
-
-## Internal colony checkpoint: Spaceward 1.2.0-w1
-
-`RulesetRef.SPACEWARD_COLONIES` is a separate, frozen internal rule reference.
-The catalog supports restoration and `ColonySpacewardTurnEngine` dispatch, but
-`requireCreatable` rejects public creation. New games use only the current Spaceward rules.
-Subsequent metal rules must use a different reference rather than change W1.
-
-`SystemQuality` saves stellar luminosity, orbital distance in AU, host body,
-whether the colony is on a moon, atmosphere and independently generated metal
-richness. `ColonyGenesis` generates this once at the explicit creation boundary.
-Home systems share fertility and richness despite different star types. The
-star and body types (`SystemQuality.StarType`, `BodyType`) are part of the saved
-environment; no picture of the system is drawn. Richness is not yet a deposit.
-
-`ColonyEconomy` combines the immutable quality and population. One labor unit
-is 100 population points; usable capacity is min(installed industry, whole labor
-units). Suitability permits 25/35/50 labor units, with 1/2/3 percent growth per
-round, rounded up to whole population points and capped at the population limit.
-The stellar-flux proxy is luminosity / orbital-distance squared. Temperate
-atmosphere at flux 0.75–1.5 is fertile; thin or temperate atmosphere at 0.4–2 is
-habitable; other generated colonies are harsh. These thresholds are game balance
-choices, not a physical climate model. The conceptual basis is the joint role of
-distance and atmosphere described by [NASA](https://science.nasa.gov/exoplanets/habitable-zone/).
-
-`GameState.colonies`, optional snapshot and replay-frame maps preserve the exact
-properties and fractional growth. W1 rejects incomplete colony maps, including
-historical frames; restoration never regenerates them. Older versions accept
-missing fields and retain empty maps. Copying uses immutable records and separate
-maps. Conquest retains the colony while resetting allocation; neutral systems
-do not grow automatically. Actual production uses current labor and allocation;
-growth updates the next turn's output. Allocation, routing, AI and UI previews
-consume the same usable capacity. The original versions retain their outputs.
-
-Only fully visible industry views contain `ColonyView`; sensor contacts receive
-no population or environment details. Replay views use their frame's saved values.
-`ColonySnapshotTest` exercises JSON and a new store instance restoring a database
-party before resolving another round. The Browserless `ColonyJourneyTest` journey
-checks allocation, growth, reload and historical review. This checkpoint adds no
-mining, resource spending, recycling, ship designs or research.
+Extended 2.0.0 has no metal, mining, recycling, colonies, population or ship research;
+expansion is the only economic decision.
 
 ## Classic compatibility contract
 
@@ -328,14 +258,15 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
   `ui` (Vaadin views: the entry route `LobbyView`, `MainView`, panels, dialogs,
   `UiMapper`, `UiTexts`, and `OwnFrameParts`, through which the views ask for the
   own start's lobby, language switch, account menu and legal footer).
-- `turn` — Ruleset dispatch and shared `RoundPipeline`.
+- `turn` — Ruleset dispatch, shared `RoundPipeline` and planned joint-attack starts
+  (`JointDepartures`).
 - `combat` — Combat resolution (`CombatService`, `CombatResolver`).
 - `fleet` — Fleet commands and validation (`FleetService`,
   `FleetOrder`).
-- `economy` — Spaceward capacity, allocation and progress (`Industry`),
+- `economy` — Extended capacity, allocation and progress (`Industry`),
   production (`EconomyService`) and the immutable inspector (`IndustryView`, `IndustryPanel`).
 - `diplomacy` — alliance groups, unanimous consent and round-based departures.
-- `ai` — Classic and Spaceward AI decisions (`AiService`, `SpacewardPlanning`).
+- `ai` — Classic and Extended AI decisions (`AiService`, `SpacewardPlanning`).
 - `report` — Round reports (`TurnReport`, `TurnEvent`).
 - `auth` — the signed-in player (`UserContext`) and display names
   (`PlayerDirectory`), both read from games-platform-api's `PlatformAccounts`.
@@ -387,23 +318,42 @@ Fixed sequence, fully inside one `writeState`:
 1. `AiService.planAiTurns` queues the AI's orders, exactly like a human's.
    The AI plans on the state the humans saw during the round, so it has no
    information advantage and its fleets launch in the same round.
-2. Apply all queued orders (send, wait, disband), then standing relocations.
-3. Production on owned, non-neutral systems.
+2. `JointDepartures.launchDue` turns the planned joint-attack starts due this round
+   (`GameState.scheduledDepartures`, `ScheduledDeparture`) into fleets at the same
+   step as queued sends; then all queued orders (send, wait, disband) apply, ready
+   stationed Extended fleets depart, and standing relocations launch.
+3. Production on owned, non-neutral systems (Extended: industrial production and the
+   `EconomySummary` event).
 4. Apply `waitThisTurn` (arrival +1, clear flag).
 5. Group all arrivals of the round by `toSystemId` + owner before any combat;
    reinforce the owner first, then resolve the attackers one after another via
    `CombatService`, each against the garrison left by the previous one. The
    order is a game rule (`RoundRules.attackOrder`): random (default) or
-   strongest first.
-6. SectorForces random events (`CosmicEvents`, only with `SectorOptions`, see below).
-7. Victory check (>= the configured system share, neutrals included, destroyed
+   strongest first. Extended resolves arrivals through the coalition path instead
+   and refreshes station access afterwards.
+6. Classic random events (`CosmicEvents`, only with `SectorOptions`, see below).
+7. `JointDepartures.cancelLost` cancels planned starts whose source the planner no
+   longer owns, with a `TurnEvent.JointDeparture` report line.
+8. Victory check (>= the configured system share, neutrals included, destroyed
    systems excluded; default `GameConfig.VICTORY_SYSTEM_PERCENT`, 70%); optional group
    victory follows individual victory. It sends `Victory` to every winner and `Defeat`
    with the winning members to every other participant. Without a winner, `RoundLimit`
    warns during the last five rounds and ends a game with a round limit by `SectorScore`.
-8. `state.nextTurn()`.
+9. Replay frame capture and `state.nextTurn()`.
 
 If `state.gameOver()` is true, `advanceTurn` is a no-op.
+
+Joint attacks: `GameService.planJointAttack` validates the whole attack under the write
+lock (`OrderPlanning.jointAttack`); the slowest sources become ordinary queued sends, faster ones a
+`ScheduledDeparture` with a later departure round so that all arrive together. Until
+then the ships stay in the garrison and defend it, but count as reserved for further
+sends. At launch a start sends what is left; it is cancelled with a report line when
+nothing is left, the source changed hands or the target is unreachable or destroyed.
+A target that became the player's own or an ally's is still flown to. Without planned
+starts both steps do nothing, so the frozen Classic results are unchanged. The UI sees
+them as `PlayerViewState.plannedDepartures` (`PlannedDeparture`) in the Fleets tab and
+can cancel them; the single undo step (`GameState.previousOrders` and
+`previousDepartures`) covers them too.
 
 `TurnEvent.Victory` stores the threshold at resolution time. Reports therefore
 retain the correct threshold even after continuation or during archive replay;
@@ -560,15 +510,27 @@ Relocations and Report. Details show the selected system or fleet; for a system 
 of sight they show the last intelligence from fog-filtered `VisibleSystem` values, for
 an own system its relocations and relocation balance (`ProductionFlow`). Fleets lists
 fleets under way and the round's planned orders together, grouped by arrival round.
-Report renders the player's turn events beside the map. In the advanced rules the
-header's economy notices replace the details with a filtered issue list until it is
-cleared or something is selected, and the details of an own mining system carry the
-mining automation and the own systems by yield. The panel receives only `PlayerViewState` and
-the view-local map selection from `MainView`; selecting a system or fleet never
-mutates the game. New bulk commands select Fleets and a resolved turn selects Report;
-the report stays in the sidebar. The battle replay names the system's known
-production; acknowledging it opens no further dialog. Making that automatic choice a user preference
-remains future work.
+Report renders the player's turn events beside the map. The four sections are `Tabs`
+at every width and on phones; above them `MainView` places the alliance and undo
+actions. In Extended games an own system's details also carry the `IndustryPanel`. The
+panel receives only `PlayerViewState` and the view-local map selection from `MainView`;
+selecting a system or fleet never mutates the game. A planned joint attack or an edited
+order selects Fleets, a resolved turn selects Report; the report stays in the sidebar.
+The battle replay names the system's known production; acknowledging it opens no
+further dialog.
+
+Round start walkthrough: `RoundWalkthrough` (package `game.ui`) picks the located events
+of the round report, i.e. battles (`TurnEvent.battleSite`), cosmic news with a system and
+cancelled or reduced joint starts (`TurnEvent.JointDeparture`); production,
+reinforcements and events without a place stay out. `RoundWalkthrough.current` returns
+the first one the account has not confirmed, with its position ("Event 2 of 5"). The
+confirmations use the durable battle acknowledgements (`BattleAcknowledgements`, keyed
+by account, game, round and original event index), so the progress survives reloads and
+other devices. While a step is open `MainView` centres the map on its system, shows its
+card in the report (on phones over the map via `MobileMapLayout.walkthrough`) and locks
+planning: no target selection, sends, relocations or turn submission. A battle offers
+its replay, every other event **Continue**. Spectators and the review are never held up;
+a decided game opens its outcome only after the walkthrough.
 
 `TurnEvent.affectedSystemId()` is the shared link between the report and the
 map. Every event with a system ID gets a marker. Selecting a report card centres
@@ -693,16 +655,16 @@ logic and callbacks stay in `MainView`; only the arrangement differs.
   start, to 100%.
   `GameRegistry.createGame(GameSetup, hostPlayerId, name)` is the main
   entry point (the short overload builds a default, unnamed game).
-- Galaxy size: `GalaxySize` offers 16/24/40/64 systems (sizes with fewer than two systems
+- Galaxy size: `GalaxySize` offers 16/24/30/40 systems (sizes with fewer than two systems
   per player are locked). `GalaxyExtent.forSystems` keeps a fixed density of 240,000 px²
-  per system at aspect ratio 1.6 (Small 2600×1670, Medium 3160×2020, Large 4040×2570,
-  Huge 5080×3220); the extent is stored in `GameStateSnapshot.extent` (absent means the
-  former 3200×2000). `GalaxyPlacement` and `DefaultGameRegistry.spaceOut` place systems
+  per system at aspect ratio 1.6 (Small 2600×1670, Medium 3160×2020, Large 3510×2240,
+  Huge 4040×2570); the extent is stored in `GameStateSnapshot.extent` (absent means the
+  former 3200×2000). `GalaxyPlacement` and `GalaxyGenesis.spaceOut` place systems
   inside it, `PlayerViewState.extent` carries it to `MapCanvas`, `MapRenderer` and
   `map-geometry.js`, so "whole galaxy" and "own realm" fit any size. Travel uses one fixed
   speed, `GameState.roundsFor` = ceil(distance / 160 px) clamped to 2–40 rounds; nearest
-  neighbours are usually three rounds apart, a crossing takes about 19/23/29/37 rounds.
-  Spaceward's `RangeCalibration` measures the longest spanning-tree edge in map pixels and
+  neighbours are usually three rounds apart, a crossing takes about 19/23/25/29 rounds.
+  Extended's `RangeCalibration` measures the longest spanning-tree edge in map pixels and
   therefore adapts to every size without change.
 - `GameState.ownershipHistory` records each system ownership change and is
   persisted in the snapshot. `PlayerViewBuilder` exposes it only for fully
@@ -803,7 +765,9 @@ enforces this.
   `@ServiceConnection` (not `@Testcontainers` / `@Container`, otherwise
   one container per class); `SyncAsyncTestConfig` makes `@Async` run
   synchronously.
-- No Vaadin UI tests; the core logic stays independent of the UI.
+- UI journeys run headless with Vaadin Browserless (`AbstractBrowserlessTest`) in the
+  normal `test` task; Selenium/Cucumber (`e2eTest`) keeps only what needs a real
+  browser. The core logic stays independent of the UI.
 - Architecture check: `ModulithTest` verifies module boundaries on
   every `./gradlew test`.
 
@@ -811,7 +775,7 @@ enforces this.
 
 `OrderPlanning` validates a complete replacement of one player's pending orders
 under `GameRegistry.writeState`. Edits compare the displayed command with the
-current index and use a turn token. Batch dispatch rejects duplicate sources,
+current index and use a turn token. A joint attack (`OrderPlanning.jointAttack`) rejects duplicate sources,
 foreign systems, missing destinations and overcommitted garrisons before any
 `GameState.previousOrders` stores one undo step per player, is part of the optional
 snapshot fields, and is cleared by `nextTurn`. Undo revalidates the current garrisons.
@@ -850,10 +814,10 @@ Map and sidebar rendering skip unchanged content. Route filters are stable Vaadi
 components while their result containers are replaced independently. Custom click
 targets use `KeyboardActions` with Enter/Space activation and visible focus styles.
 
-## Spaceward coalition combat (M6)
+## Extended coalition combat
 
 RoundPipeline dispatches arrivals to CoalitionCombatService only for the fixed
-Spaceward reference. SectorForces retains CombatService/CombatResolver and its
+Extended rules. Classic retains CombatService/CombatResolver and its
 configured sequential attack order. The coalition service is stateless; its
 caller holds the game lock. All battles resolve synchronously before station
 access refresh, victory evaluation and replay capture.
@@ -898,18 +862,19 @@ The independent frontend animation reads recorded results, reveals every side
 concurrently and preserves the personal sound preference. SharedBrowser mutes
 all browser acceptance tests.
 
-## Spaceward release (M7)
+## Creating Extended games
 
-`RulesetCatalog.builtIn()` enables creation for Spaceward with default
-`spaceward / 1.1.0` and keeps `1.0.0` supported for stored games; SectorForces
-stays first and therefore preselected in the new-game dialog. `RulesetRef.resolvesCoalitionBattles`
-(true for both Spaceward versions) makes Spaceward setups store the default attack order. No stored data changes:
-existing games keep their reference, and templates and rematches of Spaceward
-games are now creatable as well. `DefaultGameRegistry.createGame` initializes
-industry and the calibrated range directly after galaxy generation, so lobby
-views show the final Spaceward state before the start. `SpacewardReleaseIntegrationTest`
-covers creation, joining, starting, regular round resolution and a rematch through
-the public services against PostgreSQL.
+`RulesetCatalog.builtIn()` holds exactly one version per variant: `classic / 1.0.0` and
+`spaceward / 2.0.0`; Classic stays first and therefore preselected in the new-game
+dialog. `RulesetDefinition.creatableVersions` and `supportedVersions` both contain only
+that version; `requireCreatable` applies the same choice to registry creation, and
+`SetupCards.rules` shows one card per variant without a version number.
+Templates and rematches use the current rules of their variant. `DefaultGameRegistry.createGame`
+initializes industry and the calibrated range directly after galaxy generation, so lobby
+views show the final Extended state before the start. `SpacewardReleaseIntegrationTest`
+covers creation, joining, starting, regular round resolution and a rematch through the
+public services against PostgreSQL; `RetiredRulesPlatformTest` checks that stored games
+of the removed 1.x versions stay out of the platform's lists instead of failing them.
 
 
 ## Reproducible strategy experiments
@@ -926,8 +891,8 @@ alternative profiles use the shared pure `ai.domain.AiPolicy`, also called by
 the benchmark adapter. `DefaultProfilePlanning` captures `AiObservation` from a
 filtered player view, allies and legal route durations, then applies `AiOrders`
 through the economy and fleet services under the caller's write lock. The policy
-receives no mutable GameState. Classic and both Spaceward engines dispatch each
-AI seat independently; Spaceward still answers diplomacy proposals before planning.
+receives no mutable GameState. Classic and Extended engines dispatch each
+AI seat independently; Extended still answers diplomacy proposals before planning.
 
 `GameSetup.computerStrength` selects the profiles: `DefaultGameRegistry` draws each
 computer's `AiStrategy` from `ComputerStrength.strategy` and stores it in
@@ -940,7 +905,7 @@ verifies ruleset switches, count changes, creation and the saved setup.
 and legal route durations. Alternative policies never receive GameState. The
 baseline adapter invokes the existing AI on a private copy with only the current
 seat marked as AI and no pending orders. Classic baseline only reads exact own
-forces and distances to non-owned systems; Spaceward baseline already consumes
+forces and distances to non-owned systems; Extended baseline already consumes
 filtered views. Information-boundary tests perturb hidden forces and enemy orders.
 Only the trusted simulator and result recorder inspect complete state.
 
@@ -950,7 +915,7 @@ remain unchanged. The shared `ai.domain.IndustryPolicy` supplies two allocations
 INDUSTRY_LIGHT and INDUSTRY_ADAPTIVE. They reuse INDUSTRY's military policy and
 consume only own industry, available ships and route distance
 to visible enemies. Unknown threats are not revealed. Integer allocation may be
-zero on very small colonies; no fractional growth or new economic rule is added.
+zero on very small systems; no fractional growth or new economic rule is added.
 
 CombatService accepts a DoubleSupplier, coalition combat an IntToDoubleFunction,
 and RoundPipeline a supplier for attack-order randomness. The simulator resets
@@ -975,271 +940,59 @@ policy orders abort the experiment rather than silently becoming losses. The
 harness tests determinism, conservation, non-mutating planning, checkpoint
 continuation, information boundaries and every command-line mode without a database.
 
-## Internal recycling checkpoint: Spaceward 1.2.0-w3
+## Industry editing and forecasts
 
-`SPACEWARD_RECYCLING` has its own `RecyclingSpacewardTurnEngine`. W2 retains its
-original reference. `MetalEconomy.recycling` is optional for older snapshots but
-required, with complete system and player keys, in W3 current and replay state.
-Explicit creation records the initial whole-galaxy material, including neutral
-ships; restoration never synthesizes orders, fractions or a new balance.
-
-`RecyclingOrders` validates ownership and the combined dispatch/recycling
-budget. Single dispatch, batch edits and undo share the same reservation. `GameService.planRecycling` validates the round and unsubmitted seat
-inside `GameRegistry.writeState`; zero cancels or replaces the local order.
-`Recycling.calculate` is pure fixed-point settlement. Seven of ten metal tenths
-return per ship, with empire-wide fractions retained across rounds and reloads.
-Only whole stock funds construction; split and bulk recycling conserve the same
-material. `MetalProduction.forPlan` includes planned credits without mutation.
-Actual production rejects unsettled recycling rather than crediting it twice.
-
-The round pipeline resolves dispatch, recycling with structured report events,
-mining/construction, relocations and arrivals in that order. The galaxy ledger
-records combat losses after arrival resolution and recycling losses at settlement.
-Its initial total equals remaining deposits, stock and fractions, surviving ships,
-combat losses and recycling losses. All ships have the fixed one-metal W3 value.
-
-Player views expose personal orders and fractions only with full visibility.
-Recycling controls and the saved plan remain read-only in archive replay.
-All eight AI profiles use the same filtered view and legal command validator;
-rear-area recycling targets construction shortages while preserving eight
-unreserved ships and avoiding known enemies within two travel rounds. W4 compares this trial policy; see `docs/ECONOMY-EXPERIMENTS.md`.
-
-Restoration loads pending dispatches before validating resource reservations;
-otherwise an overbooked recycling order could appear valid against an empty
-order list. `RecyclingSnapshotTest` covers corrupt totals and combined budgets.
-
-## Economy acceptance candidate: Spaceward 1.2.0-w4
-
-`SPACEWARD_ECONOMY_PREVIEW` dispatches through its own provider and shares the
-frozen W3 material formulas. The catalog always supports its saved reference for
-restoring and continuing games; new games use the current Spaceward rules. Older
-checkpoints remain creation-disabled. Existing snapshots are not migrated.
-
-The registry initializes industry, colony geology and resources before saving
-any new candidate. Initial material includes all neutral and player ships.
-`AiPolicy` subtracts mining points before validating expansion and calculating
-fleet reserves; its legacy results without metal remain unchanged.
-
-`strategyBenchmark --mode=economy` runs real production AI and round resolution
-without Spring, a browser or audio. Experimental economic interventions share
-CONCENTRATION fleet planning; they use filtered own-resource observations and
-normal allocation/recycling commands. Rejected commands fail the experiment.
-Paired environments isolate geology and growth. Every round validates exact
-material conservation; snapshots are restored every 25 resolved rounds.
-CSV evidence separates shortage capacity from unused labor capacity and records
-initial metal and global irreversible losses. Reproducibility and interpretation
-are documented in `docs/ECONOMY-EXPERIMENTS.md`.
-
-## Economy totals in the final summary
-
-`TurnEvent.EconomySummary` is appended once per participant and resolved Spaceward
-round at the production step, before combat: metal actually extracted, metal booked
-for ships (`ships × SHIP_COST`) and capacity gained from finished expansion, all
-taken from the same `IndustrialProduction` results that `EconomyService.produce`
-books. Zero summaries are stored so that missing history differs from a true zero.
-The event adds no report line and is filtered from report lists while keeping the
-original event indices used by battle acknowledgements. `EconomyTotals.of` sums the
-summaries of the replay frames' resolved rounds and labels coverage as complete,
-since a later round, partial or not recorded; SectorForces carries no economy.
-
-## Economy candidate: Spaceward 1.2.0-w5
-
-`SPACEWARD_DIRECT_ECONOMY` replaces W4 as `RulesetCatalog.ECONOMY_CANDIDATE`;
-W4 is restoration-only like W1–W3. W5 keeps all W4 formulas but treats
-population as atmosphere: `RulesetRef.limitsIndustryByLabor()` is false, so
-`ColonyEconomy.usableCapacity(industry, false)` returns the installed capacity.
-`GameState`, `MetalProduction.forPlan/calculate`, the player view and every AI
-profile read this single rule; growth still changes population, never industry.
-`ColonyView.laborLimited` carries the rule to the UI, which then shows neither
-labor lines nor `EconomyIssues.Kind.LABOR`. Saved games are never re-labelled.
-
-### Production drafts and authorized forecasts
-
-`GameService.previewProduction` resolves the account's joined human seat and checks
-access, round, ownership and submission under the registry read lock. It applies
-the requested allocation to `GameState.copyOf`, then reuses `PlayerViewBuilder`
-and `MetalProduction` for the local and empire-wide result. The original session,
-orders and persisted snapshot remain untouched. `ProductionPlanPreview` contains
-immutable industry and empire views; `EmpireStats.metal` is absent for non-metal
-rules and unprivileged observer views.
+`GameService.previewProduction` resolves the account's active seat and checks access,
+round, ownership and submission under the registry read lock. It applies the requested
+allocation to `GameState.copyOf`, then reuses `PlayerViewBuilder` for the local industry
+and the empire. The original session, orders and persisted snapshot remain untouched.
+`ProductionPlanPreview` carries the `IndustryView`, `EmpireStats` and the relocation
+adjustments the change would cause.
 
 `AllocationSplit` splits the integer capacity into the expansion share and the
-shipbuilding rest. `ProductionEditor` shows one always-visible expansion control and
-saves every completed input through `GameService.commitProduction`; slider dragging
-only calls the copy-based preview. `ProductionInputs` keeps the transient input, the
-focused control and the last save feedback per system of one map view; a server
-update always replaces the input. `IndustryPanel.result` renders ships per round,
-the expansion progress after the next round and the rounds until the level completes. `MetalBalance.formattedChange` derives the header change from
-`next - current`, so the rounded display matches the forecast stock.
+shipbuilding rest. `ProductionEditor` shows the one always-visible expansion control and
+saves every completed input through `GameService.commitProduction`; slider dragging only
+calls the copy-based preview. `ProductionInputs` keeps the transient input, the focused
+control and the last save feedback per system of one map view; a server update always
+replaces the input. `IndustryPanel.result` renders ships per round, the expansion progress
+after the next round and the rounds until the level completes.
 
-`RelocationTrim` is the single rule for W5 relocation shortening: floor(old × limit /
-total), remaining ships by largest remainder, ties by order id, zero removes the
-route. `FleetService.trimRelocations` applies it with `routingCapacity` (expected
-shipbuilding plus incoming routes) as limit. `DefaultGameService.allocate` runs the
-production command and, only for `RulesetRef.adjustsRelocationsToShipbuilding()` and
-a lower expected shipbuilding, the trim in the same write lock; the preview performs
-the identical steps on its copy. `ProductionCommit` and `ProductionPlanPreview`
-return the adjustments. Metal shortage alone never rewrites standing orders. Older
-Spaceward references retain their two-way expansion/shipbuilding rule.
+`RelocationTrim` is the single rule for relocation shortening: floor(old × limit / total),
+remaining ships by largest remainder, ties by order id, zero removes the route.
+`FleetService.trimRelocations` applies it with `routingCapacity` (expected shipbuilding
+plus incoming routes) as limit. `DefaultGameService` runs the production command and, only
+when the expected shipbuilding dropped, the trim in the same write lock; the preview
+performs the identical steps on its copy. `ProductionCommit` and `ProductionPlanPreview`
+return the adjustments.
 
-`Routes.rangeFrom` classifies every target from a permitted station as direct,
-via stations or unreachable with the same `withinRange`, station and travel-edge
-rules as route commands, and stores the straight-line distance as a share of the
-range. `RangeShare` rounds down inside and up beyond the limit (one decimal near
-100 %), so a target just outside never reads as 100 %. `GameService.rangeFor` is
-read-only; `MapRenderer` draws `RangeOverlay` only during target selection in map
-coordinates without click handling, and marks targets by outline, opacity,
-`data-reach` and accessible text. SectorForces returns no range view.
+`TurnEvent.EconomySummary` is appended once per participant and resolved Extended round at
+the production step, before combat: the capacity gained from finished expansion, taken
+from the `IndustrialProduction` results that `EconomyService.produce` books. Zero
+summaries are stored too. The event adds no report line and is filtered from report lists
+while keeping the original event indices used by battle acknowledgements.
+`EconomyTotals.of` sums one player's summaries over the replay frames' resolved rounds for
+the game-end dialog ("Industry built"); Classic carries no economy.
 
-Map interaction geometry is computed by `map-geometry.js` from the actual browser
-zoom and rendered system diameter. Shared free lane intervals drive both visible
-lines and interactive hit areas. Source, destination and intersecting systems
-have protected circles; badges occupy free space, with the fleet list as fallback.
-Pure segment and placement functions are covered by Node tests.
+## Range view, map geometry and battle presentation
 
-`BattleReplay.defenderSideId` projects the coalition containing the original owner
-(or neutral member zero) into a presentation role, without exposing the subsequent
-ownership transition. Missing roles in historical data remain explicitly unknown.
-`CombatReadiness` derives deterministic, transient crew-condition buckets from
-stored opening strength, never from survivors or the winner.
-`ProductionFlow` also supplies the net retained production amount used by the
-send dialog, on top of its mode maximum.
+`Routes.rangeFrom` classifies every target from a permitted station as direct, via stations
+(with the number of stops of the fastest route) or unreachable, with the same
+`withinRange`, station and travel-edge rules as route commands. `RangeView` carries no
+distances. `GameService.rangeFor` is read-only; `MapRenderer` draws `RangeOverlay` only
+during target selection in map coordinates without click handling, and marks targets by
+outline, opacity, `data-reach` and the accessible texts "Directly reachable", "Via N
+stations" and "No route". The send dialog uses the same texts. Classic returns no range
+view.
 
-## Equal metal candidate: Spaceward 1.2.0-w6
+Map interaction geometry is computed by `map-geometry.js` from the actual browser zoom and
+rendered system diameter. Shared free lane intervals drive both visible lines and
+interactive hit areas. Source, destination and intersecting systems have protected circles;
+badges occupy free space, with the fleet list as fallback. Pure segment and placement
+functions are covered by Node tests.
 
-`SPACEWARD_EQUAL_METAL` is the new `RulesetCatalog.ECONOMY_CANDIDATE`.
-W5 remains supported for restoration with proportional scarcity allocation;
-W6 inherits its unrestricted installed industry and relocation shortening.
-`MetalProduction` receives the complete stored rule reference for both live
-and replay forecasts. Under W6, active yards receive equal shares, capped at
-each yard's requested ships. Satisfied yards leave their share to the others.
-Integer leftovers use system ID order. Mining is settled empire-wide first;
-unused stock is retained, and separate empires never share stock.
-`EqualMetalSpacewardTurnEngine` registers W6 in the ordinary round dispatcher.
-No snapshot schema change or retroactive game conversion is needed.
-
-The economy benchmark accepts `--rules=w3|w4|w5|w6|w7` and an optional
-`--environments` list. `--suite=strategies` runs all eight production AI
-profiles against every other profile with both seat assignments, plus two
-rotating four-player groups. It uses the matching production round engine,
-checks metal conservation every round and restores a snapshot every 25 rounds.
-The legacy default remains W3. Raw evidence is flushed between environments
-to bound memory use; commands and exact rule reference are saved with each run.
-
-
-## Early industry candidate: Spaceward 1.2.0-w7
-
-`SPACEWARD_EARLY_INDUSTRY` inherits W6 equal metal sharing, unrestricted installed
-industry and relocation shortening. It is the default for new Spaceward games; W6 is also selectable.
-All earlier stored versions remain restorable.
-`EarlyIndustrySpacewardTurnEngine` registers its independent stored identity.
-
-`EconomyRules.expansionCost(capacity, rules)` charges
-`min(2*C, max(2, ceil(C*C/10)))` only for W7. The no-reference overload retains
-the historical 2*C curve. `Industry.expandForOneTurn(rules)` spends accumulated
-progress level by level, allowing multiple cheap levels. Capacity caps at 50;
-new capacity contributes only next round. Capture retains progress as before.
-`GameState.validateIndustry` checks saved progress against its stored rule price,
-without changing snapshot shape. Live and replay `IndustryView` prices use the
-same reference; AI reads those authorized prices. The editor's progress display
-continues to describe the next level. No system-property multiplier is introduced.
-
-Regression tests compare every valid capacity/allocation/progress combination
-against the studied EARLY_COST model, check restored rules, historical prices,
-multiple completions, capacity cap, next-round output and material conservation.
-
-
-## Separate creation and restoration versions
-
-`RulesetDefinition.creatableVersions` explicitly limits new-game references,
-independently of `supportedVersions`. The built-in Spaceward entry permits only
-the current 1.3.0-r1 (it permitted W6 and W7 before 0.2.1); SectorForces keeps its
-existing entry and default.
-`creationChoices()` returns the default first with stable ordering. Catalog
-validation rejects unsupported choices and a non-creatable enabled default.
-`requireCreatable` applies the same choices to registry creation. The former
-opt-in profiles for acceptance candidates were removed in 0.2.12.
-
-`SetupCards.rules` shows one picture card per variant and creates its default version;
-the dialog shows no version number. Templates and rematches move to the current
-rules of their variant. Older stored games still
-load and continue, but `DefaultGameTemplateService` excludes their setups from
-new templates. No snapshot migration or stored-rule rewrite is performed.
-
-
-## Shared ship research: Spaceward 1.3.0-r1
-
-R1 inherits W7 economics and navigation under its own stored rule reference and
-round provider and is the Spaceward default for new games. Saved W6/W7 games keep
-their rules; no saved reference is migrated.
-
-`ResearchEconomy` is an immutable optional component of `MetalEconomy`, which
-already travels through snapshots, copies and replay frames. R1 requires exactly
-one research record per player. Older rules require no research component.
-`ShipResearch` stores a percentage, completed level and long progress, validates
-cost bounds, carries remainders and stops at the initial level-20 cap. The square
-cost curve is versioned in R1. Reservation is computed from installed industry,
-rounded once per empire and allocated by largest remainder then system ID.
-Reservations reduce the industry's usable capacity; `MetalProduction` exposes
-the exact same reservation map for authorized live and historical forecasts.
-
-`GameState.planShipResearch` clamps expansion before mining and updates planned
-ship output. The application command identifies the seat from the account,
-checks round/submission state and compares the expected previous percentage
-under the game lock. Accepted changes publish `ProductionAllocationChanged`.
-Relocations are trimmed after a budget change. Research advancement uses opening
-industry and follows ship production: that round's ships keep the old level.
-Expanded industry, new levels and changed ownership recompute next-round budgets.
-`ResearchCompleted` is a stored, localized report event without a battle marker.
-
-`ShipCohorts` stores immutable per-level hull counts in both `StarSystem` and
-`Fleet`. Constructors check counts; missing legacy JSON defaults to level zero.
-All navigation, return, dispatch, cancellation, docking, reinforcement, recycling
-and survivor operations retain generations. Standing orders partition the same
-newest-first selection without duplicating cohorts. Only research production can
-add newly commissioned higher-level hulls. Recycling removes oldest hulls first;
-casualties use proportional largest remainders. No material conversion uses
-combat strength: hull counts, metal cost and recycling remain unchanged.
-
-R1 coalition resolution uses summed generation strength per volley and each
-side's actual surviving cohort mix; rolls and physical casualty limits remain
-unchanged. The legacy resolver path receives no cohorts and keeps historical
-math. Survivors are assigned to members and contingents by hull count, then to
-generations by largest remainder. The UI projects composition only through fully
-visible industry and own fleets; research progress and budgets are own-empire
-views behind the account authorization boundary. Reviews use saved research and
-ship generations, never the empire's later technology.
-
-The map menu opens an ordinary Vaadin dialog; no frontend bundle, JavaScript,
-CSS or tracked dependency manifests are changed. AI budgets use 10%, 5% for
-RUSH, following the paired study in `RESEARCH-EXPERIMENTS.md`, through the same domain budget operation. Focused regression cases cover
-completion timing, material conservation, coalition outcomes, multiple standing
-routes, conquest budget changes, old JSON, account/stale-write rejection,
-database reload and all AI profiles. These checks do not establish optimal balance.
-
-Coalition reports store opening base strength separately from rolled strength.
-Legacy reports default base strength to hull count; crew-condition text compares
-against the technology-weighted base, so technology does not masquerade as crew
-readiness. Per-volley strength uses the same member/contingent rounding as final
-survivor allocation; generation strength is summed in integer tenths.
-
-
-## Optional mining order assistance
-
-`MiningAutomation` contains opt-in human order preferences, separate from economic
-rules. Its optional map in `GameStateSnapshot` defaults to no automation for old
-JSON and is copied with the aggregate. Settings are tied to the owning account;
-seat reassignment and lost systems do not transfer consent. `MiningPlanner` uses
-the shared exact `MetalProduction` forecast, including research and recycling.
-It protects expansion, pinned systems and relocation sources and reports unmet
-reserves instead of changing economic formulas or blocking round submission.
-
-Planning runs after a round transition and after relevant own planning commands,
-inside the existing aggregate lock. Rendering never writes plans. The dialog
-requires a global preview; save checks actor, round, expected settings, production
-bases and equality with the reviewed proposal before applying it. This also rejects
-an outdated preview when new routes or resource changes would alter the result.
-Manual production edits remove the world from automatic participation. The latest
-plan and its assignment changes are retained with the preferences; old replay
-frames are not rewritten. Economic resolution, rule versions and AI defaults are
-unchanged while the feature is off.
+`BattleReplay.defenderSideId` projects the coalition containing the original owner (or
+neutral member zero) into a presentation role, without exposing the subsequent ownership
+transition. `CombatReadiness` derives deterministic, transient crew-condition buckets from
+stored opening strength, never from survivors or the winner. `ProductionFlow` also
+supplies the net retained production amount used by the send dialog, on top of its mode
+maximum.
