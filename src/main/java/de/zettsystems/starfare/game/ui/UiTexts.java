@@ -324,8 +324,6 @@ public final class UiTexts {
     public static final String MAP_ARRIVAL_MATCH = "map.arrival.match";
     public static final String MAP_ARRIVAL_EARLY = "map.arrival.early";
     public static final String MAP_ARRIVAL_LATE = "map.arrival.late";
-    public static final String MAP_JOINT_SEND = "map.jointSend";
-    public static final String MAP_JOINT_SEND_TO = "map.jointSend.to";
 
     // Map — fleet badge
     public static final String MAP_FLEET_BADGE_BASE = "map.fleetBadge.base";
@@ -487,11 +485,8 @@ public final class UiTexts {
     public static final String PLAN_SAVE = "plan.save";
     public static final String PLAN_ARRIVALS = "plan.arrivals";
     public static final String PLAN_ARRIVAL = "plan.arrival";
-    public static final String PLAN_DISPATCH = "plan.dispatch";
     public static final String PLAN_UNDO = "plan.undo";
     public static final String PLAN_TARGET = "plan.target";
-    public static final String PLAN_SOURCES = "plan.sources";
-    public static final String PLAN_ALL_AVAILABLE = "plan.allAvailable";
     public static final String PLAN_REJECTED = "plan.rejected";
     public static final String PLAN_ACK_ALL = "plan.ackAll";
     public static final String PLAN_TEMPLATE = "plan.template";
@@ -499,6 +494,25 @@ public final class UiTexts {
     public static final String PLAN_TEMPLATE_HINT = "plan.templateHint";
     public static final String PLAN_TEMPLATE_MISSING = "plan.templateMissing";
     public static final String PLAN_GAME_NAME = "plan.gameName";
+    // Joint attack: sources picked on the map, faster ones start later.
+    public static final String MAP_JOINT_ATTACK = "joint.attack";
+    public static final String MAP_JOINT_SEND = "joint.send";
+    public static final String MAP_JOINT_ATTACK_TO = "joint.attack.to";
+    public static final String MAP_JOINT_HINT = "joint.hint";
+    public static final String MAP_JOINT_PICK = "joint.pick";
+    public static final String MAP_JOINT_DROP = "joint.drop";
+    public static final String JOINT_DIALOG_TITLE = "joint.dialog.title";
+    public static final String JOINT_DIALOG_CONFIRM = "joint.dialog.confirm";
+    public static final String JOINT_DIALOG_SUMMARY = "joint.dialog.summary";
+    public static final String JOINT_DIALOG_START_NOW = "joint.dialog.startNow";
+    public static final String JOINT_DIALOG_START_LATER = "joint.dialog.startLater";
+    public static final String JOINT_DIALOG_GARRISON = "joint.dialog.garrison";
+    public static final String JOINT_DEPARTURE = "joint.departure";
+    public static final String JOINT_DEPARTURE_TIMES = "joint.departure.times";
+    public static final String ROUND_EVENT_JOINT_SOURCE_LOST = "joint.event.sourceLost";
+    public static final String ROUND_EVENT_JOINT_NO_SHIPS = "joint.event.noShips";
+    public static final String ROUND_EVENT_JOINT_NO_ROUTE = "joint.event.noRoute";
+    public static final String ROUND_EVENT_JOINT_REDUCED = "joint.event.reduced";
     public static final String COALITION_FILTER = "coalition.filter";
     public static final String COALITION_MEMBER_START = "coalition.member.start";
     public static final String COALITION_MEMBER_END = "coalition.member.end";

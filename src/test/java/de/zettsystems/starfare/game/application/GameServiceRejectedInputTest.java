@@ -79,7 +79,7 @@ class GameServiceRejectedInputTest extends AbstractIntegrationTest {
         assertThat(games.sendFleet(id, seat, staleRound, own, target, 1, seat)).isFalse();
         assertThat(games.editOrder(id, seat, staleRound, planned, target, 1)).isFalse();
         assertThat(games.undoOrders(id, seat, staleRound)).isFalse();
-        assertThat(games.dispatchFleets(id, seat, staleRound, target, List.of())).isFalse();
+        assertThat(games.planJointAttack(id, seat, staleRound, target, List.of())).isFalse();
         assertThat(games.allocateExpansion(id, seat, staleRound, own, 0)).isFalse();
         assertThat(snapshot(id)).isEqualTo(before);
     }

@@ -52,7 +52,7 @@ class RoutesTest {
         assertThat(fleets.sendFleet(state, 1, 1, 5, 10)).isFalse();
         assertThat(fleets.queueSend(state, 1, 1, 5, 10)).isFalse();
         assertThat(fleets.addStandingOrder(state, 1, 1, 5, 2)).isNegative();
-        assertThat(OrderPlanning.dispatch(state, 1, 5, List.of(new FleetDispatch(1, 10)))).isFalse();
+        assertThat(OrderPlanning.jointAttack(state, 1, 5, List.of(new FleetDispatch(1, 10)))).isFalse();
         assertThatThrownBy(() -> state.addFleet(1, 1, 5, 10)).isInstanceOf(java.util.NoSuchElementException.class);
         assertThat(GameState.toSnapshot(state)).isEqualTo(before);
         assertThat(fleets.queueSend(state, 1, 1, 4, 10)).isTrue();

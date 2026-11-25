@@ -27,8 +27,15 @@ public interface GameService {
 
     boolean editOrder(GameId gameId, int playerId, int expectedTurn, PlannedOrder expected, int target, int ships);
     boolean undoOrders(GameId gameId, int playerId, int expectedTurn);
-    boolean dispatchFleets(GameId gameId, int playerId, int expectedTurn, int target,
-                          List<de.zettsystems.starfare.fleet.values.FleetDispatch> dispatches);
+    /**
+     * Joint attack on one target: all sources arrive in the round of the slowest one. Sources that would arrive
+     * earlier start later; their ships stay in the garrison until then. All or nothing.
+     */
+    boolean planJointAttack(GameId gameId, int playerId, int expectedTurn, int target,
+                            List<de.zettsystems.starfare.fleet.values.FleetDispatch> dispatches);
+
+    /** Cancels one planned later start of a joint attack while the round is open. */
+    boolean cancelDeparture(GameId gameId, int playerId, int expectedTurn, PlannedDeparture expected);
     List<GameSummary> visibleGamesFor(String account, GameListScope scope);
 
     /**

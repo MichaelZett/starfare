@@ -69,6 +69,8 @@ public class DefaultReportService implements ReportService {
             case TurnEvent.EconomySummary _ -> null;
             case TurnEvent.Cosmic(var kind, _, var systemName, _, _, _, _, _) ->
                     "Hyperraum-Ticker: %s %s".formatted(kind, systemName).strip();
+            case TurnEvent.JointDeparture departure -> "Geplanter Start %s → %s: %d von %d Schiffen.".formatted(
+                    departure.systemName(), departure.targetName(), departure.sent(), departure.planned());
             case TurnEvent.FinalScore(var round, var lines) -> "Wertung nach Runde %d: %s".formatted(round, lines.stream()
                     .map(line -> line.name() + " " + line.points()).collect(java.util.stream.Collectors.joining(", ")));
         };

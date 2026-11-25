@@ -1,13 +1,16 @@
 package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridTester;
 import com.vaadin.flow.component.textfield.TextField;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.values.PlannedDeparture;
 import de.zettsystems.starfare.game.values.VisibleSystem;
+import de.zettsystems.starfare.testsupport.DomEvents;
 import de.zettsystems.starfare.legal.ui.ImprintView;
 import org.junit.jupiter.api.Test;
 
@@ -15,24 +18,51 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class BulkPlanningJourneyTest extends AbstractMapJourneyTest {
     @Test
-    void jointSendFromTheMapEditingAndUndoUseBothSelectedSystems() {
+    void jointAttackPicksSourcesOnTheBadgesAndStartsTheFasterOneLater() {
         createReviewGame();
+        int turn = view().turn();
         select("Gamma");
-        assertThat(find(com.vaadin.flow.component.html.Div.class).withClassName("sys-arrival").all())
-                .as("a badge with the arrival round at each own system with ships").hasSize(2);
-        click("Gemeinsam senden");
-        @SuppressWarnings("unchecked") // rationale: the planning target is a ComboBox<VisibleSystem>.
-        ComboBox<VisibleSystem> target = find(ComboBox.class, openedDialog()).single();
-        assertThat(target.getValue().name()).as("the target comes from the map").isEqualTo("Gamma");
-        selectSources();
-        test(find(Checkbox.class, openedDialog()).single()).click();
-        enterAmount(1);
-        assertThat(elementText(openedDialog().getElement())).as("one arrival line per round with the fixed amount")
-                .contains("Gamma · Runde");
-        dialogClick("Flotten gesammelt senden");
-        assertThat(view().plannedOrders()).allMatch(order -> Integer.valueOf(1).equals(order.ships()));
+        assertThat(find(Div.class).withClassName("sys-arrival").all())
+                .as("a badge with the arrival round at each own system with ships, without any arrival to meet")
+                .hasSize(2);
+        assertThat(viewText()).contains("Gemeinsam angreifen: Rundenabzeichen eigener Systeme anklicken");
+
+        pickSource("Alpha");
+        pickSource("Beta");
+        assertThat(find(Div.class, mapSystem("Beta")).withClassName("sys-arrival-selected").all()).hasSize(1);
+        click("Gemeinsam angreifen (Ankunft R" + (turn + 15) + ")");
+        assertThat(elementText(openedDialog().getElement())).as("the faster source starts three rounds later")
+                .contains("Start sofort · Ankunft Runde " + (turn + 15))
+                .contains("Start in Runde " + (turn + 3) + " (+3) · Ankunft Runde " + (turn + 15));
+        IntegerField beta = find(IntegerField.class, openedDialog()).withCondition(field -> "Beta".equals(field.getLabel())).single();
+        assertThat(beta.getValue()).as("all available ships by default").isEqualTo(3);
+        test(beta).setValue(2);
+        roundTrip();
+        dialogClick("Angriff planen");
+
+        assertThat(view().plannedOrders()).singleElement()
+                .matches(order -> Integer.valueOf(1).equals(order.fromSystemId()) && Integer.valueOf(5).equals(order.ships()));
+        assertThat(view().plannedDepartures()).singleElement()
+                .isEqualTo(new PlannedDeparture(2, 3, "Beta", "Gamma", 2, turn + 3, turn + 15, null));
+        VisibleSystem reserved = view().systems().stream().filter(system -> system.id() == 2).findFirst().orElseThrow();
+        assertThat(reserved.garrison()).as("reserved ships still defend").isEqualTo(3);
+        assertThat(reserved.availableShips()).as("but cannot be sent twice").isEqualTo(1);
         assertTab("Flotten");
-        assertThat(view().plannedOrders()).hasSize(2);
+        assertThat(elementText(card("fleet-travel-card-departure", "Beta → Gamma").getElement()))
+                .contains("Start: Runde " + (turn + 3) + " · Ankunft: Runde " + (turn + 15));
+
+        cardAction("fleet-travel-card-departure", "Beta → Gamma", "Stornieren");
+        assertThat(view().plannedDepartures()).isEmpty();
+        click("Letzten Befehlschritt zurücknehmen");
+        assertThat(view().plannedDepartures()).as("undo brings the cancelled start back").hasSize(1);
+    }
+
+    @Test
+    void editingAndUndoOfAQueuedSendKeepTheTravelList() {
+        createReviewGame();
+        assertThat(games.sendFleet(id, player, 1, 3, 1)).isTrue();
+        reloadMap();
+        selectTab("Flotten");
         cardAction("fleet-travel-card-planned", "Alpha → Gamma", "Befehl bearbeiten");
         selectTarget("Beta");
         enterAmount(2);
@@ -72,11 +102,10 @@ class BulkPlanningJourneyTest extends AbstractMapJourneyTest {
         store.delete(copy);
     }
 
-    @SuppressWarnings("unchecked") // rationale: the planning dialog contains a MultiSelectComboBox<VisibleSystem>.
-    private void selectSources() {
-        MultiSelectComboBox<VisibleSystem> sources = find(MultiSelectComboBox.class, openedDialog()).single();
-        test(sources).selectItem("Alpha", "Beta");
-        assertThat(sources.getValue()).hasSize(2);
+    /** The round badge sits inside the system dot and has its own click target. */
+    private void pickSource(String system) {
+        DomEvents.fire(find(Div.class, mapSystem(system)).withClassName("sys-arrival").single(), "click");
+        runPendingUiAccess();
     }
 
     @SuppressWarnings("unchecked") // rationale: the planning target is a ComboBox<VisibleSystem>.

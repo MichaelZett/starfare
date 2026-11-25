@@ -20,6 +20,18 @@ class TurnEventJsonTest {
     }
 
     @Test
+    void jointDeparturesRoundTripAndPointAtTheirSourceWithoutABattle() {
+        TurnEvent event = new TurnEvent.JointDeparture(1, 4, "Vega", 7, "Rigel", 10, 6, TurnEvent.JointDeparture.Outcome.REDUCED);
+        String json = mapper.writeValueAsString(event);
+        assertThat(json).contains("\"type\":\"jointDeparture\"");
+        TurnEvent restored = mapper.readValue(json, TurnEvent.class);
+        assertThat(restored).isEqualTo(event);
+        assertThat(restored.affectedSystemId()).hasValue(4);
+        assertThat(restored.battleSystemId()).isEmpty();
+        assertThat(BattleReplay.from(restored)).isEmpty();
+    }
+
+    @Test
     void economySummariesRoundTripWithoutAnySystemOrBattle() {
         TurnEvent summary = new TurnEvent.EconomySummary(2, 1);
         String json = mapper.writeValueAsString(summary);

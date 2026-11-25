@@ -75,29 +75,63 @@
 }
 
 /* Joint arrival: the round in which ships sent now from an own system would reach the chosen target. Left of
-   the dot, clear of the free-ships diamond and the fleet badges. The text carries the meaning, colour repeats it. */
+   the dot, clear of the free-ships diamond and the fleet badges. The text carries the meaning, colour repeats it.
+   While the round is open a badge picks its system as a source of a joint attack. */
 #map .sys-arrival {
     position: absolute;
     right: 100%;
     top: 50%;
-    z-index: 3;
-    transform: translate(-4px, -50%) scale(var(--map-inverse-zoom, 1));
+    z-index: 5;
+    transform: translate(-6px, -50%) scale(var(--map-inverse-zoom, 1));
     transform-origin: right center;
-    padding: 1px 7px;
-    border: 1px solid #7c86a6;
+    padding: 3px 9px;
+    border: 2px solid #7c86a6;
     border-radius: 999px;
-    background: rgba(13, 17, 23, .9);
-    color: #c3cae0;
-    font-size: 11px;
+    background: rgba(13, 17, 23, .94);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .55);
+    color: #e3e8f5;
+    font-size: 13px;
     font-weight: 700;
     line-height: 1.4;
     white-space: nowrap;
 }
 
+#map .sys-arrival[role="button"] { cursor: pointer; }
+#map .sys-arrival[role="button"]:hover,
+#map .sys-arrival[role="button"]:focus-visible { outline: 2px solid #f3f6ff; outline-offset: 2px; }
+
 #map .sys-arrival-match { border-color: #5be38a; background: rgba(18, 58, 36, .94); color: #c9ffd9; }
 #map .sys-arrival-early { border-color: #ffc857; background: rgba(58, 48, 16, .94); color: #ffe7a8; }
 #map .sys-arrival-open { border-color: #4aa3ff; color: #dfe6f7; }
 #map .sys-joint-target { outline: 2px dashed #ff6b5e; outline-offset: 6px; }
+#map .sys-arrival-selected { border-width: 3px; border-color: #f3f6ff; box-shadow: 0 0 0 3px rgba(91, 227, 138, .55); }
+#map .sys-joint-source { outline: 3px solid #5be38a; outline-offset: 4px; }
+
+#map .sys-joint-hint {
+    position: absolute;
+    z-index: 6;
+    transform: translate(-50%, -100%) scale(var(--map-inverse-zoom, 1));
+    transform-origin: center bottom;
+    padding: 3px 10px;
+    border: 1px dashed #ff6b5e;
+    border-radius: 6px;
+    background: rgba(13, 17, 23, .92);
+    color: #ffd9d5;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.joint-attack-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; }
+.joint-attack-row vaadin-integer-field { width: 9rem; }
+.joint-attack-start { color: var(--sf-text-muted); font-size: .9rem; }
+.joint-attack-summary { font-weight: 600; }
+
+.event-joint-departure {
+    border-left-color: #ffc857;
+    background: rgba(255, 200, 87, 0.08);
+}
 
 #map vaadin-button.sys-joint-send {
     position: absolute;

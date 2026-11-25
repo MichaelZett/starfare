@@ -54,6 +54,7 @@ final class MapRenderer {
                   Runnable onRefresh,
                   de.zettsystems.starfare.navigation.values.@Nullable RangeView range,
                   @Nullable JointArrival joint,
+                  IntConsumer onJointToggle,
                   Consumer<JointArrival> onJointSend) {
     }
 
@@ -66,7 +67,7 @@ final class MapRenderer {
             map.add(buildSystemDot(sys, in));
         }
         JointArrival joint = in.joint();
-        if (joint != null && joint.mayDispatch()) { addJointSend(map, joint, in); }
+        if (joint != null && joint.mayDispatch()) { addJointAttack(map, joint, in); }
         for (PlannedOrder order : in.view().plannedOrders()) {
             renderPlannedOrder(map, order, in);
         }
@@ -291,8 +292,9 @@ final class MapRenderer {
 
     /**
      * Arrival round at the chosen target if this system sent its ships now, against the round to meet there:
-     * a tick for together, the rounds to wait for too early, the plain round otherwise. The text carries the
-     * meaning, the colour only repeats it.
+     * a tick for together, the rounds it would start later for too early, the plain round otherwise. While the
+     * round is open the badge picks the system as a source of a joint attack, or drops it again. The text carries
+     * the meaning, the colour only repeats it.
      */
     private static void markJointArrival(Div dot, VisibleSystem sys, Inputs in) {
         JointArrival joint = in.joint();
@@ -302,46 +304,71 @@ final class MapRenderer {
         if (arrival == null) { return; }
         JointArrival.Fit fit = joint.fit(arrival);
         int gap = joint.gap(arrival);
+        boolean selected = joint.isSelected(sys.id());
         Div badge = new Div();
         badge.addClassNames("sys-arrival", "sys-arrival-" + fit.name().toLowerCase(java.util.Locale.ROOT));
         String round = I18n.t(UiTexts.MAP_ARRIVAL_ROUND, arrival);
-        badge.setText(switch (fit) {
+        badge.setText((selected ? "✔ " : "") + switch (fit) {
             case MATCH -> round + " ✓";
             case EARLY -> round + " · +" + gap + " ⏸";
             default -> round;
         });
         String target = in.systems().stream().filter(system -> system.id() == joint.targetId())
                 .map(VisibleSystem::name).findFirst().orElse("?");
-        badge.getElement().setProperty(HtmlAttributes.TITLE, switch (fit) {
+        String tooltip = switch (fit) {
             case MATCH -> I18n.t(UiTexts.MAP_ARRIVAL_MATCH, target, arrival);
             case EARLY -> I18n.t(UiTexts.MAP_ARRIVAL_EARLY, target, arrival, gap);
             case LATE -> I18n.t(UiTexts.MAP_ARRIVAL_LATE, target, arrival, gap);
             default -> I18n.t(UiTexts.MAP_ARRIVAL_OPEN, target, arrival);
-        });
-        badge.getElement().addEventListener("click", _ -> { }).addEventData(STOP_PROPAGATION);
+        };
+        if (joint.mayDispatch()) {
+            if (selected) {
+                dot.addClassName("sys-joint-source");
+                badge.addClassName("sys-arrival-selected");
+            }
+            tooltip += " — " + I18n.t(selected ? UiTexts.MAP_JOINT_DROP : UiTexts.MAP_JOINT_PICK);
+            KeyboardActions.enable(badge);
+            badge.getElement().setAttribute(HtmlAttributes.ARIA_PRESSED, String.valueOf(selected));
+            badge.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, sys.name() + ": " + tooltip);
+            badge.getElement().addEventListener("click", _ -> in.onJointToggle().accept(sys.id()))
+                    .addEventData(STOP_PROPAGATION);
+        } else {
+            badge.getElement().addEventListener("click", _ -> { }).addEventData(STOP_PROPAGATION);
+        }
+        badge.getElement().setProperty(HtmlAttributes.TITLE, tooltip);
         dot.add(badge);
     }
 
-    /** Above the target: opens the joint send with the systems that arrive together already chosen. */
-    private static void addJointSend(Div map, JointArrival joint, Inputs in) {
+    /**
+     * Above the target: before any pick a hint how to pick sources; afterwards the joint attack with its common
+     * arrival, which opens the confirmation.
+     */
+    private static void addJointAttack(Div map, JointArrival joint, Inputs in) {
         VisibleSystem target = in.systems().stream().filter(system -> system.id() == joint.targetId()).findFirst().orElse(null);
         if (target == null) { return; }
-        List<String> together = joint.matchingSources().stream().map(id -> in.systems().stream()
-                .filter(system -> system.id() == id).map(VisibleSystem::name).findFirst().orElse("?")).toList();
-        String label = I18n.t(UiTexts.MAP_JOINT_SEND);
-        if (!together.isEmpty()) {
-            label += " (" + (together.size() <= 3 ? String.join(", ", together)
-                    : String.join(", ", together.subList(0, 2)) + " +" + (together.size() - 2)) + ")";
+        Integer common = joint.commonArrival();
+        com.vaadin.flow.component.Component control;
+        String label;
+        if (common == null) {
+            label = I18n.t(UiTexts.MAP_JOINT_HINT);
+            var hint = new com.vaadin.flow.component.html.Span(label);
+            hint.addClassName("sys-joint-hint");
+            control = hint;
+        } else {
+            label = I18n.t(Objects.equals(target.ownerId(), in.playerId()) ? UiTexts.MAP_JOINT_SEND : UiTexts.MAP_JOINT_ATTACK,
+                    common);
+            List<String> sources = joint.selectedArrivals().stream().map(entry -> in.systems().stream()
+                    .filter(system -> system.id() == entry.getKey()).map(VisibleSystem::name).findFirst().orElse("?")).toList();
+            var attack = new com.vaadin.flow.component.button.Button(label, _ -> in.onJointSend().accept(joint));
+            attack.addClassName("sys-joint-send");
+            attack.setAriaLabel(I18n.t(UiTexts.MAP_JOINT_ATTACK_TO, target.name(), String.join(", ", sources), common));
+            control = attack;
         }
-        var send = new com.vaadin.flow.component.button.Button(label, _ -> in.onJointSend().accept(joint));
-        send.addClassName("sys-joint-send");
-        send.setAriaLabel(I18n.t(UiTexts.MAP_JOINT_SEND_TO, target.name())
-                + (together.isEmpty() ? "" : ": " + String.join(", ", together)));
         double half = label.length() * 3.4 + 12;
         double left = Math.clamp(target.x(), half, Math.max(half, in.view().extent().width() - half));
-        send.getStyle().set(CssProperties.LEFT, left + "px")
+        control.getElement().getStyle().set(CssProperties.LEFT, left + "px")
                 .set(CssProperties.TOP, (target.y() - SystemDisplaySize.pixelsFor(target) / 2.0 - 8) + "px");
-        map.add(send);
+        map.add(control);
     }
 
     /** Only unseen battles earn a marker; seen ones stay in the report list for rewatching. */

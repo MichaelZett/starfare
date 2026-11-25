@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Own arrivals, counting a waiting fleet once at its delayed arrival. */
+/** Own arrivals, counting a waiting fleet once at its delayed arrival and a planned later start at its planned arrival. */
 public record ArrivalPreview(int systemId, String systemName, int turn, long ships) {
     /** Final destination and arrival round of one own fleet. */
     public record Arrival(int systemId, int turn) { }
@@ -34,6 +34,9 @@ public record ArrivalPreview(int systemId, String systemName, int turn, long shi
             if (order.isSend() && target != null && turn != null && ships != null) {
                 totals.merge(new Destination(target, turn), ships.longValue(), Long::sum);
             }
+        }
+        for (PlannedDeparture departure : view.plannedDepartures()) {
+            totals.merge(new Destination(departure.toSystemId(), departure.arrivalTurn()), (long) departure.ships(), Long::sum);
         }
         return totals.entrySet().stream().map(entry -> new ArrivalPreview(entry.getKey().system(),
                         view.systems().stream().filter(system -> system.id() == entry.getKey().system())

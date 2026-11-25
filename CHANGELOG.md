@@ -6,6 +6,15 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- **Gemeinsam angreifen:** Nach dem Klick auf ein Ziel wählen die Rundenabzeichen der eigenen Systeme
+  per Klick die Quellen aus; der Knopf über dem Ziel zeigt die gemeinsame Ankunft und öffnet eine kurze
+  Bestätigung mit den Schiffen je Quelle. Schnellere Quellen starten automatisch später, damit alle in
+  derselben Runde ankommen; ihre Schiffe verteidigen bis dahin die Garnison, sind aber vorgemerkt.
+  Geplante Starts stehen im Reiter Flotten und lassen sich stornieren. Der bisherige Dialog
+  „Flotten gesammelt senden“ entfällt.
+
 ## 0.2.19 - 2026-11-25
 
 - **Neue Namen der Varianten:** Starfare setzt SectorForces um, mit klassischen und erweiterten Regeln.

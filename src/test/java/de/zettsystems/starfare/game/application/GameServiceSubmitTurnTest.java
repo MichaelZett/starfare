@@ -17,9 +17,9 @@ class GameServiceSubmitTurnTest extends AbstractIntegrationTest {
         GameId id = setupTwoHumanStartedGame();
         int turn = currentTurn(id);
         var dispatch = java.util.List.of(new de.zettsystems.starfare.fleet.values.FleetDispatch(1, 2));
-        assertThat(game.dispatchFleets(id, 1, turn - 1, 3, dispatch)).isFalse();
-        assertThat(game.dispatchFleets(id, 99, turn, 3, dispatch)).isFalse();
-        assertThat(game.dispatchFleets(id, 1, turn, 3, dispatch)).isTrue();
+        assertThat(game.planJointAttack(id, 1, turn - 1, 3, dispatch)).isFalse();
+        assertThat(game.planJointAttack(id, 99, turn, 3, dispatch)).isFalse();
+        assertThat(game.planJointAttack(id, 1, turn, 3, dispatch)).isTrue();
         assertThat(game.submitTurn(id, 1)).isTrue();
         assertThat(game.undoOrders(id, 1, turn)).isFalse();
     }

@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.domain;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.diplomacy.values.DiplomacyState;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
+import de.zettsystems.starfare.fleet.values.ScheduledDeparture;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.navigation.values.NavigationSettings;
 import de.zettsystems.starfare.report.values.TurnReport;
@@ -68,7 +69,10 @@ public record GameStateSnapshot(
         @Nullable CosmicState cosmic,
         @Nullable Map<Integer, Integer> timedOutPlaces,
         // Games created before the map grew with the system count have no extent and keep the earlier fixed map.
-        @Nullable GalaxyExtent extent) {
+        @Nullable GalaxyExtent extent,
+        // Games saved before joint attacks have no planned later starts.
+        @Nullable List<ScheduledDeparture> scheduledDepartures,
+        @Nullable Map<Integer, List<ScheduledDeparture>> previousDepartures) {
     public GameStateSnapshot(int turn, int nextGlobalFleetId, Map<Integer, Integer> nextLocalFleetNo,
                              List<Player> players, List<StarSystem> systems, List<Fleet> fleets,
                              Map<Integer, TurnReport> reports, Map<Integer, Map<Integer, GameState.Intel>> intel,
@@ -88,6 +92,7 @@ public record GameStateSnapshot(
                 submittedThisTurn, gameOver, winnerId, started, joinedHumanPlayerIds, originalHumanPlayerIds,
                 observers, seatByUser, invitedSeats, pendingOrders, standingOrders, nextStandingOrderId,
                 observersAllowed, reentryAllowed, turnStartedAt, visibility, finishedAt, ownershipHistory,
-                replayFrames, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+                replayFrames, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null);
     }
 }

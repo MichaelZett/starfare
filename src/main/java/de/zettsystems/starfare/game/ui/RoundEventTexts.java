@@ -29,6 +29,7 @@ final class RoundEventTexts {
             case TurnEvent.EconomySummary _ -> "";
             case TurnEvent.Cosmic news -> CosmicNewsTexts.text(news);
             case TurnEvent.FinalScore score -> CosmicNewsTexts.score(score);
+            case TurnEvent.JointDeparture departure -> jointDeparture(departure);
         };
     }
 
@@ -44,7 +45,8 @@ final class RoundEventTexts {
                     you(held.defenderName()));
             case TurnEvent.CoalitionBattle _, TurnEvent.Production _, TurnEvent.Reinforcement _,
                  TurnEvent.Victory _, TurnEvent.Defeat _, TurnEvent.EconomySummary _,
-                 TurnEvent.Cosmic _, TurnEvent.FinalScore _ -> new BattleReplayDialog.BattleSides("", "");
+                 TurnEvent.Cosmic _, TurnEvent.FinalScore _, TurnEvent.JointDeparture _ ->
+                    new BattleReplayDialog.BattleSides("", "");
         };
     }
 
@@ -55,6 +57,16 @@ final class RoundEventTexts {
     private static String battleWon(TurnEvent.BattleWon battle) {
         return I18n.t(battle.wasNeutral() ? UiTexts.ROUND_EVENT_BATTLE_WON_NEUTRAL : UiTexts.ROUND_EVENT_BATTLE_WON_ENEMY,
                 battle.systemName(), battle.attacking(), battle.defending(), battle.remaining());
+    }
+
+    private static String jointDeparture(TurnEvent.JointDeparture departure) {
+        return switch (departure.outcome()) {
+            case SOURCE_LOST -> I18n.t(UiTexts.ROUND_EVENT_JOINT_SOURCE_LOST, departure.systemName(), departure.targetName());
+            case NO_SHIPS -> I18n.t(UiTexts.ROUND_EVENT_JOINT_NO_SHIPS, departure.systemName(), departure.targetName());
+            case NO_ROUTE -> I18n.t(UiTexts.ROUND_EVENT_JOINT_NO_ROUTE, departure.systemName(), departure.targetName());
+            case REDUCED -> I18n.t(UiTexts.ROUND_EVENT_JOINT_REDUCED, departure.systemName(), departure.targetName(),
+                    departure.sent(), departure.planned());
+        };
     }
 
     private static String victory(TurnEvent.Victory victory) {

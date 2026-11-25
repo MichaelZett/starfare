@@ -100,6 +100,23 @@ class GameStateSnapshotJsonTest extends AbstractIntegrationTest {
                 .isEqualTo(CosmicState.EMPTY);
     }
 
+    @Test
+    void plannedStartsOfJointAttacksSurviveJsonAndOldSnapshotsHaveNone() {
+        GameState state = sampleState(true);
+        state.systems().add(new StarSystem(2, "Near", 480, 0, 1, 10, 2, false));
+        state.systems().add(new StarSystem(3, "Target", 640, 0, null, 3, 1, true));
+        assertThat(de.zettsystems.starfare.fleet.domain.OrderPlanning.jointAttack(state, 1, 3, List.of(
+                new de.zettsystems.starfare.fleet.values.FleetDispatch(1, 4),
+                new de.zettsystems.starfare.fleet.values.FleetDispatch(2, 6)))).isTrue();
+        ObjectNode json = (ObjectNode) objectMapper.valueToTree(GameState.toSnapshot(state));
+        GameState restored = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+        assertThat(restored.scheduledDepartures()).hasSize(1).isEqualTo(state.scheduledDepartures());
+        json.remove(List.of("scheduledDepartures", "previousDepartures"));
+        GameState old = GameState.fromSnapshot(objectMapper.treeToValue(json, GameStateSnapshot.class));
+        assertThat(old.scheduledDepartures()).isEmpty();
+        assertThat(old.undoOrders(1)).as("orders undo without any planned start").isTrue();
+    }
+
     @Autowired
     private ObjectMapper objectMapper;
 

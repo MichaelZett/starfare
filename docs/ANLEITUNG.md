@@ -234,7 +234,7 @@ Rücknahmeschritt, keine mehrstufige Historie. Er bleibt nach Neuladen und Neust
 erhalten, endet aber mit dem Rundenwechsel. Verlegungen gehören nicht zu dieser
 Befehlsrücknahme.
 
-### Gleichzeitig ankommen und gemeinsam senden
+### Gemeinsam angreifen
 
 Klickst du auf der Karte ein fremdes System oder eine eigene fliegende Flotte an,
 zeigt jedes eigene System mit freien Schiffen links ein Abzeichen mit der Runde,
@@ -243,30 +243,47 @@ dieselben Routen wie beim Senden, in erweiterten Partien also mit Reichweite und
 Zwischenhalten; Systeme ohne Weg dorthin bekommen kein Abzeichen.
 
 Gibt es schon eine Ankunft, nach der du dich richten kannst, vergleichen die
-Abzeichen damit: bei einer gewählten Flotte ihre Ankunft, bei einem gewählten
-System die früheste eigene Flotte oder vorgemerkte Sendung dorthin.
+Abzeichen zunächst damit: bei einer gewählten Flotte ihre Ankunft, bei einem
+gewählten System die früheste eigene Flotte oder geplante Sendung dorthin.
 
 - **Grün mit ✓:** kommt in derselben Runde an.
-- **Gelb mit `+1 ⏸`:** käme so viele Runden zu früh; eine Runde später senden
-  oder die Flotte unterwegs warten lassen.
+- **Gelb mit `+1 ⏸`:** käme so viele Runden zu früh.
 - **Grau:** käme später an.
 
-Über dem Ziel steht **Gemeinsam senden**, in Klammern die Systeme, die
-gleichzeitig ankommen. Der Knopf öffnet das gemeinsame Senden mit Ziel und
-diesen Systemen vorausgewählt:
+So planst du einen gemeinsamen Angriff:
 
-1. Passe die Auswahl der eigenen Systeme bei Bedarf an.
-2. Nutze **Alle verfügbaren Schiffe** oder gib eine feste Menge **je System** an.
-3. Prüfe die Vorschau mit den Summen je Ankunftsrunde und bestätige mit
-   **Flotten gesammelt senden**.
+1. Klicke die Abzeichen der Systeme an, die mitfliegen sollen. Gewählte Abzeichen
+   tragen ein ✔ und einen hellen Rand, das System einen grünen Ring; ein zweiter
+   Klick wählt ab. Die Abzeichen vergleichen jetzt mit der gemeinsamen Ankunft,
+   der spätesten Ankunft der gewählten Systeme.
+2. Über dem Ziel steht **Gemeinsam angreifen (Ankunft R39)** (bei einem eigenen
+   Ziel **Gemeinsam senden**). Der Knopf öffnet die Bestätigung: je System die
+   Schiffe (vorgegeben: alle verfügbaren) und wann es startet.
+3. **Angriff planen** übernimmt alles oder nichts.
 
-Die Aktion wird als Ganzes geprüft. Ist eine Menge ungültig oder inzwischen die
-Runde gewechselt, wird keine Teilmenge der Befehle übernommen.
+Das langsamste System startet sofort. Schnellere Systeme starten später, genau so,
+dass alle in derselben Runde ankommen: Kommt ein System in Runde 37 an, ein anderes
+in 39, startet das erste zwei Runden später. Bis zum Start bleiben diese Schiffe in
+der Garnison und verteidigen das System; für andere Sendungen sind sie aber
+vorgemerkt und nicht mehr verfügbar. Gestartet wird automatisch in der richtigen
+Runde. Geplante Starts stehen im Reiter **Flotten** mit Start- und Ankunftsrunde und
+lassen sich stornieren, solange die Runde offen ist; **Letzten Befehlschritt
+zurücknehmen** nimmt auch einen ganzen gemeinsamen Angriff zurück.
+
+Ändert sich bis zum Start etwas, steht es im Rundenbericht:
+
+- Geht das Startsystem verloren, entfällt der Start.
+- Sind weniger Schiffe da als geplant, startet der Rest; ist keines mehr da,
+  entfällt der Start.
+- Ist das Ziel nicht mehr erreichbar (erweiterte Regeln: Route unterbrochen,
+  oder das Ziel ist zerstört), entfällt der Start.
+- Gehört das Ziel inzwischen dir oder einem Verbündeten, fliegen die Schiffe
+  trotzdem los und verstärken es, wie jede Flotte, die schon unterwegs ist.
 
 ### Unterwegs und Ankunftsvorschau
 
-Der Reiter **Flotten** zeigt reisende Flotten und die in dieser Runde vorgemerkten
-Befehle in einer Liste, gruppiert nach Ankunftsrunde; innerhalb einer Runde stehen
+Der Reiter **Flotten** zeigt reisende Flotten, die in dieser Runde vorgemerkten
+Befehle und die geplanten Starts gemeinsamer Angriffe in einer Liste, gruppiert nach Ankunftsrunde; innerhalb einer Runde stehen
 die reisenden Flotten vor den Befehlen. Der aufklappbare Bereich
 **Gemeinsame Ankünfte** summiert reisende Flotten und vorgemerkte Sendungen nach
 Ziel und Ankunftsrunde. **Reisedetails** öffnet zusätzliche Reiseangaben.

@@ -3,6 +3,7 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.economy.values.IndustryView;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
+import de.zettsystems.starfare.fleet.values.ScheduledDeparture;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.navigation.domain.Routes;
@@ -51,10 +52,14 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 : state.pendingOrders().getOrDefault(playerId, List.of());
         Map<Integer, Integer> committedBySystem = committedShipsBySystem(orders);
         Map<Integer, Integer> routedBySystem = routedShipsBySystem(state, playerId);
+        List<ScheduledDeparture> departures = state.gameOver() ? List.of() : state.departuresOf(playerId);
+        Map<Integer, Integer> reservedBySystem = new HashMap<>();
+        departures.forEach(departure -> reservedBySystem.merge(departure.fromSystemId(), departure.ships(), Integer::sum));
 
         Set<Integer> sensorCoverage = sensorCoverage(state, playerId);
         var vis = state.systems().stream()
-                .map(s -> buildVisibleSystem(state, playerId, s, committedBySystem, sensorCoverage, routedBySystem))
+                .map(s -> buildVisibleSystem(state, playerId, s, committedBySystem, sensorCoverage, routedBySystem,
+                        reservedBySystem.getOrDefault(s.id(), 0)))
                 .toList();
 
         Map<Integer, String> sysNames = state.systems().stream()
@@ -68,7 +73,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         return new PlayerViewState(turn, players, vis, ownFleets, report, state.gameOver(), state.winnerId(),
                 plannedOrders, standing, empireStats(state, playerId, ownFleets), waitingFleetIds(state, orders),
                 state.battlePresentationEnabled(), roundStatus(state), state.outcome(), SkyMarks.of(state.cosmic()),
-                state.extent());
+                state.extent(), plannedDepartures(departures, sysNames));
     }
 
     @Override
@@ -163,6 +168,15 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
         return committed;
     }
 
+    private static List<PlannedDeparture> plannedDepartures(List<ScheduledDeparture> departures, Map<Integer, String> names) {
+        return departures.stream()
+                .sorted(Comparator.comparingInt(ScheduledDeparture::departureTurn).thenComparingInt(ScheduledDeparture::fromSystemId))
+                .map(departure -> new PlannedDeparture(departure.fromSystemId(), departure.toSystemId(),
+                        names.getOrDefault(departure.fromSystemId(), "?"), names.getOrDefault(departure.toSystemId(), "?"),
+                        departure.ships(), departure.departureTurn(), departure.arrivalTurn(), departure.beneficiaryId()))
+                .toList();
+    }
+
     /** Je Quellsystem die Summe der ausgehenden Produktionsverlegungen. */
     private static Map<Integer, Integer> routedShipsBySystem(GameState state, int playerId) {
         Map<Integer, Integer> out = new HashMap<>();
@@ -175,7 +189,7 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
     private static VisibleSystem buildVisibleSystem(GameState state, int playerId, StarSystem s,
                                                     Map<Integer, Integer> committedBySystem,
                                                     Set<Integer> sensorCoverage,
-                                                    Map<Integer, Integer> routedBySystem) {
+                                                    Map<Integer, Integer> routedBySystem, int reserved) {
         boolean own = Objects.equals(s.ownerId(), playerId);
         var intel = state.intel().getOrDefault(playerId, Map.of()).get(s.id());
         boolean inRange = !own && sensorCoverage.contains(s.id());
@@ -219,10 +233,11 @@ public class DefaultPlayerViewBuilder implements PlayerViewBuilder {
                 production,
                 own, color, lastSeen, inRange,
                 own ? routedBySystem.getOrDefault(s.id(), 0) : null,
-                own ? Math.max(0, s.garrison() - committedBySystem.getOrDefault(s.id(), 0)) : null,
+                // Ships reserved for a planned later start still defend (garrison) but cannot be sent twice.
+                own ? Math.max(0, s.garrison() - committedBySystem.getOrDefault(s.id(), 0) - reserved) : null,
                 own ? ownershipHistory(state, s.id()) : List.of(),
                 own ? industryView(state, s, playerId, Math.max(0, s.garrison()
-                        - committedBySystem.getOrDefault(s.id(), 0)), routedBySystem.getOrDefault(s.id(), 0)) : null);
+                        - committedBySystem.getOrDefault(s.id(), 0) - reserved), routedBySystem.getOrDefault(s.id(), 0)) : null);
     }
 
     private static @Nullable IndustryView industryView(GameState state, StarSystem system, int player, int available, int planned) {
