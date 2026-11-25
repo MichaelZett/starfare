@@ -46,7 +46,7 @@ Bugs, ideas and questions are welcome as
 3. Open [New issue](https://github.com/MichaelZett/starfare/issues/new/choose) and
    choose **Bug report** or **Idea**. The form asks for everything needed:
    - for bugs: what you did, what you expected and what happened instead;
-   - the game variant and rule version (shown in the lobby and the new-game wizard);
+   - the game variant and rule version (shown in the lobby and on the rules card of the new-game dialog);
    - the round, your browser and, if possible, a screenshot.
 4. Submit. You will be notified about replies on GitHub.
 
@@ -63,11 +63,11 @@ complete game.
 
 ## Game variants and rule versions
 
-Choose a game variant before its settings in the new-game dialog. **SectorForces
-classic** (rules **1.0.0**) is preselected. **SectorForces extended** (always the
+Choose the rules first in the new-game dialog: **Classic** (SectorForces classic, rules
+**1.0.0**) is preselected, **Extended** is SectorForces extended. **SectorForces extended** (always the
 current rules **1.3.0-r1**) is available for new games as well. Inside the games platform host
 each variant has a stage the platform keeps (alpha, beta, production; SectorForces extended starts
-in alpha): the platform decides who may use it, the wizard marks alpha and beta
+in alpha): the platform decides who may use it, the rules card marks alpha and beta
 variants, and an account that may no longer use a variant loses access to its games,
 running ones included. In Starfare's own start every variant is open. It adds
 production allocation between ships and industrial expansion, plus limited flight range,
@@ -83,29 +83,28 @@ release. Existing games default to SectorForces; their Classic behavior remains
 unchanged. Lobby, joining, management and archive show the selected rules.
 Templates and rematches retain them.
 
-## AI strategies
+## Computer strength
 
-The new-game wizard offers a separate strategy for each AI seat. SectorForces
-supports Baseline, Rush, Expansion, Concentration and Defense. Spaceward also
-supports Industry, Light industry and Adaptive industry. Baseline preserves the
-previous AI behavior and is the default for new seats and older saved games.
+The new-game dialog offers one computer strength for all computer seats
+(named constants in `ComputerStrength`, calibrated later):
+
+| Strength | Play | Computer start |
+| --- | --- | --- |
+| Easy | Baseline | production and ships ×0.75 |
+| Normal (default) | each computer secretly draws Rush, Expansion, Concentration or Defense | as humans |
+| Challenging | the strongest benchmark profiles: Classic duels Rush or Expansion, else Baseline; Extended Adaptive industry (in larger games also Baseline) | production and ships ×1.25 |
 
 Rush commits ships early; Expansion favors nearby neutral systems; Concentration
-moves spare forces toward the front; Defense keeps larger local reserves. Industry
-invests heavily, Light industry retains more shipbuilding, and Adaptive industry
-adjusts investment to visible threats and available ships.
-These are different approaches, not difficulty levels or a guaranteed ranking.
-
-Selections survive changes to the AI count, the confirmation/back step, reloads,
-server restarts, templates and rematches. Switching to SectorForces resets any
-incompatible industry selection to Baseline. The confirmation lists each AI seat's
-strategy before creation. The alternatives use the same policies as the strategy
-benchmark and consume player-visible information and legal route durations.
+moves spare forces toward the front; Defense keeps larger local reserves; Adaptive
+industry adjusts investment to visible threats and available ships. The profiles use
+the same policies as the strategy benchmark and consume only player-visible
+information and legal route durations. The strength is saved with the game and kept
+by templates and rematches; the drawn profiles are stored per seat.
 
 ## Lobby and archive
 
-New games are private. Use **Manage** to invite players or publish the game
-before it starts. Public games can be found by other signed-in players; private
+New games are public unless **Invitation only** is ticked. Use **Manage** to invite
+players or change the visibility before the game starts. Public games can be found by other signed-in players; private
 games are visible to the host, seat holders and invitees. Visibility is fixed
 once the game starts.
 
@@ -113,8 +112,7 @@ Finished games move from the lobby to **Archive**. Search by game or player name
 filter your games and open a completed map without issuing further orders.
 **View** opens the review. Returning to
 the archive within the same account session restores filters and scrolls to the
-last viewed game. Ten-seat wizard summaries offer collapsible seat details,
-initially expanded, with **Change** always accessible at the group heading.
+last viewed game.
 When the final round contains a battle, the normal round report remains open first.
 Resolve every battle from that report, individually or together in **Instant** mode;
 only then does the victory or defeat dialog appear,
@@ -306,16 +304,42 @@ survives navigation and reload; the default is German.
 
 The landing route `/` is the lobby. From there:
 
-- **New game** — opens the wizard:
-    - Galaxy size: 8–120 systems, never fewer than the participating players
-    - Up to 8 human players and 7 AI players; at most 10 participants together
-    - A colour per seat (duplicates fall back to a free palette entry)
-    - Neutral and starting production: 1–20 per turn; home-system ships: 1–50
-    - Allow observers? Allow rejoining?
-    - Victory threshold: 10–100% of all systems, default 70%
-    - Combat strength variation: 0–30%, default ±10%, fixed for the game
-    - Tempo for games with two or more humans, and attack order for multiple attackers
-    - Battle presentation on by default; each account's saved speed choice overrides it
+- **New game** — opens the one-page dialog **New game** (picture cards and drop-downs, no
+  summary page; **Create game** creates it):
+    - Game: a random name (roll again with the die), rules Classic or Extended, empire name
+    - Players 2–10 (default 3), of which computers 0..n−1 (default all others), computer
+      strength Easy / Normal / Challenging (default Normal), tempo only with more than one human,
+      invitation only (default off), tutorial
+    - Map: layout even or random; galaxy size Small 16 / Medium 24 / Large 40 / Huge 64
+      systems (default Medium; sizes with fewer than two systems per player are locked);
+      highest neutral production 6 / 10 / 15 / 20 (default 10)
+    - Chance: None / Low / Medium / High (default Low), see below
+    - Details (Classic only, collapsible): single galactic events (unless chance is None)
+      and a round limit (off or 10–500)
+    - If every other seat is a computer, the game starts at once.
+
+  Fixed for every new game: home system with production 4 and 8 ships, start balance by
+  position, colours from the palette in seat order, victory at 70% of all systems,
+  observers and rejoining allowed, battle presentation on (each account's saved speed
+  choice overrides it). Neutral systems produce 1 up to the chosen maximum, bell-shaped
+  around the middle. Extended games allow alliances, alliance victories (70%) and
+  computer alliances.
+
+  | Chance | Combat strength | Events (Classic) | Several attackers |
+  | --- | --- | --- | --- |
+  | None | exact | off | strongest first |
+  | Low | ±5% | rare | random order |
+  | Medium | ±10% | normal | random order |
+  | High | ±20% | frequent | random order |
+
+  Extended games resolve all hostile sides together, so chance only affects combat
+  strength there.
+
+  Fleets fly at one fixed speed on every map: 160 map pixels per round, at least 2 and
+  at most 40 rounds. Density is fixed at 240,000 square pixels per system, so larger
+  galaxies are wider (Small 2600×1670, Medium 3160×2020, Large 4040×2570, Huge
+  5080×3220). Neighbours are usually about three rounds apart; crossing the whole map
+  takes about 19 / 23 / 29 / 37 rounds. Each game stores its map size in the snapshot.
 - **Search / filter** — narrow the list by game or player name, and by
   status: all, mine, open or running games. Finished games are in **Archive**.
 - **Join** — take an open slot. One slot per game; first come, first
@@ -440,7 +464,7 @@ In the header:
   have submitted. With two or more humans each round has a deadline: the
   round limit from the start of the round, and the straggler limit as soon as
   only one player is missing — their chip then shows the countdown. The tempo
-  chosen in the wizard sets both and stays fixed for the whole game: Live
+  chosen in the new-game dialog sets both and stays fixed for the whole game: Live
   (5 min / 1 min), Brisk (1 h / 15 min), Daily (1 day / 6 h) or Relaxed
   (3 days / 12 h). A click on submit that arrives after the deadline ended the
   round is refused instead of submitting the next round. Whoever misses the deadline
@@ -464,7 +488,7 @@ sound. The browser activates audio on the first click on a battle card. Use
 the report's **Speed** selector to choose **0.5×, 1×, 1.5×, 2×, Instant**.
 **Instant** skips animation and also offers **Resolve all open battles**, including
 battles hidden by report filters. Speed and sound are saved per account for later
-rounds and sign-ins; the wizard default applies until you make a personal choice.
+rounds and sign-ins; the game default applies until you make a personal choice.
 The playback dialog also lets you change animation speed and test or switch sound.
 The result appears only after acknowledging the battle;
 until then the map shows a large battle marker and conceals the affected
@@ -478,9 +502,8 @@ colours faded, without revealing combat details.
 
 ## Victory condition
 
-The wizard sets the required share of all systems (10–100%, default 70%).
-Neutral systems count towards the total. Once a player reaches the configured
-share, the game ends; after pending battles are acknowledged, the result dialog
+New games require 70% of all systems. Neutral systems count towards the total; older
+games keep their stored threshold. Once a player reaches the required share, the game ends; after pending battles are acknowledged, the result dialog
 shows the winner and personal ship totals.
 
 The winner can choose **Continue until every system is conquered** to resume toward 100%.
@@ -494,11 +517,11 @@ the end of the game; unlike leaving there is no way back, even when the game all
 
 ## SectorForces: galactic events and scoring
 
-Inspired by the C64 classic Galactic Empire (1983), SectorForces games offer a wizard section
-**Galactic events and scoring**. Everything is off by default; older games read as off and keep
-rules 1.0.0.
+Inspired by the C64 classic Galactic Empire (1983). How often events occur follows the game's
+chance level (None: never, Low: rare, Medium: normal, High: frequent); older games read as off and
+keep rules 1.0.0.
 
-- **Random events** off / rare / normal, each event can be switched off on its own: cosmic
+- **Random events**, each can be switched off on its own under **Details**: cosmic
   storms (every fleet in hyperspace one round later), space-time quake (half the remaining
   travel time), mysterious disappearance of ships, spaceport quake and supernova.
 - **Supernova:** the report warns everyone ("unstable sun") and the map marks the system for
@@ -507,16 +530,16 @@ rules 1.0.0.
   Home systems never explode.
 - **Pirates** (needs the supernova): the garrison of a neutral sun flees as a pirate fleet
   without a seat. A successful raid leaves the system neutral.
-- **Start balance by position:** homes close to opponents get more ships, homes with many
-  neutral systems nearby fewer (between half and twice the regular garrison).
+- **Start balance by position** (always on): homes close to opponents get more ships, homes with
+  many neutral systems nearby fewer (between half and twice the regular garrison).
 - **Round limit** (10–500): if nobody reaches the threshold, the best score after the last round
   wins (400 per system, 25 per stationed ship, 20 per ship in flight; ties go to more systems,
   then the lower seat). The last five rounds are announced.
 
 ## Observer mode
 
-If "allow observers" was checked at game creation, non-participating
-users can follow the map live. They select a participant perspective and can
+Non-participating users can follow the map live (new games always allow observers;
+older games keep their setting). They select a participant perspective and can
 switch the fog of war on or off; spectator views never permit commands. In
 pure-AI games the round runs automatically (autoplay) until the last observer leaves or the game
 ends.
@@ -559,9 +582,9 @@ logged at WARN; `0` disables a threshold.
 `./gradlew test` runs the unit and integration tests (PostgreSQL via
 Testcontainers), including Vaadin Browserless checks of real views with test
 accounts as a platform host has them (`testsupport.TestPlatformAccounts`). These cover map dispatch and round broadcasts, switching
-accounts in the private lobby, and automatic navigation after wizard creation.
+accounts in the private lobby, and automatic navigation after creating a game.
 Economy journeys also cover colony growth, mining and shortages, recycling,
-production presets and relocation trimming, the Spaceward wizard and ship research,
+production presets and relocation trimming, creating Extended games and ship research,
 including saved allocations and historical review.
 Map journeys cover fleet actions, bulk dispatch, editing and undo,
 saved filters after a new sign-in, rematches, relocation limits, station routes
@@ -580,12 +603,12 @@ part of `build`. CI runs it as a separate job
 (`[skip e2e]` in the commit message skips it). Failures leave page text in the
 test output and a screenshot in `build/e2e-failures/`.
 
-The `@ui-acceptance` journeys cover summary corrections, lobby invitations and
+The `@ui-acceptance` journeys cover choosing picture cards in the new-game dialog, lobby invitations and
 archive access, two-player deadlines, final battles and coalition dispatch.
 They save current screenshots and visible text in `build/ui-acceptance/` for
 personal review. Automated checks do not replace a player's usability assessment.
 The `@layout` journey preserves layout checks while functional journeys move to
-Browserless: lobby, wizard and summary, system details, archive and review at
+Browserless: lobby, new-game dialog, system details, archive and review at
 1366 and 1024 pixels. The economy layout journey retains moon keyboard activation,
 the 44-pixel moon target, production controls and mixed-technology/research views.
 Phone research input and hit testing remain in `mobile.feature` (`@research`).
@@ -612,7 +635,7 @@ Testcontainers; Docker must be running.
 
 The internal economy checkpoint **Spaceward 1.2.0-w1** remains loadable for
 saved games: saved colony environments and population limit usable industry,
-with growth taking effect on the following turn. The public wizard continues
+with growth taking effect on the following turn. The new-game dialog continues
 to create games with the current **1.3.0-r1** rules. Existing rules and saved games retain their behavior.
 W1 retains its original behavior without mining. The separate internal **1.2.0-w2** checkpoint adds finite metal; the separate internal **1.2.0-w3** checkpoint adds recycling.
 Run the saved-party Browserless journey with:
@@ -806,7 +829,7 @@ Run the saved-game Browserless journey with:
 
 ### Spaceward rules: current version only
 
-Choose Spaceward in the ordinary new-game wizard. Every new game uses the current
+Choose the **Extended** rules card in the new-game dialog. Every new game uses the current
 **1.3.0-r1** rules, including mining, recycling, industry expansion and ship
 research. There is no version selector.
 SectorForces remains a separate variant using its own current rules.
@@ -840,15 +863,14 @@ Personal acceptance and a final, unqualified 1.2.0 release remain pending.
 .\gradlew.bat test --tests "*.EconomyLaunchJourneyTest"
 ```
 
-This checks the released default through the ordinary wizard. `MetalJourneyTest`
+This checks the released default through the ordinary new-game dialog. `MetalJourneyTest`
 and `RecyclingJourneyTest` cover shortages, reload, exact fractional recovery and
 historical views. All economy journeys run in the regular `test` task.
 
 ### Decision-oriented game interface
 
-The setup wizard shows only the selected variant's rules and groups the final
-summary by galaxy, participants, victory and access. Each group can be edited.
-The schematic galaxy preview is secondary and expandable.
+The new-game dialog shows only the settings of the selected rules; events and the round
+limit exist only for Classic.
 
 Spaceward production functions open their allocation directly: a shipyard, mining
 tower and construction crane have distinct shapes and show invested points and their

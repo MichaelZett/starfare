@@ -23,7 +23,7 @@ Spaceward supports stored versions 1.0.0, 1.1.0, W1–W7 and 1.3.0-r1. New games
 use only the current `spaceward / 1.3.0-r1`. Inside the platform host each variant has a
 stage the platform keeps (games-platform-api 0.5.0; `variants=classic:PRODUCTION,
 spaceward:ALPHA` in `game.properties` is the stage at first start): `RulesetAccess` asks
-`PlatformAccounts.mayUseVariant` and marks alpha and beta variants in the wizard
+`PlatformAccounts.mayUseVariant` and marks alpha and beta variants on the rules card of the new-game dialog
 (`variantStage`). An account that may not use a variant reaches none of its games, running
 and finished ones included: `DefaultGameAccessPolicy` and the planning and submission
 checks refuse map, review, chat and orders. `MatchSummary.variant` and `MatchEnded.variant`
@@ -79,7 +79,7 @@ Old constructors and nullable JSON fields retain legacy read compatibility.
 The platform learns every winner from `MatchEnded` (place 1).
 
 The production catalog enables W6 and W7 for new Spaceward games.
-`CreateGameWizardTest` covers the option dependencies with every variant creatable;
+`NewGameDialogTest` covers the option dependencies with every variant creatable;
 `AllianceVictoryJourneyTest` covers both winners, reload and archive. The strategy harness can pair 1.1.0 scenarios with group victory on/off;
 each member receives its own win in the report.
 
@@ -232,7 +232,7 @@ new mining or recycling strategy comparisons remain a W4 task.
 
 `RulesetRef.SPACEWARD_COLONIES` is a separate, frozen internal rule reference.
 The catalog supports restoration and `ColonySpacewardTurnEngine` dispatch, but
-`requireCreatable` rejects public creation. The current wizard offers W6 and W7.
+`requireCreatable` rejects public creation. New games use only the current Spaceward rules.
 Subsequent metal rules must use a different reference rather than change W1.
 
 `SystemQuality` saves stellar luminosity, orbital distance in AU, host body,
@@ -448,7 +448,7 @@ held systems.
 A round ends once every human has submitted, or at the round deadline
 (`GameState.roundDeadline`): the round limit counts from the start of the
 round, the straggler limit from the moment only one human is still missing;
-whichever comes first. A game with several humans picks a tempo in the wizard
+whichever comes first. A game with several humans picks a tempo in the new-game dialog
 (`GameTempo`: Live 5 min / 1 min, Brisk 1 h / 15 min, Daily 24 h / 6 h, Relaxed
 72 h / 12 h), which sets both limits and fixes them for the whole game; the
 platform learns the tempo from `MatchSummary.tempo` and the levels from
@@ -656,19 +656,44 @@ logic and callbacks stay in `MainView`; only the arrangement differs.
 - Spring configs: `@ConfigurationProperties` (records or classes), never
   `@Value`. `@Configuration` classes live in the `<module>/config/`
   package (they fit neither `ui` nor `application/domain/values`).
-- New game: wizard (`CreateGameWizardDialog`, opened from the lobby or `NewMatchView`) → `GameSetup` (`game.values`);
-  `GameSetup.normalized()` clamps and defaults inputs. The fixed limits are
-  8–120 systems, 0–8 human and 0–7 AI participants (at most 10 combined),
-  production 1–20 and starting garrison 1–50. The system count is raised to
-  the participant count when necessary.
-  The setup also persists the default for battle presentation. An explicit
-  personal speed choice overrides it across rounds and sessions via the
-  platform's settings; until then the game default applies.
-  Combat randomness (0–30%, default ±10%) and the victory threshold (10–100%,
-  default 70%) are game rules. Only the winner's full-conquest continuation
-  changes the victory threshold after the start, to 100%.
+- New game: `NewGameDialog` (opened from the lobby or `NewMatchView`) holds a `NewGamePanel`
+  built from `SetupLayout` sections and `SetupCards` picture cards (radio groups with a
+  `ComponentRenderer`); `SetupDetails` holds the Classic-only events and round limit.
+  The panel yields a `GameSetup` (`game.values`); the dialog creates, joins, publishes
+  unless invitation-only, and starts at once when every other seat is a computer.
+  `GameSetup` keeps only what the dialog offers: seats, system count, highest neutral
+  production, layout, round rules (tempo), ruleset, `ComputerStrength`, `RandomnessLevel`,
+  enabled events, round limit and tutorial. `normalized()` clamps to 0–10 humans, at most
+  10 participants, 8–120 systems (at least the participant count) and production 1–20;
+  unknown fields of older JSON are ignored. Everything else is fixed for new games:
+  home production 4 and 8 ships (`GameConfig.START_PRODUCTION/START_GARRISON`), neutral
+  production bell-shaped from 1 to the chosen maximum, start balance always on, seat
+  colours from the palette, observers, re-entry and battle presentation on, and
+  `VictoryRules.forNewGame` (70%; Extended additionally alliances, alliance victory at 70%
+  and computer alliances).
+  `RandomnessLevel` maps to combat randomness (0/5/10/20%), `EventFrequency`
+  (off/rare/normal/frequent ×2) and the attack order (strongest first only at None);
+  rulesets that resolve coalition battles keep the default order.
+  `ComputerStrength` picks each computer's `AiStrategy` (Easy baseline, Normal a hidden
+  draw from Rush/Expansion/Concentration/Defense, Challenging the strongest benchmark
+  profiles) and scales its home production and garrison (0.75/1.0/1.25); the values are
+  named constants, calibrated later. An explicit personal battle speed overrides the
+  presentation default across rounds and sessions via the platform's settings.
+  Only the winner's full-conquest continuation changes the victory threshold after the
+  start, to 100%.
   `GameRegistry.createGame(GameSetup, hostPlayerId, name)` is the main
   entry point (the short overload builds a default, unnamed game).
+- Galaxy size: `GalaxySize` offers 16/24/40/64 systems (sizes with fewer than two systems
+  per player are locked). `GalaxyExtent.forSystems` keeps a fixed density of 240,000 px²
+  per system at aspect ratio 1.6 (Small 2600×1670, Medium 3160×2020, Large 4040×2570,
+  Huge 5080×3220); the extent is stored in `GameStateSnapshot.extent` (absent means the
+  former 3200×2000). `GalaxyPlacement` and `DefaultGameRegistry.spaceOut` place systems
+  inside it, `PlayerViewState.extent` carries it to `MapCanvas`, `MapRenderer` and
+  `map-geometry.js`, so "whole galaxy" and "own realm" fit any size. Travel uses one fixed
+  speed, `GameState.roundsFor` = ceil(distance / 160 px) clamped to 2–40 rounds; nearest
+  neighbours are usually three rounds apart, a crossing takes about 19/23/29/37 rounds.
+  Spaceward's `RangeCalibration` measures the longest spanning-tree edge in map pixels and
+  therefore adapts to every size without change.
 - `GameState.ownershipHistory` records each system ownership change and is
   persisted in the snapshot. `PlayerViewBuilder` exposes it only for fully
   visible systems, so system details never reveal historical information
@@ -866,9 +891,8 @@ all browser acceptance tests.
 
 `RulesetCatalog.builtIn()` enables creation for Spaceward with default
 `spaceward / 1.1.0` and keeps `1.0.0` supported for stored games; SectorForces
-stays first and therefore preselected in the wizard. `RulesetRef.resolvesCoalitionBattles`
-(true for both Spaceward versions) hides the SectorForces attack-order section for Spaceward; such setups store the
-default order, and the summary names simultaneous coalition combat. No stored data changes:
+stays first and therefore preselected in the new-game dialog. `RulesetRef.resolvesCoalitionBattles`
+(true for both Spaceward versions) makes Spaceward setups store the default attack order. No stored data changes:
 existing games keep their reference, and templates and rematches of Spaceward
 games are now creatable as well. `DefaultGameRegistry.createGame` initializes
 industry and the calibrated range directly after galaxy generation, so lobby
@@ -894,15 +918,12 @@ through the economy and fleet services under the caller's write lock. The policy
 receives no mutable GameState. Classic and both Spaceward engines dispatch each
 AI seat independently; Spaceward still answers diplomacy proposals before planning.
 
-`AiStrategyFields` offers one choice per AI seat and restricts items by ruleset.
-`GameSetup.aiStrategies` indexes only AI seats; normalization fills absent entries
-with BASELINE, drops extra entries and resets unsupported industry profiles.
-`DefaultGameRegistry` copies each choice into `Player.aiStrategy`. Both fields
-are included in existing JSON snapshots, requiring no database migration.
-Missing fields deserialize as the historical baseline. Player handovers retain
-the profile; templates and rematches retain the setup list. `CreateGameWizardTest`
-verifies ruleset switches, count changes, confirmation, back navigation, creation
-and the saved setup.
+`GameSetup.computerStrength` selects the profiles: `DefaultGameRegistry` draws each
+computer's `AiStrategy` from `ComputerStrength.strategy` and stores it in
+`Player.aiStrategy`, which existing JSON snapshots already carry. Missing fields
+deserialize as the historical baseline. Player handovers retain the profile;
+templates and rematches retain the strength and draw again. `NewGameDialogTest`
+verifies ruleset switches, count changes, creation and the saved setup.
 
 `Observation` exposes only PlayerViewBuilder's filtered state, diplomacy membership
 and legal route durations. Alternative policies never receive GameState. The
@@ -1129,10 +1150,9 @@ validation rejects unsupported choices and a non-creatable enabled default.
 `requireCreatable` applies the same choices to registry creation. The former
 opt-in profiles for acceptance candidates were removed in 0.2.12.
 
-`RulesetSelector` keeps variant selection separate from a version radio group,
-shown only when multiple versions can be created. Version changes notify the
-wizard and update the selected card; switching variants resets to that variant's
-default. Templates and rematches retain W6/W7 exactly. Older stored games still
+`SetupCards.rules` shows one picture card per variant and creates its default version;
+the dialog shows no version number. Templates and rematches move to the current
+rules of their variant. Older stored games still
 load and continue, but `DefaultGameTemplateService` excludes their setups from
 new templates. No snapshot migration or stored-rule rewrite is performed.
 

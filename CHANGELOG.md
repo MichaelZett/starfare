@@ -21,6 +21,30 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Himmelskörperbeschreibungen und Modellradien fallen aus den Systemdetails weg. Die Systemdetails
   zeigen weiter Produktion, Garnison, Flotten und Verlegungen. In SectorForces erweitert stehen die
   Kolonieangaben im Bereich **Kolonie & Logistik** der Systemdetails.
+- **Neuer Dialog „Neue Partie“:** Eine Seite mit Bildkarten und Klapplisten ersetzt den Assistenten
+  mit Zusammenfassung. Abschnitte: Partie (zufälliger Name mit Neu-würfeln, Regeln **Klassisch** oder
+  **Erweitert**, Name des Imperiums), Mitspieler (2–10 Spieler, davon Computer, Computerstärke,
+  Spieltempo nur bei mehreren Menschen, „Nur auf Einladung“, Tutorial), Karte (Kartenform,
+  Galaxiegröße, höchste Produktion), Zufall und aufklappbare Details (Ereignisse einzeln,
+  Rundenlimit). Sind alle anderen Sitze Computer, startet die Partie sofort. Neue Partien sind
+  öffentlich, außer bei „Nur auf Einladung“. Die Varianten heißen in der Oberfläche nur noch
+  **Klassisch** und **Erweitert**, ohne Versionsnummer.
+- **Computerstärke:** **Einfach** (Basisstrategie, Start mit 75 %), **Normal** (je Computer verdeckt
+  eine von vier Strategien) und **Anspruchsvoll** (die stärksten Profile aus dem Prüfstand, Start mit
+  125 %) ersetzen die Strategiewahl je Sitz.
+- **Zufallsstufe:** **Kein**, **Wenig** (Vorgabe), **Mittel** und **Viel** legen Kampfzufall (0/5/10/20 %),
+  Häufigkeit der Ereignisse (aus, selten, normal, neu: häufig) und die Reihenfolge mehrerer Angreifer
+  gemeinsam fest.
+- **Galaxiegröße:** Klein 16, Mittel 24, Groß 40 und Riesig 64 Systeme bei fester Dichte; die Karte
+  wächst mit. Flotten fliegen überall gleich schnell (160 Bildpunkte je Runde, 2 bis 40 Runden),
+  benachbarte Systeme liegen meist drei Runden auseinander. Karte, „Ganze Galaxie“ und „Eigenes Reich“
+  passen sich an.
+- **Feste Werte statt Einstellungen:** Startproduktion 4 und 8 Schiffe, Farben aus der Palette, neutrale
+  Produktion von 1 bis zur gewählten Höchstproduktion (meist um die Mitte), Startausgleich nach Lage,
+  Sieg bei 70 %, Zuschauer, Wiedereinstieg und Kampfdarstellung. Erweiterte Partien erlauben Bündnisse,
+  Bündnissiege (70 %) und Bündnisse der Computer. Vorlagen und Revanchen übernehmen das neue Setup.
+- **Ohne Bestandsschutz:** Ältere laufende Partien laden weiter, Reisezeiten richten sich aber nach der
+  festen Geschwindigkeit und können sich ändern.
 
 ## 0.2.18 - 2026-11-24
 

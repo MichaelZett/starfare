@@ -28,79 +28,107 @@ Kontaktadresse im Impressum.
 
 ## Partie erstellen und beitreten
 
-Wähle zuerst die **Spielvariante**. Starfare setzt Sector Forces um, ein C64-Spiel
-der 80er-Jahre: Jedes System baut Schiffe, Flotten erobern fremde Systeme, und wer
-genug der Galaxie beherrscht, gewinnt. **SectorForces klassisch** (Regelversion
-**1.0.0**) ist vorausgewählt; die folgenden Spielregeln beschreiben sie.
-**SectorForces erweitert** (Regelversion **1.3.0-r1**) ergänzt Industrieausbau,
-Metall und Schiffsforschung, begrenzte Reichweite, Bündnisse und gemeinsame
-Schlachten. Die Abschnitte „Erweiterte Regeln“ weiter unten beschreiben, worin sie
-von den klassischen Regeln abweicht. Weil dort alle feindlichen Seiten
-gleichzeitig kämpfen, blendet der Dialog bei SectorForces erweitert die Einstellung
-**Reihenfolge mehrerer Angreifer** aus.
+Starfare setzt Sector Forces um, ein C64-Spiel der 80er-Jahre: Jedes System baut
+Schiffe, Flotten erobern fremde Systeme, und wer genug der Galaxie beherrscht,
+gewinnt. **Neues Spiel** in der Lobby öffnet den Dialog **Neue Partie**. Er passt auf
+eine Seite; die Auswahl triffst du über Bildkarten und Klapplisten. Ein Klick auf
+**Spiel anlegen** legt die Partie an.
 
-Auf der gemeinsamen Spieleplattform hat jede Variante eine Stufe (Alpha, Beta,
-Produktion); SectorForces erweitert ist derzeit in Alpha. Wer eine Variante nutzen darf,
-entscheidet die Plattform; der Assistent kennzeichnet Alpha- und Beta-Varianten.
-Wer eine Variante nicht mehr nutzen darf, erreicht auch ihre Partien nicht mehr,
-auch laufende und die Nachbetrachtung. Im eigenen Start von Starfare stehen beide
-Varianten allen offen.
+**Partie**
 
-Variante und Regelversion bleiben für die Partie fest. Die Anwendungsversion
-ist davon unabhängig. Alte Partien werden als SectorForces klassisch angezeigt und behalten
-ihre bisherigen Regeln. Lobby, Beitritt, Verwaltung und Archiv zeigen die
-Regelreferenz; Vorlagen und Revanchen übernehmen sie.
+- **Name**: Der Dialog schlägt einen zufälligen Namen vor; der Würfel daneben würfelt
+  einen neuen.
+- **Regeln**: **Klassisch** ist vorausgewählt; die folgenden Spielregeln beschreiben
+  sie. **Erweitert** ergänzt Industrieausbau, Metall und Schiffsforschung, begrenzte
+  Reichweite, Bündnisse und gemeinsame Schlachten. Die Abschnitte „Erweiterte Regeln“
+  weiter unten beschreiben, worin sie von den klassischen Regeln abweichen.
+- **Name des Imperiums**: So erscheint dein Reich auf der Karte und im Bericht.
 
-Im Assistenten wählst du unter anderem:
+**Mitspieler**
 
-- 8–120 Systeme; mindestens so viele wie Teilnehmer.
-- Bis zu acht menschliche und sieben KI-Spieler, insgesamt höchstens zehn.
-- Eine eigene Strategie je KI-Spieler; die Zusammenfassung nennt jede Auswahl.
-- Sitzfarben, Galaxieform, Produktionsverteilung und Startwerte.
-- Produktion von 1–20 Schiffen je Runde und Startgarnison von 1–50 Schiffen.
-- Zuschauer und Wiedereinstieg, Rundenfristen sowie die Angriffsreihenfolge.
-- Den zum Sieg nötigen Systemanteil: 10–100 %, Vorgabe 70 %.
-- Zufall bei der Kampfstärke: 0–30 %, Vorgabe ±10 % je Seite.
-- Ob Schlachten zunächst mit Wiedergabe dargestellt werden. Eine gespeicherte
-  persönliche Geschwindigkeitswahl hat Vorrang vor dieser Vorgabe.
+- **Spieler** 2–10 (Vorgabe 3) und **Davon Computer** 0 bis Spieler minus 1 (Vorgabe:
+  alle anderen). Änderst du die Spielerzahl, bleibt „alle anderen sind Computer“
+  erhalten; eine gemischte Runde behält ihre Computerzahl.
+- **Computerstärke** **Einfach**, **Normal** (Vorgabe) oder **Anspruchsvoll**, siehe unten.
+- **Spieltempo** nur bei mehr als einem Menschen: die Rundenfristen (Live, Zügig,
+  Täglich, Gemütlich).
+- **Nur auf Einladung**: Sonst ist die Partie öffentlich und für andere angemeldete
+  Spieler auffindbar. Einladen kannst du im Warteraum.
 - **Tutorial**: Die Partie zeigt Hilfen zum Lernen, die es im normalen Spiel nicht
   gibt. Zurzeit ist das eine gestrichelte Raute am System mit der Zahl freier Schiffe,
   wenn dort mehr Schiffe stehen, als das System in einer Runde baut. Alle Teilnehmer
-  sehen in Warteraum und Kopfzeile,
-  dass es ein Tutorial ist; es zählt nicht in der Statistik der Plattform.
+  sehen in Warteraum und Kopfzeile, dass es ein Tutorial ist; es zählt nicht in der
+  Statistik der Plattform.
 
-Neue Partien sind **privat**. Der Gastgeber kann vor dem Start Spieler einladen
-oder die Partie veröffentlichen. Eine Einladung reserviert einen Platz; der
-eingeladene Spieler muss selbst beitreten. Nach dem Start ist die Sichtbarkeit fest.
-Öffentliche Partien sind für andere angemeldete Spieler auffindbar.
+Sind alle anderen Sitze Computer, startet die Partie sofort und die Karte öffnet sich.
+Sonst wartest du im Warteraum, bis alle menschlichen Plätze besetzt sind, und startest
+dann selbst.
+
+**Karte**
+
+- **Kartenform**: **Gleichmäßig** verteilt die Systeme ohne abgelegene Startplätze,
+  **Zufällig** erzeugt Haufen und Lücken.
+- **Galaxiegröße**: **Klein** 16, **Mittel** 24 (Vorgabe), **Groß** 40 oder **Riesig**
+  64 Systeme. Die Systemdichte ist auf jeder Karte gleich, größere Karten sind also
+  weiter. Größen mit weniger als zwei Systemen je Spieler sind gesperrt.
+- **Höchste Produktion** 6, 10 (Vorgabe), 15 oder 20: Neutrale Systeme produzieren
+  1 bis zu diesem Wert, meist um die Mitte.
+
+Flotten fliegen auf jeder Karte gleich schnell: 160 Bildpunkte der Karte je Runde,
+mindestens 2 und höchstens 40 Runden. Benachbarte Systeme liegen meist etwa drei
+Runden auseinander; quer über die ganze Karte sind es etwa 19 (Klein), 23 (Mittel),
+29 (Groß) oder 37 Runden (Riesig).
+
+Jedes Reich startet mit einem Heimatsystem mit Produktion 4 und 8 Schiffen; die
+Farben vergibt Starfare der Reihe nach. Der **Startausgleich nach Lage** ist immer
+aktiv: Wer nah an Gegnern startet, bekommt mehr Schiffe; wer viele neutrale Systeme in
+der Nähe hat, weniger. Jede Startgarnison bleibt zwischen der Hälfte und dem
+Doppelten des normalen Werts.
+
+**Zufall**
+
+| Stufe | Kampfstärke | Ereignisse (klassisch) | Mehrere Angreifer |
+| --- | --- | --- | --- |
+| Kein | genau nach Stärke | keine | stärkster zuerst |
+| Wenig (Vorgabe) | ±5 % je Seite | selten | zufällige Reihenfolge |
+| Mittel | ±10 % je Seite | normal | zufällige Reihenfolge |
+| Viel | ±20 % je Seite | häufig | zufällige Reihenfolge |
+
+In den erweiterten Regeln kämpfen alle feindlichen Seiten gleichzeitig; dort wirkt
+die Stufe nur auf die Kampfstärke.
+
+**Details** (aufklappbar, nur bei klassischen Regeln)
+
+- Die **Galaxie-Ereignisse** einzeln, solange der Zufall nicht auf **Kein** steht.
+- **Spielende nach Runden**: aus oder 10–500 Runden.
+
+Fest eingestellt sind: Sieg mit 70 % aller Systeme, Zuschauer und Wiedereinstieg
+erlaubt, Schlachten zunächst mit Wiedergabe (eine gespeicherte persönliche
+Geschwindigkeitswahl hat Vorrang). In den erweiterten Regeln sind Bündnisse und
+Bündnissiege (gemeinsam 70 %) erlaubt.
+
+Auf der gemeinsamen Spieleplattform hat jede Variante eine Stufe (Alpha, Beta,
+Produktion); die erweiterten Regeln sind derzeit in Alpha. Wer eine Variante nutzen
+darf, entscheidet die Plattform; die Regelkarte kennzeichnet Alpha und Beta. Wer eine
+Variante nicht mehr nutzen darf, erreicht auch ihre Partien nicht mehr, auch laufende
+und die Nachbetrachtung. Im eigenen Start von Starfare stehen beide Varianten allen
+offen. Die Variante bleibt für die Partie fest; Vorlagen und Revanchen übernehmen sie.
 
 Die Lobby zeigt offene und laufende Partien. Suche nach Partie- oder Spielernamen
 und nutze den Filter für eigene, offene oder laufende Partien. Beendete Partien
 findest du im **Archiv** über **Mein Bereich**.
 
-### KI-Strategien
+### Computerstärke
 
-Unter den allgemeinen Einstellungen wählst du für jeden KI-Sitz eine Strategie.
-Die Auswahl bleibt beim Ändern der KI-Anzahl und beim Zurückgehen aus der
-Zusammenfassung erhalten. Sie wird mit der Partie gespeichert und von Vorlagen
-und Revanchen übernommen. Bestehende Partien verwenden die **Basisstrategie**.
+| Stärke | Spielweise | Start der Computer |
+| --- | --- | --- |
+| Einfach | Basisstrategie: stärkste Basis, nahes Ziel, begrenzter Versand | Produktion und Schiffe ×0,75 |
+| Normal | je Computer verdeckt zufällig: früher Angriff, Expansion, Kräftekonzentration oder Verteidigung | wie Menschen |
+| Anspruchsvoll | die im Prüfstand stärksten Profile; erweitert mit adaptivem Industrieausbau | Produktion und Schiffe ×1,25 |
 
-| Strategie | Schwerpunkt |
-| --- | --- |
-| Basisstrategie | Bisheriges Verhalten: stärkste Basis, nahes Ziel und begrenzter Versand; SectorForces erweitert baut zusätzlich Industrie aus. |
-| Früher Angriff | Früher Versand großer Kräfte mit kleiner Rücklage; gegnerische Systeme werden stärker bevorzugt. |
-| Expansion | Bevorzugt nahe, schwach verteidigte neutrale Systeme. |
-| Kräftekonzentration | Führt freie Schiffe aus dem Hinterland näher an die Front. |
-| Verteidigung | Hält größere Garnisonen zurück und verstärkt die Front. |
-| Industrieausbau | Investiert einen großen Produktionsanteil in weiteren Ausbau. |
-| Zurückhaltender Industrieausbau | Investiert außerhalb naher sichtbarer Bedrohung ein Viertel der Kapazität. |
-| Adaptiver Industrieausbau | Berücksichtigt sichtbare Bedrohung und Schiffsbestand; baut bei knappen Kräften nicht weiter aus. |
-
-Die drei Industrieprofile stehen nur in **SectorForces erweitert** bereit. Beim Wechsel zu
-SectorForces klassisch werden unpassende Auswahlen auf Basisstrategie zurückgesetzt.
-Strategien sind unterschiedliche Spielweisen, keine festen Schwierigkeitsstufen.
-Die zusätzlichen Profile nutzen sichtbare Informationen; verborgene Garnisonen
-und gegnerische Befehle erhalten sie nicht.
+Die Computer nutzen nur sichtbare Informationen; verborgene Garnisonen und
+gegnerische Befehle erhalten sie nicht. Die Stärke wird mit der Partie gespeichert
+und von Vorlagen und Revanchen übernommen.
 
 ## Karte lesen und bedienen
 
@@ -305,8 +333,8 @@ weder die Kampfstärke noch Rundenfristen oder Ergebnisse.
 
 ## Sieg, Fortsetzung und Archiv
 
-Gewonnen hat, wer den eingestellten Anteil aller Systeme kontrolliert; neutrale
-Systeme zählen zur Gesamtzahl. Die Vorgabe ist 70 %. Wenn die letzte Runde noch
+Gewonnen hat, wer 70 % aller Systeme kontrolliert; neutrale Systeme zählen zur
+Gesamtzahl. Wenn die letzte Runde noch
 offene Schlachten enthält, erscheint zunächst der Bericht. Erst nach deren
 Bestätigung öffnet sich das Ergebnis mit persönlichen Schiffssummen. SectorForces erweitert
 zeigt zusätzlich die Wirtschaft der Partie: gebaute Industrie in Kapazitätspunkten
@@ -327,12 +355,10 @@ nicht zurückkehren, auch wenn die Partie Wiedereinstieg erlaubt.
 
 ## Galaxie-Ereignisse und Wertung (SectorForces klassisch)
 
-Nach dem C64-Klassiker Galactic Empire (1983). Der Abschnitt **Galaxie-Ereignisse und
-Wertung** im Spielassistenten erscheint nur bei SectorForces klassisch; alles ist zunächst aus.
-Die Zusammenfassung nennt die gewählten Ereignisse.
-
-**Zufallsereignisse** stehen auf **Aus**, **Selten** oder **Normal**; darunter lässt sich
-jedes Ereignis einzeln abwählen. Meldungen erscheinen im Bericht als Ticker-Karten:
+Nach dem C64-Klassiker Galactic Empire (1983). Wie oft Ereignisse eintreten, folgt der
+**Zufallsstufe** der Partie (Kein: nie, Wenig: selten, Mittel: normal, Viel: häufig). Unter
+**Details** lässt sich jedes Ereignis einzeln abwählen. Meldungen erscheinen im Bericht als
+Ticker-Karten:
 
 - **Kosmische Stürme:** Alle Flotten im Hyperraum, auch Piraten, kommen eine Runde später an.
 - **Raum-Zeit-Erschütterung:** Alle Flotten im Hyperraum brauchen nur noch die halbe Restzeit.
@@ -349,10 +375,6 @@ jedes Ereignis einzeln abwählen. Meldungen erscheinen im Bericht als Ticker-Kar
 - **Piraten** (nur zusammen mit der Supernova): Die Garnison einer neutralen Sonne flieht
   als Piratenflotte ohne Sitz. Gewinnt sie den Kampf am Ziel, wird das System neutral.
 
-**Startausgleich nach Lage:** Wer nah an Gegnern startet, bekommt mehr Schiffe; wer viele
-neutrale Systeme in der Nähe hat, weniger. Jede Startgarnison bleibt zwischen der Hälfte
-und dem Doppelten des normalen Werts.
-
 **Spielende nach Runden** (10 bis 500): Erreicht bis dahin niemand die Siegschwelle, endet
 die Partie nach der letzten Runde. Es gewinnt die höchste Wertung: 400 Punkte je System,
 25 je stationiertes Schiff, 20 je Schiff unterwegs; bei Gleichstand mehr Systeme, dann der
@@ -361,8 +383,6 @@ aller Reiche steht im letzten Bericht.
 
 Im **Archiv** öffnet **Ansehen** die Nachbetrachtung. Such- und Ergebnisfilter bleiben bei Rückkehr innerhalb
 derselben Sitzung erhalten; die Liste führt zur zuletzt angesehenen Partie.
-Bei zehn Sitzen im Spielassistenten lassen sich die zunächst offenen Sitzdetails
-in der Zusammenfassung einklappen; **Ändern** bleibt am Gruppenkopf erreichbar.
 
 Im **Archiv** kannst du die beendete Karte lesend öffnen, eine Teilnehmerperspektive
 wählen und den Kriegsnebel umschalten. Die Zeitleiste zeigt gespeicherte Runden ohne
@@ -496,12 +516,11 @@ Datenschutz gehören der Spieleplattform und stehen in ihrem Rahmen.
 
 ## Erweiterte Regeln: Siegoptionen
 
-Die Regelfassung 1.1.0 ergänzt vor dem Start zwei Partieeigenschaften:
-**Bündnisse erlaubt** und **Bündnissiege erlaubt**. Die Einzelschwelle und
-die Bündnisschwelle sind getrennt einstellbar (10–100 %, jeweils Vorgabe 70 %).
-Standardmäßig sind Bündnisse erlaubt, Bündnissiege ausgeschaltet. Ohne
-erlaubte Bündnisse ist auch der Bündnissieg ausgeschaltet. SectorForces klassisch bietet
-keine Bündnisse.
+Die Regelfassung 1.1.0 ergänzt zwei Partieeigenschaften: **Bündnisse erlaubt** und
+**Bündnissiege erlaubt**. Neue Partien mit erweiterten Regeln haben beide eingeschaltet,
+dazu Bündnisse der Computer; Einzel- und Bündnisschwelle liegen fest bei 70 %. Ältere
+Partien behalten ihre gespeicherten Einstellungen. SectorForces klassisch bietet keine
+Bündnisse.
 
 Einzelsieg wird zuerst geprüft. Danach kann eine wirksame Gruppe mit mindestens
 zwei Mitgliedern gemeinsam gewinnen. Gezählt werden ihre Systeme zusammen;
@@ -642,7 +661,7 @@ keine Recyclingbefehle. W3 bleibt nur fortsetzbar; neue Partien mit erweiterten 
 
 ### Erweiterte Regeln: immer die aktuelle Regelfassung
 
-Im normalen Spielassistenten „SectorForces erweitert“ auswählen. Neue Partien verwenden
+Im Dialog **Neue Partie** die Regelkarte **Erweitert** auswählen. Neue Partien verwenden
 stets die aktuelle Regelfassung **1.3.0-r1**, einschließlich Metallförderung,
 Recycling, Industrieausbau und Schiffsforschung. Eine Versionsauswahl oder ein
 besonderes Startprofil ist nicht erforderlich. „SectorForces klassisch“ bleibt eine eigene
@@ -682,9 +701,8 @@ Terraforming, aktive Bevölkerungssteuerung und Besiedlung kommen später.
 
 ### Entscheidungen in der Oberfläche
 
-Der Spielassistent zeigt nur die Regeln der gewählten Variante. Die Zusammenfassung
-ordnet Galaxie, Teilnehmer, Sieg und Runden/Zugang; **Ändern** führt zur jeweiligen
-Einstellung zurück. Die Galaxienvorschau ist ein aufklappbares Verteilungsbeispiel.
+Der Dialog **Neue Partie** zeigt nur die Einstellungen der gewählten Variante; die
+Details mit Ereignissen und Rundenlimit gibt es nur bei klassischen Regeln.
 
 In den Systemdetails öffnen Werfthalle, Förderturm mit Seilrad und Werkhalle sowie Baukran direkt den jeweiligen
 Anteil. Jede Funktion zeigt eingesetzte Punkte und ihren Ertrag je Runde, etwa
