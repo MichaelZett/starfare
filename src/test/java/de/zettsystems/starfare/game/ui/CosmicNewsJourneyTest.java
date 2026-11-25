@@ -1,10 +1,8 @@
 package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.html.Div;
-import de.zettsystems.starfare.game.values.EventFrequency;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.RandomnessLevel;
-import de.zettsystems.starfare.game.values.SectorOptions;
 import de.zettsystems.starfare.game.values.StarSystem;
 import de.zettsystems.starfare.report.values.CosmicNews;
 import de.zettsystems.starfare.report.values.TurnEvent;

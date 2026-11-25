@@ -11,7 +11,6 @@ import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebElement;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -5,7 +5,6 @@ import de.zettsystems.starfare.combat.application.DefaultCombatService;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.SectorScore;
-import de.zettsystems.starfare.game.values.EventFrequency;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.RandomnessLevel;
 import de.zettsystems.starfare.game.values.Player;

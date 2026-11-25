@@ -43,8 +43,8 @@ final class MapCanvas extends Div {
     /** The map is as large as the galaxy of the game; every game has its own size. */
     private void size(GalaxyExtent galaxy) {
         extent = galaxy;
-        map.setWidth(galaxy.width(), Unit.PIXELS);
-        map.setHeight(galaxy.height(), Unit.PIXELS);
+        map.setWidth((float) galaxy.width(), Unit.PIXELS);
+        map.setHeight((float) galaxy.height(), Unit.PIXELS);
     }
 
     void render(MapRenderer.Inputs inputs) {

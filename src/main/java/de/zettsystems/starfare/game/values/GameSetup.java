@@ -43,14 +43,21 @@ public record GameSetup(
         ruleset = ruleset == null ? RulesetRef.SECTOR_FORCES : ruleset;
         computerStrength = computerStrength == null ? ComputerStrength.DEFAULT : computerStrength;
         randomness = randomness == null ? RandomnessLevel.DEFAULT : randomness;
-        enabledEvents = enabledEvents == null ? Set.copyOf(EnumSet.allOf(CosmicEvent.class))
-                : enabledEvents.isEmpty() ? Set.of() : Set.copyOf(EnumSet.copyOf(enabledEvents));
+        enabledEvents = copyOfEvents(enabledEvents);
         RoundRules deadlines = roundRules == null ? RoundRules.defaults() : roundRules;
         // The randomness level decides the order of several attackers; coalition battles have none to store.
         AttackOrder order = ruleset.resolvesCoalitionBattles() ? RoundRules.DEFAULT_ATTACK_ORDER : randomness.attackOrder();
         roundRules = new RoundRules(deadlines.roundLimit(), deadlines.stragglerLimit(), order, deadlines.tempo());
         roundLimit = roundLimit <= 0 ? 0
                 : Math.clamp(roundLimit, SectorOptions.MIN_ROUND_LIMIT, SectorOptions.MAX_ROUND_LIMIT);
+    }
+
+    /** All events when nothing was chosen; an empty choice switches every event off. */
+    private static Set<CosmicEvent> copyOfEvents(@Nullable Set<CosmicEvent> chosen) {
+        if (chosen == null) {
+            return Set.copyOf(EnumSet.allOf(CosmicEvent.class));
+        }
+        return chosen.isEmpty() ? Set.of() : Set.copyOf(EnumSet.copyOf(chosen));
     }
 
     /** What the dialog proposes: one person against two normal computers on a medium even galaxy. */

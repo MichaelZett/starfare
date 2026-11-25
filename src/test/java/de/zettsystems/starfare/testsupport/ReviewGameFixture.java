@@ -11,7 +11,6 @@ import de.zettsystems.starfare.game.values.StarSystem;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

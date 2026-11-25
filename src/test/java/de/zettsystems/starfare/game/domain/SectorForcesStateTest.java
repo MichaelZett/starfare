@@ -1,6 +1,5 @@
 package de.zettsystems.starfare.game.domain;
 
-import de.zettsystems.starfare.game.values.EventFrequency;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.RandomnessLevel;

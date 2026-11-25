@@ -36,7 +36,8 @@ class MobileMapJourneyTest extends AbstractMapJourneyTest {
         createReviewGame();
 
         var menu = find(com.vaadin.flow.component.menubar.MenuBar.class).withClassName("app-header-menu").single();
-        assertThat(menu.getItems().getFirst().getSubMenu().getItems()).extracting(item -> item.getText())
+        assertThat(menu.getItems().getFirst().getSubMenu().getItems()).isNotEmpty()
+                .extracting(com.vaadin.flow.component.HasText::getText)
                 .doesNotContain("Legende", "Logistik");
         test(find(Button.class).withAriaLabel("Kartenhilfe").single()).click();
         var help = openedDialog();
