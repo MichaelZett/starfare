@@ -278,8 +278,7 @@ public class ReviewMapSteps {
     private boolean fleetDetailsSelected() {
         return Boolean.TRUE.equals(js().executeScript("""
                 return [...document.querySelectorAll('vaadin-tab[selected]')]
-                    .some(tab => tab.textContent.trim() === 'Details')
-                    || document.querySelector('.map-sidebar-select input')?.value === 'Details';
+                    .some(tab => tab.textContent.trim() === 'Details');
                 """));
     }
 

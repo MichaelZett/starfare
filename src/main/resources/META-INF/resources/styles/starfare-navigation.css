@@ -4,11 +4,10 @@
 .map-right { container: sidebar / inline-size; min-width: 0; }
 .map-sidebar-navigation { min-width: 0; }
 .map-workspace .map-right { min-width: 20rem; }
-.map-sidebar-compact { display: none; align-items: center; gap: .5rem; width: 100%; }
-.map-sidebar-select { display: block; min-width: 0; padding: 0; }
-@container sidebar (max-width: 44rem) {
-    .map-sidebar-navigation > .map-sidebar-tabs { display: none; }
-    .map-sidebar-navigation > .map-sidebar-compact { display: flex; }
+/* Four switches share the narrow sidebar evenly; a long label shrinks instead of scrolling the row. */
+.map-sidebar-tabs vaadin-tab {
+    flex: 1 1 0; min-width: 0; justify-content: center; padding-inline: .3rem; font-size: .9rem;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .map-right > .map-controls { flex-wrap: nowrap; gap: .35rem; width: 100%; padding: 0; box-sizing: border-box; }
 .map-right .planning-actions { display: flex; flex-wrap: nowrap; gap: .35rem; }
@@ -33,9 +32,6 @@
 @media (max-width: 1100px) {
     .archive-game-card { grid-template-columns: 1fr; }
 }
-.starfare-mobile .map-sidebar-tabs { display: none; }
-.starfare-mobile .map-sidebar-select { display: block; }
-.starfare-mobile .map-sidebar-compact { display: flex; }
 
 /* Unseen battles are red with crossed swords; the amber "!" belongs to the economy alone. */
 #map .sys-report-marker {

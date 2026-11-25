@@ -3,7 +3,6 @@ package de.zettsystems.starfare.game.ui;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -21,6 +20,7 @@ import de.zettsystems.starfare.report.values.BattleReplay;
 import de.zettsystems.starfare.report.values.TurnEvent;
 import de.zettsystems.starfare.report.values.TurnReport;
 import de.zettsystems.starfare.style.CssProperties;
+import de.zettsystems.starfare.style.HtmlAttributes;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -45,7 +45,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private final List<VerticalLayout> pages = List.of(detailsPage, fleetsPage, relocationsPage, reportPage);
     private final Tabs tabs;
     private final Div navigation = new Div();
-    private final ComboBox<Section> compactNavigation = new ComboBox<>();
     private final List<Tab> sectionTabs;
     private final Tab reportTab;
     private boolean reportAvailable = true;
@@ -169,21 +168,11 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         tabs.add(sectionTabs.toArray(Tab[]::new));
         tabs.setWidthFull();
         tabs.addClassName("map-sidebar-tabs");
+        tabs.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, I18n.t(UiTexts.MAP_VIEW));
         tabs.addSelectedChangeListener(event -> showSection(sectionOf(event.getSelectedTab())));
-        compactNavigation.setAriaLabel(I18n.t(UiTexts.MAP_VIEW));
-        compactNavigation.setItems(Section.values());
-        compactNavigation.setItemLabelGenerator(section -> tabFor(section).getElement().getText());
-        compactNavigation.setAllowCustomValue(false);
-        compactNavigation.setWidthFull();
-        compactNavigation.addClassName("map-sidebar-select");
-        compactNavigation.addValueChangeListener(event -> {
-            if (event.getValue() != null) { select(event.getValue()); }
-        });
         navigation.addClassName("map-sidebar-navigation");
         navigation.setWidthFull();
-        Div compactRow = new Div(compactNavigation);
-        compactRow.addClassName("map-sidebar-compact");
-        navigation.add(tabs, compactRow);
+        navigation.add(tabs);
         add(navigation, detailsPage, fleetsPage, relocationsPage, reportPage);
         showSection(Section.DETAILS);
         fleetsPage.add(header(UiTexts.MAP_OWN_FLEETS), routeFilter(), fleetCards);
@@ -243,10 +232,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (!available && Objects.equals(tabs.getSelectedTab(), reportTab)) {
             tabs.setSelectedTab(sectionTabs.getFirst());
         }
-        Section selected = sectionOf(tabs.getSelectedTab());
-        compactNavigation.setItems(java.util.Arrays.stream(Section.values())
-                .filter(section -> available || section != Section.REPORT).toList());
-        compactNavigation.setValue(selected);
     }
 
     void setActions(com.vaadin.flow.component.Component actions) {
@@ -1019,7 +1004,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     private void showSection(Section section) {
-        if (compactNavigation.getValue() != section) { compactNavigation.setValue(section); }
         detailsPage.setVisible(section == Section.DETAILS);
         fleetsPage.setVisible(section == Section.FLEETS);
         relocationsPage.setVisible(section == Section.RELOCATIONS);

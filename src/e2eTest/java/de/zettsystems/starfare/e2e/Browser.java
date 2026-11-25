@@ -227,21 +227,15 @@ public class Browser {
                 });
     }
 
-    /** Wählt eine Ansicht über den sichtbaren Reiter oder die kompakte Navigation. */
+    /** Wählt eine Ansicht über ihren sichtbaren Reiter. */
     public void clickTabWithText(String label) {
         WebElement tab = new WebDriverWait(driver(), LOAD)
-                .withMessage("Keine Navigation für „" + label + "“ auf der Seite.")
-                .until(_ -> driver().findElements(By.cssSelector("vaadin-tab, .map-sidebar-select")).stream()
+                .withMessage("Kein Reiter „" + label + "“ auf der Seite.")
+                .until(_ -> driver().findElements(By.tagName("vaadin-tab")).stream()
                         .filter(WebElement::isDisplayed)
-                        .filter(candidate -> candidate.getTagName().equals("vaadin-combo-box")
-                                || label.equals(candidate.getText().strip()))
+                        .filter(candidate -> label.equals(candidate.getText().strip()))
                         .findFirst().orElse(null));
-        if (tab.getTagName().equals("vaadin-tab")) {
-            ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", tab);
-        } else {
-            type(".map-sidebar-select input", Keys.chord(Keys.CONTROL, "a"), label);
-            clickMatching("vaadin-combo-box-item", item -> item.getText().strip().equals(label), "Ansicht " + label);
-        }
+        ((JavascriptExecutor) driver()).executeScript("arguments[0].click();", tab);
     }
 
     /** Öffnet einen sichtbaren aufklappbaren Bereich anhand seiner Zusammenfassung. */
@@ -259,9 +253,7 @@ public class Browser {
         new WebDriverWait(driver(), LOAD).withMessage("Reiter „" + label + "“ wurde nicht ausgewählt.")
                 .until(_ -> driver().findElements(By.tagName("vaadin-tab")).stream()
                         .filter(WebElement::isDisplayed)
-                        .anyMatch(tab -> label.equals(tab.getText().strip()) && tab.getAttribute("selected") != null)
-                        || driver().findElements(By.cssSelector(".map-sidebar-select input")).stream()
-                        .filter(WebElement::isDisplayed).anyMatch(input -> label.equals(input.getDomProperty("value"))));
+                        .anyMatch(tab -> label.equals(tab.getText().strip()) && tab.getAttribute("selected") != null));
     }
 
     /** {@code null}, wenn der Knopf (noch) fehlt oder die Seite gerade neu rendert — die Wait fragt erneut. */
