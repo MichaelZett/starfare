@@ -17,28 +17,28 @@ class AllocationSplitTest {
     @Test void raisingOneShareTakesThePointsFromTheOther() {
         var split = new AllocationSplit(7, 3);
         int[] limits = AllocationSplit.limits(industry(10, 3));
-        assertThat(split.adjust(AllocationSplit.EXPANSION, 6, limits)).isEqualTo(new AllocationSplit(4, 6));
-        assertThat(split.adjust(AllocationSplit.SHIPS, 10, limits)).isEqualTo(new AllocationSplit(10, 0));
+        assertThat(split.adjust(AllocationSplit.EXPANSION_INDEX, 6, limits)).isEqualTo(new AllocationSplit(4, 6));
+        assertThat(split.adjust(AllocationSplit.SHIPS_INDEX, 10, limits)).isEqualTo(new AllocationSplit(10, 0));
     }
 
     @Test void requestsStayWithinTheTotalAndTheLimits() {
         var split = new AllocationSplit(7, 3);
         int[] limits = AllocationSplit.limits(industry(10, 3));
-        assertThat(split.adjust(AllocationSplit.EXPANSION, 99, limits)).isEqualTo(new AllocationSplit(0, 10));
-        assertThat(split.adjust(AllocationSplit.EXPANSION, -4, limits)).isEqualTo(new AllocationSplit(10, 0));
+        assertThat(split.adjust(AllocationSplit.EXPANSION_INDEX, 99, limits)).isEqualTo(new AllocationSplit(0, 10));
+        assertThat(split.adjust(AllocationSplit.EXPANSION_INDEX, -4, limits)).isEqualTo(new AllocationSplit(10, 0));
     }
 
     @Test void anIndustryAtItsMaximumCannotExpand() {
         var full = industry(EconomyRules.MAX_CAPACITY, 0);
         assertThat(AllocationSplit.limits(full)).containsExactly(EconomyRules.MAX_CAPACITY, 0);
-        assertThat(AllocationSplit.saved(full).adjust(AllocationSplit.EXPANSION, 5, AllocationSplit.limits(full)))
+        assertThat(AllocationSplit.saved(full).adjust(AllocationSplit.EXPANSION_INDEX, 5, AllocationSplit.limits(full)))
                 .isEqualTo(new AllocationSplit(EconomyRules.MAX_CAPACITY, 0));
     }
 
     @Test void sharesAreReadByIndexAndMustNotBeNegative() {
         var split = new AllocationSplit(4, 2);
-        assertThat(split.at(AllocationSplit.SHIPS)).isEqualTo(4);
-        assertThat(split.at(AllocationSplit.EXPANSION)).isEqualTo(2);
+        assertThat(split.at(AllocationSplit.SHIPS_INDEX)).isEqualTo(4);
+        assertThat(split.at(AllocationSplit.EXPANSION_INDEX)).isEqualTo(2);
         assertThat(split.total()).isEqualTo(6);
         assertThatThrownBy(() -> split.at(2)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new AllocationSplit(-1, 0)).isInstanceOf(IllegalArgumentException.class);

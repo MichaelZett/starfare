@@ -3,7 +3,6 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.gamesplatformapi.AccountId;
 import de.zettsystems.gamesplatformapi.LifecycleStage;
 import de.zettsystems.gamesplatformapi.PlatformAccounts;
-import de.zettsystems.starfare.game.values.RulesetCatalog;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import org.junit.jupiter.api.Test;
 

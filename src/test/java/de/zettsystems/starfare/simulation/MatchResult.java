@@ -22,7 +22,7 @@ record MatchResult(Scenario scenario, List<Strategy> strategies, String experime
      */
     record SeatActivity(int player, int activeRounds, int sends, int attacks, long attackShips, int referenceAttacks,
                         int firstReferenceAttack) {
-        SeatActivity record(int round, boolean attack, boolean onReference, int ships) {
+        SeatActivity withSend(int round, boolean attack, boolean onReference, int ships) {
             return new SeatActivity(player, activeRounds, sends + 1, attacks + (attack ? 1 : 0),
                     attackShips + (attack ? ships : 0), referenceAttacks + (onReference ? 1 : 0),
                     firstReferenceAttack == 0 && onReference ? round : firstReferenceAttack);

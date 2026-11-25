@@ -27,6 +27,7 @@ import org.jspecify.annotations.Nullable;
 final class MapRenderer {
     private static final String FLEET_ROUTE = "fleet-";
     private static final String STOP_PROPAGATION = "event.stopPropagation()";
+    private static final String CLICK = "click";
 
     private MapRenderer() {
     }
@@ -330,10 +331,10 @@ final class MapRenderer {
             KeyboardActions.enable(badge);
             badge.getElement().setAttribute(HtmlAttributes.ARIA_PRESSED, String.valueOf(selected));
             badge.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, sys.name() + ": " + tooltip);
-            badge.getElement().addEventListener("click", _ -> in.onJointToggle().accept(sys.id()))
+            badge.getElement().addEventListener(CLICK, _ -> in.onJointToggle().accept(sys.id()))
                     .addEventData(STOP_PROPAGATION);
         } else {
-            badge.getElement().addEventListener("click", _ -> { }).addEventData(STOP_PROPAGATION);
+            badge.getElement().addEventListener(CLICK, _ -> { }).addEventData(STOP_PROPAGATION);
         }
         badge.getElement().setProperty(HtmlAttributes.TITLE, tooltip);
         dot.add(badge);
@@ -379,7 +380,7 @@ final class MapRenderer {
         marker.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, sys.name() + ": " + I18n.t(UiTexts.MAP_REPORT_MARKER_HINT));
         KeyboardActions.enable(marker);
         marker.getElement().setProperty(HtmlAttributes.TITLE, I18n.t(UiTexts.MAP_REPORT_MARKER_HINT));
-        marker.getElement().addEventListener("click", _ -> in.onReportSystemSelected().accept(sys.id()))
+        marker.getElement().addEventListener(CLICK, _ -> in.onReportSystemSelected().accept(sys.id()))
                 .addEventData(STOP_PROPAGATION);
         return marker;
     }

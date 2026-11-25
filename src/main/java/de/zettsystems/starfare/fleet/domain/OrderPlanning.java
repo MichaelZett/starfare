@@ -6,6 +6,7 @@ import de.zettsystems.starfare.fleet.values.ScheduledDeparture;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.PlannedOrder;
 import de.zettsystems.starfare.navigation.domain.Routes;
+import de.zettsystems.starfare.navigation.values.RoutePreview;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +45,7 @@ public final class OrderPlanning {
         Map<Integer, Integer> arrivals = new HashMap<>();
         for (FleetDispatch dispatch : dispatches) {
             Optional<Integer> rounds = dispatch.sourceId() == target ? Optional.empty()
-                    : Routes.plan(state, player, dispatch.sourceId(), target).map(route -> route.rounds());
+                    : Routes.plan(state, player, dispatch.sourceId(), target).map(RoutePreview::rounds);
             if (rounds.isEmpty()) { return false; }
             arrivals.put(dispatch.sourceId(), state.turn() + rounds.orElseThrow());
         }

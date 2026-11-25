@@ -85,7 +85,7 @@ final class MatchRunner {
         for (var send : plan.sends()) {
             Integer owner = owners.get(send.toSystemId());
             boolean attack = owner != null && owner != player;
-            seatActivity = seatActivity.record(round, attack, attack && owner == 1, send.ships());
+            seatActivity = seatActivity.withSend(round, attack, attack && owner == 1, send.ships());
         }
         activity.set(seat, seatActivity);
     }

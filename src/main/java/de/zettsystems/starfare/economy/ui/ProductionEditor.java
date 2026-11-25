@@ -23,8 +23,8 @@ import java.util.function.Function;
  */
 public final class ProductionEditor extends Div {
     private static final String VALUE = "element.value";
-    private static final int FIELD = 0;
-    private static final int SLIDER = 1;
+    private static final int FIELD_CONTROL = 0;
+    private static final int SLIDER_CONTROL = 1;
     private final ProductionInputs.Input input;
     private final Function<AllocationSplit, Optional<ProductionPlanPreview>> preview;
     private final Function<AllocationSplit, ProductionCommit> commit;
@@ -69,16 +69,16 @@ public final class ProductionEditor extends Div {
         slider.getElement().addEventListener("change", event -> {
             if (!updating) { input.expansion(event.getEventData().path(VALUE).asInt()); save(); }
         }).addEventData(VALUE);
-        amount.getElement().addEventListener("focusin", _ -> input.focus(FIELD));
+        amount.getElement().addEventListener("focusin", _ -> input.focus(FIELD_CONTROL));
         amount.getElement().addEventListener("focusout", _ -> input.focus(null));
-        slider.getElement().addEventListener("focus", _ -> input.focus(SLIDER));
+        slider.getElement().addEventListener("focus", _ -> input.focus(SLIDER_CONTROL));
         slider.getElement().addEventListener("blur", _ -> input.focus(null));
     }
 
     private void restoreFocus() {
         Integer control = input.focus();
         if (control == null) { return; }
-        if (control == FIELD) { amount.focus(); }
+        if (control == FIELD_CONTROL) { amount.focus(); }
         else { slider.getElement().callJsFunction("focus"); }
     }
 
@@ -94,7 +94,7 @@ public final class ProductionEditor extends Div {
     private void sync() {
         updating = true;
         // At the maximum capacity nothing can be expanded, so the split is fixed.
-        int limit = AllocationSplit.limits(input.industry())[AllocationSplit.EXPANSION];
+        int limit = AllocationSplit.limits(input.industry())[AllocationSplit.EXPANSION_INDEX];
         int value = input.allocation().expansion();
         amount.setMax(limit); amount.setValue(value);
         slider.getElement().setAttribute(HtmlAttributes.MAX, String.valueOf(limit));

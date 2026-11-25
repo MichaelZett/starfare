@@ -55,14 +55,14 @@ public final class ProductionInputs {
         public List<RelocationAdjustment> relocations() { return relocations; }
         /** Sets the expansion share; shipbuilding receives the rest of the capacity. */
         public void expansion(int value) {
-            allocation = allocation.adjust(AllocationSplit.EXPANSION, value, AllocationSplit.limits(industry));
+            allocation = allocation.adjust(AllocationSplit.EXPANSION_INDEX, value, AllocationSplit.limits(industry));
             status = Status.NONE;
         }
         public boolean valid() {
             int[] limits = AllocationSplit.limits(industry);
             return allocation.total() == industry.capacity()
-                    && allocation.ships() <= limits[AllocationSplit.SHIPS]
-                    && allocation.expansion() <= limits[AllocationSplit.EXPANSION];
+                    && allocation.ships() <= limits[AllocationSplit.SHIPS_INDEX]
+                    && allocation.expansion() <= limits[AllocationSplit.EXPANSION_INDEX];
         }
         /** The server accepted the current allocation; it is the expected base of the next save. */
         public void accepted(List<RelocationAdjustment> shortened) {

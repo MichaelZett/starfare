@@ -96,7 +96,7 @@ class CautiousPolicyTest {
         var playerList = IntStream.rangeClosed(1, players).mapToObj(id -> new Player(id, "P" + id, id != ME, "#fff")).toList();
         var view = new PlayerViewState(5, playerList, systems, fleets, null, false, null, List.of(), List.of(),
                 EmpireStats.NONE, Set.of(), false, RoundStatus.NONE, null);
-        var owned = systems.stream().filter(system -> system.fullyVisible()).map(VisibleSystem::id).toList();
+        var owned = systems.stream().filter(VisibleSystem::fullyVisible).map(VisibleSystem::id).toList();
         Map<AiObservation.Route, Integer> travel = new HashMap<>();
         for (int index = 0; index < owned.size(); index++) {
             int extra = index;

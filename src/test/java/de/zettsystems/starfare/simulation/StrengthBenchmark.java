@@ -6,7 +6,6 @@ import de.zettsystems.starfare.game.values.ComputerStrength;
 import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.RandomnessLevel;
-import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.game.values.StarSystem;
 import java.io.IOException;
 import java.nio.file.Files;

@@ -7,7 +7,6 @@ import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.game.application.DefaultPlayerViewBuilder;
 import de.zettsystems.starfare.game.domain.GameState;
-import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.navigation.application.DefaultNavigationService;
 import de.zettsystems.starfare.report.application.DefaultReportService;
 import de.zettsystems.starfare.turn.application.DefaultTurnEngine;

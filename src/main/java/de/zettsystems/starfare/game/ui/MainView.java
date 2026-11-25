@@ -610,14 +610,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         displayedTurn = view.turn();
         boolean observer = isObserver() || reviewing;
         int playerId = observer ? -1 : currentSeat();
-        var diplomacy = observer ? java.util.Optional.<de.zettsystems.starfare.diplomacy.values.DiplomacyView>empty()
-                : game.diplomacyFor(gameId, UserContext.currentPlayerId().orElse(""));
-        treatyActions.setVisible(diplomacy.isPresent());
-        fleetsPanel.diplomacyAvailable(treatyActions.isVisible());
-        fleetsPanel.alliedOwners(diplomacy.flatMap(value -> value.treaties().groupFor(value.player()))
-                .map(de.zettsystems.starfare.diplomacy.values.AllianceGroup::members).orElse(java.util.Set.of()));
-        var treaties = diplomacyDialog;
-        if (treaties != null && treaties.isOpened()) { treaties.refresh(); }
+        refreshDiplomacy(observer);
         RoundWalkthrough.Step step = observer ? null : walkthroughStep(view);
         walkthroughOpen = step != null;
         planningLocked = walkthroughOpen || view.gameOver();
@@ -639,6 +632,18 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             if (newFocus) { phoneLayout.showMap(); }
         }
         showOutcomeWhenDue(view);
+    }
+
+    /** Alliance actions and allied owners for a seated player; spectators and the review see no diplomacy. */
+    private void refreshDiplomacy(boolean observer) {
+        var diplomacy = observer ? java.util.Optional.<de.zettsystems.starfare.diplomacy.values.DiplomacyView>empty()
+                : game.diplomacyFor(gameId, UserContext.currentPlayerId().orElse(""));
+        treatyActions.setVisible(diplomacy.isPresent());
+        fleetsPanel.diplomacyAvailable(treatyActions.isVisible());
+        fleetsPanel.alliedOwners(diplomacy.flatMap(value -> value.treaties().groupFor(value.player()))
+                .map(de.zettsystems.starfare.diplomacy.values.AllianceGroup::members).orElse(java.util.Set.of()));
+        var treaties = diplomacyDialog;
+        if (treaties != null && treaties.isOpened()) { treaties.refresh(); }
     }
 
     /** The open event of the round walkthrough for the seated player; spectators and the review are never held up. */

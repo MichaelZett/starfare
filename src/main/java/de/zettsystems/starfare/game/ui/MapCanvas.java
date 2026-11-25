@@ -5,7 +5,6 @@ import com.vaadin.flow.component.html.Div;
 import de.zettsystems.starfare.game.values.GalaxyExtent;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.style.CssProperties;
-import de.zettsystems.starfare.style.HtmlAttributes;
 
 /**
  * Scrollable container for the game map. Wraps the scroll Div + inner map Div,

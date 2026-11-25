@@ -67,15 +67,21 @@ final class CautiousPolicy {
         for (var target : observation.view().systems()) {
             if (!observation.hostile(target) || engaged.contains(target.id())) { continue; }
             for (var source : owned) {
-                int rounds = observation.rounds(source.id(), target.id());
-                int spare = spare(source, guardRounds);
-                if (rounds == Integer.MAX_VALUE || required(target, rounds) > spare) { continue; }
-                double score = rounds + defence(target) / 8.0 + (target.ownerId() != null ? EMPIRE_PENALTY : 0);
-                var candidate = new Operation(source.id(), target.id(), spare, score);
-                if (best == null || candidate.betterThan(best)) { best = candidate; }
+                var candidate = operation(observation, source, target, guardRounds);
+                if (candidate != null && (best == null || candidate.betterThan(best))) { best = candidate; }
             }
         }
         return best;
+    }
+
+    /** The attack from this source if its spare ships clearly beat the target's defence at arrival. */
+    private static @Nullable Operation operation(AiObservation observation, VisibleSystem source, VisibleSystem target,
+                                                 double guardRounds) {
+        int rounds = observation.rounds(source.id(), target.id());
+        int spare = spare(source, guardRounds);
+        if (rounds == Integer.MAX_VALUE || required(target, rounds) > spare) { return null; }
+        double score = rounds + defence(target) / 8.0 + (target.ownerId() != null ? EMPIRE_PENALTY : 0);
+        return new Operation(source.id(), target.id(), spare, score);
     }
 
     /** Ships for a clear superiority over the defence the target will have when the fleet arrives. */
@@ -100,6 +106,7 @@ final class CautiousPolicy {
     }
 
     private static int defence(VisibleSystem system) {
-        return Objects.requireNonNullElse(system.garrison(), UNKNOWN_DEFENCE);
+        Integer garrison = system.garrison();
+        return garrison == null ? UNKNOWN_DEFENCE : garrison;
     }
 }
