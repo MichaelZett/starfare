@@ -27,27 +27,24 @@ class SidebarNavigationTest {
     }
 
     @Test
-    void compactAndWideNavigationStayInSyncWhenTheReportBecomesUnavailable() {
+    void fourTabsSwitchTheSectionsAndTheReportTabHidesWhenUnavailable() {
         var panel = new FleetAndOrdersPanel(new BattleAcknowledgements(mock(BattleAcknowledgementService.class)),
                 _ -> { }, _ -> { }, _ -> { }, () -> { }, _ -> { }, _ -> { }, _ -> { }, _ -> { },
                 _ -> { }, _ -> { }, () -> { });
-        ComboBox<?> compact = descendants(panel).filter(ComboBox.class::isInstance).map(ComboBox.class::cast).findFirst().orElseThrow();
+        assertThat(descendants(panel).filter(ComboBox.class::isInstance)).as("no compact section select").isEmpty();
         Tabs tabs = descendants(panel).filter(Tabs.class::isInstance).map(Tabs.class::cast).findFirst().orElseThrow();
         assertThat(tabs.getChildren().map(tab -> tab.getElement().getText()).toList())
                 .containsExactly("Details", "Flotten", "Verlegungen", "Bericht");
-        assertThat(compact.getListDataView().getItemCount()).isEqualTo(4);
         panel.showFleets();
-        assertThat(compact.getValue()).hasToString("FLEETS");
         assertThat(tabs.getSelectedIndex()).isEqualTo(1);
         panel.showReport();
         panel.setReportAvailable(false);
-        assertThat(compact.getListDataView().getItemCount()).isEqualTo(3);
-        assertThat(compact.getValue()).hasToString("DETAILS");
         assertThat(tabs.getSelectedIndex()).isZero();
+        assertThat(tabs.getChildren().toList().getLast().isVisible()).isFalse();
         panel.setReportAvailable(true);
-        assertThat(compact.getListDataView().getItemCount()).isEqualTo(4);
+        assertThat(tabs.getChildren().toList().getLast().isVisible()).isTrue();
         tabs.setSelectedIndex(2);
-        assertThat(compact.getValue()).hasToString("RELOCATIONS");
+        assertThat(tabs.getSelectedIndex()).isEqualTo(2);
     }
 
     private static Stream<Component> descendants(Component component) {

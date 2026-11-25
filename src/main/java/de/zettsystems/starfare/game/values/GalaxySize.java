@@ -5,7 +5,7 @@ import java.util.Optional;
 
 /** The galaxy sizes offered for a new game. */
 public enum GalaxySize {
-    SMALL(16), MEDIUM(24), LARGE(40), HUGE(64);
+    SMALL(16), MEDIUM(24), LARGE(30), HUGE(40);
 
     public static final GalaxySize DEFAULT = MEDIUM;
     /** A size needs at least this many systems per empire, or the empires start next to each other. */

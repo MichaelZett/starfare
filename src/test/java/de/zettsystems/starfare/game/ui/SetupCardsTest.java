@@ -59,12 +59,12 @@ class SetupCardsTest {
         players.set(10);
         assertThat(sizes.getItemEnabledProvider().test(GalaxySize.SMALL)).isFalse();
         assertThat(text(card(sizes, GalaxySize.SMALL), "setup-card-status")).isEqualTo("Zu klein für 10 Spieler");
-        assertThat(text(card(sizes, GalaxySize.HUGE), "setup-card-text")).isEqualTo("64 Systeme, quer über die Karte etwa 37 Runden.");
+        assertThat(text(card(sizes, GalaxySize.HUGE), "setup-card-text")).isEqualTo("40 Systeme, quer über die Karte etwa 29 Runden.");
     }
 
     @Test
     void crossingTheMapTakesLongerOnLargerGalaxies() {
-        assertThat(GalaxySize.values()).extracting(SetupCards::crossingRounds).containsExactly(19, 23, 29, 37);
+        assertThat(GalaxySize.values()).extracting(SetupCards::crossingRounds).containsExactly(19, 23, 25, 29);
     }
 
     @SuppressWarnings("unchecked")

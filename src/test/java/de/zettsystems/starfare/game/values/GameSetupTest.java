@@ -123,7 +123,8 @@ class GameSetupTest {
         assertThat(GalaxySize.SMALL.fits(9)).isFalse();
         assertThat(GalaxySize.fitting(GalaxySize.SMALL, 10)).isEqualTo(GalaxySize.MEDIUM);
         assertThat(GalaxySize.fitting(GalaxySize.LARGE, 10)).isEqualTo(GalaxySize.LARGE);
-        assertThat(GalaxySize.of(64)).contains(GalaxySize.HUGE);
+        assertThat(GalaxySize.of(40)).contains(GalaxySize.HUGE);
+        assertThat(GalaxySize.of(64)).isEmpty();
         assertThat(GalaxySize.of(25)).isEmpty();
     }
 
