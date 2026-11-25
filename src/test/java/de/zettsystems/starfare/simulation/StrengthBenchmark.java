@@ -21,7 +21,7 @@ import java.util.concurrent.Future;
 
 /**
  * Calibrates the computer strengths on the galaxies of the lobby: the same generation, start values, start balance,
- * events and attack order as a new classic game. Seat 1 is the person, played by a fixed reference profile.
+ * events and attack order as a new game under the chosen rules. Seat 1 is the person, played by a fixed reference profile.
  */
 final class StrengthBenchmark {
     private StrengthBenchmark() { }
@@ -104,18 +104,18 @@ final class StrengthBenchmark {
         }
     }
 
-    /** A classic lobby setup: one person, the rest computers; without events the dice and attack order stay. */
+    /** A lobby setup: one person, the rest computers; without events the dice and attack order stay. */
     static GameSetup setup(StrengthOptions options, ComputerStrength strength, RandomnessLevel level, boolean events,
                            int systems, int players) {
         var setup = GameSetup.defaults().seatPlayers(1, players - 1).chooseGalaxy(systems, options.layout())
-                .selectRuleset(RulesetRef.SECTOR_FORCES).chooseComputerStrength(strength).chooseRandomness(level);
+                .selectRuleset(options.rules()).chooseComputerStrength(strength).chooseRandomness(level);
         return (events ? setup : setup.chooseEvents(Set.of())).normalized();
     }
 
     static Match play(StrengthOptions options, GameSetup setup, long mapSeed, long combatSeed) {
         var state = create(options, setup, mapSeed);
         var strategies = strategies(options, state, mapSeed);
-        var scenario = new Scenario(RulesetRef.SECTOR_FORCES, setup.galaxyLayout(), setup.systemCount(), mapSeed, combatSeed,
+        var scenario = new Scenario(setup.ruleset(), setup.galaxyLayout(), setup.systemCount(), mapSeed, combatSeed,
                 options.rounds(), setup.combatRandomnessPercent(), setup.victoryRules());
         var result = MatchRunner.playLobbyGame(scenario, strategies, state, "strength");
         return new Match(setup.computerStrength(), setup.randomness(), !setup.enabledEvents().isEmpty(),

@@ -18,18 +18,19 @@ import java.util.function.Function;
  * Dimensions of a computer-strength calibration on lobby galaxies: one reference profile stands in for the person on
  * seat 1, the computers play as the chosen strength would let them.
  *
+ * @param rules            classic or extended lobby games
  * @param startShare       replaces the start share of every strength when present, to try other values
  * @param computerProfiles replaces the profiles of the computers when not empty; each draws one per map
  * @param events           with {@code false}, all cosmic events are switched off while the randomness level keeps
  *                         its combat deviation and attack order; both values pair events against none
  */
-record StrengthOptions(Path output, List<ComputerStrength> strengths, List<RandomnessLevel> levels, List<Boolean> events,
+record StrengthOptions(Path output, RulesetRef rules, List<ComputerStrength> strengths, List<RandomnessLevel> levels, List<Boolean> events,
                        List<Integer> sizes, List<Integer> players, GalaxyLayout layout, long firstSeed, int seeds,
                        long combatSeed, int combatSeeds, int rounds, Strategy reference, OptionalDouble startShare,
                        List<Strategy> computerProfiles, int threads) {
     private static final Set<String> KEYS = Set.of("mode", "output", "strengths", "randomness", "events", "systems",
             "players", "layout", "first-seed", "seeds", "combat-seed", "combat-seeds", "rounds", "reference",
-            "start-share", "computer-profiles", "threads");
+            "start-share", "computer-profiles", "threads", "rules");
 
     StrengthOptions {
         strengths = List.copyOf(strengths);
@@ -50,6 +51,7 @@ record StrengthOptions(Path output, List<ComputerStrength> strengths, List<Rando
             }
         }
         var options = new StrengthOptions(Path.of(values.getOrDefault("output", "build/strategy-harness/strength")),
+                rules(values.getOrDefault("rules", "classic")),
                 list(values, "strengths", "EASY,NORMAL,HARD", ComputerStrength::valueOf),
                 list(values, "randomness", RandomnessLevel.DEFAULT.name(), RandomnessLevel::valueOf),
                 list(values, "events", "on", StrengthOptions::switchedOn),
@@ -67,17 +69,26 @@ record StrengthOptions(Path output, List<ComputerStrength> strengths, List<Rando
     }
 
     private void validate() {
-        var classic = Strategy.forRules(RulesetRef.SECTOR_FORCES);
-        boolean classicProfiles = classic.containsAll(computerProfiles) && classic.contains(reference);
+        // Extended games also offer the industry profiles the computers of the game play.
+        var offered = rules.isSpaceward() ? List.of(Strategy.values()) : Strategy.forRules(rules);
+        boolean profilesFit = offered.containsAll(computerProfiles) && offered.contains(reference);
         boolean shareValid = startShare.isEmpty() || (startShare.getAsDouble() >= 0.25 && startShare.getAsDouble() <= 3);
         if (seeds < 1 || seeds > 1000 || combatSeeds < 1 || combatSeeds > 20 || rounds < 1 || rounds > 2000
-                || threads < 1 || threads > 8 || !classicProfiles || !shareValid
+                || threads < 1 || threads > 8 || !profilesFit || !shareValid
                 || sizes.stream().anyMatch(size -> GalaxySize.of(size).isEmpty())
                 || players.stream().anyMatch(count -> count < 2 || count > 10)
                 || sizes.stream().anyMatch(size -> players.stream().anyMatch(count -> !GalaxySize.of(size).orElseThrow().fits(count)))) {
-            throw new IllegalArgumentException("Strength options: classic profiles, offered galaxy sizes that fit 2..10 players, "
+            throw new IllegalArgumentException("Strength options: profiles of the rules, offered galaxy sizes that fit 2..10 players, "
                     + "1..1000 seeds, 1..20 combat seeds, start share 0.25..3, 1..8 threads");
         }
+    }
+
+    private static RulesetRef rules(String value) {
+        return switch (value) {
+            case "classic" -> RulesetRef.SECTOR_FORCES;
+            case "spaceward" -> RulesetRef.EXTENDED;
+            default -> throw new IllegalArgumentException("Rules: classic, spaceward");
+        };
     }
 
     private static boolean switchedOn(String value) {

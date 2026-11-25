@@ -135,18 +135,17 @@ class GameSetupTest {
         assertThat(ComputerStrength.NORMAL.computerStart(classic, 8)).isEqualTo(8);
         assertThat(ComputerStrength.HARD.computerStart(classic, 8)).isEqualTo(12);
         assertThat(ComputerStrength.EASY.computerStart(classic, 1)).isOne();
-        assertThat(ComputerStrength.EASY.computerStart(extended, 4)).as("extended keeps its values until phase E").isEqualTo(3);
-        assertThat(ComputerStrength.HARD.computerStart(extended, 8)).isEqualTo(10);
+        assertThat(ComputerStrength.EASY.computerStart(extended, 4)).isEqualTo(2);
+        assertThat(ComputerStrength.HARD.computerStart(extended, 8)).as("hard extended computers expand instead").isEqualTo(8);
 
         Random random = new Random(3);
         assertThat(ComputerStrength.EASY.strategy(classic, 2, random)).isEqualTo(AiStrategy.BASELINE);
         for (int draw = 0; draw < 20; draw++) {
             assertThat(ComputerStrength.NORMAL.strategy(classic, 2, random)).isEqualTo(AiStrategy.BASELINE);
             assertThat(ComputerStrength.HARD.strategy(classic, 2, random)).isIn(AiStrategy.BASELINE, AiStrategy.RUSH);
-            assertThat(ComputerStrength.NORMAL.strategy(extended, 4, random))
-                    .isIn(ComputerStrength.NORMAL_EXTENDED_PROFILES);
-            assertThat(ComputerStrength.HARD.strategy(extended, 5, random))
-                    .isIn(AiStrategy.INDUSTRY_ADAPTIVE, AiStrategy.BASELINE);
+            assertThat(ComputerStrength.NORMAL.strategy(extended, 4, random)).isEqualTo(AiStrategy.BASELINE);
+            assertThat(ComputerStrength.EASY.strategy(extended, 2, random)).isEqualTo(AiStrategy.BASELINE);
+            assertThat(ComputerStrength.HARD.strategy(extended, 5, random)).isEqualTo(AiStrategy.INDUSTRY_ADAPTIVE);
         }
         assertThat(ComputerStrength.NORMAL.strategy(classic, 4, random)).isEqualTo(AiStrategy.BASELINE);
         assertThat(ComputerStrength.HARD.strategy(classic, 3, random)).isEqualTo(AiStrategy.BASELINE);
