@@ -98,7 +98,9 @@ final class ShipLedger {
                 case TurnEvent.CoalitionBattle battle when seen.add(battle) -> lost += battle.sides().stream()
                         .flatMap(side -> side.members().stream())
                         .mapToLong(member -> member.ships() - member.remaining()).sum();
-                default -> { }
+                default -> {
+                    // Other events destroy no ships in a battle; cosmic losses are counted where they happen.
+                }
             }
         }
         return lost;

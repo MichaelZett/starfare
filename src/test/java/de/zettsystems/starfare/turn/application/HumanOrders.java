@@ -166,7 +166,7 @@ final class HumanOrders {
             case 2 -> open.isEmpty() ? new DiplomacyOrder(DiplomacyOrder.Action.FOUND, other)
                     : new DiplomacyOrder(DiplomacyOrder.Action.APPROVE, pick(open).id());
             default -> new DiplomacyOrder(DiplomacyOrder.Action.LEAVE,
-                    state.diplomacy().groupFor(player).map(group -> group.id()).orElse(0));
+                    state.diplomacy().groupFor(player).map(de.zettsystems.starfare.diplomacy.values.AllianceGroup::id).orElse(0));
         };
         if (diplomacy.act(state, player, order)) { ShipLedger.see("treaty " + order.action(), 1); }
     }

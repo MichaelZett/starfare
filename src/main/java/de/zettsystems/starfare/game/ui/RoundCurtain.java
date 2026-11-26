@@ -17,14 +17,13 @@ final class RoundCurtain extends Div {
 
     /**
      * Follows the event's system on the map, even while the map scrolls there or redraws, and cuts the bright spot
-     * into the curtain at its place; outside the visible map there is no spot. Runs until the curtain is hidden.
+     * into the curtain at its place; outside the visible map there is no spot. It places the spot at once, on every
+     * scroll of the map and resize, and on a short timer, not on animation frames, which a browser may hold back.
+     * Stops when the curtain is hidden or gone.
      */
     private static final String FOLLOW_SITE = """
             const curtain = this;
-            if (curtain.__starfareSpot) return;
-            curtain.__starfareSpot = true;
-            const follow = () => {
-              if (!curtain.isConnected || curtain.hidden) { curtain.__starfareSpot = false; return; }
+            const place = () => {
               const root = curtain.parentElement;
               const site = root && root.querySelector('#map .sys-report-event-active');
               const scroll = root && root.querySelector('#scroll');
@@ -40,9 +39,21 @@ final class RoundCurtain extends Div {
                 }
               }
               curtain.style.setProperty('--spot-r', radius + 'px');
-              requestAnimationFrame(follow);
             };
-            requestAnimationFrame(follow);
+            place();
+            if (curtain.__starfareSpot) return;
+            const stop = () => {
+              clearInterval(curtain.__starfareSpot);
+              curtain.__starfareSpot = null;
+              document.removeEventListener('scroll', place, true);
+              window.removeEventListener('resize', place);
+            };
+            document.addEventListener('scroll', place, true);
+            window.addEventListener('resize', place);
+            curtain.__starfareSpot = setInterval(() => {
+              if (!curtain.isConnected || curtain.hidden) { stop(); return; }
+              place();
+            }, 150);
             """;
 
     private final List<Component> board;

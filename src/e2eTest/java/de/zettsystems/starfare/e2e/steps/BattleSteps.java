@@ -78,14 +78,27 @@ public class BattleSteps {
         useNarrowDesktop();
         browser.awaitCss(".round-curtain .round-walkthrough");
         // Only the site of the event stays bright, and a click on the map lands on the curtain.
-        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> Boolean.TRUE.equals(js().executeScript("""
-                const curtain = document.querySelector('.round-curtain');
-                const map = document.querySelector('.map-left').getBoundingClientRect();
-                const hit = document.elementFromPoint(map.left + 20, map.top + map.height / 2);
-                return parseFloat(curtain.style.getPropertyValue('--spot-r')) > 0
-                    && curtain.contains(hit)
-                    && document.querySelector('.map-content').closest('[inert]') !== null;
-                """)));
+        String[] missing = {""};
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(20))
+                .withMessage(() -> "Vorhang unvollständig: " + missing[0])
+                .until(_ -> {
+                    missing[0] = String.valueOf(js().executeScript("""
+                            const curtain = document.querySelector('.round-curtain');
+                            const map = document.querySelector('.map-left').getBoundingClientRect();
+                            const hit = document.elementFromPoint(map.left + 20, map.top + map.height / 2);
+                            const missing = [];
+                            if (!(parseFloat(curtain.style.getPropertyValue('--spot-r')) > 0)) {
+                                const site = document.querySelector('#map .sys-report-event-active');
+                                missing.push('spot ' + curtain.style.getPropertyValue('--spot-r') + ' site '
+                                    + (site ? JSON.stringify(site.getBoundingClientRect()) : 'none') + ' scroll '
+                                    + JSON.stringify(document.querySelector('#scroll').getBoundingClientRect()));
+                            }
+                            if (!curtain.contains(hit)) { missing.push('hit ' + (hit ? hit.outerHTML.slice(0, 120) : 'none')); }
+                            if (document.querySelector('.map-content').closest('[inert]') === null) { missing.push('not inert'); }
+                            return missing.join('; ');
+                            """));
+                    return missing[0].isEmpty();
+                });
         browser.captureUiAcceptance("round-curtain");
     }
 
