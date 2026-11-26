@@ -18,6 +18,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   Seitenanfrage liest Starfare die Lobby nur einmal. „Beendete Partien“ liest nur noch die Partien
   der angefragten Seite statt aller Archive. Im Test mit 15 Partien kosteten die drei Listen einer Seite
   vorher 39 Abfragen, jetzt eine.
+- **Gemeinsamer Angriff nicht doppelt:** Wurde derselbe gemeinsame Angriff zweimal geplant, waren seine
+  Schiffe doppelt vorgemerkt; der zweite Plan wird jetzt abgelehnt, wenn die Garnison nicht reicht. Neue
+  Tests rechnen in ganzen simulierten Partien jede Runde nach, dass keine Schiffe entstehen oder verschwinden.
 
 ## 0.3.0 - 2026-11-25
 
