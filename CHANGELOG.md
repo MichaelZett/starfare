@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.3.1 - 2026-11-26
 
 - **Rundenbericht als Vorhang:** Nach einem Rundenwechsel legt sich der Bericht vor das ganze
   Spielfeld. Karte, Seitenleiste und Kopf sind abgedunkelt und nehmen keine Eingaben an; nur das
