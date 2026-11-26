@@ -459,6 +459,12 @@ running.
 are private; snapshots without the optional visibility field restore as public.
 `visibleGamesFor(account, scope)` separates the active lobby from the archive;
 `summaryFor` and `viewForAccount` enforce account access before returning UI data.
+The lobby scope is one pass over the registry: summaries from memory (the parked
+summary of an unloaded game), no archive lookups, and the variant rule asked once
+per variant (`RulesetAccess.usableBy`). Within one HTTP request the list is read
+once per account while `GameRegistry.version()` stays unchanged, because the
+platform builds a page from several of Starfare's lists. `MatchDirectoryQueryBudgetTest`
+keeps the cost independent of the number of games.
 The UI resolves accounts from the authenticated session, not route parameters.
 
 Only the current host may change visibility, and only before the start. Making
@@ -495,6 +501,8 @@ The platform lists an account's finished games from the same store
 account held a seat in, latest end first (the `finished_at` of the first
 archiving), each with its ranking from `StarfareMatches.result` and the map as
 review link. A game continued after its victory runs again and is left out.
+The database finds the account's seats in the snapshot JSON and returns only ids;
+just the archives of the requested page are read.
 
 `GameState.replayFrames` stores immutable systems, fleets and reports at game
 start and after every resolved turn. It is optional in `GameStateSnapshot` so

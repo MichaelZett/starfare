@@ -71,6 +71,11 @@ public class DefaultGameRegistry implements GameRegistry {
     }
 
     @Override
+    public long version() {
+        return store.version();
+    }
+
+    @Override
     public List<GameId> loadedIds() {
         return store.loadedIds();
     }

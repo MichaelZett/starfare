@@ -36,14 +36,19 @@ public interface GameService {
 
     /** Cancels one planned later start of a joint attack while the round is open. */
     boolean cancelDeparture(GameId gameId, int playerId, int expectedTurn, PlannedDeparture expected);
+    /**
+     * The games the account sees in the lobby or the archive. The lobby takes the summaries from memory and asks
+     * the variant rule once per variant; within one HTTP request it is read once while no game changes.
+     */
     List<GameSummary> visibleGamesFor(String account, GameListScope scope);
 
     /**
-     * The finished games the account held a seat in, for the platform's list of finished matches: latest
-     * end first, then by id. The end is the one stored when the game was archived first; a game its winner
-     * continued runs again and is not listed until it ends anew.
+     * One page of the finished games the account held a seat in, for the platform's list of finished matches:
+     * latest end first, then by id. The end is the one stored when the game was archived first; a game its winner
+     * continued runs again and is not listed until it ends anew. Only the games of the page are read; an archive
+     * that can no longer be read makes its page shorter.
      */
-    List<FinishedMatch> finishedMatchesOf(String account);
+    List<FinishedMatch> finishedMatchesOf(String account, int offset, int limit);
     Optional<GameSummary> summaryFor(GameId id, String account);
     boolean changeVisibility(GameId id, String actor, GameVisibility visibility);
     Optional<PlayerViewState> reviewFor(GameId id, String account);

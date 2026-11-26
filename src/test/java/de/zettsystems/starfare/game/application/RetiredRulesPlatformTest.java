@@ -59,7 +59,7 @@ class RetiredRulesPlatformTest extends AbstractIntegrationTest {
         assertThat(directory.openMatches(AccountId.of(23))).extracting(MatchSummary::matchId).doesNotContain(RUNNING, FINISHED);
         assertThat(directory.invitationsOf(ACCOUNT)).isEmpty();
         assertThat(directory.finishedMatchesOf(ACCOUNT, 0, 50)).extracting(FinishedMatch::matchId).doesNotContain(RUNNING, FINISHED);
-        assertThat(games.finishedMatchesOf("17")).noneMatch(match -> FINISHED.equals(match.matchId()));
+        assertThat(games.finishedMatchesOf("17", 0, 100)).noneMatch(match -> FINISHED.equals(match.matchId()));
         assertThat(directory.chatAccess(RUNNING, ACCOUNT)).isEqualTo(ChatAccess.NONE);
         assertThat(directory.chatAccess(FINISHED, ACCOUNT)).isEqualTo(ChatAccess.NONE);
         assertThat(registry.find(GameId.of(RUNNING))).isEmpty();

@@ -38,6 +38,7 @@ public class JpaGameSessionStore implements GameSessionStore {
     /** Lobby summaries of unloaded games, taken at unload; a game is either cached or parked here. */
     private final ConcurrentHashMap<GameId, GameSummary> parked = new ConcurrentHashMap<>();
     private final Object cacheMonitor = new Object();
+    private final java.util.concurrent.atomic.AtomicLong version = new java.util.concurrent.atomic.AtomicLong();
 
     public JpaGameSessionStore(GameSessionRepository repository, GameArchiveStore archives, ObjectMapper objectMapper) {
         this(repository, archives, objectMapper, RulesetCatalog.builtIn());
@@ -110,6 +111,7 @@ public class JpaGameSessionStore implements GameSessionStore {
             readableIds.add(session.id());
             parked.remove(session.id());
             lastAccess.put(session.id(), Instant.now());
+            version.incrementAndGet();
         }
         try {
             String json = objectMapper.writeValueAsString(snapshot);
@@ -156,6 +158,7 @@ public class JpaGameSessionStore implements GameSessionStore {
             lastAccess.remove(id);
             readableIds.remove(id);
             parked.remove(id);
+            version.incrementAndGet();
         }
     }
 
@@ -165,6 +168,7 @@ public class JpaGameSessionStore implements GameSessionStore {
             cache.remove(id);
             lastAccess.remove(id);
             parked.remove(id);
+            version.incrementAndGet();
         }
     }
 
@@ -195,11 +199,17 @@ public class JpaGameSessionStore implements GameSessionStore {
                 if (isIdle(id, cutoff) && cache.remove(id, candidate.session())) {
                     lastAccess.remove(id);
                     parked.put(id, candidate.summary());
+                    version.incrementAndGet();
                     unloaded++;
                 }
             }
         }
         return unloaded;
+    }
+
+    @Override
+    public long version() {
+        return version.get();
     }
 
     @Override

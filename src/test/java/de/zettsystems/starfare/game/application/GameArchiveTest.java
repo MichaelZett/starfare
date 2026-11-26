@@ -75,11 +75,14 @@ class GameArchiveTest extends AbstractIntegrationTest {
         games.startGame(running);
         sessions.delete(first);
 
-        assertThat(games.finishedMatchesOf("17"))
+        assertThat(games.finishedMatchesOf("17", 0, 10))
                 .as("from the archive even without the operative session; neither foreign nor running games")
                 .extracting(FinishedMatch::matchId).containsExactly(second.value(), first.value());
+        assertThat(games.finishedMatchesOf("17", 1, 5)).extracting(FinishedMatch::matchId).containsExactly(first.value());
+        assertThat(games.finishedMatchesOf("17", 0, 1)).extracting(FinishedMatch::matchId).containsExactly(second.value());
+        assertThat(games.finishedMatchesOf("17", 2, 1)).isEmpty();
         var ended = java.util.Objects.requireNonNull(registry.readState(second, GameState::finishedAt));
-        assertThat(games.finishedMatchesOf("17").getFirst().endedAt()).as("the end stored when archived")
+        assertThat(games.finishedMatchesOf("17", 0, 1).getFirst().endedAt()).as("the end stored when archived")
                 .isCloseTo(ended, org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
     }
 

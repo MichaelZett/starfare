@@ -2,11 +2,13 @@ package de.zettsystems.starfare.game.application;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameSummary;
 import de.zettsystems.starfare.game.values.GameVisibility;
+import de.zettsystems.starfare.game.values.RulesetRef;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Who sees and plays a game. On top of the game's own rules, an account that may no longer use the
@@ -39,8 +41,12 @@ public class DefaultGameAccessPolicy implements GameAccessPolicy {
     }
     @Override
     public boolean visible(GameSummary summary, String account) {
+        return visible(summary, account, ruleset -> variants.mayUse(ruleset, account));
+    }
+    @Override
+    public boolean visible(GameSummary summary, String account, Predicate<RulesetRef> usableVariants) {
         return visible(summary.visibility(), summary.gameOver(), summary.hostPlayerId(), summary.seatByPlayer(),
-                summary.invitedSeats(), account) && variants.mayUse(summary.ruleset(), account);
+                summary.invitedSeats(), account) && usableVariants.test(summary.ruleset());
     }
     private static boolean visible(GameVisibility visibility, boolean gameOver, @Nullable String host,
                                    Map<String, Integer> seats, Map<String, Integer> invited, String account) {

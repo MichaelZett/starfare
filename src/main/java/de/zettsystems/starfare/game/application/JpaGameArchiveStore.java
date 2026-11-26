@@ -14,6 +14,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -46,6 +47,13 @@ class JpaGameArchiveStore implements GameArchiveStore {
     }
     @Override public Optional<GameArchiveStore.ArchivedGame> load(GameId id) { return repository.findById(id.value()).flatMap(this::read); }
     @Override public List<GameArchiveStore.ArchivedGame> all() { return repository.findAll().stream().map(this::read).flatMap(Optional::stream).toList(); }
+    @Override public List<GameId> idsWithSeat(String account) { return repository.findIdsWithSeat(account).stream().map(GameId::of).toList(); }
+    @Override public List<GameArchiveStore.ArchivedGame> load(List<GameId> ids) {
+        if (ids.isEmpty()) { return List.of(); }
+        Map<String, GameArchiveEntity> byId = repository.findAllById(ids.stream().map(GameId::value).toList()).stream()
+                .collect(java.util.stream.Collectors.toMap(GameArchiveEntity::getId, entity -> entity));
+        return ids.stream().map(id -> byId.get(id.value())).filter(Objects::nonNull).map(this::read).flatMap(Optional::stream).toList();
+    }
     @Override public List<GameId> idsFinishedBefore(Instant cutoff) { return repository.findIdsFinishedBefore(cutoff).stream().map(GameId::of).toList(); }
     @Override public void delete(GameId id) { repository.deleteById(id.value()); }
     private Optional<GameArchiveStore.ArchivedGame> read(GameArchiveEntity entity) {

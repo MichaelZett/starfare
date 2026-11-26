@@ -11,10 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryGameSessionStore implements GameSessionStore {
     private final ConcurrentHashMap<GameId, GameSession> sessions = new ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicLong version = new java.util.concurrent.atomic.AtomicLong();
 
     @Override
     public void save(GameSession session) {
         sessions.put(session.id(), session);
+        version.incrementAndGet();
     }
 
     @Override
@@ -32,5 +34,11 @@ public class InMemoryGameSessionStore implements GameSessionStore {
     @Override
     public void delete(GameId id) {
         sessions.remove(id);
+        version.incrementAndGet();
+    }
+
+    @Override
+    public long version() {
+        return version.get();
     }
 }

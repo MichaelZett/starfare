@@ -25,6 +25,12 @@ public interface GameSessionStore {
 
     void delete(GameId id);
 
+    /**
+     * Rises with every change of a stored game: saved, deleted, dropped from the cache or unloaded. A read model
+     * of several games keeps its value while this number stays the same.
+     */
+    long version();
+
     /** Drops a derived cache after an externally committed snapshot update; uncached stores need no action. */
     default void invalidate(GameId id) { }
 

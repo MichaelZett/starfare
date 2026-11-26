@@ -2,3 +2,12 @@ spring:
   docker:
     compose:
       enabled: false
+  jpa:
+    properties:
+      hibernate:
+        # MatchDirectoryQueryBudgetTest counts statements and loaded entities.
+        generate_statistics: true
+logging:
+  level:
+    # Statistics would otherwise log the metrics of every session.
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: warn

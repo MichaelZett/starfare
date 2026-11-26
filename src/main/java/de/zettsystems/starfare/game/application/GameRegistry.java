@@ -23,6 +23,9 @@ public interface GameRegistry {
 
     List<GameId> listIds();
 
+    /** See {@link GameSessionStore#version()}: unchanged while no game was saved, deleted or unloaded. */
+    long version();
+
     default List<GameId> loadedIds() {
         return listIds();
     }

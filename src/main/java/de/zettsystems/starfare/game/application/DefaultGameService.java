@@ -983,28 +983,67 @@ public class DefaultGameService implements GameService {
 
     @Override
     public List<GameSummary> visibleGamesFor(String account, GameListScope scope) {
-        List<GameSummary> live = registry.listIds().stream().map(id -> summaryFor(id, account)).flatMap(Optional::stream).toList();
         if (scope == GameListScope.LOBBY) {
-            // Fremde Partien einer Variante, die das Konto nicht nutzen darf, bleiben unsichtbar; eigene laufen weiter.
-            var usable = rulesetAccess.usableBy(account);
-            return live.stream().filter(summary -> !summary.gameOver())
-                    .filter(summary -> summary.belongsTo(account) || usable.test(summary.ruleset())).toList();
+            // The version first: a change while the list is built makes the next read build it anew.
+            long version = registry.version();
+            return perRequest("lobby." + account, version, () -> lobbyOf(account));
         }
+        List<GameSummary> live = registry.listIds().stream().map(id -> summaryFor(id, account)).flatMap(Optional::stream).toList();
         var archived = archives.all().stream()
                 .filter(game -> access.canReview(game.state(), game.hostPlayerId(), account))
                 .map(game -> summaryOf(game.id(), game.name(), game.hostPlayerId(), game.state())).toList();
         return Stream.concat(live.stream().filter(GameSummary::gameOver), archived.stream())
                 .collect(Collectors.toMap(GameSummary::gameId, summary -> summary, (first, _) -> first)).values().stream().toList();
     }
+    /**
+     * Running and open games the account sees, in one pass: summaries from memory (parked ones for unloaded games),
+     * no archive lookups, and the variant rule asked once per variant. A game of a variant the account may no
+     * longer use stays hidden, its own included (V2).
+     */
+    private List<GameSummary> lobbyOf(String account) {
+        var usable = rulesetAccess.usableBy(account);
+        return registry.listIds().stream().map(this::currentSummary).flatMap(Optional::stream)
+                .filter(summary -> !summary.gameOver() && access.visible(summary, account, usable)).toList();
+    }
+
+    private Optional<GameSummary> currentSummary(GameId id) {
+        return registry.parkedSummary(id).or(() -> registry.find(id).map(GameSession::summary));
+    }
+
+    private record RequestEntry(long version, Object value) {
+    }
+
+    /**
+     * Keeps a read model for the rest of the current HTTP request. The platform builds a page from several lists of
+     * the same game (running, open, invitations), each from the same lobby; within one request they share one pass.
+     * The value counts only while the given version is unchanged, so a change in the same request reads anew.
+     * Outside a request (push, scheduler, tests without one) it computes every time.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> T perRequest(String key, long version, java.util.function.Supplier<T> compute) {
+        var request = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        if (request == null) {
+            return compute.get();
+        }
+        String attribute = DefaultGameService.class.getName() + "." + key;
+        int scope = org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST;
+        if (request.getAttribute(attribute, scope) instanceof RequestEntry entry && entry.version() == version) {
+            return (T) entry.value();
+        }
+        T value = compute.get();
+        request.setAttribute(attribute, new RequestEntry(version, value), scope);
+        return value;
+    }
+
     @Override
-    public List<FinishedMatch> finishedMatchesOf(String account) {
+    public List<FinishedMatch> finishedMatchesOf(String account, int offset, int limit) {
         Set<GameId> running = visibleGamesFor(account, GameListScope.LOBBY).stream()
                 .map(GameSummary::gameId).collect(Collectors.toSet());
-        return archives.all().stream().filter(game -> !running.contains(game.id()))
+        List<GameId> page = archives.idsWithSeat(account).stream().filter(id -> !running.contains(id))
+                .skip(offset).limit(limit).toList();
+        return archives.load(page).stream()
                 .map(game -> StarfareMatches.finished(game.id(), game.name(), game.finishedAt(), game.state(), account))
-                .flatMap(Optional::stream)
-                .sorted(Comparator.comparing(FinishedMatch::endedAt).reversed().thenComparing(FinishedMatch::matchId))
-                .toList();
+                .flatMap(Optional::stream).toList();
     }
 
     @Override

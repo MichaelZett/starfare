@@ -91,12 +91,10 @@ class StarfareMatchDirectoryTest {
     }
 
     @Test
-    void pagesThroughTheFinishedGamesOfTheAccount() {
-        when(games.finishedMatchesOf("17")).thenReturn(List.of(finished("c"), finished("b"), finished("a")));
+    void asksTheGameServiceForJustThePage() {
+        when(games.finishedMatchesOf("17", 1, 5)).thenReturn(List.of(finished("b"), finished("a")));
 
         assertThat(directory.finishedMatchesOf(VIEWER, 1, 5)).extracting(FinishedMatch::matchId).containsExactly("b", "a");
-        assertThat(directory.finishedMatchesOf(VIEWER, 0, 1)).extracting(FinishedMatch::matchId).containsExactly("c");
-        assertThat(directory.finishedMatchesOf(VIEWER, 3, 1)).isEmpty();
     }
 
     @Test

@@ -68,13 +68,13 @@ class StarfareMatchDirectory implements MatchDirectory {
                 .toList();
     }
 
-    /** One page of {@link GameService#finishedMatchesOf(String)}: the account's finished games, latest first. */
+    /** {@link GameService#finishedMatchesOf(String, int, int)}: one page of the account's finished games, latest first. */
     @Override
     public List<FinishedMatch> finishedMatchesOf(AccountId account, int offset, int limit) {
         if (offset < 0 || limit < 1) {
             throw new IllegalArgumentException("offset must be at least 0 and limit at least 1, got " + offset + " and " + limit);
         }
-        return games.finishedMatchesOf(StarfareMatches.accountName(account)).stream().skip(offset).limit(limit).toList();
+        return games.finishedMatchesOf(StarfareMatches.accountName(account), offset, limit);
     }
 
     /**

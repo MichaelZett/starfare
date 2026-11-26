@@ -13,6 +13,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
   System des offenen Ereignisses bleibt hell. Davor stehen Runde, Ereignis und die eine Handlung
   (Schlacht ansehen oder Weiter); erst nach dem letzten Ereignis hebt sich der Vorhang. Bisher stand
   das Ereignis nur oben im Bericht der Seitenleiste.
+- **Schnellere Partielisten der Plattform:** Laufende, offene und eingeladene Partien kommen ohne
+  Abfrage je Partie aus, die Spielvariante wird einmal je Variante geprüft, und innerhalb einer
+  Seitenanfrage liest Starfare die Lobby nur einmal. „Beendete Partien“ liest nur noch die Partien
+  der angefragten Seite statt aller Archive. Im Test mit 15 Partien kosteten die drei Listen einer Seite
+  vorher 39 Abfragen, jetzt eine.
 
 ## 0.3.0 - 2026-11-25
 
