@@ -8,19 +8,16 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import de.zettsystems.starfare.i18n.I18n;
 import java.util.List;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Phone arrangement of the map screen: compact header on top, the map filling the screen with
  * floating zoom and help buttons, and the sidebar as a sheet over the map. A bottom bar switches between
- * map and sheet; while a target is picked the sheet closes and a banner offers to cancel. During the round walkthrough
- * the open event sits as a card at the foot of the map.
+ * map and sheet; while a target is picked the sheet closes and a banner offers to cancel.
  */
 final class MobileMapLayout extends Div {
 
     private final Div sheet = new Div();
     private final Div targetBanner = new Div();
-    private final Div walkthroughBanner = new Div();
     private final Button mapTab;
     private final Button panelTab;
 
@@ -48,11 +45,8 @@ final class MobileMapLayout extends Div {
         sheet.add(panel);
         sheet.addClassName("mobile-map-sheet");
 
-        walkthroughBanner.addClassName("mobile-map-walkthrough");
-        walkthroughBanner.setVisible(false);
-
         gameOverBanner.getElement().getClassList().add("mobile-map-banner");
-        var stage = new Div(gameOverBanner, canvas, zoom, targetBanner, walkthroughBanner, sheet);
+        var stage = new Div(gameOverBanner, canvas, zoom, targetBanner, sheet);
         stage.addClassName("mobile-map-stage");
 
         mapTab = tab(VaadinIcon.MAP_MARKER, UiTexts.MAP_MOBILE_MAP, this::showMap);
@@ -78,16 +72,6 @@ final class MobileMapLayout extends Div {
     void targetSelection(boolean active) {
         targetBanner.setVisible(active);
         if (active) { showMap(); }
-    }
-
-    /**
-     * The open event of the round walkthrough lies over the map the event is centred on, so the player sees both;
-     * {@code null} once the walkthrough is done.
-     */
-    void walkthrough(@Nullable Component card) {
-        walkthroughBanner.removeAll();
-        walkthroughBanner.setVisible(card != null);
-        if (card != null) { walkthroughBanner.add(card); }
     }
 
     private static void select(Button selected, Button other) {

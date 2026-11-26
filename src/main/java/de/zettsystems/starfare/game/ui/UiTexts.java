@@ -355,6 +355,7 @@ public final class UiTexts {
     public static final String ROUND_NEXT_OPEN_BATTLE = "round.nextOpenBattle";
     public static final String ROUND_OPEN_BATTLES = "round.openBattles";
     // Round-start walkthrough
+    public static final String ROUND_WALKTHROUGH_TITLE = "round.walkthrough.title";
     public static final String ROUND_WALKTHROUGH_HINT = "round.walkthrough.hint";
     public static final String ROUND_WALKTHROUGH_PROGRESS = "round.walkthrough.progress";
     public static final String ROUND_WALKTHROUGH_NEXT = "round.walkthrough.next";

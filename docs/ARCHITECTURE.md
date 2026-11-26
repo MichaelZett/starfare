@@ -527,8 +527,10 @@ the first one the account has not confirmed, with its position ("Event 2 of 5").
 confirmations use the durable battle acknowledgements (`BattleAcknowledgements`, keyed
 by account, game, round and original event index), so the progress survives reloads and
 other devices. While a step is open `MainView` centres the map on its system, shows its
-card in the report (on phones over the map via `MobileMapLayout.walkthrough`) and locks
-planning: no target selection, sends, relocations or turn submission. A battle offers
+card on `RoundCurtain`, a layer in front of the whole map view (desktop and phone), and
+locks planning: no target selection, sends, relocations or turn submission. The curtain
+marks everything behind it `inert` and darkens it except a bright spot that a small
+browser loop keeps on the event's system (`--spot-x`, `--spot-y`, `--spot-r`). A battle offers
 its replay, every other event **Continue**. Spectators and the review are never held up;
 a decided game opens its outcome only after the walkthrough.
 

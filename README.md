@@ -230,11 +230,14 @@ fleets their owner, launch turn, travel time and ETA. The report entry contains
 the complete filterable round timeline, including victory and defeat reports.
 Single sends and relocations retain the current tab; a joint attack and editing an
 order open Fleets.
-Resolving a new round opens Report and walks through its located events one by one
+Resolving a new round walks through its located events one by one
 (battles, conquests, losses, cosmic news with a system, cancelled or reduced starts of a
-joint attack): the map centres on each, a battle
-offers its playback, every other event continues. Until the last one is confirmed the map
-offers no orders and **Submit turn** stays locked; the progress is stored per account.
+joint attack). The report lies as a curtain in front of the whole board: map, sidebar and
+header are darkened and take no input, only the event's system stays bright, and the card
+in front ("Round 12 resolved", "Event 1 of 3") offers the playback of a battle or
+**Continue** for every other event. The map centres on each event. Once the last one is
+confirmed the curtain lifts and orders and **Submit turn** are open; the progress is stored
+per account.
 Spectators and the review are never held up.
 Systems mentioned in a report carry a gold marker on the map. Select a report
 entry to centre the map on it, or select the marker to return to its report

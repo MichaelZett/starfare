@@ -76,14 +76,14 @@ public class CoalitionRenderingSteps {
         browser.logIn(email);
         browser.open(Browser.LOBBY + "/map/" + id.value());
         browser.awaitCss(".map-content");
-        browser.clickTabWithText("Bericht");
-        browser.awaitCss(".event-battle-pending");
+        // The round report lies as a curtain in front of the board and offers the battles one after the other.
+        browser.awaitCss(".round-curtain .round-walkthrough-action");
     }
 
     @Dann("zeigt die Bündnisanimation neutrale Startfarben, getrennte Seiten und die gespeicherten Restschiffe")
     public void replayRendering() throws IOException {
         for (int index = 0; index < 2; index++) {
-            browser.clickCss(".event-battle-pending");
+            browser.clickCss(".round-walkthrough-action");
             browser.awaitCss(".coalition-replay");
             assertSideLayout(index);
             browser.awaitCss(".battle-replay-result-visible");

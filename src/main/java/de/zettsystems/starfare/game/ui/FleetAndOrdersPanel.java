@@ -272,7 +272,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         showReport();
     }
 
-    /** A fresh card of the open walkthrough event; phones show it over the map. */
+    /** A fresh card of the open walkthrough event for the curtain in front of the board. */
     Optional<Div> walkthroughCard() {
         RoundWalkthrough.Step step = walkthrough;
         PlayerViewState view = currentView;
@@ -491,7 +491,6 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private void renderReport(PlayerViewState view) {
         reportPage.removeAll();
         reportPage.add(header(UiTexts.MAP_SIDEBAR_REPORT));
-        walkthroughCard().ifPresent(reportPage::add);
         Div filters = new Div();
         filters.addClassName("report-filter-bar");
         TurnReport report = view.report();

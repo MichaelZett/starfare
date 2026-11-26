@@ -73,10 +73,25 @@ public class BattleSteps {
         broadcaster.publish(new GameEvent.GameFinished(id, seat));
     }
 
+    @Dann("liegt der Rundenbericht als Vorhang vor dem Brett")
+    public void curtainInFrontOfTheBoard() throws IOException {
+        useNarrowDesktop();
+        browser.awaitCss(".round-curtain .round-walkthrough");
+        // Only the site of the event stays bright, and a click on the map lands on the curtain.
+        new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> Boolean.TRUE.equals(js().executeScript("""
+                const curtain = document.querySelector('.round-curtain');
+                const map = document.querySelector('.map-left').getBoundingClientRect();
+                const hit = document.elementFromPoint(map.left + 20, map.top + map.height / 2);
+                return parseFloat(curtain.style.getPropertyValue('--spot-r')) > 0
+                    && curtain.contains(hit)
+                    && document.querySelector('.map-content').closest('[inert]') !== null;
+                """)));
+        browser.captureUiAcceptance("round-curtain");
+    }
+
     @Dann("kann ich die Kartenbreite durch Ziehen ändern")
     public void resizeMap() throws IOException {
-        originalSize = browser.driver().manage().window().getSize();
-        browser.driver().manage().window().setSize(new Dimension(1024, 768));
+        useNarrowDesktop();
         WebElement layout = browser.awaitCss("vaadin-split-layout");
         WebElement splitter = layout.getShadowRoot().findElement(By.cssSelector("[part='splitter']"));
         WebElement map = browser.awaitCss(".map-left");
@@ -90,8 +105,9 @@ public class BattleSteps {
     @Wenn("ich beide Schlachten mit Ton auswerte")
     public void playBattles() throws IOException {
         for (int battle = 0; battle < 2; battle++) {
-            // The round walkthrough offers the first battle; the second comes from its report card.
-            browser.clickCss(battle == 0 ? ".round-walkthrough-action" : PENDING);
+            // The curtain of the round offers one battle after the other; the board behind takes no click. A real
+            // click, because only a user gesture unlocks the battle sound.
+            browser.clickButtonWithText("Schlacht ansehen");
             browser.awaitCss(".battle-replay");
             browser.awaitTexts(".battle-condition", texts -> texts.size() == 2, "Zwei Zustandsangaben in der Schlacht");
             assertThat(js().executeScript("""
@@ -143,6 +159,13 @@ public class BattleSteps {
         // The review redraws the map without fog; wait for that instead of reading the old map.
         browser.awaitCount("#map .sys-fog", 0);
         browser.captureUiAcceptance("battle-review");
+    }
+
+    private void useNarrowDesktop() {
+        if (originalSize == null) {
+            originalSize = browser.driver().manage().window().getSize();
+        }
+        browser.driver().manage().window().setSize(new Dimension(1024, 768));
     }
 
     private JavascriptExecutor js() {

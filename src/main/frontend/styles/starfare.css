@@ -454,6 +454,7 @@ html[data-gp-game="starfare"] {
 }
 
 .map-root {
+    position: relative;
     min-height: 100%;
     color: var(--sf-text);
     background: var(--sf-bg);
@@ -1029,19 +1030,37 @@ html[data-gp-game="starfare"] {
 .event-battle-interactive { cursor: pointer; user-select: none; }
 .event-battle-interactive:hover { filter: brightness(1.16); }
 
+/* The round report as a curtain in front of the whole board; only the event's site stays bright (K8a). */
+.round-curtain {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    box-sizing: border-box;
+    padding: 1.5rem;
+    background: radial-gradient(circle at var(--spot-x, 50%) var(--spot-y, 50%),
+        transparent var(--spot-r, 0px), rgba(2, 4, 10, .82) calc(var(--spot-r, 0px) * 1.6));
+}
+
+.round-curtain[hidden] { display: none; }
+
 .round-walkthrough {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: .45rem;
-    width: 100%;
+    gap: .6rem;
+    width: min(26rem, 100%);
     box-sizing: border-box;
-    padding: .7rem .9rem;
-    border: 1px solid #ffc14f;
-    border-radius: 12px;
+    padding: 1.1rem 1.3rem;
+    border: 2px solid #ffc14f;
+    border-radius: 14px;
     background: var(--sf-surface-2);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, .4);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .65);
 }
+
+.round-walkthrough-title { font-size: 1.4rem; font-weight: 700; color: var(--sf-text); }
 
 .round-walkthrough-heading {
     display: flex;
@@ -1054,7 +1073,7 @@ html[data-gp-game="starfare"] {
 }
 
 .round-walkthrough-progress { font-weight: 600; color: #ffc14f; }
-.round-walkthrough-text { font-size: 1rem; line-height: 1.4; color: var(--sf-text); }
+.round-walkthrough-text { font-size: 1.05rem; line-height: 1.45; color: var(--sf-text); }
 .round-walkthrough-locked { margin: .25rem 0; font-size: .9rem; color: var(--sf-text-muted); }
 
 .event-walkthrough-current {

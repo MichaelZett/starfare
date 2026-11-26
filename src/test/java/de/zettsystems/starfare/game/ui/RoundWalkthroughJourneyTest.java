@@ -39,7 +39,8 @@ class RoundWalkthroughJourneyTest extends AbstractMapJourneyTest {
                 new TurnEvent.Cosmic(CosmicNews.SUPERNOVA, 5, "Remote 5", 0, 0, 0, 0, ""));
 
         assertTab("Bericht");
-        assertThat(text("round-walkthrough")).contains("Ereignis 1 von 2", "Remote 4");
+        assertCurtainInFrontOfTheBoard();
+        assertThat(text("round-walkthrough")).contains("Runde " + round + " ausgewertet", "Ereignis 1 von 2", "Remote 4");
         assertThat(text("sys-report-event-active")).startsWith("Remote 4");
         assertThat(submit().isEnabled()).isFalse();
         assertNoOrders();
@@ -61,6 +62,7 @@ class RoundWalkthroughJourneyTest extends AbstractMapJourneyTest {
         test(action("Weiter")).click();
         runPendingUiAccess();
         assertThat(find(Div.class).withClassName("round-walkthrough").all()).isEmpty();
+        assertBoardFree();
         assertThat(acknowledgements.acknowledgedEventIndices(account, id, round)).containsExactlyInAnyOrder(1, 2);
         assertThat(submit().isEnabled()).isTrue();
         select("Alpha");
@@ -88,19 +90,19 @@ class RoundWalkthroughJourneyTest extends AbstractMapJourneyTest {
     }
 
     @Test
-    void onPhonesTheOpenEventLiesOverTheCentredMap() {
+    void onPhonesTheCurtainLiesOverTheWholeScreen() {
         VaadinSession.getCurrent().setAttribute("starfare.deviceLayout", DeviceLayout.MOBILE);
         createReviewGame();
         advanceWith(false, new TurnEvent.Cosmic(CosmicNews.SUN_UNSTABLE, 5, "Remote 5", 0, 0, 0, 9, ""));
 
         var layout = find(MobileMapLayout.class).single();
         assertThat(find(Div.class, layout).withClassName("mobile-map-sheet").exists()).as("the map in front").isFalse();
-        var banner = find(Div.class, layout).withClassName("mobile-map-walkthrough").single();
-        assertThat(elementText(banner.getElement())).contains("Ereignis 1 von 1", "Remote 5");
+        RoundCurtain curtain = assertCurtainInFrontOfTheBoard();
+        assertThat(elementText(curtain.getElement())).contains("Ereignis 1 von 1", "Remote 5");
 
-        test(find(Button.class, banner).withText("Weiter").single()).click();
+        test(find(Button.class, curtain).withText("Weiter").single()).click();
         runPendingUiAccess();
-        assertThat(find(Div.class, layout).withClassName("mobile-map-walkthrough").exists()).isFalse();
+        assertBoardFree();
         assertThat(submit().isEnabled()).isTrue();
     }
 
@@ -138,6 +140,29 @@ class RoundWalkthroughJourneyTest extends AbstractMapJourneyTest {
         select("Alpha");
         assertThat(find(Button.class).withText("Flotte senden").all()).isEmpty();
         assertThat(viewText()).contains("Erst die Ereignisse der Runde durchgehen");
+    }
+
+    /** The curtain shows and everything else of the map view is inert behind it. */
+    private RoundCurtain assertCurtainInFrontOfTheBoard() {
+        RoundCurtain curtain = find(RoundCurtain.class).single();
+        assertThat(curtain.isVisible()).isTrue();
+        List<Component> board = boardBehind(curtain);
+        assertThat(board).isNotEmpty().allSatisfy(part ->
+                assertThat(part.getElement().hasAttribute("inert")).as("inert: %s", part).isTrue());
+        return curtain;
+    }
+
+    private void assertBoardFree() {
+        // The lifted curtain is hidden, which the finder skips.
+        RoundCurtain curtain = find(MainView.class).single().getChildren()
+                .filter(RoundCurtain.class::isInstance).map(RoundCurtain.class::cast).findFirst().orElseThrow();
+        assertThat(curtain.isVisible()).isFalse();
+        assertThat(boardBehind(curtain)).noneSatisfy(part ->
+                assertThat(part.getElement().hasAttribute("inert")).isTrue());
+    }
+
+    private static List<Component> boardBehind(RoundCurtain curtain) {
+        return curtain.getParent().orElseThrow().getChildren().filter(part -> part != curtain).toList();
     }
 
     private Button submit() {

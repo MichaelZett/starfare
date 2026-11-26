@@ -373,20 +373,18 @@ html.starfare-mobile[data-gp-game="starfare"] .mobile-map-target {
     box-shadow: 0 6px 16px rgba(0, 0, 0, .55);
 }
 
-/* The open walkthrough event at the foot of the map, left of the zoom buttons. */
-html.starfare-mobile[data-gp-game="starfare"] .mobile-map-walkthrough {
-    position: absolute;
-    left: 8px;
-    right: calc(var(--sf-touch) + 18px);
-    bottom: 12px;
-    z-index: 5;
+/* On phones the curtain holds the event card at the foot of the screen, below the centred site. */
+html.starfare-mobile[data-gp-game="starfare"] .round-curtain {
+    align-items: flex-end;
+    justify-content: center;
+    padding: 10px 8px 14px;
 }
 
-html.starfare-mobile[data-gp-game="starfare"] .mobile-map-walkthrough .round-walkthrough {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, .55);
+html.starfare-mobile[data-gp-game="starfare"] .round-curtain .round-walkthrough {
+    width: 100%;
 }
 
-html.starfare-mobile[data-gp-game="starfare"] .mobile-map-walkthrough .round-walkthrough-action {
+html.starfare-mobile[data-gp-game="starfare"] .round-curtain .round-walkthrough-action {
     min-height: var(--sf-touch);
 }
 

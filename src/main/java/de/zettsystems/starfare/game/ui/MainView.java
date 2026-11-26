@@ -99,6 +99,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private boolean walkthroughOpen;
     /** No orders: the walkthrough is open or the game is decided. */
     private boolean planningLocked;
+    /** The open walkthrough event in front of the whole board; set up once the board is laid out. */
+    private final RoundCurtain curtain;
     /** Remember the pending outcome even when the view was reloaded during the final battles. */
     private boolean witnessedRunningGame;
     private boolean outcomeAcknowledged;
@@ -192,6 +194,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         mobile = phone ? new MobileMapLayout(List.of(header, roundStatus, spectatorControls, reviewControls), gameOverBanner,
                 mapCanvas, fleetsPanel, this::cancelTargetSelectionAndRefresh, () -> routeRules) : null;
         layOut(frame);
+        curtain = new RoundCurtain(getChildren().toList());
+        add(curtain);
     }
 
     /** Phones get the sheet layout, wider screens the sidebar beside the map; the own start adds its footer. */
@@ -201,10 +205,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             if (frame != null) { phoneLayout.addBelowPanel(frame.legalFooter()); }
             addClassName("map-root-mobile");
             add(phoneLayout);
-            return;
+        } else {
+            add(header, roundStatus, spectatorControls, reviewControls, buildContent());
+            if (frame != null) { add(frame.legalFooter()); }
         }
-        add(header, roundStatus, spectatorControls, reviewControls, buildContent());
-        if (frame != null) { add(frame.legalFooter()); }
     }
 
     /** Brings the sidebar into view; on phones it lies as a sheet over the map. */
@@ -626,11 +630,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             fleetsPanel.showReport();
             revealPanel();
         }
-        MobileMapLayout phoneLayout = mobile;
-        if (phoneLayout != null) {
-            phoneLayout.walkthrough(fleetsPanel.walkthroughCard().orElse(null));
-            if (newFocus) { phoneLayout.showMap(); }
-        }
+        curtain.show(fleetsPanel.walkthroughCard().orElse(null));
+        if (newFocus) { revealMap(); }
         showOutcomeWhenDue(view);
     }
 

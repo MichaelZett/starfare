@@ -24,8 +24,8 @@ Kontaktadresse im Impressum.
    Lege die Schiffsanzahl fest und merke den Sendebefehl vor.
 5. Prüfe den Reiter **Flotten** und klicke auf **Runde abgeben**.
 6. Sobald alle Menschen abgegeben haben oder die Frist abläuft, wird die Runde
-   ausgewertet. Der **Bericht** führt dich danach durch die Ereignisse der Runde; erst
-   dann sind neue Befehle möglich (Abschnitt „Rundenbeginn: Ereignisse durchgehen“).
+   ausgewertet. Der Rundenbericht legt sich danach vor das ganze Spielfeld und führt dich
+   durch die Ereignisse der Runde; erst dann sind neue Befehle möglich (Abschnitt „Rundenbeginn: Ereignisse durchgehen“).
 
 ## Partie erstellen und beitreten
 
@@ -340,17 +340,19 @@ den Wiedereinstieg, kannst du später zurückkehren.
 
 ## Rundenbeginn: Ereignisse durchgehen
 
-Nach dem Rundenwechsel wechselt die Seitenleiste zum **Bericht**. Er zeigt oben das erste
-noch offene Ereignis mit Ort (Schlachten, Eroberungen, Verluste, kosmische Meldungen wie
-Supernova, Beben oder Piraten und entfallene oder verkleinerte Starts eines gemeinsamen
-Angriffs) und zentriert die Karte auf dessen System. Oben steht, das wievielte Ereignis
-es ist („Ereignis 2 von 5“). Eine Schlacht bietet
+Nach dem Rundenwechsel legt sich der Rundenbericht wie ein Vorhang vor das ganze Spielfeld:
+Karte, Seitenleiste und Kopf sind abgedunkelt und nehmen keine Klicks an, nur das System des
+Ereignisses bleibt hell. Davor steht die Karte des ersten noch offenen Ereignisses mit Ort
+(Schlachten, Eroberungen, Verluste, kosmische Meldungen wie Supernova, Beben oder Piraten und
+entfallene oder verkleinerte Starts eines gemeinsamen Angriffs) mit der Runde („Runde 12
+ausgewertet“) und der Stelle („Ereignis 2 von 5“); die Karte zentriert sich auf das System.
+Eine Schlacht bietet
 **Schlacht ansehen** mit der Wiedergabe, jedes andere Ereignis **Weiter**; danach folgt das
 nächste. Produktion, eintreffende Verstärkungen und Meldungen ohne Ort gehören nicht dazu.
-Solange Ereignisse offen sind, gibt es keine Befehle: kein Senden, keine Zielwahl, keine
-Verlegung und kein **Runde abgeben**. Der Fortschritt bleibt beim Neuladen und auf anderen
-Geräten erhalten. Zuschauer und die Nachbetrachtung durchlaufen nichts. Auf dem Handy liegt
-das offene Ereignis als Karte am unteren Rand über der zentrierten Karte.
+Erst nach dem letzten Ereignis hebt sich der Vorhang; vorher gibt es keine Befehle: kein
+Senden, keine Zielwahl, keine Verlegung und kein **Runde abgeben**. Der Fortschritt bleibt
+beim Neuladen und auf anderen Geräten erhalten. Zuschauer und die Nachbetrachtung durchlaufen
+nichts. Auf dem Handy steht die Ereigniskarte am unteren Rand des Vorhangs.
 
 ## Schlachten ansehen oder sofort auswerten
 

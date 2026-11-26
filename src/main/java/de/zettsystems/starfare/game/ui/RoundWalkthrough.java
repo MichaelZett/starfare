@@ -79,9 +79,12 @@ final class RoundWalkthrough {
 
     /**
      * The current event with the single action that confirms it: a battle with a replay offers the replay, every
-     * other event (and every battle at instant speed) shows its result and continues.
+     * other event (and every battle at instant speed) shows its result and continues. {@link RoundCurtain} holds it
+     * in front of the board.
      */
     static Div card(Step step, boolean replay, Runnable action) {
+        Span title = new Span(I18n.t(UiTexts.ROUND_WALKTHROUGH_TITLE, step.turn()));
+        title.addClassName("round-walkthrough-title");
         Span hint = new Span(I18n.t(UiTexts.ROUND_WALKTHROUGH_HINT));
         hint.addClassName("round-walkthrough-hint");
         Span progress = new Span(I18n.t(UiTexts.ROUND_WALKTHROUGH_PROGRESS, step.position(), step.total()));
@@ -92,7 +95,7 @@ final class RoundWalkthrough {
         text.addClassName("round-walkthrough-text");
         Button next = new Button(I18n.t(replay ? UiTexts.ROUND_WALKTHROUGH_BATTLE : UiTexts.ROUND_WALKTHROUGH_NEXT),
                 _ -> action.run());
-        next.addThemeVariants(ButtonVariant.PRIMARY, ButtonVariant.SMALL);
+        next.addThemeVariants(ButtonVariant.PRIMARY);
         next.addClassName("round-walkthrough-action");
         if (replay) {
             // The delegated browser click unlocks the battle sound before the server opens the replay.
@@ -100,7 +103,9 @@ final class RoundWalkthrough {
         } else {
             next.setDisableOnClick(true);
         }
-        Div card = new Div(heading, text, next);
+        // The board behind is inert, so the keyboard lands on the only thing to do.
+        next.focus();
+        Div card = new Div(title, heading, text, next);
         card.addClassName("round-walkthrough");
         return card;
     }

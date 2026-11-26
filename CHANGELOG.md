@@ -6,6 +6,14 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- **Rundenbericht als Vorhang:** Nach einem Rundenwechsel legt sich der Bericht vor das ganze
+  Spielfeld. Karte, Seitenleiste und Kopf sind abgedunkelt und nehmen keine Eingaben an; nur das
+  System des offenen Ereignisses bleibt hell. Davor stehen Runde, Ereignis und die eine Handlung
+  (Schlacht ansehen oder Weiter); erst nach dem letzten Ereignis hebt sich der Vorhang. Bisher stand
+  das Ereignis nur oben im Bericht der Seitenleiste.
+
 ## 0.3.0 - 2026-11-25
 
 - **Erweitert neu (Regelfassung 2.0.0):** Erweitert ist jetzt Klassisch plus ausbaubare Industrie,
