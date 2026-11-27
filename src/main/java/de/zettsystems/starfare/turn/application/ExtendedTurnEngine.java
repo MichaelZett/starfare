@@ -1,6 +1,6 @@
 package de.zettsystems.starfare.turn.application;
 
-import de.zettsystems.starfare.ai.application.SpacewardPlanning;
+import de.zettsystems.starfare.ai.application.ExtendedPlanning;
 import de.zettsystems.starfare.economy.application.EconomyService;
 import de.zettsystems.starfare.economy.values.IndustrialProduction;
 import de.zettsystems.starfare.fleet.application.FleetService;
@@ -17,13 +17,13 @@ import org.springframework.stereotype.Service;
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Spring-injected collaborators are retained for the lifetime of this stateless bean.")
-public class SpacewardTurnEngine implements RulesetRoundImplementation {
+public class ExtendedTurnEngine implements RulesetRoundImplementation {
     private final RoundPipeline pipeline;
     private final EconomyService economy;
-    private final SpacewardPlanning ai;
+    private final ExtendedPlanning ai;
     private final FleetService fleets;
     private final ReportService reports;
-    public SpacewardTurnEngine(RoundPipeline pipeline, EconomyService economy, SpacewardPlanning ai,
+    public ExtendedTurnEngine(RoundPipeline pipeline, EconomyService economy, ExtendedPlanning ai,
                                FleetService fleets, ReportService reports) {
         this.pipeline = pipeline; this.economy = economy; this.ai = ai; this.fleets = fleets; this.reports = reports;
     }

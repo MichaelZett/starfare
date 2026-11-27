@@ -4,8 +4,8 @@ import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.*;
 import java.util.List;
 
-public final class SpacewardStates {
-    private SpacewardStates() { }
+public final class ExtendedStates {
+    private ExtendedStates() { }
     /** A started two-empire game of the extended rules with wide range. */
     public static GameState running() {
         GameState state = ready();

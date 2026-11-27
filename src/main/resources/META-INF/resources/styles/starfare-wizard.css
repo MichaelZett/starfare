@@ -152,7 +152,7 @@
 
 /* The variant drawings are wide banners with their motif on the right. */
 .setup-picture-variant-classic { background-image: url("../images/wizard/variant-classic.svg"); background-position: right center; }
-.setup-picture-variant-spaceward { background-image: url("../images/wizard/variant-spaceward.svg"); background-position: right center; }
+.setup-picture-variant-extended { background-image: url("../images/wizard/variant-extended.svg"); background-position: right center; }
 .setup-picture-map-even { background-image: url("../images/wizard/map-even.svg"); }
 .setup-picture-map-random { background-image: url("../images/wizard/map-random.svg"); }
 .setup-picture-size-small { background-image: url("../images/wizard/size-small.svg"); }

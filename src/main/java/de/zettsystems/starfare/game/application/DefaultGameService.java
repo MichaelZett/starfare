@@ -1270,7 +1270,7 @@ public class DefaultGameService implements GameService {
 
         private static de.zettsystems.starfare.game.values.@org.jspecify.annotations.Nullable EconomyTotals economy(
                 GameState state, int playerId) {
-            if (!state.ruleset().isSpaceward()) { return null; }
+            if (!state.ruleset().isExtended()) { return null; }
             var reports = state.replayFrames().entrySet().stream()
                     .filter(frame -> frame.getKey() < state.turn())
                     .map(frame -> frame.getValue().reports().get(playerId))

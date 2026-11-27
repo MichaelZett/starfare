@@ -11,7 +11,7 @@ import de.zettsystems.starfare.navigation.application.DefaultNavigationService;
 import de.zettsystems.starfare.report.application.DefaultReportService;
 import de.zettsystems.starfare.turn.application.DefaultTurnEngine;
 import de.zettsystems.starfare.turn.application.RoundPipeline;
-import de.zettsystems.starfare.turn.application.SpacewardTurnEngine;
+import de.zettsystems.starfare.turn.application.ExtendedTurnEngine;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,7 +29,7 @@ final class SimulationEngine {
     private final java.util.Map<Integer, CachedRoutes> routeCache = new java.util.HashMap<>();
     private record CachedRoutes(String geometry, java.util.Map<Observation.Route, Integer> routes) { }
     private final DefaultTurnEngine classic;
-    private final SpacewardTurnEngine spaceward;
+    private final ExtendedTurnEngine extended;
     private final boolean dropRejectedSends;
 
     SimulationEngine() {
@@ -49,7 +49,7 @@ final class SimulationEngine {
         var pipeline = new RoundPipeline(combat, reports, fleets, navigation, new DefaultDiplomacyService(),
                 coalitions, () -> orderRandom);
         classic = new DefaultTurnEngine(pipeline, (_, _) -> { }, reports, fleets);
-        spaceward = new SpacewardTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports);
+        extended = new ExtendedTurnEngine(pipeline, economy, (_, _) -> { }, fleets, reports);
     }
 
     List<StrategyOrders> plan(GameState state, List<Strategy> strategies) {
@@ -85,8 +85,8 @@ final class SimulationEngine {
         // Absolute round seeds allow forks to share future entropy without copying Random internals.
         combatRandom.setSeed(mix(combatSeed, state.turn()));
         orderRandom.setSeed(mix(combatSeed ^ 0x6a09e667f3bcc909L, state.turn()));
-        if (state.ruleset().isSpaceward()) {
-            spaceward.advanceTurn(state);
+        if (state.ruleset().isExtended()) {
+            extended.advanceTurn(state);
         }
         else { classic.advanceTurn(state); }
         return List.copyOf(plans);
@@ -114,7 +114,7 @@ final class SimulationEngine {
         if (intervention == Intervention.OMIT_FIRST_SEND) {
             return new StrategyOrders(orders.sends().stream().skip(1).toList(), orders.expansion());
         }
-        if (!state.ruleset().isSpaceward()) { throw new IllegalArgumentException("Industry requires Spaceward"); }
+        if (!state.ruleset().isExtended()) { throw new IllegalArgumentException("Industry requires Extended"); }
         var expansion = new TreeMap<>(orders.expansion());
         state.systems().stream().filter(s -> java.util.Objects.equals(s.ownerId(), 1)).findFirst().ifPresent(system -> {
             var industry = state.industries().get(system.id());
@@ -126,7 +126,7 @@ final class SimulationEngine {
 
     private static void validateStrategies(GameState state, List<Strategy> strategies) {
         if (strategies.size() != state.players().size()
-                || (!state.ruleset().isSpaceward() && strategies.stream().anyMatch(Strategy::requiresIndustry))) {
+                || (!state.ruleset().isExtended() && strategies.stream().anyMatch(Strategy::requiresIndustry))) {
             throw new IllegalArgumentException("Strategies must match seats and rules");
         }
         if (!state.pendingOrders().isEmpty()) { throw new IllegalArgumentException("Simulation expects an unplanned round"); }

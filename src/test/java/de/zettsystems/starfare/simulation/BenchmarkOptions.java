@@ -30,9 +30,9 @@ record BenchmarkOptions(String mode, List<RulesetRef> rules, List<GalaxyLayout> 
         if (!Set.of("matrix", "multiplayer", "decision", "alliance").contains(mode)) {
             throw new IllegalArgumentException("Modes: matrix, multiplayer, decision, alliance");
         }
-        var rules = Arrays.stream(options.getOrDefault("rules", "classic,spaceward").split(",")).map(value -> switch (value) {
+        var rules = Arrays.stream(options.getOrDefault("rules", "classic,extended").split(",")).map(value -> switch (value) {
             case "classic" -> RulesetRef.SECTOR_FORCES;
-            case "spaceward" -> RulesetRef.EXTENDED;
+            case "extended" -> RulesetRef.EXTENDED;
             default -> throw new IllegalArgumentException("Unknown rules: " + value);
         }).toList();
         var layouts = Arrays.stream(options.getOrDefault("layouts", "RANDOM,EVEN").split(",")).map(GalaxyLayout::valueOf).toList();
@@ -45,13 +45,13 @@ record BenchmarkOptions(String mode, List<RulesetRef> rules, List<GalaxyLayout> 
                 || rules.stream().distinct().count() != rules.size() || layouts.stream().distinct().count() != layouts.size()
                 || sizes.stream().distinct().count() != sizes.size()) { throw new IllegalArgumentException("Invalid or duplicate experiment dimensions"); }
         for (int size : sizes) { new Scenario(rules.getFirst(), layouts.getFirst(), size, seeds.first(), seeds.combat(), limits.rounds(), limits.randomness()); }
-        if (mode.equals("alliance") && (rules.size() != 1 || !rules.getFirst().isSpaceward())) {
-            throw new IllegalArgumentException("Alliance mode requires --rules=spaceward");
+        if (mode.equals("alliance") && (rules.size() != 1 || !rules.getFirst().isExtended())) {
+            throw new IllegalArgumentException("Alliance mode requires --rules=extended");
         }
         String allianceVictory = options.getOrDefault("alliance-victory", "false");
         if (!Set.of("false", "true", "both").contains(allianceVictory)
                 || (!allianceVictory.equals("false") && !rules.equals(List.of(RulesetRef.EXTENDED)))) {
-            throw new IllegalArgumentException("Group victory requires --rules=spaceward and false, true or both");
+            throw new IllegalArgumentException("Group victory requires --rules=extended and false, true or both");
         }
         int individual = number(options, "individual-percent", 70);
         int group = number(options, "alliance-percent", 70);
@@ -68,7 +68,7 @@ record BenchmarkOptions(String mode, List<RulesetRef> rules, List<GalaxyLayout> 
         if (!Set.of("matrix", "multiplayer").contains(mode) || profiles.size() < 2
                 || profiles.stream().distinct().count() != profiles.size()
                 || (mode.equals("multiplayer") && profiles.size() > 7)
-                || (rules.stream().anyMatch(rule -> !rule.isSpaceward()) && profiles.stream().anyMatch(Strategy::requiresIndustry))) {
+                || (rules.stream().anyMatch(rule -> !rule.isExtended()) && profiles.stream().anyMatch(Strategy::requiresIndustry))) {
             throw new IllegalArgumentException("Profiles require distinct supported strategies: matrix >=2, multiplayer 2..7");
         }
     }

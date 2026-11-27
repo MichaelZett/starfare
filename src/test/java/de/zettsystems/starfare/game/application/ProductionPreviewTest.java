@@ -9,7 +9,7 @@ import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.RelocationAdjustment;
 import de.zettsystems.starfare.game.values.StandingOrder;
-import de.zettsystems.starfare.testsupport.SpacewardStates;
+import de.zettsystems.starfare.testsupport.ExtendedStates;
 import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,7 +37,7 @@ class ProductionPreviewTest extends AbstractIntegrationTest {
 
     /** Alpha (capacity 10) relocates 6 ships to Beta and 4 to the enemy home every round. */
     private static GameState withRelocations() {
-        var state = SpacewardStates.running();
+        var state = ExtendedStates.running();
         var fleets = new DefaultFleetService();
         assertThat(fleets.addStandingOrder(state, 1, 1, 2, 6)).isPositive();
         assertThat(fleets.addStandingOrder(state, 1, 1, 3, 4)).isPositive();
@@ -55,7 +55,7 @@ class ProductionPreviewTest extends AbstractIntegrationTest {
     }
 
     @Test void optimisticProductionCommitRejectsAnExternalEditAndStaleRound() {
-        save(SpacewardStates.running());
+        save(ExtendedStates.running());
         var command = new ProductionAllocation(1, 1, 2, saved());
         assertThat(games.commitProduction(id, "stranger", command).accepted()).isFalse();
         assertThat(games.allocateExpansion(id, 1, 1, 1, 1)).isTrue();
@@ -68,7 +68,7 @@ class ProductionPreviewTest extends AbstractIntegrationTest {
     }
 
     @Test void previewsTheSystemWithoutChangingMemoryOrStorage() {
-        save(SpacewardStates.running());
+        save(ExtendedStates.running());
         var before = registry.readState(id, GameState::toSnapshot);
         var result = games.previewProduction(id, OWNER, new ProductionAllocation(1, 1, 4)).orElseThrow();
         assertThat(result.industry().shipbuilding()).isEqualTo(6);
@@ -80,7 +80,7 @@ class ProductionPreviewTest extends AbstractIntegrationTest {
     }
 
     @Test void rejectsForeignSystemsUnknownAccountsInvalidBudgetsAndStaleRounds() {
-        save(SpacewardStates.running());
+        save(ExtendedStates.running());
         assertThat(games.previewProduction(id, "stranger", new ProductionAllocation(1, 1, 0))).isEmpty();
         assertThat(games.previewProduction(id, OWNER, new ProductionAllocation(3, 1, 0))).as("foreign").isEmpty();
         assertThat(games.previewProduction(id, OWNER, new ProductionAllocation(1, 0, 0))).as("stale").isEmpty();

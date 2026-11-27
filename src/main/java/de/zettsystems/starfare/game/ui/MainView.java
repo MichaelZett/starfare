@@ -458,7 +458,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             return;
         }
         this.gameId = candidate;
-        routeRules = game.summaryFor(candidate, account).map(summary -> summary.ruleset().isSpaceward()).orElse(false);
+        routeRules = game.summaryFor(candidate, account).map(summary -> summary.ruleset().isExtended()).orElse(false);
         mapCanvas.useGame(candidate);
         if (diplomacyDialog != null) { diplomacyDialog.close(); diplomacyDialog = null; }
         displayedTurn = null;

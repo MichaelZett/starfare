@@ -29,7 +29,7 @@ class NavigationIntegrationTest extends AbstractIntegrationTest {
     @Autowired private PlayerViewBuilder views;
     @Autowired private FleetService fleets;
     @Autowired private NavigationService navigation;
-    @Autowired private de.zettsystems.starfare.ai.application.SpacewardPlanning ai;
+    @Autowired private de.zettsystems.starfare.ai.application.ExtendedPlanning ai;
     private final List<GameId> created = new ArrayList<>();
     private GameId save(GameState state) {
         GameId id = GameId.newId(); created.add(id);
@@ -49,7 +49,7 @@ class NavigationIntegrationTest extends AbstractIntegrationTest {
         assertThat(archives.load(id).orElseThrow().state().fleets()).containsExactly(fleet);
         assertThat(views.forReplay(state, state.replayFrames().get(3), 1).ownFleets()).containsExactly(fleet);
     }
-    @Test void optionalNavigationReadsOldClassicAndOldInternalSpacewardSnapshots() {
+    @Test void optionalNavigationReadsOldClassicAndOldInternalExtendedSnapshots() {
         ObjectNode classic = (ObjectNode) mapper.valueToTree(GameState.toSnapshot(new GameState())); classic.remove("navigation");
         assertThat(GameState.fromSnapshot(mapper.treeToValue(classic, GameStateSnapshot.class)).navigationSettings()).isEmpty();
         GameState internal = NavigationStates.running();

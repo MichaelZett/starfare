@@ -150,7 +150,7 @@ class NewGameDialogTest extends AbstractBrowserlessTest {
         assertThat(find(CheckboxGroup.class).withId("sector-events").all()).as("no events without chance").isEmpty();
         randomness().setValue(RandomnessLevel.HIGH);
         assertThat(events().isVisible()).isTrue();
-        chooseVariant(RulesetRef::isSpaceward);
+        chooseVariant(RulesetRef::isExtended);
         assertThat(find(Details.class).withId("setup-details").all()).as("extended games have none of these").isEmpty();
         chooseVariant(ref -> ref == RulesetRef.SECTOR_FORCES);
         test(computers()).selectItem("1");
@@ -167,7 +167,7 @@ class NewGameDialogTest extends AbstractBrowserlessTest {
     void anExtendedGameAllowsAlliancesAndAnAllianceVictory() {
         loginAsNewPlayer("Extended Host");
         openDialogWithEveryVariant();
-        chooseVariant(RulesetRef::isSpaceward);
+        chooseVariant(RulesetRef::isExtended);
         test(computers()).selectItem("1");
 
         GameId id = create();

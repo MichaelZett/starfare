@@ -52,6 +52,18 @@ class RulesetPersistenceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void snapshotsWithTheFormerDerivedFlagStillLoadAndAreWrittenWithoutIt() {
+        var tree = mapper.readTree(mapper.writeValueAsString(GameState.toSnapshot(state(RulesetRef.SECTOR_FORCES))));
+        ((tools.jackson.databind.node.ObjectNode) tree.get("ruleset")).put("spaceward", false);
+        ((tools.jackson.databind.node.ObjectNode) tree.get("originalSetup").get("ruleset")).put("spaceward", false);
+        var restored = GameState.fromSnapshot(mapper.treeToValue(tree, GameStateSnapshot.class));
+        assertThat(restored.ruleset()).isEqualTo(RulesetRef.SECTOR_FORCES);
+        String written = mapper.writeValueAsString(GameState.toSnapshot(restored));
+        assertThat(written).contains("\"ruleset\":{\"variant\":\"classic\",\"version\":\"1.0.0\"}")
+                .doesNotContain("spaceward", "\"extended\":");
+    }
+
+    @Test
     void missingReferencesInGameAndOriginalSetupDefaultToSectorForces() {
         var tree = mapper.readTree(mapper.writeValueAsString(GameState.toSnapshot(state(RulesetRef.SECTOR_FORCES))));
         ((tools.jackson.databind.node.ObjectNode) tree).remove("ruleset");
@@ -83,7 +95,7 @@ class RulesetPersistenceTest extends AbstractIntegrationTest {
 
     @Test
     void unsupportedSavesAreRejectedBeforeDatabaseAndCacheMutation() {
-        GameState state = state(new RulesetRef("spaceward", "9.0.0"));
+        GameState state = state(new RulesetRef("extended", "9.0.0"));
         var session = new GameSession(GameId.of(INVALID), "Unsupported", "host", Instant.now(), state);
         var store = new JpaGameSessionStore(sessions, archives, mapper, catalog);
         assertThatThrownBy(() -> store.save(session)).isInstanceOf(IllegalArgumentException.class);

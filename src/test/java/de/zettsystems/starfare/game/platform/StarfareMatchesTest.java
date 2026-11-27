@@ -112,7 +112,7 @@ class StarfareMatchesTest {
                                     state.roundDeadline()));
             assertThat(state.roundDeadline()).isNotNull();
             assertThat(summary.toMove()).as("an answer is no turn").containsExactly(SEVENTEEN, TWENTY_THREE);
-            assertThat(summary.variant()).isEqualTo("spaceward");
+            assertThat(summary.variant()).isEqualTo("extended");
         }
 
         @Test
@@ -372,7 +372,7 @@ class StarfareMatchesTest {
 
     private static final DefaultDiplomacyService DIPLOMACY = new DefaultDiplomacyService();
 
-    /** A running Spaceward game of the accounts 17 (seat 1) and 23 (seat 2), where alliances are allowed. */
+    /** A running Extended game of the accounts 17 (seat 1) and 23 (seat 2), where alliances are allowed. */
     private static GameState treatyGame() {
         GameState state = NavigationStates.running();
         state.seatByUser().put("17", 1);

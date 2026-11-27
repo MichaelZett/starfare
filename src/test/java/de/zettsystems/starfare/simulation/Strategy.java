@@ -7,7 +7,7 @@ enum Strategy {
     BASELINE, RUSH, EXPANSION, CONCENTRATION, DEFENSE, INDUSTRY, INDUSTRY_LIGHT, INDUSTRY_ADAPTIVE, CAUTIOUS;
 
     static List<Strategy> forRules(RulesetRef rules) {
-        return List.of(BASELINE, RUSH, EXPANSION, CONCENTRATION, DEFENSE, rules.isSpaceward() ? INDUSTRY : CAUTIOUS);
+        return List.of(BASELINE, RUSH, EXPANSION, CONCENTRATION, DEFENSE, rules.isExtended() ? INDUSTRY : CAUTIOUS);
     }
 
     boolean requiresIndustry() {

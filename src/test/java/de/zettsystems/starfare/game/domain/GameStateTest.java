@@ -16,7 +16,7 @@ import de.zettsystems.starfare.game.values.SystemOwnership;
 import de.zettsystems.starfare.game.values.VictoryRules;
 import de.zettsystems.starfare.navigation.values.NavigationSettings;
 import de.zettsystems.starfare.report.application.DefaultReportService;
-import de.zettsystems.starfare.testsupport.SpacewardStates;
+import de.zettsystems.starfare.testsupport.ExtendedStates;
 import de.zettsystems.starfare.testsupport.NavigationStates;
 import org.junit.jupiter.api.Test;
 
@@ -441,7 +441,7 @@ class GameStateTest {
     }
 
     @Test
-    void spacewardActionsAreRejectedInSectorForces() {
+    void extendedActionsAreRejectedInSectorForces() {
         GameState state = new GameState();
         state.players().addAll(List.of(new Player(1, "P1", false, "#fff"), new Player(2, "P2", false, "#000")));
         state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 2, false));
@@ -460,7 +460,7 @@ class GameStateTest {
 
     @Test
     void creationSettingsAreFixedOnceEstablished() {
-        GameState prepared = SpacewardStates.ready();
+        GameState prepared = ExtendedStates.ready();
         NavigationSettings navigation = new NavigationSettings(200);
         GameState started = NavigationStates.running();
 
@@ -472,7 +472,7 @@ class GameStateTest {
 
     @Test
     void industryChangesNeedAKnownSystem() {
-        GameState state = SpacewardStates.ready();
+        GameState state = ExtendedStates.ready();
         var industry = state.industries().get(1);
 
         assertThatThrownBy(() -> state.planIndustrialExpansion(99, industry)).isInstanceOf(IllegalArgumentException.class);
@@ -516,7 +516,7 @@ class GameStateTest {
     }
 
     @Test
-    void startCalibratesTheSpacewardRangeWhenNoneWasConfigured() {
+    void startCalibratesTheExtendedRangeWhenNoneWasConfigured() {
         GameState state = new GameState();
         state.resetForNewGame();
         state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));

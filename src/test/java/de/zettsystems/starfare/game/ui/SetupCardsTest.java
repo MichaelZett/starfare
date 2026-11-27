@@ -28,7 +28,7 @@ class SetupCardsTest {
                 .containsExactly(RulesetRef.SECTOR_FORCES, RulesetRef.EXTENDED);
 
         RadioButtonGroup<RulesetDefinition> classicOnly = SetupCards.rules(catalog,
-                new RulesetOffer(ruleset -> !ruleset.isSpaceward(), _ -> Optional.empty()));
+                new RulesetOffer(ruleset -> !ruleset.isExtended(), _ -> Optional.empty()));
         assertThat(classicOnly.getListDataView().getItems().map(RulesetDefinition::defaultRef))
                 .containsExactly(RulesetRef.SECTOR_FORCES);
     }
@@ -37,9 +37,9 @@ class SetupCardsTest {
     void rulesShowOnlyTheirNameAndMarkAlphaOrBetaWithoutAVersion() {
         var catalog = RulesetCatalog.builtIn();
         RadioButtonGroup<RulesetDefinition> rules = SetupCards.rules(catalog, new RulesetOffer(_ -> true,
-                ruleset -> ruleset.isSpaceward() ? Optional.of(LifecycleStage.ALPHA) : Optional.empty()));
+                ruleset -> ruleset.isExtended() ? Optional.of(LifecycleStage.ALPHA) : Optional.empty()));
 
-        Div extended = card(rules, catalog.find("spaceward").orElseThrow());
+        Div extended = card(rules, catalog.find("extended").orElseThrow());
         Div classic = card(rules, catalog.find("classic").orElseThrow());
 
         assertThat(text(extended, "setup-card-title")).isEqualTo("Erweitert");

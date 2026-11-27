@@ -6,7 +6,7 @@ import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.testsupport.NavigationStates;
-import de.zettsystems.starfare.testsupport.SpacewardStates;
+import de.zettsystems.starfare.testsupport.ExtendedStates;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,18 +21,18 @@ class TamperedSnapshotTest extends AbstractIntegrationTest {
     @Autowired private ObjectMapper mapper;
 
     @Test
-    void industryAndNavigationBelongOnlyToSpaceward() {
-        assertRejected(SpacewardStates.running(), json -> json.set("ruleset", classic()),
-                "Industry belongs only to Spaceward");
-        assertRejected(SpacewardStates.running(), json -> {
+    void industryAndNavigationBelongOnlyToExtended() {
+        assertRejected(ExtendedStates.running(), json -> json.set("ruleset", classic()),
+                "Industry belongs only to Extended");
+        assertRejected(ExtendedStates.running(), json -> {
             json.set("ruleset", classic());
             json.remove("industries");
-        }, "Navigation state belongs only to Spaceward");
+        }, "Navigation state belongs only to Extended");
     }
 
     @Test
     void industryMustExplainTheShipProduction() {
-        assertRejected(SpacewardStates.running(),
+        assertRejected(ExtendedStates.running(),
                 json -> ((ObjectNode) json.path("systems").path(0)).put("productionPerTurn", 99),
                 "System industry and ship production disagree");
     }

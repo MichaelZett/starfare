@@ -54,9 +54,9 @@ class RulesetTurnEngineTest {
     void providerRegistrationRoutesClassicAndRejectsMissingImplementations() {
         RulesetRoundImplementation provider = mock(RulesetRoundImplementation.class);
         when(provider.ruleset()).thenReturn(RulesetRef.SECTOR_FORCES);
-        RulesetRoundImplementation spaceward = mock(RulesetRoundImplementation.class);
-        when(spaceward.ruleset()).thenReturn(RulesetRef.EXTENDED);
-        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), List.of(provider, spaceward));
+        RulesetRoundImplementation extended = mock(RulesetRoundImplementation.class);
+        when(extended.ruleset()).thenReturn(RulesetRef.EXTENDED);
+        var engine = new RulesetTurnEngine(RulesetCatalog.builtIn(), List.of(provider, extended));
         GameState state = new GameState();
         assertThatCode(() -> engine.advanceTurn(state)).doesNotThrowAnyException();
         verify(provider).advanceTurn(state);

@@ -21,7 +21,7 @@ import java.util.function.IntToDoubleFunction;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
-/** Spaceward-only arrivals: one battle per place, including already stationed allied forces. */
+/** Extended-only arrivals: one battle per place, including already stationed allied forces. */
 @Service
 public class DefaultCoalitionCombatService implements CoalitionCombatService {
     private final ReportService reports;

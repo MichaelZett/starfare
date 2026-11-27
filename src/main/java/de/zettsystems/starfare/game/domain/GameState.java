@@ -60,7 +60,7 @@ public class GameState {
     }
     private void validateDiplomacy() {
         if ((!Routes.limited(this) || !victoryRules().alliancesAllowed()) && !diplomacy.equals(DiplomacyState.EMPTY)) {
-            throw new IllegalArgumentException("Diplomacy belongs only to Spaceward");
+            throw new IllegalArgumentException("Diplomacy belongs only to Extended");
         }
         var participants = players.stream().map(Player::id).collect(java.util.stream.Collectors.toSet());
         if (diplomacy.groups().stream().anyMatch(group -> !participants.containsAll(group.members()))
@@ -71,11 +71,11 @@ public class GameState {
     private @Nullable NavigationSettings navigation;
     public Optional<NavigationSettings> navigationSettings() { return Optional.ofNullable(navigation); }
     public void configureNavigation(NavigationSettings settings) {
-        if (started || navigation != null || !ruleset.isSpaceward()) { throw new IllegalStateException("Navigation is fixed at creation"); }
+        if (started || navigation != null || !ruleset.isExtended()) { throw new IllegalStateException("Navigation is fixed at creation"); }
         navigation = settings;
     }
     public void initializeNavigation() {
-        if (ruleset.isSpaceward() && navigation == null) {
+        if (ruleset.isExtended() && navigation == null) {
             navigation = RangeCalibration.forGalaxy(systems);
         }
     }
@@ -128,7 +128,7 @@ public class GameState {
     public Map<Integer, Industry> industries() { return Map.copyOf(industries); }
 
     public void initializeIndustry() {
-        if (!ruleset.isSpaceward() || !industries.isEmpty()) { return; }
+        if (!ruleset.isExtended() || !industries.isEmpty()) { return; }
         systems.forEach(system -> industries.put(system.id(), Industry.establish(system.productionPerTurn())));
     }
 
@@ -155,7 +155,7 @@ public class GameState {
 
     private void validateNavigation() {
         if (!Routes.limited(this) && (navigation != null || fleets.stream().anyMatch(f -> f.journey() != null))) {
-            throw new IllegalArgumentException("Navigation state belongs only to Spaceward");
+            throw new IllegalArgumentException("Navigation state belongs only to Extended");
         }
         for (Fleet fleet : fleets) {
             var journey = fleet.journey();
@@ -175,8 +175,8 @@ public class GameState {
     }
 
     private void validateIndustry() {
-        if (!ruleset.isSpaceward()) {
-            if (!industries.isEmpty()) { throw new IllegalArgumentException("Industry belongs only to Spaceward"); }
+        if (!ruleset.isExtended()) {
+            if (!industries.isEmpty()) { throw new IllegalArgumentException("Industry belongs only to Extended"); }
             return;
         }
         if (industries.size() != systems.size() || systems.stream().anyMatch(system -> {
@@ -579,7 +579,7 @@ public class GameState {
     }
 
     public void endGame(@Nullable Integer winnerId, Instant finishedAt) {
-        if (this.gameOver && (winningAlliance != null || ruleset.isSpaceward())) { return; }
+        if (this.gameOver && (winningAlliance != null || ruleset.isExtended())) { return; }
         if (!this.gameOver) { this.finishedAt = finishedAt; }
         this.gameOver = true;
         this.winnerId = winnerId;
@@ -607,7 +607,7 @@ public class GameState {
 
     /** Starts a fresh round deadline when the winner resumes play towards full conquest. */
     public void resumeForFullConquest(Instant now) {
-        victoryRules = ruleset.isSpaceward() ? victoryRules().forFullConquest()
+        victoryRules = ruleset.isExtended() ? victoryRules().forFullConquest()
                 : VictoryRules.defaults(ruleset, GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
         configureVictorySystemPercent(GameConfig.MAX_VICTORY_SYSTEM_PERCENT);
         clearGameOver();

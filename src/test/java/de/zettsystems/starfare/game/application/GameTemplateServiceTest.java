@@ -37,8 +37,8 @@ class GameTemplateServiceTest {
 
     @Test
     void historicalTemplatesAndRematchesUseCurrentRulesWithoutChangingTheirSource() {
-        for (var version : registry.rulesets().find("spaceward").orElseThrow().supportedVersions()) {
-            var rules = new RulesetRef("spaceward", version);
+        for (var version : registry.rulesets().find("extended").orElseThrow().supportedVersions()) {
+            var rules = new RulesetRef("extended", version);
             var store = new InMemoryGameSessionStore();
             var historical = new RulesetDefinition(rules, "test.name", "test.description",
                     java.util.Set.of(version), true);

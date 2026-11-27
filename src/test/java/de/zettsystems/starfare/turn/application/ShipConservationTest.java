@@ -1,7 +1,7 @@
 package de.zettsystems.starfare.turn.application;
 
 import de.zettsystems.starfare.ai.application.DefaultAiService;
-import de.zettsystems.starfare.ai.application.DefaultSpacewardPlanning;
+import de.zettsystems.starfare.ai.application.DefaultExtendedPlanning;
 import de.zettsystems.starfare.ai.values.AiStrategy;
 import de.zettsystems.starfare.combat.application.DefaultCoalitionCombatService;
 import de.zettsystems.starfare.combat.application.DefaultCombatService;
@@ -102,8 +102,8 @@ class ShipConservationTest {
                     ledger.fleets, ledger.navigation, ledger.diplomacy,
                     new DefaultCoalitionCombatService(ledger.reports, ledger.navigation, _ -> combat.nextDouble()),
                     () -> order).countingCosmicLosses(ledger::countCosmicLoss);
-            engine = rules.isSpaceward()
-                    ? new SpacewardTurnEngine(pipeline, economy, new DefaultSpacewardPlanning(economy, views),
+            engine = rules.isExtended()
+                    ? new ExtendedTurnEngine(pipeline, economy, new DefaultExtendedPlanning(economy, views),
                     ledger.fleets, ledger.reports)
                     : new DefaultTurnEngine(pipeline, new DefaultAiService(), ledger.reports, ledger.fleets);
             orders = new HumanOrders(ledger.fleets, economy, new DefaultDiplomacyService(), people);

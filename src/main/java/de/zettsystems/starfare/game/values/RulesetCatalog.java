@@ -22,8 +22,8 @@ public record RulesetCatalog(List<RulesetDefinition> definitions) {
         return new RulesetCatalog(List.of(
                 new RulesetDefinition(RulesetRef.SECTOR_FORCES, RulesetDefinition.SECTOR_FORCES_NAME,
                         RulesetDefinition.SECTOR_FORCES_DESCRIPTION, Set.of(RulesetRef.SECTOR_FORCES.version()), true),
-                new RulesetDefinition(RulesetRef.EXTENDED, RulesetDefinition.SPACEWARD_NAME,
-                        RulesetDefinition.SPACEWARD_DESCRIPTION, Set.of(RulesetRef.EXTENDED.version()), true)));
+                new RulesetDefinition(RulesetRef.EXTENDED, RulesetDefinition.EXTENDED_NAME,
+                        RulesetDefinition.EXTENDED_DESCRIPTION, Set.of(RulesetRef.EXTENDED.version()), true)));
     }
 
     public Optional<RulesetDefinition> find(String variant) {

@@ -1,13 +1,13 @@
 package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.starfare.AbstractIntegrationTest;
-import de.zettsystems.starfare.ai.application.SpacewardPlanning;
+import de.zettsystems.starfare.ai.application.ExtendedPlanning;
 import de.zettsystems.starfare.economy.application.EconomyService;
 import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.fleet.application.FleetService;
 import de.zettsystems.starfare.game.domain.*;
 import de.zettsystems.starfare.game.values.*;
-import de.zettsystems.starfare.testsupport.SpacewardStates;
+import de.zettsystems.starfare.testsupport.ExtendedStates;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 
-class SpacewardIntegrationTest extends AbstractIntegrationTest {
+class ExtendedIntegrationTest extends AbstractIntegrationTest {
     @Autowired private EconomyService economy;
     @Autowired private GameService games;
     @Autowired private GameRegistry registry;
@@ -31,7 +31,7 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
     @Autowired private ObjectMapper mapper;
     @Autowired private PlayerViewBuilder views;
     @Autowired private FleetService fleets;
-    @Autowired private SpacewardPlanning ai;
+    @Autowired private ExtendedPlanning ai;
     private final List<GameId> created = new ArrayList<>();
 
     @AfterEach void cleanup() {
@@ -39,11 +39,11 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
     }
     private GameId save(GameState state) {
         GameId id = GameId.newId(); created.add(id);
-        store.save(new GameSession(id, "Spaceward test", "host", Instant.now(), state));
+        store.save(new GameSession(id, "Extended test", "host", Instant.now(), state));
         return id;
     }
     @Test void industrySurvivesJsonCopyRestartAndArchiveWithoutChangingHistoricalFrames() {
-        GameState state = SpacewardStates.running();
+        GameState state = ExtendedStates.running();
         economy.allocateExpansion(state, 1, 1, 4); economy.produce(state, Map.of());
         state.captureReplayFrame();
         var frame = state.replayFrames().get(1);
@@ -60,8 +60,8 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         registry.writeState(id, snap -> { snap.endGame(1); return null; });
         assertThat(archives.load(id).orElseThrow().state().industries()).containsEntry(1, restored);
     }
-    @Test void missingOrInconsistentSpacewardEconomyIsRejectedButOldClassicDataStillLoads() {
-        GameState state = SpacewardStates.running();
+    @Test void missingOrInconsistentExtendedEconomyIsRejectedButOldClassicDataStillLoads() {
+        GameState state = ExtendedStates.running();
         ObjectNode json = (ObjectNode) mapper.valueToTree(GameState.toSnapshot(state));
         json.remove("industries");
         ObjectNode missing = json;
@@ -77,7 +77,7 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         assertThat(GameState.fromSnapshot(mapper.treeToValue(classic, GameStateSnapshot.class)).industries()).isEmpty();
     }
     @Test void planningChecksOwnershipRoundAndSubmissionBeforeChangingTheSavedBudget() {
-        GameState state = SpacewardStates.running(); GameId id = save(state);
+        GameState state = ExtendedStates.running(); GameId id = save(state);
         assertThat(games.allocateExpansion(id, 1, 1, 1, 4)).isTrue();
         assertThat(games.allocateExpansion(id, 2, 1, 1, 2)).isFalse();
         assertThat(games.allocateExpansion(id, 1, 0, 1, 2)).isFalse();
@@ -90,7 +90,7 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         assertThat(games.allocateExpansion(id, 1, 1, 1, 0)).isFalse();
     }
     @Test void visibleDeliveryMatchesResolutionAndForeignIndustryDoesNotLeak() {
-        GameState state = SpacewardStates.running();
+        GameState state = ExtendedStates.running();
         state.updateSystem(1, system -> system.afterDefense(2));
         fleets.addStandingOrder(state, 1, 1, 3, 7); fleets.addStandingOrder(state, 1, 1, 4, 3);
         economy.allocateExpansion(state, 1, 1, 4);
@@ -108,7 +108,7 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
         assertThat(state.getSystem(1).garrison()).isZero();
     }
     @Test void queuedLaunchReducesDeliveryPreview() {
-        GameState state = SpacewardStates.running();
+        GameState state = ExtendedStates.running();
         state.updateSystem(1, system -> system.afterDefense(2));
         fleets.addStandingOrder(state, 1, 1, 3, 7);
         fleets.addStandingOrder(state, 1, 1, 4, 3);
@@ -125,7 +125,7 @@ class SpacewardIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test void aiUsesKnownThreatsAndDoesNotReactToHiddenEnemyStrength() {
-        GameState state = SpacewardStates.running(); state.updatePlayer(1, Player::asAi);
+        GameState state = ExtendedStates.running(); state.updatePlayer(1, Player::asAi);
         ai.plan(state, fleets);
         assertThat(state.industries().get(1).expansionAllocation()).isEqualTo(3);
         assertThat(state.industries().get(2).expansionAllocation()).isEqualTo(1);

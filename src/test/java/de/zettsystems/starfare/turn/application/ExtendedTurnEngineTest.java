@@ -1,25 +1,25 @@
 package de.zettsystems.starfare.turn.application;
 
 import de.zettsystems.starfare.game.values.Fleet;
-import de.zettsystems.starfare.ai.application.SpacewardPlanning;
+import de.zettsystems.starfare.ai.application.ExtendedPlanning;
 import de.zettsystems.starfare.combat.application.CombatService;
 import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.report.application.DefaultReportService;
 import de.zettsystems.starfare.report.values.TurnEvent;
-import de.zettsystems.starfare.testsupport.SpacewardStates;
+import de.zettsystems.starfare.testsupport.ExtendedStates;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class SpacewardTurnEngineTest {
+class ExtendedTurnEngineTest {
     @Test void roundProducesRoutesAndArchivesOnlyActualShipOutput() {
         var fleets = new DefaultFleetService(); var reports = new DefaultReportService();
-        SpacewardPlanning ai = mock(SpacewardPlanning.class);
+        ExtendedPlanning ai = mock(ExtendedPlanning.class);
         var economy = new DefaultEconomyService();
-        var engine = new SpacewardTurnEngine(new RoundPipeline(mock(CombatService.class), reports, fleets), economy, ai, fleets, reports);
-        GameState state = SpacewardStates.running();
+        var engine = new ExtendedTurnEngine(new RoundPipeline(mock(CombatService.class), reports, fleets), economy, ai, fleets, reports);
+        GameState state = ExtendedStates.running();
         fleets.addStandingOrder(state, 1, 1, 3, 7);
         fleets.addStandingOrder(state, 1, 1, 4, 3);
         economy.allocateExpansion(state, 1, 1, 4);
@@ -33,12 +33,12 @@ class SpacewardTurnEngineTest {
     }
     @Test void wrongRulesAndFinishedGamesNeverPlanOrProduce() {
         var fleets = new DefaultFleetService(); var reports = new DefaultReportService();
-        SpacewardPlanning ai = mock(SpacewardPlanning.class);
-        var engine = new SpacewardTurnEngine(new RoundPipeline(mock(CombatService.class), reports, fleets),
+        ExtendedPlanning ai = mock(ExtendedPlanning.class);
+        var engine = new ExtendedTurnEngine(new RoundPipeline(mock(CombatService.class), reports, fleets),
                 new DefaultEconomyService(), ai, fleets, reports);
         var input1 = new GameState();
         assertThatThrownBy(() -> engine.advanceTurn(input1)).isInstanceOf(IllegalArgumentException.class);
-        GameState finished = SpacewardStates.running(); finished.endGame(1);
+        GameState finished = ExtendedStates.running(); finished.endGame(1);
         var before = GameState.toSnapshot(finished);
         assertThatCode(() -> engine.advanceTurn(finished)).doesNotThrowAnyException();
         assertThat(GameState.toSnapshot(finished)).isEqualTo(before);

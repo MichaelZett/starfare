@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  * Reconstructed via {@link GameState#fromSnapshot(GameStateSnapshot)}.
  */
 // Older snapshots still carry "active" from the removed abort-in-place (it was always true) and the
-// colonies, metals and mining automation of the removed Spaceward economy (games of those versions
+// colonies, metals and mining automation of the removed 1.x economy of the extended rules (games of those versions
 // are no longer supported and are skipped on load).
 @JsonIgnoreProperties({"active", "colonies", "metals", "miningAutomation"})
 public record GameStateSnapshot(

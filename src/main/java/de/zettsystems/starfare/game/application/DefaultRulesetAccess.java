@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Im Plattform-Host entscheidet die Plattform je Spielvariante ({@link PlatformAccounts#mayUseVariant}:
- * Stufe der Variante, etwa Spaceward in Alpha, und Rolle des Kontos); Starfare meldet die Varianten mit
+ * Stufe der Variante, etwa Extended in Alpha, und Rolle des Kontos); Starfare meldet die Varianten mit
  * ihrer Startstufe in {@code games/starfare/game.properties}. Ohne Plattformkonto ist nichts frei. Im
  * eigenen Start ist alles frei. Die Plattform liest Stufen und Rollen bei jeder Frage frisch, damit eine
  * Änderung auch für laufende Sitzungen gilt.

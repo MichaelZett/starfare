@@ -10,7 +10,7 @@ import java.util.*;
 /** Pure planning used by commands, production routing, AI and previews. */
 public final class Routes {
     private Routes() { }
-    public static boolean limited(GameState state) { return state.ruleset().isSpaceward(); }
+    public static boolean limited(GameState state) { return state.ruleset().isExtended(); }
     public static boolean stationAllowed(GameState state, int owner, int system) {
         StarSystem station = state.systems().stream().filter(candidate -> candidate.id() == system).findFirst().orElse(null);
         return station != null && (Objects.equals(station.ownerId(), owner) || state.allied(owner, station.ownerId()));

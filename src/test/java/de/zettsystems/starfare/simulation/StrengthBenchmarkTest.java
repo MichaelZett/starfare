@@ -42,7 +42,7 @@ class StrengthBenchmarkTest {
 
     @Test
     void extendedGamesUseTheExtendedRulesAndTheirIndustryProfiles() {
-        var options = StrengthOptions.parse(new String[]{"--rules=spaceward", "--systems=16", "--players=2", "--seeds=1",
+        var options = StrengthOptions.parse(new String[]{"--rules=extended", "--systems=16", "--players=2", "--seeds=1",
                 "--rounds=30", "--strengths=HARD", "--reference=INDUSTRY_ADAPTIVE"});
         var state = StrengthBenchmark.create(options, StrengthBenchmark.setup(options, ComputerStrength.HARD,
                 RandomnessLevel.LOW, true, 16, 2), 1);
@@ -53,7 +53,7 @@ class StrengthBenchmarkTest {
         assertThat(StrengthBenchmark.run(options)).singleElement()
                 .satisfies(match -> assertThat(match.computers()).containsExactly(Strategy.INDUSTRY_ADAPTIVE));
         assertThatIllegalArgumentException().isThrownBy(() -> StrengthOptions.parse(new String[]{"--reference=INDUSTRY"}));
-        assertThatIllegalArgumentException().isThrownBy(() -> StrengthOptions.parse(new String[]{"--rules=spaceward-1.1"}));
+        assertThatIllegalArgumentException().isThrownBy(() -> StrengthOptions.parse(new String[]{"--rules=extended-1.1"}));
     }
 
     @Test

@@ -5,7 +5,7 @@ import de.zettsystems.starfare.economy.domain.Industry;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.StarSystem;
-import de.zettsystems.starfare.testsupport.SpacewardStates;
+import de.zettsystems.starfare.testsupport.ExtendedStates;
 import org.junit.jupiter.api.Test;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.*;
 class EconomyServiceTest {
     private final EconomyService economy = new DefaultEconomyService();
     @Test void productionUsesCurrentCapacityAndGrowthAffectsTheFollowingRound() {
-        GameState state = SpacewardStates.running();
+        GameState state = ExtendedStates.running();
         assertThat(economy.allocateExpansion(state, 1, 1, 4)).isTrue();
         // The first level above 10 costs 10 points: 4 points a round complete it in the third round.
         for (int turn = 0; turn < 3; turn++) {
@@ -26,7 +26,7 @@ class EconomyServiceTest {
         assertThat(state.getSystem(1).garrison()).isEqualTo(37);
     }
     @Test void allocationChangesKeepRoutesAndServeCompetingTransfers() {
-        GameState state = SpacewardStates.running();
+        GameState state = ExtendedStates.running();
         var fleets = new DefaultFleetService();
         assertThat(fleets.addStandingOrder(state, 1, 1, 3, 7)).isPositive();
         assertThat(fleets.addStandingOrder(state, 1, 1, 4, 3)).isPositive();
@@ -41,7 +41,7 @@ class EconomyServiceTest {
         assertThat(state.standingOrders().get(1)).hasSize(2);
     }
     @Test void captureRetainsCapacityAndProgressButRestoresFullShipbuilding() {
-        GameState state = SpacewardStates.running();
+        GameState state = ExtendedStates.running();
         economy.allocateExpansion(state, 1, 1, 4);
         economy.produce(state, Map.of());
         economy.produce(state, Map.of());
@@ -51,7 +51,7 @@ class EconomyServiceTest {
         assertThat(state.getSystem(1).garrison()).isEqualTo(5);
     }
     @Test void allExpansionBuildsNoShipsThisRoundAndNeutralSystemsDoNotGrow() {
-        GameState state = SpacewardStates.running();
+        GameState state = ExtendedStates.running();
         StarSystem neutral = state.getSystem(4);
         assertThat(economy.allocateExpansion(state, 1, 1, 10)).isTrue();
         economy.produce(state, Map.of());
@@ -62,7 +62,7 @@ class EconomyServiceTest {
         assertThat(state.getSystem(4)).isEqualTo(neutral);
     }
     @Test void unauthorizedOrInvalidAllocationsAndClassicAreUnchanged() {
-        GameState state = SpacewardStates.running();
+        GameState state = ExtendedStates.running();
         var before = GameState.toSnapshot(state);
         assertThat(economy.allocateExpansion(state, 2, 1, 4)).isFalse();
         assertThat(economy.allocateExpansion(state, 1, 4, 2)).isFalse();
@@ -76,14 +76,14 @@ class EconomyServiceTest {
         assertThat(classic.industries()).isEmpty();
     }
     @Test void zeroPointsStopAnExpansion() {
-        GameState state = SpacewardStates.running();
+        GameState state = ExtendedStates.running();
         assertThat(economy.allocateExpansion(state, 1, 1, 4)).isTrue();
         assertThat(economy.allocateExpansion(state, 1, 1, 0)).isTrue();
         assertThat(state.industries().get(1).expansionAllocation()).isZero();
         assertThat(economy.allocateExpansion(state, 1, 1, -1)).isFalse();
     }
     @Test void productionReportsTheCapacityGainedThisRound() {
-        GameState state = SpacewardStates.running();
+        GameState state = ExtendedStates.running();
         assertThat(economy.allocateExpansion(state, 1, 1, 10)).isTrue();
         assertThat(economy.produce(state, Map.of()).stream().filter(r -> r.systemId() == 1).findFirst().orElseThrow().capacityGained()).isOne();
         assertThat(economy.produce(state, Map.of()).stream().filter(r -> r.systemId() == 1).findFirst().orElseThrow().capacityGained()).isZero();

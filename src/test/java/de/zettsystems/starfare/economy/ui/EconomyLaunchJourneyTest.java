@@ -14,10 +14,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EconomyLaunchJourneyTest extends AbstractEconomyUiTest {
     @Test
     void ordinaryWizardCreatesTheExtendedRulesWithIndustryExpansion() {
-        loginAsNewPlayer("Spaceward Founder");
+        loginAsNewPlayer("Extended Founder");
         navigate(LobbyView.class);
         test(find(Button.class).withText("Neues Spiel").atIndex(1)).click();
-        chooseSpaceward();
+        chooseExtended();
         assertThat(elementText(openedDialog().getElement())).contains("Erweitert").doesNotContain("2.0.0");
         test(button("Spiel anlegen")).click();
         runPendingUiAccess();
@@ -40,9 +40,9 @@ class EconomyLaunchJourneyTest extends AbstractEconomyUiTest {
     }
 
     @SuppressWarnings("unchecked") // rationale: the rules cards contain RulesetDefinition values.
-    private void chooseSpaceward() {
+    private void chooseExtended() {
         RadioButtonGroup<RulesetDefinition> choices = find(RadioButtonGroup.class).withId("ruleset-selection").single();
         assertThat(choices.getValue().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
-        choices.setValue(registry.rulesets().find("spaceward").orElseThrow());
+        choices.setValue(registry.rulesets().find("extended").orElseThrow());
     }
 }

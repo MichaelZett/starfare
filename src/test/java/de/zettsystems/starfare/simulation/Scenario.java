@@ -51,7 +51,7 @@ record Scenario(RulesetRef rules, GalaxyLayout layout, int systems, long mapSeed
             int owner = seat;
             state.updateSystem(homes.get(seat - 1).id(), system -> system.colonize(owner, 20, 5));
         }
-        if (rules.isSpaceward()) {
+        if (rules.isExtended()) {
             state.initializeIndustry();
         }
         state.start();

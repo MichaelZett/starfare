@@ -19,7 +19,7 @@ public final class FleetUiStates {
     private FleetUiStates() { }
 
     public static GameState navigation() {
-        GameState state = spaceward();
+        GameState state = extended();
         state.players().addAll(List.of(new Player(1, "Navigator", false, "#56b4e9", "Navigation Empire"),
                 new Player(2, "Opponent", false, "#d55e00")));
         state.systems().addAll(List.of(new StarSystem(1, "Alpha", 400, 350, 1, 50, 4, false),
@@ -33,7 +33,7 @@ public final class FleetUiStates {
     }
 
     public static GameState coalition() {
-        GameState state = spaceward();
+        GameState state = extended();
         state.configureLobby(true, true, true, 0);
         // Commander and Partner already hold 6 of 8 systems: without this the alliance victory ends the game at once.
         state.configureVictoryRules(new VictoryRules(70, true, false, 70));
@@ -55,7 +55,7 @@ public final class FleetUiStates {
         return state;
     }
 
-    private static GameState spaceward() {
+    private static GameState extended() {
         GameState state = new GameState();
         state.resetForNewGame();
         state.rememberSetup(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));

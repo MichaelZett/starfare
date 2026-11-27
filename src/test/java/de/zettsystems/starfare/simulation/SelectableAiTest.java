@@ -1,7 +1,7 @@
 package de.zettsystems.starfare.simulation;
 
 import de.zettsystems.starfare.ai.application.DefaultAiService;
-import de.zettsystems.starfare.ai.application.DefaultSpacewardPlanning;
+import de.zettsystems.starfare.ai.application.DefaultExtendedPlanning;
 import de.zettsystems.starfare.ai.values.AiStrategy;
 import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
@@ -69,8 +69,8 @@ class SelectableAiTest {
 
     private static void plan(GameState state) {
         var fleets = new DefaultFleetService();
-        if (state.ruleset().isSpaceward()) {
-            new DefaultSpacewardPlanning(new DefaultEconomyService(), new DefaultPlayerViewBuilder()).plan(state, fleets);
+        if (state.ruleset().isExtended()) {
+            new DefaultExtendedPlanning(new DefaultEconomyService(), new DefaultPlayerViewBuilder()).plan(state, fleets);
         } else {
             new DefaultAiService().planAiTurns(state, fleets);
         }

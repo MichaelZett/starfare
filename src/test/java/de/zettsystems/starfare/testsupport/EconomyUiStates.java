@@ -36,9 +36,9 @@ public final class EconomyUiStates {
         return state;
     }
 
-    /** The industry test game of {@link SpacewardStates} with two relocations from Alpha. */
+    /** The industry test game of {@link ExtendedStates} with two relocations from Alpha. */
     public static GameState directProduction() {
-        var state = SpacewardStates.running();
+        var state = ExtendedStates.running();
         var fleets = new DefaultFleetService();
         assertThat(fleets.addStandingOrder(state, 1, 1, 2, 6)).isPositive();
         assertThat(fleets.addStandingOrder(state, 1, 1, 3, 4)).isPositive();

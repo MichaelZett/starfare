@@ -402,29 +402,29 @@ class FleetServiceTest {
 
     @Test
     void ordersBeyondTheFlightRangeAreRejected() {
-        GameState spaceward = NavigationStates.running();
-        int fleets = spaceward.fleets().size();
+        GameState extended = NavigationStates.running();
+        int fleets = extended.fleets().size();
 
-        assertThat(service.queueSend(spaceward, 1, 1, 5, 1)).isFalse();
-        assertThat(service.sendFleet(spaceward, 1, 1, 5, 1)).isFalse();
-        assertThat(service.addStandingOrder(spaceward, 1, 1, 5, 1)).isEqualTo(-1);
+        assertThat(service.queueSend(extended, 1, 1, 5, 1)).isFalse();
+        assertThat(service.sendFleet(extended, 1, 1, 5, 1)).isFalse();
+        assertThat(service.addStandingOrder(extended, 1, 1, 5, 1)).isEqualTo(-1);
 
-        assertThat(spaceward.pendingOrders().getOrDefault(1, List.of())).isEmpty();
-        assertThat(spaceward.fleets()).hasSize(fleets);
-        assertThat(spaceward.standingOrders().getOrDefault(1, List.of())).isEmpty();
+        assertThat(extended.pendingOrders().getOrDefault(1, List.of())).isEmpty();
+        assertThat(extended.fleets()).hasSize(fleets);
+        assertThat(extended.standingOrders().getOrDefault(1, List.of())).isEmpty();
     }
 
     @Test
     void aRelocationWithoutRouteSendsNothingButIsKept() {
-        GameState spaceward = NavigationStates.running();
-        int fleets = spaceward.fleets().size();
-        spaceward.standingOrders().put(1, new ArrayList<>(List.of(new StandingOrder(1, 1, 1, 5, 2))));
+        GameState extended = NavigationStates.running();
+        int fleets = extended.fleets().size();
+        extended.standingOrders().put(1, new ArrayList<>(List.of(new StandingOrder(1, 1, 1, 5, 2))));
 
-        var routed = service.applyStandingOrdersForProduction(spaceward);
+        var routed = service.applyStandingOrdersForProduction(extended);
 
         assertThat(routed).isEmpty();
-        assertThat(spaceward.fleets()).hasSize(fleets);
-        assertThat(spaceward.standingOrders().get(1)).hasSize(1);
+        assertThat(extended.fleets()).hasSize(fleets);
+        assertThat(extended.standingOrders().get(1)).hasSize(1);
     }
 
     @Test

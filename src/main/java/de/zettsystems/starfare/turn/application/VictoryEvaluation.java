@@ -30,7 +30,7 @@ final class VictoryEvaluation {
         if (state.gameOver() || state.systems().isEmpty()) { return; }
         var counts = state.systems().stream().filter(s -> s.ownerId() != null)
                 .collect(Collectors.groupingBy(StarSystem::ownerId, Collectors.counting()));
-        if (!state.ruleset().isSpaceward()) {
+        if (!state.ruleset().isExtended()) {
             // Preserve the historical evaluation of simultaneous low-threshold individual wins.
             counts.forEach((player, count) -> {
                 if (count * 100 >= (long) state.livingSystemCount() * state.victorySystemPercent()) {

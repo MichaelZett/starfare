@@ -128,10 +128,10 @@ public class RoundPipeline {
     }
 
     private void resolveArrivals(GameState state) {
-        if (state.ruleset().isSpaceward()) {
+        if (state.ruleset().isExtended()) {
             coalitions.resolveArrivals(state); return;
         }
-        // Without Spaceward navigation there are no itineraries, stations or alliances to intercept an arrival.
+        // Without Extended navigation there are no itineraries, stations or alliances to intercept an arrival.
         Map<Integer, Map<Integer, MergedArrival>> merged = groupArrivals(state);
         state.fleets().removeIf(f -> f.inFlight() && f.arrivalTurn() == state.turn() + 1);
         for (var e : merged.entrySet()) {
@@ -194,7 +194,7 @@ public class RoundPipeline {
             for (FleetOrder order : orders) {
                 switch (order) {
                     case FleetOrder.Send(int ownerId, int from, int to, int ships, var beneficiary) -> {
-                        if (state.ruleset().isSpaceward()) {
+                        if (state.ruleset().isExtended()) {
                             fleetService.sendFleet(state, ownerId, from, to, ships, beneficiary);
                         } else { fleetService.sendFleet(state, ownerId, from, to, ships); }
                     }

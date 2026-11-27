@@ -32,11 +32,11 @@ class AllianceBenchmarkTest {
     }
 
     @Test void commandLinePairsGroupVictoryAndRejectsItForClassicRules(@TempDir Path output) throws java.io.IOException {
-        StrategyBenchmark.main(new String[]{"--mode=alliance", "--rules=spaceward", "--alliance-victory=both",
+        StrategyBenchmark.main(new String[]{"--mode=alliance", "--rules=extended", "--alliance-victory=both",
                 "--seeds=1", "--layouts=EVEN", "--systems=8", "--rounds=3", "--output=" + output});
         var lines = Files.readAllLines(output.resolve("matches.csv"));
         assertThat(lines).hasSize(9);
-        assertThat(String.join("\n", lines)).contains("group-win-true", "group-win-false", "spaceward,2.0.0");
+        assertThat(String.join("\n", lines)).contains("group-win-true", "group-win-false", "extended,2.0.0");
         assertThatThrownBy(() -> BenchmarkOptions.parse(new String[]{"--rules=classic", "--alliance-victory=true"}))
                 .isInstanceOf(IllegalArgumentException.class);
     }

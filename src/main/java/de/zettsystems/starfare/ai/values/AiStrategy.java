@@ -14,7 +14,7 @@ public enum AiStrategy {
         return this == INDUSTRY || this == INDUSTRY_LIGHT || this == INDUSTRY_ADAPTIVE;
     }
 
-    public boolean supports(RulesetRef rules) { return !requiresIndustry() || rules.isSpaceward(); }
+    public boolean supports(RulesetRef rules) { return !requiresIndustry() || rules.isExtended(); }
 
     public static List<AiStrategy> forRules(RulesetRef rules) {
         return Arrays.stream(values()).filter(strategy -> strategy.supports(rules)).toList();

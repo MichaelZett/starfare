@@ -22,12 +22,12 @@ Every game stores its variant and rule version.
 | Variant | Status |
 |---|---|
 | **Classic** (`classic`) | Playable, rules 1.0.0 |
-| **Extended** (`spaceward`) | Playable, rules 2.0.0 (Classic plus industrial expansion, flight range with stations, alliances and coalition combat); alpha stage inside the platform host |
+| **Extended** (`extended`) | Playable, rules 2.0.0 (Classic plus industrial expansion, flight range with stations, alliances and coalition combat); alpha stage inside the platform host |
 
 The classic rules are the compact core of conquest and fleet movement. The
 extended rules add industrial expansion, limited flight range, alliances and
 coalition combat. In code, commands and stored rule versions the extended rules carry
-the technical key `spaceward` (`spaceward/2.0.0`).
+the technical key `extended` (`extended/2.0.0`).
 
 Starfare is an independent hobby project. It is not affiliated with or endorsed
 by the publishers or rights holders of *Sector Forces* or *Galactic Empire*; their
@@ -691,7 +691,7 @@ The opt-in `strategyBenchmark` task runs Classic and Extended games through the 
 turn engines without Spring, PostgreSQL, a browser or audio. Running the tooling does
 not alter stored games or their AI selections. Modes are `matrix` (default),
 `multiplayer`, `decision`, `alliance` and `strength`; `--rules=classic` selects Classic
-1.0.0, `--rules=spaceward` Extended 2.0.0.
+1.0.0, `--rules=extended` Extended 2.0.0.
 
 ```powershell
 # Pairwise matches, with both seat assignments for every pair.
@@ -701,9 +701,9 @@ not alter stored games or their AI selections. Modes are `matrix` (default),
 # Compare one changed decision against the same checkpoint and future round seeds.
 .\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=decision --seeds=3 --combat-seeds=3 --fork-round=10"
 # Four empires, with a fixed alliance between seats 1 and 2.
-.\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=alliance --rules=spaceward --seeds=3"
+.\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=alliance --rules=extended --seeds=3"
 # Pair identical Extended scenarios with group victory disabled/enabled.
-.\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=alliance --rules=spaceward --alliance-victory=both --seeds=3 --combat-seeds=3"
+.\gradlew.bat strategyBenchmark "-PstrategyArgs=--mode=alliance --rules=extended --alliance-victory=both --seeds=3 --combat-seeds=3"
 ```
 
 Use `./gradlew` on Linux/macOS. Results default to `build/strategy-harness/<mode>/`;
@@ -711,7 +711,7 @@ Use `./gradlew` on Linux/macOS. Results default to `build/strategy-harness/<mode
 directory replaces its report files. Options use `--key=value`; quote the entire
 Gradle property as shown. Paths supplied through this property must not contain spaces.
 Without `--rules` the matrix, multiplayer and decision modes run both variants;
-`--rules=classic` or `--rules=spaceward` narrows them. `--layouts=RANDOM,EVEN`
+`--rules=classic` or `--rules=extended` narrows them. `--layouts=RANDOM,EVEN`
 selects galaxy layouts. Defaults are two map seeds, 16 systems, 120 rounds and 10%
 combat variation. `--first-seed=1001` selects a disjoint validation map set after
 tuning on the initial seeds. `--combat-seed=314159` and `--combat-seeds=3` control
@@ -742,7 +742,7 @@ match INDUSTRY, so their comparisons isolate the allocation policy.
 
 ```powershell
 # Separate validation maps, Extended rules, longer matches.
-.\gradlew.bat strategyBenchmark -x vaadinBuildFrontend "-PstrategyArgs=--mode=matrix --rules=spaceward --profiles=EXPANSION,CONCENTRATION,INDUSTRY,INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE --systems=16,32 --first-seed=1001 --seeds=5 --rounds=300 --output=build/strategy-harness/deepening-control-300"
+.\gradlew.bat strategyBenchmark -x vaadinBuildFrontend "-PstrategyArgs=--mode=matrix --rules=extended --profiles=EXPANSION,CONCENTRATION,INDUSTRY,INDUSTRY_LIGHT,INDUSTRY_ADAPTIVE --systems=16,32 --first-seed=1001 --seeds=5 --rounds=300 --output=build/strategy-harness/deepening-control-300"
 ```
 All alternative policies consume the normal fog-filtered player view and legal
 route durations. Unknown defence is estimated at five ships, not read from the
@@ -755,7 +755,7 @@ they are not claimed to reproduce its full map distribution.
 
 `--mode=strength` calibrates the computer strengths on lobby galaxies: the same
 generation, start values, start balance, events and attack order as a new game
-(`GalaxyGenesis`). `--rules=classic` (default) or `--rules=spaceward` selects the rules.
+(`GalaxyGenesis`). `--rules=classic` (default) or `--rules=extended` selects the rules.
 Seat 1 is the person, played by `--reference=BASELINE`; the computers play the profiles
 their strength draws. Rejected sends are dropped as in a real game.
 Dimensions: `--strengths=EASY,NORMAL,HARD`, `--randomness=NONE,LOW,MEDIUM,HIGH`,
@@ -794,7 +794,7 @@ change. Future random streams restart from absolute round seeds; altered combat
 sequences may consume different draws, so compare several combat seeds.
 
 Alliance mode exercises joint combat and partner navigation with a fixed contract,
-not a negotiating AI, and needs `--rules=spaceward`. `--alliance-victory=true`,
+not a negotiating AI, and needs `--rules=extended`. `--alliance-victory=true`,
 `false` (default) or `both` (paired runs) sets group victory. `--individual-percent=70`
 and `--alliance-percent=70` select independent thresholds (10–100%). CSV results
 include both choices and every winning seat; each winning ally counts as a win. Use
@@ -821,7 +821,7 @@ pages then leave out their own account menu, language switch and footer. The
 standalone start keeps them. `games/starfare/game.properties` additionally names
 the frame's look (`scheme=dark`, `accent`, `icon`), the game navigation
 (`navigation=<id>:<path>, ...`, texts `game.navigation.<id>`), the variants of the
-rules with their stage at first start (`variants=classic:PRODUCTION, spaceward:ALPHA`,
+rules with their stage at first start (`variants=classic:PRODUCTION, extended:ALPHA`,
 names `game.variant.<key>`) and the full-screen map (`fullscreenPaths`). `src/main/frontend/styles/platform.css` is Starfare's own
 copy of the host's platform stylesheet for the standalone start; it is neither
 synchronised nor part of the game artifact, a host serves its own.

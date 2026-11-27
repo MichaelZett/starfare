@@ -35,7 +35,7 @@ class DiplomacyJourneyTest extends AbstractMapJourneyTest {
         String partner = String.valueOf(accounts.findByEmail(partnerEmail).orElseThrow().id());
         GameState state = twoEmpires();
         state.seatByUser().put(partner, 2);
-        openGame(state, "Spaceward treaty test");
+        openGame(state, "Extended treaty test");
         hostEmail = email;
 
         foundingNeedsThePartner();
@@ -157,7 +157,7 @@ class DiplomacyJourneyTest extends AbstractMapJourneyTest {
         runPendingUiAccess();
     }
 
-    /** Spaceward with diplomacy; Beta (partner) lies between the two empires' worlds. */
+    /** Extended with diplomacy; Beta (partner) lies between the two empires' worlds. */
     private static GameState twoEmpires() {
         GameState state = new GameState();
         state.resetForNewGame();

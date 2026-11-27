@@ -13,8 +13,8 @@ public record RulesetDefinition(RulesetRef defaultRef, String nameKey, String de
                                 Set<String> supportedVersions, boolean creationEnabled, Set<String> creatableVersions) {
     public static final String SECTOR_FORCES_NAME = "ruleset.sectorForces.name";
     public static final String SECTOR_FORCES_DESCRIPTION = "ruleset.sectorForces.description";
-    public static final String SPACEWARD_NAME = "ruleset.spaceward.name";
-    public static final String SPACEWARD_DESCRIPTION = "ruleset.spaceward.description";
+    public static final String EXTENDED_NAME = "ruleset.extended.name";
+    public static final String EXTENDED_DESCRIPTION = "ruleset.extended.description";
 
     public RulesetDefinition(RulesetRef defaultRef, String nameKey, String descriptionKey,
                              Set<String> supportedVersions, boolean creationEnabled) {

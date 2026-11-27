@@ -2,7 +2,7 @@ package de.zettsystems.starfare.simulation;
 
 import de.zettsystems.starfare.ai.application.DefaultAiService;
 import de.zettsystems.starfare.ai.values.AiStrategy;
-import de.zettsystems.starfare.ai.application.DefaultSpacewardPlanning;
+import de.zettsystems.starfare.ai.application.DefaultExtendedPlanning;
 import de.zettsystems.starfare.economy.application.DefaultEconomyService;
 import de.zettsystems.starfare.fleet.application.DefaultFleetService;
 import de.zettsystems.starfare.fleet.values.FleetOrder;
@@ -23,8 +23,8 @@ final class BaselinePolicy {
         state.players().replaceAll(p -> p.id() == player
                 ? new Player(p.id(), p.name(), true, p.colorHex(), p.empireName(), AiStrategy.BASELINE) : p.asHuman());
         var fleets = new DefaultFleetService();
-        if (state.ruleset().isSpaceward()) {
-            new DefaultSpacewardPlanning(new DefaultEconomyService(), views).plan(state, fleets);
+        if (state.ruleset().isExtended()) {
+            new DefaultExtendedPlanning(new DefaultEconomyService(), views).plan(state, fleets);
         } else {
             new DefaultAiService().planAiTurns(state, fleets);
         }

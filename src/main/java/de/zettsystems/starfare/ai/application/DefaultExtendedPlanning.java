@@ -16,19 +16,19 @@ import org.springframework.stereotype.Service;
 
 /** Uses the same filtered system information available to a human player. */
 @Service
-public class DefaultSpacewardPlanning implements SpacewardPlanning {
+public class DefaultExtendedPlanning implements ExtendedPlanning {
     private final ProfilePlanning profiles;
     private final EconomyService economy;
     private final PlayerViewBuilder views;
     private final DiplomacyService diplomacy;
-    public DefaultSpacewardPlanning(EconomyService economy, PlayerViewBuilder views) {
+    public DefaultExtendedPlanning(EconomyService economy, PlayerViewBuilder views) {
         this(economy, views, new DefaultDiplomacyService());
     }
-    public DefaultSpacewardPlanning(EconomyService economy, PlayerViewBuilder views, DiplomacyService diplomacy) {
+    public DefaultExtendedPlanning(EconomyService economy, PlayerViewBuilder views, DiplomacyService diplomacy) {
         this(economy, views, diplomacy, new DefaultProfilePlanning(views, economy));
     }
     @org.springframework.beans.factory.annotation.Autowired
-    public DefaultSpacewardPlanning(EconomyService economy, PlayerViewBuilder views, DiplomacyService diplomacy,
+    public DefaultExtendedPlanning(EconomyService economy, PlayerViewBuilder views, DiplomacyService diplomacy,
                                     ProfilePlanning profiles) {
         this.profiles = profiles;
         this.diplomacy = diplomacy;
@@ -56,7 +56,7 @@ public class DefaultSpacewardPlanning implements SpacewardPlanning {
             int allocation = threatened || industry.atMaximum() ? 0 : industry.capacity() / 3;
             economy.allocateExpansion(state, player.id(), system.id(), allocation);
         }
-        owned.stream().max(Comparator.comparingInt(DefaultSpacewardPlanning::knownGarrison))
+        owned.stream().max(Comparator.comparingInt(DefaultExtendedPlanning::knownGarrison))
                 .ifPresent(base -> sendFrom(state, fleets, player, base, view));
     }
     private static int knownGarrison(VisibleSystem system) {

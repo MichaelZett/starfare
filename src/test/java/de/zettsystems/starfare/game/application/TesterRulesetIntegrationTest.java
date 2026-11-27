@@ -25,14 +25,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Starfare im Plattform-Host: Die Dienste setzen die Stufe einer Variante selbst durch, nicht nur
  * die Oberfläche. Die Frage an die Plattform prüft {@link DefaultRulesetAccessTest}; hier darf jedes
- * Konto, das mit {@code tester} beginnt, die Alpha-Variante Spaceward nutzen.
+ * Konto, das mit {@code tester} beginnt, die Alpha-Variante Extended nutzen.
  */
 class TesterRulesetIntegrationTest extends AbstractIntegrationTest {
     private static final String TESTER = "tester";
     private static final String OTHER_TESTER = "tester-2";
     private static final String PLAYER = "player";
     private static final GameSetup CLASSIC = twoHumans();
-    private static final GameSetup SPACEWARD = twoHumans().selectRuleset(RulesetRef.EXTENDED);
+    private static final GameSetup EXTENDED = twoHumans().selectRuleset(RulesetRef.EXTENDED);
 
     /** Accounts whose Alpha role the platform took away during the test. */
     private static final Set<String> REVOKED = ConcurrentHashMap.newKeySet();
@@ -42,7 +42,7 @@ class TesterRulesetIntegrationTest extends AbstractIntegrationTest {
         @Bean
         @Primary
         RulesetAccess hostRulesetAccess() {
-            return (ruleset, account) -> !ruleset.isSpaceward()
+            return (ruleset, account) -> !ruleset.isExtended()
                     || (account != null && account.startsWith(TESTER) && !REVOKED.contains(account));
         }
     }
@@ -56,38 +56,38 @@ class TesterRulesetIntegrationTest extends AbstractIntegrationTest {
     @Autowired private GameTemplateService templates;
 
     @Test
-    void onlyTestersCreateSpacewardGames() {
+    void onlyTestersCreateExtendedGames() {
         int before = games.listGames().size();
-        assertThatThrownBy(() -> games.newGame(SPACEWARD, PLAYER, "Refused"))
+        assertThatThrownBy(() -> games.newGame(EXTENDED, PLAYER, "Refused"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> games.newGame(SPACEWARD)).as("no host, no tester")
+        assertThatThrownBy(() -> games.newGame(EXTENDED)).as("no host, no tester")
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(games.listGames()).hasSize(before);
-        games.newGame(SPACEWARD, TESTER, "Tested");
+        games.newGame(EXTENDED, TESTER, "Tested");
         games.newGame(CLASSIC, PLAYER, "Classic");
         assertThat(games.listGames()).hasSize(before + 2);
     }
 
     @Test
-    void foreignOpenSpacewardGamesStayHiddenAndClosedForNonTesters() {
-        GameId spaceward = publicGame(SPACEWARD, "Open Spaceward");
+    void foreignOpenExtendedGamesStayHiddenAndClosedForNonTesters() {
+        GameId extended = publicGame(EXTENDED, "Open Extended");
         GameId classic = publicGame(CLASSIC, "Open SectorForces");
         assertThat(lobbyOf(PLAYER)).containsExactly(classic);
-        assertThat(lobbyOf(OTHER_TESTER)).containsExactlyInAnyOrder(spaceward, classic);
-        assertThat(games.joinGame(spaceward, PLAYER)).isEmpty();
-        assertThat(games.joinGame(spaceward, PLAYER, "Player", "Empire")).isEmpty();
-        assertThat(games.observeGame(spaceward, PLAYER)).isFalse();
-        assertThat(games.inviteUser(spaceward, PLAYER)).isEmpty();
-        assertThat(games.summaryOf(spaceward).seatByPlayer()).doesNotContainKey(PLAYER);
+        assertThat(lobbyOf(OTHER_TESTER)).containsExactlyInAnyOrder(extended, classic);
+        assertThat(games.joinGame(extended, PLAYER)).isEmpty();
+        assertThat(games.joinGame(extended, PLAYER, "Player", "Empire")).isEmpty();
+        assertThat(games.observeGame(extended, PLAYER)).isFalse();
+        assertThat(games.inviteUser(extended, PLAYER)).isEmpty();
+        assertThat(games.summaryOf(extended).seatByPlayer()).doesNotContainKey(PLAYER);
         assertThat(games.joinGame(classic, PLAYER)).isPresent();
-        assertThat(games.observeGame(spaceward, OTHER_TESTER)).isTrue();
-        assertThat(games.inviteUser(spaceward, OTHER_TESTER)).isPresent();
-        assertThat(games.joinGame(spaceward, OTHER_TESTER)).isPresent();
+        assertThat(games.observeGame(extended, OTHER_TESTER)).isTrue();
+        assertThat(games.inviteUser(extended, OTHER_TESTER)).isPresent();
+        assertThat(games.joinGame(extended, OTHER_TESTER)).isPresent();
     }
 
     @Test
     void anAccountThatLosesTheVariantLosesItsRunningGameToo() {
-        GameId id = publicGame(SPACEWARD, "Running Spaceward");
+        GameId id = publicGame(EXTENDED, "Running Extended");
         int own = games.seatFor(id, TESTER).orElseThrow();
         int other = games.joinGame(id, OTHER_TESTER).orElseThrow();
         assertThat(games.startGame(id)).isTrue();
@@ -116,8 +116,8 @@ class TesterRulesetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void templatesAndRematchesOfSpacewardGamesAreForTestersOnly() {
-        GameId source = games.newGame(SPACEWARD, TESTER, "Finished");
+    void templatesAndRematchesOfExtendedGamesAreForTestersOnly() {
+        GameId source = games.newGame(EXTENDED, TESTER, "Finished");
         registry.writeState(source, state -> {
             state.seatByUser().put(TESTER, 1);
             state.seatByUser().put(PLAYER, 2);

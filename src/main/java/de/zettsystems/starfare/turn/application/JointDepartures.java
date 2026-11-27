@@ -66,7 +66,7 @@ final class JointDepartures {
             report(state, departure, 0, Outcome.NO_SHIPS);
             return;
         }
-        boolean launched = state.ruleset().isSpaceward()
+        boolean launched = state.ruleset().isExtended()
                 ? fleets.sendFleet(state, owner, from, to, ships, departure.beneficiaryId())
                 : fleets.sendFleet(state, owner, from, to, ships);
         if (!launched) {

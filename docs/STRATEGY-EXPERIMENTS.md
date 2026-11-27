@@ -1,7 +1,7 @@
 # Strategieprüfstände
 
 Der Prüfstand spielt ganze Partien mit den echten Rundenregeln von Klassisch (`classic/1.0.0`) und
-Erweitert (technisch `spaceward/2.0.0`), ohne Spring, Datenbank oder Browser, und vergleicht
+Erweitert (technisch `extended/2.0.0`), ohne Spring, Datenbank oder Browser, und vergleicht
 Strategieprofile und Computerstärken. Bedienung und Profile stehen im
 [README](../README.md#strategy-experiments).
 
@@ -274,7 +274,7 @@ Entscheidung:
 - **Einfach** und **Anspruchsvoll** bleiben unverändert; ihre Partien sind mit dem Stand vor der
   Änderung bitgenau gleich (gleiche Prüfsummen in `matches.csv`). Die Rangfolge der Siegquoten
   Einfach > Normal > Anspruchsvoll hält in jeder Zelle.
-- Erweitert bleibt bei der Basisstrategie aus `DefaultSpacewardPlanning` (heute kalibriert).
+- Erweitert bleibt bei der Basisstrategie aus `DefaultExtendedPlanning` (heute kalibriert).
 
 Grenzen:
 
@@ -310,7 +310,7 @@ Partien.
 ## Computerstärke Erweitert (E5) — 25.11.2026
 
 Kalibriert werden die Stufen des Dialogs „Neue Partie“ für **Erweitert 2.0.0** (Industrieausbau,
-Reichweite, Bündnisse). Aufbau wie bei K4; `--mode=strength` kennt dafür `--rules=spaceward`.
+Reichweite, Bündnisse). Aufbau wie bei K4; `--mode=strength` kennt dafür `--rules=extended`.
 Referenz auf Sitz 1 ist wieder die Basisstrategie. In Erweitert baut sie ein Drittel der Kapazität
 aus, solange kein Gegner näher als zwei Runden steht, spielt also wie ein Mensch, der seine
 Industrie mitnimmt. Die Computer schließen untereinander keine Bündnisse (die Spiel-KI beantwortet

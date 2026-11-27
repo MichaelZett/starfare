@@ -17,7 +17,7 @@ class RulesetRegistryTest {
         var restored = GameState.fromSnapshot(original);
         restored.start();
         assertThat(restored.ruleset()).isEqualTo(RulesetRef.EXTENDED);
-        assertThat(RulesetCatalog.builtIn().find("spaceward").orElseThrow().defaultRef()).isEqualTo(RulesetRef.EXTENDED);
+        assertThat(RulesetCatalog.builtIn().find("extended").orElseThrow().defaultRef()).isEqualTo(RulesetRef.EXTENDED);
     }
     @Test
     void unavailableVariantsAreRejectedBeforeAnyGameIsSaved() {
@@ -34,11 +34,11 @@ class RulesetRegistryTest {
     }
 
     @Test
-    void oldSpacewardVersionsAreRejectedBeforeAnyStateIsSaved() {
+    void oldExtendedVersionsAreRejectedBeforeAnyStateIsSaved() {
         var store = mock(GameSessionStore.class);
         var registry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
-        for (var version : RulesetCatalog.builtIn().find("spaceward").orElseThrow().supportedVersions()) {
-            var rules = new RulesetRef("spaceward", version);
+        for (var version : RulesetCatalog.builtIn().find("extended").orElseThrow().supportedVersions()) {
+            var rules = new RulesetRef("extended", version);
             if (rules.equals(RulesetRef.EXTENDED)) { continue; }
             var setup = GameSetup.defaults().selectRuleset(rules);
             assertThatThrownBy(() -> registry.createGame(setup))
@@ -48,7 +48,7 @@ class RulesetRegistryTest {
     }
 
     @Test
-    void releasedSpacewardGamesStartWithIndustryAndFixedRange() {
+    void releasedExtendedGamesStartWithIndustryAndFixedRange() {
         GameSessionStore store = new InMemoryGameSessionStore();
         GameRegistry registry = new DefaultGameRegistry(store, new DefaultGameAccessPolicy());
         GameId id = registry.createGame(GameSetup.defaults().selectRuleset(RulesetRef.EXTENDED));

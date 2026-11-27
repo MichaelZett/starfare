@@ -70,7 +70,7 @@ record StrengthOptions(Path output, RulesetRef rules, List<ComputerStrength> str
 
     private void validate() {
         // Extended games also offer the industry profiles the computers of the game play.
-        var offered = rules.isSpaceward() ? List.of(Strategy.values()) : Strategy.forRules(rules);
+        var offered = rules.isExtended() ? List.of(Strategy.values()) : Strategy.forRules(rules);
         boolean profilesFit = offered.containsAll(computerProfiles) && offered.contains(reference);
         boolean shareValid = startShare.isEmpty() || (startShare.getAsDouble() >= 0.25 && startShare.getAsDouble() <= 3);
         if (seeds < 1 || seeds > 1000 || combatSeeds < 1 || combatSeeds > 20 || rounds < 1 || rounds > 2000
@@ -86,8 +86,8 @@ record StrengthOptions(Path output, RulesetRef rules, List<ComputerStrength> str
     private static RulesetRef rules(String value) {
         return switch (value) {
             case "classic" -> RulesetRef.SECTOR_FORCES;
-            case "spaceward" -> RulesetRef.EXTENDED;
-            default -> throw new IllegalArgumentException("Rules: classic, spaceward");
+            case "extended" -> RulesetRef.EXTENDED;
+            default -> throw new IllegalArgumentException("Rules: classic, extended");
         };
     }
 

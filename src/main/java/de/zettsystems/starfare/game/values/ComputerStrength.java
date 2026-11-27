@@ -47,7 +47,7 @@ public enum ComputerStrength {
 
     /** Start production and garrison of a computer empire relative to a person's under these rules. */
     public double startShare(RulesetRef rules) {
-        return rules.isSpaceward() ? extendedShare : classicShare;
+        return rules.isExtended() ? extendedShare : classicShare;
     }
 
     /** A computer's start value under these rules derived from a person's, never below one. */
@@ -70,7 +70,7 @@ public enum ComputerStrength {
      * @param players every empire of the game, people included; a duel has two
      */
     public AiStrategy strategy(RulesetRef rules, int players, RandomGenerator random) {
-        if (rules.isSpaceward()) {
+        if (rules.isExtended()) {
             return this == HARD ? AiStrategy.INDUSTRY_ADAPTIVE : AiStrategy.BASELINE;
         }
         boolean duel = players <= 2;

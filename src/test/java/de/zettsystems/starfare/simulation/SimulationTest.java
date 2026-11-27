@@ -15,8 +15,8 @@ import static org.assertj.core.api.Assertions.*;
 
 class SimulationTest {
     @ParameterizedTest @ValueSource(booleans = {false, true})
-    void wholeMatchesAreRepeatableIncludingNonzeroCombatRandomness(boolean spaceward) {
-        var scenario = scenario(spaceward, 40);
+    void wholeMatchesAreRepeatableIncludingNonzeroCombatRandomness(boolean extended) {
+        var scenario = scenario(extended, 40);
         var profiles = List.of(Strategy.RUSH, Strategy.CONCENTRATION, Strategy.DEFENSE);
         var first = MatchRunner.play(scenario, profiles);
         var second = MatchRunner.play(scenario, profiles);
@@ -30,8 +30,8 @@ class SimulationTest {
     }
 
     @ParameterizedTest @ValueSource(booleans = {false, true})
-    void baselineAndAlternativePoliciesDoNotReactToHiddenGarrisonsOrEnemyOrders(boolean spaceward) {
-        var state = hiddenState(spaceward);
+    void baselineAndAlternativePoliciesDoNotReactToHiddenGarrisonsOrEnemyOrders(boolean extended) {
+        var state = hiddenState(extended);
         var views = new DefaultPlayerViewBuilder();
         var before = Observation.capture(state, 1, views);
         assertThat(before.view().systems().get(1).garrison()).isNull();
@@ -41,7 +41,7 @@ class SimulationTest {
         var after = Observation.capture(state, 1, views);
         assertThat(after).isEqualTo(before);
         assertThat(BaselinePolicy.plan(state, 1, views)).isEqualTo(baseline);
-        for (var strategy : spaceward ? List.of(Strategy.values()) : Strategy.forRules(state.ruleset())) {
+        for (var strategy : extended ? List.of(Strategy.values()) : Strategy.forRules(state.ruleset())) {
             if (strategy != Strategy.BASELINE) {
                 assertThat(HeuristicPolicy.plan(strategy, after)).isEqualTo(HeuristicPolicy.plan(strategy, before));
             }
@@ -61,8 +61,8 @@ class SimulationTest {
     }
 
     @ParameterizedTest @ValueSource(booleans = {false, true})
-    void checkpointContinuationMatchesFullRunAndPreservesSource(boolean spaceward) {
-        var scenario = scenario(spaceward, 25);
+    void checkpointContinuationMatchesFullRunAndPreservesSource(boolean extended) {
+        var scenario = scenario(extended, 25);
         var profiles = List.of(Strategy.CONCENTRATION, Strategy.RUSH);
         var checkpoint = MatchRunner.checkpoint(scenario, profiles, 5);
         var snapshot = GameState.toSnapshot(checkpoint);
@@ -139,7 +139,7 @@ class SimulationTest {
     }
 
     @ParameterizedTest @org.junit.jupiter.params.provider.EnumSource(value = Strategy.class)
-    void eachSpacewardPolicyCanPlayWithoutInvalidOrders(Strategy strategy) {
+    void eachExtendedPolicyCanPlayWithoutInvalidOrders(Strategy strategy) {
         assertThatCode(() -> MatchRunner.play(scenario(true, 15), List.of(strategy, Strategy.RUSH))).doesNotThrowAnyException();
     }
 
@@ -157,21 +157,21 @@ class SimulationTest {
 
     @ParameterizedTest @ValueSource(strings = {"matrix", "multiplayer", "alliance", "decision"})
     void commandLineModesProduceEvidenceWithoutSpring(String mode, @TempDir Path output) throws java.io.IOException {
-        StrategyBenchmark.main(new String[]{"--mode=" + mode, "--rules=spaceward", "--layouts=EVEN", "--systems=8",
+        StrategyBenchmark.main(new String[]{"--mode=" + mode, "--rules=extended", "--layouts=EVEN", "--systems=8",
                 "--seeds=1", "--rounds=12", "--fork-round=1", "--output=" + output});
         assertThat(Files.readString(output.resolve("invocation.txt"))).contains("source-sha256=", "java=");
-        assertThat(Files.readString(output.resolve("matches.csv"))).contains("spaceward,2.0.0");
+        assertThat(Files.readString(output.resolve("matches.csv"))).contains("extended,2.0.0");
         assertThat(Files.readString(output.resolve("summary.md"))).contains("Strategiepruefstand");
     }
 
-    private static Scenario scenario(boolean spaceward, int rounds) {
-        return new Scenario(spaceward ? RulesetRef.EXTENDED : RulesetRef.SECTOR_FORCES, GalaxyLayout.EVEN, 8, 7, 123, rounds, 10);
+    private static Scenario scenario(boolean extended, int rounds) {
+        return new Scenario(extended ? RulesetRef.EXTENDED : RulesetRef.SECTOR_FORCES, GalaxyLayout.EVEN, 8, 7, 123, rounds, 10);
     }
 
-    private static GameState hiddenState(boolean spaceward) {
+    private static GameState hiddenState(boolean extended) {
         var state = new GameState();
         state.resetForNewGame();
-        state.rememberSetup(GameSetup.defaults().selectRuleset(spaceward ? RulesetRef.EXTENDED : RulesetRef.SECTOR_FORCES));
+        state.rememberSetup(GameSetup.defaults().selectRuleset(extended ? RulesetRef.EXTENDED : RulesetRef.SECTOR_FORCES));
         state.players().addAll(List.of(new Player(1, "One", true, "#ffffff"), new Player(2, "Two", true, "#ff0000")));
         state.systems().add(new StarSystem(1, "Home", 100, 100, 1, 50, 5, false));
         state.systems().add(new StarSystem(2, "Hidden", 3100, 1900, 2, 20, 5, false));

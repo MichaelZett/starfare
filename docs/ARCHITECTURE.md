@@ -18,19 +18,19 @@ this document covers the structural decisions.
 `RulesetRef` stores a stable variant ID and rule version independently of the
 application release. Starfare implements SectorForces (after Galactic Empire, 1983) with two
 variants. Classic ("Klassisch") uses
-`classic / 1.0.0`, Extended ("Erweitert") `spaceward / 2.0.0`; the display names do
+`classic / 1.0.0`, Extended ("Erweitert") `extended / 2.0.0`; the display names do
 not change the stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.
 Each variant has exactly one supported version; the extended versions 1.0.0 to
 1.3.0-r1 were removed with their turn engines, and their stored games no longer load
 (`RetiredRulesPlatformTest`). Inside the platform host each variant has a
 stage the platform keeps (games-platform-api 0.5.0; `variants=classic:PRODUCTION,
-spaceward:ALPHA` in `game.properties` is the stage at first start): `RulesetAccess` asks
+extended:ALPHA` in `game.properties` is the stage at first start): `RulesetAccess` asks
 `PlatformAccounts.mayUseVariant` and marks alpha and beta variants on the rules card of the new-game dialog
 (`variantStage`). An account that may not use a variant reaches none of its games, running
 and finished ones included: `DefaultGameAccessPolicy` and the planning and submission
 checks refuse map, review, chat and orders. `MatchSummary.variant` and `MatchEnded.variant`
-carry `classic` or `spaceward`.
+carry `classic` or `extended`.
 
 `RulesetConfiguration` supplies the shared catalog. `GameSetup`, `GameState`,
 `GameStateSnapshot`, `GameSummary`, templates and compact result history retain
@@ -43,7 +43,7 @@ mutating the registry state or saving a new game.
 `RulesetTurnEngine` is the primary `TurnEngine` used by `GameService` and autoplay.
 It dispatches by the full reference to registered `RulesetRoundImplementation`
 beans. `DefaultTurnEngine` implements Classic 1.0.0 and keeps the frozen
-Classic pipeline through `RoundPipeline`. `SpacewardTurnEngine` implements Extended
+Classic pipeline through `RoundPipeline`. `ExtendedTurnEngine` implements Extended
 2.0.0 with the same order/arrival/victory sequence, its own AI planning and industrial
 production. Every
 supported reference needs an explicit registered round implementation; incomplete registrations fail during application startup.
@@ -195,7 +195,7 @@ inconsistent industrial snapshots are rejected during restoration.
 `IndustryPanel` in the system details shows the capacity, the expansion control and one
 result line (ships per round, progress after the next round, rounds to the next level). Foreign sensor views and unresolved
 battles do not reveal the industrial details. Observers and archives are read-only.
-The BASELINE branch of `DefaultSpacewardPlanning` uses filtered views, allocating one third of capacity
+The BASELINE branch of `DefaultExtendedPlanning` uses filtered views, allocating one third of capacity
 to expansion in safe systems and all output to ships near known enemies.
 
 Extended 2.0.0 has no metal, mining, recycling, colonies, population or ship research;
@@ -267,7 +267,7 @@ Base package: `de.zettsystems.starfare.<domain>.<technical>`.
 - `economy` — Extended capacity, allocation and progress (`Industry`),
   production (`EconomyService`) and the immutable inspector (`IndustryView`, `IndustryPanel`).
 - `diplomacy` — alliance groups, unanimous consent and round-based departures.
-- `ai` — Classic and Extended AI decisions (`AiService`, `SpacewardPlanning`).
+- `ai` — Classic and Extended AI decisions (`AiService`, `ExtendedPlanning`).
 - `report` — Round reports (`TurnReport`, `TurnEvent`).
 - `auth` — the signed-in player (`UserContext`) and display names
   (`PlayerDirectory`), both read from games-platform-api's `PlatformAccounts`.
@@ -883,13 +883,13 @@ all browser acceptance tests.
 ## Creating Extended games
 
 `RulesetCatalog.builtIn()` holds exactly one version per variant: `classic / 1.0.0` and
-`spaceward / 2.0.0`; Classic stays first and therefore preselected in the new-game
+`extended / 2.0.0`; Classic stays first and therefore preselected in the new-game
 dialog. `RulesetDefinition.creatableVersions` and `supportedVersions` both contain only
 that version; `requireCreatable` applies the same choice to registry creation, and
 `SetupCards.rules` shows one card per variant without a version number.
 Templates and rematches use the current rules of their variant. `DefaultGameRegistry.createGame`
 initializes industry and the calibrated range directly after galaxy generation, so lobby
-views show the final Extended state before the start. `SpacewardReleaseIntegrationTest`
+views show the final Extended state before the start. `ExtendedReleaseIntegrationTest`
 covers creation, joining, starting, regular round resolution and a rematch through the
 public services against PostgreSQL; `RetiredRulesPlatformTest` checks that stored games
 of the removed 1.x versions stay out of the platform's lists instead of failing them.

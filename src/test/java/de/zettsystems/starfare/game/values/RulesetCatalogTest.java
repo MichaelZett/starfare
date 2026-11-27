@@ -9,7 +9,7 @@ class RulesetCatalogTest {
     private final RulesetCatalog catalog = RulesetCatalog.builtIn();
 
     @Test void eachVariantHasExactlyOneVersion() {
-        var extended = catalog.find("spaceward").orElseThrow();
+        var extended = catalog.find("extended").orElseThrow();
         assertThat(extended.defaultRef()).isEqualTo(RulesetRef.EXTENDED);
         assertThat(extended.supportedVersions()).containsExactly(RulesetRef.EXTENDED.version());
         assertThat(extended.creationEnabled()).isTrue();
@@ -23,16 +23,23 @@ class RulesetCatalogTest {
 
     @Test void removedExtendedVersionsAreNoLongerSupported() {
         for (var version : List.of("1.0.0", "1.1.0", "1.2.0-w7", "1.3.0-r1")) {
-            var removed = new RulesetRef("spaceward", version);
-            assertThat(removed.isSpaceward()).isTrue();
+            var removed = new RulesetRef("extended", version);
+            assertThat(removed.isExtended()).isTrue();
             assertThatThrownBy(() -> catalog.requireSupported(removed)).isInstanceOf(IllegalArgumentException.class);
         }
+    }
+
+    @Test void theFormerKeyOfTheExtendedRulesIsNoLongerKnown() {
+        var former = new RulesetRef("spaceward", RulesetRef.EXTENDED.version());
+        assertThat(former.isExtended()).isFalse();
+        assertThat(catalog.find("spaceward")).isEmpty();
+        assertThatThrownBy(() -> catalog.requireSupported(former)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test void onlyTheClassicRulesUseEventsStartBalanceAndRoundLimit() {
         assertThat(RulesetRef.SECTOR_FORCES.usesSectorOptions()).isTrue();
         assertThat(RulesetRef.EXTENDED.usesSectorOptions()).isFalse();
-        assertThat(RulesetRef.SECTOR_FORCES.isSpaceward()).isFalse();
+        assertThat(RulesetRef.SECTOR_FORCES.isExtended()).isFalse();
     }
 
     @Test

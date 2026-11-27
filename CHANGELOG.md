@@ -8,6 +8,13 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Technischer Schlüssel der erweiterten Regeln heißt `extended`:** Bisher `spaceward`. Das betrifft
+  Spielbeschreibung (`variants=classic:PRODUCTION, extended:ALPHA`), Regelfassung `extended/2.0.0`,
+  Übersetzungsschlüssel und Befehle (`--rules=extended`). Gespeicherte Partien mit dem alten Schlüssel
+  in Fassung 2.0.0 schreibt eine Migration um; das abgeleitete Feld `spaceward` in gespeicherten
+  Ständen wird beim Lesen übergangen und nicht mehr geschrieben. Im Plattform-Host beginnt die
+  Variante unter dem neuen Schlüssel mit der Stufe aus der Spielbeschreibung, solange der Host die
+  Stufe nicht übernimmt.
 - **Schlachtende mit Sieger:** Am Ende einer Schlacht steht über dem Gewinner groß „Sieger“, ein
   Lorbeerkranz umrahmt seine verbliebenen Schiffe. Die Produktion des umkämpften Systems steht
   oben deutlich hervorgehoben, jetzt auch für den Verteidiger, der das System verloren hat.
