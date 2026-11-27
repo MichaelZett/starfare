@@ -30,6 +30,12 @@ import java.util.Set;
 @Repository
 class JpaGameArchiveStore implements GameArchiveStore {
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(JpaGameArchiveStore.class);
+    private static final String PAGE_SELECT = "select a.id, a.name, a.finishedAt, a.tutorial, a.aborted"
+            + " from GameArchiveEntity a join a.seats s where s.account = :account";
+    private static final String PAGE_ORDER = " order by a.finishedAt desc, collate(a.id as ucs_basic)";
+    private static final String PAGE = PAGE_SELECT + PAGE_ORDER;
+    /** An empty "not in" is not portable JPQL, so a page without exceptions leaves the condition out. */
+    private static final String PAGE_EXCEPT = PAGE_SELECT + " and a.id not in :except" + PAGE_ORDER;
     private final GameArchiveRepository repository;
     private final ObjectMapper objectMapper;
     private final RulesetCatalog catalog;
@@ -77,11 +83,7 @@ class JpaGameArchiveStore implements GameArchiveStore {
     @Override
     @Transactional(readOnly = true)
     public List<ListedGame> listedWithSeat(String account, Set<GameId> except, int offset, int limit) {
-        // An empty "not in" is not portable JPQL: leave the condition out instead.
-        String exclusion = except.isEmpty() ? "" : " and a.id not in :except";
-        TypedQuery<Object[]> page = entityManager.createQuery("select a.id, a.name, a.finishedAt, a.tutorial, a.aborted"
-                        + " from GameArchiveEntity a join a.seats s where s.account = :account" + exclusion
-                        + " order by a.finishedAt desc, collate(a.id as ucs_basic)", Object[].class)
+        TypedQuery<Object[]> page = entityManager.createQuery(except.isEmpty() ? PAGE : PAGE_EXCEPT, Object[].class)
                 .setParameter("account", account).setFirstResult(offset).setMaxResults(limit);
         if (!except.isEmpty()) {
             page.setParameter("except", except.stream().map(GameId::value).toList());
@@ -96,7 +98,7 @@ class JpaGameArchiveStore implements GameArchiveStore {
                 .setParameter("ids", List.copyOf(seats.keySet())).getResultList()
                 .forEach(row -> seats.computeIfAbsent((String) row[0], _ -> new ArrayList<>()).add((GameArchiveEntity.Seat) row[1]));
         return rows.stream().map(row -> new ListedGame(GameId.of((String) row[0]), (String) row[1], (Instant) row[2],
-                (Boolean) row[3], (Boolean) row[4], seats.getOrDefault((String) row[0], List.of()))).toList();
+                (Boolean) row[3], (Boolean) row[4], seats.getOrDefault(row[0], List.of()))).toList();
     }
 
     @Override

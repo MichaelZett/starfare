@@ -70,17 +70,17 @@ public class GameArchiveEntity extends AbstractBaseEntity<String> {
     @Embeddable
     public static class Seat {
         @Column(nullable = false, length = 30) private String account;
-        @Column(nullable = false) private int seat;
+        @Column(name = "seat", nullable = false) private int seatIndex;
         @Column private @Nullable Integer place;
         @Column(length = 20) private @Nullable String departure;
 
         @SuppressWarnings("NullAway.Init") protected Seat() {}
 
         public Seat(String account, int seat, @Nullable Integer place, @Nullable String departure) {
-            this.account = account; this.seat = seat; this.place = place; this.departure = departure;
+            this.account = account; this.seatIndex = seat; this.place = place; this.departure = departure;
         }
         public String getAccount() { return account; }
-        public int getSeat() { return seat; }
+        public int getSeat() { return seatIndex; }
         public @Nullable Integer getPlace() { return place; }
         public @Nullable String getDeparture() { return departure; }
     }
