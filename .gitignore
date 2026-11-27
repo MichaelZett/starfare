@@ -46,3 +46,6 @@ Thumbs.db
 
 # Eigene Eingabeordner des Users
 _input*/
+
+# Local SonarQube scanner cache
+.sonar/
