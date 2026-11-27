@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.3.2 - 2026-11-27
 
 - **Technischer Schlüssel der erweiterten Regeln heißt `extended`:** Bisher `spaceward`. Das betrifft
   Spielbeschreibung (`variants=classic:PRODUCTION, extended:ALPHA`), Regelfassung `extended/2.0.0`,
@@ -26,7 +26,6 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - **Texte auf SectorForces ausgerichtet:** Beschreibung auf der Plattform, Anleitung, README und
   Issue-Vorlagen nennen Starfare als Umsetzung von SectorForces (nach Galactic Empire). Hinweise auf
   Spaceward und Master of Orion sind entfernt, ebenso die Studien zu den früheren erweiterten Fassungen 1.x.
-
 - **Beendete Partien ohne Archiv-Snapshots:** Die Liste der beendeten Partien liest die Spielstände
   nicht mehr. Titel, Ende, Tutorial, Ergebnis und Plätze legt Starfare beim Archivieren in eigenen
   Spalten und der neuen Tabelle `game_archive_seats` ab (Migration `V2_16`), die Seite schneidet die
