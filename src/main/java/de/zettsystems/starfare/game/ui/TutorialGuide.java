@@ -15,7 +15,7 @@ import java.util.Locale;
  * The guided first moves of a tutorial, next to the button that ends the round: choose an own system, choose the
  * target, then plan more or submit. It follows what the player is doing and says only the next step. Hidden once
  * the player hides it; the choice follows the account ({@link DisplaySetting#TUTORIAL_GUIDE}). Only a tutorial shows
- * it, as every aid that points at a move (AGENTS.md, Tutorialmodus).
+ * it: in a normal game the idea for a move has to come from the player.
  */
 final class TutorialGuide extends Div {
     static final String HIDDEN = "hidden";
