@@ -42,7 +42,11 @@ class JpaGameArchiveStore implements GameArchiveStore {
         this.entityManager = entityManager; this.transactions = new TransactionTemplate(transactionManager);
     }
 
-    /** Archives stored before the listing existed get it at the start, so that they show in the lists. */
+    /**
+     * Archives stored before the listing existed get it at the start, so that they show in the lists. This is
+     * expected, not a fault: during a rolling deploy the old container may still archive a game without a listing
+     * after this ran; that game is missing from the lists until the next start fills it.
+     */
     @PostConstruct
     void listStoredArchives() {
         int listed = listUnlisted();

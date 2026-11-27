@@ -11,8 +11,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - **Beendete Partien ohne Archiv-Snapshots:** Die Liste der beendeten Partien liest die Spielstände
   nicht mehr. Titel, Ende, Tutorial, Ergebnis und Plätze legt Starfare beim Archivieren in eigenen
   Spalten und der neuen Tabelle `game_archive_seats` ab (Migration `V2_16`), die Seite schneidet die
-  Datenbank zu. Bestehende Archive werden beim ersten Start einmal nachgetragen. Mit den 7 Archiven
-  der Produktionskopie sinkt ein Aufruf lokal von 476 ms auf 11 ms, bei 100 Archiven von 4,1 s auf 9 ms.
+  Datenbank zu. Bestehende Archive werden beim ersten Start einmal nachgetragen. Endet eine Partie
+  während des rollenden Wechsels noch im alten Container, fehlt sie bis zum nächsten Start in der Liste
+  (gewollt, kein Fehler). Mit den 7 Archiven der Produktionskopie sinkt ein Aufruf lokal von 476 ms auf
+  11 ms, bei 100 Archiven von 4,1 s auf 9 ms; auf der Plattform-Spielseite `games/starfare` von rund
+  520 ms auf rund 260 ms.
 
 ## 0.3.1 - 2026-11-26
 
