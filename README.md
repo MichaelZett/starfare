@@ -240,6 +240,11 @@ in front ("Round 12 resolved", "Event 1 of 3") offers the playback of a battle o
 confirmed the curtain lifts and orders and **Submit turn** are open; the progress is stored
 per account.
 Spectators and the review are never held up.
+A new game opens with a start card in the same curtain: the own empire, its first system
+(bright on the map) and the number of opponents, of them computers. **Let’s go** frees the
+first round; the card is shown once per account and game. A tutorial adds what a round
+consists of and shows the next step beside **Submit turn** (choose a system and send a fleet,
+click the target, submit); the hint can be hidden for the account.
 Systems mentioned in a report carry a gold marker on the map. Select a report
 entry to centre the map on it, or select the marker to return to its report
 entry.
@@ -365,6 +370,9 @@ The landing route `/` is the lobby. From there:
     - Details (Classic only, collapsible): single galactic events (unless chance is None)
       and a round limit (off or 10–500)
     - If every other seat is a computer, the game starts at once.
+    - The dialog starts from the account's choices of its last new game (kept in the
+      platform settings under `create.setup`); a value that no longer fits falls back to
+      the default, the name is rolled anew.
 
   Fixed for every new game: home system with production 4 and 8 ships, start balance by
   position, colours from the palette in seat order, victory at 70% of all systems,
