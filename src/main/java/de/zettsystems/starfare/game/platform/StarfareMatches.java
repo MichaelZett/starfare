@@ -3,7 +3,6 @@ package de.zettsystems.starfare.game.platform;
 import de.zettsystems.gamesplatformapi.AccountId;
 import de.zettsystems.gamesplatformapi.DecisionKind;
 import de.zettsystems.gamesplatformapi.Departure;
-import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.gamesplatformapi.MatchResult;
 import de.zettsystems.gamesplatformapi.MatchStatus;
 import de.zettsystems.gamesplatformapi.MatchSummary;
@@ -23,7 +22,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -139,19 +137,6 @@ public final class StarfareMatches {
      */
     public static String answerId(int round, int proposal) {
         return decisionId(round) + "-answer-" + proposal;
-    }
-
-    /**
-     * The platform's entry for a finished game the account held a seat in, with the given end; empty if the
-     * account had no seat or no account of the game is a platform account.
-     */
-    public static Optional<FinishedMatch> finished(GameId id, String name, Instant endedAt, GameState state,
-                                                   String account) {
-        if (!state.seatByUser().containsKey(account)) {
-            return Optional.empty();
-        }
-        return result(state).map(result -> new FinishedMatch(GAME_KEY, id.value(), name.isBlank() ? id.value() : name,
-                endedAt, result, state.tutorial(), viewPath(id)));
     }
 
     private static MatchStatus status(GameSummary game) {

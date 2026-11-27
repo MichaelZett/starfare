@@ -38,6 +38,8 @@ class GameAccountDeletionListenerTest {
             assertThat(archive.getHostPlayerId()).isNull();
             assertThat(session.getStateJson()).doesNotContain("\"42\"");
             assertThat(archive.getStateJson()).doesNotContain("\"42\"");
+            assertThat(archive.getSeats()).as("the listing follows the snapshot")
+                    .extracting(GameArchiveEntity.Seat::getAccount).containsExactly("43");
             assertThat(state.seatByUser()).containsKey("42");
             verify(jdbc).update("DELETE FROM battle_acknowledgements WHERE player_id = ?", "42");
             verify(jdbc).update("DELETE FROM user_display_settings WHERE player_id = ?", "42");

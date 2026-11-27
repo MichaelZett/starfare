@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.gamesplatformapi.AccountRemoved;
 import de.zettsystems.starfare.game.domain.GameState;
+import de.zettsystems.starfare.game.platform.ArchiveListing;
 import de.zettsystems.starfare.game.domain.GameStateSnapshot;
 import de.zettsystems.starfare.game.values.GameId;
 import java.util.ArrayList;
@@ -75,7 +76,10 @@ public class GameAccountDeletionListener {
                 entity.transferHostTo(null);
                 released = true;
             }
-            if (released) { entity.replaceSnapshot(write(state)); }
+            if (released) {
+                entity.replaceSnapshot(write(state));
+                ArchiveListing.list(entity, state);
+            }
         }
     }
 

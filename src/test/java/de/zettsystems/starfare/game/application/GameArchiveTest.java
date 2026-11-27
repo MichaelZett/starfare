@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.application;
 
 import de.zettsystems.gamesplatformapi.FinishedMatch;
 import de.zettsystems.starfare.AbstractIntegrationTest;
+import de.zettsystems.starfare.game.domain.GameArchiveEntity;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.GameId;
 import de.zettsystems.starfare.game.values.GameListScope;
@@ -25,6 +26,8 @@ class GameArchiveTest extends AbstractIntegrationTest {
     @Autowired private GameService games;
     @Autowired private GameSessionRepository repository;
     @Autowired private GameSessionStore sessions;
+    @Autowired private GameArchiveRepository archiveRepository;
+    @Autowired private GameArchiveStore archiveStore;
 
     @Test
     void reviewSelectionRequiresFinishedAccessibleGameAndExistingParticipant() {
@@ -84,6 +87,40 @@ class GameArchiveTest extends AbstractIntegrationTest {
         var ended = java.util.Objects.requireNonNull(registry.readState(second, GameState::finishedAt));
         assertThat(games.finishedMatchesOf("17", 0, 1).getFirst().endedAt()).as("the end stored when archived")
                 .isCloseTo(ended, org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
+    }
+
+    @Test
+    void anArchiveStoredBeforeTheListingIsListedOnceFilled() {
+        var id = finishedGameOf("4711", "Stored before");
+        var stored = archiveRepository.findById(id.value()).orElseThrow();
+        sessions.delete(id);
+        archiveRepository.deleteById(id.value());
+        archiveRepository.saveAndFlush(new GameArchiveEntity(id.value(), stored.getName(), stored.getHostPlayerId(),
+                stored.getFinishedAt(), stored.getStateJson()));
+        try {
+            assertThat(games.finishedMatchesOf("4711", 0, 10)).as("not listed yet").isEmpty();
+
+            assertThat(archiveStore.listUnlisted()).isPositive();
+
+            assertThat(games.finishedMatchesOf("4711", 0, 10)).singleElement().satisfies(match -> {
+                assertThat(match.matchId()).isEqualTo(id.value());
+                assertThat(match.title()).isEqualTo("Stored before");
+                assertThat(match.placementOf(de.zettsystems.gamesplatformapi.AccountId.of(4711)))
+                        .hasValueSatisfying(placement -> assertThat(placement.place()).isEqualTo(1));
+            });
+            assertThat(archiveRepository.findIdsNotListed()).as("filled once").doesNotContain(id.value());
+        } finally {
+            archiveRepository.deleteById(id.value());
+        }
+    }
+
+    @Test
+    void aGameContinuedAfterItsVictoryIsNotListedAsFinished() {
+        var ended = finishedGameOf("4712", "Ended");
+        var continued = finishedGameOf("4712", "Continued");
+        registry.writeState(continued, state -> { state.clearGameOver(); return null; });
+
+        assertThat(games.finishedMatchesOf("4712", 0, 10)).extracting(FinishedMatch::matchId).containsExactly(ended.value());
     }
 
     private GameId finishedGameOf(String account, String name) {

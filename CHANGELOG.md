@@ -6,6 +6,14 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- **Beendete Partien ohne Archiv-Snapshots:** Die Liste der beendeten Partien liest die Spielstände
+  nicht mehr. Titel, Ende, Tutorial, Ergebnis und Plätze legt Starfare beim Archivieren in eigenen
+  Spalten und der neuen Tabelle `game_archive_seats` ab (Migration `V2_16`), die Seite schneidet die
+  Datenbank zu. Bestehende Archive werden beim ersten Start einmal nachgetragen. Mit den 7 Archiven
+  der Produktionskopie sinkt ein Aufruf lokal von 476 ms auf 11 ms, bei 100 Archiven von 4,1 s auf 9 ms.
+
 ## 0.3.1 - 2026-11-26
 
 - **Rundenbericht als Vorhang:** Nach einem Rundenwechsel legt sich der Bericht vor das ganze

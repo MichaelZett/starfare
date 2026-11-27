@@ -14,7 +14,7 @@ import de.zettsystems.starfare.fleet.values.FleetOrder;
 import de.zettsystems.starfare.game.config.GameTimingProperties;
 import de.zettsystems.starfare.game.domain.GameSession;
 import de.zettsystems.starfare.game.domain.GameState;
-import de.zettsystems.starfare.game.platform.StarfareMatches;
+import de.zettsystems.starfare.game.platform.ArchiveListing;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.navigation.domain.Routes;
 import de.zettsystems.starfare.navigation.values.RoutePreview;
@@ -1039,10 +1039,10 @@ public class DefaultGameService implements GameService {
     public List<FinishedMatch> finishedMatchesOf(String account, int offset, int limit) {
         Set<GameId> running = visibleGamesFor(account, GameListScope.LOBBY).stream()
                 .map(GameSummary::gameId).collect(Collectors.toSet());
-        List<GameId> page = archives.idsWithSeat(account).stream().filter(id -> !running.contains(id))
-                .skip(offset).limit(limit).toList();
-        return archives.load(page).stream()
-                .map(game -> StarfareMatches.finished(game.id(), game.name(), game.finishedAt(), game.state(), account))
+        // A game continued after its victory runs again but keeps its archive: it is not finished.
+        return archives.listedWithSeat(account, running, offset, limit).stream()
+                .map(game -> ArchiveListing.finished(game.id(), game.name(), game.finishedAt(), game.tutorial(),
+                        game.aborted(), game.seats()))
                 .flatMap(Optional::stream).toList();
     }
 

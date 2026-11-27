@@ -21,8 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * The platform builds its pages from Starfare's lists (running, open, invitations, finished). Their cost must not
- * grow with the number of games: no lookup per game, the lobby read once per request, only the finished games of
- * the requested page read (platform measurement 25.11.2026).
+ * grow with the number of games: no lookup per game, the lobby read once per request, the finished games of the
+ * requested page from their listing without the archived snapshots (platform measurements 25. and 27.11.2026).
  */
 class MatchDirectoryQueryBudgetTest extends AbstractIntegrationTest {
     private static final AccountId VIEWER = AccountId.of(17);
@@ -74,16 +74,31 @@ class MatchDirectoryQueryBudgetTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void aPageOfFinishedGamesReadsOnlyItsOwnArchives() {
+    void aPageOfFinishedGamesReadsNoArchivedSnapshot() {
         statistics.clear();
         var page = directory.finishedMatchesOf(VIEWER, 0, 1);
 
         assertThat(page).extracting(FinishedMatch::title).containsExactly("Own second");
-        assertThat(statistics.getEntityLoadCount()).as("archives read for a page of one").isLessThanOrEqualTo(1);
-        assertThat(statistics.getPrepareStatementCount()).as("game ids, own archive ids, the page")
-                .isLessThanOrEqualTo(3);
+        assertThat(statistics.getEntityLoadCount()).as("archives (with their snapshots) read for a page").isZero();
+        assertThat(statistics.getPrepareStatementCount()).as("game ids, the page, its seats").isLessThanOrEqualTo(3);
         assertThat(directory.finishedMatchesOf(VIEWER, 1, 5)).extracting(FinishedMatch::title)
                 .containsExactly("Own first");
+    }
+
+    /** Platform measurement 27.11.2026: 298 ms per call with 7 archives, growing with every archive. */
+    @Test
+    void aPageOfFinishedGamesCostsTheSameWithManyMoreArchives() {
+        long few = statementsFor(() -> assertThat(directory.finishedMatchesOf(VIEWER, 0, 10)).hasSize(2));
+        for (int game = 0; game < 12; game++) {
+            finished("17", "Own more " + game);
+        }
+
+        statistics.clear();
+        var page = directory.finishedMatchesOf(VIEWER, 0, 10);
+
+        assertThat(page).hasSize(10).first().extracting(FinishedMatch::title).isEqualTo("Own more 11");
+        assertThat(statistics.getEntityLoadCount()).as("archives (with their snapshots) read for a page of ten").isZero();
+        assertThat(statistics.getPrepareStatementCount()).as("as many statements as with two archives").isEqualTo(few);
     }
 
     private long statementsFor(Runnable action) {

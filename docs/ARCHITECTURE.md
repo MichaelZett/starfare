@@ -501,8 +501,14 @@ The platform lists an account's finished games from the same store
 account held a seat in, latest end first (the `finished_at` of the first
 archiving), each with its ranking from `StarfareMatches.result` and the map as
 review link. A game continued after its victory runs again and is left out.
-The database finds the account's seats in the snapshot JSON and returns only ids;
-just the archives of the requested page are read.
+No snapshot is read for the list: when a game is archived, Starfare also stores
+what the list shows (`ArchiveListing`): the columns `tutorial` and `aborted` of
+`game_archives` and one row per seat holder in `game_archive_seats` (account, seat,
+place, departure; indexed by account). The page is cut in SQL (offset, limit), its
+seats come with a second query. Removing an account rewrites the listing together
+with the snapshot. Archives stored before the listing (`listed = false`, migration
+`V2_16`) are filled once when the store starts, because places and departures follow
+the rules in Java; an unreadable archive is listed without seats.
 
 `GameState.replayFrames` stores immutable systems, fleets and reports at game
 start and after every resolved turn. It is optional in `GameStateSnapshot` so
