@@ -45,17 +45,22 @@ import static org.assertj.core.api.Assertions.assertThat;
  * existed before, plus production, minus the losses of both sides in every battle and minus what cosmic events
  * destroyed. Every step in between keeps the total, and while a round is planned no ship is booked twice and the map
  * shows every ship once.
+ *
+ * <p>Large maps run one seed per seating only: an extended game on 60 systems takes 6 to 36 seconds, three seeds of
+ * each made up nine tenths of the whole run. Small and medium maps keep three seeds.
  */
 class ShipConservationTest {
     private static final int ROUND_LIMIT = 90;
     private static final int SEEDS = 3;
+    private static final int LARGE_MAP = 60;
+    private static final int LARGE_MAP_SEEDS = 1;
 
     static Stream<Arguments> games() {
         List<Arguments> games = new ArrayList<>();
         for (RulesetRef rules : List.of(RulesetRef.SECTOR_FORCES, RulesetRef.EXTENDED)) {
-            for (int systems : List.of(12, 30, 60)) {
+            for (int systems : List.of(12, 30, LARGE_MAP)) {
                 for (int[] seats : List.of(new int[]{1, 1}, new int[]{2, 1}, new int[]{2, 3})) {
-                    for (int seed = 1; seed <= SEEDS; seed++) {
+                    for (int seed = 1; seed <= (systems == LARGE_MAP ? LARGE_MAP_SEEDS : SEEDS); seed++) {
                         games.add(Arguments.of(rules, systems, seats[0], seats[1], 1000L * systems + 100L * seats[1] + seed));
                     }
                 }
