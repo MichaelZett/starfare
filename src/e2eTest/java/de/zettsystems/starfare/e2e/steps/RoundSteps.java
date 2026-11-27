@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
+import de.zettsystems.starfare.testsupport.ReviewGameFixture;
 import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.GameService;
@@ -22,14 +23,16 @@ public class RoundSteps {
     private final Browser browser;
     private final GameService games;
     private final TestPlatformAccounts accounts;
+    private final ReviewGameFixture fixtures;
     private GameId id;
     private String guestAccountEmail;
     private Browser guestSession;
 
-    public RoundSteps(Browser browser, GameService games, TestPlatformAccounts accounts) {
+    public RoundSteps(Browser browser, GameService games, TestPlatformAccounts accounts, ReviewGameFixture fixtures) {
         this.browser = browser;
         this.games = games;
         this.accounts = accounts;
+        this.fixtures = fixtures;
     }
 
     private String accountId(String email) {
@@ -47,6 +50,8 @@ public class RoundSteps {
         assertThat(games.joinGame(id, host, "Runden Host", "Host-Reich")).isPresent();
         assertThat(games.joinGame(id, guest, "Runden Gast", "Gast-Reich")).isPresent();
         assertThat(games.startGame(id)).isTrue();
+        fixtures.startSeen(id, host);
+        fixtures.startSeen(id, guest);
     }
 
     /** Die laufende Partie stünde sonst in der Lobby der folgenden Szenarien obenan. */

@@ -356,6 +356,17 @@ public final class UiTexts {
     public static final String ROUND_OPEN_BATTLES = "round.openBattles";
     // Round-start walkthrough
     public static final String ROUND_WALKTHROUGH_TITLE = "round.walkthrough.title";
+    public static final String START_CARD_TITLE = "start.card.title";
+    public static final String TUTORIAL_GUIDE_SOURCE = "tutorial.guide.source";
+    public static final String TUTORIAL_GUIDE_TARGET = "tutorial.guide.target";
+    public static final String TUTORIAL_GUIDE_SUBMIT = "tutorial.guide.submit";
+    public static final String TUTORIAL_GUIDE_HIDE = "tutorial.guide.hide";
+    public static final String START_CARD_HOME = "start.card.home";
+    public static final String START_CARD_OPPONENTS = "start.card.opponents";
+    public static final String START_CARD_OPPONENTS_HUMAN = "start.card.opponents.human";
+    public static final String START_CARD_OPPONENTS_COMPUTER = "start.card.opponents.computer";
+    public static final String START_CARD_TUTORIAL = "start.card.tutorial";
+    public static final String START_CARD_BEGIN = "start.card.begin";
     public static final String ROUND_WALKTHROUGH_HINT = "round.walkthrough.hint";
     public static final String ROUND_WALKTHROUGH_PROGRESS = "round.walkthrough.progress";
     public static final String ROUND_WALKTHROUGH_NEXT = "round.walkthrough.next";

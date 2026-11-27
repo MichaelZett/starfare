@@ -65,6 +65,7 @@ abstract class AbstractMapJourneyTest extends AbstractBrowserlessTest {
         account = String.valueOf(accounts.findByEmail(email).orElseThrow().id());
         state.seatByUser().put(account, player);
         store.save(new GameSession(id, name, account, Instant.now(), state));
+        reviewGames.startSeen(id, account);
         openMap();
     }
 

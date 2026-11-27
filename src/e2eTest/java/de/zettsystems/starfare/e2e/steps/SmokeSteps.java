@@ -99,6 +99,11 @@ public class SmokeSteps {
         browser.captureUiAcceptance("wizard");
         browser.clickButtonWithText("Spiel anlegen");
         browser.awaitUrl(url -> url.contains("/map/"), "Die KI-Partie wurde nicht automatisch gestartet.");
+        // A new game opens with its start in front of the board; the button clears it for the first round.
+        browser.awaitCss(".round-curtain .start-card");
+        browser.captureUiAcceptance("start");
+        browser.clickButtonWithText("Los geht’s");
+        browser.awaitNoneDisplayed(".round-curtain");
     }
 
     private void chooseCard(String group, String title) {

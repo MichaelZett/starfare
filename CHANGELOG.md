@@ -6,6 +6,19 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- **Neue Partie merkt sich die letzte Wahl:** Der Dialog beginnt mit Regeln,
+  Mitspielern, Computerstärke, Tempo, Einladung, Tutorial, Karte, Zufall, Ereignissen und
+  Rundenlimit der letzten neuen Partie des Kontos. Was nicht mehr passt, fällt auf die Vorgabe
+  zurück; der Name wird neu gewürfelt.
+- **Startkarte vor der ersten Runde:** Eine neue Partie öffnet mit einer Karte vor dem Spielfeld:
+  das eigene Reich, sein Startsystem (hell auf der Karte) und die Zahl der Gegner. **Los geht’s**
+  gibt die Runde frei; die Karte erscheint je Konto und Partie einmal.
+- **Geführte erste Züge im Tutorial:** Neben **Runde abgeben** steht der nächste Schritt (System
+  wählen und Flotte senden, Ziel anklicken, abgeben), die Startkarte erklärt eine Runde. Die
+  Hinweise lassen sich für das Konto ausblenden.
+
 ## 0.3.2 - 2026-11-27
 
 - **Technischer Schlüssel der erweiterten Regeln heißt `extended`:** Bisher `spaceward`. Das betrifft

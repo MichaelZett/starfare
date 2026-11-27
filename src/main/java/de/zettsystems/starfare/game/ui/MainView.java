@@ -27,6 +27,7 @@ import de.zettsystems.starfare.game.application.GameTemplateService;
 import de.zettsystems.starfare.game.application.RulesetAccess;
 import de.zettsystems.gamesplatformapi.MatchView;
 import de.zettsystems.gamesplatformapi.PlatformSettings;
+import de.zettsystems.starfare.game.values.Player;
 import de.zettsystems.starfare.game.values.*;
 import de.zettsystems.starfare.i18n.I18n;
 import de.zettsystems.starfare.report.values.TurnReport;
@@ -97,6 +98,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private @Nullable VisibleSystem walkthroughSystem;
     /** Seated players go through the located events of the round before they may give orders. */
     private boolean walkthroughOpen;
+    private @Nullable Integer startSystemId;
     /** No orders: the walkthrough is open or the game is decided. */
     private boolean planningLocked;
     /** The open walkthrough event in front of the whole board; set up once the board is laid out. */
@@ -616,13 +618,15 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         int playerId = observer ? -1 : currentSeat();
         refreshDiplomacy(observer);
         RoundWalkthrough.Step step = observer ? null : walkthroughStep(view);
-        walkthroughOpen = step != null;
+        VisibleSystem start = observer || step != null ? null : startSystem(view, playerId);
+        startSystemId = start == null ? null : start.id();
+        walkthroughOpen = step != null || start != null;
         planningLocked = walkthroughOpen || view.gameOver();
         if (planningLocked) { cancelTargetSelection(); }
         planningActions.setVisible(!observer && !planningLocked && !view.roundStatus().hasSubmitted(playerId));
         actionBar.setVisible(treatyActions.isVisible() || planningActions.isVisible());
         selectPendingReplayEvent(view);
-        boolean newFocus = focusWalkthrough(view, step);
+        boolean newFocus = start != null ? focusStart(start) : focusWalkthrough(view, step);
         fleetsPanel.walkthrough(step);
         configureHeader(view, observer, playerId);
         renderMapAndSidebar(view, playerId, observer);
@@ -630,7 +634,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             fleetsPanel.showReport();
             revealPanel();
         }
-        curtain.show(fleetsPanel.walkthroughCard(game.isTutorial(gameId)).orElse(null));
+        curtain.show(start != null ? startCard(view, playerId, start)
+                : fleetsPanel.walkthroughCard(game.isTutorial(gameId)).orElse(null));
         if (newFocus) { revealMap(); }
         showOutcomeWhenDue(view);
     }
@@ -654,6 +659,44 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             return null;
         }
         return acknowledgements.walkthrough(gameId, report).orElse(null);
+    }
+
+    /**
+     * The player's first system while the start of the game waits to be seen: round 1, before any round was
+     * resolved. Spectators, the review and a seat without a system see no start.
+     */
+    private @Nullable VisibleSystem startSystem(PlayerViewState view, int playerId) {
+        TurnReport report = view.report();
+        if (reviewing || playerId < 0 || view.turn() != 1 || (report != null && report.turn() > 0) || view.gameOver()
+                || !acknowledgements.startOpen(gameId)) {
+            return null;
+        }
+        return view.systems().stream().filter(system -> Objects.equals(system.ownerId(), playerId))
+                .min(Comparator.comparingInt(VisibleSystem::id)).orElse(null);
+    }
+
+    private boolean focusStart(VisibleSystem home) {
+        String focus = gameId.value() + ":start";
+        if (focus.equals(walkthroughFocus)) {
+            return false;
+        }
+        walkthroughFocus = focus;
+        highlightedReportSystemId = home.id();
+        walkthroughSystem = home;
+        mapCanvas.centerOn(home.x(), home.y());
+        return true;
+    }
+
+    private Div startCard(PlayerViewState view, int playerId, VisibleSystem home) {
+        List<Player> others = view.players().stream().filter(player -> player.id() != playerId).toList();
+        String empire = view.players().stream().filter(player -> player.id() == playerId).findFirst()
+                .map(Player::empireNameOrName)
+                .orElse("");
+        var start = new StartCard.Start(empire, home.name(), others.size(), (int) others.stream().filter(Player::ai).count());
+        return StartCard.card(start, game.isTutorial(gameId), () -> {
+            acknowledgements.confirmStart(gameId);
+            refresh();
+        });
     }
 
     /**
@@ -755,7 +798,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         RoundStatus status = reviewing ? RoundStatus.NONE : view.roundStatus();
         roundStatus.update(status, playerId);
         header.setGameName(game.gameNameOf(gameId));
-        header.setTutorial(game.isTutorial(gameId));
+        boolean tutorial = game.isTutorial(gameId);
+        header.setTutorial(tutorial);
+        header.showGuide(new TutorialGuide.Situation(tutorial && !observer && !reviewing, view.gameOver() || walkthroughOpen,
+                status.hasSubmitted(playerId), selectedFrom != null && targetSelection == TargetSelection.FLEET,
+                view.plannedOrders().size()));
         header.setEmpireName(observer ? "" : view.players().stream().filter(player -> player.id() == playerId)
                 .map(de.zettsystems.starfare.game.values.Player::empireNameOrName).findFirst().orElse(""));
         header.updateTurnAction(status, playerId, observer, view.gameOver() || walkthroughOpen);
@@ -951,6 +998,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
 
     private Set<Integer> reportedSystemIds(PlayerViewState view) {
         TurnReport report = view.report();
+        Integer start = startSystemId;
+        if (start != null) {
+            // The start of the game lights up the player's first system like the site of an event.
+            return Set.of(start);
+        }
         if (report == null) {
             return Set.of();
         }

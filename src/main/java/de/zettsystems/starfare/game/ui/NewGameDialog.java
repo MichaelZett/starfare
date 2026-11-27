@@ -16,6 +16,8 @@ import de.zettsystems.starfare.game.values.GameSetup;
 import de.zettsystems.starfare.game.values.GameVisibility;
 import de.zettsystems.starfare.game.values.RulesetCatalog;
 import de.zettsystems.starfare.i18n.I18n;
+import de.zettsystems.gamesplatformapi.PlatformSettings;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Dialog "new game": one page of choices without a summary. The creator always takes a seat; when every other
@@ -26,23 +28,31 @@ public final class NewGameDialog {
     private NewGameDialog() {
     }
 
-    /** Offers only the variants {@code offer} allows the current account, with their marking. */
-    public static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetOffer offer) {
-        open(game, players, onCreated, game.rulesets(), offer, () -> { });
+    /**
+     * Offers only the variants {@code offer} allows the current account, with their marking, and starts from the
+     * choices of the account's last new game that {@code settings} kept.
+     */
+    public static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetOffer offer,
+                            @Nullable PlatformSettings settings) {
+        open(game, players, onCreated, game.rulesets(), offer, memory(settings), () -> { });
     }
 
-    /** Like {@link #open(GameService, PlayerDirectory, Runnable, RulesetOffer)}; {@code onCancel} runs when the person gives up. */
+    /** Like {@link #open(GameService, PlayerDirectory, Runnable, RulesetOffer, PlatformSettings)}; {@code onCancel} runs when the person gives up. */
     static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetOffer offer,
-                     Runnable onCancel) {
-        open(game, players, onCreated, game.rulesets(), offer, onCancel);
+                     @Nullable PlatformSettings settings, Runnable onCancel) {
+        open(game, players, onCreated, game.rulesets(), offer, memory(settings), onCancel);
     }
 
     static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetCatalog catalog) {
-        open(game, players, onCreated, catalog, RulesetOffer.everything(), () -> { });
+        open(game, players, onCreated, catalog, RulesetOffer.everything(), NewGameMemory.none(), () -> { });
+    }
+
+    private static NewGameMemory memory(@Nullable PlatformSettings settings) {
+        return NewGameMemory.of(settings, UserContext.currentPlayerId().orElse(null));
     }
 
     private static void open(GameService game, PlayerDirectory players, Runnable onCreated, RulesetCatalog catalog,
-                             RulesetOffer offer, Runnable onCancel) {
+                             RulesetOffer offer, NewGameMemory memory, Runnable onCancel) {
         Dialog dialog = new Dialog();
         dialog.addClassName("create-game-dialog");
         // A stray click next to the dialog must not throw away every choice; "Cancel" and Esc close it.
@@ -56,6 +66,7 @@ public final class NewGameDialog {
         String hostId = UserContext.currentPlayerId().orElse("");
         String hostName = hostId.isBlank() ? "" : players.displayName(hostId);
         NewGamePanel panel = new NewGamePanel(catalog, offer, hostName);
+        panel.recall(memory.recall());
         Button create = new Button(I18n.t(UiTexts.LOBBY_WIZARD_CREATE), VaadinIcon.ROCKET.create());
         create.setId("create-game");
         create.addThemeVariants(ButtonVariant.PRIMARY);
@@ -63,6 +74,7 @@ public final class NewGameDialog {
             if (filled(panel.gameName(), UiTexts.LOBBY_GAME_NAME_REQUIRED)
                     && filled(panel.empireName(), UiTexts.LOBBY_EMPIRE_NAME_REQUIRED)) {
                 create.setEnabled(false);
+                memory.remember(panel.choices());
                 createGame(game, dialog, panel, hostName, onCreated);
             }
         });

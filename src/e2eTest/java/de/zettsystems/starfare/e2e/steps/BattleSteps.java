@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
+import de.zettsystems.starfare.testsupport.ReviewGameFixture;
 import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.Broadcaster;
@@ -38,15 +39,17 @@ public class BattleSteps {
     private final GameRegistry registry;
     private final Broadcaster broadcaster;
     private final TestPlatformAccounts accounts;
+    private final ReviewGameFixture fixtures;
     private Dimension originalSize;
 
     public BattleSteps(Browser browser, GameService games, GameRegistry registry,
-                       Broadcaster broadcaster, TestPlatformAccounts accounts) {
+                       Broadcaster broadcaster, TestPlatformAccounts accounts, ReviewGameFixture fixtures) {
         this.browser = browser;
         this.games = games;
         this.registry = registry;
         this.broadcaster = broadcaster;
         this.accounts = accounts;
+        this.fixtures = fixtures;
     }
 
     @Wenn("eine Partie mit zwei abschließenden Schlachten für {string} bereitsteht")
@@ -55,6 +58,7 @@ public class BattleSteps {
         GameId id = games.newGame(GameSetup.defaults(), account, "Finale Schlachten");
         int seat = games.joinGame(id, account, "Battle Tester", "Battle Empire").orElseThrow();
         assertThat(games.startGame(id)).isTrue();
+        fixtures.startSeen(id, account);
         browser.open(Browser.LOBBY + "/map/" + id.value());
         browser.awaitCss(".map-content");
         registry.writeState(id, state -> {

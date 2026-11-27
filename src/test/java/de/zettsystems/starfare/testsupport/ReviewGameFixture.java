@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.testsupport;
 
+import de.zettsystems.starfare.game.application.BattleAcknowledgementService;
 import de.zettsystems.starfare.game.application.GameRegistry;
 import de.zettsystems.starfare.game.application.GameService;
 import de.zettsystems.starfare.game.values.GameId;
@@ -22,11 +23,22 @@ public class ReviewGameFixture {
     private final GameService games;
     private final GameRegistry registry;
     private final TestPlatformAccounts accounts;
+    private final BattleAcknowledgementService acknowledgements;
 
-    ReviewGameFixture(GameService games, GameRegistry registry, TestPlatformAccounts accounts) {
+    ReviewGameFixture(GameService games, GameRegistry registry, TestPlatformAccounts accounts,
+                      BattleAcknowledgementService acknowledgements) {
         this.games = games;
         this.registry = registry;
         this.accounts = accounts;
+        this.acknowledgements = acknowledgements;
+    }
+
+    /**
+     * Marks the start card of the game as seen by {@code account}, as its button "Los geht's" does: event 0 of round
+     * 0. Journeys that are not about the start of a game begin with the board free.
+     */
+    public void startSeen(GameId id, String account) {
+        acknowledgements.acknowledge(account, id, 0, 0);
     }
 
     public Game create(String hostEmail, @Nullable String guestEmail) {
@@ -58,6 +70,10 @@ public class ReviewGameFixture {
             return null;
         });
         assertThat(games.startGame(id)).isTrue();
+        startSeen(id, host);
+        if (guestEmail != null) {
+            startSeen(id, accountId(guestEmail));
+        }
         return new Game(id, hostSeat, guestSeat);
     }
 

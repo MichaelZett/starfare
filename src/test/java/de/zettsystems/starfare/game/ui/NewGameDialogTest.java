@@ -195,6 +195,55 @@ class NewGameDialogTest extends AbstractBrowserlessTest {
         assertThat(games.listGames()).containsExactlyInAnyOrderElementsOf(before);
     }
 
+    @Test
+    void theNextNewGameStartsFromTheChoicesOfTheLast() {
+        loginAsNewPlayer("Returning Host");
+        navigate(NewMatchView.class);
+        players().setValue(4);
+        computers().setValue(2);
+        strength().setValue(ComputerStrength.HARD);
+        tempo().setValue(GameTempo.DAILY);
+        find(Checkbox.class).withId("wizard-invite-only").single().setValue(true);
+        find(Checkbox.class).withId("wizard-tutorial").single().setValue(true);
+        layout().setValue(GalaxyLayout.RANDOM);
+        size().setValue(GalaxySize.LARGE);
+        randomness().setValue(RandomnessLevel.HIGH);
+        events().setValue(EnumSet.of(CosmicEvent.SUPERNOVA));
+        create();
+
+        navigate(NewMatchView.class);
+
+        assertThat(players().getValue()).isEqualTo(4);
+        assertThat(computers().getValue()).isEqualTo(2);
+        assertThat(strength().getValue()).isEqualTo(ComputerStrength.HARD);
+        assertThat(tempo().getValue()).isEqualTo(GameTempo.DAILY);
+        assertThat(find(Checkbox.class).withId("wizard-invite-only").single().getValue()).isTrue();
+        assertThat(find(Checkbox.class).withId("wizard-tutorial").single().getValue()).isTrue();
+        assertThat(layout().getValue()).isEqualTo(GalaxyLayout.RANDOM);
+        assertThat(size().getValue()).isEqualTo(GalaxySize.LARGE);
+        assertThat(randomness().getValue()).isEqualTo(RandomnessLevel.HIGH);
+        assertThat(events().getValue()).containsExactly(CosmicEvent.SUPERNOVA);
+    }
+
+    @Test
+    void keptChoicesThatNoLongerFitFallBackToTheDefaults() {
+        loginAsNewPlayer("Outdated Host");
+        settings.set("starfare", NewGameMemory.KEY,
+                "rules=spaceward;players=99;computers=-1;tempo=SOMETIMES;inviteOnly=perhaps;size=GIANT;maxProduction=7");
+
+        navigate(NewMatchView.class);
+
+        assertThat(variants().getValue().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
+        assertThat(players().getValue()).isEqualTo(NewGamePanel.DEFAULT_PLAYERS);
+        assertThat(computers().getValue()).isEqualTo(NewGamePanel.DEFAULT_PLAYERS - 1);
+        assertThat(size().getValue()).as("no such size").isEqualTo(GalaxySize.MEDIUM);
+        assertThat(find(ComboBox.class).withId("max-production").single().getValue())
+                .isEqualTo(de.zettsystems.starfare.game.values.GameConfig.DEFAULT_MAX_PRODUCTION);
+    }
+
+    @Autowired
+    private de.zettsystems.gamesplatformapi.PlatformSettings settings;
+
     private void openDialog() {
         navigate(LobbyView.class);
         test(find(Button.class).withText("Neues Spiel").atIndex(1)).click();

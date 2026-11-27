@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
+import de.zettsystems.starfare.testsupport.ReviewGameFixture;
 import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.GameSessionStore;
@@ -21,11 +22,14 @@ import java.util.UUID;
 /** Retains geometry, keyboard activation and acceptance pictures from migrated economy journeys. */
 public class EconomyLayoutSteps {
     private final Browser browser;
+    private final ReviewGameFixture fixtures;
     private final TestPlatformAccounts accounts;
     private final GameSessionStore store;
     private final List<GameId> created = new ArrayList<>();
 
-    public EconomyLayoutSteps(Browser browser, TestPlatformAccounts accounts, GameSessionStore store) {
+    public EconomyLayoutSteps(Browser browser, TestPlatformAccounts accounts, GameSessionStore store,
+                              ReviewGameFixture fixtures) {
+        this.fixtures = fixtures;
         this.browser = browser;
         this.accounts = accounts;
         this.store = store;
@@ -54,6 +58,7 @@ public class EconomyLayoutSteps {
         GameId id = GameId.newId();
         created.add(id);
         store.save(new GameSession(id, "Economy layout", host, Instant.now(), state));
+        fixtures.startSeen(id, host);
         return id;
     }
 

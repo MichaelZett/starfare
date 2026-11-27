@@ -22,6 +22,9 @@ import java.util.Set;
  */
 final class BattleAcknowledgements {
 
+    static final int START_TURN = 0;
+    static final int START_EVENT = 0;
+
     private final BattleAcknowledgementService service;
     private final Map<String, Set<Integer>> acknowledgedByRound = new HashMap<>();
 
@@ -77,6 +80,22 @@ final class BattleAcknowledgements {
         return eventIndex >= 0 && eventIndex < report.events().size()
                 && report.events().get(eventIndex).battleSystemId().isPresent()
                 && !acknowledgedIndices.contains(eventIndex);
+    }
+
+    /**
+     * Whether the player still has to see the start of the game ({@link StartCard}). Kept as event 0 of round 0,
+     * which no report has; confirming the first real event later removes it with the older rounds.
+     */
+    boolean startOpen(GameId gameId) {
+        return !acknowledged(gameId, START_TURN).contains(START_EVENT);
+    }
+
+    void confirmStart(GameId gameId) {
+        if (!startOpen(gameId)) {
+            return;
+        }
+        UserContext.currentPlayerId().ifPresent(playerId -> service.acknowledge(playerId, gameId, START_TURN, START_EVENT));
+        acknowledgedByRound.put(key(gameId, START_TURN), Set.of(START_EVENT));
     }
 
     private Set<Integer> acknowledged(GameId gameId, int turn) {

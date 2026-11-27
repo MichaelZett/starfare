@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
+import de.zettsystems.starfare.testsupport.ReviewGameFixture;
 import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.GameRegistry;
@@ -26,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** Real SVG highlighting, map geometry and route-card layout after the functional migration. */
 public class NavigationLayoutSteps {
     private final Browser browser;
+    private final ReviewGameFixture fixtures;
     private final GameRegistry registry;
     private final GameService games;
     private final GameSessionStore store;
@@ -33,7 +35,8 @@ public class NavigationLayoutSteps {
     private final List<GameId> created = new ArrayList<>();
 
     public NavigationLayoutSteps(Browser browser, GameRegistry registry, GameService games,
-                                 GameSessionStore store, TestPlatformAccounts accounts) {
+                                 GameSessionStore store, TestPlatformAccounts accounts, ReviewGameFixture fixtures) {
+        this.fixtures = fixtures;
         this.browser = browser;
         this.registry = registry;
         this.games = games;
@@ -50,6 +53,7 @@ public class NavigationLayoutSteps {
         GameId id = GameId.newId();
         created.add(id);
         store.save(new GameSession(id, "Navigation layout", host, Instant.now(), state));
+        fixtures.startSeen(id, host);
         browser.logIn(email);
         browser.open(Browser.LOBBY + "/map/" + id.value());
         browser.awaitCss("#map .sys-own");

@@ -22,6 +22,8 @@ class EconomyLaunchJourneyTest extends AbstractEconomyUiTest {
         test(button("Spiel anlegen")).click();
         runPendingUiAccess();
         assertThat(getCurrentView()).isInstanceOf(MainView.class);
+        test(button("Los geht’s")).click();
+        runPendingUiAccess();
         id = games.listGames().getLast();
         var before = registry.readState(id, GameState::toSnapshot);
         assertThat(before.ruleset()).isEqualTo(RulesetRef.EXTENDED);

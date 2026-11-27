@@ -9,8 +9,13 @@ import de.zettsystems.starfare.game.values.CosmicEvent;
 import de.zettsystems.starfare.game.values.SectorOptions;
 import de.zettsystems.starfare.i18n.I18n;
 
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Collapsed details of a classic game after Galactic Empire (1983): which cosmic events may strike and a round
@@ -57,6 +62,31 @@ final class SetupDetails extends Details {
 
     Set<CosmicEvent> chosenEvents() {
         return events.getValue().isEmpty() ? EnumSet.noneOf(CosmicEvent.class) : EnumSet.copyOf(events.getValue());
+    }
+
+    /** The events as names joined by commas ({@code none} for no event) and the last round, 0 without a limit. */
+    Map<String, String> choices() {
+        Map<String, String> choices = new LinkedHashMap<>();
+        Set<CosmicEvent> chosen = chosenEvents();
+        choices.put("events", chosen.isEmpty() ? "none"
+                : chosen.stream().map(CosmicEvent::name).collect(Collectors.joining(",")));
+        choices.put("roundLimit", String.valueOf(chosenRoundLimit()));
+        return choices;
+    }
+
+    /** Kept events and round limit; unknown event names are dropped, a limit out of range keeps the default. */
+    void recall(Map<String, String> choices) {
+        Optional.ofNullable(choices.get("events")).ifPresent(names -> events.setValue(names.equals("none")
+                ? EnumSet.noneOf(CosmicEvent.class)
+                : Arrays.stream(names.split(",", -1)).map(name -> NewGamePanel.constant(CosmicEvent.class, name))
+                        .flatMap(Optional::stream).collect(Collectors.toCollection(() -> EnumSet.noneOf(CosmicEvent.class)))));
+        NewGamePanel.number(choices, "roundLimit").ifPresent(last -> {
+            boolean limited = last >= SectorOptions.MIN_ROUND_LIMIT && last <= SectorOptions.MAX_ROUND_LIMIT;
+            roundLimitEnabled.setValue(limited);
+            if (limited) {
+                roundLimit.setValue(last);
+            }
+        });
     }
 
     /** The last round of the game, 0 without a limit. */

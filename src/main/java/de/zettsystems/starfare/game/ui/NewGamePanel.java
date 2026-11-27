@@ -23,7 +23,11 @@ import de.zettsystems.starfare.game.values.RulesetDefinition;
 import de.zettsystems.starfare.game.values.RulesetRef;
 import de.zettsystems.starfare.i18n.I18n;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 /**
@@ -193,6 +197,71 @@ final class NewGamePanel extends Div {
 
     TextField empireName() {
         return empire;
+    }
+
+    /** The choices of the form to keep for the next new game; names stay out, they are rolled anew. */
+    Map<String, String> choices() {
+        Map<String, String> choices = new LinkedHashMap<>();
+        choices.put("rules", chosenRuleset().variant());
+        choices.put("players", String.valueOf(playerCount()));
+        choices.put("computers", String.valueOf(computerCount()));
+        choices.put("strength", Objects.requireNonNullElse(strength.getValue(), ComputerStrength.DEFAULT).name());
+        choices.put("tempo", Objects.requireNonNullElse(tempo.getValue(), GameTempo.DEFAULT).name());
+        choices.put("inviteOnly", String.valueOf(inviteOnly.getValue()));
+        choices.put("tutorial", String.valueOf(tutorial.getValue()));
+        choices.put("layout", Objects.requireNonNullElse(layout.getValue(), GalaxyLayout.EVEN).name());
+        choices.put("size", Objects.requireNonNullElse(size.getValue(), GalaxySize.DEFAULT).name());
+        choices.put("maxProduction", String.valueOf(Objects.requireNonNullElse(maxProduction.getValue(),
+                GameConfig.DEFAULT_MAX_PRODUCTION)));
+        choices.put("randomness", chosenRandomness().name());
+        choices.putAll(details.choices());
+        return choices;
+    }
+
+    /**
+     * Fills the form with kept choices. Each value is checked against what the form offers now; one that no
+     * longer fits (a variant the account may not use, an unknown name, a number out of range) keeps the default.
+     */
+    void recall(Map<String, String> choices) {
+        rules.getGenericDataView().getItems()
+                .filter(entry -> entry.creationEnabled() && entry.defaultRef().variant().equals(choices.get("rules")))
+                .findFirst().ifPresent(rules::setValue);
+        number(choices, "players").filter(count -> count >= GameConfig.MIN_TOTAL_PLAYERS
+                && count <= GameConfig.MAX_TOTAL_PLAYERS).ifPresent(players::setValue);
+        number(choices, "computers").filter(count -> count >= 0 && count < playerCount()).ifPresent(computers::setValue);
+        constant(ComputerStrength.class, choices.get("strength")).ifPresent(strength::setValue);
+        constant(GameTempo.class, choices.get("tempo")).ifPresent(tempo::setValue);
+        flag(choices, "inviteOnly").ifPresent(inviteOnly::setValue);
+        flag(choices, "tutorial").ifPresent(tutorial::setValue);
+        constant(GalaxyLayout.class, choices.get("layout")).ifPresent(layout::setValue);
+        constant(GalaxySize.class, choices.get("size")).filter(choice -> choice.fits(playerCount())).ifPresent(size::setValue);
+        number(choices, "maxProduction").filter(GameConfig.MAX_PRODUCTION_CHOICES::contains).ifPresent(maxProduction::setValue);
+        constant(RandomnessLevel.class, choices.get("randomness")).ifPresent(randomness::setValue);
+        details.recall(choices);
+    }
+
+    static Optional<Integer> number(Map<String, String> choices, String key) {
+        try {
+            return Optional.ofNullable(choices.get(key)).map(Integer::valueOf);
+        } catch (NumberFormatException _) {
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<Boolean> flag(Map<String, String> choices, String key) {
+        return Optional.ofNullable(choices.get(key)).filter(Predicate.isEqual("true").or(Predicate.isEqual("false")))
+                .map(Boolean::valueOf);
+    }
+
+    static <E extends Enum<E>> Optional<E> constant(Class<E> type, @org.jspecify.annotations.Nullable String name) {
+        if (name == null) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Enum.valueOf(type, name));
+        } catch (IllegalArgumentException _) {
+            return Optional.empty();
+        }
     }
 
     /** Whether others find the game in the lobby: never for a game against the computer alone. */

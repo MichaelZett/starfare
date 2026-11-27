@@ -36,6 +36,7 @@ abstract class AbstractEconomyUiTest extends AbstractBrowserlessTest {
         state.seatByUser().put(host, 1);
         if (!state.started()) { state.start(); }
         store.save(new GameSession(id, name, host, Instant.now(), state));
+        reviewGames.startSeen(id, host);
         navigate(MainView.class, Map.of("gameId", id.value()));
         select("Alpha");
     }

@@ -22,6 +22,7 @@ final class MapHeaderBar extends HorizontalLayout {
 
     private final Span gameNameLabel = new Span();
     private final Span tutorialMark = TutorialMark.create();
+    private final TutorialGuide guide = new TutorialGuide();
     private final Span empireNameLabel = new Span();
     private final Span roundLabel = new Span();
     private final EmpireStatsBar empireStats;
@@ -67,9 +68,9 @@ final class MapHeaderBar extends HorizontalLayout {
 
         HorizontalLayout headerRight;
         if (!compact && frame != null) {
-            headerRight = new HorizontalLayout(frame.languageSwitcher(), next, headerMenu);
+            headerRight = new HorizontalLayout(guide, frame.languageSwitcher(), next, headerMenu);
         } else {
-            headerRight = new HorizontalLayout(next, headerMenu);
+            headerRight = new HorizontalLayout(guide, next, headerMenu);
         }
         headerRight.setAlignItems(Alignment.CENTER);
         headerRight.setSpacing(true);
@@ -91,6 +92,11 @@ final class MapHeaderBar extends HorizontalLayout {
 
     void setGameName(String name) {
         gameNameLabel.setText(name);
+    }
+
+    /** The next step of a tutorial round beside the button that ends it; nothing outside a tutorial. */
+    void showGuide(TutorialGuide.Situation situation) {
+        guide.show(situation);
     }
 
     /** Every seat and every observer sees that the game is a tutorial. */

@@ -19,6 +19,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.spring.annotation.SpringComponent;
+import de.zettsystems.gamesplatformapi.PlatformSettings;
 import de.zettsystems.starfare.auth.application.PlayerDirectory;
 import de.zettsystems.starfare.auth.ui.UserContext;
 import de.zettsystems.starfare.game.application.Broadcaster;
@@ -65,6 +66,7 @@ public class StandaloneLobby extends VerticalLayout {
     private final GameService game;
     private final de.zettsystems.starfare.game.application.GameTemplateService templates;
     private final RulesetAccess rulesetAccess;
+    private final @Nullable PlatformSettings settings;
     private final Broadcaster broadcaster;
     private final InvitationService invitationService;
     private final PlatformPresence presence;
@@ -81,10 +83,11 @@ public class StandaloneLobby extends VerticalLayout {
     public StandaloneLobby(GameService game, Broadcaster broadcaster, PlatformPresence presence, PlatformFriends friends,
                      PlayerDirectory players, InvitationService invitationService,
                      de.zettsystems.starfare.game.application.GameTemplateService templates,
-                     RulesetAccess rulesetAccess) {
+                     RulesetAccess rulesetAccess, @Nullable PlatformSettings settings) {
         this.game = game;
         this.templates = templates;
         this.rulesetAccess = rulesetAccess;
+        this.settings = settings;
         this.broadcaster = broadcaster;
         this.invitationService = invitationService;
         this.presence = presence;
@@ -456,7 +459,7 @@ public class StandaloneLobby extends VerticalLayout {
 
     private void openNewGameDialog() {
         NewGameDialog.open(game, players, this::refresh,
-                RulesetOffer.of(rulesetAccess, UserContext.currentPlayerId().orElse(null)));
+                RulesetOffer.of(rulesetAccess, UserContext.currentPlayerId().orElse(null)), settings);
     }
 
     private void openManageDialog(LobbyGameRow row) {

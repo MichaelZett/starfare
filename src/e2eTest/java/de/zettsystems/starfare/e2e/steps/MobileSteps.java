@@ -1,5 +1,6 @@
 package de.zettsystems.starfare.e2e.steps;
 
+import de.zettsystems.starfare.testsupport.ReviewGameFixture;
 import de.zettsystems.starfare.testsupport.TestPlatformAccounts;
 import de.zettsystems.starfare.e2e.Browser;
 import de.zettsystems.starfare.game.application.GameService;
@@ -33,14 +34,16 @@ public class MobileSteps {
     private final Browser browser;
     private final GameService games;
     private final TestPlatformAccounts accounts;
+    private final ReviewGameFixture fixtures;
     private @Nullable Browser phone;
     private @Nullable GameId id;
     private @Nullable String guestEmail;
 
-    public MobileSteps(Browser browser, GameService games, TestPlatformAccounts accounts) {
+    public MobileSteps(Browser browser, GameService games, TestPlatformAccounts accounts, ReviewGameFixture fixtures) {
         this.browser = browser;
         this.games = games;
         this.accounts = accounts;
+        this.fixtures = fixtures;
     }
 
     @After
@@ -63,6 +66,8 @@ public class MobileSteps {
         assertThat(games.joinGame(id, host, "Handy Host", "Handy-Reich")).isPresent();
         assertThat(games.joinGame(id, accountId(guestEmail), "Handy Gast", "Gast-Reich")).isPresent();
         assertThat(games.startGame(id)).isTrue();
+        fixtures.startSeen(id, host);
+        fixtures.startSeen(id, accountId(guestEmail));
     }
 
     @Wenn("ich mich auf dem Handy mit {string} anmelde")

@@ -34,7 +34,10 @@ Klon von Galactic Empire (1983): Jedes System baut
 Schiffe, Flotten erobern fremde Systeme, und wer genug der Galaxie beherrscht,
 gewinnt. **Neues Spiel** in der Lobby öffnet den Dialog **Neue Partie**. Er passt auf
 eine Seite; die Auswahl triffst du über Bildkarten und Klapplisten. Ein Klick auf
-**Spiel anlegen** legt die Partie an.
+**Spiel anlegen** legt die Partie an. Der Dialog merkt sich deine Wahl je Konto:
+Die nächste neue Partie beginnt mit Regeln, Mitspielern, Tempo, Karte, Zufall, Ereignissen
+und Rundenlimit der letzten. Was nicht mehr passt, etwa eine Kartengröße, die es nicht mehr
+gibt, fällt auf die Vorgabe zurück. Der Name wird jedes Mal neu gewürfelt.
 
 **Partie**
 
@@ -58,14 +61,23 @@ eine Seite; die Auswahl triffst du über Bildkarten und Klapplisten. Ein Klick a
   und für andere angemeldete Spieler auffindbar. Einladen kannst du im Warteraum. Eine
   Partie allein gegen den Computer ist immer privat.
 - **Tutorial**: Die Partie zeigt Hilfen zum Lernen, die es im normalen Spiel nicht
-  gibt. Zurzeit ist das eine gestrichelte Raute am System mit der Zahl freier Schiffe,
-  wenn dort mehr Schiffe stehen, als das System in einer Runde baut. Alle Teilnehmer
+  gibt: Die Startkarte erklärt, woraus eine Runde besteht. Neben **Runde abgeben** steht
+  der nächste Schritt (System wählen und **Flotte senden**, Ziel anklicken, weitere Flotten
+  oder **Runde abgeben**); das Kreuz daran blendet die Hinweise für dein Konto aus. Eine
+  gestrichelte Raute am System zeigt die Zahl freier Schiffe, wenn dort mehr Schiffe stehen,
+  als das System in einer Runde baut. Alle Teilnehmer
   sehen in Warteraum und Kopfzeile, dass es ein Tutorial ist; es zählt nicht in der
   Statistik der Plattform.
 
 Sind alle anderen Sitze Computer, startet die Partie sofort und die Karte öffnet sich.
 Sonst wartest du im Warteraum, bis alle menschlichen Plätze besetzt sind, und startest
 dann selbst.
+
+Beim ersten Öffnen liegt die Startkarte wie der Rundenvorhang vor dem Spielfeld: Sie nennt
+dein Reich, das System, in dem es beginnt (es bleibt auf der Karte hell), und wie viele
+Gegner mitspielen, davon wie viele vom Computer. **Los geht’s** gibt die erste Runde frei;
+die Karte erscheint je Konto und Partie nur einmal. Eine Zugreihenfolge gibt es nicht, alle
+planen gleichzeitig.
 
 **Karte**
 
