@@ -813,9 +813,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         header.setGameName(game.gameNameOf(gameId));
         boolean tutorial = game.isTutorial(gameId);
         header.setTutorial(tutorial);
-        header.showGuide(new TutorialGuide.Situation(tutorial && !observer && !reviewing, view.gameOver() || walkthroughOpen,
-                status.hasSubmitted(playerId), selectedFrom != null && targetSelection == TargetSelection.FLEET,
-                view.plannedOrders().size()));
+        header.showGuide(guideSituation(view, status, tutorial && !observer && !reviewing, playerId));
         header.setEmpireName(observer ? "" : view.players().stream().filter(player -> player.id() == playerId)
                 .map(de.zettsystems.starfare.game.values.Player::empireNameOrName).findFirst().orElse(""));
         header.updateTurnAction(status, playerId, observer, view.gameOver() || walkthroughOpen);
@@ -823,6 +821,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         if (!observer) {
             header.updateEmpireStats(view);
         }
+    }
+
+    /** What the seated player of a tutorial is doing, for the next step beside "Submit turn". */
+    private TutorialGuide.Situation guideSituation(PlayerViewState view, RoundStatus status, boolean guided, int playerId) {
+        boolean choosingTarget = selectedFrom != null && targetSelection == TargetSelection.FLEET;
+        return new TutorialGuide.Situation(guided, view.gameOver() || walkthroughOpen, status.hasSubmitted(playerId),
+                choosingTarget, view.plannedOrders().size());
     }
 
     /** A tempo fixes the deadlines, so only the host of a game without one may change them. */
