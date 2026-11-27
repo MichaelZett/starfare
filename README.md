@@ -214,8 +214,9 @@ fewer ships left, the rest starts. A target that became your own or an ally's is
 still flown to.
 
 With battle speed **Instant**, **Resolve all open battles** acknowledges the complete
-round. Speed, sound, report filters, route search and sidebar width are
-saved per account and restored on later sign-ins.
+round. Speed, sound, report filters, route search, sidebar width, a hidden tutorial
+guide and the choices of the last new game are saved per account and restored on later
+sign-ins.
 
 Use **Use as template / rematch** on your lobby games or in the review of a
 finished game (the bar above the map) to reuse the

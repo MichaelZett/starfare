@@ -549,6 +549,14 @@ browser loop keeps on the event's system (`--spot-x`, `--spot-y`, `--spot-r`). A
 its replay, every other event **Continue**. Spectators and the review are never held up;
 a decided game opens its outcome only after the walkthrough.
 
+Before the first round is resolved the same curtain holds the start card (`StartCard`):
+the empire, its first system (the lowest own system id, lit like an event site) and the
+number of opponents, of them computers. Its confirmation is stored as event 0 of round 0 in
+the battle acknowledgements, which no report has, so no migration was needed; confirming
+the first real event later removes it with the older rounds. In a tutorial the card adds
+what a round consists of, and `TutorialGuide` beside **Submit turn** names the next step
+from the selection, the target choice and the planned orders.
+
 `TurnEvent.affectedSystemId()` is the shared link between the report and the
 map. Every event with a system ID gets a marker. Selecting a report card centres
 the map and highlights its marker; selecting the marker returns to and
@@ -814,9 +822,13 @@ start lists finished games; the game module has no `/starfare/archive` route and
 games and link to the review (plan S.4).
 
 Display choices are kept by the platform (`PlatformSettings`, games-platform-api
-0.4.0) for the signed-in account under the game key `starfare`; the keys are the
-names of `DisplaySetting`: speed, sound, event filters, route search and
-sidebar position. `DisplayPreferences` reads them in one call while the map is
+0.4.0 and later) for the signed-in account under the game key `starfare`; the keys are the
+names of `DisplaySetting`: speed, sound, event filters, route search,
+sidebar position and whether the tutorial guide is hidden (`TUTORIAL_GUIDE`).
+The new-game dialog keeps the choices of the account's last new game under the key
+`create.setup` as one value `key=value;key=value` (`NewGameMemory`, at most 512
+characters); `NewGamePanel.recall` checks every value against what the form offers now
+and keeps the default where one no longer fits. `DisplayPreferences` reads them in one call while the map is
 built and caches them in the session; each explicit changed choice is written at
 once, and only its own key, so an open map never overwrites what another device
 chose meanwhile (the fleet panel saves its two filters separately); keys of removed

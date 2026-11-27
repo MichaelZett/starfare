@@ -482,8 +482,9 @@ können nicht als Vorlage dienen.
 
 ## Persönliche Einstellungen und Konto
 
-Geschwindigkeit, Ton, Berichtsfilter, Routensuche und Seitenleistenbreite
-werden je Konto gespeichert und bei einer späteren Anmeldung wieder geladen.
+Geschwindigkeit, Ton, Berichtsfilter, Routensuche, Seitenleistenbreite, ausgeblendete
+Tutorial-Hinweise und die Wahl der letzten neuen Partie werden je Konto gespeichert und
+bei einer späteren Anmeldung wieder geladen.
 Sprache bleibt sitzungsbezogen; Kartenposition und Zoom werden je Partie in der
 Browsersitzung behalten.
 
