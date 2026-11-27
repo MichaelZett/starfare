@@ -8,6 +8,13 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Partien allein gegen den Computer bleiben privat:** Der Dialog „Neue Partie“ zeigt „Nur auf
+  Einladung“ nur noch, wenn mehr als ein Mensch mitspielt. Eine Partie gegen den Computer allein ist
+  immer privat; bisher war sie ohne Haken öffentlich.
+- **Texte auf SectorForces ausgerichtet:** Beschreibung auf der Plattform, Anleitung, README und
+  Issue-Vorlagen nennen Starfare als Umsetzung von SectorForces (nach Galactic Empire). Hinweise auf
+  Spaceward und Master of Orion sind entfernt, ebenso die Studien zu den früheren erweiterten Fassungen 1.x.
+
 - **Beendete Partien ohne Archiv-Snapshots:** Die Liste der beendeten Partien liest die Spielstände
   nicht mehr. Titel, Ende, Tutorial, Ergebnis und Plätze legt Starfare beim Archivieren in eigenen
   Spalten und der neuen Tabelle `game_archive_seats` ab (Migration `V2_16`), die Seite schneidet die

@@ -2,7 +2,7 @@
 @ui-acceptance
 @coalition
 @coalition-rendering
-Funktionalität: Spaceward-Schlachten mit Bündnisgruppen
+Funktionalität: Schlachten mit Bündnisgruppen (erweiterte Regeln)
 
   Szenario: Gemeinsame Schlachten zeigen neutrale Startfarben und die gespeicherten Verluste
     Wenn zwei aufgelöste Bündnisschlachten für die Browser-Wiedergabe bereitstehen

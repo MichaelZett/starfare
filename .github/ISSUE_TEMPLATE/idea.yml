@@ -12,9 +12,8 @@ body:
     attributes:
       label: Concerns / Betrifft
       options:
-        - SectorForces
-        - Spaceward
-        - Planned Master of Orion II variant / Geplante Master-of-Orion-II-Variante
+        - Classic / Klassisch
+        - Extended / Erweitert
         - All variants (lobby, map, account …) / Alle Varianten (Lobby, Karte, Konto …)
     validations:
       required: true

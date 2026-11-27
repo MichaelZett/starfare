@@ -1,6 +1,6 @@
 # Wirtschaftsprüfung (Zusammenfassung)
 
-Stand 25.11.2026: Die erweiterten Regeln wurden als Fassung `spaceward/2.0.0` neu gebaut. Von
+Stand 25.11.2026: Die erweiterten Regeln wurden als Fassung 2.0.0 (technisch `spaceward/2.0.0`) neu gebaut. Von
 der Wirtschaft blieb nur der **Industrieausbau**: Jedes System teilt seine Kapazität zwischen
 Schiffbau und Ausbau. Metall, Förderung, Recycling, Förderautomatik, Kolonien und Schiffsforschung
 sind entfallen, ebenso die Studien-Modi des Prüfstands (`investment`, `economy`, `research`).

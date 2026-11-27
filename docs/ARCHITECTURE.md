@@ -16,7 +16,8 @@ this document covers the structural decisions.
 ## Game variants and immutable rule references
 
 `RulesetRef` stores a stable variant ID and rule version independently of the
-application release. Classic ("Klassisch", formerly SectorForces) uses
+application release. Starfare implements SectorForces (after Galactic Empire, 1983) with two
+variants. Classic ("Klassisch") uses
 `classic / 1.0.0`, Extended ("Erweitert") `spaceward / 2.0.0`; the display names do
 not change the stored identity. `RulesetCatalog` holds localized name and
 description keys, supported versions and availability for new-game creation.

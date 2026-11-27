@@ -93,7 +93,7 @@ public final class NewGameDialog {
             if (!joined) {
                 Notification.show(I18n.t(UiTexts.LOBBY_JOIN_FAILED));
             }
-            if (!panel.inviteOnly()) {
+            if (panel.openToAll()) {
                 game.changeVisibility(gameId, accountId, GameVisibility.PUBLIC);
             }
         }

@@ -130,8 +130,10 @@ final class NewGamePanel extends Div {
 
     private void refreshSeats() {
         strength.setEnabled(computerCount() > 0);
-        // Only games with several people run against deadlines, so only they get a tempo.
+        // Only games with several people run against deadlines and look for players, so only they get a tempo
+        // and the choice to be found in the lobby; a game against the computer alone stays private.
         tempo.setVisible(humanCount() > 1);
+        inviteOnly.setVisible(humanCount() > 1);
     }
 
     private void refreshDetails() {
@@ -193,8 +195,9 @@ final class NewGamePanel extends Div {
         return empire;
     }
 
-    boolean inviteOnly() {
-        return inviteOnly.getValue();
+    /** Whether others find the game in the lobby: never for a game against the computer alone. */
+    boolean openToAll() {
+        return humanCount() > 1 && !inviteOnly.getValue();
     }
 
     static String strengthName(ComputerStrength value) {

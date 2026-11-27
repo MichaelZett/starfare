@@ -36,8 +36,8 @@ body:
       label: Game variant / Spielvariante
       description: Shown in the lobby and in the new-game wizard. / Steht in der Lobby und im Assistenten für neue Spiele.
       options:
-        - SectorForces
-        - Spaceward
+        - Classic / Klassisch
+        - Extended / Erweitert
         - Not game-specific (sign-in, lobby, account …) / Nicht spielbezogen (Anmeldung, Lobby, Konto …)
     validations:
       required: true
@@ -45,7 +45,7 @@ body:
     id: rules
     attributes:
       label: Rule version and round / Regelversion und Runde
-      placeholder: "Spaceward 1.1.0, round 12"
+      placeholder: "Classic 1.0.0, round 12"
   - type: input
     id: browser
     attributes:

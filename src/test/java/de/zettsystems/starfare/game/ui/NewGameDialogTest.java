@@ -62,6 +62,7 @@ class NewGameDialogTest extends AbstractBrowserlessTest {
         assertThat(computers().getValue()).isEqualTo(2);
         assertThat(strength().getValue()).isEqualTo(ComputerStrength.NORMAL);
         assertThat(find(ComboBox.class).withId("wizard-tempo").all()).as("no deadlines without a second person").isEmpty();
+        assertThat(find(Checkbox.class).withId("wizard-invite-only").all()).as("nobody to invite or find it").isEmpty();
         assertThat(size().getValue()).isEqualTo(GalaxySize.MEDIUM);
         assertThat(randomness().getValue()).isEqualTo(RandomnessLevel.LOW);
         assertThat(variants().getValue().defaultRef()).isEqualTo(RulesetRef.SECTOR_FORCES);
@@ -71,7 +72,8 @@ class NewGameDialogTest extends AbstractBrowserlessTest {
 
         assertThat(getCurrentView()).as("every other seat is a computer").isInstanceOf(MainView.class);
         assertThat(games.summaryOf(id).started()).isTrue();
-        assertThat(games.summaryOf(id).visibility()).isEqualTo(GameVisibility.PUBLIC);
+        assertThat(games.summaryOf(id).visibility()).as("a game against the computer alone stays private")
+                .isEqualTo(GameVisibility.PRIVATE);
         assertThat(games.summaryOf(id).tempo()).isNull();
         assertThat(games.seatFor(id, host)).hasValue(1);
         GameSetup setup = setupOf(id);

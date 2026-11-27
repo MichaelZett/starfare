@@ -29,7 +29,8 @@ Kontaktadresse im Impressum.
 
 ## Partie erstellen und beitreten
 
-Starfare setzt Sector Forces um, ein C64-Spiel der 80er-Jahre: Jedes System baut
+Starfare setzt Sector Forces um, ein C64-Spiel der 80er-Jahre und vermutlich ein deutscher
+Klon von Galactic Empire (1983): Jedes System baut
 Schiffe, Flotten erobern fremde Systeme, und wer genug der Galaxie beherrscht,
 gewinnt. **Neues Spiel** in der Lobby öffnet den Dialog **Neue Partie**. Er passt auf
 eine Seite; die Auswahl triffst du über Bildkarten und Klapplisten. Ein Klick auf
@@ -53,8 +54,9 @@ eine Seite; die Auswahl triffst du über Bildkarten und Klapplisten. Ein Klick a
 - **Computerstärke** **Einfach**, **Normal** (Vorgabe) oder **Anspruchsvoll**, siehe unten.
 - **Spieltempo** nur bei mehr als einem Menschen: die Rundenfristen (Live, Zügig,
   Täglich, Gemütlich).
-- **Nur auf Einladung**: Sonst ist die Partie öffentlich und für andere angemeldete
-  Spieler auffindbar. Einladen kannst du im Warteraum.
+- **Nur auf Einladung** nur bei mehr als einem Menschen: Sonst ist die Partie öffentlich
+  und für andere angemeldete Spieler auffindbar. Einladen kannst du im Warteraum. Eine
+  Partie allein gegen den Computer ist immer privat.
 - **Tutorial**: Die Partie zeigt Hilfen zum Lernen, die es im normalen Spiel nicht
   gibt. Zurzeit ist das eine gestrichelte Raute am System mit der Zahl freier Schiffe,
   wenn dort mehr Schiffe stehen, als das System in einer Runde baut. Alle Teilnehmer

@@ -26,12 +26,12 @@ Every game stores its variant and rule version.
 
 The classic rules are the compact core of conquest and fleet movement. The
 extended rules add industrial expansion, limited flight range, alliances and
-coalition combat. Technically the extended rules are the variant `spaceward`, so
-the rest of this document and the rule versions (`spaceward/2.0.0`) keep that name.
+coalition combat. In code, commands and stored rule versions the extended rules carry
+the technical key `spaceward` (`spaceward/2.0.0`).
 
 Starfare is an independent hobby project. It is not affiliated with or endorsed
-by the publishers or rights holders of these games; their names only describe
-the inspiration. No original code or assets are used.
+by the publishers or rights holders of *Sector Forces* or *Galactic Empire*; their
+names only describe the inspiration. No original code or assets are used.
 
 ## Feedback and issues
 
@@ -133,7 +133,8 @@ by templates and rematches; the drawn profiles are stored per seat.
 
 ## Lobby and archive
 
-New games are public unless **Invitation only** is ticked. Use **Manage** to invite
+Games with more than one person are public unless **Invitation only** is ticked; a game
+against the computer alone is always private and has no such option. Use **Manage** to invite
 players or change the visibility before the game starts. Public games can be found by other signed-in players; private
 games are visible to the host, seat holders and invitees. Visibility is fixed
 once the game starts.
@@ -355,7 +356,8 @@ The landing route `/` is the lobby. From there:
     - Game: a random name (roll again with the die), rules Classic or Extended, empire name
     - Players 2–10 (default 3), of which computers 0..n−1 (default all others), computer
       strength Easy / Normal / Challenging (default Normal), tempo only with more than one human,
-      invitation only (default off), tutorial
+      invitation only (default off; only with more than one human, games against the computer
+      alone are always private), tutorial
     - Map: layout even or random; galaxy size Small 16 / Medium 24 / Large 30 / Huge 40
       systems (default Medium; sizes with fewer than two systems per player are locked);
       highest neutral production 6 / 10 / 15 / 20 (default 10)
