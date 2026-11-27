@@ -630,7 +630,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             fleetsPanel.showReport();
             revealPanel();
         }
-        curtain.show(fleetsPanel.walkthroughCard().orElse(null));
+        curtain.show(fleetsPanel.walkthroughCard(game.isTutorial(gameId)).orElse(null));
         if (newFocus) { revealMap(); }
         showOutcomeWhenDue(view);
     }

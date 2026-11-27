@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /** After a round change the located events come one by one, centred on the map, before any order. */
 class RoundWalkthroughJourneyTest extends AbstractMapJourneyTest {
+    private static final String HINT = "Erst die Ereignisse der Runde durchgehen";
 
     @Autowired
     private Broadcaster broadcaster;
@@ -40,7 +41,8 @@ class RoundWalkthroughJourneyTest extends AbstractMapJourneyTest {
 
         assertTab("Bericht");
         assertCurtainInFrontOfTheBoard();
-        assertThat(text("round-walkthrough")).contains("Runde " + round + " ausgewertet", "Ereignis 1 von 2", "Remote 4");
+        assertThat(text("round-walkthrough")).contains("Runde " + round + " ausgewertet", "Ereignis 1 von 2", "Remote 4")
+                .as("only the tutorial explains the walkthrough").doesNotContain(HINT);
         assertThat(text("sys-report-event-active")).startsWith("Remote 4");
         assertThat(submit().isEnabled()).isFalse();
         assertNoOrders();
@@ -67,7 +69,18 @@ class RoundWalkthroughJourneyTest extends AbstractMapJourneyTest {
         assertThat(submit().isEnabled()).isTrue();
         select("Alpha");
         assertThat(find(Button.class).withText("Flotte senden").all()).hasSize(1);
-        assertThat(viewText()).doesNotContain("Erst die Ereignisse der Runde durchgehen");
+    }
+
+    @Test
+    void theTutorialExplainsWhyTheOrdersWait() {
+        createReviewGame(true);
+        advanceWith(false, new TurnEvent.Cosmic(CosmicNews.SUN_UNSTABLE, 5, "Remote 5", 0, 0, 0, 9, ""));
+
+        assertThat(text("round-walkthrough")).contains(HINT, "Ereignis 1 von 1");
+
+        test(action("Weiter")).click();
+        runPendingUiAccess();
+        assertThat(viewText()).doesNotContain(HINT);
     }
 
     @Test
@@ -139,7 +152,6 @@ class RoundWalkthroughJourneyTest extends AbstractMapJourneyTest {
         assertThat(find(Div.class).withClassName("sys-target").all()).isEmpty();
         select("Alpha");
         assertThat(find(Button.class).withText("Flotte senden").all()).isEmpty();
-        assertThat(viewText()).contains("Erst die Ereignisse der Runde durchgehen");
     }
 
     /** The curtain shows and everything else of the map view is inert behind it. */

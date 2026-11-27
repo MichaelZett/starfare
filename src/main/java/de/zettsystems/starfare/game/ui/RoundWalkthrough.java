@@ -80,16 +80,20 @@ final class RoundWalkthrough {
     /**
      * The current event with the single action that confirms it: a battle with a replay offers the replay, every
      * other event (and every battle at instant speed) shows its result and continues. {@link RoundCurtain} holds it
-     * in front of the board.
+     * in front of the board. Only the tutorial explains why the orders wait.
      */
-    static Div card(Step step, boolean replay, Runnable action) {
+    static Div card(Step step, boolean replay, boolean tutorial, Runnable action) {
         Span title = new Span(I18n.t(UiTexts.ROUND_WALKTHROUGH_TITLE, step.turn()));
         title.addClassName("round-walkthrough-title");
-        Span hint = new Span(I18n.t(UiTexts.ROUND_WALKTHROUGH_HINT));
-        hint.addClassName("round-walkthrough-hint");
         Span progress = new Span(I18n.t(UiTexts.ROUND_WALKTHROUGH_PROGRESS, step.position(), step.total()));
         progress.addClassName("round-walkthrough-progress");
-        Div heading = new Div(hint, progress);
+        Div heading = new Div();
+        if (tutorial) {
+            Span hint = new Span(I18n.t(UiTexts.ROUND_WALKTHROUGH_HINT));
+            hint.addClassName("round-walkthrough-hint");
+            heading.add(hint);
+        }
+        heading.add(progress);
         heading.addClassName("round-walkthrough-heading");
         Span text = new Span(RoundEventTexts.text(step.event(), replay));
         text.addClassName("round-walkthrough-text");

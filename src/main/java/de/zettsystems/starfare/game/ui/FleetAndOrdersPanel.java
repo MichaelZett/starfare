@@ -273,7 +273,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     }
 
     /** A fresh card of the open walkthrough event for the curtain in front of the board. */
-    Optional<Div> walkthroughCard() {
+    Optional<Div> walkthroughCard(boolean tutorial) {
         RoundWalkthrough.Step step = walkthrough;
         PlayerViewState view = currentView;
         TurnReport report = view == null ? null : view.report();
@@ -282,7 +282,7 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         }
         boolean replay = battlePresentationEnabled && BattleReplay.from(step.event()).isPresent();
         List<TurnEvent> events = report.events();
-        return Optional.of(RoundWalkthrough.card(step, replay, () -> openNextPendingBattle(events, step.eventIndex())));
+        return Optional.of(RoundWalkthrough.card(step, replay, tutorial, () -> openNextPendingBattle(events, step.eventIndex())));
     }
 
     private static int valueOrZero(@Nullable Integer value) {

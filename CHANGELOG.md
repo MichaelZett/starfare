@@ -8,6 +8,8 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Rundenbeginn ohne Erklärtext:** Der Satz „Erst die Ereignisse der Runde durchgehen, dann sind
+  Befehle frei.“ steht nur noch im Tutorial.
 - **Partien allein gegen den Computer bleiben privat:** Der Dialog „Neue Partie“ zeigt „Nur auf
   Einladung“ nur noch, wenn mehr als ein Mensch mitspielt. Eine Partie gegen den Computer allein ist
   immer privat; bisher war sie ohne Haken öffentlich.
