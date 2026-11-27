@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.game.ui;
 
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.Component;
 import de.zettsystems.starfare.diplomacy.ui.DiplomacyDialog;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
@@ -621,10 +622,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         VisibleSystem start = observer || step != null ? null : startSystem(view, playerId);
         startSystemId = start == null ? null : start.id();
         walkthroughOpen = step != null || start != null;
-        planningLocked = walkthroughOpen || view.gameOver();
-        if (planningLocked) { cancelTargetSelection(); }
-        planningActions.setVisible(!observer && !planningLocked && !view.roundStatus().hasSubmitted(playerId));
-        actionBar.setVisible(treatyActions.isVisible() || planningActions.isVisible());
+        lockPlanning(view, observer, playerId);
         selectPendingReplayEvent(view);
         boolean newFocus = start != null ? focusStart(start) : focusWalkthrough(view, step);
         fleetsPanel.walkthrough(step);
@@ -634,10 +632,25 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             fleetsPanel.showReport();
             revealPanel();
         }
-        curtain.show(start != null ? startCard(view, playerId, start)
-                : fleetsPanel.walkthroughCard(game.isTutorial(gameId)).orElse(null));
+        curtain.show(curtainCard(view, playerId, start));
         if (newFocus) { revealMap(); }
         showOutcomeWhenDue(view);
+    }
+
+    /** No orders while the curtain is down or the game is over; a pending target choice is dropped. */
+    private void lockPlanning(PlayerViewState view, boolean observer, int playerId) {
+        planningLocked = walkthroughOpen || view.gameOver();
+        if (planningLocked) { cancelTargetSelection(); }
+        planningActions.setVisible(!observer && !planningLocked && !view.roundStatus().hasSubmitted(playerId));
+        actionBar.setVisible(treatyActions.isVisible() || planningActions.isVisible());
+    }
+
+    /** The start of the game before the first round, else the open walkthrough event, else nothing. */
+    private @Nullable Component curtainCard(PlayerViewState view, int playerId, @Nullable VisibleSystem start) {
+        if (start != null) {
+            return startCard(view, playerId, start);
+        }
+        return fleetsPanel.walkthroughCard(game.isTutorial(gameId)).orElse(null);
     }
 
     /** Alliance actions and allied owners for a seated player; spectators and the review see no diplomacy. */
