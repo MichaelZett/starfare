@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.3.3 - 2026-11-27
 
 - **Neue Partie merkt sich die letzte Wahl:** Der Dialog beginnt mit Regeln,
   Mitspielern, Computerstärke, Tempo, Einladung, Tutorial, Karte, Zufall, Ereignissen und
@@ -18,6 +18,8 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - **Geführte erste Züge im Tutorial:** Neben **Runde abgeben** steht der nächste Schritt (System
   wählen und Flotte senden, Ziel anklicken, abgeben), die Startkarte erklärt eine Runde. Die
   Hinweise lassen sich für das Konto ausblenden.
+- **Produktionsanzeige der Schlachtwiedergabe mit kräftigerem Kontrast.**
+- **Abhängigkeiten:** SpotBugs-Plugin 6.5.15.
 
 ## 0.3.2 - 2026-11-27
 
