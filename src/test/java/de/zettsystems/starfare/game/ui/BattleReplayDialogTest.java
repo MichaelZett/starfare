@@ -23,7 +23,7 @@ class BattleReplayDialogTest extends AbstractBrowserlessTest {
         assertThat(dialog.getHeaderTitle()).isEqualTo("Schlacht bei Alpha");
 
         Div attacker = side(dialog, "battle-attacker");
-        assertThat(texts(attacker)).startsWith("Angreifer", "Du", "20");
+        assertThat(texts(attacker)).startsWith("Sieger", "Angreifer", "Du", "20");
         assertThat(number(attacker).getElement().hasAttribute("data-battle-attacking")).isTrue();
         assertThat(number(attacker).getElement().hasAttribute("data-battle-defending")).isFalse();
         // 20 ships against 4: one marker stands for three ships.
@@ -66,6 +66,20 @@ class BattleReplayDialogTest extends AbstractBrowserlessTest {
         assertThat(find(com.vaadin.flow.component.checkbox.Checkbox.class, dialog).single().getLabel()).isEqualTo("Kampfgeräusche");
         assertThat(find(com.vaadin.flow.component.combobox.ComboBox.class, dialog).single().getLabel()).isEqualTo("Geschwindigkeit");
         assertThat(find(Div.class, dialog).withClassName("battle-replay-production").all()).isEmpty();
+    }
+
+    @Test
+    void onlyTheWinnerIsNamedVictorAndGetsTheWreath() {
+        BattleReplayDialog.open(new BattleReplay("Gamma", 5, 5, 0, 2),
+                new BattleReplayDialog.BattleSides("Gegner", "Du"), null, () -> { });
+        Dialog dialog = openedDialog();
+
+        Div defender = side(dialog, "battle-defender");
+        assertThat(defender.hasClassName("battle-winner")).isTrue();
+        assertThat(find(Span.class, defender).withClassName("battle-victor").single().getText()).isEqualTo("Sieger");
+        Div attacker = side(dialog, "battle-attacker");
+        assertThat(attacker.hasClassName("battle-winner")).isFalse();
+        assertThat(find(Span.class, attacker).withClassName("battle-victor").all()).isEmpty();
     }
 
     @Test

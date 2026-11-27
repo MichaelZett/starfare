@@ -23,6 +23,8 @@ final class CoalitionPresentation {
         visual.add(attackers, defenders);
         for (var side : sides.stream().sorted(java.util.Comparator.comparingInt(CoalitionSide::id)).toList()) {
             Div card = new Div(); card.addClassNames("battle-side", "coalition-side");
+            // Shown only on the side that the replay leaves standing.
+            card.add(BattleReplayDialog.victor());
             card.getElement().setAttribute(HtmlAttributes.COALITION_SIDE, Integer.toString(side.id()));
             boolean defender = Integer.valueOf(side.id()).equals(replay.defenderSideId());
             if (replay.defenderSideId() != null) {

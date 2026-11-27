@@ -369,6 +369,7 @@ public final class UiTexts {
     public static final String BATTLE_REPLAY_RESULT = "battleReplay.result";
     public static final String BATTLE_REPLAY_SOUND = "battleReplay.sound";
     public static final String BATTLE_REPLAY_PRODUCTION = "battleReplay.production";
+    public static final String BATTLE_REPLAY_VICTOR = "battleReplay.victor";
     public static final String BATTLE_REPLAY_SPEED = "battleReplay.speed";
     public static final String BATTLE_REPLAY_OFF = "battleReplay.off";
     public static final String BATTLE_REPLAY_ACKNOWLEDGE = "battleReplay.acknowledge";

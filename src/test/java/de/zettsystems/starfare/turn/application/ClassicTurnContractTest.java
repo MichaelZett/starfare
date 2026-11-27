@@ -111,7 +111,7 @@ class ClassicTurnContractTest {
                 new TurnEvent.Production(1, 1, "Target", 2),
                 new TurnEvent.Reinforcement(1, 1, "Target", 5, 12, "F1,2"),
                 new TurnEvent.DefenseHeld(1, 1, "Target", 12, 12, 0, 12, 12, "P2", "P1"),
-                new TurnEvent.SystemLost(1, 3, 1, "Target", 12, 0, 12, 12, 0, "P3", "P1"));
+                new TurnEvent.SystemLost(1, 3, 1, "Target", 12, 0, 12, 12, 0, "P3", "P1", 2));
         assertThat(state.reports().get(2).events()).contains(
                 new TurnEvent.BattleLost(2, 1, "Target", 12, 12, 0, 12, 12, "P2", "P1"));
         assertThat(state.reports().get(3).events()).contains(

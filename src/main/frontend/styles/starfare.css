@@ -1112,7 +1112,51 @@ html[data-gp-game="starfare"] {
 
 .battle-attacker { align-items: flex-start; color: #ffd86a; }
 .battle-defender { align-items: flex-end; color: #ffd86a; text-align: right; }
-.battle-replay-production { margin-bottom: .5rem; text-align: center; color: var(--sf-text-muted); }
+.battle-replay-production {
+    align-self: center;
+    margin: 0 auto .75rem;
+    width: max-content;
+    max-width: 100%;
+    padding: .45rem 1.1rem;
+    border: 2px solid #ffd86a;
+    border-radius: 999px;
+    background: rgba(255, 216, 106, .14);
+    color: #ffd86a;
+    font-size: clamp(1.05rem, 2.4vw, 1.4rem);
+    font-weight: 800;
+    letter-spacing: .02em;
+    text-align: center;
+    box-shadow: 0 0 18px rgba(255, 193, 79, .35);
+}
+/* Once the replay reaches the result, the winner is named in large letters and a laurel wreath frames its ships. */
+.battle-victor {
+    visibility: hidden;
+    color: #ffe9a3;
+    font-size: clamp(1.8rem, 4.6vw, 3rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    text-shadow: 0 0 16px rgba(255, 184, 68, .95), 0 0 40px rgba(255, 94, 39, .55), 0 2px 4px #02050e;
+}
+.battle-replay-result-known .battle-winner .battle-number,
+.coalition-side.coalition-survived .battle-number {
+    padding: .42em .62em .62em;
+    margin-inline: -.62em;
+    background: url('/images/battle/laurel.svg') center / contain no-repeat;
+}
+.battle-replay-result-known .battle-victor { visibility: visible; }
+/* A coalition battle names only the side left standing. */
+.coalition-side > .battle-victor { display: none; }
+.coalition-side.coalition-survived > .battle-victor { display: block; visibility: visible; }
+@media (prefers-reduced-motion: no-preference) {
+    .battle-replay-result-known .battle-victor,
+    .coalition-side.coalition-survived > .battle-victor { animation: battle-victor-in .6s cubic-bezier(.2, 1.6, .4, 1) both; }
+}
+@keyframes battle-victor-in {
+    from { transform: scale(.3); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
 .battle-replay-result-known.battle-replay-attacker-won .battle-attacker,
 .battle-replay-result-known:not(.battle-replay-attacker-won) .battle-defender { color: #56d990; }
 .battle-replay-result-known.battle-replay-attacker-won .battle-defender,

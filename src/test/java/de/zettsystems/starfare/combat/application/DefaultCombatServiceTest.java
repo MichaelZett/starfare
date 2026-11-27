@@ -85,6 +85,7 @@ class DefaultCombatServiceTest {
         TurnEvent.SystemLost lost = (TurnEvent.SystemLost) reportOf(2).events().getFirst();
         assertThat(lost.systemId()).isEqualTo(2);
         assertThat(lost.attackerId()).isOne();
+        assertThat(lost.production()).as("what the defender knew of its system").isEqualTo(captured.productionPerTurn());
 
         // both intel maps now point at the new owner
         assertThat(state.intel().get(1).get(2).ownerId()).isOne();

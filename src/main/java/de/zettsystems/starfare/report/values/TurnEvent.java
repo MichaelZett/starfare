@@ -163,12 +163,26 @@ public sealed interface TurnEvent {
         }
     }
 
+    /**
+     * The defender's side of a conquest.
+     *
+     * @param production what the system produced while the defender still held it; the defender no longer sees it
+     *                   on the map afterwards. Null in reports stored before it was recorded.
+     */
     record SystemLost(int defenderId, int attackerId, int systemId, String systemName,
                       int attacking, int defending, int attackersRemaining,
-                      double attackerStrength, double defenderStrength, String attackerName, String defenderName)
+                      double attackerStrength, double defenderStrength, String attackerName, String defenderName,
+                      @Nullable Integer production)
             implements TurnEvent {
         public SystemLost(int defenderId, int attackerId, int systemId, String systemName) {
             this(defenderId, attackerId, systemId, systemName, 0, 0, 0, 0, 0, "", "");
+        }
+
+        public SystemLost(int defenderId, int attackerId, int systemId, String systemName,
+                          int attacking, int defending, int attackersRemaining,
+                          double attackerStrength, double defenderStrength, String attackerName, String defenderName) {
+            this(defenderId, attackerId, systemId, systemName, attacking, defending, attackersRemaining,
+                    attackerStrength, defenderStrength, attackerName, defenderName, null);
         }
 
         public SystemLost(int defenderId, int attackerId, int systemId, String systemName,
@@ -193,14 +207,15 @@ public sealed interface TurnEvent {
                 @JsonProperty("attackerStrength") @Nullable Double attackerStrength,
                 @JsonProperty("defenderStrength") @Nullable Double defenderStrength,
                 @JsonProperty("attackerName") @Nullable String attackerName,
-                @JsonProperty("defenderName") @Nullable String defenderName) {
+                @JsonProperty("defenderName") @Nullable String defenderName,
+                @JsonProperty("production") @Nullable Integer production) {
             int actualAttacking = Objects.requireNonNullElse(attacking, 0);
             int actualDefending = Objects.requireNonNullElse(defending, 0);
             return new SystemLost(defenderId, attackerId, systemId, systemName,
                     actualAttacking, actualDefending, Objects.requireNonNullElse(attackersRemaining, 0),
                     attackerStrength != null ? attackerStrength : actualAttacking,
                     defenderStrength != null ? defenderStrength : actualDefending,
-                    Objects.requireNonNullElse(attackerName, ""), Objects.requireNonNullElse(defenderName, ""));
+                    Objects.requireNonNullElse(attackerName, ""), Objects.requireNonNullElse(defenderName, ""), production);
         }
     }
 

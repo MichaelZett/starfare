@@ -8,6 +8,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Schlachtende mit Sieger:** Am Ende einer Schlacht steht über dem Gewinner groß „Sieger“, ein
+  Lorbeerkranz umrahmt seine verbliebenen Schiffe. Die Produktion des umkämpften Systems steht
+  oben deutlich hervorgehoben, jetzt auch für den Verteidiger, der das System verloren hat.
 - **Rundenbeginn ohne Erklärtext:** Der Satz „Erst die Ereignisse der Runde durchgehen, dann sind
   Befehle frei.“ steht nur noch im Tutorial.
 - **Partien allein gegen den Computer bleiben privat:** Der Dialog „Neue Partie“ zeigt „Nur auf

@@ -30,11 +30,14 @@ final class BattleReplayDialog {
         visual.addClassName("battle-replay");
         visual.getElement().setAttribute(HtmlAttributes.BATTLE_ATTACKER_WON, String.valueOf(replay.attackerWon()));
         if (replay.coalitions().isEmpty()) {
-            visual.add(side("battle-attacker", UiTexts.BATTLE_REPLAY_ATTACKERS, replay.attacking(), replay.defending(),
-                            replay.attackerStrength(), replay.defenderStrength(), sides.attacker()),
-                    new Span("✦"),
-                    side("battle-defender", UiTexts.BATTLE_REPLAY_DEFENDERS, replay.defending(), replay.attacking(),
-                            replay.defenderStrength(), replay.attackerStrength(), sides.defender()));
+            Div attacker = side("battle-attacker", UiTexts.BATTLE_REPLAY_ATTACKERS, replay.attacking(), replay.defending(),
+                    replay.attackerStrength(), replay.defenderStrength(), sides.attacker());
+            Div defender = side("battle-defender", UiTexts.BATTLE_REPLAY_DEFENDERS, replay.defending(), replay.attacking(),
+                    replay.defenderStrength(), replay.attackerStrength(), sides.defender());
+            Div winner = replay.attackerWon() ? attacker : defender;
+            winner.addClassName("battle-winner");
+            winner.addComponentAsFirst(victor());
+            visual.add(attacker, new Span("✦"), defender);
             visual.getChildren().skip(1).findFirst().ifPresent(center -> center.addClassName("battle-replay-flash"));
 
             Div result = new Div();
@@ -82,6 +85,13 @@ final class BattleReplayDialog {
                     replay.attacking(), replay.defending(), replay.attackingRemaining(),
                     replay.defendingRemaining(), soundEnabled, speed());
         }
+    }
+
+    /** The word over the winner, hidden until the replay reaches the result; a laurel wreath frames its ships. */
+    static Span victor() {
+        Span victor = new Span(I18n.t(UiTexts.BATTLE_REPLAY_VICTOR));
+        victor.addClassName("battle-victor");
+        return victor;
     }
 
     private static Div side(String sideClass, String labelKey, int ships, int opponentShips, double strength, double opposingStrength,

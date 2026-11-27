@@ -716,6 +716,10 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         if (view == null || event.battleSystemId().isEmpty()) {
             return null;
         }
+        // The defender no longer sees a lost system's production on the map, but knew it while holding it.
+        if (event instanceof TurnEvent.SystemLost lost && lost.production() != null) {
+            return String.valueOf(lost.production());
+        }
         int systemId = event.battleSystemId().getAsInt();
         return view.systems().stream().filter(system -> system.id() == systemId && system.productionPerTurn() != null)
                 .findFirst().map(FleetAndOrdersPanel::productionValue).orElse(null);

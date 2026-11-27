@@ -130,7 +130,8 @@ public class BattleSteps {
                     return !root.classList.contains('battle-replay-result-known')
                         && a.getBoundingClientRect().left < d.getBoundingClientRect().left
                         && getComputedStyle(a).color === 'rgb(255, 216, 106)'
-                        && getComputedStyle(d).color === 'rgb(255, 216, 106)';
+                        && getComputedStyle(d).color === 'rgb(255, 216, 106)'
+                        && getComputedStyle(root.querySelector('.battle-victor')).visibility === 'hidden';
                     """)).isEqualTo(true);
             String expectedStrength = battle == 0 ? "64,8" : "97,2";
             browser.awaitTextIn(".battle-strength", expectedStrength);
@@ -141,6 +142,11 @@ public class BattleSteps {
                 verifyAudioOutput();
             }
             browser.awaitCss(".battle-replay-result-visible");
+            new WebDriverWait(browser.driver(), Duration.ofSeconds(10)).until(_ -> Boolean.TRUE.equals(js().executeScript("""
+                    const victor = document.querySelector('.battle-winner .battle-victor');
+                    return victor !== null && getComputedStyle(victor).visibility === 'visible'
+                        && getComputedStyle(victor.parentElement.querySelector('.battle-number')).backgroundImage.includes('laurel');
+                    """)));
             screenshot("battle-result-" + battle);
             assertThat(browser.textsOf("[data-battle-attacking]")).contains(battle == 0 ? "20" : "60");
             assertThat(browser.textsOf("[data-battle-defending]")).contains("0");

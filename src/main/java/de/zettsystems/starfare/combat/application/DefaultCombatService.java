@@ -64,7 +64,8 @@ public class DefaultCombatService implements CombatService {
                 reportService.appendEvent(state, oldOwner,
                         new TurnEvent.SystemLost(oldOwner, attackerId, toSystemId, target.name(),
                                 ships, defendersBefore, res.attackersLeft(),
-                                res.attackerStrength(), res.defenderStrength(), attackerName, defenderName));
+                                res.attackerStrength(), res.defenderStrength(), attackerName, defenderName,
+                                target.productionPerTurn()));
                 intelFor(state, oldOwner).put(toSystemId, new GameState.Intel(attackerId, state.turn(), res.attackersLeft()));
             }
             intelFor(state, attackerId).put(toSystemId, new GameState.Intel(attackerId, state.turn(), res.attackersLeft()));

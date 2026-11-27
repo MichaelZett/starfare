@@ -72,6 +72,19 @@ class RoundWalkthroughJourneyTest extends AbstractMapJourneyTest {
     }
 
     @Test
+    void theReplayOfALostSystemShowsWhatItProduced() {
+        createReviewGame();
+        advanceWith(false, new TurnEvent.SystemLost(player, player + 1, 4, "Remote 4", 12, 8, 4, 12, 8,
+                "Gegner", "Du", 7));
+
+        test(action("Schlacht ansehen")).click();
+        runPendingUiAccess();
+
+        assertThat(find(Div.class, openedDialog()).withClassName("battle-replay-production").single().getText())
+                .isEqualTo("Produktion von Remote 4: 7 je Runde");
+    }
+
+    @Test
     void theTutorialExplainsWhyTheOrdersWait() {
         createReviewGame(true);
         advanceWith(false, new TurnEvent.Cosmic(CosmicNews.SUN_UNSTABLE, 5, "Remote 5", 0, 0, 0, 9, ""));
