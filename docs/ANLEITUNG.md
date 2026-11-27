@@ -351,7 +351,8 @@ ausgewertet“) und der Stelle („Ereignis 2 von 5“); die Karte zentriert sic
 Eine Schlacht bietet
 **Schlacht ansehen** mit der Wiedergabe, jedes andere Ereignis **Weiter**; danach folgt das
 nächste. Produktion, eintreffende Verstärkungen und Meldungen ohne Ort gehören nicht dazu.
-Erst nach dem letzten Ereignis hebt sich der Vorhang; vorher gibt es keine Befehle: kein
+Erst nach dem letzten Ereignis hebt sich der Vorhang; vorher gibt es keine Befehle (das Tutorial
+sagt das auf der Ereigniskarte dazu): kein
 Senden, keine Zielwahl, keine Verlegung und kein **Runde abgeben**. Der Fortschritt bleibt
 beim Neuladen und auf anderen Geräten erhalten. Zuschauer und die Nachbetrachtung durchlaufen
 nichts. Auf dem Handy steht die Ereigniskarte am unteren Rand des Vorhangs.
@@ -361,8 +362,11 @@ nichts. Auf dem Handy steht die Ereigniskarte am unteren Rand des Vorhangs.
 Eine offene Kampfmeldung zeigt zunächst den Ort. Besitzer und Ergebnis am
 betroffenen System bleiben verdeckt, bis du die Schlacht bestätigt hast.
 Klicke die Meldung an, um die Wiedergabe zu öffnen, und bestätige mit
-**Ergebnis übernehmen**. Die Wiedergabe nennt über Schiffen und Stärken auch die Produktion
-des Systems, soweit du sie kennst; einen eigenen Eroberungsdialog gibt es nicht. Die
+**Ergebnis übernehmen**. Die Wiedergabe nennt oben hervorgehoben die Produktion des Systems,
+soweit du sie kennst; hast du das System verloren, die Produktion, die es bei dir hatte. Am Ende
+steht über dem Gewinner groß **Sieger**, ein Lorbeerkranz umrahmt seine verbliebenen Schiffe. Bleibt
+auf keiner Seite ein Schiff, zeigt die Markierung, wer das System hält. Einen eigenen
+Eroberungsdialog gibt es nicht. Die
 Auswahl verändert ausschließlich die Darstellung; die Runde ist zu diesem Zeitpunkt
 bereits berechnet.
 
