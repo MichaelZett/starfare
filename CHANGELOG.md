@@ -6,6 +6,10 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
+## Unreleased
+
+- **Abhängigkeiten:** Vaadin 25.3.7 (Wartungsrelease, gemeinsam mit dem Host).
+
 ## 0.3.3 - 2026-11-27
 
 - **Neue Partie merkt sich die letzte Wahl:** Der Dialog beginnt mit Regeln,

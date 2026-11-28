@@ -43,7 +43,7 @@
     "transform-ast": "2.4.4",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "vite": "8.3.8",
-    "vite-plugin-checker": "1.0.0"
+    "vite-plugin-checker": "1.1.0"
   },
   "overrides": {
     "@fontsource-variable/dm-sans": "$@fontsource-variable/dm-sans",
@@ -161,8 +161,8 @@
       "transform-ast": "2.4.4",
       "typescript": "npm:@typescript/typescript6@6.0.2",
       "vite": "8.3.8",
-      "vite-plugin-checker": "1.0.0"
+      "vite-plugin-checker": "1.1.0"
     },
-    "hash": "6150cd737872607446899993e68d3f5a07dc26c52775499ddd4c4e1b7a40c703"
+    "hash": "1cbd412aca278cc0509d33c1c93b4fa58917ca5b1fca1798fce86be452393452"
   }
 }
