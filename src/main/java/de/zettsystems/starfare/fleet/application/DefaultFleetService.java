@@ -252,11 +252,13 @@ public class DefaultFleetService implements FleetService {
 
     private static void routeOneOrder(GameState state, int playerId, StandingOrder o, StarSystem from,
                                       Map<Integer, Integer> routed) {
-        // Was das System diese Runde noch abgeben kann: Produktion plus Garnison,
-        // abzueglich dessen, was fruehere Verlegungen desselben Systems schon nehmen.
+        // Was das System diese Runde noch abgeben kann: Produktion plus Garnison ohne die Schiffe, die ein
+        // späterer Start eines gemeinsamen Angriffs vorgemerkt hat, abzüglich dessen, was frühere Verlegungen
+        // desselben Systems schon nehmen. Ohne Vormerkung ist das die ganze Garnison wie bisher.
         if (Routes.plan(state, playerId, o.fromSystemId(), o.toSystemId()).isEmpty()) { return; }
         int alreadyRouted = routed.getOrDefault(o.fromSystemId(), 0);
-        int available = from.garrison() + from.productionPerTurn() - alreadyRouted;
+        int freeGarrison = Math.max(0, from.garrison() - state.reservedShips(playerId, o.fromSystemId()));
+        int available = freeGarrison + from.productionPerTurn() - alreadyRouted;
         int ships = Math.clamp(o.ships(), 0, Math.max(0, available));
         if (ships <= 0) {
             return;

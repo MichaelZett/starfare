@@ -8,6 +8,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Verlegungen lassen vorgemerkte Schiffe in Ruhe:** Eine Produktionsverlegung nimmt keine Schiffe mehr, die ein
+  späterer Start eines gemeinsamen Angriffs vorgemerkt hat. Reicht die Produktion nicht, zehrt sie nur an der freien
+  Garnison; der Start fliegt dann mit allen geplanten Schiffen. Ohne Vormerkung bleibt alles wie bisher.
 - **Abhängigkeiten:** Vaadin 25.3.7 (Wartungsrelease, gemeinsam mit dem Host).
 
 ## 0.3.3 - 2026-11-27

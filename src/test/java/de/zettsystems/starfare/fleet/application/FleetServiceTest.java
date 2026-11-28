@@ -1,6 +1,7 @@
 package de.zettsystems.starfare.fleet.application;
 
 import de.zettsystems.starfare.fleet.values.FleetOrder;
+import de.zettsystems.starfare.fleet.values.ScheduledDeparture;
 import de.zettsystems.starfare.game.domain.GameState;
 import de.zettsystems.starfare.game.values.Fleet;
 import de.zettsystems.starfare.game.values.Player;
@@ -37,6 +38,32 @@ class FleetServiceTest {
         assertThat(service.addStandingOrder(state, 1, 1, 2, 20)).isPositive();
         assertThat(state.standingOrders().get(1)).singleElement().satisfies(order ->
                 assertThat(order.ships()).isEqualTo(20));
+    }
+
+    @Test
+    void relocationsLeaveShipsReservedForALaterJointStartAlone() {
+        state.systems().clear();
+        state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 2, false));
+        state.systems().add(new StarSystem(2, "S2", 100, 0, 1, 3, 2, false));
+        assertThat(service.addStandingOrder(state, 1, 1, 2, 2)).isPositive();
+        state.standingOrders().get(1).replaceAll(order -> new StandingOrder(order.id(), order.ownerId(),
+                order.fromSystemId(), order.toSystemId(), 20));
+        state.replaceDepartures(1, List.of(new ScheduledDeparture(1, 1, 2, 4, state.turn() + 2, state.turn() + 3, null)));
+
+        assertThat(service.applyStandingOrdersForProduction(state)).containsEntry(1, 3);
+        assertThat(state.fleets()).singleElement().satisfies(fleet -> assertThat(fleet.ships()).isEqualTo(3));
+    }
+
+    @Test
+    void relocationsWithoutReservationsStillDrawOnTheWholeGarrison() {
+        state.systems().clear();
+        state.systems().add(new StarSystem(1, "S1", 0, 0, 1, 5, 2, false));
+        state.systems().add(new StarSystem(2, "S2", 100, 0, 1, 3, 2, false));
+        assertThat(service.addStandingOrder(state, 1, 1, 2, 2)).isPositive();
+        state.standingOrders().get(1).replaceAll(order -> new StandingOrder(order.id(), order.ownerId(),
+                order.fromSystemId(), order.toSystemId(), 20));
+
+        assertThat(service.applyStandingOrdersForProduction(state)).containsEntry(1, 7);
     }
 
     private FleetService service;
