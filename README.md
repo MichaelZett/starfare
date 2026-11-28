@@ -528,7 +528,7 @@ In the header and its menu:
   round limit from the start of the round, and the straggler limit as soon as
   only one player is missing — their chip then shows the countdown. The tempo
   chosen in the new-game dialog sets both and stays fixed for the whole game: Live
-  (5 min / 1 min), Brisk (1 h / 15 min), Daily (1 day / 6 h) or Relaxed
+  (5 min / 1 min), Brisk (1 h / 15 min), Daily (1 day / 6 h), Every other day (2 days / 12 h) or Relaxed
   (3 days / 12 h). A click on submit that arrives after the deadline ended the
   round is refused instead of submitting the next round. Whoever misses the deadline
   moves with the orders given so far. Missed rounds count over the whole game:

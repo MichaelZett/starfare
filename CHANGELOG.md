@@ -8,6 +8,9 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Neue Tempostufe „Alle zwei Tage“:** Partien mit mehreren Menschen können zwischen Täglich und Gemütlich eine
+  Runde alle 48 Stunden wählen; fehlt nur noch einer, bleiben ihm 12 Stunden. Gemeinsame Stufe aller Plattformspiele
+  (games-platform-api 0.6.0).
 - **Gemeinsam angreifen mit Angriffsplan:** Ein Klick auf ein fremdes System öffnet über seinen Details den
   Angriffsplan (auf dem Handy als Blatt über der unteren Kartenhälfte): bekannte Verteidigung des Ziels, gewählte
   Quellen mit Schiffen (−/+ und „alle“), Start und Ankunft, mögliche Quellen nach Ankunft sortiert, die Summe und
@@ -24,7 +27,7 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 - **Verlegungen lassen vorgemerkte Schiffe in Ruhe:** Eine Produktionsverlegung nimmt keine Schiffe mehr, die ein
   späterer Start eines gemeinsamen Angriffs vorgemerkt hat. Reicht die Produktion nicht, zehrt sie nur an der freien
   Garnison; der Start fliegt dann mit allen geplanten Schiffen. Ohne Vormerkung bleibt alles wie bisher.
-- **Abhängigkeiten:** Vaadin 25.3.7 (Wartungsrelease, gemeinsam mit dem Host).
+- **Abhängigkeiten:** Vaadin 25.3.7 (Wartungsrelease) und games-platform-api 0.6.0, gemeinsam mit dem Host.
 
 ## 0.3.3 - 2026-11-27
 

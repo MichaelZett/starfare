@@ -13,6 +13,7 @@ final class TempoLabels {
             case LIVE -> UiTexts.LOBBY_TEMPO_LIVE;
             case BRISK -> UiTexts.LOBBY_TEMPO_BRISK;
             case DAILY -> UiTexts.LOBBY_TEMPO_DAILY;
+            case EVERY_OTHER_DAY -> UiTexts.LOBBY_TEMPO_EVERY_OTHER_DAY;
             case RELAXED -> UiTexts.LOBBY_TEMPO_RELAXED;
         });
     }

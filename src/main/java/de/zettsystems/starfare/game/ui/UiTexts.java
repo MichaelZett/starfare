@@ -205,6 +205,7 @@ public final class UiTexts {
     public static final String LOBBY_TEMPO_LIVE = "lobby.tempo.LIVE";
     public static final String LOBBY_TEMPO_BRISK = "lobby.tempo.BRISK";
     public static final String LOBBY_TEMPO_DAILY = "lobby.tempo.DAILY";
+    public static final String LOBBY_TEMPO_EVERY_OTHER_DAY = "lobby.tempo.EVERY_OTHER_DAY";
     public static final String LOBBY_TEMPO_RELAXED = "lobby.tempo.RELAXED";
     public static final String DURATION_SECONDS = "duration.seconds";
     public static final String DURATION_MINUTES = "duration.minutes";

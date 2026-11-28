@@ -12,6 +12,8 @@ public enum GameTempo {
     LIVE(Duration.ofMinutes(5), Duration.ofMinutes(1)),
     BRISK(Duration.ofHours(1), Duration.ofMinutes(15)),
     DAILY(Duration.ofHours(24), Duration.ofHours(6)),
+    /** One round every other day (API 0.6.0, all platform games, 28.11.2026). */
+    EVERY_OTHER_DAY(Duration.ofHours(48), Duration.ofHours(12)),
     RELAXED(Duration.ofHours(72), Duration.ofHours(12));
 
     /** The tempo a new game with several people starts with. */

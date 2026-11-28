@@ -56,7 +56,7 @@ gibt, fällt auf die Vorgabe zurück. Der Name wird jedes Mal neu gewürfelt.
   erhalten; eine gemischte Runde behält ihre Computerzahl.
 - **Computerstärke** **Einfach**, **Normal** (Vorgabe) oder **Anspruchsvoll**, siehe unten.
 - **Spieltempo** nur bei mehr als einem Menschen: die Rundenfristen (Live, Zügig,
-  Täglich, Gemütlich).
+  Täglich, Alle zwei Tage, Gemütlich).
 - **Nur auf Einladung** nur bei mehr als einem Menschen: Sonst ist die Partie öffentlich
   und für andere angemeldete Spieler auffindbar. Einladen kannst du im Warteraum. Eine
   Partie allein gegen den Computer ist immer privat.

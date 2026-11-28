@@ -32,6 +32,13 @@ class GameTempoTest {
     }
 
     @Test
+    void everyTempoOfThePlatformIsOffered() {
+        assertThat(Tempo.values()).allSatisfy(tempo -> assertThat(GameTempo.valueOf(tempo.name())).isNotNull());
+        assertThat(GameTempo.EVERY_OTHER_DAY.roundLimit()).isEqualTo(Duration.ofHours(48));
+        assertThat(GameTempo.EVERY_OTHER_DAY.stragglerLimit()).isEqualTo(Duration.ofHours(12));
+    }
+
+    @Test
     void aTempoSetsBothDeadlinesWhateverIsGiven() {
         RoundRules rules = new RoundRules(Duration.ofDays(5), Duration.ofSeconds(30), null, GameTempo.BRISK);
 
