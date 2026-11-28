@@ -123,6 +123,31 @@
     pointer-events: none;
 }
 
+/* K9: the joint attack plan above the details of its target. */
+.joint-plan {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    margin: 0 0 .75rem;
+    padding: .6rem .75rem .75rem;
+    border: 1px solid #ff6b5e;
+    border-radius: 8px;
+    background: rgba(255, 107, 94, .06);
+}
+.joint-plan-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.joint-plan-title { margin: 0; font-size: 1.05rem; }
+.joint-plan-defence { color: var(--sf-text-muted); }
+.joint-plan-section { margin-top: .25rem; font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--sf-text-muted); }
+.joint-plan-row { display: flex; flex-wrap: wrap; align-items: center; gap: .15rem .6rem; }
+.joint-plan-chosen { padding: .25rem 0; border-bottom: 1px solid rgba(255, 255, 255, .06); }
+.joint-plan-amount { display: flex; align-items: center; gap: .25rem; }
+.joint-plan-amount vaadin-integer-field { width: 8.5rem; }
+.joint-plan-start { flex-basis: 100%; color: var(--sf-text-muted); font-size: .9rem; }
+.joint-plan-empty, .joint-plan-note { margin: 0; color: var(--sf-text-muted); font-size: .9rem; }
+.joint-plan-summary { font-weight: 700; }
+.joint-plan-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.joint-plan-confirm { flex: 1 1 auto; }
+
 .joint-attack-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; }
 .joint-attack-row vaadin-integer-field { width: 9rem; }
 .joint-attack-start { color: var(--sf-text-muted); font-size: .9rem; }

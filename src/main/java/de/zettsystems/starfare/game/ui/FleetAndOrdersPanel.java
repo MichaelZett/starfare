@@ -40,6 +40,8 @@ final class FleetAndOrdersPanel extends VerticalLayout {
     private enum EventCategory { COALITION, PRODUCTION, REINFORCEMENT, BATTLE_WON, BATTLE_LOST, SYSTEM_LOST, DEFENSE_HELD }
 
     private final VerticalLayout detailsPage = page();
+    /** The joint attack plan above the details of its target (K9); its content comes from the view. */
+    private final Div jointPlanHolder = new Div();
     private final VerticalLayout fleetsPage = page();
     private final VerticalLayout relocationsPage = page();
     private final VerticalLayout reportPage = page();
@@ -314,8 +316,16 @@ final class FleetAndOrdersPanel extends VerticalLayout {
         return I18n.t(UiTexts.MAP_SIDEBAR_LAST_SEEN_TURN, system.lastSeenTurn());
     }
 
+    /** Shows the joint attack plan above the details, or removes it with {@code null}. */
+    void jointPlan(com.vaadin.flow.component.@Nullable Component plan) {
+        jointPlanHolder.removeAll();
+        if (plan != null) { jointPlanHolder.add(plan); }
+        jointPlanHolder.setVisible(plan != null);
+    }
+
     private void renderDetails(PlayerViewState view, boolean targetSelectionActive) {
         detailsPage.removeAll();
+        detailsPage.add(jointPlanHolder);
         if (selectedSystem != null) {
             VisibleSystem system = selectedSystem;
             if (isBattlePending(system.id())) {

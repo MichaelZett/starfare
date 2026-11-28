@@ -90,6 +90,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     private java.util.Map<Integer, Integer> arrivalTurns = java.util.Map.of();
     /** Sources picked on the map for a joint attack on the current target; view-local, reset with target or round. */
     private final Set<Integer> jointSources = new java.util.HashSet<>();
+    /** Ships typed per source in the joint attack plan; view-local, reset with the sources. */
+    private final java.util.Map<Integer, Integer> jointAmounts = new java.util.HashMap<>();
     private @Nullable Integer highlightedStandingOrderId;
     private @Nullable Integer highlightedReportSystemId;
     private @Nullable ReplayEventMarker pendingReplayEvent;
@@ -379,10 +381,52 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
 
     private void openJointAttack(JointArrival joint) {
         planningDialogs().jointAttack(joint, () -> {
-            jointSources.clear();
+            clearJointSources();
             refresh();
             fleetsPanel.showFleets();
         });
+    }
+
+    private void clearJointSources() {
+        jointSources.clear();
+        jointAmounts.clear();
+    }
+
+    /**
+     * The attack plan in the sidebar for a selected target system (K9); a selected fleet keeps the button over its
+     * destination. Only while the player may still plan this round.
+     */
+    private @Nullable JointAttackPlan jointPlan(PlayerViewState view, int playerId, @Nullable JointArrival joint) {
+        VisibleSystem target = selectedSystem;
+        if (joint == null || !joint.mayDispatch() || planningLocked || highlightedFleetId != null || target == null
+                || target.id() != joint.targetId()) {
+            return null;
+        }
+        List<JointAttackPlan.Source> sources = joint.arrivals().entrySet().stream()
+                .flatMap(entry -> view.systems().stream().filter(system -> system.id() == entry.getKey())
+                        .map(system -> new JointAttackPlan.Source(system.id(), system.name(), entry.getValue(),
+                                Objects.requireNonNullElse(system.availableShips(), 0))))
+                .filter(source -> source.available() > 0).toList();
+        int turn = view.turn();
+        return new JointAttackPlan(target, Objects.equals(target.ownerId(), playerId), sources, joint.selected(), turn,
+                jointAmounts, this::toggleJointSource,
+                dispatches -> {
+                    boolean accepted = game.planJointAttack(gameId, playerId, turn, target.id(), dispatches);
+                    if (accepted) {
+                        clearJointSources();
+                        selectedSystem = null;
+                        refresh();
+                        fleetsPanel.showFleets();
+                    }
+                    return accepted;
+                },
+                this::closeJointPlan);
+    }
+
+    private void closeJointPlan() {
+        clearJointSources();
+        selectedSystem = null;
+        refresh();
     }
 
     private void cancelOrder(PlannedOrder o) {
@@ -931,6 +975,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 .sorted(Comparator.comparingInt(VisibleSystem::id)).toList();
         // A locked map still inspects systems and fleets, but offers no orders.
         boolean ordersOffered = !observer && !planningLocked;
+        JointArrival joint = jointArrival(view, playerId, !ordersOffered);
+        JointAttackPlan plan = ordersOffered ? jointPlan(view, playerId, joint) : null;
+        if (plan != null && joint != null) { joint = joint.planInSidebar(); }
         mapCanvas.render(new MapRenderer.Inputs(
                 game, gameId, view, playerId, !ordersOffered, selectedFrom, targetSelection == TargetSelection.RELOCATION,
                 highlightedFleetId, highlightedStandingOrderId, reportedSystemIds(view), highlightedReportSystemId,
@@ -945,11 +992,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
                 this::onReportMarkerSelected,
                 this::refresh,
                 rangeForSelection(playerId, observer),
-                jointArrival(view, playerId, !ordersOffered),
+                joint,
                 this::toggleJointSource,
                 this::openJointAttack));
+        fleetsPanel.jointPlan(plan);
         fleetsPanel.update(gameId, view, selectedSystem, highlightedFleetId, highlightedStandingOrderId, observer,
                 targetSelection != TargetSelection.NONE);
+        if (mobile != null) { mobile.halfSheet(plan != null); }
         if (mobile != null) { mobile.targetSelection(targetSelection != TargetSelection.NONE); }
     }
 
@@ -972,7 +1021,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         if (!key.equals(arrivalKey)) {
             arrivalTurns = game.arrivalTurnsTo(gameId, playerId, aim.targetId());
             arrivalKey = key;
-            jointSources.clear();
+            clearJointSources();
         }
         JointArrival joint = JointArrival.of(view, aim, arrivalTurns, !view.roundStatus().hasSubmitted(playerId), jointSources);
         jointSources.retainAll(joint == null ? Set.of() : joint.selected());

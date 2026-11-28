@@ -253,7 +253,7 @@ Befehlsrücknahme.
 
 Klickst du auf der Karte ein fremdes System oder eine eigene fliegende Flotte an,
 zeigt jedes eigene System mit freien Schiffen links ein Abzeichen mit der Runde,
-in der eine jetzt gesendete Flotte dort ankäme (`R14`). Gerechnet wird über
+in der eine jetzt gesendete Flotte dort ankäme, und seinen freien Schiffen (`R14 · 8`). Gerechnet wird über
 dieselben Routen wie beim Senden, in erweiterten Partien also mit Reichweite und
 Zwischenhalten; Systeme ohne Weg dorthin bekommen kein Abzeichen.
 
@@ -265,16 +265,27 @@ gewählten System die früheste eigene Flotte oder geplante Sendung dorthin.
 - **Gelb mit `+1 ⏸`:** käme so viele Runden zu früh.
 - **Grau:** käme später an.
 
-So planst du einen gemeinsamen Angriff:
+So planst du einen gemeinsamen Angriff auf ein angeklicktes System: Über seinen Details
+steht der **Angriffsplan** (auf dem Handy als Blatt über der unteren Kartenhälfte, die
+Abzeichen bleiben darüber sichtbar). Er zeigt die bekannte Verteidigung des Ziels als
+Zahl („Vega: 20 Schiffe · Produktion 4“), die gewählten Quellen und darunter die
+möglichen Quellen, sortiert nach Ankunft („Altair · R40 · 8 Schiffe“).
 
-1. Klicke die Abzeichen der Systeme an, die mitfliegen sollen. Gewählte Abzeichen
-   tragen ein ✔ und einen hellen Rand, das System einen grünen Ring; ein zweiter
-   Klick wählt ab. Die Abzeichen vergleichen jetzt mit der gemeinsamen Ankunft,
-   der spätesten Ankunft der gewählten Systeme.
-2. Über dem Ziel steht **Gemeinsam angreifen (Ankunft R39)** (bei einem eigenen
-   Ziel **Gemeinsam senden**). Der Knopf öffnet die Bestätigung: je System die
-   Schiffe (vorgegeben: alle verfügbaren) und wann es startet.
-3. **Angriff planen** übernimmt alles oder nichts.
+1. Wähle die Systeme, die mitfliegen sollen: Abzeichen auf der Karte anklicken oder im
+   Plan abhaken, beides wählt dieselbe Quelle. Gewählte Abzeichen tragen ein ✔ und
+   einen hellen Rand, das System einen grünen Ring; ein zweiter Klick oder der Haken
+   wählt ab. Die Abzeichen vergleichen jetzt mit der gemeinsamen Ankunft, der
+   spätesten Ankunft der gewählten Systeme.
+2. Jede gewählte Quelle hat ein Zahlenfeld mit −/+ und **alle** (vorgegeben: alle
+   freien Schiffe), darunter „Start sofort“ oder „Start in Runde 37 (+2)“ und die Ankunft.
+   Darunter steht die Summe: „Gemeinsame Ankunft R39 · 45 Schiffe“.
+3. **Angriff planen – 45 Schiffe, Ankunft R39** (bei einem eigenen Ziel **Senden
+   planen**) übernimmt alles oder nichts; ohne Quelle oder mit ungültiger Menge ist der
+   Knopf gesperrt. **Abbrechen** oder ✕ schließt den Plan ohne Befehle.
+
+Bei einer gewählten eigenen Flotte gibt es keinen Plan in der Seitenleiste: Über ihrem
+Ziel steht dann **Gemeinsam angreifen (Ankunft R39)** und öffnet eine kurze
+Bestätigung mit denselben Angaben.
 
 Das langsamste System startet sofort. Schnellere Systeme starten später, genau so,
 dass alle in derselben Runde ankommen: Kommt ein System in Runde 37 an, ein anderes

@@ -8,6 +8,11 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Gemeinsam angreifen mit Angriffsplan:** Ein Klick auf ein fremdes System öffnet über seinen Details den
+  Angriffsplan (auf dem Handy als Blatt über der unteren Kartenhälfte): bekannte Verteidigung des Ziels, gewählte
+  Quellen mit Schiffen (−/+ und „alle“), Start und Ankunft, mögliche Quellen nach Ankunft sortiert, die Summe und
+  ein Knopf „Angriff planen – 45 Schiffe, Ankunft R39“. Abzeichen auf der Karte zeigen Ankunftsrunde und freie
+  Schiffe („R39 · 12“) und wählen dieselben Quellen wie die Haken im Plan.
 - **Ereignisse auf der Karte und nur für Betroffene:** Der Rundendurchgang zeigt kosmische Meldungen dort, wo sie
   wirken: „−3“ an der Flotte, die Schiffe verloren hat (die Karte zentriert auf ihre Position unterwegs), „−3“ am
   System nach einem Raumhafenbeben, „+1“ bzw. die neue Ankunftsrunde an allen eigenen Flotten im Hyperraum nach

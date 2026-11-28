@@ -69,7 +69,7 @@ final class MapRenderer {
             map.add(buildSystemDot(sys, in));
         }
         JointArrival joint = in.joint();
-        if (joint != null && joint.mayDispatch()) { addJointAttack(map, joint, in); }
+        if (joint != null && joint.mayDispatch() && !joint.inSidebar()) { addJointAttack(map, joint, in); }
         for (PlannedOrder order : in.view().plannedOrders()) {
             renderPlannedOrder(map, order, in);
         }
@@ -311,7 +311,8 @@ final class MapRenderer {
         boolean selected = joint.isSelected(sys.id());
         Div badge = new Div();
         badge.addClassNames("sys-arrival", "sys-arrival-" + fit.name().toLowerCase(java.util.Locale.ROOT));
-        String round = I18n.t(UiTexts.MAP_ARRIVAL_ROUND, arrival);
+        // "R39 · 12": arrival round and the ships the system can send (K9).
+        String round = I18n.t(UiTexts.MAP_ARRIVAL_ROUND, arrival) + " · " + Objects.requireNonNullElse(sys.availableShips(), 0);
         badge.setText((selected ? "✔ " : "") + switch (fit) {
             case MATCH -> round + " ✓";
             case EARLY -> round + " · +" + gap + " ⏸";

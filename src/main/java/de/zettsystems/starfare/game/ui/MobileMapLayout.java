@@ -68,6 +68,11 @@ final class MobileMapLayout extends Div {
         select(panelTab, mapTab);
     }
 
+    /** The joint attack plan leaves the upper half of the map free for its round badges (K9). */
+    void halfSheet(boolean half) {
+        sheet.setClassName("mobile-map-sheet-half", half);
+    }
+
     /** Picking a target happens on the map, so the sheet makes way and the banner explains what to do. */
     void targetSelection(boolean active) {
         targetBanner.setVisible(active);

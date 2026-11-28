@@ -23,9 +23,10 @@ import java.util.stream.Collectors;
  * @param reference   round to meet before any source is picked, if any
  * @param mayDispatch whether the player may still queue orders this round
  * @param selected    the sources picked for a joint attack, a subset of {@code arrivals}
+ * @param inSidebar   whether the sidebar shows the attack plan (K9), so the map offers no button of its own
  */
 record JointArrival(int targetId, Map<Integer, Integer> arrivals, @Nullable Integer reference, boolean mayDispatch,
-                    Set<Integer> selected) {
+                    Set<Integer> selected, boolean inSidebar) {
 
     /** How an arrival relates to the round to meet. */
     enum Fit { MATCH, EARLY, LATE, OPEN }
@@ -36,6 +37,16 @@ record JointArrival(int targetId, Map<Integer, Integer> arrivals, @Nullable Inte
     JointArrival {
         arrivals = Map.copyOf(arrivals);
         selected = Set.copyOf(selected);
+    }
+
+    JointArrival(int targetId, Map<Integer, Integer> arrivals, @Nullable Integer reference, boolean mayDispatch,
+                 Set<Integer> selected) {
+        this(targetId, arrivals, reference, mayDispatch, selected, false);
+    }
+
+    /** The same arrivals with the attack plan in the sidebar. */
+    JointArrival planInSidebar() {
+        return new JointArrival(targetId, arrivals, reference, mayDispatch, selected, true);
     }
 
     /** A selected own fleet: its final destination and arrival; none while it holds at a station. */

@@ -355,7 +355,13 @@ nothing is left, the source changed hands or the target is unreachable or destro
 A target that became the player's own or an ally's is still flown to. Without planned
 starts both steps do nothing, so the frozen Classic results are unchanged. The UI sees
 them as `PlayerViewState.plannedDepartures` (`PlannedDeparture`) in the Fleets tab and
-can cancel them; the single undo step (`GameState.previousOrders` and
+can cancel them. The attack plan (`JointAttackPlan`, K9) sits above the details of a
+selected target system in `FleetAndOrdersPanel` (`jointPlan`); `MainView` builds it from
+`JointArrival` and keeps picked sources and typed amounts view-local, so map badges and
+ticks pick the same sources and typing only updates the plan. While it is shown the map
+offers no button of its own (`JointArrival.inSidebar`); a selected fleet keeps the button
+and the confirmation dialog in `PlanningDialogs`. On phones `MobileMapLayout.halfSheet`
+leaves the upper half of the map visible; the single undo step (`GameState.previousOrders` and
 `previousDepartures`) covers them too.
 
 `TurnEvent.Victory` stores the threshold at resolution time. Reports therefore

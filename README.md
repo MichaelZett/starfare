@@ -201,10 +201,15 @@ turn.
 
 Select a foreign system or one of your flying fleets on the map, and each of your
 systems with ships to spare shows the round a fleet sent from there now would arrive
-(along the same routes the game uses, so extended range and stopovers count). Click
-those badges to pick the sources of a **joint attack**; the button above the target
-shows the common arrival (the latest among the picked sources) and opens a short
-confirmation with the ships per source (all available by default). The slowest
+(along the same routes the game uses, so extended range and stopovers count) and its free
+ships, e.g. `R14 · 8`. Clicking a foreign system opens the **attack plan** above its
+details (on phones a sheet over the lower half of the map): the target's known defence as
+plain numbers, the chosen sources with ships (−/+ and **all**, all free ships by default),
+start and arrival, the possible sources by arrival, the sum and one button **Plan attack –
+45 ships, arrival R39**. Badges on the map and ticks in the plan pick the same sources;
+**Cancel** closes the plan. The common arrival is the latest among the picked sources.
+For a selected flying fleet the button above its destination opens a short confirmation
+instead. The slowest
 sources leave now; faster ones get a planned later start so that all arrive in the
 same round. Until then their ships stay in the garrison and defend it, but are
 reserved and cannot be sent twice. Planned starts are listed in the Fleets tab and can

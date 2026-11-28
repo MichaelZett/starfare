@@ -400,6 +400,18 @@ html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet {
     background: var(--sf-surface, #151b22);
 }
 
+/* K9: the attack plan as a sheet over the lower half, the round badges stay visible above it. */
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet.mobile-map-sheet-half {
+    top: 50%;
+    border-top: 2px solid #ff6b5e;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -6px 18px rgba(0, 0, 0, .5);
+}
+
+html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet .joint-plan-confirm {
+    min-height: var(--sf-touch);
+}
+
 html.starfare-mobile[data-gp-game="starfare"] .mobile-map-sheet .map-right {
     min-width: 0;
     height: auto !important;
