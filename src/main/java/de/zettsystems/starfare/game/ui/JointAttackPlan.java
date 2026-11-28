@@ -182,9 +182,12 @@ final class JointAttackPlan extends Div {
         boolean ready = !amounts.isEmpty() && dispatches.size() == amounts.size();
         summary.setText(amounts.isEmpty() ? "" : I18n.t(UiTexts.JOINT_PLAN_SUMMARY, commonArrival, ships));
         summary.setVisible(!amounts.isEmpty());
-        confirm.setText(amounts.isEmpty() ? I18n.t(UiTexts.JOINT_DIALOG_CONFIRM)
-                : I18n.t(ownTarget ? UiTexts.JOINT_PLAN_CONFIRM_SEND : UiTexts.JOINT_PLAN_CONFIRM_ATTACK, ships,
-                commonArrival));
+        confirm.setText(amounts.isEmpty() ? I18n.t(UiTexts.JOINT_DIALOG_CONFIRM) : confirmText(ships));
         confirm.setEnabled(ready);
+    }
+
+    private String confirmText(int ships) {
+        String key = ownTarget ? UiTexts.JOINT_PLAN_CONFIRM_SEND : UiTexts.JOINT_PLAN_CONFIRM_ATTACK;
+        return I18n.t(key, ships, commonArrival);
     }
 }

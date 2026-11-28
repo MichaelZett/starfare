@@ -977,7 +977,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         boolean ordersOffered = !observer && !planningLocked;
         JointArrival joint = jointArrival(view, playerId, !ordersOffered);
         JointAttackPlan plan = ordersOffered ? jointPlan(view, playerId, joint) : null;
-        if (plan != null && joint != null) { joint = joint.planInSidebar(); }
+        // A plan exists only for a joint arrival.
+        if (plan != null) { joint = Objects.requireNonNull(joint).planInSidebar(); }
         mapCanvas.render(new MapRenderer.Inputs(
                 game, gameId, view, playerId, !ordersOffered, selectedFrom, targetSelection == TargetSelection.RELOCATION,
                 highlightedFleetId, highlightedStandingOrderId, reportedSystemIds(view), highlightedReportSystemId,
