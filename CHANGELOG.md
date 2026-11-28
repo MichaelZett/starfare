@@ -8,6 +8,8 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Höchstens eine Supernova bei Zufall „Wenig“:** Eine Partie mit wenig Zufall bringt nur noch eine instabile Sonne
+  und damit höchstens einen Piratenschwarm. Mittel und Viel bleiben, wie sie sind.
 - **Verlegungen lassen vorgemerkte Schiffe in Ruhe:** Eine Produktionsverlegung nimmt keine Schiffe mehr, die ein
   späterer Start eines gemeinsamen Angriffs vorgemerkt hat. Reicht die Produktion nicht, zehrt sie nur an der freien
   Garnison; der Start fliegt dann mit allen geplanten Schiffen. Ohne Vormerkung bleibt alles wie bisher.

@@ -62,6 +62,14 @@ public record SectorOptions(EventFrequency eventFrequency, Set<CosmicEvent> enab
         return enabled(event) ? eventFrequency.scale(event.baseChance()) : 0.0;
     }
 
+    /**
+     * Whether another sun may turn unstable after {@code supernovaeSoFar} unstable or exploded ones. With rare
+     * events a game has at most one supernova (User 25.11.2026); otherwise there is no limit.
+     */
+    public boolean allowsSupernova(int supernovaeSoFar) {
+        return eventFrequency != EventFrequency.RARE || supernovaeSoFar < 1;
+    }
+
     public boolean hasRoundLimit() {
         return roundLimit > 0;
     }

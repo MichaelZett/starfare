@@ -202,6 +202,36 @@ class CosmicEventsTest {
     }
 
     @Test
+    void rareEventsBringAtMostOneSupernovaPerGame() {
+        GameState state = galaxy(GameSetup.defaults().chooseRandomness(RandomnessLevel.LOW)
+                .chooseEvents(EnumSet.of(CosmicEvent.SUPERNOVA)));
+
+        events.resolve(state);
+        assertThat(state.cosmic().unstableSystems()).containsOnlyKeys(2);
+
+        for (int round = 0; round < 5; round++) {
+            state.nextTurn();
+            events.resolve(state);
+            assertThat(news(state, 1)).extracting(TurnEvent.Cosmic::news).doesNotContain(CosmicNews.SUN_UNSTABLE);
+        }
+
+        assertThat(state.cosmic().destroyedSystems()).containsExactly(2);
+        assertThat(state.cosmic().unstableSystems()).isEmpty();
+    }
+
+    @Test
+    void mediumEventsKeepBringingSupernovae() {
+        GameState state = galaxy(EnumSet.of(CosmicEvent.SUPERNOVA));
+
+        events.resolve(state);
+        state.nextTurn();
+        events.resolve(state);
+
+        assertThat(state.cosmic().destroyedSystems()).containsExactly(2);
+        assertThat(state.cosmic().unstableSystems()).containsOnlyKeys(4);
+    }
+
+    @Test
     void destroyedSystemsCanNoLongerBeTargeted() {
         GameState state = galaxy(EnumSet.of(CosmicEvent.SUPERNOVA));
         state.updateCosmic(cosmic -> cosmic.destabilize(2, state.turn()));

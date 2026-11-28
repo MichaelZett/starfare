@@ -62,7 +62,14 @@ final class CosmicEvents {
         if (strikes(rng, options, CosmicEvent.SPACETIME_QUAKE)) { spacetimeQuake(state); }
         if (strikes(rng, options, CosmicEvent.DISAPPEARANCE)) { disappearance(state, rng); }
         if (strikes(rng, options, CosmicEvent.SPACEPORT_QUAKE)) { spaceportQuake(state, rng); }
-        if (strikes(rng, options, CosmicEvent.SUPERNOVA)) { destabilizeSun(state, rng); }
+        if (strikes(rng, options, CosmicEvent.SUPERNOVA) && options.allowsSupernova(supernovae(state))) {
+            destabilizeSun(state, rng);
+        }
+    }
+
+    /** Suns that turned unstable in this game so far, exploded or still due. */
+    private static int supernovae(GameState state) {
+        return state.cosmic().destroyedSystems().size() + state.cosmic().unstableSystems().size();
     }
 
     private static boolean strikes(Random rng, SectorOptions options, CosmicEvent event) {
