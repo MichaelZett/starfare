@@ -72,12 +72,39 @@ class BulkPlanningJourneyTest extends AbstractMapJourneyTest {
         select("Gamma");
         pickSource("Alpha");
         assertThat(find(Div.class).withClassName("sys-arrival-selected").all()).hasSize(1);
+        IntegerField alpha = find(IntegerField.class, find(Div.class).withClassName("joint-plan").single()).single();
+        test(alpha).setValue(1);
+        roundTrip();
+        click("alle");
+        assertThat(alpha.getValue()).as("all puts back every free ship").isEqualTo(5);
 
         click("Abbrechen");
 
         assertThat(find(Div.class).withClassName("joint-plan").all()).isEmpty();
         assertThat(find(Div.class).withClassName("sys-arrival").all()).as("no target, no badges").isEmpty();
         assertThat(view().plannedOrders()).isEmpty();
+
+        select("Gamma");
+        assertThat(find(Div.class).withClassName("sys-arrival-selected").all()).as("the sources start afresh").isEmpty();
+        click("Angriffsplan schließen");
+        assertThat(find(Div.class).withClassName("joint-plan").all()).isEmpty();
+    }
+
+    @Test
+    void aSelectedFleetKeepsTheButtonOverItsDestinationAndTheConfirmation() {
+        createReviewGame();
+        test(find(Div.class).withClassName("fleet-badge").single()).click();
+        runPendingUiAccess();
+        assertThat(find(Div.class).withClassName("joint-plan").all()).as("no plan for a fleet").isEmpty();
+
+        pickSource("Alpha");
+        test(find(com.vaadin.flow.component.button.Button.class).withClassName("sys-joint-send").single()).click();
+        runPendingUiAccess();
+        assertThat(elementText(openedDialog().getElement())).contains("Start sofort");
+        dialogClick("Angriff planen");
+
+        assertThat(view().plannedOrders()).singleElement()
+                .matches(order -> Integer.valueOf(1).equals(order.fromSystemId()) && Integer.valueOf(2).equals(order.toSystemId()));
     }
 
     @Test
