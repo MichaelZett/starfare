@@ -483,7 +483,8 @@ Ticking **as production transfer** turns the order into a standing one: the
 given number of ships is shipped every turn. A system may route at most its
 own production plus whatever is routed into it, and several targets share that
 budget — the map shows the still-free share in brackets after `P:`. Whatever
-is not routed stays behind as garrison. The **Relocations** tab also offers
+is not routed stays behind as garrison. When production falls short a transfer draws on the
+garrison, but never on ships reserved for a later start of a joint attack. The **Relocations** tab also offers
 **Edit** and **Cancel transfer** on every route and directly at either system; editing opens the same capacity-aware
 dialog.
 
@@ -585,11 +586,14 @@ keep rules 1.0.0.
 
 - **Random events**, each can be switched off on its own under **Details**: cosmic
   storms (every fleet in hyperspace one round later), space-time quake (half the remaining
-  travel time), mysterious disappearance of ships, spaceport quake and supernova.
+  travel time), mysterious disappearance of ships, spaceport quake and supernova. Storms and
+  quakes in hyperspace are reported only to empires with fleets in flight; the round start
+  walkthrough shows each event's effect on the map ("−3" at a fleet or system, "+1" or the
+  new arrival round at every own fleet in flight).
 - **Supernova:** the report warns everyone ("unstable sun") and the map marks the system for
   one round. Then it is destroyed for good, no longer counts towards the victory threshold and
   can no longer be targeted. Its garrison flees to a random system; fleets bound for it jump on.
-  Home systems never explode.
+  Home systems never explode. With the chance level Low a game has at most one supernova.
 - **Pirates** (needs the supernova): the garrison of a neutral sun flees as a pirate fleet
   without a seat. A successful raid leaves the system neutral.
 - **Start balance by position** (always on): homes close to opponents get more ships, homes with

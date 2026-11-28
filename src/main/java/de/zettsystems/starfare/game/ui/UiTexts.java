@@ -308,6 +308,7 @@ public final class UiTexts {
     public static final String MAP_STANDING_LANE_TOOLTIP = "map.standingLane.tooltip";
     public static final String MAP_HINT_DRAG_RELOCATION = "map.hint.dragRelocation";
     public static final String MAP_REPORT_MARKER_HINT = "map.reportMarker.hint";
+    public static final String MAP_EVENT_PIRATES = "map.event.pirates";
     public static final String MAP_IDLE_SHIPS_HINT = "map.idleShips.hint";
     public static final String MAP_ARRIVAL_ROUND = "map.arrival.round";
     public static final String MAP_ARRIVAL_OPEN = "map.arrival.open";

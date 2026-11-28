@@ -112,7 +112,7 @@ class CosmicEventsTest {
     }
 
     @Test
-    void stormDelaysEveryFleetAndTellsEveryone() {
+    void stormDelaysEveryFleetAndTellsOnlyEmpiresWithFleetsInFlight() {
         GameState state = galaxy(EnumSet.of(CosmicEvent.COSMIC_STORM));
         state.addFleet(1, 1, 3, 5);
         int arrival = fleet(state, 1).arrivalTurn();
@@ -121,7 +121,7 @@ class CosmicEventsTest {
 
         assertThat(fleet(state, 1).arrivalTurn()).isEqualTo(arrival + 1);
         assertThat(news(state, 1)).extracting(TurnEvent.Cosmic::news).containsExactly(CosmicNews.STORM);
-        assertThat(news(state, 2)).extracting(TurnEvent.Cosmic::news).containsExactly(CosmicNews.STORM);
+        assertThat(news(state, 2)).isEmpty();
     }
 
     @Test
@@ -137,7 +137,8 @@ class CosmicEventsTest {
         events.resolve(state);
 
         assertThat(fleet(state, 1).arrivalTurn()).isEqualTo(CosmicEvents.halved(state.turn() + 1, arrival));
-        assertThat(news(state, 2)).extracting(TurnEvent.Cosmic::news).containsExactly(CosmicNews.SPACETIME_QUAKE);
+        assertThat(news(state, 1)).extracting(TurnEvent.Cosmic::news).containsExactly(CosmicNews.SPACETIME_QUAKE);
+        assertThat(news(state, 2)).isEmpty();
     }
 
     @Test

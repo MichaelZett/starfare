@@ -97,6 +97,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
     /** The walkthrough event the view last centred on, as game, round and report index. */
     private @Nullable String walkthroughFocus;
     private @Nullable VisibleSystem walkthroughSystem;
+    /** Map point of the fleet the open walkthrough event is about, when it centres on a fleet instead of a system. */
+    private double @Nullable [] walkthroughFleetPoint;
+    /** What the map marks for the open walkthrough event (K8e). */
+    private RoundWalkthrough.MapMarks walkthroughMarks = RoundWalkthrough.MapMarks.NONE;
     /** Seated players go through the located events of the round before they may give orders. */
     private boolean walkthroughOpen;
     private @Nullable Integer startSystemId;
@@ -505,8 +509,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         refresh();
         mapCanvas.installDragToPan();
         VisibleSystem focus = walkthroughSystem;
+        double[] fleetPoint = walkthroughFleetPoint;
         if (focus != null) {
             mapCanvas.restoreZoomAndCenterOn(focus.x(), focus.y());
+        } else if (fleetPoint != null) {
+            mapCanvas.restoreZoomAndCenterOn(fleetPoint[0], fleetPoint[1]);
         } else {
             restoreViewport();
         }
@@ -622,6 +629,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         VisibleSystem start = observer || step != null ? null : startSystem(view, playerId);
         startSystemId = start == null ? null : start.id();
         walkthroughOpen = step != null || start != null;
+        walkthroughMarks = start != null ? RoundWalkthrough.MapMarks.NONE : RoundWalkthrough.marks(step, view.ownFleets());
         lockPlanning(view, observer, playerId);
         selectPendingReplayEvent(view);
         boolean newFocus = start != null ? focusStart(start) : focusWalkthrough(view, step);
@@ -696,6 +704,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         walkthroughFocus = focus;
         highlightedReportSystemId = home.id();
         walkthroughSystem = home;
+        walkthroughFleetPoint = null;
         mapCanvas.centerOn(home.x(), home.y());
         return true;
     }
@@ -720,6 +729,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         if (step == null) {
             walkthroughFocus = null;
             walkthroughSystem = null;
+            walkthroughFleetPoint = null;
             return false;
         }
         String focus = gameId.value() + ":" + step.turn() + ":" + step.eventIndex();
@@ -727,14 +737,22 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
             return false;
         }
         walkthroughFocus = focus;
-        highlightedReportSystemId = step.systemId();
-        walkthroughSystem = view.systems().stream().filter(system -> system.id() == step.systemId())
-                .findFirst().orElse(null);
+        Integer focusFleet = walkthroughMarks.focusFleet();
+        walkthroughFleetPoint = focusFleet == null ? null : view.ownFleets().stream()
+                .filter(fleet -> fleet.globalId() == focusFleet).findFirst()
+                .flatMap(fleet -> MapRenderer.fleetPosition(fleet, view.systems(), view.turn())).orElse(null);
+        double[] fleetPoint = walkthroughFleetPoint;
+        // A fleet in flight takes the bright spot; the system then stays unlit so the curtain finds the fleet.
+        highlightedReportSystemId = fleetPoint != null || !step.hasSystem() ? null : step.systemId();
+        walkthroughSystem = fleetPoint != null ? null : view.systems().stream()
+                .filter(system -> system.id() == step.systemId()).findFirst().orElse(null);
         VisibleSystem system = walkthroughSystem;
-        if (system != null) {
+        if (fleetPoint != null) {
+            mapCanvas.centerOn(fleetPoint[0], fleetPoint[1]);
+        } else if (system != null) {
             mapCanvas.centerOn(system.x(), system.y());
         }
-        fleetsPanel.focusReportSystem(step.systemId());
+        if (step.hasSystem()) { fleetsPanel.focusReportSystem(step.systemId()); }
         return true;
     }
 
@@ -916,7 +934,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver, Mat
         mapCanvas.render(new MapRenderer.Inputs(
                 game, gameId, view, playerId, !ordersOffered, selectedFrom, targetSelection == TargetSelection.RELOCATION,
                 highlightedFleetId, highlightedStandingOrderId, reportedSystemIds(view), highlightedReportSystemId,
-                pendingBattleSystemIds(view), game.isTutorial(gameId),
+                walkthroughMarks, pendingBattleSystemIds(view), game.isTutorial(gameId),
                 badgesShowingFleetNo, systems,
                 this::inspectSystem,
                 this::selectSource,

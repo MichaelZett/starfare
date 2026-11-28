@@ -41,6 +41,7 @@ final class MapRenderer {
                   @Nullable Integer highlightedStandingOrderId,
                   Set<Integer> reportedSystemIds,
                   @Nullable Integer highlightedReportSystemId,
+                  RoundWalkthrough.MapMarks eventMarks,
                   Set<Integer> pendingBattleSystemIds,
                   boolean tutorial,
                   Set<Integer> badgesShowingFleetNo,
@@ -195,6 +196,8 @@ final class MapRenderer {
         dot.getStyle().set(CssProperties.HEIGHT, size + "px");
 
         markReportEvent(dot, sys, in, pendingBattle);
+        String eventMark = in.eventMarks().systems().get(sys.id());
+        if (eventMark != null && !eventMark.isEmpty()) { dot.add(buildEventMark(eventMark)); }
         markSky(dot, sys, in.view().sky());
         if (showsIdleShips(in)) {
             IdleShips.of(sys).ifPresent(ships -> dot.add(buildIdleShipsHint(ships)));
@@ -372,6 +375,28 @@ final class MapRenderer {
         map.add(control);
     }
 
+    /** The effect of the open walkthrough event at a system or fleet, such as "−3" or "+1" (K8e). */
+    private static Div buildEventMark(String label) {
+        Div mark = new Div();
+        mark.addClassName("map-event-mark");
+        mark.setText(label);
+        mark.getElement().setAttribute(HtmlAttributes.ARIA_HIDDEN, "true");
+        return mark;
+    }
+
+    /** Where the badge of a fleet sits on the map in the given round: on its route by elapsed flight time. */
+    static Optional<double[]> fleetPosition(Fleet f, List<VisibleSystem> systems, int currentTurn) {
+        Optional<VisibleSystem> from = systems.stream().filter(system -> system.id() == f.fromSystemId()).findFirst();
+        Optional<VisibleSystem> to = systems.stream().filter(system -> system.id() == f.toSystemId()).findFirst();
+        if (from.isEmpty() || to.isEmpty()) {
+            return Optional.empty();
+        }
+        VisibleSystem a = from.get();
+        VisibleSystem b = to.get();
+        double progress = etaProgress(f, currentTurn);
+        return Optional.of(new double[]{a.x() + (b.x() - a.x()) * progress, a.y() + (b.y() - a.y()) * progress});
+    }
+
     /** Only unseen battles earn a marker; seen ones stay in the report list for rewatching. */
     private static Div buildBattleMarker(VisibleSystem sys, Inputs in) {
         Div marker = new Div();
@@ -501,6 +526,7 @@ final class MapRenderer {
         routeData(badge, FLEET_ROUTE + f.globalId(), a, b, geom);
         badge.getElement().setAttribute(HtmlAttributes.MAP_PROGRESS, Double.toString(etaProgress(f, in.view().turn())));
         map.add(badge);
+        markFleetEvent(map, f, badge, in);
 
         if (!in.observer() && in.playerId() >= 0 && f.inFlight()) {
             Div hit = buildFleetHitArea(f, a.x(), a.y(), len, geom.angle, in);
@@ -508,6 +534,26 @@ final class MapRenderer {
             hit.getElement().setAttribute(HtmlAttributes.ARIA_LABEL, tooltip);
             map.add(hit);
         }
+    }
+
+    /** Highlights a fleet the open walkthrough event is about and puts its effect next to the badge (K8e). */
+    private static void markFleetEvent(Div map, Fleet f, Div badge, Inputs in) {
+        String label = in.eventMarks().fleets().get(f.globalId());
+        if (label == null) {
+            return;
+        }
+        badge.addClassName("fleet-badge-highlighted");
+        if (Objects.equals(in.eventMarks().focusFleet(), f.globalId())) {
+            badge.addClassName("map-event-focus");
+        }
+        if (label.isEmpty()) {
+            return;
+        }
+        Div mark = buildEventMark(label);
+        mark.addClassName("map-event-mark-fleet");
+        mark.getStyle().set(CssProperties.LEFT, badge.getStyle().get("left"))
+                .set(CssProperties.TOP, badge.getStyle().get("top"));
+        map.add(mark);
     }
 
     /**

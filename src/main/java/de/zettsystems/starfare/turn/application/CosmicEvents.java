@@ -81,7 +81,7 @@ final class CosmicEvents {
         if (state.fleets().isEmpty() && state.cosmic().pirates().isEmpty()) { return; }
         state.fleets().replaceAll(Fleet::delayedByOneTurn);
         state.updateCosmic(cosmic -> cosmic.movePirates(p -> p.rescheduled(p.arrivalTurn() + 1)));
-        tellEveryone(state, TurnEvent.Cosmic.news(CosmicNews.STORM));
+        tellFleetOwners(state, TurnEvent.Cosmic.news(CosmicNews.STORM));
     }
 
     private void spacetimeQuake(GameState state) {
@@ -89,7 +89,7 @@ final class CosmicEvents {
         int next = state.turn() + 1;
         state.fleets().replaceAll(fleet -> fleet.acceleratedTo(halved(next, fleet.arrivalTurn())));
         state.updateCosmic(cosmic -> cosmic.movePirates(p -> p.rescheduled(halved(next, p.arrivalTurn()))));
-        tellEveryone(state, TurnEvent.Cosmic.news(CosmicNews.SPACETIME_QUAKE));
+        tellFleetOwners(state, TurnEvent.Cosmic.news(CosmicNews.SPACETIME_QUAKE));
     }
 
     /** Halves the rounds still to fly after the coming one; one remaining round stays one round. */
@@ -234,6 +234,15 @@ final class CosmicEvents {
                 .filter(system -> system.id() != except && !state.destroyed(system.id())).toList();
         return candidates.isEmpty() ? Optional.empty()
                 : Optional.of(candidates.get(rng.nextInt(candidates.size())).id());
+    }
+
+    /** Hyperspace news reaches only the empires with fleets in flight; nobody else notices it (K8e). */
+    private void tellFleetOwners(GameState state, TurnEvent event) {
+        for (Player player : state.players()) {
+            if (state.fleets().stream().anyMatch(fleet -> fleet.ownerId() == player.id() && fleet.inFlight())) {
+                reports.appendEvent(state, player.id(), event);
+            }
+        }
     }
 
     private void tellEveryone(GameState state, TurnEvent event) {

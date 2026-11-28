@@ -177,7 +177,9 @@ returns to full shipbuilding. Growth changes output for the following turn only.
 
 `StarSystem.productionPerTurn` always contains actual ship output, so existing
 routing limits, delivery checks and relocation balances consume the same value.
-Standing orders retained after an allocation change may use the source garrison;
+Standing orders retained after an allocation change may use the source garrison, except the
+ships reserved for a later joint start (`GameState.reservedShips`, read in
+`DefaultFleetService.routeOneOrder`);
 incoming rates never count as already delivered ships.
 `DefaultEconomyService` produces only the output available before this turn's
 growth. Capture resets allocation to full shipbuilding while
@@ -386,6 +388,10 @@ remaining fleet is in hyperspace:
 3. Landing pirates fight with `CombatResolver`; a win calls `StarSystem.fallToPirates`.
 4. Each switched-on event rolls `SectorOptions.chance`: storm, space-time quake,
    disappearance, spaceport quake, and a new unstable sun (never a home) due next round.
+   With rare events (`EventFrequency.RARE`) `SectorOptions.allowsSupernova` allows one
+   unstable or exploded sun per game; the roll still happens, so the random sequence of
+   the other events stays the same. Storm and space-time quake are reported only to
+   players with a fleet in flight; a supernova goes to everyone.
 
 Reports carry `TurnEvent.Cosmic` (kind `CosmicNews`) and, at the end, `TurnEvent.FinalScore`;
 a victory by score is `TurnEvent.Victory` with `BY_SCORE` (0). Destroyed systems are no target:
@@ -536,8 +542,15 @@ further dialog.
 
 Round start walkthrough: `RoundWalkthrough` (package `game.ui`) picks the located events
 of the round report, i.e. battles (`TurnEvent.battleSite`), cosmic news with a system and
-cancelled or reduced joint starts (`TurnEvent.JointDeparture`); production,
-reinforcements and events without a place stay out. `RoundWalkthrough.current` returns
+cancelled or reduced joint starts (`TurnEvent.JointDeparture`), plus storm and space-time
+quake, which have no system (`RoundWalkthrough.walked`, `Step.NO_SYSTEM`); production,
+reinforcements and other events without a place stay out. `RoundWalkthrough.marks`
+derives the map marks of the open step from the player's own fleets (`MapMarks`: labels at
+fleets and systems, the fleet to centre on): "−n" at a vanished fleet (at its target when the
+whole fleet is gone) or a quaked spaceport, "+1" or the new arrival "Rn" at every own fleet in
+flight, refugees and panic jumps highlighted, fleeing pirates named at the exploded system.
+`MapRenderer` draws them (`map-event-mark`) and gives the focused fleet badge
+`map-event-focus`, which the curtain spot follows like `sys-report-event-active`. `RoundWalkthrough.current` returns
 the first one the account has not confirmed, with its position ("Event 2 of 5"). The
 confirmations use the durable battle acknowledgements (`BattleAcknowledgements`, keyed
 by account, game, round and original event index), so the progress survives reloads and

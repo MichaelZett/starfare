@@ -140,6 +140,32 @@ html[data-gp-game="starfare"] {
     animation: reportSystemPulse 1.25s ease-in-out infinite;
 }
 
+/* K8e: the effect of the open walkthrough event, as "−3" at a system or "+1" / "R12" at a fleet in flight.
+   It only informs; clicks go through to the map. */
+.map-event-mark {
+    position: absolute;
+    left: 50%;
+    top: -14px;
+    transform: translate(-50%, -100%);
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: #ffc14f;
+    border: 2px solid #fff1bf;
+    color: #2a1a00;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 7;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .55);
+}
+
+.map-event-mark-fleet {
+    top: auto;
+    transform: translate(-50%, calc(-100% - 16px));
+}
+
 .sys-report-marker {
     position: absolute;
     top: -8px;

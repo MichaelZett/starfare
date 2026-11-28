@@ -324,7 +324,8 @@ dann 10, abzüglich anderer ausgehender Aufträge.
 
 Das gemeinsame Limit aller ausgehenden Verlegungen ist die eigene Produktion plus
 die eingehenden Verlegungsmengen. Eingehende Schiffe brauchen trotzdem ihre normale
-Reisezeit. Wenn nötig, nutzt die Verlegung vorhandene Garnison. Nicht versandte
+Reisezeit. Wenn nötig, nutzt die Verlegung vorhandene Garnison, aber nie Schiffe, die ein späterer
+Start eines gemeinsamen Angriffs vorgemerkt hat. Nicht versandte
 Produktion bleibt am System. Die Karte zeigt die Routen
 violett gestrichelt mit ihrer Menge; der Reiter **Verlegungen** listet alle Routen.
 
@@ -360,9 +361,15 @@ Ereignisses bleibt hell. Davor steht die Karte des ersten noch offenen Ereigniss
 (Schlachten, Eroberungen, Verluste, kosmische Meldungen wie Supernova, Beben oder Piraten und
 entfallene oder verkleinerte Starts eines gemeinsamen Angriffs) mit der Runde („Runde 12
 ausgewertet“) und der Stelle („Ereignis 2 von 5“); die Karte zentriert sich auf das System.
+Kosmische Meldungen zeigen ihre Folge auf der Karte: Ein mysteriöses Verschwinden steht als „−3“
+an der betroffenen Flotte (die Karte zentriert auf ihre Position unterwegs; ist die Flotte ganz
+verloren, am Ziel), ein Raumhafenbeben als „−3“ am System. Sturm und Raum-Zeit-Erschütterung
+markieren alle eigenen Flotten im Hyperraum mit „+1“ bzw. der neuen Ankunftsrunde („R12“) und
+zentrieren auf die, die zuerst ankommt. Flüchtlinge und weitergesprungene Flotten sind
+hervorgehoben, fliehende Piraten stehen mit ihrer Zahl an der explodierten Sonne.
 Eine Schlacht bietet
 **Schlacht ansehen** mit der Wiedergabe, jedes andere Ereignis **Weiter**; danach folgt das
-nächste. Produktion, eintreffende Verstärkungen und Meldungen ohne Ort gehören nicht dazu.
+nächste. Produktion, eintreffende Verstärkungen und sonstige Meldungen ohne Ort gehören nicht dazu.
 Erst nach dem letzten Ereignis hebt sich der Vorhang; vorher gibt es keine Befehle (das Tutorial
 sagt das auf der Ereigniskarte dazu): kein
 Senden, keine Zielwahl, keine Verlegung und kein **Runde abgeben**. Der Fortschritt bleibt
@@ -432,7 +439,9 @@ Nach dem C64-Klassiker Galactic Empire (1983). Wie oft Ereignisse eintreten, fol
 Ticker-Karten:
 
 - **Kosmische Stürme:** Alle Flotten im Hyperraum, auch Piraten, kommen eine Runde später an.
+  Davon erfahren nur Reiche mit Flotten im Hyperraum.
 - **Raum-Zeit-Erschütterung:** Alle Flotten im Hyperraum brauchen nur noch die halbe Restzeit.
+  Auch hier erfahren es nur Reiche mit Flotten im Hyperraum.
 - **Mysteriöses Verschwinden:** Eine zufällige Flotte verliert bis zur Hälfte ihrer Schiffe.
   Nur ihr Besitzer erfährt davon.
 - **Raumhafenbeben:** Ein zufälliges System verliert einen Teil seiner Garnison (leichtes oder
@@ -442,7 +451,7 @@ Ticker-Karten:
   Schiffe abziehen. Danach ist das System für immer zerstört (dunkel auf der Karte), zählt nicht mehr zur Siegschwelle und kann nicht
   mehr angeflogen werden. Seine Garnison flieht als Flotte zu einem zufälligen System;
   Flotten auf dem Weg dorthin springen per Panikschaltung zu einem anderen System weiter.
-  Heimatwelten explodieren nie.
+  Heimatwelten explodieren nie. Bei Zufall „Wenig“ gibt es höchstens eine Supernova je Partie.
 - **Piraten** (nur zusammen mit der Supernova): Die Garnison einer neutralen Sonne flieht
   als Piratenflotte ohne Sitz. Gewinnt sie den Kampf am Ziel, wird das System neutral.
 

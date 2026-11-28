@@ -8,6 +8,12 @@ verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
 ## Unreleased
 
+- **Ereignisse auf der Karte und nur für Betroffene:** Der Rundendurchgang zeigt kosmische Meldungen dort, wo sie
+  wirken: „−3“ an der Flotte, die Schiffe verloren hat (die Karte zentriert auf ihre Position unterwegs), „−3“ am
+  System nach einem Raumhafenbeben, „+1“ bzw. die neue Ankunftsrunde an allen eigenen Flotten im Hyperraum nach
+  Sturm und Raum-Zeit-Erschütterung. Flüchtlinge und weitergesprungene Flotten sind hervorgehoben, fliehende Piraten
+  stehen an der explodierten Sonne. Sturm und Raum-Zeit-Erschütterung erfahren nur Reiche mit Flotten im Hyperraum;
+  die Supernova bleibt eine Meldung für alle.
 - **Höchstens eine Supernova bei Zufall „Wenig“:** Eine Partie mit wenig Zufall bringt nur noch eine instabile Sonne
   und damit höchstens einen Piratenschwarm. Mittel und Viel bleiben, wie sie sind.
 - **Verlegungen lassen vorgemerkte Schiffe in Ruhe:** Eine Produktionsverlegung nimmt keine Schiffe mehr, die ein

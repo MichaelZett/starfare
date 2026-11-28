@@ -16,7 +16,7 @@ final class RoundCurtain extends Div {
     static final String CLASS_NAME = "round-curtain";
 
     /**
-     * Follows the event's system on the map, even while the map scrolls there or redraws, and cuts the bright spot
+     * Follows the event's system (or the fleet in flight it is about) on the map, even while the map scrolls there or redraws, and cuts the bright spot
      * into the curtain at its place; outside the visible map there is no spot. It places the spot at once, on every
      * scroll of the map and resize, and on a short timer, not on animation frames, which a browser may hold back.
      * Stops when the curtain is hidden or gone.
@@ -25,7 +25,7 @@ final class RoundCurtain extends Div {
             const curtain = this;
             const place = () => {
               const root = curtain.parentElement;
-              const site = root && root.querySelector('#map .sys-report-event-active');
+              const site = root && root.querySelector('#map .map-event-focus, #map .sys-report-event-active');
               const scroll = root && root.querySelector('#scroll');
               const box = curtain.getBoundingClientRect();
               let radius = 0;
