@@ -6,7 +6,7 @@ Alle nennenswerten Änderungen an Starfare. Format nach
 `## Unreleased` in `## <appVersion> - <Datum>` umbenannt; der Release-Job
 verwendet diesen Abschnitt als Release-Notes und bricht ohne ihn ab.
 
-## Unreleased
+## 0.4.0 - 2026-11-28
 
 - **Neue Tempostufe „Alle zwei Tage“:** Partien mit mehreren Menschen können zwischen Täglich und Gemütlich eine
   Runde alle 48 Stunden wählen; fehlt nur noch einer, bleiben ihm 12 Stunden. Gemeinsame Stufe aller Plattformspiele
