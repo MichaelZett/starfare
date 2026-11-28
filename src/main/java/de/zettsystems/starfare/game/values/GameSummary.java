@@ -2,6 +2,7 @@ package de.zettsystems.starfare.game.values;
 
 import org.jspecify.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,9 +39,9 @@ public record GameSummary(
         RulesetRef ruleset,
         @Nullable VictoryRules victoryRules,
         Set<Integer> submittedSeats,
-        java.time.Instant roundStartedAt,
+        Instant roundStartedAt,
         Set<Integer> closedSeats,
-        java.time.@Nullable Instant roundDeadline,
+        @Nullable Instant roundDeadline,
         @Nullable GameTempo tempo,
         boolean tutorial,
         Map<Integer, List<Integer>> pendingAnswers) {
@@ -71,9 +72,9 @@ public record GameSummary(
         RulesetRef ruleset,
         @Nullable VictoryRules victoryRules,
         Set<Integer> submittedSeats,
-        java.time.Instant roundStartedAt,
+        Instant roundStartedAt,
         Set<Integer> closedSeats,
-        java.time.@Nullable Instant roundDeadline,
+        @Nullable Instant roundDeadline,
         @Nullable GameTempo tempo,
         boolean tutorial) {
         this(gameId, name, hostPlayerId, turn, started, gameOver, observersAllowed, reentryAllowed, players,
@@ -100,7 +101,7 @@ public record GameSummary(
         RulesetRef ruleset,
         @Nullable VictoryRules victoryRules,
         Set<Integer> submittedSeats,
-        java.time.Instant roundStartedAt,
+        Instant roundStartedAt,
         Set<Integer> closedSeats) {
         this(gameId, name, hostPlayerId, turn, started, gameOver, observersAllowed, reentryAllowed, players,
                 joinedHumanSeats, seatByPlayer, invitedSeats, visibility, outcome, ruleset, victoryRules, submittedSeats,
@@ -126,7 +127,7 @@ public record GameSummary(
         @Nullable VictoryRules victoryRules) {
         this(gameId, name, hostPlayerId, turn, started, gameOver, observersAllowed, reentryAllowed, players,
                 joinedHumanSeats, seatByPlayer, invitedSeats, visibility, outcome, ruleset, victoryRules, Set.of(),
-                java.time.Instant.EPOCH, Set.of());
+                Instant.EPOCH, Set.of());
     }
 
     public GameSummary(
