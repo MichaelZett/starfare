@@ -24,7 +24,7 @@ description keys, supported versions and availability for new-game creation.
 Each variant has exactly one supported version; the extended versions 1.0.0 to
 1.3.0-r1 were removed with their turn engines, and their stored games no longer load
 (`RetiredRulesPlatformTest`). Inside the platform host each variant has a
-stage the platform keeps (games-platform-api 0.5.0; `variants=classic:PRODUCTION,
+stage the platform keeps (games-platform-api 0.5.0 and later; `variants=classic:PRODUCTION,
 extended:ALPHA` in `game.properties` is the stage at first start): `RulesetAccess` asks
 `PlatformAccounts.mayUseVariant` and marks alpha and beta variants on the rules card of the new-game dialog
 (`variantStage`). An account that may not use a variant reaches none of its games, running
